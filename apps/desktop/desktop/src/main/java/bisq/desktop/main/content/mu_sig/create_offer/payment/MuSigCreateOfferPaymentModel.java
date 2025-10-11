@@ -63,6 +63,9 @@ public class MuSigCreateOfferPaymentModel implements Model {
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
     private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
 
+    private final BooleanProperty shouldShowNoPaymentMethodSelectedOverlay = new SimpleBooleanProperty();
+    private final StringProperty noPaymentMethodSelectedOverlayText = new SimpleStringProperty("");
+
     public MuSigCreateOfferPaymentModel() {
     }
 
@@ -82,5 +85,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
         selectedAccountByPaymentMethod.clear();
+        shouldShowNoPaymentMethodSelectedOverlay.set(false);
+        noPaymentMethodSelectedOverlayText.set("");
     }
 }
