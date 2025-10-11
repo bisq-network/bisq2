@@ -167,6 +167,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                config.getBaseDir(),
                 securityService,
                 networkService,
                 userService,
@@ -177,7 +178,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 settingsService,
                 bisqEasyService,
                 openTradeItemsService,
-                accountService);
+                accountService,
+                userService.getReputationService());
     }
 
     @Override

@@ -164,7 +164,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         if (restApiConfig.isEnabled()) {
             var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
-            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
+            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getBaseDir(), securityService, networkService));
         }
     }
 

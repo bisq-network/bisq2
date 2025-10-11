@@ -544,7 +544,6 @@ public class DtoMappings {
                     value.getPrecision(),
                     value.getLowPrecision(),
                     MarketMapping.fromBisq2Model(value.getMarket())
-
             );
         }
     }

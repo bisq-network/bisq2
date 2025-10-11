@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile.")
+@Schema(name = "UpdateUserIdentityResponse", description = "Response payload containing the user profile.")
 public class UpdateUserIdentityResponse {
     private final UserProfileDto userProfile;
 

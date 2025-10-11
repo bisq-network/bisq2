@@ -60,8 +60,7 @@ public class ApiTorOnionService implements Service {
 
         return CompletableFuture.supplyAsync(() -> {
                     String keyId = keyBundleService.getKeyIdFromTag(identityTag);
-                    KeyBundle keyBundle = keyBundleService.findKeyBundle(keyId)
-                            .orElseGet(() -> keyBundleService.createAndPersistKeyBundle(identityTag, keyBundleService.generateKeyPair()));
+                    KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
                     return keyBundle.getTorKeyPair();
                 })
                 .thenCompose(torKeyPair -> networkService.publishOnionService(port, port, torKeyPair))
