@@ -69,7 +69,7 @@ public class DashboardController implements Controller {
         marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(this::updateMarketPrice);
 
         getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
-                UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
+                UIThread.run(() -> model.getActiveUsers().set(String.valueOf(numUserProfiles))));
 
         channelsPins.addAll(bisqEasyOfferbookChannelService.getChannels().stream()
                 .map(channel -> channel.getChatMessages().addObserver(this::updateOffersOnline))
