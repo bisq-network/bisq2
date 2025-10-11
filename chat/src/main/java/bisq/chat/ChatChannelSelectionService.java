@@ -27,6 +27,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Locale;
 import java.util.stream.Stream;
 
@@ -56,7 +57,7 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
                 .orElse(null));
     }
 
-    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void selectChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 

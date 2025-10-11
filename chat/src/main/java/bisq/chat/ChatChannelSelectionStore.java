@@ -33,7 +33,7 @@ import java.util.Optional;
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class ChatChannelSelectionStore implements PersistableStore<ChatChannelSelectionStore> {
+public final class ChatChannelSelectionStore implements PersistableStore<ChatChannelSelectionStore> {
     @Nullable
     @Setter(AccessLevel.PACKAGE)
     private String selectedChannelId;
