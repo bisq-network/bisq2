@@ -40,6 +40,6 @@ public class RequestValidation {
         // todo add more validation, whitelist of endpoints and
         // Only allow alphanumeric characters and some special characters like /, -, _
         // Do not allow '../' to avoid path traversal attacks
-        return path != null && path.matches("^[a-zA-Z0-9/_-]+$");
+        return path != null && path.matches("^[a-zA-Z0-9/_\\-?=,&]*$");
     }
 }

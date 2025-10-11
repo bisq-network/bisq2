@@ -15,16 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.subscription;
+package bisq.http_api.rest_api.domain.user_identity;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Data
+@Schema(description = "Request payload for updating user profile statement and trade terms.")
+public class UpdateUserIdentityRequest {
+
+    @Schema(description = "The updated statement for the user profile.", example = "I am a reliable trader.")
+    private String statement;
+
+    @Schema(description = "The updated trade terms for the user profile.", example = "No trades on weekends.")
+    private String terms;
 }

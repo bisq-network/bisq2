@@ -252,6 +252,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                getConfig().getBaseDir(),
                 securityService,
                 networkService,
                 userService,
@@ -262,7 +263,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 settingsService,
                 bisqEasyService,
                 openTradeItemsService,
-                accountService);
+                accountService,
+                userService.getReputationService());
     }
 
     @Override

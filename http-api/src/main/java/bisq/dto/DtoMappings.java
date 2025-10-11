@@ -544,7 +544,6 @@ public class DtoMappings {
                     value.getPrecision(),
                     value.getLowPrecision(),
                     MarketMapping.fromBisq2Model(value.getMarket())
-
             );
         }
     }
@@ -1117,6 +1116,7 @@ public class DtoMappings {
                     settingsService.getLanguageCode().get(),
                     settingsService.getSupportedLanguageCodes(),
                     settingsService.getMaxTradePriceDeviation().get(),
+                    MarketMapping.fromBisq2Model(settingsService.getSelectedMuSigMarket().get()),
                     settingsService.getNumDaysAfterRedactingTradeData().get(),
                     settingsService.getUseAnimations().get()
             );
