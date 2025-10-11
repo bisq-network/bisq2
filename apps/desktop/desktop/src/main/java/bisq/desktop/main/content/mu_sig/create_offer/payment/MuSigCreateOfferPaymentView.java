@@ -54,15 +54,15 @@ import java.util.Set;
 public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOfferPaymentModel, MuSigCreateOfferPaymentController> {
     private final GridPane gridPane;
     private final VBox content;
-    private final WizardOverlay noAccountOverlay, multipleAccountsOverlay;
-    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton;
+    private final WizardOverlay noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay;
+    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton, noPaymentMethodSelectedOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountSelection;
     private final Set<ImageView> closeIcons = new HashSet<>();
+    private final Label noPaymentMethodSelectedOverlayLabel;
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
-
     private final ListChangeListener<PaymentMethod<?>> paymentMethodListener;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
-    private Subscription shouldShowNoAccountOverlayPin, shouldShowMultipleAccountsOverlayPin;
+    private Subscription shouldShowNoAccountOverlayPin, shouldShowMultipleAccountsOverlayPin, shouldShowNoPaymentMethodSelectedOverlayPin;
 
     public MuSigCreateOfferPaymentView(MuSigCreateOfferPaymentModel model,
                                        MuSigCreateOfferPaymentController controller) {
@@ -105,8 +105,19 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
                 multipleAccountsContentBox,
                 multipleAccountOverlayCloseButton);
 
+        // invalidPaymentMethods overlay
+        noPaymentMethodSelectedOverlayLabel = new Label();
+        noPaymentMethodSelectedOverlayLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        noPaymentMethodSelectedOverlayLabel.setMaxWidth(noPaymentMethodSelectedOverlayLabel.getMinWidth());
+        noPaymentMethodSelectedOverlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
+        noPaymentMethodSelectedOverlay = new WizardOverlay(root,
+                "muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.headline",
+                new VBox(noPaymentMethodSelectedOverlayLabel),
+                noPaymentMethodSelectedOverlayCloseButton);
+
         StackPane.setMargin(content, new Insets(40));
-        root.getChildren().addAll(content, noAccountOverlay, multipleAccountsOverlay);
+        root.getChildren().addAll(content, noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay);
 
         paymentMethodListener = c -> setUpAndFillPaymentMethods();
         selectedPaymentMethodsListener = change -> updateSelectionsState();
@@ -116,11 +127,14 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     protected void onViewAttached() {
         noAccountOverlay.getHeadlineLabel().textProperty().bind(model.getNoAccountOverlayHeadlineText());
         multipleAccountsOverlay.getHeadlineLabel().textProperty().bind(model.getMultipleAccountsOverlayHeadlineText());
+        noPaymentMethodSelectedOverlayLabel.textProperty().bind(model.getNoPaymentMethodSelectedOverlayText());
 
         shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
                 noAccountOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoAccountOverlay));
         shouldShowMultipleAccountsOverlayPin = EasyBind.subscribe(model.getShouldShowMultipleAccountsOverlay(), shouldShow ->
                 multipleAccountsOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingMultipleAccountsOverlay));
+        shouldShowNoPaymentMethodSelectedOverlayPin = EasyBind.subscribe(model.getShouldShowNoPaymentMethodSelectedOverlay(), shouldShow ->
+                noPaymentMethodSelectedOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay));
 
         model.getSelectedPaymentMethods().addListener(selectedPaymentMethodsListener);
         model.getPaymentMethods().addListener(paymentMethodListener);
@@ -128,6 +142,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
         createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
         multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
+        noPaymentMethodSelectedOverlayCloseButton.setOnAction(e -> controller.onCloseNoPaymentMethodSelectedOverlay());
         accountSelection.setOnChangeConfirmed(e -> accountSelectionConfirmed());
 
         root.setOnMousePressed(e -> root.requestFocus());
@@ -140,9 +155,11 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     protected void onViewDetached() {
         noAccountOverlay.getHeadlineLabel().textProperty().unbind();
         multipleAccountsOverlay.getHeadlineLabel().textProperty().unbind();
+        noPaymentMethodSelectedOverlayLabel.textProperty().unbind();
 
         shouldShowNoAccountOverlayPin.unsubscribe();
         shouldShowMultipleAccountsOverlayPin.unsubscribe();
+        shouldShowNoPaymentMethodSelectedOverlayPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
 
@@ -151,6 +168,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         createAccountButton.setOnAction(null);
         noAccountOverlayCloseButton.setOnAction(null);
         multipleAccountOverlayCloseButton.setOnAction(null);
+        noPaymentMethodSelectedOverlayCloseButton.setOnAction(null);
         accountSelection.setOnChangeConfirmed(null);
 
         closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));

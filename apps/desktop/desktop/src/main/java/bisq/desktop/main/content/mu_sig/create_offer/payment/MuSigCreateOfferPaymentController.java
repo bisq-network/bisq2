@@ -83,9 +83,12 @@ public class MuSigCreateOfferPaymentController implements Controller {
 
     public boolean validate() {
         if (model.getSelectedAccountByPaymentMethod().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
-                    .owner(owner)
-                    .show();
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowNoPaymentMethodSelectedOverlay().set(true);
+            model.getNoPaymentMethodSelectedOverlayText().set(
+                    model.getMarket().get().isCrypto()
+                            ? Res.get("muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.cryptoAsset.subTitle")
+                            : Res.get("muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.fiat.subTitle"));
             return false;
         }
 
@@ -226,6 +229,19 @@ public class MuSigCreateOfferPaymentController implements Controller {
     void onKeyPressedWhileShowingMultipleAccountsOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {});
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseMultipleAccountsOverlay);
+    }
+
+    void onCloseNoPaymentMethodSelectedOverlay() {
+        if (model.getShouldShowNoPaymentMethodSelectedOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowNoPaymentMethodSelectedOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoPaymentMethodSelectedOverlay);
     }
 
     private void updateShouldShowNoAccountOverlay(boolean shouldShow) {
