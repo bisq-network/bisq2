@@ -74,7 +74,7 @@ public class TorTransportService implements TransportService {
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
             String onionAddress = torKeyPair.getOnionAddress();
             TorAddress address = new TorAddress(onionAddress, port);
-            ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
+            ServerSocket serverSocket = torService.publishOnionServiceAndCreateServerSocket(port, torKeyPair).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
         } catch (InterruptedException e) {
@@ -123,5 +123,9 @@ public class TorTransportService implements TransportService {
 
     public Observable<Boolean> getUseExternalTor() {
         return torService.getUseExternalTor();
+    }
+
+    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
+        return torService.publishOnionService(localPort, onionServicePort, torKeyPair);
     }
 }

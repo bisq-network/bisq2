@@ -37,6 +37,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -59,6 +60,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.TorKeyPair;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
@@ -81,6 +83,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.common.network.TransportType.TOR;
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -518,5 +521,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Report> requestReport(Address address) {
         return serviceNodesByTransport.requestReport(address);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Publish onion service
+    /* --------------------------------------------------------------------- */
+
+    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
+        return serviceNodesByTransport.findServiceNode(TOR)
+                .map(ServiceNode::getTransportService)
+                .map(TorTransportService.class::cast)
+                .map(torTransportService -> torTransportService.publishOnionService(localPort, onionServicePort, torKeyPair))
+                .orElse(CompletableFuture.failedFuture(new UnsupportedOperationException("Calling publishOnionService requires to have a TorTransportService running.")));
     }
 }
