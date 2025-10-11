@@ -105,7 +105,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
                 multipleAccountsContentBox,
                 multipleAccountOverlayCloseButton);
 
-        // invalidPaymentMethods overlay
+        // noPaymentMethodSelected overlay
         noPaymentMethodSelectedOverlayLabel = new Label();
         noPaymentMethodSelectedOverlayLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
         noPaymentMethodSelectedOverlayLabel.setMaxWidth(noPaymentMethodSelectedOverlayLabel.getMinWidth());
