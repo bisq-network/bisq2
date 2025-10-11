@@ -31,6 +31,7 @@ import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
+import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -157,7 +158,13 @@ public abstract class ApplicationService implements Service {
             log.error("Could not create data directory {}", baseDir, e);
             throw new RuntimeException(e);
         }
+
         setupLogging(baseDir);
+
+        log.info(AsciiLogo.getAsciiLogo());
+        log.info("Data directory: {}", baseDir);
+        log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
+        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
 
         customConfig = TypesafeConfigUtils.resolveCustomConfig(baseDir).orElse(ConfigFactory.empty());
 
@@ -224,7 +231,15 @@ public abstract class ApplicationService implements Service {
         log.info("New state {}", newState);
     }
 
-    private void checkInstanceLock() {
+    protected void setupLogging(Path dataDir) {
+        com.typesafe.config.Config loggingConfig = getConfig("logging");
+        int rollingPolicyMaxIndex = loggingConfig.getInt("rollingPolicyMaxIndex");
+        String maxFileSize = loggingConfig.getString("maxFileSize");
+        Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
+        LogSetup.setup(dataDir.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
+    }
+
+    protected void checkInstanceLock() {
         // Create a quasi-unique port per data directory
         // Dynamic/private ports: 49152 – 65535
         int lowestPort = 49152;
@@ -242,15 +257,5 @@ public abstract class ApplicationService implements Service {
             Thread.currentThread().setName("InstanceLockManager.releaseLock");
             instanceLockManager.releaseLock();
         }));
-    }
-
-    private static void setupLogging(Path baseDir) {
-        LogSetup.setup(baseDir.resolve("bisq").toString());
-        log.info(AsciiLogo.getAsciiLogo());
-        log.info("Data directory: {}", baseDir);
-        log.info("Version: v{} / Commit hash: {}",
-                ApplicationVersion.getVersion().getVersionAsString(),
-                ApplicationVersion.getBuildCommitShortHash());
-        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
     }
 }
