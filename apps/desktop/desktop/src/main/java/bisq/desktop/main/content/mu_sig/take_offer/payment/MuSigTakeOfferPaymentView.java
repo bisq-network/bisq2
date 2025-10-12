@@ -24,6 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.mu_sig.components.PaymentMethodChipButton;
@@ -59,12 +60,13 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
     private final GridPane gridPane;
     private final Label headlineLabel, noAccountOverlayHeadline, subtitleLabel, multipleAccountOverlayHeadline;
     private final VBox noAccountOverlay, multipleAccountOverlay, content;
-    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton;
+    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton, noPaymentMethodSelectedOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> singlePaymentMethodAccountSelection, accountSelection;
     private final Set<ImageView> closeIcons = new HashSet<>();
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
-
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin, selectedPaymentMethodPin, selectedTogglePin;
+    private final WizardOverlay noPaymentMethodSelectedOverlay;
+    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin, selectedPaymentMethodPin,
+            selectedTogglePin, shouldShowNoPaymentMethodSelectedOverlayPin;
 
     public MuSigTakeOfferPaymentView(MuSigTakeOfferPaymentModel model,
                                      MuSigTakeOfferPaymentController controller) {
@@ -111,10 +113,17 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         accountSelection = createComboBox();
         configMultipleAccountOverlay();
 
+        // noPaymentMethodSelected overlay
+        noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
+        noPaymentMethodSelectedOverlay = new WizardOverlay(root,
+                "muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.title",
+                "muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.subtitle",
+                noPaymentMethodSelectedOverlayCloseButton);
+
         StackPane.setMargin(content, new Insets(40));
         StackPane.setMargin(noAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
         StackPane.setMargin(multipleAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, noAccountOverlay, multipleAccountOverlay);
+        root.getChildren().addAll(content, noAccountOverlay, multipleAccountOverlay, noPaymentMethodSelectedOverlay);
     }
 
     @Override
@@ -171,11 +180,17 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
                         updateSelectionsState();
                     }
                 });
+
         selectedTogglePin = EasyBind.subscribe(model.getToggleGroup().selectedToggleProperty(), selectedToggle -> {
             if (selectedToggle == null) {
                 paymentMethodChipButtons.forEach(button -> button.setAccountName(null));
             }
         });
+
+        shouldShowNoPaymentMethodSelectedOverlayPin = EasyBind.subscribe(model.getShouldShowNoPaymentMethodSelectedOverlay(), shouldShow ->
+                noPaymentMethodSelectedOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay));
+
+        noPaymentMethodSelectedOverlayCloseButton.setOnAction(e -> controller.onCloseNoPaymentMethodSelectedOverlay());
 
         root.setOnMousePressed(e -> root.requestFocus());
 
@@ -207,12 +222,14 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         paymentMethodWithMultipleAccountsPin.unsubscribe();
         selectedPaymentMethodPin.unsubscribe();
         selectedTogglePin.unsubscribe();
+        shouldShowNoPaymentMethodSelectedOverlayPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
 
         createAccountButton.setOnAction(null);
         noAccountOverlayCloseButton.setOnAction(null);
         multipleAccountOverlayCloseButton.setOnAction(null);
+        noPaymentMethodSelectedOverlayCloseButton.setOnAction(null);
         singlePaymentMethodAccountSelection.setOnChangeConfirmed(null);
         accountSelection.setOnChangeConfirmed(null);
 

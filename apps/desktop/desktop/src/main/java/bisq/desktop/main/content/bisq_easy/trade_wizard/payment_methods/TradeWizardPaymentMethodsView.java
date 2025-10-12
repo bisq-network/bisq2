@@ -108,7 +108,7 @@ public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPa
         overlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
         closeOverlayButton = new Button(Res.get("action.close"));
         overlay = new WizardOverlay(root,
-                "bisqEasy.tradeWizard.paymentMethods.wizardOverlay.Title",
+                "bisqEasy.tradeWizard.paymentMethods.wizardOverlay.title",
                 new VBox(overlayLabel),
                 closeOverlayButton);
 

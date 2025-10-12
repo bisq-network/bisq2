@@ -23,7 +23,9 @@ import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.account.payment_method.PaymentMethodSpec;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -65,6 +67,8 @@ public class MuSigTakeOfferPaymentModel implements Model {
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
 
+    private final BooleanProperty shouldShowNoPaymentMethodSelectedOverlay = new SimpleBooleanProperty();
+
     public MuSigTakeOfferPaymentModel() {
     }
 
@@ -85,5 +89,6 @@ public class MuSigTakeOfferPaymentModel implements Model {
         selectedAccount.set(null);
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
+        shouldShowNoPaymentMethodSelectedOverlay.set(false);
     }
 }

@@ -21,8 +21,8 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
@@ -31,11 +31,12 @@ import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.scene.layout.Region;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
+import java.util.function.Consumer;
 
 @Slf4j
 public class TakeOfferPaymentController implements Controller {
@@ -43,8 +44,11 @@ public class TakeOfferPaymentController implements Controller {
     @Getter
     private final TakeOfferPaymentView view;
     private final SettingsService settingsService;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
-    public TakeOfferPaymentController(ServiceProvider serviceProvider) {
+    public TakeOfferPaymentController(ServiceProvider serviceProvider,
+                                      Consumer<Boolean> navigationButtonsVisibleHandler) {
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         settingsService = serviceProvider.getSettingsService();
 
         model = new TakeOfferPaymentModel();
@@ -77,13 +81,9 @@ public class TakeOfferPaymentController implements Controller {
 
     public void handleInvalidInput() {
         if (model.getSelectedFiatPaymentMethodSpec().get() == null) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
-                    .owner((Region) view.getRoot().getParent().getParent())
-                    .show();
+            showInvalidInputOverlay(Res.get("bisqEasy.takeOffer.paymentMethods.invalidInputWizardOverlay.subtitle.fiat"));
         } else if (model.getSelectedBitcoinPaymentMethodSpec().get() == null) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
-                    .owner((Region) view.getRoot().getParent().getParent())
-                    .show();
+            showInvalidInputOverlay(Res.get("bisqEasy.takeOffer.paymentMethods.invalidInputWizardOverlay.subtitle.btc"));
         }
     }
 
@@ -143,10 +143,6 @@ public class TakeOfferPaymentController implements Controller {
         }
     }
 
-    private String getCookieSubKey() {
-        return model.getMarket().getMarketCodes();
-    }
-
     void onToggleBitcoinPaymentMethod(BitcoinPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedBitcoinPaymentMethodSpec().set(spec);
@@ -155,5 +151,28 @@ public class TakeOfferPaymentController implements Controller {
         } else {
             model.getSelectedBitcoinPaymentMethodSpec().set(null);
         }
+    }
+
+    void onCloseInvalidInputOverlay() {
+        if (model.getShouldShowInvalidInputOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowInvalidInputOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingInvalidInputOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseInvalidInputOverlay);
+    }
+
+    private String getCookieSubKey() {
+        return model.getMarket().getMarketCodes();
+    }
+
+    private void showInvalidInputOverlay(String overlayText) {
+        navigationButtonsVisibleHandler.accept(false);
+        model.getShouldShowInvalidInputOverlay().set(true);
+        model.getInvalidInputOverlayText().set(overlayText);
     }
 }
