@@ -88,7 +88,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
         view = new MuSigTakeOfferView(model, this);
 
         muSigTakeOfferAmountController = new MuSigTakeOfferAmountController(serviceProvider, this::setMainButtonsVisibleState);
-        muSigTakeOfferPaymentController = new MuSigTakeOfferPaymentController(serviceProvider, view.getRoot());
+        muSigTakeOfferPaymentController = new MuSigTakeOfferPaymentController(serviceProvider, this::setMainButtonsVisibleState);
         muSigTakeOfferReviewController = new MuSigTakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
 

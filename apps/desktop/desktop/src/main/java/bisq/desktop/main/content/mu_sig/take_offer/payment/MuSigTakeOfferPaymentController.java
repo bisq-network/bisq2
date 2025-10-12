@@ -26,7 +26,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -35,13 +34,13 @@ import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,12 +51,13 @@ public class MuSigTakeOfferPaymentController implements Controller {
     private final MuSigTakeOfferPaymentModel model;
     @Getter
     private final MuSigTakeOfferPaymentView view;
-    private final Region owner;
     private final AccountService accountService;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
-    public MuSigTakeOfferPaymentController(ServiceProvider serviceProvider, Region owner) {
+    public MuSigTakeOfferPaymentController(ServiceProvider serviceProvider,
+                                           Consumer<Boolean> navigationButtonsVisibleHandler) {
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         accountService = serviceProvider.getAccountService();
-        this.owner = owner;
 
         model = new MuSigTakeOfferPaymentModel();
         view = new MuSigTakeOfferPaymentView(model, this);
@@ -117,9 +117,8 @@ public class MuSigTakeOfferPaymentController implements Controller {
 
     public boolean validate() {
         if (model.getSelectedAccount().get() == null) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
-                    .owner(owner)
-                    .show();
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowNoPaymentMethodSelectedOverlay().set(true);
             return false;
         }
 
@@ -200,6 +199,19 @@ public class MuSigTakeOfferPaymentController implements Controller {
             model.getPaymentMethodWithoutAccount().set(null);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         });
+    }
+
+    void onCloseNoPaymentMethodSelectedOverlay() {
+        if (model.getShouldShowNoPaymentMethodSelectedOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowNoPaymentMethodSelectedOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoPaymentMethodSelectedOverlay);
     }
 
     private String getPaymentMethodsHeadline(boolean isBuyer) {
