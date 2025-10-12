@@ -79,7 +79,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         view = new TakeOfferView(model, this);
 
         takeOfferAmountController = new TakeOfferAmountController(serviceProvider, this::setMainButtonsVisibleState);
-        takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider);
+        takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider, this::setMainButtonsVisibleState);
         takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
 
