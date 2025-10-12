@@ -103,8 +103,6 @@ public class TakeOfferPaymentView extends View<StackPane, TakeOfferPaymentModel,
                 new VBox(invalidInputOverlayTextLabel),
                 invalidInputOverlayCloseButton);
 
-//        VBox.setMargin(headlineLabel, new Insets(0, 0, -10, 0));
-//
         VBox.setMargin(headlineLabel, new Insets(0, 0, 40, 0));
         VBox.setMargin(fiatGridPane, new Insets(0, 0, 45, 0));
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, fiatVBox, btcVBox, Spacer.fillVBox());
