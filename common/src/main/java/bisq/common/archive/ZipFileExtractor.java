@@ -17,21 +17,20 @@
 
 package bisq.common.archive;
 
-import bisq.common.file.FileUtils;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class ZipFileExtractor implements AutoCloseable {
 
     private final InputStream zipFileInputStream;
-    private final File destDir;
+    private final Path destDir;
 
-    public ZipFileExtractor(InputStream zipFileInputStream, File destDir) {
+    public ZipFileExtractor(InputStream zipFileInputStream, Path destDir) {
         this.zipFileInputStream = zipFileInputStream;
         this.destDir = destDir;
     }
@@ -46,9 +45,9 @@ public class ZipFileExtractor implements AutoCloseable {
         zipFileInputStream.close();
     }
 
-    private void createDirIfNotPresent(File destDir) {
+    private void createDirIfNotPresent(Path destDir) {
         try {
-            FileUtils.makeDirs(destDir);
+            Files.createDirectories(destDir);
         } catch (IOException e) {
             throw new ZipFileExtractionFailedException("Couldn't create directory: " + destDir, e);
         }
@@ -63,7 +62,7 @@ public class ZipFileExtractor implements AutoCloseable {
                 String fileName = zipEntry.getName();
 
                 if (zipEntry.isDirectory()) {
-                    File dirFile = new File(destDir, fileName);
+                    Path dirFile = destDir.resolve(fileName);
                     createDirIfNotPresent(dirFile);
                 } else {
                     writeStreamToFile(buffer, zipInputStream, fileName);
@@ -79,8 +78,8 @@ public class ZipFileExtractor implements AutoCloseable {
     }
 
     private void writeStreamToFile(byte[] buffer, InputStream inputStream, String fileName) {
-        File destFile = new File(destDir, fileName);
-        try (FileOutputStream outputStream = new FileOutputStream(destFile)) {
+        Path destFile = destDir.resolve(fileName);
+        try (OutputStream outputStream = Files.newOutputStream(destFile)) {
             int length;
             while ((length = inputStream.read(buffer)) > 0) {
                 outputStream.write(buffer, 0, length);

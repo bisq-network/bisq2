@@ -29,6 +29,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +56,7 @@ public class WebcamProcessLauncher {
                 if (!jarFile.exists() || DevMode.isDevMode()) {
                     String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    File destDir = new File(webcamDir);
+                    Path destDir = Path.of(webcamDir);
                     ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
                     zipFileExtractor.extractArchive();
                     log.info("Extracted zip file {} to {}", resourcePath, webcamDir);
@@ -68,8 +70,8 @@ public class WebcamProcessLauncher {
                 ProcessBuilder processBuilder;
                 if (OS.isMacOs()) {
                     String iconPath = webcamDir + "/webcam-app-icon.png";
-                    File bisqIcon = new File(iconPath);
-                    if (!bisqIcon.exists()) {
+                    Path bisqIcon = Path.of(iconPath);
+                    if (!Files.exists(bisqIcon)) {
                         FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;

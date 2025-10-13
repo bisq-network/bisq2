@@ -19,22 +19,13 @@ package bisq.common.file;
 
 import bisq.common.jvm.DeleteOnExitHook;
 import bisq.common.observable.Observable;
-import bisq.common.platform.OS;
-import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -45,11 +36,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
@@ -64,32 +55,13 @@ import java.util.stream.Stream;
 public class FileUtils {
     public static final String FILE_SEP = File.separator;
 
-    public static void write(String fileName, String data) throws IOException {
-        write(fileName, data.getBytes(Charsets.UTF_8));
+    public static String readUTF8String(Path path) throws IOException {
+        return Files.readString(path, StandardCharsets.UTF_8);
     }
 
-    public static void write(String fileName, byte[] data) throws IOException {
-        try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
-            outputStream.write(data);
-        }
+    public static void writeUTF8String(Path path, String content) throws IOException {
+        Files.writeString(path, content, StandardCharsets.UTF_8);
     }
-
-    public static byte[] read(String fileName) throws IOException {
-        return Files.readAllBytes(Paths.get(fileName));
-    }
-
-    public static byte[] read(File file) throws IOException {
-        return Files.readAllBytes(file.toPath());
-    }
-
-    public static String readAsString(String fileName) throws IOException {
-        return new String(read(fileName), Charsets.UTF_8);
-    }
-
-    public static String readAsString(File file) throws IOException {
-        return new String(read(file), Charsets.UTF_8);
-    }
-
 
     /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
@@ -98,120 +70,91 @@ public class FileUtils {
      * We added our own extended DeleteOnExitHook where we added a remove method. The client is responsible to call that
      * `remove` method via `releaseTempFile` once the file should be deleted.
      *
-     * @param file The file to add a shutdown hook for delete on exit
+     * @param path The path to add a shutdown hook for delete on exit
      */
-    public static void deleteOnExit(File file) {
+    public static void deleteOnExit(Path path) {
         if (!DeleteOnExitHook.isShutdownInProgress()) {
-            DeleteOnExitHook.add(file.getPath());
+            DeleteOnExitHook.add(path.toString());
         }
     }
 
     /**
-     * @param file The file to delete and to get removed from the `DeleteOnExitHook`.
+     * @param path The path to delete and to get removed from the `DeleteOnExitHook`.
      */
-    public static void releaseTempFile(File file) throws IOException {
+    public static void releaseTempFile(Path path) throws IOException {
         if (!DeleteOnExitHook.isShutdownInProgress()) {
-            DeleteOnExitHook.remove(file.getPath());
+            DeleteOnExitHook.remove(path.toString());
         }
-        deleteFile(file);
+        Files.deleteIfExists(path);
     }
 
-    public static void deleteFileOrDirectory(String dirPath) throws IOException {
-        deleteFileOrDirectory(new File(dirPath));
-    }
-
+    /**
+     * Recursively delete a file or directory. If the path does not exist, do nothing.
+     *
+     * @param path The path to delete
+     * @throws IOException if an I/O error occurs
+     */
     public static void deleteFileOrDirectory(Path path) throws IOException {
-        deleteFileOrDirectory(path.toFile());
-    }
-
-    public static void deleteFileOrDirectory(File dir) throws IOException {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                deleteFileOrDirectory(file);
+        if (Files.exists(path)) {
+            // Use try-with-resources to ensure the walk stream is closed
+            try (var stream = Files.walk(path)) {
+                stream.sorted(Comparator.reverseOrder()) // delete children before parents
+                        .forEach(p -> {
+                            try {
+                                Files.delete(p);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Failed to delete: " + p, e);
+                            }
+                        });
             }
         }
-        if (dir.exists()) {
-            Files.delete(dir.toPath());
-        }
     }
 
     /**
-     * Deletes a file if it exists. On some operating systems it may not be possible
-     * to remove a file when it is open and in use by this Java virtual machine or other programs
-     *
-     * @see Files#deleteIfExists
-     */
-    public static boolean deleteFile(File file) throws IOException {
-        return Files.deleteIfExists(file.toPath());
-    }
-
-    /**
-     * <b>Blocking</b>; delete file and wait until it no longer exists, polling every 50ms.
+     * <b>Blocking</b>; delete path and wait until it no longer exists, polling every 50ms.
      *
      * @throws InterruptedException if the thread is interrupted while waiting.
      */
-    public static void deleteFileAndWait(File file, long timeoutMillis) throws IOException, InterruptedException {
-        deleteFile(file);
+    public static void deleteFileAndWait(Path path, long timeoutMillis) throws IOException, InterruptedException {
+        Files.deleteIfExists(path);
         long start = System.currentTimeMillis();
-        while (file.exists()) {
+        while (Files.exists(path)) {
             if (System.currentTimeMillis() - start > timeoutMillis) {
-                throw new IOException("Failed to delete file within timeout: " + file.getAbsolutePath());
+                throw new IOException("Failed to delete file within timeout: " + path.toAbsolutePath());
             }
             Thread.sleep(50);
         }
     }
 
     /**
-     * <b>Blocking</b>; Waits until the specified file exists, polling every 100ms up to the given timeout.
+     * <b>Blocking</b>; Waits until the specified path exists, polling every 100ms up to the given timeout.
      *
      * @throws InterruptedException if the thread is interrupted while waiting.
      */
-    public static void waitUntilFileExists(File file,
+    public static void waitUntilFileExists(Path path,
                                            long timeoutMillis) throws InterruptedException, TimeoutException {
         long start = System.currentTimeMillis();
-        while (!file.exists()) {
+        while (!Files.exists(path)) {
             if (System.currentTimeMillis() - start > timeoutMillis) {
-                throw new TimeoutException("File did not exist after " + timeoutMillis + " ms: " + file.getAbsolutePath());
+                throw new TimeoutException("File did not exist after " + timeoutMillis + " ms: " + path.toAbsolutePath());
             }
             Thread.sleep(100);
         }
     }
 
-    public static void makeDirIfNotExists(File dir) throws IOException {
-        makeDirIfNotExists(dir.toPath());
-    }
-
-    public static void makeDirIfNotExists(Path dirPath) throws IOException {
-        makeDirIfNotExists(dirPath.toString());
-    }
-
-    public static void makeDirIfNotExists(String dirName) throws IOException {
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new IOException("Cannot create directory " + dir.getAbsolutePath());
-            }
-        }
-    }
-
+    /**
+     * Create a temporary directory that is automatically deleted on JVM exit.
+     *
+     * @return The path to the created temporary directory
+     * @throws IOException if an I/O error occurs
+     */
     public static Path createTempDir() throws IOException {
         Path tempDirPath = Files.createTempDirectory(null);
         recursiveDeleteOnShutdownHook(tempDirPath);
         return tempDirPath;
     }
 
-    public static Set<String> listFilesInDirectory(String directory, int depth) throws IOException {
-        try (Stream<Path> stream = Files.walk(Paths.get(directory), depth)) {
-            return stream
-                    .filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .map(Path::toString)
-                    .collect(Collectors.toSet());
-        }
-    }
-
-    public static void recursiveDeleteOnShutdownHook(Path path) {
+    private static void recursiveDeleteOnShutdownHook(Path path) {
         Runtime.getRuntime().addShutdownHook(new Thread(
                 () -> {
                     Thread.currentThread().setName("ShutdownHook.recursiveDelete");
@@ -242,46 +185,46 @@ public class FileUtils {
                 }));
     }
 
-    public static void makeDirs(Path dirPath) throws IOException {
-        makeDirs(dirPath.toFile());
-    }
-
-    public static void makeDirs(String dirPath) throws IOException {
-        makeDirs(new File(dirPath));
-    }
-
-    public static void makeDirs(File dir) throws IOException {
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Could not make dir " + dir);
+    /**
+     * List all files (not directories) in the given directory up to the specified depth.
+     *
+     * @param directory The directory to list files from
+     * @param depth     The maximum depth to traverse
+     * @return A set of file names (not paths) in the directory
+     * @throws IOException if an I/O error occurs
+     */
+    public static Set<String> listFilesInDirectory(Path directory, int depth) throws IOException {
+        try (Stream<Path> stream = Files.walk(directory, depth)) {
+            return stream
+                    .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
         }
     }
 
-    public static void makeFile(File file) throws IOException {
-        if (!file.exists() && !file.createNewFile()) {
-            throw new IOException("Could not make file " + file);
-        }
-    }
-
-    public static void writeToFile(String string, File file) throws IOException {
-        try (FileWriter fileWriter = new FileWriter(file.getAbsolutePath())) {
-            fileWriter.write(string);
+    /**
+     * Write the given content to the specified file, creating the file if it does not exist.
+     * Uses the platform default charset.
+     *
+     * @param content The content to write
+     * @param path    The path to the file
+     * @throws IOException if an I/O error occurs
+     */
+    public static void writeToFile(String content, Path path) throws IOException {
+        try {
+            Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
         } catch (IOException e) {
-            log.warn("Could not write {} to file {}", string, file);
+            log.warn("Could not write to file {}", path);
             throw e;
         }
     }
 
-    public static Optional<String> readFromFileIfPresent(File file) {
+    public static Optional<String> readFromFileIfPresent(Path path) {
         try {
-            return Optional.of(readStringFromFile(file));
+            return Optional.of(Files.readString(path));
         } catch (IOException e) {
             return Optional.empty();
-        }
-    }
-
-    public static String readStringFromFile(File file) throws IOException {
-        try (Scanner scanner = new Scanner(file)) {
-            return readFromScanner(scanner);
         }
     }
 
@@ -310,67 +253,19 @@ public class FileUtils {
         return resource;
     }
 
-    public static void resourceToFile(String resourceName, File outputFile) throws IOException {
+    public static void resourceToFile(String resourceName, Path outputPath) throws IOException {
         try (InputStream resource = getResourceAsStream(resourceName)) {
-            if (outputFile.exists() && !outputFile.delete()) {
-                throw new IOException("Could not remove existing outputFile " + outputFile.getPath());
-            }
-            OutputStream out = new FileOutputStream(outputFile);
-            copy(resource, out);
+            Files.deleteIfExists(outputPath);
+            Files.copy(resource, outputPath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
-    public static void copyFile(File source, File destination) throws IOException {
-        try (InputStream inputStream = new FileInputStream(source);
-             OutputStream outputStream = new FileOutputStream(destination)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-        }
-    }
-
-    public static void appendFromResource(PrintWriter printWriter, String pathname) {
-        try (InputStream inputStream = FileUtils.class.getResourceAsStream(pathname);
-             BufferedReader bufferedReader = new BufferedReader(
-                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                printWriter.println(line);
-            }
-        } catch (Exception e) {
-            log.error("Error at appendFromResource with pathname {}", pathname);
-            log.error(e.toString(), e);
-        }
-    }
-
-    public static byte[] asBytes(File file) throws IOException {
-        byte[] bytes = new byte[(int) file.length()];
-        try (FileInputStream inputStream = new FileInputStream(file)) {
-            int offset = 0;
-            while (offset < bytes.length) {
-                int read = inputStream.read(bytes, offset, bytes.length - offset);
-                if (read == -1) throw new EOFException();
-                offset += read;
-            }
-            return bytes;
-        }
+    public static void copyFile(Path source, Path destination) throws IOException {
+        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
     }
 
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
-        try (outputStream) {
-            byte[] buffer = new byte[4096];
-            while (true) {
-                int read = inputStream.read(buffer);
-                if (read == -1) break;
-                outputStream.write(buffer, 0, read);
-            }
-        }
-    }
-
-    public static Set<String> listFiles(String dirPath) {
-        return listFiles(Paths.get(dirPath));
+        inputStream.transferTo(outputStream);
     }
 
     public static Set<String> listFiles(Path dirPath) {
@@ -389,10 +284,6 @@ public class FileUtils {
         }
     }
 
-    public static Set<String> listDirectories(String dirPath) {
-        return listDirectories(Paths.get(dirPath));
-    }
-
     public static Set<String> listDirectories(Path dirPath) {
         if (!dirPath.toFile().exists()) {
             return new HashSet<>();
@@ -409,64 +300,61 @@ public class FileUtils {
         }
     }
 
-    public static File createNewFile(Path path) throws IOException {
-        File file = path.toFile();
-        if (!file.createNewFile()) {
-            throw new IOException("File with path exists already: " + path);
+    /**
+     * Rename (move) a file from oldPath to newPath. If newPath exists, it will be replaced.
+     *
+     * @param oldPath The current path of the file
+     * @param newPath The new path of the file
+     * @return true if the file was successfully renamed, false otherwise
+     */
+    public static boolean renameFile(Path oldPath, Path newPath) {
+        try {
+            Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (IOException e) {
+            log.error("Failed to rename {} to {}", oldPath, newPath, e);
+            return false;
         }
-        return file;
     }
 
-    public static boolean renameFile(File oldFile, File newFile) throws IOException {
-        File target = newFile;
-        if (OS.isWindows()) {
-            // Work around an issue on Windows whereby you can't rename over existing files.
-            target = newFile.getCanonicalFile();
-            if (target.exists() && !target.delete()) {
-                throw new IOException("Failed to delete canonical file for replacement with save");
-            }
-        }
-
-        return oldFile.renameTo(target);
-    }
-
-    public static void backupCorruptedFile(String directory, File storageFile, String fileName, String backupFolderName)
+    public static void backupCorruptedFile(String directory, Path storageFile, String fileName, String backupFolderName)
             throws IOException {
-        if (storageFile.exists()) {
-            File corruptedBackupDir = new File(Paths.get(directory, backupFolderName).toString());
-            makeDirs(corruptedBackupDir);
+        if (Files.exists(storageFile)) {
+            Path corruptedBackupDir = Path.of(directory, backupFolderName);
+            Files.createDirectories(corruptedBackupDir);
             String timestamp = String.valueOf(System.currentTimeMillis());
             String newFileName = fileName + "_at_" + timestamp;
-            File target = new File(Paths.get(directory, backupFolderName, newFileName).toString());
-            renameFile(storageFile, target);
+            Path target = Path.of(directory, backupFolderName, newFileName);
+            Files.move(storageFile, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
     public static HttpURLConnection downloadFile(URL url,
-                                                 File destination,
+                                                 Path destination,
                                                  Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         int fileSize;
-        try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
-             FileOutputStream outputStream = new FileOutputStream(destination)) {
+        try {
             connection.connect();
-            // If server does not provide contentLength it is -1
-            fileSize = connection.getContentLength();
-            double totalReadBytes = 0d;
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-                if (fileSize != -1) {
-                    totalReadBytes += bytesRead;
-                    progress.set(totalReadBytes / fileSize);
+            try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
+                 OutputStream outputStream = Files.newOutputStream(destination)) {
+                // If server does not provide contentLength it is -1
+                fileSize = connection.getContentLength();
+                double totalReadBytes = 0d;
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    if (fileSize != -1) {
+                        totalReadBytes += bytesRead;
+                        progress.set(totalReadBytes / fileSize);
+                    }
+                }
+                if (fileSize == -1) {
+                    progress.set(1d);
                 }
             }
-            if (fileSize == -1) {
-                progress.set(1d);
-            }
         } finally {
-
             connection.disconnect();
         }
         return connection;
@@ -474,10 +362,6 @@ public class FileUtils {
 
     public static boolean hasResourceFile(String fileName) {
         return FileUtils.class.getClassLoader().getResource(fileName) != null;
-    }
-
-    public static void copyDirectory(String sourceDirectory, String destinationDirectory) throws IOException {
-        copyDirectory(sourceDirectory, destinationDirectory, Collections.emptySet());
     }
 
     public static void copyDirectory(String sourceDirectory,
@@ -524,14 +408,14 @@ public class FileUtils {
         }
         String protocol = dirURL.getProtocol();
         if ("file".equals(protocol)) {
-            File dir = new File(dirURL.toURI());
-            if (!dir.isDirectory()) {
+            Path dir = Path.of(dirURL.toURI());
+            if (!Files.isDirectory(dir)) {
                 throw new IOException("Resource path is not a directory: " + dir);
             }
-            try (Stream<Path> stream = Files.walk(dir.toPath())) {
+            try (Stream<Path> stream = Files.walk(dir)) {
                 return stream
                         .filter(Files::isRegularFile)
-                        .map(path -> dir.toPath().relativize(path).toString().replace(File.separatorChar, '/'))
+                        .map(path -> dir.relativize(path).toString().replace(File.separatorChar, '/'))
                         .collect(Collectors.toSet());
             }
         } else if ("jar".equals(protocol)) {
@@ -560,7 +444,7 @@ public class FileUtils {
     }
 
     public static void copyResourceDirectory(String resourceDir,
-                                             Path i2pDirPath) throws IOException, URISyntaxException {
+                                             Path path) throws IOException, URISyntaxException {
         // Resource paths always use forward slashes on all OS.
         String normalized = resourceDir.replace('\\', '/');
         if (!normalized.endsWith("/")) {
@@ -569,9 +453,9 @@ public class FileUtils {
         Set<String> resources = listResources(normalized);
         for (String resourceFile : resources) {
             String resourcePath = normalized + resourceFile; // classpath uses '/'
-            File targetFile = i2pDirPath.resolve(resourceFile).toFile(); // preserve relative layout
+            Path targetFile = path.resolve(resourceFile); // preserve relative layout
             try {
-                Path parent = targetFile.toPath().getParent();
+                Path parent = targetFile.getParent();
                 if (parent != null) {
                     Files.createDirectories(parent);
                 }

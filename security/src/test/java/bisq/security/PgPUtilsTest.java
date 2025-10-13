@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SignatureException;
@@ -38,12 +39,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PgPUtilsTest {
     @BeforeEach
     void setUp() throws IOException {
-        FileUtils.makeDirs(Path.of("temp").toFile());
+        Files.createDirectories(Path.of("temp"));
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        FileUtils.deleteFileOrDirectory(Path.of("temp").toFile());
+        FileUtils.deleteFileOrDirectory(Path.of("temp"));
     }
 
     @Test

@@ -22,7 +22,6 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.asset.FiatCurrencyRepository;
-import bisq.common.file.FileUtils;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
@@ -39,6 +38,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -153,7 +153,7 @@ public abstract class ApplicationService implements Service {
                 ? Path.of(rootConfig.getString("application.baseDir"))
                 : userDataDir.resolve(appName);
         try {
-            FileUtils.makeDirs(baseDir.toFile());
+            Files.createDirectories(baseDir);
         } catch (IOException e) {
             log.error("Could not create data directory {}", baseDir, e);
             throw new RuntimeException(e);

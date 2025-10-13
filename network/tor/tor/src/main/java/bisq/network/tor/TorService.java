@@ -46,6 +46,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -145,7 +146,7 @@ public class TorService implements Service {
         Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         Path controlPortFilePath = controlDirPath.resolve("control");
         try {
-            FileUtils.deleteFileAndWait(controlPortFilePath.toFile(), 5000);
+            FileUtils.deleteFileAndWait(controlPortFilePath, 5000);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete tor control port file", e);
         }
@@ -156,14 +157,14 @@ public class TorService implements Service {
         embeddedTorProcess.start();
 
         try {
-            FileUtils.waitUntilFileExists(controlPortFilePath.toFile(), 5000);
+            FileUtils.waitUntilFileExists(controlPortFilePath, 5000);
         } catch (Exception e) {
             throw new RuntimeException("Error while waiting for tor control port file to exist", e);
         }
 
         int controlPort = ControlPortFileParser.parse(controlPortFilePath);
 
-        FileUtils.deleteOnExit(controlPortFilePath.toFile());
+        FileUtils.deleteOnExit(controlPortFilePath);
 
         torController.initialize(controlPort);
         torController.authenticate(hashedControlPassword);
@@ -314,7 +315,7 @@ public class TorService implements Service {
             if (torConfigMap.containsKey(COOKIE_AUTH_FILE)) {
                 String authCookiePath = torConfigMap.get(COOKIE_AUTH_FILE);
                 try {
-                    byte[] authCookie = FileUtils.read(authCookiePath);
+                    byte[] authCookie = Files.readAllBytes(Path.of(authCookiePath));
                     torController.authenticate(authCookie);
                     isAuthenticated = true;
                 } catch (TorControlAuthenticationFailed e) {
@@ -367,13 +368,13 @@ public class TorService implements Service {
     private void readExternalTorConfigMap() {
         try {
             String torConfigFileName = "external_tor.config";
-            File torConfigFile = transportConfig.getDataDir().resolve(torConfigFileName).toFile();
+            Path torConfigFilePath = transportConfig.getDataDir().resolve(torConfigFileName);
             String torConfig;
-            if (!torConfigFile.exists()) {
+            if (!Files.exists(torConfigFilePath)) {
                 torConfig = FileUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileUtils.writeToFile(torConfig, torConfigFile);
+                FileUtils.writeToFile(torConfig, torConfigFilePath);
             } else {
-                torConfig = FileUtils.readAsString(torConfigFile);
+                torConfig = FileUtils.readUTF8String(torConfigFilePath);
             }
             Set<String> lines = torConfig.lines().collect(Collectors.toSet());
             for (String line : lines) {
@@ -406,7 +407,7 @@ public class TorService implements Service {
     private void makeTorDir() {
         try {
             Path torDataDirPath = transportConfig.getDataDir();
-            FileUtils.makeDirs(torDataDirPath.toFile());
+            Files.createDirectories(torDataDirPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

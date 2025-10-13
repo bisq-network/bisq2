@@ -19,22 +19,23 @@ package bisq.network.i2p.router.utils;
 
 import bisq.common.file.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class RouterCertificateUtil {
-    public static void copyCertificatesFromResources(File i2pDir) throws IOException, URISyntaxException {
-        File certDir = createDirectory(i2pDir, "certificates");
-        File seedDir = createDirectory(certDir, "reseed");
-        File sslDir = createDirectory(certDir, "ssl");
-        FileUtils.copyResourceDirectory("certificates/reseed/", seedDir.toPath());
-        FileUtils.copyResourceDirectory("certificates/ssl/", sslDir.toPath());
+    public static void copyCertificatesFromResources(Path i2pDir) throws IOException, URISyntaxException {
+        Path certDir = createDirectory(i2pDir, "certificates");
+        Path seedDir = createDirectory(certDir, "reseed");
+        Path sslDir = createDirectory(certDir, "ssl");
+        FileUtils.copyResourceDirectory("certificates/reseed/", seedDir);
+        FileUtils.copyResourceDirectory("certificates/ssl/", sslDir);
     }
 
-    private static File createDirectory(File parent, String child) throws IOException {
-        File dir = new File(parent, child);
-        FileUtils.makeDirIfNotExists(dir);
+    private static Path createDirectory(Path parent, String child) throws IOException {
+        Path dir = parent.resolve(child);
+        Files.createDirectories(dir);
         return dir;
     }
 }

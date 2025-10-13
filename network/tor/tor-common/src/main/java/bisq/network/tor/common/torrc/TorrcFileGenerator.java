@@ -56,7 +56,7 @@ public class TorrcFileGenerator {
 
 
         try {
-            FileUtils.writeToFile(torrcStringBuilder.toString(), torrcPath.toFile());
+            FileUtils.writeToFile(torrcStringBuilder.toString(), torrcPath);
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create torrc file: " + torrcPath.toAbsolutePath());
         }
