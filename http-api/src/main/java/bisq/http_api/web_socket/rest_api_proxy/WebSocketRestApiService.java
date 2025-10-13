@@ -18,6 +18,7 @@
 package bisq.http_api.web_socket.rest_api_proxy;
 
 import bisq.common.application.Service;
+import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.Response;
@@ -41,11 +42,15 @@ import java.util.concurrent.CompletableFuture;
 public class WebSocketRestApiService implements Service {
     private final ObjectMapper objectMapper;
     private final String restApiAddress;
+    private final WebSocketRequestValidator requestValidator;
     private Optional<HttpClient> httpClient = Optional.empty();
 
-    public WebSocketRestApiService(ObjectMapper objectMapper, String restApiAddress) {
+    public WebSocketRestApiService(ObjectMapper objectMapper,
+                                   String restApiAddress,
+                                   WebSocketRequestValidator requestValidator) {
         this.objectMapper = objectMapper;
         this.restApiAddress = restApiAddress;
+        this.requestValidator = requestValidator;
     }
 
     @Override
@@ -74,7 +79,7 @@ public class WebSocketRestApiService implements Service {
     }
 
     private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
-        String errorMessage = RequestValidation.validateRequest(request);
+        String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
             return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.BAD_REQUEST.getStatusCode(), errorMessage);
@@ -94,7 +99,7 @@ public class WebSocketRestApiService implements Service {
             // Blocking send
             HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
             log.info("httpResponse {}", httpResponse);
-            return new WebSocketRestApiResponse( request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
+            return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
             errorMessage = String.format("Error at sending a '%s' request to '%s' with body: '%s'. Error: %s", method, url, body, e.getMessage());
             log.error(errorMessage, e);
