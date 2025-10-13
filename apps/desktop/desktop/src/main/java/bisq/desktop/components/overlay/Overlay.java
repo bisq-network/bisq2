@@ -83,14 +83,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,14 +103,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected final static double DEFAULT_WIDTH = 668;
 
     public static Region primaryStageOwner;
-    private static String baseDir;
+    private static Path baseDir;
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
     private static DontShowAgainService dontShowAgainService;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
-        Overlay.baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
+        Overlay.baseDir = serviceProvider.getConfig().getBaseDir();
         Overlay.settingsService = serviceProvider.getSettingsService();
         Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
         Overlay.dontShowAgainService = serviceProvider.getDontShowAgainService();
@@ -973,7 +971,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private void addReportErrorButtons() {
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        logButton.setOnAction(event -> PlatformUtils.open(new File(baseDir, "bisq.log")));
+        logButton.setOnAction(event -> PlatformUtils.open(baseDir.resolve("bisq.log")));
 
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
         zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
@@ -991,23 +989,22 @@ public abstract class Overlay<T extends Overlay<T>> {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    String zipDirectory = directory.getAbsolutePath();
-                    URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                    URI uri = URI.create("jar:file:" + directory.resolve("bisq2-logs.zip").toUri().getRawPath());
                     Map<String, String> env = Map.of("create", "true");
                     List<Path> logPaths = Arrays.asList(
-                            Path.of(baseDir).resolve("bisq.log"),
+                            baseDir.resolve("bisq.log"),
                             debugLogForZipFile);
                     try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
                         logPaths.forEach(logPath -> {
-                            if (logPath.toFile().isFile()) {
+                            if (Files.isRegularFile(logPath)) {
                                 try {
-                                    Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                    Files.copy(logPath, zipFileSystem.getPath(logPath.getFileName().toString()), StandardCopyOption.REPLACE_EXISTING);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
                             }
                         });
-                        PlatformUtils.open(zipDirectory);
+                        PlatformUtils.open(directory);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

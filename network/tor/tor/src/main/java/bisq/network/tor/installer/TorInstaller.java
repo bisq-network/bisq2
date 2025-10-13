@@ -27,10 +27,12 @@ import java.nio.file.Path;
 @Slf4j
 public class TorInstaller {
     private static final String VERSION = "0.1.0";
-    private final TorInstallationFiles torInstallationFiles;
+    private final Path torDir;
+    private final Path versionFile;
 
     public TorInstaller(Path torDataDirPath) {
-        this.torInstallationFiles = new TorInstallationFiles(torDataDirPath);
+        this.torDir = torDataDirPath;
+        this.versionFile = torDir.resolve("version");
     }
 
     public void installIfNotUpToDate() {
@@ -44,7 +46,6 @@ public class TorInstaller {
     }
 
     public void deleteVersionFile() {
-        Path versionFile = torInstallationFiles.getVersionFile();
         try {
             Files.deleteIfExists(versionFile);
             log.debug("Deleted {}", versionFile.toAbsolutePath());
@@ -54,20 +55,17 @@ public class TorInstaller {
     }
 
     private boolean isTorUpToDate() throws IOException {
-        Path versionFile = torInstallationFiles.getVersionFile();
         return Files.exists(versionFile) && VERSION.equals(Files.readString(versionFile));
     }
 
     private void install() throws IOException {
         try {
-            Path destDir = torInstallationFiles.getTorDir();
-            new TorBinaryZipExtractor(destDir).extractBinary();
-            log.info("Tor files installed to {}", destDir.toAbsolutePath());
+            new TorBinaryZipExtractor(torDir).extractBinary();
+            log.info("Tor files installed to {}", torDir.toAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            Path versionFile = torInstallationFiles.getVersionFile();
             FileUtils.writeToFile(VERSION, versionFile);
-        } catch (Throwable e) {
+        } catch (IOException e) {
             deleteVersionFile();
             throw e;
         }

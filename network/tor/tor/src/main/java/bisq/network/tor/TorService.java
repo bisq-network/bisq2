@@ -39,7 +39,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -124,12 +123,11 @@ public class TorService implements Service {
 
         Path torBinaryPath = getTorBinaryPath();
         if (!isTorRunning(torBinaryPath.toString())) {
-            File lockFile = torDataDirPath.resolve("lock").toFile();
-            if (lockFile.exists()) {
-                boolean isSuccess = lockFile.delete();
-                if (!isSuccess) {
-                    throw new IllegalStateException("Couldn't remove tor lock file.");
-                }
+            Path lockFile = torDataDirPath.resolve("lock");
+            try {
+                Files.deleteIfExists(lockFile);
+            } catch (IOException e) {
+                throw new IllegalStateException("Couldn't remove tor lock file.", e);
             }
         }
 
@@ -150,7 +148,6 @@ public class TorService implements Service {
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete tor control port file", e);
         }
-
 
         var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
         torProcess = Optional.of(embeddedTorProcess);

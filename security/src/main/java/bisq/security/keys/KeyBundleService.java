@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.Objects;
 import java.util.Optional;
@@ -116,10 +115,10 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
 
         persistableStore = new KeyBundleStore(keyStoreSecretUid);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-        String baseDir = persistenceService.getBaseDir();
-        defaultKeyStoragePath = Paths.get(baseDir, "db", "private", "key");
-        torStoragePath = Paths.get(baseDir, "db", "private", "tor");
-        i2pStoragePath = Paths.get(baseDir, "db", "private", "i2p");
+        Path baseDir = persistenceService.getBaseDir();
+        defaultKeyStoragePath = baseDir.resolve("db").resolve("private").resolve("key");
+        torStoragePath = baseDir.resolve("db").resolve("private").resolve("tor");
+        i2pStoragePath = baseDir.resolve("db").resolve("private").resolve("i2p");
 
         if (defaultPrivateKey.isPresent()) {
             log.warn("defaultPrivateKey is provided via the config and will replace the persisted key");

@@ -19,11 +19,10 @@ package bisq.common.platform;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,11 +33,11 @@ public class PlatformUtils {
 
     public static Path getUserDataDir() {
         if (OS.isWindows()) {
-            return Paths.get(System.getenv("APPDATA"));
+            return Path.of(System.getenv("APPDATA"));
         }
 
         if (OS.isMacOs()) {
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
+            return Path.of(System.getProperty("user.home"), "Library", "Application Support");
         }
 
         if (OS.isAndroid()) {
@@ -47,7 +46,7 @@ public class PlatformUtils {
         }
 
         // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share");
+        return Path.of(System.getProperty("user.home"), ".local", "share");
     }
 
     public static int availableProcessors() {
@@ -85,11 +84,11 @@ public class PlatformUtils {
         return open(url);
     }
 
-    public static boolean open(File file) {
-        return open(file.getPath());
+    public static boolean open(Path path) {
+        return open(path.toString());
     }
 
-    public static boolean open(String target) {
+    private static boolean open(String target) {
         if (OS.isLinux()) {
             if (runCommand("kde-open", "%s", target)) return true;
             if (runCommand("gnome-open", "%s", target)) return true;
@@ -144,16 +143,17 @@ public class PlatformUtils {
         return parts.toArray(new String[0]);
     }
 
-    public static String getDownloadOfHomeDir() {
-        File file = new File(getHomeDirectory() + "/Downloads");
-        if (file.exists()) {
-            return file.getAbsolutePath();
+    public static Path getDownloadOfHomeDir() {
+        Path homeDirectory = getHomeDirectory();
+        Path path = homeDirectory.resolve("Downloads");
+        if (Files.exists(path)) {
+            return path;
         } else {
-            return getHomeDirectory();
+            return homeDirectory;
         }
     }
 
-    public static String getHomeDirectory() {
-        return OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+    public static Path getHomeDirectory() {
+        return Path.of(OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home"));
     }
 }

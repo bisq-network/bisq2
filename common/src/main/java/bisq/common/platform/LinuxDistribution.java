@@ -19,7 +19,8 @@ package bisq.common.platform;
 
 import lombok.Getter;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public enum LinuxDistribution {
     DEBIAN("debian"),
@@ -34,16 +35,17 @@ public enum LinuxDistribution {
     }
 
     public static boolean isDebian() {
-        return OS.isLinux() && new File("/etc/debian_version").isFile();
+        return OS.isLinux() && Files.isRegularFile(Path.of("/etc/debian_version"));
     }
 
     public static boolean isRedHat() {
-        return OS.isLinux() && new File("/etc/redhat-release").isFile();
+        return OS.isLinux() && Files.isRegularFile(Path.of("/etc/redhat-release"));
     }
 
     public static boolean isWhonix() {
-        return OS.isLinux() && new File("/usr/share/whonix/marker").isFile() &&
-                new File("/usr/share/anon-dist/marker").isFile();
+        return OS.isLinux() &&
+                Files.isRegularFile(Path.of("/usr/share/whonix/marker")) &&
+                Files.isRegularFile(Path.of("/usr/share/anon-dist/marker"));
     }
 }
 

@@ -36,9 +36,9 @@ import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
@@ -48,14 +48,14 @@ public class ResourcesController implements Controller {
     @Getter
     private final ResourcesView view;
     private final ResourcesModel model;
-    private final String baseDir;
+    private final Path baseDir;
     private final String appName;
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
     private Pin backupLocationPin;
 
     public ResourcesController(ServiceProvider serviceProvider) {
-        baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
+        baseDir = serviceProvider.getConfig().getBaseDir();
         appName = serviceProvider.getConfig().getAppName();
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
@@ -81,11 +81,11 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenLogFile() {
-        PlatformUtils.open(Paths.get(baseDir, "bisq.log").toFile());
+        PlatformUtils.open(baseDir.resolve("bisq.log"));
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(Paths.get(baseDir, "tor", "debug.log").toFile());
+        PlatformUtils.open(baseDir.resolve("tor").resolve("debug.log"));
     }
 
     void onOpenDataDir() {
@@ -93,13 +93,13 @@ public class ResourcesController implements Controller {
     }
 
     void onSetBackupLocation() {
-        String path = model.getBackupLocation().get();
-        if (StringUtils.isEmpty(path)) {
-            path = PlatformUtils.getHomeDirectory();
-        }
+        String backupLocation = model.getBackupLocation().get();
+        Path path = StringUtils.isEmpty(backupLocation)
+                ? PlatformUtils.getHomeDirectory()
+                : Path.of(backupLocation);
         String title = Res.get("support.resources.backup.selectLocation");
         FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
-                .ifPresent(directory -> model.getBackupLocation().set(directory.getAbsolutePath()));
+                .ifPresent(directory -> model.getBackupLocation().set(directory.toAbsolutePath().toString()));
     }
 
     void onBackup() {
@@ -112,8 +112,8 @@ public class ResourcesController implements Controller {
                     if (throwable == null) {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destinationDirName = appName + "_backup_" + dateString;
-                        String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
-                        if (!new File(model.getBackupLocation().get()).exists()) {
+                        Path destination = Path.of(model.getBackupLocation().get(), destinationDirName);
+                        if (!Files.exists(Path.of(model.getBackupLocation().get()))) {
                             new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
                             return;
                         }

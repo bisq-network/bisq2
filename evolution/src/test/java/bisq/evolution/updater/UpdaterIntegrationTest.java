@@ -56,6 +56,9 @@ public class UpdaterIntegrationTest {
 
     @AfterEach
     void tearDown() throws IOException {
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
         if (Files.exists(destinationBaseDir)) {
             FileUtils.deleteFileOrDirectory(destinationBaseDir);
         }
@@ -63,7 +66,7 @@ public class UpdaterIntegrationTest {
 
     // @Test
     public void downloadAndVerifyLauncher() {
-        String baseDir = destinationBaseDir.toAbsolutePath().toString();
+        Path baseDir = destinationBaseDir;
         String version = "1.9.9";
         Path sourceDirectory = srcBaseDir.resolve(version);
         Path destinationDirectory = destinationBaseDir.resolve(UPDATES_DIR).resolve(version);
@@ -74,9 +77,9 @@ public class UpdaterIntegrationTest {
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
             Files.createDirectories(destinationDirectory);
-            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory.toString(), downloadFileName, keyIds));
+            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
             simulateDownload(downloadItemList, sourceDirectory.toString(), executorService)
-                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory.toString(), keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
                     .thenCompose(nil -> UpdaterService.writeVersionFile(version, baseDir, executorService))
                     .whenComplete((e, throwable) -> {
                         if (throwable != null) {
@@ -101,7 +104,6 @@ public class UpdaterIntegrationTest {
 
     // @Test
     public void downloadAndVerifyJar() {
-        String baseDir = destinationBaseDir.toAbsolutePath().toString();
         String version = "1.9.10";
         Path sourceDirectory = srcBaseDir.resolve(version);
         Path destinationDirectory = destinationBaseDir.resolve(UPDATES_DIR).resolve(version);
@@ -112,10 +114,10 @@ public class UpdaterIntegrationTest {
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
             Files.createDirectories(destinationDirectory);
-            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory.toString(), downloadFileName, keyIds));
+            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
             simulateDownload(downloadItemList, sourceDirectory.toString(), executorService)
-                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory.toString(), keyIds, ignoreSigningKeyInResourcesCheck, executorService))
-                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, baseDir, executorService))
+                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, destinationBaseDir, executorService))
                     .whenComplete((e, throwable) -> {
                         if (throwable != null) {
                             throwable.printStackTrace();
@@ -128,7 +130,7 @@ public class UpdaterIntegrationTest {
             List<String> filesInDestinationDirectory = FileUtils.listFilesInDirectory(destinationDirectory, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
             assertEquals(filesInSourceDirectory, filesInDestinationDirectory);
 
-            Optional<String> versionFromFile = readVersionFromVersionFile(baseDir);
+            Optional<String> versionFromFile = readVersionFromVersionFile(destinationBaseDir);
             assertTrue(versionFromFile.isPresent());
             assertEquals(version, versionFromFile.get());
         } catch (IOException e) {
@@ -145,7 +147,7 @@ public class UpdaterIntegrationTest {
                 try {
                     FileUtils.copyFile(
                             Path.of(localDevTestSrcDir, downloadItem.getSourceFileName()),
-                            downloadItem.getDestinationFile().toPath());
+                            downloadItem.getDestinationFile());
                     downloadItem.getProgress().set(1d);
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -107,7 +107,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 false,
                 false,
-                PlatformUtils.getHomeDirectory(),
+                PlatformUtils.getHomeDirectory().toAbsolutePath().toString(),
                 false,
                 DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,

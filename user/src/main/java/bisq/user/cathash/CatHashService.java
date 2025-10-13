@@ -24,19 +24,15 @@ import bisq.user.profile.UserProfile;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -67,9 +63,9 @@ public abstract class CatHashService<T> {
 
     protected abstract T composeImage(String[] paths, double size);
 
-    protected abstract void writeRawImage(T image, File iconFile) throws IOException;
+    protected abstract void writeRawImage(T image, Path iconFile) throws IOException;
 
-    protected abstract T readRawImage(File iconFile) throws IOException;
+    protected abstract T readRawImage(Path iconFile) throws IOException;
 
     public T getImage(UserProfile userProfile, double size) {
         return getImage(userProfile.getPubKeyHash(),
@@ -82,7 +78,7 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        Path iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion);
+        Path iconsDir = getCatHashIconsDirectory().resolve("v" + avatarVersion);
         Path iconFile = iconsDir.resolve(userProfileId + ".raw");
 
         // We create the images internally with 2x size for retina resolution
@@ -110,7 +106,7 @@ public abstract class CatHashService<T> {
             // Next approach is to read the image from file
             if (Files.exists(iconFile)) {
                 try {
-                    T image = readRawImage(iconFile.toFile());
+                    T image = readRawImage(iconFile);
                     if (cache.size() < getMaxCacheSize()) {
                         cache.put(catHashInput, image);
                     }
@@ -134,7 +130,7 @@ public abstract class CatHashService<T> {
         if (useCache && cache.size() < getMaxCacheSize()) {
             cache.put(catHashInput, image);
             try {
-                writeRawImage(image, iconFile.toFile());
+                writeRawImage(image, iconFile);
             } catch (IOException e) {
                 log.error("Write image failed", e);
             }
@@ -147,73 +143,81 @@ public abstract class CatHashService<T> {
         if (userProfiles.isEmpty()) {
             return;
         }
-        File iconsDirectory = getCatHashIconsDirectory().toFile();
-        File[] versionDirs = iconsDirectory.listFiles();
-        if (versionDirs == null) {
-            return;
-        }
-        Map<String, List<File>> iconFilesByVersion = Stream.of(versionDirs)
-                .filter(File::isDirectory)
-                .filter(dir -> dir.listFiles() != null)
-                .filter(dir -> {
-                    String name = dir.getName();
-                    if (!name.startsWith("v")) {
-                        log.warn("Version directory in the cat_hash_icons directory not prefixed with 'v' {}", name);
-                        return false;
-                    }
-                    try {
-                        int version = Integer.parseInt(name.replace("v", ""));
-                        boolean contains = BucketConfig.ALL_VERSIONS.contains(version);
-                        if (!contains) {
-                            log.warn("Version string '{}' of the version directory found in the existing versions: {}",
-                                    version, BucketConfig.ALL_VERSIONS);
+        Path iconsDirectory = getCatHashIconsDirectory();
+
+        try (Stream<Path> versionDirStream = Files.list(iconsDirectory)) {
+            Map<String, List<Path>> iconFilesByVersion = versionDirStream
+                    .filter(Files::isDirectory)
+                    .filter(dir -> {
+                        String name = dir.getFileName().toString();
+                        if (!name.startsWith("v")) {
+                            log.warn("Version directory in the cat_hash_icons directory not prefixed with 'v' {}", name);
+                            return false;
                         }
-                        return contains;
-                    } catch (NumberFormatException e) {
-                        log.warn("Version postfix is not an integer in the directory: {}", name, e);
-                        return false;
-                    }
-                })
-                .collect(Collectors.toMap(File::getName,
-                        dir -> Arrays.asList(Objects.requireNonNull(dir.listFiles()))));
-
-        Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
-                .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
-        CompletableFuture.runAsync(() -> {
-            iconFilesByVersion.forEach((versionDir, iconFiles) -> {
-                try {
-                    int version = Integer.parseInt(versionDir
-                            .replace("v", ""));
-                    Set<String> fromDisk = iconFiles.stream()
-                            .map(File::getName)
-                            .collect(Collectors.toSet());
-                    Set<String> fromData = Optional.ofNullable(userProfilesByVersion.get(version))
-                            .map(profiles -> profiles.stream()
-                                    .map(userProfile -> userProfile.getId() + ".raw")
-                                    .collect(Collectors.toSet()))
-                            .orElseGet(Collections::emptySet);
-                    Set<String> toRemove = new HashSet<>(fromDisk);
-                    toRemove.removeAll(fromData);
-
-                    log.info("We remove {} outdated user profile icons (not found in the current user profile list)", toRemove.size());
-                    if (toRemove.size() < 10) {
-                        log.info("Removed user profile icons: {}", toRemove);
-                    }
-                    toRemove.forEach(fileName -> {
-                        Path file = Paths.get(iconsDirectory.getAbsolutePath(), versionDir, fileName);
                         try {
-                            log.debug("Remove {}", file);
-                            Files.deleteIfExists(file);
-                        } catch (IOException e) {
-                            log.error("Failed to remove file {}", file, e);
+                            int version = Integer.parseInt(name.replace("v", ""));
+                            boolean contains = BucketConfig.ALL_VERSIONS.contains(version);
+                            if (!contains) {
+                                log.warn("Version string '{}' of the version directory found in the existing versions: {}",
+                                        version, BucketConfig.ALL_VERSIONS);
+                            }
+                            return contains;
+                        } catch (NumberFormatException e) {
+                            log.warn("Version postfix is not an integer in the directory: {}", name, e);
+                            return false;
                         }
-                    });
+                    })
+                    .collect(Collectors.toMap(
+                            path -> path.getFileName().toString(),
+                            dir -> {
+                                try (Stream<Path> files = Files.list(dir)) {
+                                    return files.collect(Collectors.toList());
+                                } catch (IOException e) {
+                                    log.error("Failed to list files in directory {}", dir, e);
+                                    return Collections.emptyList();
+                                }
+                            }
+                    ));
 
-                } catch (Exception e) {
-                    log.error("Unexpected versionDir {}", versionDir, e);
-                }
-            });
-        }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
+            Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
+                    .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
+            CompletableFuture.runAsync(() -> {
+                iconFilesByVersion.forEach((versionDir, iconFiles) -> {
+                    try {
+                        int version = Integer.parseInt(versionDir.replace("v", ""));
+                        Set<String> fromDisk = iconFiles.stream()
+                                .map(path -> path.getFileName().toString())
+                                .collect(Collectors.toSet());
+                        Set<String> fromData = Optional.ofNullable(userProfilesByVersion.get(version))
+                                .map(profiles -> profiles.stream()
+                                        .map(userProfile -> userProfile.getId() + ".raw")
+                                        .collect(Collectors.toSet()))
+                                .orElseGet(Collections::emptySet);
+                        Set<String> toRemove = new HashSet<>(fromDisk);
+                        toRemove.removeAll(fromData);
+
+                        log.info("We remove {} outdated user profile icons (not found in the current user profile list)", toRemove.size());
+                        if (toRemove.size() < 10) {
+                            log.info("Removed user profile icons: {}", toRemove);
+                        }
+                        toRemove.forEach(fileName -> {
+                            Path file = iconsDirectory.resolve(versionDir).resolve(fileName);
+                            try {
+                                log.debug("Remove {}", file);
+                                Files.deleteIfExists(file);
+                            } catch (IOException e) {
+                                log.error("Failed to remove file {}", file, e);
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        log.error("Unexpected versionDir {}", versionDir, e);
+                    }
+                });
+            }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
+        } catch (IOException e) {
+            log.error("Failed to list version directories in the cat_hash_icons directory", e);
+        }
     }
 
     public int currentAvatarsVersion() {
@@ -229,7 +233,10 @@ public abstract class CatHashService<T> {
     }
 
     private Path getCatHashIconsDirectory() {
-        return Paths.get(baseDir.toString(), "db", "cache", "cat_hash_icons");
+        return baseDir
+                .resolve("db")
+                .resolve("cache")
+                .resolve("cat_hash_icons");
     }
 
     private BucketConfig getBucketConfig(int avatarVersion) {

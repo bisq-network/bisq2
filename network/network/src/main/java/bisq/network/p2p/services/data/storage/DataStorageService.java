@@ -34,7 +34,7 @@ import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,7 +50,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     private final String storeKey;
     @Getter
-    protected final String subDirectory;
+    protected final Path subDirectory;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
@@ -61,7 +61,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
-        subDirectory = dbSubDirectory.getDbPath() + File.separator + storeName;
+        subDirectory = dbSubDirectory.getDbPath().resolve(storeName);
         persistence = persistenceService.getOrCreatePersistence(this,
                 subDirectory,
                 storageFileName,

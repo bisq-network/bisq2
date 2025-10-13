@@ -22,9 +22,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,15 +55,15 @@ public class TypesafeConfigUtils {
     public static Optional<Config> resolveCustomConfig(Path appDataDir) {
         // J8 compatible to avoid issues on mobile Samsung devices
         String configName = ApplicationService.CUSTOM_CONFIG_FILE_NAME;
-        File customConfigFile = Paths.get(appDataDir.toString(), configName).toFile();
-        if (customConfigFile.exists()) {
+        Path customConfigFile = appDataDir.resolve(configName);
+        if (Files.exists(customConfigFile)) {
             try {
-                com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFile);
+                com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFile.toFile());
                 config.checkValid(ConfigFactory.defaultReference(), "application");
-                log.info("Using custom config file: {}", customConfigFile.getAbsolutePath());
+                log.info("Using custom config file: {}", customConfigFile.toAbsolutePath());
                 return Optional.of(config);
             } catch (Exception e) {
-                log.error("Could not load custom config file {}", customConfigFile.getAbsolutePath(), e);
+                log.error("Could not load custom config file {}", customConfigFile.toAbsolutePath(), e);
             }
         }
         return Optional.empty();

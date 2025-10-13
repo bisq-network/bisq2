@@ -19,24 +19,24 @@ package bisq.common.archive;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class ZipFileExtractor implements AutoCloseable {
 
     private final InputStream zipFileInputStream;
-    private final Path destDir;
+    private final Path destPath;
 
-    public ZipFileExtractor(InputStream zipFileInputStream, Path destDir) {
+    public ZipFileExtractor(InputStream zipFileInputStream, Path destPath) {
         this.zipFileInputStream = zipFileInputStream;
-        this.destDir = destDir;
+        this.destPath = destPath;
     }
 
     public void extractArchive() {
-        createDirIfNotPresent(destDir);
+        createDirIfNotPresent(destPath);
         extractFiles();
     }
 
@@ -55,38 +55,30 @@ public class ZipFileExtractor implements AutoCloseable {
 
     private void extractFiles() {
         try (ZipInputStream zipInputStream = new ZipInputStream(zipFileInputStream)) {
-            byte[] buffer = new byte[1024];
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 
-            while (zipEntry != null) {
-                String fileName = zipEntry.getName();
-
-                if (zipEntry.isDirectory()) {
-                    Path dirFile = destDir.resolve(fileName);
-                    createDirIfNotPresent(dirFile);
-                } else {
-                    writeStreamToFile(buffer, zipInputStream, fileName);
-                }
-
-                zipEntry = zipInputStream.getNextEntry();
+            if (zipEntry == null) {
+                throw new IOException("Invalid or empty zip file");
             }
-            zipInputStream.closeEntry();
 
+            Path normalizedDestPath = destPath.normalize();
+            do {
+                Path targetPath = destPath.resolve(zipEntry.getName()).normalize();
+                // Security check: prevent path traversal attacks
+                if (!targetPath.startsWith(normalizedDestPath)) {
+                    throw new IOException("Entry is outside of the target directory");
+                }
+                if (zipEntry.isDirectory()) {
+                    Files.createDirectories(targetPath);
+                } else {
+                    // Ensure parent directories exist
+                    Files.createDirectories(targetPath.getParent());
+                    // Copy stream content to file
+                    Files.copy(zipInputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } while ((zipEntry = zipInputStream.getNextEntry()) != null);
         } catch (IOException e) {
             throw new ZipFileExtractionFailedException("Couldn't extract zip file.", e);
-        }
-    }
-
-    private void writeStreamToFile(byte[] buffer, InputStream inputStream, String fileName) {
-        Path destFile = destDir.resolve(fileName);
-        try (OutputStream outputStream = Files.newOutputStream(destFile)) {
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, length);
-            }
-
-        } catch (IOException e) {
-            throw new ZipFileExtractionFailedException("Couldn't write to stream to: " + destFile);
         }
     }
 }

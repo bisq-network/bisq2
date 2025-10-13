@@ -195,8 +195,7 @@ public abstract class ApplicationService implements Service {
         Res.setAndApplyLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
-        String absoluteDataDirPath = baseDir.toAbsolutePath().toString();
-        persistenceService = new PersistenceService(absoluteDataDirPath);
+        persistenceService = new PersistenceService(baseDir);
         migrationService = new MigrationService(baseDir);
     }
 

@@ -25,7 +25,6 @@ import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -39,31 +38,29 @@ import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 @Slf4j
 public class WebcamProcessLauncher {
-    private final String webcamDir;
+    private final Path webcamDir;
     private Optional<Process> runningProcess = Optional.empty();
 
-    public WebcamProcessLauncher(String baseDir) {
-        this.webcamDir = baseDir + "/webcam";
+    public WebcamProcessLauncher(Path baseDir) {
+        this.webcamDir = baseDir.resolve("webcam");
     }
 
     public CompletableFuture<Process> start(int port) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("webcam-app/version.txt");
-                String jarFilePath = webcamDir + "/webcam-app-" + version + "-all.jar";
-                File jarFile = new File(jarFilePath);
+                Path jarFilePath = webcamDir.resolve("webcam-app-" + version + "-all.jar");
 
-                if (!jarFile.exists() || DevMode.isDevMode()) {
+                if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
                     String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    Path destDir = Path.of(webcamDir);
-                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
+                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, webcamDir);
                     zipFileExtractor.extractArchive();
                     log.info("Extracted zip file {} to {}", resourcePath, webcamDir);
                 }
 
                 String portParam = "--port=" + port;
-                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
+                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDir.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
                 String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
@@ -75,9 +72,9 @@ public class WebcamProcessLauncher {
                         FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageParam);
                 } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageParam);
                 }
                 log.info("ProcessBuilder commands: {}", processBuilder.command());
                 Process process = processBuilder.start();

@@ -45,8 +45,8 @@ import bisq.persistence.PersistenceService;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,11 +97,11 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        String subPath = persistenceService.getBaseDir() + File.separator + DbSubDirectory.NETWORK_DB.getDbPath();
+        Path subPath = persistenceService.getBaseDir().resolve(DbSubDirectory.NETWORK_DB.getDbPath());
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
-            String directory = subPath + File.separator + authStoreName;
-            if (new File(directory).exists()) {
+            Path directory = subPath.resolve(authStoreName);
+            if (Files.exists(directory)) {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
@@ -145,8 +145,8 @@ public class StorageService {
                         });
             }
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
-            directory = subPath + File.separator + mailboxStoreName;
-            if (new File(directory).exists()) {
+            directory = subPath.resolve(mailboxStoreName);
+            if (Files.exists(directory)) {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
@@ -180,8 +180,8 @@ public class StorageService {
             }
 
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
-            directory = subPath + File.separator + appendStoreName;
-            if (new File(directory).exists()) {
+            directory = subPath.resolve(appendStoreName);
+            if (Files.exists(directory)) {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
@@ -602,11 +602,11 @@ public class StorageService {
                 .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
-    private Set<String> getExistingStoreKeys(String directory) {
+    private Set<String> getExistingStoreKeys(Path directory) {
         return NetworkStorageWhiteList.getClassNames().stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
-                    return Paths.get(directory, storageFileName).toFile().exists();
+                    return Files.exists(directory.resolve(storageFileName));
                 })
                 .collect(Collectors.toSet());
     }

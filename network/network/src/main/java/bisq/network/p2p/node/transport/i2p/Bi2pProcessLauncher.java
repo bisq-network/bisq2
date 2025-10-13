@@ -30,7 +30,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -155,7 +154,7 @@ public class Bi2pProcessLauncher implements Service {
     private static String getJavaExePath() {
         String javaHome = System.getProperty("java.home");
         String exe = OS.isWindows() ? "java.exe" : "java";
-        return Paths.get(javaHome, "bin", exe).toString();
+        return Path.of(javaHome, "bin", exe).toString();
     }
 
 }

@@ -1,6 +1,5 @@
 package bisq.application.migration.migrations;
 
-import bisq.application.migration.migrations.MigrationsForV2_1_2;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -28,45 +27,40 @@ public class MigrationsForV2_1_2Tests {
 
     @Test
     @EnabledOnOs({OS.MAC, OS.WINDOWS})
-    void torFilesRemovalTestOnMacAndWindows(@TempDir Path dataDir) {
+    void torFilesRemovalTestOnMacAndWindows(@TempDir Path dataDir) throws IOException {
         Path torDataDir = dataDir.resolve("tor");
         createFakeTorDataDir(torDataDir);
 
         migrationsForV212.run(dataDir);
 
         assertThat(torDataDir).exists();
-        boolean fileExists = torDataDir.resolve("libevent-2.1.so.7").toFile().exists();
-        assertThat(fileExists).isTrue();
+        assertThat(torDataDir.resolve("libevent-2.1.so.7")).exists();
 
         Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
         assertThat(pluggableTransportDir).exists();
 
-        fileExists = pluggableTransportDir.resolve("README.SNOWFLAKE.md").toFile().exists();
-        assertThat(fileExists).isTrue();
+        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).exists();
     }
 
     @Test
     @EnabledOnOs(OS.LINUX)
-    void torFilesRemovalTestOnLinux(@TempDir Path dataDir) {
+    void torFilesRemovalTestOnLinux(@TempDir Path dataDir) throws IOException {
         Path torDataDir = dataDir.resolve("tor");
         createFakeTorDataDir(torDataDir);
 
         migrationsForV212.run(dataDir);
 
         assertThat(torDataDir).doesNotExist();
-        boolean fileExists = torDataDir.resolve("libevent-2.1.so.7").toFile().exists();
-        assertThat(fileExists).isFalse();
+        assertThat(torDataDir.resolve("libevent-2.1.so.7")).doesNotExist();
 
         Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
         assertThat(pluggableTransportDir).doesNotExist();
 
-        fileExists = pluggableTransportDir.resolve("README.SNOWFLAKE.md").toFile().exists();
-        assertThat(fileExists).isFalse();
+        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).doesNotExist();
     }
 
-    private void createFakeTorDataDir(Path torDataDir) {
-        boolean isSuccess = torDataDir.toFile().mkdirs();
-        assertThat(isSuccess).isTrue();
+    private void createFakeTorDataDir(Path torDataDir) throws IOException {
+        Files.createDirectories(torDataDir);
 
         List<String> torDirFiles = List.of("lock",
                 "libssl.so.1.1",
@@ -87,8 +81,7 @@ public class MigrationsForV2_1_2Tests {
         createFiles(torDataDir, torDirFiles);
 
         Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
-        isSuccess = pluggableTransportDir.toFile().mkdirs();
-        assertThat(isSuccess).isTrue();
+        Files.createDirectories(pluggableTransportDir);
 
         List<String> pluggableTransportFiles = List.of("snowflake-client",
                 "bridges_list.snowflake.txt",
@@ -99,11 +92,9 @@ public class MigrationsForV2_1_2Tests {
                 "bridges_list.meek-azure.txt");
         createFiles(pluggableTransportDir, pluggableTransportFiles);
 
-        boolean fileExists = torDataDir.resolve("libevent-2.1.so.7").toFile().exists();
-        assertThat(fileExists).isTrue();
+        assertThat(torDataDir.resolve("libevent-2.1.so.7")).exists();
 
-        fileExists = pluggableTransportDir.resolve("README.SNOWFLAKE.md").toFile().exists();
-        assertThat(fileExists).isTrue();
+        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).exists();
     }
 
     private void createFiles(Path basePath, List<String> fileNames) {
