@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 class RequestValidator {
     // Only allow alphanumeric characters and some special characters like /, -, _
     // Does not allow dots to avoid path traversal attacks (example: '../')
-    private static final Pattern SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-?=,&.]*$");
+    private static final Pattern SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-?=,&.:]*$");
     private final Set<Pattern> endpointWhitelistPatterns;
     private final Set<Pattern> endpointBlacklistPatterns;
 
