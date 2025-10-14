@@ -285,8 +285,9 @@ public class MarketPriceRequestService {
                     long ts = System.currentTimeMillis();
                     String param = "getAllMarketPrices";
                     log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
+                    String json = "";
                     try {
-                        String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                        json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
                         log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
 
@@ -320,6 +321,7 @@ public class MarketPriceRequestService {
 
                         Throwable rootCause = ExceptionUtil.getRootCause(e);
                         log.warn("{} at request: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Json: {}", json);
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
 
