@@ -306,8 +306,8 @@ public class ServiceNode implements Node.Listener {
         return nodesById.isNodeInitialized(networkId);
     }
 
-    void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
-        Set<Address> addresses = seedNodeAddresses.stream().filter(address -> {
+    void addSeedNodeAddresses(Set<Address> addresses) {
+        Set<Address> seedNodeAddresses = addresses.stream().filter(address -> {
                     if (address == null) {
                         log.warn("address is null at addSeedNodeAddresses");
                         return false;
