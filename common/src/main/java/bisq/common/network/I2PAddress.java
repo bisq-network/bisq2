@@ -53,7 +53,7 @@ public class I2PAddress extends Address {
     }
 
     @Getter
-    private Optional<String> destinationBase32 = Optional.empty();
+    private transient Optional<String> destinationBase32 = Optional.empty();
 
     public I2PAddress(String host, int port) {
         super(host, port);
