@@ -257,12 +257,12 @@ public class MuSigTakeOfferPaymentController implements Controller {
         String currencyCode = model.getPaymentMethodCurrencyCode();
         if (model.getMarket().isCrypto()) {
             return isBuyer
-                    ? Res.get("muSig.takeOffer.cryptoMarket.paymentMethods.headline.buyer", currencyCode)
-                    : Res.get("muSig.takeOffer.cryptoMarket.paymentMethods.headline.seller", currencyCode);
+                    ? Res.get("muSig.takeOffer.paymentMethods.cryptoMarket.headline.buyer", currencyCode)
+                    : Res.get("muSig.takeOffer.paymentMethods.cryptoMarket.headline.seller", currencyCode);
         } else {
             return isBuyer
-                    ? Res.get("muSig.takeOffer.fiatMarket.paymentMethods.headline.buyer", currencyCode)
-                    : Res.get("muSig.takeOffer.fiatMarket.paymentMethods.headline.seller", currencyCode);
+                    ? Res.get("muSig.takeOffer.paymentMethods.fiatMarket.headline.buyer", currencyCode)
+                    : Res.get("muSig.takeOffer.paymentMethods.fiatMarket.headline.seller", currencyCode);
         }
     }
 }
