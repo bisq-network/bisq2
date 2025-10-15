@@ -27,6 +27,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -67,6 +69,10 @@ public class MuSigTakeOfferPaymentModel implements Model {
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
 
+    private final BooleanProperty shouldShowNoAccountOverlay = new SimpleBooleanProperty();
+    private final StringProperty noAccountOverlayHeadlineText = new SimpleStringProperty();
+    private final BooleanProperty shouldShowMultipleAccountsOverlay = new SimpleBooleanProperty();
+    private final StringProperty multipleAccountsOverlayHeadlineText = new SimpleStringProperty();
     private final BooleanProperty shouldShowNoPaymentMethodSelectedOverlay = new SimpleBooleanProperty();
 
     public MuSigTakeOfferPaymentModel() {
@@ -89,6 +95,10 @@ public class MuSigTakeOfferPaymentModel implements Model {
         selectedAccount.set(null);
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
+        shouldShowNoAccountOverlay.set(false);
+        noAccountOverlayHeadlineText.set("");
+        shouldShowMultipleAccountsOverlay.set(false);
+        multipleAccountsOverlayHeadlineText.set("");
         shouldShowNoPaymentMethodSelectedOverlay.set(false);
     }
 }

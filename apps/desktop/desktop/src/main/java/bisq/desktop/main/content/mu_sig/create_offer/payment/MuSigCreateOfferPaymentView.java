@@ -55,7 +55,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
     private final GridPane gridPane;
     private final VBox content;
     private final WizardOverlay noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay;
-    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton, noPaymentMethodSelectedOverlayCloseButton;
+    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountsOverlayCloseButton, noPaymentMethodSelectedOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountSelection;
     private final Set<ImageView> closeIcons = new HashSet<>();
     private final Label noPaymentMethodSelectedOverlayLabel;
@@ -97,13 +97,13 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
                 createAccountButton);
 
         // multipleAccounts overlay
-        multipleAccountOverlayCloseButton = new Button(Res.get("action.close"));
+        multipleAccountsOverlayCloseButton = new Button(Res.get("action.close"));
         accountSelection = createComboBox();
         VBox multipleAccountsContentBox = createAndGetContentBox();
         multipleAccountsOverlay = new WizardOverlay(root,
                 "",
                 multipleAccountsContentBox,
-                multipleAccountOverlayCloseButton);
+                multipleAccountsOverlayCloseButton);
 
         // noPaymentMethodSelected overlay
         noPaymentMethodSelectedOverlayLabel = new Label();
@@ -141,7 +141,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
         noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
         createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
-        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
+        multipleAccountsOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
         noPaymentMethodSelectedOverlayCloseButton.setOnAction(e -> controller.onCloseNoPaymentMethodSelectedOverlay());
         accountSelection.setOnChangeConfirmed(e -> accountSelectionConfirmed());
 
@@ -167,7 +167,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
         createAccountButton.setOnAction(null);
         noAccountOverlayCloseButton.setOnAction(null);
-        multipleAccountOverlayCloseButton.setOnAction(null);
+        multipleAccountsOverlayCloseButton.setOnAction(null);
         noPaymentMethodSelectedOverlayCloseButton.setOnAction(null);
         accountSelection.setOnChangeConfirmed(null);
 
