@@ -40,16 +40,16 @@ class RequestValidator {
             log.info("Invalid decoded path was null.");
             return false;
         }
+        if (!decodedPath.startsWith("/")) {
+            log.info("Invalid path: must start with '/'. path: {}", decodedPath);
+            return false;
+        }
         if (!SAFE_PATH.matcher(decodedPath).matches()) {
             log.info("Invalid decoded path contained unsafe characters. path: {}", decodedPath);
             return false;
         }
         if (decodedPath.contains("..")) {
             log.info("Invalid decoded path contained unsafe relative path. path: {}", decodedPath);
-            return false;
-        }
-        if (decodedPath.isEmpty()) {
-            log.info("Invalid decoded path was empty");
             return false;
         }
         if (decodedPath.length() >= 2000) {
