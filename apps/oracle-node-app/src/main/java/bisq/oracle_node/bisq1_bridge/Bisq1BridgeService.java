@@ -43,7 +43,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -87,7 +86,8 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     private final Bisq1BridgeRequestService bisq1BridgeRequestService;
     private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
     @Nullable
-    private ScheduledExecutorService executor;
+    private volatile ScheduledExecutorService executor;
+    private final Object executorLock = new Object();
 
     public Bisq1BridgeService(Config config,
                               PersistenceService persistenceService,
@@ -143,8 +143,14 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
         queue.clear();
 
-        ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
-        executor = null;
+        ScheduledExecutorService toShutdown;
+        synchronized (executorLock) {
+            toShutdown = executor;
+            executor = null;
+        }
+        if (toShutdown != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(toShutdown, 100);
+        }
 
         return burningmanGrpcService.shutdown()
                 .thenCompose(result -> bsqBlockGrpcService.shutdown())
@@ -158,19 +164,23 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
-        if (executor == null) {
+        if (executor != null) return;
+
+        synchronized (executorLock) {
+            if (executor != null) return;
             int numAllConnections = networkService.getServiceNodesByTransport().getAllServiceNodes().stream()
                     .map(ServiceNode::getDefaultNode)
                     .mapToInt(Node::getNumConnections)
                     .sum();
             if (numAllConnections >= config.getNumConnectionsForRepublish()) {
-                executor = Executors.newSingleThreadScheduledExecutor();
-                executor.scheduleWithFixedDelay(() -> {
+                ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
+                tmp.scheduleWithFixedDelay(() -> {
                     AuthorizedDistributedData data = queue.poll();
                     if (data != null) {
                         publishAuthorizedData(data);
                     }
                 }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                executor = tmp;
             }
         }
     }
