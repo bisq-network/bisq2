@@ -83,7 +83,16 @@ public class BondedRolesListItem {
                     .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                     .collect(Collectors.toList());
             address = Joiner.on("\n").join(list);
-            addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressMap);
+            String json ="N/A";
+            try {
+                json = new GsonBuilder()
+                        .setPrettyPrinting()
+                        .create()
+                        .toJson(addressMap);
+            } catch (Exception e) {
+                log.error("Could not create json from {}", addressMap, e);
+            }
+            this.addressInfoJson = json;
 
             Set<String> bondedRoleAddresses = addressMap.values().stream()
                     .map(Address::getFullAddress)
