@@ -320,7 +320,7 @@ public class MarketPriceRequestService {
                         }
 
                         Throwable rootCause = ExceptionUtil.getRootCause(e);
-                        log.warn("{} at request: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Failed to request market price data from {}. {} at request: {}", client.getBaseUrl(), rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
                         log.warn("Json: {}", json);
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
