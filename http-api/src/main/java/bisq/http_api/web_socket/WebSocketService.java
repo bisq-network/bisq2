@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.http_api.ApiTorOnionService;
+import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.http_api.web_socket.subscription.SubscriptionService;
@@ -112,6 +113,7 @@ public class WebSocketService implements Service {
     private final WebSocketConnectionHandler webSocketConnectionHandler;
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
+    private final WebSocketRequestValidator requestValidator;
     private Optional<HttpServer> httpServer = Optional.empty();
     private final ApiTorOnionService apiTorOnionService;
 
@@ -125,9 +127,11 @@ public class WebSocketService implements Service {
                             ChatService chatService,
                             TradeService tradeService,
                             UserService userService,
-                            OpenTradeItemsService openTradeItemsService) {
+                            OpenTradeItemsService openTradeItemsService,
+                            WebSocketRequestValidator requestValidator) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
+        this.requestValidator = requestValidator;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
 
@@ -139,7 +143,7 @@ public class WebSocketService implements Service {
                 tradeService,
                 userService,
                 openTradeItemsService);
-        webSocketRestApiService = new WebSocketRestApiService(objectMapper, restApiBaseAddress);
+        webSocketRestApiService = new WebSocketRestApiService(objectMapper, restApiBaseAddress, requestValidator);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
