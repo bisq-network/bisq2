@@ -406,7 +406,10 @@ public class Node implements Connection.Handler {
         // myCapability is set once we have start our sever which happens in initialize()
         return myCapability.map(capability -> createOutboundConnectionAsync(address, capability))
                 .orElseGet(() -> {
-                    int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
+                    // When updating to I2P address might be not present
+                    String port = networkId.getAddressByTransportTypeMap().getAddress(transportType).map(Address::getPort)
+                            .map(Object::toString)
+                            .orElse("N/A");
                     log.warn("We create an outbound connection but we have not initialized our server. " +
                             "We create a server on port {} now but clients better control node " +
                             "life cycle themselves.", port);
@@ -925,7 +928,10 @@ public class Node implements Connection.Handler {
     }
 
     private String printAddresses() {
-        String address = getNetworkId().getAddressByTransportTypeMap().get(transportType).toString();
+        // Address can be null at first start after updating to I2P enabled version
+        String address = networkId.getAddressByTransportTypeMap().getAddress(transportType)
+                .map(Object::toString)
+                .orElse("Address N/A");
         return transportType.name() + "-" + StringUtils.truncate(address, 20, StringUtils.UNICODE_ELLIPSIS);
     }
 }

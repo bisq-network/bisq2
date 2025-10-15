@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 
 @Slf4j
 public class TorTransportService implements TransportService {
@@ -68,7 +70,9 @@ public class TorTransportService implements TransportService {
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         try {
-            int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
+            Optional<Address> optionalAddress = networkId.getAddressByTransportTypeMap().getAddress(TransportType.TOR);
+            checkArgument(optionalAddress.isPresent(), "networkId.getAddressByTransportTypeMap().getAddress(TransportType.TOR) must not be empty");
+            int port = optionalAddress.map(Address::getPort).orElseThrow();
             initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
 
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
