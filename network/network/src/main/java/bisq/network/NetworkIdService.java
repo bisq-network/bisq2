@@ -81,12 +81,39 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     public NetworkId getOrCreateDefaultNetworkId() {
         // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
         KeyBundle keyBundle = keyBundleService.findDefaultKeyBundle().orElseThrow();
-        return getOrCreateNetworkId(keyBundle, "default");
+        String tag = "default";
+        maybeUpdateNetworkId(keyBundle, tag);
+        return getOrCreateNetworkId(keyBundle, tag);
     }
 
     public NetworkId getOrCreateNetworkId(KeyBundle keyBundle, String tag) {
         return findNetworkId(tag)
                 .orElseGet(() -> createNetworkId(keyBundle, tag));
+    }
+
+    public void maybeUpdateNetworkId(KeyBundle keyBundle, String tag) {
+        findNetworkId(tag).ifPresent(networkId -> {
+            // In case we had already a networkId persisted, but we get a new transportType
+            // added we update and persist the networkId.
+            AddressByTransportTypeMap addressByTransportTypeMap = networkId.getAddressByTransportTypeMap();
+            int previousSize = addressByTransportTypeMap.size();
+            supportedTransportTypes.stream()
+                    .filter(transportType -> !addressByTransportTypeMap.containsKey(transportType))
+                    .forEach(transportType -> {
+                        int port = getPortByTransport(tag, transportType);
+                        Address address = getAddressByTransport(keyBundle, port, transportType);
+                        log.warn("We add a new address to the addressByTransportTypeMap for {}: {}", transportType, address);
+                        addressByTransportTypeMap.put(transportType, address);
+                    });
+            if (addressByTransportTypeMap.size() > previousSize) {
+                KeyPair keyPair = keyBundle.getKeyPair();
+                PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
+                NetworkId updatedNetworkId = new NetworkId(addressByTransportTypeMap, pubKey);
+                log.warn("We updated the networkId for {}: {}", tag, updatedNetworkId);
+                persistableStore.getNetworkIdByTag().put(tag, updatedNetworkId);
+                persist();
+            }
+        });
     }
 
     public Optional<NetworkId> findNetworkId(String tag) {
