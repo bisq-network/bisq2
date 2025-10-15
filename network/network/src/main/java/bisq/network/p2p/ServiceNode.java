@@ -267,9 +267,9 @@ public class ServiceNode implements Node.Listener {
                         peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
-        setState(State.INITIALIZING);
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize");
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor(transportType + "-DefaultNode.initialize");
         return supplyAsync(() -> {
+            setState(State.INITIALIZING);
             transportService.initialize();// blocking
             defaultNode.initializeAsync().join();// blocking
             peerGroupManager.ifPresentOrElse(peerGroupManager -> {
