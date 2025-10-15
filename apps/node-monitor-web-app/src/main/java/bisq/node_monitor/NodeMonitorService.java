@@ -70,8 +70,9 @@ public class NodeMonitorService implements Service {
                     .collect(Collectors.toList());
 
             // Oracle Nodes
-            addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:36185");
+            addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:7777");
             addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
+            addresslist.add("7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVn7lhpn3Ixttek7RE6zUExGBybDXNQsXwhYwXNvobCdMBQAEAAcAAA==:7777"); // Henrik I2P, same node as kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:
             return addresslist;
         } catch (Exception e) {
             throw new RestApiException(e);

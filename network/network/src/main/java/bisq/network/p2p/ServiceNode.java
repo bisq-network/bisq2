@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -267,9 +268,9 @@ public class ServiceNode implements Node.Listener {
                         peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
-        setState(State.INITIALIZING);
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("DefaultNode.initialize");
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor(transportType + "-DefaultNode.initialize");
         return supplyAsync(() -> {
+            setState(State.INITIALIZING);
             transportService.initialize();// blocking
             defaultNode.initializeAsync().join();// blocking
             peerGroupManager.ifPresentOrElse(peerGroupManager -> {
@@ -305,12 +306,25 @@ public class ServiceNode implements Node.Listener {
         return nodesById.isNodeInitialized(networkId);
     }
 
-    void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+    void addSeedNodeAddresses(Set<Address> addresses) {
+        Set<Address> seedNodeAddresses = addresses.stream().filter(address -> {
+                    if (address == null) {
+                        log.warn("address is null at addSeedNodeAddresses");
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toSet());
+
         this.seedNodeAddresses.addAll(seedNodeAddresses);
         peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.addSeedNodeAddresses(seedNodeAddresses));
     }
 
     void addSeedNodeAddress(Address seedNodeAddress) {
+        if (seedNodeAddress == null) {
+            log.warn("seedNodeAddress is null at addSeedNodeAddress");
+            return;
+        }
         // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
         // seedNodeAddresses field
         seedNodeAddresses.add(seedNodeAddress);

@@ -53,10 +53,11 @@ public class I2PAddress extends Address {
     }
 
     @Getter
-    private transient Optional<String> destinationBase32 = Optional.empty();
+    private final transient Optional<String> destinationBase32;
 
     public I2PAddress(String host, int port) {
         super(host, port);
+        destinationBase32 = Optional.empty();
 
         if (!isBase64Destination(host)) {
             throw new IllegalArgumentException("I2P host must be in base 64 destination format. " + host);
