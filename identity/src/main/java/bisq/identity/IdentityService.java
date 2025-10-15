@@ -90,7 +90,11 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             return CompletableFuture.completedFuture(true);
         }
 
-        getActiveIdentityByTag().values().forEach(this::maybeUpdateNetworkId);
+        List<Identity> snapshot;
+        synchronized (lock) {
+            snapshot = List.copyOf(getActiveIdentityByTag().values());
+        }
+        snapshot.forEach(this::maybeUpdateNetworkId);
 
         // We get called after networkService with the default node is already initialized.
         // We publish now all onion services of our active identities.
@@ -205,9 +209,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     /* --------------------------------------------------------------------- */
 
     private CompletableFuture<List<Node>> initializeAllActiveIdentities(TransportType transportType) {
-        Stream<CompletableFuture<Node>> futures = getActiveIdentityByTag().values().stream()
-                .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
+        List<Identity> snapshot;
+        synchronized (lock) {
+            snapshot = getActiveIdentityByTag().values().stream()
+                    .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
+                    .collect(Collectors.toList());
+        }
+        Stream<CompletableFuture<Node>> futures = snapshot.stream()
                 .map(identity -> networkService.supplyInitializedNode(transportType, identity.getNetworkId()));
+
         return CompletableFutureUtils.allOf(futures);
     }
 
