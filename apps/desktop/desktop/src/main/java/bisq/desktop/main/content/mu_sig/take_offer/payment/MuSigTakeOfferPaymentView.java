@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.take_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
@@ -28,7 +27,6 @@ import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.mu_sig.components.PaymentMethodChipButton;
-import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferView;
 import bisq.i18n.Res;
 import bisq.account.payment_method.PaymentMethodSpec;
 import javafx.geometry.Insets;
@@ -37,7 +35,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -55,18 +52,17 @@ import java.util.Set;
 
 @Slf4j
 public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPaymentModel, MuSigTakeOfferPaymentController> {
-    private final static int FEEDBACK_WIDTH = 700;
-
     private final GridPane gridPane;
-    private final Label headlineLabel, noAccountOverlayHeadline, subtitleLabel, multipleAccountOverlayHeadline;
-    private final VBox noAccountOverlay, multipleAccountOverlay, content;
-    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountOverlayCloseButton, noPaymentMethodSelectedOverlayCloseButton;
+    private final Label headlineLabel, subtitleLabel;
+    private final VBox content;
+    private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountsOverlayCloseButton,
+            noPaymentMethodSelectedOverlayCloseButton;
     private final AutoCompleteComboBox<Account<?, ?>> singlePaymentMethodAccountSelection, accountSelection;
     private final Set<ImageView> closeIcons = new HashSet<>();
     private final List<PaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
-    private final WizardOverlay noPaymentMethodSelectedOverlay;
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin, selectedPaymentMethodPin,
-            selectedTogglePin, shouldShowNoPaymentMethodSelectedOverlayPin;
+    private final WizardOverlay noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay;
+    private Subscription selectedPaymentMethodPin, selectedTogglePin, shouldShowNoAccountOverlayPin,
+            shouldShowMultipleAccountsOverlayPin, shouldShowNoPaymentMethodSelectedOverlayPin;
 
     public MuSigTakeOfferPaymentView(MuSigTakeOfferPaymentModel model,
                                      MuSigTakeOfferPaymentController controller) {
@@ -100,18 +96,22 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, vBox, Spacer.fillVBox());
 
         // noAccount overlay
-        noAccountOverlayHeadline = new Label();
         noAccountOverlayCloseButton = new Button(Res.get("action.close"));
-        createAccountButton = new Button(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.createAccount"));
-        noAccountOverlay = new VBox(20);
-        configNoAccountOverlay();
+        createAccountButton = new Button(Res.get("muSig.takeOffer.paymentMethod.noAccountOverlay.createAccount"));
+        createAccountButton.setDefaultButton(true);
+        noAccountOverlay = new WizardOverlay(root,
+                "",
+                "muSig.takeOffer.paymentMethod.noAccountOverlay.subTitle",
+                noAccountOverlayCloseButton, createAccountButton);
 
         // multipleAccount overlay
-        multipleAccountOverlayHeadline = new Label();
-        multipleAccountOverlayCloseButton = new Button(Res.get("action.close"));
-        multipleAccountOverlay = new VBox(20);
+        multipleAccountsOverlayCloseButton = new Button(Res.get("action.close"));
         accountSelection = createComboBox();
-        configMultipleAccountOverlay();
+        VBox multipleAccountsContentBox = createAndGetContentBox();
+        multipleAccountsOverlay = new WizardOverlay(root,
+                "",
+                multipleAccountsContentBox,
+                multipleAccountsOverlayCloseButton);
 
         // noPaymentMethodSelected overlay
         noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
@@ -121,58 +121,20 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
                 noPaymentMethodSelectedOverlayCloseButton);
 
         StackPane.setMargin(content, new Insets(40));
-        StackPane.setMargin(noAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        StackPane.setMargin(multipleAccountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, noAccountOverlay, multipleAccountOverlay, noPaymentMethodSelectedOverlay);
+        root.getChildren().addAll(content, noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay);
     }
 
     @Override
     protected void onViewAttached() {
-        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(),
-                paymentMethod -> {
-                    noAccountOverlayCloseButton.setOnAction(null);
-                    createAccountButton.setOnAction(null);
-                    if (paymentMethod != null) {
-                        noAccountOverlay.setVisible(true);
-                        noAccountOverlayHeadline.setText(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                        noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay(paymentMethod));
-                        createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen(paymentMethod));
-                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(noAccountOverlay, 450);
-                    } else {
-                        root.setOnKeyPressed(null);
-                        noAccountOverlay.setVisible(false);
-                        Transitions.removeEffect(content);
-                    }
-                });
+        noAccountOverlay.getHeadlineLabel().textProperty().bind(model.getNoAccountOverlayHeadlineText());
+        multipleAccountsOverlay.getHeadlineLabel().textProperty().bind(model.getMultipleAccountsOverlayHeadlineText());
 
-        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
-                paymentMethod -> {
-                    accountSelection.setOnChangeConfirmed(null);
-                    multipleAccountOverlayCloseButton.setOnAction(null);
-                    if (paymentMethod != null) {
-                        multipleAccountOverlay.setVisible(true);
-                        multipleAccountOverlayHeadline.setText(Res.get("muSig.createOffer.paymentMethod.multipleAccountOverlay.headline", paymentMethod.getShortDisplayString()));
-                        accountSelection.setOnChangeConfirmed(e -> {
-                            Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
-                            if (account != null) {
-                                findPaymentMethodChipButton(paymentMethod)
-                                        .ifPresent(button -> button.setAccountName(account.getAccountName()));
-                                controller.onSelectAccount(account);
-                                UIThread.runOnNextRenderFrame(() -> accountSelection.getSelectionModel().select(null));
-                            }
-                        });
-                        multipleAccountOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
-                        root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(multipleAccountOverlay, 450);
-                    } else {
-                        root.setOnKeyPressed(null);
-                        multipleAccountOverlay.setVisible(false);
-                        Transitions.removeEffect(content);
-                    }
-                });
+        shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
+                noAccountOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoAccountOverlay));
+        shouldShowMultipleAccountsOverlayPin = EasyBind.subscribe(model.getShouldShowMultipleAccountsOverlay(), shouldShow ->
+                multipleAccountsOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingMultipleAccountsOverlay));
+        shouldShowNoPaymentMethodSelectedOverlayPin = EasyBind.subscribe(model.getShouldShowNoPaymentMethodSelectedOverlay(), shouldShow ->
+                noPaymentMethodSelectedOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay));
 
         selectedPaymentMethodPin = EasyBind.subscribe(model.getSelectedPaymentMethodSpec(),
                 paymentMethodSpec -> {
@@ -187,10 +149,11 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
             }
         });
 
-        shouldShowNoPaymentMethodSelectedOverlayPin = EasyBind.subscribe(model.getShouldShowNoPaymentMethodSelectedOverlay(), shouldShow ->
-                noPaymentMethodSelectedOverlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay));
-
+        createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
+        noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
+        multipleAccountsOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
         noPaymentMethodSelectedOverlayCloseButton.setOnAction(e -> controller.onCloseNoPaymentMethodSelectedOverlay());
+        accountSelection.setOnChangeConfirmed(e -> accountSelectionConfirmed());
 
         root.setOnMousePressed(e -> root.requestFocus());
 
@@ -218,20 +181,23 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
 
     @Override
     protected void onViewDetached() {
-        paymentMethodWithoutAccountPin.unsubscribe();
-        paymentMethodWithMultipleAccountsPin.unsubscribe();
+        noAccountOverlay.getHeadlineLabel().textProperty().unbind();
+        multipleAccountsOverlay.getHeadlineLabel().textProperty().unbind();
+
+        shouldShowNoAccountOverlayPin.unsubscribe();
+        shouldShowMultipleAccountsOverlayPin.unsubscribe();
+        shouldShowNoPaymentMethodSelectedOverlayPin.unsubscribe();
         selectedPaymentMethodPin.unsubscribe();
         selectedTogglePin.unsubscribe();
-        shouldShowNoPaymentMethodSelectedOverlayPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(PaymentMethodChipButton::dispose);
 
         createAccountButton.setOnAction(null);
         noAccountOverlayCloseButton.setOnAction(null);
-        multipleAccountOverlayCloseButton.setOnAction(null);
+        multipleAccountsOverlayCloseButton.setOnAction(null);
         noPaymentMethodSelectedOverlayCloseButton.setOnAction(null);
-        singlePaymentMethodAccountSelection.setOnChangeConfirmed(null);
         accountSelection.setOnChangeConfirmed(null);
+        singlePaymentMethodAccountSelection.setOnChangeConfirmed(null);
 
         closeIcons.forEach(imageView -> imageView.setOnMousePressed(null));
         closeIcons.clear();
@@ -320,56 +286,25 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         return comboBox;
     }
 
-    private void configNoAccountOverlay() {
-        VBox overlayContent = new VBox(20);
-        overlayContent.setAlignment(Pos.TOP_CENTER);
-        overlayContent.getStyleClass().setAll("trade-wizard-feedback-bg");
-        overlayContent.setPadding(new Insets(30));
-        overlayContent.setMaxWidth(FEEDBACK_WIDTH);
-
-        noAccountOverlay.setVisible(false);
-        noAccountOverlay.setAlignment(Pos.TOP_CENTER);
-
-        noAccountOverlayHeadline.getStyleClass().add("bisq-text-headline-2");
-
-        Label subtitleLabel = new Label(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
+    private VBox createAndGetContentBox() {
+        Label subtitleLabel = new Label(Res.get("muSig.takeOffer.paymentMethod.multipleAccountOverlay.subTitle"));
+        subtitleLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.getStyleClass().add("bisq-text-21");
+        subtitleLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        createAccountButton.setDefaultButton(true);
-        HBox buttonsBox = new HBox(10, noAccountOverlayCloseButton, createAccountButton);
-        buttonsBox.setAlignment(Pos.CENTER);
-        VBox.setMargin(buttonsBox, new Insets(10, 0, 0, 0));
-        overlayContent.getChildren().addAll(noAccountOverlayHeadline, subtitleLabel, buttonsBox);
-        noAccountOverlay.getChildren().addAll(overlayContent, Spacer.fillVBox());
+        VBox vBox = new VBox(20, subtitleLabel, accountSelection);
+        vBox.setAlignment(Pos.CENTER);
+        return vBox;
     }
 
-    private void configMultipleAccountOverlay() {
-        VBox overlayContent = new VBox(20);
-        overlayContent.setAlignment(Pos.TOP_CENTER);
-        overlayContent.getStyleClass().setAll("trade-wizard-feedback-bg");
-        overlayContent.setPadding(new Insets(30));
-        overlayContent.setMaxWidth(FEEDBACK_WIDTH);
-
-        multipleAccountOverlay.setVisible(false);
-        multipleAccountOverlay.setAlignment(Pos.TOP_CENTER);
-
-        multipleAccountOverlayHeadline.getStyleClass().add("bisq-text-headline-2");
-
-        Label subtitleLabel = new Label(Res.get("muSig.createOffer.paymentMethod.multipleAccountOverlay.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMinWidth(FEEDBACK_WIDTH - 200);
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.getStyleClass().add("bisq-text-21");
-
-        VBox.setMargin(multipleAccountOverlayCloseButton, new Insets(10, 0, 20, 0));
-        overlayContent.getChildren().addAll(multipleAccountOverlayHeadline, subtitleLabel, accountSelection, multipleAccountOverlayCloseButton);
-        multipleAccountOverlay.getChildren().addAll(overlayContent, Spacer.fillVBox());
+    private void accountSelectionConfirmed() {
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithMultipleAccounts().get();
+        Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
+        if (paymentMethod != null && account != null) {
+            findPaymentMethodChipButton(paymentMethod)
+                    .ifPresent(button -> button.setAccountName(account.getAccountName()));
+            controller.onSelectAccount(account);
+            UIThread.runOnNextRenderFrame(() -> accountSelection.getSelectionModel().select(null));
+        }
     }
 }
