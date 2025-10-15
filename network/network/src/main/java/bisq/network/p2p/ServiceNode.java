@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -306,11 +307,24 @@ public class ServiceNode implements Node.Listener {
     }
 
     void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        Set<Address> addresses = seedNodeAddresses.stream().filter(address -> {
+                    if (address == null) {
+                        log.warn("address is null at addSeedNodeAddresses");
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toSet());
+
         this.seedNodeAddresses.addAll(seedNodeAddresses);
         peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.addSeedNodeAddresses(seedNodeAddresses));
     }
 
     void addSeedNodeAddress(Address seedNodeAddress) {
+        if (seedNodeAddress == null) {
+            log.warn("seedNodeAddress is null at addSeedNodeAddress");
+            return;
+        }
         // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
         // seedNodeAddresses field
         seedNodeAddresses.add(seedNodeAddress);
