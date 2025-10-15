@@ -292,19 +292,17 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                     } else {
                         // Expected in case we have got added I2P to an identity which was created with Tor only
                         KeyBundle keyBundle = identity.getKeyBundle();
-                        missing.forEach(transportType -> {
-                            Identity upDatedIdentity = new Identity(identityTag, fromNetworkIdStore, keyBundle);
-                            log.warn("We update the identity for tag {} with the new networkId from network ID store. {}\n" +
-                                    "This is expected when user update to the I2P enabled version", identityTag, fromNetworkIdStore);
-                            synchronized (lock) {
-                                if (identityTag.equals(DEFAULT_IDENTITY_TAG)) {
-                                    persistableStore.setDefaultIdentity(upDatedIdentity);
-                                } else {
-                                    persistableStore.getActiveIdentityByTag().put(identityTag, upDatedIdentity);
-                                }
+                        Identity upDatedIdentity = new Identity(identityTag, fromNetworkIdStore, keyBundle);
+                        log.warn("We update the identity for tag {} with the new networkId from network ID store. {}\n" +
+                                "This is expected when user update to the I2P enabled version", identityTag, fromNetworkIdStore);
+                        synchronized (lock) {
+                            if (identityTag.equals(DEFAULT_IDENTITY_TAG)) {
+                                persistableStore.setDefaultIdentity(upDatedIdentity);
+                            } else {
+                                persistableStore.getActiveIdentityByTag().put(identityTag, upDatedIdentity);
                             }
-                            persist();
-                        });
+                        }
+                        persist();
                     }
                 });
     }

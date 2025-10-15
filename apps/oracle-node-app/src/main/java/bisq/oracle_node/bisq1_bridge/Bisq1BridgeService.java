@@ -24,6 +24,12 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
+import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BsqBlockGrpcService;
@@ -32,36 +38,40 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class Bisq1BridgeService implements Service {
+public class Bisq1BridgeService implements Service, Node.Listener {
     @Getter
     public static class Config {
         private final int grpcServicePort;
         private final int initialDelayInSeconds;
         private final int throttleDelayInSeconds;
+        private final int numConnectionsForRepublish;
 
         public Config(int grpcServicePort,
                       int initialDelayInSeconds,
-                      int throttleDelayInSeconds) {
+                      int throttleDelayInSeconds,
+                      int numConnectionsForRepublish) {
             this.grpcServicePort = grpcServicePort;
             this.initialDelayInSeconds = initialDelayInSeconds;
             this.throttleDelayInSeconds = throttleDelayInSeconds;
+            this.numConnectionsForRepublish = numConnectionsForRepublish;
         }
 
         public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
             com.typesafe.config.Config grpcService = config.getConfig("grpcService");
             return new Bisq1BridgeService.Config(grpcService.getInt("port"),
                     config.getInt("initialDelayInSeconds"),
-                    config.getInt("throttleDelayInSeconds"));
+                    config.getInt("throttleDelayInSeconds"),
+                    config.getInt("numConnectionsForRepublish"));
         }
     }
 
@@ -75,7 +85,9 @@ public class Bisq1BridgeService implements Service {
     private final BurningmanGrpcService burningmanGrpcService;
     private final Bisq1BridgeRequestService bisq1BridgeRequestService;
     private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
-    private ScheduledExecutorService executor;
+    @Nullable
+    private volatile ScheduledExecutorService executor;
+    private final Object executorLock = new Object();
 
     public Bisq1BridgeService(Config config,
                               PersistenceService persistenceService,
@@ -116,13 +128,7 @@ public class Bisq1BridgeService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleWithFixedDelay(() -> {
-            AuthorizedDistributedData data = queue.poll();
-            if (data != null) {
-                publishAuthorizedData(data);
-            }
-        }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+        networkService.addDefaultNodeListener(this);
 
         return grpcClient.initialize()
                 .thenCompose(result -> bisq1BridgeRequestService.initialize())
@@ -133,16 +139,56 @@ public class Bisq1BridgeService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
 
+        networkService.removeDefaultNodeListener(this);
+
         queue.clear();
 
-        ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
-        executor = null;
+        ScheduledExecutorService toShutdown;
+        synchronized (executorLock) {
+            toShutdown = executor;
+            executor = null;
+        }
+        if (toShutdown != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(toShutdown, 100);
+        }
 
         return burningmanGrpcService.shutdown()
                 .thenCompose(result -> bsqBlockGrpcService.shutdown())
                 .thenCompose(result -> bisq1BridgeRequestService.shutdown())
                 .thenCompose(result -> grpcClient.shutdown());
     }
+
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+        if (executor != null) return;
+
+        synchronized (executorLock) {
+            if (executor != null) return;
+            int numAllConnections = networkService.getServiceNodesByTransport().getAllServiceNodes().stream()
+                    .map(ServiceNode::getDefaultNode)
+                    .mapToInt(Node::getNumConnections)
+                    .sum();
+            if (numAllConnections >= config.getNumConnectionsForRepublish()) {
+                ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
+                tmp.scheduleWithFixedDelay(() -> {
+                    AuthorizedDistributedData data = queue.poll();
+                    if (data != null) {
+                        publishAuthorizedData(data);
+                    }
+                }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                executor = tmp;
+            }
+        }
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
 
     private void publishAuthorizedData(AuthorizedDistributedData data) {
         Identity identity = identityService.getOrCreateDefaultIdentity();

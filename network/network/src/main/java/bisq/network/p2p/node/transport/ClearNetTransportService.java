@@ -144,7 +144,7 @@ public class ClearNetTransportService implements TransportService {
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
         } catch (IOException e) {
-            log.error("{}. Server port {}", e, port);
+            log.error("Error at getServerSocket. Port {}", port, e);
             throw new CompletionException(e);
         }
     }
