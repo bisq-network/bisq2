@@ -23,12 +23,14 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+import static com.google.common.base.Preconditions.checkArgument;
 
 
 @Slf4j
@@ -129,7 +131,9 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
-        int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
+        Optional<Address> optionalAddress = networkId.getAddressByTransportTypeMap().getAddress(TransportType.CLEAR);
+        checkArgument(optionalAddress.isPresent(), "networkId.getAddressByTransportTypeMap().getAddress(TransportType.CLEAR) must not be empty");
+        int port = optionalAddress.map(Address::getPort).orElseThrow();
         initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.info("Create serverSocket at port {}", port);
 

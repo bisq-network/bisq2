@@ -171,7 +171,9 @@ public class ServiceNodesByTransport {
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {
         supportedTransportTypes.forEach(transportType -> {
             Set<Address> seeds = seedNodeMaps.stream()
-                    .map(map -> map.get(transportType))
+                    .map(map -> map.getAddress(transportType))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toSet());
             map.get(transportType).addSeedNodeAddresses(seeds);
         });
