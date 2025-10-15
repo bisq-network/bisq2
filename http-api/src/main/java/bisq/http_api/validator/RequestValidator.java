@@ -9,9 +9,10 @@ import java.util.regex.Pattern;
 
 @Slf4j
 class RequestValidator {
-    // Only allow alphanumeric characters and some special characters like /, -, _
-    // Does not allow dots to avoid path traversal attacks (example: '../')
-    private static final Pattern SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-?=,&.:]*$");
+    // Only allow alphanumeric characters and some special characters like /, -, _, .
+    // Path traversal is blocked separately
+    private static final Pattern SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:]*$");
+    private static final Pattern SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=]*$");
     private final Set<Pattern> endpointWhitelistPatterns;
     private final Set<Pattern> endpointBlacklistPatterns;
 
@@ -24,17 +25,17 @@ class RequestValidator {
                 .collect(java.util.stream.Collectors.toSet());
     }
 
-    public boolean isValidPath(String path) {
+    public boolean isValidUri(String uri) {
         try {
-            return hasValidPath(new URI(path));
+            return hasValidComponents(new URI(uri));
         } catch (Exception e) {
-            log.info("Failed to parse path into URI: {}", path);
+            log.info("Failed to parse string uri into URI: {}", uri);
             return false;
         }
     }
 
-    public boolean hasValidPath(URI uri) {
-        String decodedPath = uri.normalize().getPath();
+    public boolean hasValidComponents(URI uri) {
+        String decodedPath = uri.getPath();
         if (decodedPath == null) {
             log.info("Invalid decoded path was null.");
             return false;
@@ -63,7 +64,17 @@ class RequestValidator {
             log.info("Accessed decoded path was blacklisted: {}", decodedPath);
             return false;
         }
-
+        String decodedQuery = uri.getQuery();
+        if (decodedQuery != null) {
+            if (!SAFE_QUERY.matcher(decodedQuery).matches()) {
+                log.info("Invalid decoded query contained unsafe characters. query: {}", decodedQuery);
+                return false;
+            }
+            if (decodedQuery.contains("..")) {
+                log.info("Invalid decoded query contained unsafe relative path. query: {}", decodedQuery);
+                return false;
+            }
+        }
         return true;
     }
 }

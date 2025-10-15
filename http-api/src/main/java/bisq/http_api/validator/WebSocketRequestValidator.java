@@ -18,7 +18,7 @@ public class WebSocketRequestValidator {
     @Nullable
     public String validateRequest(WebSocketRestApiRequest request) {
         String path = request.getPath();
-        if (!this.requestValidator.isValidPath(path)) {
+        if (!this.requestValidator.isValidUri(path)) {
             return String.format("Invalid path: '%s'", path);
         }
 
