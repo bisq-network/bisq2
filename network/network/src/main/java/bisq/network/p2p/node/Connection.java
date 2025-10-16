@@ -373,29 +373,33 @@ public abstract class Connection {
     }
 
     private ThreadPoolExecutor createReadExecutor() {
-        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
+        int capacity = 100;
+        MaxSizeAwareDeque deque = new MaxSizeAwareDeque(capacity);
+        String name = "Connection.read-" + getThreadNameDetails();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 deque,
-                ExecutorFactory.getThreadFactoryWithCounter("Connection.read-" + getThreadNameDetails()),
-                new AbortPolicyWithLogging());
+                ExecutorFactory.getThreadFactoryWithCounter(name),
+                new AbortPolicyWithLogging(name, capacity, executorMaxPoolSize));
         deque.setExecutor(executor);
         return executor;
     }
 
     private ThreadPoolExecutor createSendExecutor() {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
+        int capacity = 100;
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(capacity);
+        String name = "Connection.send-" + getThreadNameDetails();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Connection.send-" + getThreadNameDetails()),
-                new AbortPolicyWithLogging());
+                ExecutorFactory.getThreadFactoryWithCounter(name),
+                new AbortPolicyWithLogging(name, capacity, executorMaxPoolSize));
         queue.setExecutor(executor);
         return executor;
     }

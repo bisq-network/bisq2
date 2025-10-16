@@ -49,15 +49,17 @@ public class NetworkExecutors {
     }
 
     private static ThreadPoolExecutor createNotifyExecutor(int maxPoolSize) {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100000);
+        int capacity = 100000;
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(capacity);
+        String name = "Network.notify";
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 maxPoolSize,
                 30,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Network.notify"),
-                new AbortPolicyWithLogging());
+                ExecutorFactory.getThreadFactoryWithCounter(name),
+                new AbortPolicyWithLogging(name, capacity, maxPoolSize));
         queue.setExecutor(executor);
         return executor;
     }

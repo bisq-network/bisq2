@@ -901,19 +901,21 @@ public class Node implements Connection.Handler {
     }
 
     private ThreadPoolExecutor createExecutor() {
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
+        int capacity = 100;
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(capacity);
         // We use maxNumConnectedPeers (default 12) for the max pool size and add some extra tolerance as at startup we
         // create many connections in parallel.
         // After startup, it is expected that pool shrinks to 1-3 threads
         int maximumPoolSize = config.getMaxNumConnectedPeers() + 4;
+        String name = "Node-" + printAddresses();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 maximumPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Node-" + printAddresses()),
-                new AbortPolicyWithLogging());
+                ExecutorFactory.getThreadFactoryWithCounter(name),
+                new AbortPolicyWithLogging(name, capacity, maximumPoolSize));
         queue.setExecutor(executor);
         return executor;
     }

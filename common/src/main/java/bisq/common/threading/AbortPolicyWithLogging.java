@@ -25,12 +25,19 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class AbortPolicyWithLogging implements RejectedExecutionHandler {
-    public AbortPolicyWithLogging() {
+    private final String name;
+    private final int capacity;
+    private final int maxPoolSize;
+
+    public AbortPolicyWithLogging(String name, int capacity, int maxPoolSize) {
+        this.name = name;
+        this.capacity = capacity;
+        this.maxPoolSize = maxPoolSize;
     }
 
     @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
-        log.warn("Task rejected. We throw a RejectedExecutionException");
+        log.warn("Task rejected from {} with capacity {} and maxPoolSize {}. We throw a RejectedExecutionException", name, capacity, maxPoolSize);
         throw new RejectedExecutionException("Task " + runnable.getClass().getSimpleName() +
                 " rejected from " +
                 executor.toString());
