@@ -30,10 +30,10 @@ import javafx.scene.paint.Color;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
@@ -69,14 +69,14 @@ public class CatHashImageUtil {
         return canvas.snapshot(snapshotParameters, null);
     }
 
-    public static Image readRawImage(File file) throws IOException {
-        byte[] rawData = Files.readAllBytes(file.toPath());
+    public static Image readRawImage(Path file) throws IOException {
+        byte[] rawData = Files.readAllBytes(file);
         return byteArrayToImage(rawData);
     }
 
-    public static void writeRawImage(Image image, File file) throws IOException {
+    public static void writeRawImage(Image image, Path file) throws IOException {
         byte[] rawData = imageToByteArray(image);
-        Files.write(file.toPath(), rawData);
+        Files.write(file, rawData);
     }
 
     public static Image byteArrayToImage(byte[] data) {

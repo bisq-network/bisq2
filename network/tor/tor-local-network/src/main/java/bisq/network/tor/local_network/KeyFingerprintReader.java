@@ -20,20 +20,20 @@ package bisq.network.tor.local_network;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 @Slf4j
 public class KeyFingerprintReader {
-    private final File fingerprintFile;
+    private final Path fingerprintFile;
     private final Predicate<String> lineMatcher;
     private final UnaryOperator<String> dataExtractor;
 
-    public KeyFingerprintReader(File fingerprintFile,
+    public KeyFingerprintReader(Path fingerprintFile,
                                 Predicate<String> lineMatcher,
                                 UnaryOperator<String> dataExtractor) {
         this.fingerprintFile = fingerprintFile;
@@ -43,7 +43,7 @@ public class KeyFingerprintReader {
 
 
     public Optional<String> read() {
-        try (var reader = new BufferedReader(new FileReader(fingerprintFile))) {
+        try (BufferedReader reader = Files.newBufferedReader(fingerprintFile)) {
             String line = reader.readLine();
             while (line != null) {
 
@@ -56,7 +56,7 @@ public class KeyFingerprintReader {
                 line = reader.readLine();
             }
         } catch (IOException e) {
-            log.error("Cannot read {}", fingerprintFile.getAbsolutePath(), e);
+            log.error("Cannot read {}", fingerprintFile.toAbsolutePath(), e);
         }
 
         return Optional.empty();

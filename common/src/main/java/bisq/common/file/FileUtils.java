@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -317,14 +316,14 @@ public class FileUtils {
         }
     }
 
-    public static void backupCorruptedFile(String directory, Path storageFile, String fileName, String backupFolderName)
+    public static void backupCorruptedFile(Path directory, Path storageFile, String fileName, String backupFolderName)
             throws IOException {
         if (Files.exists(storageFile)) {
-            Path corruptedBackupDir = Path.of(directory, backupFolderName);
+            Path corruptedBackupDir = directory.resolve(backupFolderName);
             Files.createDirectories(corruptedBackupDir);
             String timestamp = String.valueOf(System.currentTimeMillis());
             String newFileName = fileName + "_at_" + timestamp;
-            Path target = Path.of(directory, backupFolderName, newFileName);
+            Path target = directory.resolve(backupFolderName).resolve(newFileName);
             Files.move(storageFile, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
@@ -364,12 +363,11 @@ public class FileUtils {
         return FileUtils.class.getClassLoader().getResource(fileName) != null;
     }
 
-    public static void copyDirectory(String sourceDirectory,
-                                     String destinationDirectory,
+    public static void copyDirectory(Path sourceDirectory,
+                                     Path destinationDirectory,
                                      Set<String> extensionsToSkip) throws IOException {
-        Path start = Paths.get(sourceDirectory);
         AtomicReference<IOException> exception = new AtomicReference<>();
-        try (Stream<Path> stream = Files.walk(start)) {
+        try (Stream<Path> stream = Files.walk(sourceDirectory)) {
             stream.forEach(source -> {
                 boolean shouldSkip = false;
                 if (!Files.isDirectory(source)) {
@@ -382,7 +380,8 @@ public class FileUtils {
                 }
 
                 if (!shouldSkip) {
-                    Path destination = Paths.get(destinationDirectory, source.toString().substring(sourceDirectory.length()));
+                    Path relativePath = sourceDirectory.relativize(source);
+                    Path destination = destinationDirectory.resolve(relativePath);
                     try {
                         Files.copy(source, destination);
                     } catch (IOException e) {

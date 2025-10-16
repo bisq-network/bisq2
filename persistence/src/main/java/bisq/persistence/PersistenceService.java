@@ -24,7 +24,7 @@ import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,12 +33,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PersistenceService {
     @Getter
-    private final String baseDir;
+    private final Path baseDir;
     @Getter
     protected final List<PersistenceClient<? extends PersistableProto>> clients = new CopyOnWriteArrayList<>();
     protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
 
-    public PersistenceService(String baseDir) {
+    public PersistenceService(Path baseDir) {
         this.baseDir = baseDir;
     }
 
@@ -86,13 +86,17 @@ public class PersistenceService {
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                                 String subDir,
+                                                                                 Path subDir,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore,
                                                                                  MaxBackupSize maxBackupSize) {
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
-        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName, maxBackupSize);
+        Path normalized = subDir.normalize();
+        if (normalized.isAbsolute()) {
+            throw new IllegalArgumentException("subDir must be relative to baseDir");
+        }
+        Persistence<T> persistence = new Persistence<>(baseDir.resolve(normalized), fileName, maxBackupSize);
         persistenceInstances.add(persistence);
         return persistence;
     }

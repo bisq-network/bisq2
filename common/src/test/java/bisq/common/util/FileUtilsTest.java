@@ -249,7 +249,7 @@ public class FileUtilsTest {
         Files.createDirectory(dir);
         Path path = dir.resolve("corrupt.txt");
         Files.write(path, "data".getBytes());
-        FileUtils.backupCorruptedFile(dir.toString(), path, "corrupt.txt", "backup");
+        FileUtils.backupCorruptedFile(dir, path, "corrupt.txt", "backup");
         Set<String> files = FileUtils.listFiles(dir.resolve("backup"));
         assertTrue(files.stream().anyMatch(f -> f.startsWith("corrupt.txt_at_")));
     }
@@ -267,7 +267,7 @@ public class FileUtilsTest {
         Files.createDirectory(srcDir);
         Files.write(srcDir.resolve("file.txt"), "abc".getBytes());
         Files.write(srcDir.resolve("file.skip"), "skip".getBytes());
-        FileUtils.copyDirectory(srcDir.toString(), destDir.toString(), Set.of("skip"));
+        FileUtils.copyDirectory(srcDir, destDir, Set.of("skip"));
         assertTrue(Files.exists(destDir.resolve("file.txt")));
         assertFalse(Files.exists(destDir.resolve("file.skip")));
     }

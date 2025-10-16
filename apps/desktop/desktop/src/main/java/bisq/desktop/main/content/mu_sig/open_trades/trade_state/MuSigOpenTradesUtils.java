@@ -58,7 +58,7 @@ public class MuSigOpenTradesUtils {
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToFile(csv, file.toPath());
+                            FileUtils.writeToFile(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

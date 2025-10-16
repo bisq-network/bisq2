@@ -139,7 +139,8 @@ public class UpdaterController implements Controller {
         });
 
         updateIgnoreVersionState();
-        model.getFilteredList().setPredicate(e -> !e.getDownloadItem().getDestinationFile().getName().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
+        model.getFilteredList().setPredicate(
+                e -> !e.getDownloadItem().getDestinationFile().getFileName().toString().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
     }
 
     @Override

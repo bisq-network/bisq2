@@ -21,8 +21,8 @@ import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import lombok.Getter;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,11 +38,11 @@ public class DirectoryAuthorityFactory {
         createDataDirIfNotPresent(dataDir);
 
         Path keysPath = dataDir.resolve("keys");
-        File keysDirFile = keysPath.toFile();
-        if (!keysDirFile.exists()) {
-            boolean isSuccess = keysDirFile.mkdirs();
-            if (!isSuccess) {
-                throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.");
+        if (!Files.exists(keysPath)) {
+            try {
+                Files.createDirectories(keysPath);
+            } catch (IOException e) {
+                throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.", e);
             }
             DirectoryAuthorityKeyGenerator.generate(directoryAuthority, passphrase);
         }
@@ -51,11 +51,11 @@ public class DirectoryAuthorityFactory {
     }
 
     private void createDataDirIfNotPresent(Path dataDir) {
-        File dataDirFile = dataDir.toFile();
-        if (!dataDirFile.exists()) {
-            boolean isSuccess = dataDir.toFile().mkdir();
-            if (!isSuccess) {
-                throw new IllegalStateException("Couldn't create data directory for directory authority.");
+        if(!Files.exists(dataDir)) {
+            try {
+                Files.createDirectory(dataDir);
+            } catch (IOException e) {
+                throw new IllegalStateException("Couldn't create data directory for directory authority.", e);
             }
         }
     }

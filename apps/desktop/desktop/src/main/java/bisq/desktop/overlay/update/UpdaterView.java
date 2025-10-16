@@ -296,7 +296,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         ListItem(DownloadItem downloadItem) {
             this.downloadItem = downloadItem;
 
-            fileName = downloadItem.getDestinationFile().getName();
+            fileName = downloadItem.getDestinationFile().getFileName().toString();
             FxBindings.bind(progress).to(downloadItem.getProgress());
             showVerified.set(UpdaterUtils.isDownloadedFile(downloadItem.getSourceFileName()));
         }

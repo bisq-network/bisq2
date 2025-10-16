@@ -7,7 +7,6 @@ import org.bouncycastle.util.encoders.Base32;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -20,16 +19,15 @@ public class TorKeyUtils {
     }
 
     public static void writePrivateKey(TorKeyPair torKeyPair, Path storageDir, String tag) {
-        Path targetPath = Paths.get(storageDir.toString(), tag);
+        Path targetPath = storageDir.resolve(tag);
         try {
             Files.createDirectories(targetPath);
-            String dir = targetPath.toAbsolutePath().toString();
 
-            FileUtils.writeToFile(Hex.encode(torKeyPair.getPrivateKey()), Paths.get(dir, "private_key_hex"));
-            FileUtils.writeToFile(torKeyPair.getOnionAddress(), Paths.get(dir, "hostname"));
+            FileUtils.writeToFile(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
+            FileUtils.writeToFile(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));
 
             log.info("We persisted the tor private key in hex encoding for onionAddress {} for tag {} to {}.",
-                    torKeyPair.getOnionAddress(), tag, dir);
+                    torKeyPair.getOnionAddress(), tag, targetPath);
         } catch (Exception e) {
             log.error("Could not persist torIdentity", e);
         }

@@ -15,24 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.tor.process;
+package bisq.evolution.updater;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Optional;
 
-public class LdPreload {
-    public static String computeLdPreloadVariable(Path dirPath) {
-        try (Stream<Path> stream = Files.list(dirPath)) {
-            return stream
-                    .filter(path -> path.getFileName().toString().contains(".so."))
-                    .map(Path::toAbsolutePath)
-                    .map(Path::toString)
-                    .collect(Collectors.joining(":"));
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to list directory: " + dirPath.toAbsolutePath(), e);
-        }
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class UpdaterUtilsTest {
+
+    @Test
+    void testReadVersionFromVersionFile(@TempDir Path tempDir) throws IOException {
+        Path expectedPath = tempDir.resolve(UpdaterUtils.VERSION_FILE_NAME);
+        Files.writeString(expectedPath, "12.3.6");
+
+        Optional<String> result = UpdaterUtils.readVersionFromVersionFile(tempDir);
+
+        assertTrue(result.isPresent());
+        assertEquals("12.3.6", result.get());
     }
 }

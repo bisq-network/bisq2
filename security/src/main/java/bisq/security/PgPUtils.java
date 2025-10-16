@@ -18,11 +18,23 @@
 package bisq.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SignatureException;
 import java.util.Iterator;
 
@@ -32,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PgPUtils {
 
-    public static boolean isSignatureValid(File pubKeyFile, File sigFile, File dataFile) {
+    public static boolean isSignatureValid(Path pubKeyFile, Path sigFile, Path dataFile) {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFile);
             PGPSignature pgpSignature = readPgpSignature(sigFile);
@@ -46,8 +58,8 @@ public class PgPUtils {
         }
     }
 
-    public static PGPPublicKeyRing readPgpPublicKeyRing(File pubKeyFile) throws IOException, PGPException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile))) {
+    public static PGPPublicKeyRing readPgpPublicKeyRing(Path pubKeyFile) throws IOException, PGPException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(pubKeyFile))) {
             PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(inputStream, new JcaKeyFingerprintCalculator());
             Iterator<PGPPublicKeyRing> iterator = publicKeyRingCollection.getKeyRings();
             if (iterator.hasNext()) {
@@ -58,8 +70,8 @@ public class PgPUtils {
         }
     }
 
-    public static PGPSignature readPgpSignature(File sigFile) throws IOException, SignatureException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(sigFile))) {
+    public static PGPSignature readPgpSignature(Path sigFile) throws IOException, SignatureException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(sigFile))) {
             PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
             Object signatureObject = pgpObjectFactory.nextObject();
             if (signatureObject instanceof PGPSignatureList signatureList) {
@@ -73,10 +85,12 @@ public class PgPUtils {
         }
     }
 
-    public static boolean isSignatureValid(PGPSignature pgpSignature, PGPPublicKey publicKey, File dataFile) throws IOException, PGPException {
+    public static boolean isSignatureValid(PGPSignature pgpSignature,
+                                           PGPPublicKey publicKey,
+                                           Path dataFile) throws IOException, PGPException {
         checkArgument(pgpSignature.getKeyID() == publicKey.getKeyID(), "Key ID from signature not matching key ID from pub Key");
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
-        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)))) {
+        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(Files.newInputStream((dataFile))))) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while (true) {

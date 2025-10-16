@@ -20,12 +20,13 @@ package bisq.network.tor.local_network;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -38,9 +39,9 @@ import static org.mockito.Mockito.spy;
 @Disabled
 public class RelayTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) {
+    void basicTest(@TempDir Path tempDir) throws IOException {
         Path relayAPath = tempDir.resolve("RELAY_A");
-        assertThat(relayAPath.toFile().mkdir()).isTrue();
+        Files.createDirectory(relayAPath);
 
         TorNode firstRelay = spy(
                 TorNode.builder()

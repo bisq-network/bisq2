@@ -289,7 +289,7 @@ public class StringUtils {
         if (OS.isAndroid()) {
             return string;
         }
-        return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
+        return string.replace(PlatformUtils.getHomeDirectory().toAbsolutePath().toString(), "<HOME_DIR>");
     }
 
     /**

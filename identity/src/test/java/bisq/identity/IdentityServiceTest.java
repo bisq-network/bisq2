@@ -54,7 +54,7 @@ public class IdentityServiceTest {
 
     @BeforeEach
     void setUp() {
-        PersistenceService persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        PersistenceService persistenceService = new PersistenceService(tempDir);
 
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));

@@ -6,7 +6,6 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.platform.Version;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,11 +15,11 @@ import java.util.concurrent.CompletableFuture;
 public class MigrationService implements Service {
     static final Version VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED = new Version("2.1.1");
     private final Path dataDir;
-    private final File dataDirVersionFile;
+    private final Path dataDirVersionFile;
 
     public MigrationService(Path dataDir) {
         this.dataDir = dataDir;
-        this.dataDirVersionFile = dataDir.resolve("version").toFile();
+        this.dataDirVersionFile = dataDir.resolve("version");
     }
 
     @Override
@@ -38,12 +37,12 @@ public class MigrationService implements Service {
     }
 
     Version getDataDirVersion() {
-        if (!dataDirVersionFile.exists()) {
+        if (!Files.exists(dataDirVersionFile)) {
             return VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED;
         }
 
         try {
-            String version = Files.readString(dataDirVersionFile.toPath());
+            String version = Files.readString(dataDirVersionFile);
             return new Version(version);
         } catch (IOException e) {
             throw new RuntimeException("Can't identify data dir version. This shouldn't happen.", e);

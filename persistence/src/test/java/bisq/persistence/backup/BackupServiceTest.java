@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -69,50 +68,50 @@ public class BackupServiceTest {
         String dirPath;
 
         // ✅ Windows Test
-        dataDir = Paths.get("C:\\Users\\bisq_user\\alice");
-        storeFilePath = Paths.get(dataDir + "\\db\\private\\key_bundle_store.protobuf");
+        dataDir = Path.of("C:\\Users\\bisq_user\\alice");
+        storeFilePath = Path.of(dataDir + "\\db\\private\\key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, true);
         assertEquals("\\db\\private\\key_bundle_store.protobuf", dirPath);
 
         // ✅ macOS Test
-        dataDir = Paths.get("/Users/bisq_user/Library/Application Support/alice");
-        storeFilePath = Paths.get(dataDir + "/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/Users/bisq_user/Library/Application Support/alice");
+        storeFilePath = Path.of(dataDir + "/db/private/key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, false);
         assertEquals("/db/private/key_bundle_store.protobuf", dirPath);
 
         // ✅ Unix Test
-        dataDir = Paths.get("/home/bisq_user/alice");
-        storeFilePath = Paths.get(dataDir + "/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/home/bisq_user/alice");
+        storeFilePath = Path.of(dataDir + "/db/private/key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, false);
         assertEquals("/db/private/key_bundle_store.protobuf", dirPath);
 
         // ✅ Windows UNC Path Test (Server Shares)
-        dataDir = Paths.get("\\\\Server\\Share\\bisq_user\\alice");
-        storeFilePath = Paths.get("\\\\Server\\Share\\bisq_user\\alice\\db\\private\\key_bundle_store.protobuf");
+        dataDir = Path.of("\\\\Server\\Share\\bisq_user\\alice");
+        storeFilePath = Path.of("\\\\Server\\Share\\bisq_user\\alice\\db\\private\\key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, true);
         assertEquals("\\db\\private\\key_bundle_store.protobuf", dirPath);
 
         // ✅ Nested Directory Test
-        dataDir = Paths.get("/home/bisq_user/alice");
-        storeFilePath = Paths.get("/home/bisq_user/alice/db/subdir/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/home/bisq_user/alice");
+        storeFilePath = Path.of("/home/bisq_user/alice/db/subdir/private/key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, false);
         assertEquals("/db/subdir/private/key_bundle_store.protobuf", dirPath);
 
         // ✅ Path with Trailing Slash in dataDir
-        dataDir = Paths.get("/home/bisq_user/alice/");
-        storeFilePath = Paths.get("/home/bisq_user/alice/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/home/bisq_user/alice/");
+        storeFilePath = Path.of("/home/bisq_user/alice/db/private/key_bundle_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, false);
         assertEquals("/db/private/key_bundle_store.protobuf", dirPath);
 
         // ✅ Special Characters in Path
-        dataDir = Paths.get("C:\\Users\\bisq user\\data");
-        storeFilePath = Paths.get("C:\\Users\\bisq user\\data\\db\\private\\my file_store.protobuf");
+        dataDir = Path.of("C:\\Users\\bisq user\\data");
+        storeFilePath = Path.of("C:\\Users\\bisq user\\data\\db\\private\\my file_store.protobuf");
         dirPath = BackupService.getRelativePath(dataDir, storeFilePath, true);
         assertEquals("\\db\\private\\my file_store.protobuf", dirPath);
 
         // ❌ File Outside `dataDir` (Should Throw Exception)
-        dataDir = Paths.get("/home/bisq_user/alice");
-        storeFilePath = Paths.get("/home/bisq_user/other_user/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/home/bisq_user/alice");
+        storeFilePath = Path.of("/home/bisq_user/other_user/db/private/key_bundle_store.protobuf");
         Path finalDataDir = dataDir;
         Path finalStoreFilePath = storeFilePath;
         assertThrows(IllegalArgumentException.class, () -> {
@@ -125,22 +124,22 @@ public class BackupServiceTest {
         Path dataDir, storeFilePath, dirPath;
 
         // Windows
-        dataDir = Paths.get("C:\\Users\\bisq_user\\alice");
-        storeFilePath = Paths.get(dataDir + "\\db\\private\\key_bundle_store.protobuf");
+        dataDir = Path.of("C:\\Users\\bisq_user\\alice");
+        storeFilePath = Path.of(dataDir + "\\db\\private\\key_bundle_store.protobuf");
         dirPath = BackupService.resolveDirPath(dataDir, storeFilePath);
-        assertEquals(Paths.get(dataDir + "\\backups\\private\\key_bundle"), dirPath);
+        assertEquals(Path.of(dataDir + "\\backups\\private\\key_bundle"), dirPath);
 
         // OSX
-        dataDir = Paths.get("/Users/bisq_user/Library/Application Support/alice");
-        storeFilePath = Paths.get(dataDir + "/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/Users/bisq_user/Library/Application Support/alice");
+        storeFilePath = Path.of(dataDir + "/db/private/key_bundle_store.protobuf");
         dirPath = BackupService.resolveDirPath(dataDir, storeFilePath);
-        assertEquals(Paths.get(dataDir + "/backups/private/key_bundle"), dirPath);
+        assertEquals(Path.of(dataDir + "/backups/private/key_bundle"), dirPath);
 
         // Unix
-        dataDir = Paths.get("/home/bisq_user/alice");
-        storeFilePath = Paths.get(dataDir + "/db/private/key_bundle_store.protobuf");
+        dataDir = Path.of("/home/bisq_user/alice");
+        storeFilePath = Path.of(dataDir + "/db/private/key_bundle_store.protobuf");
         dirPath = BackupService.resolveDirPath(dataDir, storeFilePath);
-        assertEquals(Paths.get(dataDir + "/backups/private/key_bundle"), dirPath);
+        assertEquals(Path.of(dataDir + "/backups/private/key_bundle"), dirPath);
     }
 
     @Test

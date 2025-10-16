@@ -192,7 +192,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         Path parentDirectoryPath = storeFilePath.getParent();
         try {
             FileUtils.backupCorruptedFile(
-                    parentDirectoryPath.toAbsolutePath().toString(),
+                    parentDirectoryPath,
                     storeFilePath,
                     storeFilePath.getFileName().toString(),
                     "corruptedNetworkId"
