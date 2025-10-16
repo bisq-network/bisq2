@@ -10,6 +10,7 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.http_api.validator.HttpApiRequestFilter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -21,14 +22,15 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatRestApi tradeChatRestApi,
-                                 UserIdentityRestApi userIdentityRestApi ,
+                                 UserIdentityRestApi userIdentityRestApi,
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
-                                 UserProfileRestApi userProfileRestApi) {
-        super(swaggerBaseUrl);
+                                 UserProfileRestApi userProfileRestApi,
+                                 HttpApiRequestFilter httpApiRequestFilter) {
+        super(swaggerBaseUrl, httpApiRequestFilter);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
 

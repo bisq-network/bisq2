@@ -27,6 +27,7 @@ import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.validator.HttpApiRequestFilter;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -167,13 +168,11 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         if (restApiConfig.isEnabled()) {
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
-            restApiService = Optional.of(new RestApiService(
-                    restApiConfig,
-                    restApiResourceConfig,
-                    config.getBaseDir(),
-                    securityService,
-                    networkService));
+            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(
+                    restApiConfig, networkService, nodeMonitorService,
+                    HttpApiRequestFilter.from(restApiConfig)
+            );
+            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getBaseDir(), securityService, networkService));
         }
     }
 

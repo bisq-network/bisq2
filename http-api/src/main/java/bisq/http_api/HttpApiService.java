@@ -34,6 +34,8 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.http_api.validator.HttpApiRequestFilter;
+import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -105,7 +107,8 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi);
+                        userProfileRestApi,
+                        HttpApiRequestFilter.from(restApiConfig));
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, baseDir, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
@@ -122,7 +125,8 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi);
+                        userProfileRestApi,
+                        HttpApiRequestFilter.from(webSocketConfig));
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
@@ -133,7 +137,8 @@ public class HttpApiService implements Service {
                         chatService,
                         tradeService,
                         userService,
-                        openTradeItemsService));
+                        openTradeItemsService,
+                        WebSocketRequestValidator.from(webSocketConfig)));
             } else {
                 webSocketService = Optional.empty();
             }
