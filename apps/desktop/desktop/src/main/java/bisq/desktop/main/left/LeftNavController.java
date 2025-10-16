@@ -146,7 +146,10 @@ public class LeftNavController implements Controller {
             findLeftNavButton(notification.getChatChannelDomain()).ifPresent(leftNavButton -> {
                 NavigationTarget navigationTarget = leftNavButton.getNavigationTarget();
                 long numNotifications = bisqEasyNotificationsService.getNumNotifications(NavigationUtil.fromNavigationTarget(navigationTarget));
-                if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
+                //noinspection deprecation
+                if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                        notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES ||
+                        notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
                     // In case we are a mediator we ignore the notifications in the BISQ_EASY_OPEN_TRADES as those
                     // we handle in the mediation view.
                     numNotifications = Math.max(0, numNotifications - numMediatorsNotConsumedNotifications.get());

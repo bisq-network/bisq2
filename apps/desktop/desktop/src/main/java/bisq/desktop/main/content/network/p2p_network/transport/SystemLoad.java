@@ -52,6 +52,7 @@ public class SystemLoad {
         return controller.getView().getRoot();
     }
 
+    @SuppressWarnings("deprecation")
     @Slf4j
     private static class Controller implements bisq.desktop.common.view.Controller {
         @Getter

@@ -40,6 +40,7 @@ final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> {
 
     @Override
     public bisq.user.protobuf.ProfileAgeStore.Builder getBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.user.protobuf.ProfileAgeStore.newBuilder()
                 .clearProfileIds() // Not used anymore with v2.1.8
                 .setLastRequested(lastRequested);

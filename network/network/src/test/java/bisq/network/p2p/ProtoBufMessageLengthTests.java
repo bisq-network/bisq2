@@ -105,6 +105,7 @@ public class ProtoBufMessageLengthTests {
     }
 
     private AuthorizationService createAuthorizationService() {
+        //noinspection deprecation
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),

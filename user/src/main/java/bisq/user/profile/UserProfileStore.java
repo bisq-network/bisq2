@@ -51,6 +51,7 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
     public bisq.user.protobuf.UserProfileStore.Builder getBuilder(boolean serializeForHash) {
         bisq.user.protobuf.UserProfileStore.Builder protoBuilder;
         synchronized (lock) {
+            //noinspection deprecation
             protoBuilder = bisq.user.protobuf.UserProfileStore.newBuilder()
                     .addAllIgnoredUserProfileIds(ignoredUserProfileIds)
                     .clearNymListByNickName() // We kept the protobuf field for backward compatibility, but we clear the field.

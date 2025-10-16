@@ -54,6 +54,7 @@ public class FiatPaymentMethodUtil {
     }
 
     public static List<FiatPaymentMethod> getPaymentMethods(String currencyCode) {
+        //noinspection deprecation
         return FiatPaymentRailUtil.getPaymentRails(currencyCode).stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(rail -> rail != FiatPaymentRail.CASH_APP)
