@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.common.asset.FiatCurrency;
 import bisq.common.market.Market;
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -33,7 +32,6 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,9 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWizardDirectionAndMarketModel,
@@ -126,16 +122,17 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         content.setAlignment(Pos.CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineHBox, directionBox, Spacer.fillVBox());
 
-        Label warningIcon = new Label();
-        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
         backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
         gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
         gainReputationButton.setDefaultButton(true);
-        List<String> reputationInfoText = Arrays.asList("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
-                "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2",
-                "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3");
-        reputationInfoOverlay = new WizardOverlay(root, "bisqEasy.tradeWizard.directionAndMarket.feedback.headline",
-                warningIcon, reputationInfoText, backToBuyButton, gainReputationButton);
+        reputationInfoOverlay = new WizardOverlay(root)
+                .yellowWarning()
+                .headline("bisqEasy.tradeWizard.directionAndMarket.feedback.headline")
+                .description("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
+                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2",
+                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3")
+                .buttons(backToBuyButton, gainReputationButton)
+                .build();
 
         root.getChildren().addAll(content, reputationInfoOverlay);
         root.setAlignment(Pos.CENTER);

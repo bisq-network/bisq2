@@ -1111,6 +1111,38 @@
     -fx-image: url("/images/icons/save-icon-green.png");
 }
 
+#warning-grey {
+    -fx-image: url("/images/icons/warning-grey.png");
+}
+
+#warning-white {
+    -fx-image: url("/images/icons/warning-white.png");
+}
+
+#warning-green {
+    -fx-image: url("/images/icons/warning-green.png");
+}
+
+#warning-yellow {
+    -fx-image: url("/images/icons/warning-yellow.png");
+}
+
+#warning-red {
+    -fx-image: url("/images/icons/warning-red.png");
+}
+
+#info-grey {
+    -fx-image: url("/images/icons/info-grey.png");
+}
+
+#info-white {
+    -fx-image: url("/images/icons/info-white.png");
+}
+
+#info-green {
+    -fx-image: url("/images/icons/info-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

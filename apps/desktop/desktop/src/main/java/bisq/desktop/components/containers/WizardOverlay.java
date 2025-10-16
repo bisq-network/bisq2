@@ -20,6 +20,7 @@ package bisq.desktop.components.containers;
 import bisq.common.data.Pair;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.event.EventHandler;
@@ -28,12 +29,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -43,8 +46,90 @@ public class WizardOverlay extends VBox {
 
     private final Node owner;
     @Getter
-    private final Label headlineLabel;
+    private Label headlineLabel = new Label("");
+    private VBox textContentBox;
+    private HBox buttonsBox;
 
+    public WizardOverlay(Node owner) {
+        this.owner = owner;
+        getStyleClass().add("wizard-overlay");
+    }
+
+    public WizardOverlay warning() {
+        ImageView icon = ImageUtil.getImageViewById("warning-white"); // default
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "default-warning");
+        return this;
+    }
+
+    public WizardOverlay yellowWarning() {
+        ImageView icon = ImageUtil.getImageViewById("warning-yellow");
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "yellow-warning");
+        return this;
+    }
+
+    public WizardOverlay redWarning() {
+        ImageView icon = ImageUtil.getImageViewById("warning-red");
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "red-warning");
+        return this;
+    }
+
+    public WizardOverlay greenWarning() {
+        ImageView icon = ImageUtil.getImageViewById("warning-green");
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "green-warning");
+        return this;
+    }
+
+    public WizardOverlay info() {
+        ImageView icon = ImageUtil.getImageViewById("info-white"); // default
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "default-info");
+        return this;
+    }
+
+    public WizardOverlay greyInfo() {
+        ImageView icon = ImageUtil.getImageViewById("info-grey");
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().addAll("headline", "grey-info");
+        return this;
+    }
+
+    public WizardOverlay headline(String headline) {
+        headlineLabel.setText(Res.get(headline));
+        return this;
+    }
+
+    public WizardOverlay description(String text) {
+        textContentBox = createAndGetTextBox(text);
+        return this;
+    }
+
+    public WizardOverlay description(String... texts) {
+        textContentBox = createAndGetTextBox(texts);
+        return this;
+    }
+
+    public WizardOverlay description(VBox textContent) {
+        textContentBox = textContent;
+        return this;
+    }
+
+    public WizardOverlay buttons(Button... buttons) {
+        buttonsBox = createAndGetButtonsBox(buttons);
+        return this;
+    }
+
+    public WizardOverlay build() {
+        VBox content = createAndGetContentBox();
+        setupWizardOverlay(content);
+        return this;
+    }
+
+
+    // TODO: cleanup once finished refactoring
     public WizardOverlay(Node owner, String headline, Node headlineIcon, List<String> texts, Button... buttons) {
         this(owner, headline, Optional.ofNullable(headlineIcon), texts, buttons);
     }
@@ -123,6 +208,32 @@ public class WizardOverlay extends VBox {
         }
     }
 
+    private VBox createAndGetContentBox() {
+        VBox content = new VBox(40);
+
+        if (headlineLabel != null) {
+            headlineLabel.setGraphicTextGap(15);
+            HBox headlineBox = new HBox(headlineLabel);
+            headlineBox.setAlignment(Pos.CENTER);
+            VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));
+            content.getChildren().add(headlineBox);
+        }
+
+        if (textContentBox != null) {
+            content.getChildren().add(textContentBox);
+        }
+
+        if (buttonsBox != null) {
+            content.getChildren().add(buttonsBox);
+        }
+
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().setAll("trade-wizard-feedback-bg");
+        content.setPadding(new Insets(30));
+        content.setMaxWidth(OVERLAY_WIDTH);
+        return content;
+    }
+
     private VBox createAndGetContent() {
         VBox content = new VBox(40);
         content.setAlignment(Pos.TOP_CENTER);
@@ -143,6 +254,21 @@ public class WizardOverlay extends VBox {
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineBox.getChildren().add(headlineLabel);
         return new Pair<>(headlineLabel, headlineBox);
+    }
+
+    private VBox createAndGetTextBox(String... texts) {
+        VBox textBox = new VBox(15);
+        Arrays.stream(texts)
+                .map(t -> {
+                    Label textLabel = new Label(Res.get(t));
+                    textLabel.setMinWidth(OVERLAY_WIDTH - 100);
+                    textLabel.setMaxWidth(textLabel.getMinWidth());
+                    textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+                    return textLabel;
+                })
+                .forEach(textBox.getChildren()::add);
+        VBox.setMargin(textBox, new Insets(0, 30, 0, 30));
+        return textBox;
     }
 
     private VBox createAndGetTextBox(List<String> texts) {
