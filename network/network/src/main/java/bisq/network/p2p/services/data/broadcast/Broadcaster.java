@@ -54,7 +54,7 @@ public class Broadcaster {
         checkArgument(node.isInitialized(), "Node is expected to be initialized before broadcast is called.");
         List<Connection> connections = getConnection(distributionFactor);
         if (connections.isEmpty()) {
-            log.info("No connections available for broadcast.");
+            log.info("No connections available for broadcast from node {}.", node.getNodeInfo());
             return CompletableFuture.completedFuture(new BroadcastResult(0, 0, 0));
         } else {
             long ts = System.currentTimeMillis();
