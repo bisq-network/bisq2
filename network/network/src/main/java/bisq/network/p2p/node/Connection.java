@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.network.TransportType;
 import bisq.common.threading.AbortPolicyWithLogging;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
@@ -37,6 +38,7 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -71,6 +73,9 @@ public abstract class Connection {
     public static Comparator<Connection> comparingNumPendingRequests() {
         return Comparator.comparingLong(o -> o.getRequestResponseManager().numPendingRequests());
     }
+
+    @Setter
+    private static int executorMaxPoolSize = 5;
 
     protected interface Handler {
         boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
@@ -371,11 +376,11 @@ public abstract class Connection {
         MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                3,
+                executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 deque,
-                ExecutorFactory.getThreadFactoryWithCounter("Connection.read-" + StringUtils.truncate(getPeerAddress(), 12)),
+                ExecutorFactory.getThreadFactoryWithCounter("Connection.read-" + getThreadNameDetails()),
                 new AbortPolicyWithLogging());
         deque.setExecutor(executor);
         return executor;
@@ -385,13 +390,20 @@ public abstract class Connection {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                3,
+                executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 queue,
-                ExecutorFactory.getThreadFactoryWithCounter("Connection.send-" + StringUtils.truncate(getPeerAddress(), 12)),
+                ExecutorFactory.getThreadFactoryWithCounter("Connection.send-" + getThreadNameDetails()),
                 new AbortPolicyWithLogging());
         queue.setExecutor(executor);
         return executor;
+    }
+
+    private String getThreadNameDetails() {
+        Address peerAddress = getPeerAddress();
+        String transport = peerAddress.isTorAddress() ? TransportType.TOR.name() :
+                peerAddress.isI2pAddress() ? TransportType.I2P.name() : TransportType.CLEAR.name();
+        return transport + "-" + StringUtils.truncate(peerAddress, 8);
     }
 }

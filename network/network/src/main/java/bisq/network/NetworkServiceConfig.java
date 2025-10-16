@@ -86,6 +86,7 @@ public final class NetworkServiceConfig {
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 config.getInt("version"),
                 config.getInt("notifyExecutorMaxPoolSize"),
+                config.getInt("connectionExecutorMaxPoolSize"),
                 supportedTransportTypes,
                 features,
                 configByTransportType,
@@ -174,6 +175,7 @@ public final class NetworkServiceConfig {
     private final String baseDir;
     private final int version;
     private final int notifyExecutorMaxPoolSize;
+    private final int connectionExecutorMaxPoolSize;
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
     private final InventoryService.Config inventoryServiceConfig;
@@ -188,6 +190,7 @@ public final class NetworkServiceConfig {
     public NetworkServiceConfig(String baseDir,
                                 int version,
                                 int notifyExecutorMaxPoolSize,
+                                int connectionExecutorMaxPoolSize,
                                 Set<TransportType> supportedTransportTypes,
                                 Set<Feature> features,
                                 Map<TransportType, TransportConfig> configByTransportType,
@@ -201,6 +204,7 @@ public final class NetworkServiceConfig {
         this.baseDir = baseDir;
         this.version = version;
         this.notifyExecutorMaxPoolSize = notifyExecutorMaxPoolSize;
+        this.connectionExecutorMaxPoolSize = connectionExecutorMaxPoolSize;
         this.supportedTransportTypes = supportedTransportTypes;
         this.features = features;
         this.inventoryServiceConfig = inventoryServiceConfig;
