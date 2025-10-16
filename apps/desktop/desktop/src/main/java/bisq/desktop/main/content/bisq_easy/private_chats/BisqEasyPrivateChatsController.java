@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyPrivateChatsController extends PrivateChatsController {
 
     public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
+        //noinspection deprecation
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
     }
 

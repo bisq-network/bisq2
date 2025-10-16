@@ -57,6 +57,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public bisq.network.protobuf.NetworkServiceStore.Builder getBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.network.protobuf.NetworkServiceStore.newBuilder()
                 .addAllSeedNodes(seedNodes.stream()
                         .map(e -> e.toProto(serializeForHash))
@@ -70,6 +71,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
         Set<AddressByTransportTypeMap> seeds = proto.getSeedNodesList().stream()
                 .map(AddressByTransportTypeMap::fromProto)
                 .collect(Collectors.toSet());
+        @SuppressWarnings("deprecation")
         var networkIdByTag = proto.getNetworkIdByTagMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> NetworkId.fromProto(e.getValue())));

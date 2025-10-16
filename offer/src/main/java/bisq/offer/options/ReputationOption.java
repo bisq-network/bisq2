@@ -40,6 +40,7 @@ public final class ReputationOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return getOfferOptionBuilder(serializeForHash)
                 .setReputationOption(
                         bisq.offer.protobuf.ReputationOption.newBuilder()
@@ -52,6 +53,7 @@ public final class ReputationOption implements OfferOption {
     }
 
     public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
+        //noinspection deprecation
         return new ReputationOption(proto.getRequiredTotalReputationScore());
     }
 }

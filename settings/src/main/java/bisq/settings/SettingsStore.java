@@ -54,8 +54,10 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
     final Observable<Market> selectedMuSigMarket = new Observable<>();
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated(since = "2.1.1")
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated(since = "2.1.2")
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
@@ -69,6 +71,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated(since = "2.1.1")
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
@@ -179,6 +182,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         this.muSigLastSelectedMarketByBaseCurrencyMap.putAll(muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public bisq.settings.protobuf.SettingsStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.settings.protobuf.SettingsStore.newBuilder()
@@ -220,6 +224,7 @@ final class SettingsStore implements PersistableStore<SettingsStore> {
         return resolveProto(serializeForHash);
     }
 
+    @SuppressWarnings("deprecation")
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
         double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
         if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||

@@ -332,8 +332,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public Optional<Long> findCreationDate(DistributedData distributedData, Predicate<DistributedData> predicate) {
         return dataService.flatMap(dataService -> dataService.getStorageService().getOrCreateAuthenticatedDataStore(distributedData.getClassName()).join()
                 .getPersistableStore().getMap().values().stream()
-                .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
-                .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
+                .filter(AddAuthenticatedDataRequest.class::isInstance)
+                .map(AddAuthenticatedDataRequest.class::cast)
                 .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
                 .filter(sequentialData -> predicate.test(sequentialData.getAuthenticatedData().getDistributedData()))
                 .map(AuthenticatedSequentialData::getCreated)
@@ -361,7 +361,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
             AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, Optional.of(signature), authorizedPublicKey);
             return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("publishAuthorizedData failed", e);
             return CompletableFuture.failedFuture(e);
         }
     }

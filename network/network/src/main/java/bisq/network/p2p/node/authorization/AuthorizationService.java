@@ -64,6 +64,7 @@ public class AuthorizationService {
                 .forEach(supportedFilterType -> {
                     switch (supportedFilterType) {
                         case HASH_CASH:
+                            //noinspection deprecation
                             supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashProofOfWorkService));
                             break;
                         case EQUI_HASH:
