@@ -17,7 +17,7 @@
 
 package bisq.network;
 
-import bisq.common.threading.AbortPolicyWithLogging;
+import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareQueue;
 import lombok.Getter;
@@ -49,9 +49,11 @@ public class NetworkExecutors {
     }
 
     private static ThreadPoolExecutor createNotifyExecutor(int maxPoolSize) {
-        int capacity = 100000;
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(capacity);
+        int queueCapacity = 100000;
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(queueCapacity);
         String name = "Network.notify";
+        // We use DiscardOldestPolicy instead of AbortPolicyWithLogging as we do not want to handle in the notification
+        // loops the exception, which otherwise would break the loop and escalates up.
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
                 maxPoolSize,
@@ -59,7 +61,7 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
-                new AbortPolicyWithLogging(name, capacity, maxPoolSize));
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize));
         queue.setExecutor(executor);
         return executor;
     }

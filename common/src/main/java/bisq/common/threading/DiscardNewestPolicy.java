@@ -28,7 +28,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Slf4j
 public class DiscardNewestPolicy implements RejectedExecutionHandler {
     private static final ThreadLocal<Boolean> retrying = ThreadLocal.withInitial(() -> false);
+    private final String name;
+    private final int queueCapacity;
+    private final int maxPoolSize;
 
+    public DiscardNewestPolicy(String name, int queueCapacity, int maxPoolSize) {
+        this.name = name;
+        this.queueCapacity = queueCapacity;
+        this.maxPoolSize = maxPoolSize;
+    }
     @Override
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
         if (executor.isShutdown()) {
@@ -43,11 +51,13 @@ public class DiscardNewestPolicy implements RejectedExecutionHandler {
         try {
             BlockingQueue<Runnable> queue = executor.getQueue();
             if (queue instanceof Deque<?> deque) {
-                log.warn("Task rejected as queue is full. We remove the newest task from the deque and retry to execute the current task.");
+                log.warn("Task rejected from {} with capacity {} and maxPoolSize {} as queue is full. We remove the newest task from the deque and retry to execute the current task.",
+                        name, queueCapacity, maxPoolSize);
                 deque.pollLast(); // remove newest
                 executor.execute(runnable); // retry execution with current task
             } else {
-                log.warn("Task rejected as queue is full. Queue is not type of Deque. We remove the oldest task instead of the intended policy to remove the newest.");
+                log.warn("Task rejected from {} with capacity {} and maxPoolSize {} as queue is full. Queue is not type of Deque. We remove the oldest task instead of the intended policy to remove the newest.",
+                        name, queueCapacity, maxPoolSize);
                 queue.poll();
                 executor.execute(runnable); // retry execution with current task
                 // Fallback to default discard if not a Deque

@@ -86,6 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -305,19 +306,24 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
-        CompletableFuture.runAsync(() -> {
-            protocol.handle(message);
+        try {
+            CompletableFuture.runAsync(() -> {
+                protocol.handle(message);
 
-            if (pendingMessages.contains(message)) {
-                log.info("We remove message {} from pendingMessages.", message);
-                pendingMessages.remove(message);
-            }
+                if (pendingMessages.contains(message)) {
+                    log.info("We remove message {} from pendingMessages.", message);
+                    pendingMessages.remove(message);
+                }
 
-            if (!pendingMessages.isEmpty()) {
-                log.info("We have pendingMessages. We try to re-process them now.");
-                pendingMessages.forEach(this::handleMuSigTradeMessage);
-            }
-        }, executor);
+                if (!pendingMessages.isEmpty()) {
+                    log.info("We have pendingMessages. We try to re-process them now.");
+                    pendingMessages.forEach(this::handleMuSigTradeMessage);
+                }
+            }, executor);
+        } catch (RejectedExecutionException e) {
+            log.error("Executor rejected task at handleMuSigTradeMessage", e);
+            throw e;
+        }
     }
 
 
@@ -358,7 +364,12 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    CompletableFuture.runAsync(() -> protocol.handle(event), executor);
+                    try {
+                        CompletableFuture.runAsync(() -> protocol.handle(event), executor);
+                    } catch (RejectedExecutionException e) {
+                        log.error("Executor rejected task at handleMuSigTradeEvent", e);
+                        throw e;
+                    }
                 },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
@@ -419,32 +430,37 @@ public final class MuSigTradeService implements PersistenceClient<MuSigTradeStor
             return;
         }
 
-        // todo we dont want to create a thread for each trade... but lets see how real impl. will look like
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            SubscribeTxConfirmationStatusRequest request = SubscribeTxConfirmationStatusRequest.newBuilder()
-                    .setTradeId(tradeId)
-                    .build();
-            getMusigAsyncStub().subscribeTxConfirmationStatus(request, new StreamObserver<>() {
-                @Override
-                public void onNext(bisq.trade.protobuf.TxConfirmationStatus proto) {
-                    TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
-                    if (status.getNumConfirmations() > 0) {
-                        if (trade.isDepositTxCreatedButNotConfirmed()) {
-                            handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+        try {
+            // todo we dont want to create a thread for each trade... but lets see how real impl. will look like
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                SubscribeTxConfirmationStatusRequest request = SubscribeTxConfirmationStatusRequest.newBuilder()
+                        .setTradeId(tradeId)
+                        .build();
+                getMusigAsyncStub().subscribeTxConfirmationStatus(request, new StreamObserver<>() {
+                    @Override
+                    public void onNext(bisq.trade.protobuf.TxConfirmationStatus proto) {
+                        TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
+                        if (status.getNumConfirmations() > 0) {
+                            if (trade.isDepositTxCreatedButNotConfirmed()) {
+                                handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onError(Throwable throwable) {
-                }
+                    @Override
+                    public void onError(Throwable throwable) {
+                    }
 
-                @Override
-                public void onCompleted() {
-                }
-            });
-        }, executor);
-        observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
+                    @Override
+                    public void onCompleted() {
+                    }
+                });
+            }, executor);
+            observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, future);
+        } catch (RejectedExecutionException e) {
+            log.error("Executor rejected task at observeDepositTxConfirmationStatus", e);
+            observeDepositTxConfirmationStatusFutureByTradeId.put(tradeId, CompletableFuture.failedFuture(e));
+        }
     }
 
     public void startCloseTradeTimeout(MuSigTrade trade, MuSigTradeEvent event) {

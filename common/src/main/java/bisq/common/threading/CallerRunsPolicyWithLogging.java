@@ -24,15 +24,21 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class CallerRunsPolicyWithLogging implements RejectedExecutionHandler {
-    public CallerRunsPolicyWithLogging() {
-    }
+    private final String name;
+    private final int queueCapacity;
+    private final int maxPoolSize;
 
+    public CallerRunsPolicyWithLogging(String name, int queueCapacity, int maxPoolSize) {
+        this.name = name;
+        this.queueCapacity = queueCapacity;
+        this.maxPoolSize = maxPoolSize;
+    }
     public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
         if (executor.isShutdown()) {
             log.warn("Executor was already shut down");
             return;
         }
-        log.warn("Task rejected. We run the task on the calling thread instead.");
+        log.warn("Task rejected from {} with capacity {} and maxPoolSize {}. We run the task on the calling thread instead.", name, queueCapacity, maxPoolSize);
         runnable.run();
     }
 }
