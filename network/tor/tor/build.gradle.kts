@@ -42,6 +42,6 @@ dependencies {
     implementation(libs.tukaani)
     implementation(libs.typesafe.config)
 
-    implementation(libs.chimp.jsocks)
-    implementation(libs.chimp.jtorctl)
+    implementation(libs.jsocks)
+    implementation(libs.jtorctl)
 }

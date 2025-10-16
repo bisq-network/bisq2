@@ -17,5 +17,5 @@ dependencies {
     implementation("network:network-identity:$version")
 
     implementation(libs.google.gson)
-    implementation(libs.chimp.jsocks)
+    implementation(libs.jsocks)
 }
