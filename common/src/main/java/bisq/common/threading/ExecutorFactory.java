@@ -115,7 +115,7 @@ public class ExecutorFactory {
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
                 getThreadFactoryWithCounter(name),
-                new ThreadPoolExecutor.AbortPolicy());
+                new AbortPolicyWithLogging(name, 0, maxPoolSize));
     }
 
     public static ExecutorService newCachedThreadPool(String name) {
@@ -173,12 +173,14 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService boundedCachedPool(String name) {
+        int queueCapacity = 100;
+        int maxPoolSize = 5;
         return boundedCachedPool(name,
                 1,
-                5,
+                maxPoolSize,
                 30,
-                100,
-                new ThreadPoolExecutor.AbortPolicy());
+                queueCapacity,
+                new AbortPolicyWithLogging(name, queueCapacity, maxPoolSize));
     }
 
 

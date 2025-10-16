@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
+import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -51,7 +52,6 @@ import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bisq1BridgeRequestStore>, ConfidentialMessageService.Listener {
@@ -103,18 +103,15 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        executor = ExecutorFactory.boundedCachedPool("Bisq1BridgeRequestService",
+        int maxPoolSize = 5;
+        String name = "Bisq1BridgeRequestService";
+        int queueCapacity = 20;
+        executor = ExecutorFactory.boundedCachedPool(name,
                 1,
-                5,
+                maxPoolSize,
                 10,
-                20,
-                new ThreadPoolExecutor.DiscardPolicy() {
-                    @Override
-                    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-                        log.warn("Task rejected and discarded: {}", r);
-                        super.rejectedExecution(r, e);
-                    }
-                }
+                queueCapacity,
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)
         );
 
         return accountAgeWitnessGrpcService.initialize()

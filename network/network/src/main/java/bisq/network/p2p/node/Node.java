@@ -62,6 +62,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -208,52 +209,57 @@ public class Node implements Connection.Handler {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Node> initializeAsync() {
-        return CompletableFuture.supplyAsync(() -> {
-            if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
-                try {
-                    log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
-                    boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS);
-                    if (!success) {
-                        String errorMessage = "We got called a repeated initialize. State has not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
-                        log.warn(errorMessage);
-                        throw new RuntimeException(new TimeoutException(errorMessage));
-                    } else {
-                        log.debug("We are now in RUNNING state");
-                    }
-                } catch (InterruptedException e) {
-                    log.warn("Thread got interrupted at initialize method", e);
-                    Thread.currentThread().interrupt(); // Restore interrupted state
-                }
-            }
-            synchronized (state) {
-                switch (state.get()) {
-                    case NEW: {
-                        setState(STARTING);
-                        startingStateLatch = Optional.of(new CountDownLatch(1));
-                        createServerAndListen();
-                        startingStateLatch.get().countDown();
-                        setState(State.RUNNING);
-                        break;
-                    }
-                    case STARTING: {
-                        throw new IllegalStateException("STARTING state should never be reached here as we use a " +
-                                "countDownLatch to block while in STARTING state. NetworkId=" + networkId + "; transportType=" + transportType);
-                    }
-                    case RUNNING: {
-                        log.debug("Got called while already running. We ignore that call.");
-                        break;
-                    }
-                    case STOPPING:
-                        throw new IllegalStateException("Already stopping. NetworkId=" + networkId + "; transportType=" + transportType);
-                    case TERMINATED:
-                        throw new IllegalStateException("Already terminated. NetworkId=" + networkId + "; transportType=" + transportType);
-                    default: {
-                        throw new IllegalStateException("Unhandled state " + state.get());
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
+                    try {
+                        log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
+                        boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS);
+                        if (!success) {
+                            String errorMessage = "We got called a repeated initialize. State has not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
+                            log.warn(errorMessage);
+                            throw new RuntimeException(new TimeoutException(errorMessage));
+                        } else {
+                            log.debug("We are now in RUNNING state");
+                        }
+                    } catch (InterruptedException e) {
+                        log.warn("Thread got interrupted at initialize method", e);
+                        Thread.currentThread().interrupt(); // Restore interrupted state
                     }
                 }
-            }
-            return this;
-        }, getExecutor());
+                synchronized (state) {
+                    switch (state.get()) {
+                        case NEW: {
+                            setState(STARTING);
+                            startingStateLatch = Optional.of(new CountDownLatch(1));
+                            createServerAndListen();
+                            startingStateLatch.get().countDown();
+                            setState(State.RUNNING);
+                            break;
+                        }
+                        case STARTING: {
+                            throw new IllegalStateException("STARTING state should never be reached here as we use a " +
+                                    "countDownLatch to block while in STARTING state. NetworkId=" + networkId + "; transportType=" + transportType);
+                        }
+                        case RUNNING: {
+                            log.debug("Got called while already running. We ignore that call.");
+                            break;
+                        }
+                        case STOPPING:
+                            throw new IllegalStateException("Already stopping. NetworkId=" + networkId + "; transportType=" + transportType);
+                        case TERMINATED:
+                            throw new IllegalStateException("Already terminated. NetworkId=" + networkId + "; transportType=" + transportType);
+                        default: {
+                            throw new IllegalStateException("Unhandled state " + state.get());
+                        }
+                    }
+                }
+                return this;
+            }, getExecutor());
+        } catch (RejectedExecutionException e) {
+            log.error("Node executor rejected task at initializeAsync", e);
+            return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at initializeAsync"));
+        }
     }
 
     private void createServerAndListen() {
@@ -270,46 +276,51 @@ public class Node implements Connection.Handler {
     }
 
     private CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
-        return CompletableFuture.runAsync(() -> {
-            ConnectionHandshake connectionHandshake = null;
-            try {
-                connectionHandshake = new ConnectionHandshake(socket,
-                        banList,
-                        myCapability,
-                        authorizationService,
-                        keyBundle);
-                connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-                log.debug("Inbound handshake request at: {}", myCapability.getAddress());
-                ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
-
-                Address address = result.getPeersCapability().getAddress();
-                log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
-
-                // As time passed we check again if connection is still not available
-                if (inboundConnectionsByAddress.containsKey(address)) {
-                    log.warn("Have already an InboundConnection from {}. This can happen when a " +
-                            "handshake was in progress while we received a new connection from that address. " +
-                            "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
-                    inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
-                }
-
-                InboundConnection connection = createInboundConnection(socket, result);
-                inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-                listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
-            } catch (Throwable throwable) {
+        try {
+            return CompletableFuture.runAsync(() -> {
+                ConnectionHandshake connectionHandshake = null;
                 try {
-                    socket.close();
-                } catch (IOException ignore) {
-                }
+                    connectionHandshake = new ConnectionHandshake(socket,
+                            banList,
+                            myCapability,
+                            authorizationService,
+                            keyBundle);
+                    connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
+                    log.debug("Inbound handshake request at: {}", myCapability.getAddress());
+                    ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
 
-                handleException(throwable);
-            } finally {
-                if (connectionHandshake != null) {
-                    connectionHandshake.shutdown();
-                    connectionHandshakes.remove(connectionHandshake.getId());
+                    Address address = result.getPeersCapability().getAddress();
+                    log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
+
+                    // As time passed we check again if connection is still not available
+                    if (inboundConnectionsByAddress.containsKey(address)) {
+                        log.warn("Have already an InboundConnection from {}. This can happen when a " +
+                                "handshake was in progress while we received a new connection from that address. " +
+                                "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+                        inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
+                    }
+
+                    InboundConnection connection = createInboundConnection(socket, result);
+                    inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
+                    listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+                } catch (Throwable throwable) {
+                    try {
+                        socket.close();
+                    } catch (IOException ignore) {
+                    }
+
+                    handleException(throwable);
+                } finally {
+                    if (connectionHandshake != null) {
+                        connectionHandshake.shutdown();
+                        connectionHandshakes.remove(connectionHandshake.getId());
+                    }
                 }
-            }
-        }, getExecutor());
+            }, getExecutor());
+        } catch (RejectedExecutionException e) {
+            log.error("Node executor rejected task at handleNewClientSocketAsync", e);
+            return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at handleNewClientSocketAsync"));
+        }
     }
 
     private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
@@ -422,10 +433,15 @@ public class Node implements Connection.Handler {
     }
 
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
-        return CompletableFuture.supplyAsync(() -> {
-            log.info("Create outbound connection to {}", address);
-            return createOutboundConnection(address, myCapability);
-        }, getExecutor());
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                log.info("Create outbound connection to {}", address);
+                return createOutboundConnection(address, myCapability);
+            }, getExecutor());
+        } catch (RejectedExecutionException e) {
+            log.error("Node executor rejected task at createOutboundConnectionAsync", e);
+            return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at createOutboundConnectionAsync"));
+        }
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
@@ -901,8 +917,8 @@ public class Node implements Connection.Handler {
     }
 
     private ThreadPoolExecutor createExecutor() {
-        int capacity = 100;
-        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(capacity);
+        int queueCapacity = 100;
+        MaxSizeAwareQueue queue = new MaxSizeAwareQueue(queueCapacity);
         // We use maxNumConnectedPeers (default 12) for the max pool size and add some extra tolerance as at startup we
         // create many connections in parallel.
         // After startup, it is expected that pool shrinks to 1-3 threads
@@ -915,7 +931,7 @@ public class Node implements Connection.Handler {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
-                new AbortPolicyWithLogging(name, capacity, maximumPoolSize));
+                new AbortPolicyWithLogging(name, queueCapacity, maximumPoolSize));
         queue.setExecutor(executor);
         return executor;
     }

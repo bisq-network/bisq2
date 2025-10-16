@@ -17,6 +17,7 @@
 
 package bisq.network.tor.controller;
 
+import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
 import bisq.network.tor.controller.events.events.EventType;
@@ -31,7 +32,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -51,12 +51,15 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
         this.timeout = timeout;
-        executor = ExecutorFactory.boundedCachedPool("OnionServiceOnlineStateService-" + StringUtils.truncate(onionAddress, 12),
+        int maxPoolSize = 10;
+        String name = "OnionServiceOnlineStateService-" + StringUtils.truncate(onionAddress, 12);
+        int queueCapacity = 20;
+        executor = ExecutorFactory.boundedCachedPool(name,
                 1,
-                10,
+                maxPoolSize,
                 5,
-                20,
-                new ThreadPoolExecutor.AbortPolicy());
+                queueCapacity,
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize));
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnlineAsync() {
