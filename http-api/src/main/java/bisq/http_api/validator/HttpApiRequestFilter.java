@@ -25,7 +25,7 @@ public class HttpApiRequestFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         URI requestUri = requestContext.getUriInfo().getRequestUri();
-        if (!validator.hasValidPath(requestUri)) {
+        if (!validator.hasValidComponents(requestUri)) {
             requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).build());
         }
     }
