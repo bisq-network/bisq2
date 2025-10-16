@@ -38,6 +38,7 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -72,6 +73,9 @@ public abstract class Connection {
     public static Comparator<Connection> comparingNumPendingRequests() {
         return Comparator.comparingLong(o -> o.getRequestResponseManager().numPendingRequests());
     }
+
+    @Setter
+    private static int executorMaxPoolSize = 5;
 
     protected interface Handler {
         boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
@@ -370,10 +374,9 @@ public abstract class Connection {
 
     private ThreadPoolExecutor createReadExecutor() {
         MaxSizeAwareDeque deque = new MaxSizeAwareDeque(100);
-
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                3,
+                executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 deque,
@@ -387,7 +390,7 @@ public abstract class Connection {
         MaxSizeAwareQueue queue = new MaxSizeAwareQueue(100);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 1,
-                3,
+                executorMaxPoolSize,
                 5,
                 TimeUnit.SECONDS,
                 queue,

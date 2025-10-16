@@ -27,7 +27,6 @@ import java.util.function.BiConsumer;
 
 @Slf4j
 public class InboundConnection extends Connection {
-
     InboundConnection(AuthorizationService authorizationService,
                       String connectionId,
                       Socket socket,
