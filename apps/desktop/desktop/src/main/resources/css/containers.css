@@ -837,3 +837,42 @@
 .chart-series-line {
     -fx-stroke-width: 1px; /* Default is 2px */
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * WizardOverlay                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.wizard-overlay .headline {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.wizard-overlay .yellow-warning {
+    -fx-fill: -bisq2-yellow-lit-20;
+    -fx-text-fill: -bisq2-yellow-lit-20;
+}
+
+.wizard-overlay .red-warning {
+    -fx-fill: -bisq2-red-lit-10;
+    -fx-text-fill: -bisq2-red-lit-10;
+}
+
+.wizard-overlay .green-warning,
+.wizard-overlay .green-info {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+}
+
+.wizard-overlay .default-warning,
+.wizard-overlay .default-info {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.wizard-overlay .grey-info {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
