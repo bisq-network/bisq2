@@ -52,16 +52,16 @@ public class WizardOverlay extends VBox {
     }
 
     public WizardOverlay warning() {
-        ImageView icon = ImageUtil.getImageViewById("warning-white"); // default
+        ImageView icon = ImageUtil.getImageViewById("warning-yellow"); // default
         headlineLabel.setGraphic(icon);
         headlineLabel.getStyleClass().add("default-warning");
         return this;
     }
 
-    public WizardOverlay yellowWarning() {
-        ImageView icon = ImageUtil.getImageViewById("warning-yellow");
+    public WizardOverlay whiteWarning() {
+        ImageView icon = ImageUtil.getImageViewById("warning-white");
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().add("yellow-warning");
+        headlineLabel.getStyleClass().add("white-warning");
         return this;
     }
 

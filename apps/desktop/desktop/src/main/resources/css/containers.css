@@ -850,7 +850,7 @@
     -fx-font-size: 1.7em;
 }
 
-.wizard-overlay .yellow-warning {
+.wizard-overlay .default-warning {
     -fx-fill: -bisq2-yellow-lit-20;
     -fx-text-fill: -bisq2-yellow-lit-20;
 }
@@ -866,7 +866,7 @@
     -fx-text-fill: -bisq2-green;
 }
 
-.wizard-overlay .default-warning {
+.wizard-overlay .white-warning {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
 }

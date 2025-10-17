@@ -84,7 +84,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         wrongWordGoBackButton = new Button(Res.get("wallet.verifySeeds.wrongWord.closeButton"));
         wrongWordGoBackButton.setDefaultButton(true);
         wrongWordOverlay = new WizardOverlay(root)
-                .yellowWarning()
+                .warning()
                 .headline("wallet.verifySeeds.wrongWord.title")
                 .description("wallet.verifySeeds.wrongWord.description")
                 .buttons(wrongWordGoBackButton)

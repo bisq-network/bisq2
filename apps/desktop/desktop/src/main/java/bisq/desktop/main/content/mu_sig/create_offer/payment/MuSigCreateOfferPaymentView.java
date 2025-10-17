@@ -91,7 +91,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         createAccountButton = new Button(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.createAccount"));
         createAccountButton.setDefaultButton(true);
         noAccountOverlay = new WizardOverlay(root)
-                .yellowWarning()
+                .warning()
                 .description("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle")
                 .buttons(noAccountOverlayCloseButton, createAccountButton)
                 .build();
@@ -101,7 +101,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         accountSelection = createComboBox();
         VBox multipleAccountsContentBox = createAndGetContentBox();
         multipleAccountsOverlay = new WizardOverlay(root)
-                .yellowWarning()
+                .warning()
                 .description(multipleAccountsContentBox)
                 .buttons(multipleAccountsOverlayCloseButton)
                 .build();
@@ -113,7 +113,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noPaymentMethodSelectedOverlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
         noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
         noPaymentMethodSelectedOverlay = new WizardOverlay(root)
-                .yellowWarning()
+                .warning()
                 .headline("muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.headline")
                 .description(new VBox(noPaymentMethodSelectedOverlayLabel))
                 .buttons(noPaymentMethodSelectedOverlayCloseButton)
