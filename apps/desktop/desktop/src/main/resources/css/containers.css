@@ -861,18 +861,12 @@
 }
 
 .wizard-overlay .green-warning,
-.wizard-overlay .green-info {
+.wizard-overlay .default-info {
     -fx-fill: -bisq2-green;
     -fx-text-fill: -bisq2-green;
 }
 
-.wizard-overlay .default-warning,
-.wizard-overlay .default-info {
+.wizard-overlay .default-warning {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
-}
-
-.wizard-overlay .grey-info {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
 }

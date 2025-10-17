@@ -84,16 +84,9 @@ public class WizardOverlay extends VBox {
     }
 
     public WizardOverlay info() {
-        ImageView icon = ImageUtil.getImageViewById("info-white"); // default
+        ImageView icon = ImageUtil.getImageViewById("info-green"); // default
         headlineLabel.setGraphic(icon);
         headlineLabel.getStyleClass().addAll("headline", "default-info");
-        return this;
-    }
-
-    public WizardOverlay greyInfo() {
-        ImageView icon = ImageUtil.getImageViewById("info-grey");
-        headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "grey-info");
         return this;
     }
 
