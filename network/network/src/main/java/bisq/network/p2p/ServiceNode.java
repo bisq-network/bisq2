@@ -111,7 +111,7 @@ public class ServiceNode implements Node.Listener {
 
     private final Config config;
     private final Node.Config nodeConfig;
-    private final PeerGroupManager.Config peerGroupServiceConfig;
+    private final PeerGroupManager.Config peerGroupManagerConfig;
     private final Optional<DataService> dataService;
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
@@ -154,7 +154,7 @@ public class ServiceNode implements Node.Listener {
 
     ServiceNode(Config config,
                 Node.Config nodeConfig,
-                PeerGroupManager.Config peerGroupServiceConfig,
+                PeerGroupManager.Config peerGroupManagerConfig,
                 InventoryService.Config inventoryServiceConfig,
                 KeyBundleService keyBundleService,
                 PersistenceService persistenceService,
@@ -167,7 +167,7 @@ public class ServiceNode implements Node.Listener {
                 MemoryReportService memoryReportService) {
         this.config = config;
         this.nodeConfig = nodeConfig;
-        this.peerGroupServiceConfig = peerGroupServiceConfig;
+        this.peerGroupManagerConfig = peerGroupManagerConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
@@ -180,7 +180,7 @@ public class ServiceNode implements Node.Listener {
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
-        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupServiceConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
+        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupManagerConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
 
         nodesById.addNodeListener(this);
     }
@@ -221,7 +221,7 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new PeerGroupManager(defaultNode,
                         peerGroupService,
                         banList,
-                        peerGroupServiceConfig)) :
+                        peerGroupManagerConfig)) :
                 Optional.empty();
 
         boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) &&
@@ -265,7 +265,7 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new NetworkLoadService(this,
                         dataService.orElseThrow().getStorageService(),
                         networkLoadSnapshot,
-                        peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
+                        peerGroupManagerConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
         ExecutorService executor = ExecutorFactory.newSingleThreadExecutor(transportType + "-DefaultNode.initialize");

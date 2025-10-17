@@ -76,7 +76,7 @@ public class ServiceNodesByTransport {
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
                                    ServiceNode.Config serviceNodeConfig,
-                                   Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
+                                   Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    InventoryService.Config inventoryServiceConfig,
                                    AuthorizationService.Config authorizationServiceConfig,
@@ -99,7 +99,7 @@ public class ServiceNodesByTransport {
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
-            int maxNumConnectedPeers = peerGroupServiceConfigByTransport.get(transportType).getPeerGroupConfig().getMaxNumConnectedPeers();
+            int maxNumConnectedPeers = peerGroupManagerConfigByTransport.get(transportType).getPeerGroupConfig().getMaxNumConnectedPeers();
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     features,
@@ -110,11 +110,11 @@ public class ServiceNodesByTransport {
                     maxNumConnectedPeers);
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
-            PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
+            PeerGroupManager.Config peerGroupManagerConfig = peerGroupManagerConfigByTransport.get(transportType);
 
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
-                    peerGroupServiceConfig,
+                    peerGroupManagerConfig,
                     inventoryServiceConfig,
                     keyBundleService,
                     persistenceService,

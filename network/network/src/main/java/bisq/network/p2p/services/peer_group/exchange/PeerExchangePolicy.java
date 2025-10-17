@@ -235,8 +235,8 @@ class PeerExchangePolicy {
         int limit = Math.max(minValue, missing);
 
         // In case we have enough connections but do not have received at least 25% of our
-        // numReportedPeersAtBoostrap (default 10) target we still try to connect to 50% of minNumConnectedPeers.
-        if (limit == minValue && peerGroupService.getReportedPeers().size() < config.getNumReportedPeersAtBoostrap() / 4) {
+        // numReportedPeersAtBootstrap (default 10) target we still try to connect to 50% of minNumConnectedPeers.
+        if (limit == minValue && peerGroupService.getReportedPeers().size() < config.getNumReportedPeersAtBootstrap() / 4) {
             return minNumConnectedPeers / 2;
         }
         return limit;
@@ -267,13 +267,13 @@ class PeerExchangePolicy {
         return CollectionUtil.toShuffledList(peerGroupService.getSeedNodeAddresses()).stream()
                 .filter(node::notMyself)
                 .filter(peerGroupService::isNotBanned)
-                .limit(config.getNumSeedNodesAtBoostrap())
+                .limit(config.getNumSeedNodesAtBootstrap())
                 .collect(Collectors.toList());
     }
 
     private List<Address> getReportedPeerAddresses() {
         return getSortedReportedPeers()
-                .limit(config.getNumReportedPeersAtBoostrap())
+                .limit(config.getNumReportedPeersAtBootstrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }
@@ -283,7 +283,7 @@ class PeerExchangePolicy {
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
                 .sorted()
-                .limit(config.getNumPersistedPeersAtBoostrap())
+                .limit(config.getNumPersistedPeersAtBootstrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }

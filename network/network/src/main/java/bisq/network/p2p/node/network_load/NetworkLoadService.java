@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -187,11 +188,12 @@ public class NetworkLoadService {
 
         String transportType = serviceNode.getTransportType().name();
 
-        String nodes = getAllCurrentConnections()
+        List<Connection> currentConnections = getAllCurrentConnections().toList();
+        String nodes = currentConnections.stream()
                 .map(Connection::getPeerAddress)
                 .map(address -> "- " + address)
                 .collect(Collectors.joining("\n    "));
-        long numConnections = getAllCurrentConnections().count();
+        long numConnections = currentConnections.size();
         long networkDatabaseSize = storageService.getNetworkDatabaseSize(); // takes about 50 ms
 
         StringBuilder sb = new StringBuilder("\n\n/* --------------------------------------------------------------------- */\n");

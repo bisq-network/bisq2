@@ -351,8 +351,8 @@ public class NetworkInfo {
                 if (useExternalTor != null) {
                     if (useExternalTor) {
                         torHBox.getChildren().stream()
-                                .filter(node -> node instanceof ImageView)
-                                .map(node -> (ImageView) node)
+                                .filter(ImageView.class::isInstance)
+                                .map(ImageView.class::cast)
                                 .forEach(imageView -> {
                                     imageView.setId("tor-green");
                                     imageView.setOpacity(0.75);
