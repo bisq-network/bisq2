@@ -84,12 +84,12 @@ public class DesktopAppLauncher {
     private DesktopAppLauncher(String[] args) throws Exception {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
-        Path appDataDir = PlatformUtils.getUserDataDir().resolve(appName);
-        LogSetup.setup(appDataDir.resolve("bisq").toString());
-        String version = UpdaterUtils.readVersionFromVersionFile(appDataDir)
+        Path appDataDirPath = PlatformUtils.getUserDataDirPath().resolve(appName);
+        LogSetup.setup(appDataDirPath.resolve("bisq").toString());
+        String version = UpdaterUtils.readVersionFromVersionFile(appDataDirPath)
                 .or(options::getVersion)
                 .orElse(BuildVersion.VERSION);
-        updatesDirPath = appDataDir.resolve(UPDATES_DIR).resolve(version);
+        updatesDirPath = appDataDirPath.resolve(UPDATES_DIR).resolve(version);
         jarFileName = UpdaterUtils.getJarFileName(version);
         jarPath = updatesDirPath.resolve(jarFileName);
 
@@ -102,7 +102,7 @@ public class DesktopAppLauncher {
             }
             invokeJar();
         } else {
-            Optional<String> fromVersionFile = readVersionFromVersionFile(appDataDir);
+            Optional<String> fromVersionFile = readVersionFromVersionFile(appDataDirPath);
             if (fromVersionFile.isPresent() && !fromVersionFile.get().equals(BuildVersion.VERSION)) {
                 Optional<String> versionFromArgs = options.getValue("version");
                 log.warn("We found a version file with version {} but it does not match our version. versionFromArgs={}; DesktopAppLauncher.VERSION={}; ",

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 public class TorNetwork {
 
-    private final Path rootDataDir;
+    private final Path rootDataDirPath;
     private final DirectoryAuthorityFactory dirAuthFactory = new DirectoryAuthorityFactory();
     private final Set<TorNode> directoryAuthorities = new HashSet<>();
     private final Set<TorNode> relays = new HashSet<>();
@@ -49,20 +49,20 @@ public class TorNetwork {
     private int relayIndex;
     private int clientIndex;
 
-    public TorNetwork(Path rootDataDir) {
-        this.rootDataDir = rootDataDir;
+    public TorNetwork(Path rootDataDirPath) {
+        this.rootDataDirPath = rootDataDirPath;
     }
 
     public TorNetwork addDirAuth(String passphrase) throws IOException, InterruptedException {
         String nickname = "da" + dirAuthIndex++;
 
-        Path nodeDataDir = rootDataDir.resolve(nickname);
-        createDataDirIfNotPresent(nodeDataDir);
+        Path nodeDataDirPath = rootDataDirPath.resolve(nickname);
+        createDataDirIfNotPresent(nodeDataDirPath);
 
         var dirAuth = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname(nickname)
-                .dataDir(nodeDataDir)
+                .dataDirPath(nodeDataDirPath)
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
@@ -75,13 +75,13 @@ public class TorNetwork {
     public TorNetwork addRelay() {
         String nickname = "relay" + relayIndex++;
 
-        Path nodeDataDir = rootDataDir.resolve(nickname);
-        createDataDirIfNotPresent(nodeDataDir);
+        Path nodeDataDirPath = rootDataDirPath.resolve(nickname);
+        createDataDirIfNotPresent(nodeDataDirPath);
 
         TorNode firstRelay = TorNode.builder()
                 .type(TorNode.Type.RELAY)
                 .nickname(nickname)
-                .dataDir(nodeDataDir)
+                .dataDirPath(nodeDataDirPath)
 
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
@@ -94,13 +94,13 @@ public class TorNetwork {
     public TorNetwork addClient() {
         String nickname = "client" + clientIndex++;
 
-        Path nodeDataDir = rootDataDir.resolve(nickname);
-        createDataDirIfNotPresent(nodeDataDir);
+        Path nodeDataDirPath = rootDataDirPath.resolve(nickname);
+        createDataDirIfNotPresent(nodeDataDirPath);
 
         TorNode firstClient = TorNode.builder()
                 .type(TorNode.Type.CLIENT)
                 .nickname(nickname)
-                .dataDir(nodeDataDir)
+                .dataDirPath(nodeDataDirPath)
 
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
@@ -150,7 +150,7 @@ public class TorNetwork {
     }
 
     private void installTor() {
-        Path torBinaryDirPath = rootDataDir.resolve("tor_binary");
+        Path torBinaryDirPath = rootDataDirPath.resolve("tor_binary");
         var torInstaller = new TorInstaller(torBinaryDirPath);
         torInstaller.installIfNotUpToDate();
     }
@@ -173,7 +173,7 @@ public class TorNetwork {
     }
 
     private Process createAndStartTorProcess(TorNode torNode) throws IOException {
-        String absoluteTorBinaryPath = rootDataDir.resolve("tor_binary")
+        String absoluteTorBinaryPath = rootDataDirPath.resolve("tor_binary")
                 .resolve("tor")
                 .toAbsolutePath()
                 .toString();
@@ -183,7 +183,7 @@ public class TorNetwork {
         var processBuilder = new ProcessBuilder(absoluteTorBinaryPath, "-f", absoluteTorrcPathAsString);
 
         Map<String, String> environment = processBuilder.environment();
-        Path torDataDirPath = rootDataDir.resolve("tor_binary");
+        Path torDataDirPath = rootDataDirPath.resolve("tor_binary");
         environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);

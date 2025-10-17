@@ -17,52 +17,52 @@ public class MigrationsForV2_1_2Tests {
     private final MigrationsForV2_1_2 migrationsForV212 = new MigrationsForV2_1_2();
 
     @Test
-    void migrateEmptyDataDir(@TempDir Path dataDir) {
+    void migrateEmptyDataDir(@TempDir Path appDataDirPath) {
         Version version = migrationsForV212.getVersion();
         Version expectedVersion = new Version("2.1.2");
         assertThat(version).isEqualTo(expectedVersion);
 
-        migrationsForV212.run(dataDir);
+        migrationsForV212.run(appDataDirPath);
     }
 
     @Test
     @EnabledOnOs({OS.MAC, OS.WINDOWS})
-    void torFilesRemovalTestOnMacAndWindows(@TempDir Path dataDir) throws IOException {
-        Path torDataDir = dataDir.resolve("tor");
-        createFakeTorDataDir(torDataDir);
+    void torFilesRemovalTestOnMacAndWindows(@TempDir Path appDataDirPath) throws IOException {
+        Path torPath = appDataDirPath.resolve("tor");
+        createFakeTorPath(torPath);
 
-        migrationsForV212.run(dataDir);
+        migrationsForV212.run(appDataDirPath);
 
-        assertThat(torDataDir).exists();
-        assertThat(torDataDir.resolve("libevent-2.1.so.7")).exists();
+        assertThat(torPath).exists();
+        assertThat(torPath.resolve("libevent-2.1.so.7")).exists();
 
-        Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
-        assertThat(pluggableTransportDir).exists();
+        Path pluggableTransportDirPath = torPath.resolve("pluggable_transports");
+        assertThat(pluggableTransportDirPath).exists();
 
-        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).exists();
+        assertThat(pluggableTransportDirPath.resolve("README.SNOWFLAKE.md")).exists();
     }
 
     @Test
     @EnabledOnOs(OS.LINUX)
-    void torFilesRemovalTestOnLinux(@TempDir Path dataDir) throws IOException {
-        Path torDataDir = dataDir.resolve("tor");
-        createFakeTorDataDir(torDataDir);
+    void torFilesRemovalTestOnLinux(@TempDir Path appDataDirPath) throws IOException {
+        Path torPath = appDataDirPath.resolve("tor");
+        createFakeTorPath(torPath);
 
-        migrationsForV212.run(dataDir);
+        migrationsForV212.run(appDataDirPath);
 
-        assertThat(torDataDir).doesNotExist();
-        assertThat(torDataDir.resolve("libevent-2.1.so.7")).doesNotExist();
+        assertThat(torPath).doesNotExist();
+        assertThat(torPath.resolve("libevent-2.1.so.7")).doesNotExist();
 
-        Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
-        assertThat(pluggableTransportDir).doesNotExist();
+        Path pluggableTransportDirPath = torPath.resolve("pluggable_transports");
+        assertThat(pluggableTransportDirPath).doesNotExist();
 
-        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).doesNotExist();
+        assertThat(pluggableTransportDirPath.resolve("README.SNOWFLAKE.md")).doesNotExist();
     }
 
-    private void createFakeTorDataDir(Path torDataDir) throws IOException {
-        Files.createDirectories(torDataDir);
+    private void createFakeTorPath(Path torPath) throws IOException {
+        Files.createDirectories(torPath);
 
-        List<String> torDirFiles = List.of("lock",
+        List<String> torPathFiles = List.of("lock",
                 "libssl.so.1.1",
                 "libstdc++.so.6",
                 "cached-certs",
@@ -78,10 +78,10 @@ public class MigrationsForV2_1_2Tests {
                 "libcrypto.so.1.1",
                 "keys",
                 "geoip6");
-        createFiles(torDataDir, torDirFiles);
+        createFiles(torPath, torPathFiles);
 
-        Path pluggableTransportDir = torDataDir.resolve("pluggable_transports");
-        Files.createDirectories(pluggableTransportDir);
+        Path pluggableTransportDirPath = torPath.resolve("pluggable_transports");
+        Files.createDirectories(pluggableTransportDirPath);
 
         List<String> pluggableTransportFiles = List.of("snowflake-client",
                 "bridges_list.snowflake.txt",
@@ -90,11 +90,11 @@ public class MigrationsForV2_1_2Tests {
                 "obfs4proxy",
                 "pt_config.json",
                 "bridges_list.meek-azure.txt");
-        createFiles(pluggableTransportDir, pluggableTransportFiles);
+        createFiles(pluggableTransportDirPath, pluggableTransportFiles);
 
-        assertThat(torDataDir.resolve("libevent-2.1.so.7")).exists();
+        assertThat(torPath.resolve("libevent-2.1.so.7")).exists();
 
-        assertThat(pluggableTransportDir.resolve("README.SNOWFLAKE.md")).exists();
+        assertThat(pluggableTransportDirPath.resolve("README.SNOWFLAKE.md")).exists();
     }
 
     private void createFiles(Path basePath, List<String> fileNames) {

@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toMap;
 
 @Getter
 public final class NetworkServiceConfig {
-    public static NetworkServiceConfig from(Path baseDir, Config networkConfig) {
+    public static NetworkServiceConfig from(Path appDataDirPath, Config networkConfig) {
         ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(networkConfig.getConfig("serviceNode"));
         InventoryService.Config inventoryServiceConfig = InventoryService.Config.from(networkConfig.getConfig("inventory"));
         AuthorizationService.Config authorizationServiceConfig = AuthorizationService.Config.from(networkConfig.getConfig("authorization"));
@@ -66,9 +66,9 @@ public final class NetworkServiceConfig {
                 ));
 
         Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(networkConfig);
-        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(networkConfig, baseDir);
+        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(networkConfig, appDataDirPath);
 
-        return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
+        return new NetworkServiceConfig(appDataDirPath,
                 networkConfig.getInt("version"),
                 networkConfig.getInt("notifyExecutorMaxPoolSize"),
                 networkConfig.getInt("connectionExecutorMaxPoolSize"),
@@ -116,29 +116,29 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path baseDir) {
+    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path appDataDirPath) {
         Map<TransportType, TransportConfig> map = new HashMap<>();
-        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, baseDir));
-        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, baseDir));
-        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, baseDir));
+        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, appDataDirPath));
+        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, appDataDirPath));
+        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, appDataDirPath));
         return map;
     }
 
-    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
+    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path appDataDirPath) {
         Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase(Locale.ROOT));
-        Path dataDir;
+        Path transportDirPath;
         return switch (transportType) {
             case TOR -> {
-                dataDir = baseDir.resolve("tor");
-                yield TorTransportConfig.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath.resolve("tor");
+                yield TorTransportConfig.from(transportDirPath, transportConfig);
             }
             case I2P -> {
-                dataDir = baseDir.resolve("i2p");
-                yield I2PTransportService.Config.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath.resolve("i2p");
+                yield I2PTransportService.Config.from(transportDirPath, transportConfig);
             }
             case CLEAR -> {
-                dataDir = baseDir;
-                yield ClearNetTransportService.Config.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath;
+                yield ClearNetTransportService.Config.from(transportDirPath, transportConfig);
             }
         };
     }
@@ -157,7 +157,7 @@ public final class NetworkServiceConfig {
         };
     }
 
-    private final String baseDir;
+    private final Path appDataDirPath;
     private final int version;
     private final int notifyExecutorMaxPoolSize;
     private final int connectionExecutorMaxPoolSize;
@@ -172,7 +172,7 @@ public final class NetworkServiceConfig {
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
 
-    public NetworkServiceConfig(String baseDir,
+    public NetworkServiceConfig(Path appDataDirPath,
                                 int version,
                                 int notifyExecutorMaxPoolSize,
                                 int connectionExecutorMaxPoolSize,
@@ -186,7 +186,7 @@ public final class NetworkServiceConfig {
                                 Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
-        this.baseDir = baseDir;
+        this.appDataDirPath = appDataDirPath;
         this.version = version;
         this.notifyExecutorMaxPoolSize = notifyExecutorMaxPoolSize;
         this.connectionExecutorMaxPoolSize = connectionExecutorMaxPoolSize;

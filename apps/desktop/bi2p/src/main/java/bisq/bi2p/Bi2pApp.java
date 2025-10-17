@@ -77,7 +77,7 @@ public class Bi2pApp extends Application {
     public void init() {
         Parameters parameters = getParameters();
         i2pRouterDir = Optional.ofNullable(parameters.getNamed().get("i2pRouterDir"))
-                .orElseGet(() -> PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router").toString());
+                .orElseGet(() -> PlatformUtils.getUserDataDirPath().resolve("Bisq2_I2P_router").toString());
         setupRes(parameters);
 
         preventStandbyModeService = new PreventStandbyModeService(i2pRouterDir, preventStandbyMode);

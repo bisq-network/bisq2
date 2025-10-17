@@ -29,20 +29,20 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class FileCreationWatcher {
-    private final Path directoryToWatch;
+    private final Path dirPathToWatch;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public FileCreationWatcher(Path directoryToWatch) {
-        this.directoryToWatch = directoryToWatch;
+    public FileCreationWatcher(Path dirPathToWatch) {
+        this.dirPathToWatch = dirPathToWatch;
     }
 
     public Future<Path> waitUntilNewFileCreated() {
-        return executor.submit(() -> waitForNewFile(Optional.empty()));
+        return executor.submit(() -> waitForNewFilePath(Optional.empty()));
     }
 
-    private Path waitForNewFile(Optional<Path> optionalPath) {
+    private Path waitForNewFilePath(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            directoryToWatch.register(watchService,
+            dirPathToWatch.register(watchService,
                     StandardWatchEventKinds.ENTRY_CREATE);
 
             while (true) {
@@ -60,8 +60,8 @@ public class FileCreationWatcher {
 
                     @SuppressWarnings("unchecked")
                     WatchEvent<Path> castedWatchEvent = (WatchEvent<Path>) event;
-                    Path filename = castedWatchEvent.context();
-                    Path newFilePath = directoryToWatch.resolve(filename);
+                    Path filenamePath = castedWatchEvent.context();
+                    Path newFilePath = dirPathToWatch.resolve(filenamePath);
 
                     if (optionalPath.isEmpty()) {
                         return newFilePath;
@@ -75,10 +75,10 @@ public class FileCreationWatcher {
                 }
             }
         } catch (InterruptedException e) {
-            log.error("Couldn't watch directory: {}. Thread got interrupted at waitForNewFile method", directoryToWatch.toAbsolutePath(), e);
+            log.error("Couldn't watch directory: {}. Thread got interrupted at waitForNewFilePath method", dirPathToWatch.toAbsolutePath(), e);
             Thread.currentThread().interrupt(); // Restore interrupted state
         } catch (IOException e) {
-            log.error("Couldn't watch directory: {}", directoryToWatch.toAbsolutePath(), e);
+            log.error("Couldn't watch directory: {}", dirPathToWatch.toAbsolutePath(), e);
         }
 
         throw new IllegalStateException("FileCreationWatcher terminated prematurely.");

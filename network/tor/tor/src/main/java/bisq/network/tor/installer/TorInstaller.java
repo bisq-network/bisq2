@@ -27,12 +27,12 @@ import java.nio.file.Path;
 @Slf4j
 public class TorInstaller {
     private static final String VERSION = "0.1.0";
-    private final Path torDir;
-    private final Path versionFile;
+    private final Path torDirPath;
+    private final Path versionFilePath;
 
-    public TorInstaller(Path torDataDirPath) {
-        this.torDir = torDataDirPath;
-        this.versionFile = torDir.resolve("version");
+    public TorInstaller(Path torDirPath) {
+        this.torDirPath = torDirPath;
+        this.versionFilePath = this.torDirPath.resolve("version");
     }
 
     public void installIfNotUpToDate() {
@@ -47,24 +47,24 @@ public class TorInstaller {
 
     public void deleteVersionFile() {
         try {
-            Files.deleteIfExists(versionFile);
-            log.debug("Deleted {}", versionFile.toAbsolutePath());
+            Files.deleteIfExists(versionFilePath);
+            log.debug("Deleted {}", versionFilePath.toAbsolutePath());
         } catch (IOException e) {
-            log.warn("Couldn't delete version file {}", versionFile.toAbsolutePath(), e);
+            log.warn("Couldn't delete version file {}", versionFilePath.toAbsolutePath(), e);
         }
     }
 
     private boolean isTorUpToDate() throws IOException {
-        return Files.exists(versionFile) && VERSION.equals(Files.readString(versionFile));
+        return Files.exists(versionFilePath) && VERSION.equals(Files.readString(versionFilePath));
     }
 
     private void install() throws IOException {
         try {
-            new TorBinaryZipExtractor(torDir).extractBinary();
-            log.info("Tor files installed to {}", torDir.toAbsolutePath());
+            new TorBinaryZipExtractor(torDirPath).extractBinary();
+            log.info("Tor files installed to {}", torDirPath.toAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            FileUtils.writeToFile(VERSION, versionFile);
+            FileUtils.writeToPath(VERSION, versionFilePath);
         } catch (IOException e) {
             deleteVersionFile();
             throw e;

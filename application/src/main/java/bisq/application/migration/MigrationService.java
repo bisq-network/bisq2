@@ -14,38 +14,38 @@ import java.util.concurrent.CompletableFuture;
 
 public class MigrationService implements Service {
     static final Version VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED = new Version("2.1.1");
-    private final Path dataDir;
-    private final Path dataDirVersionFile;
+    private final Path appDataDirPath;
+    private final Path versionFilePath;
 
-    public MigrationService(Path dataDir) {
-        this.dataDir = dataDir;
-        this.dataDirVersionFile = dataDir.resolve("version");
+    public MigrationService(Path appDataDirPath) {
+        this.appDataDirPath = appDataDirPath;
+        this.versionFilePath = appDataDirPath.resolve("version");
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        Version dataDirVersion = getDataDirVersion();
+        Version storedVersion = getStoredVersion();
         Version appVersion = ApplicationVersion.getVersion();
 
-        if (dataDirVersion.below(appVersion)) {
+        if (storedVersion.below(appVersion)) {
             List<Migration> allMigrations = List.of(new MigrationsForV2_1_2());
-            Migrator migrator = new Migrator(appVersion, dataDir, allMigrations);
+            Migrator migrator = new Migrator(appVersion, appDataDirPath, allMigrations);
             migrator.migrate();
         }
 
         return CompletableFuture.completedFuture(true);
     }
 
-    Version getDataDirVersion() {
-        if (!Files.exists(dataDirVersionFile)) {
+    Version getStoredVersion() {
+        if (!Files.exists(versionFilePath)) {
             return VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED;
         }
 
         try {
-            String version = Files.readString(dataDirVersionFile);
+            String version = Files.readString(versionFilePath);
             return new Version(version);
         } catch (IOException e) {
-            throw new RuntimeException("Can't identify data dir version. This shouldn't happen.", e);
+            throw new RuntimeException("Can't identify stored version. This shouldn't happen.", e);
         }
     }
 }

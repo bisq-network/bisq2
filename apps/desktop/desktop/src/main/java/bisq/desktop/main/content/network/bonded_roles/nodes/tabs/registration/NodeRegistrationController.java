@@ -89,11 +89,11 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
     }
 
     void onImportNodeAddress() {
-        Path path = serviceProvider.getConfig().getBaseDir();
+        Path path = serviceProvider.getConfig().getAppDataDirPath();
         FileChooserUtil.openFile(getView().getRoot().getScene(), path.toAbsolutePath().toString())
-                .ifPresent(file -> {
+                .ifPresent(p -> {
                     try {
-                        String json = Files.readString(file);
+                        String json = Files.readString(p);
                         checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
                         getNodesRegistrationModel().getAddressInfoJson().set(json);
                     } catch (Exception e) {

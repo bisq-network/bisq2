@@ -67,7 +67,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
-            writeStoreToTempFile(persistableStore);
+            writeStoreToTempFilePath(persistableStore);
             boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
             if (!hasFileBeenBackedUp) {
                 Files.deleteIfExists(storeFilePath);
@@ -104,13 +104,13 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         }
     }
 
-    private void writeStoreToTempFile(T persistableStore) {
-        Path tempFile = storeFileManager.getTempFilePath();
-        writeStoreToFile(persistableStore, tempFile);
+    private void writeStoreToTempFilePath(T persistableStore) {
+        Path tempFilePath = storeFileManager.getTempFilePath();
+        writeStoreToFilePath(persistableStore, tempFilePath);
     }
 
-    private void writeStoreToFile(T persistableStore, Path file) {
-        try (OutputStream fileOutputStream = Files.newOutputStream(file)) {
+    private void writeStoreToFilePath(T persistableStore, Path filePath) {
+        try (OutputStream fileOutputStream = Files.newOutputStream(filePath)) {
             // We use an Any container (byte blob) as we do not have the dependencies to the
             // external PersistableStore implementations (at deserialization we would have an issue otherwise as
             // it requires static access).

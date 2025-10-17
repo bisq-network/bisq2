@@ -30,9 +30,9 @@ import java.nio.file.Path;
 
 @Slf4j
 public class I2PKeyGeneration {
-    public static Path getDestinationFilePath(Path storageDir, String tag, String suffix) {
-        Path targetDir = storageDir.resolve(tag);
-        return targetDir.resolve(suffix);
+    public static Path getDestinationFilePath(Path storageDirPath, String tag, String suffix) {
+        Path targetDirPath = storageDirPath.resolve(tag);
+        return targetDirPath.resolve(suffix);
     }
 
     public static I2PKeyPair generateKeyPair() {

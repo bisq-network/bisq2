@@ -31,15 +31,15 @@ public class TorBinaryZipExtractor {
 
     private static final String ARCHIVE_FILENAME = "tor.zip";
 
-    private final Path destDir;
+    private final Path destDirPath;
 
-    public TorBinaryZipExtractor(Path destDir) {
-        this.destDir = destDir;
+    public TorBinaryZipExtractor(Path destDirPath) {
+        this.destDirPath = destDirPath;
     }
 
     public void extractBinary() throws IOException {
         InputStream zipFileInputStream = openBinaryZipAsStream();
-        try (ZipFileExtractor zipFileExtractor = new ZipFileExtractor(zipFileInputStream, destDir)) {
+        try (ZipFileExtractor zipFileExtractor = new ZipFileExtractor(zipFileInputStream, destDirPath)) {
             zipFileExtractor.extractArchive();
             makeTorBinaryExecutable();
         }
@@ -60,8 +60,8 @@ public class TorBinaryZipExtractor {
             return;
         }
 
-        Path torBinaryFile = destDir.resolve("tor");
-        if (!torBinaryFile.toFile().setExecutable(true)) {
+        Path torBinaryFilePath = destDirPath.resolve("tor");
+        if (!torBinaryFilePath.toFile().setExecutable(true)) {
             throw new ZipFileExtractionFailedException("Couldn't make tor binary executable: " + ARCHIVE_FILENAME);
         }
     }

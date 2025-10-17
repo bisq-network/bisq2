@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class JavaFxCatHashService extends CatHashService<Image> {
-    public JavaFxCatHashService(Path baseDir) {
-        super(baseDir);
+    public JavaFxCatHashService(Path appDataDirPath) {
+        super(appDataDirPath);
     }
 
     @Override
@@ -35,12 +35,12 @@ public class JavaFxCatHashService extends CatHashService<Image> {
     }
 
     @Override
-    protected void writeRawImage(Image image, Path iconFile) throws IOException {
-        CatHashImageUtil.writeRawImage(image, iconFile);
+    protected void writeRawImage(Image image, Path iconPath) throws IOException {
+        CatHashImageUtil.writeRawImage(image, iconPath);
     }
 
     @Override
-    protected Image readRawImage(Path iconFile) throws IOException {
-        return CatHashImageUtil.readRawImage(iconFile);
+    protected Image readRawImage(Path iconPath) throws IOException {
+        return CatHashImageUtil.readRawImage(iconPath);
     }
 }

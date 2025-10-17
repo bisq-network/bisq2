@@ -61,7 +61,7 @@ public class OpenTradesUtils {
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileUtils.writeToPath(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

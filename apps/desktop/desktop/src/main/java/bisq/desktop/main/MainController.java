@@ -77,7 +77,7 @@ public class MainController extends NavigationController {
         if (getClass().getClassLoader() instanceof URLClassLoader) {
             // We only verify version if we have been loaded as jar into the launcher. 
             // In that case our class loader is of typ URLClassLoader.
-            Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getBaseDir());
+            Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getAppDataDirPath());
             if (versionFromVersionFile.isPresent()) {
                 Version version = ApplicationVersion.getVersion();
                 if (!version.toString().equals(versionFromVersionFile.get())) {

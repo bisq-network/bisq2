@@ -103,14 +103,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected final static double DEFAULT_WIDTH = 668;
 
     public static Region primaryStageOwner;
-    private static Path baseDir;
+    private static Path appDataDirPath;
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
     private static DontShowAgainService dontShowAgainService;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
-        Overlay.baseDir = serviceProvider.getConfig().getBaseDir();
+        Overlay.appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
         Overlay.settingsService = serviceProvider.getSettingsService();
         Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
         Overlay.dontShowAgainService = serviceProvider.getDontShowAgainService();
@@ -971,29 +971,29 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private void addReportErrorButtons() {
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        logButton.setOnAction(event -> PlatformUtils.open(baseDir.resolve("bisq.log")));
+        logButton.setOnAction(event -> PlatformUtils.open(appDataDirPath.resolve("bisq.log")));
 
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), appDataDirPath, "")
                 .ifPresent(directory -> {
                     // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
                     // private data gets leaked in case the user used their real name as their OS user.
-                    Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
-                    Path debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log");
+                    Path debugLogPath = Path.of(appDataDirPath + "/tor/").resolve("debug.log");
+                    Path debugLogForZipFilePath = Path.of(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
                     try {
-                        Files.deleteIfExists(debugLogForZipFile);
-                        FileUtils.copyFile(debugLogPath, debugLogForZipFile);
-                        String logContent = FileUtils.readUTF8String(debugLogForZipFile);
+                        Files.deleteIfExists(debugLogForZipFilePath);
+                        FileUtils.copyFile(debugLogPath, debugLogForZipFilePath);
+                        String logContent = FileUtils.readUTF8String(debugLogForZipFilePath);
                         logContent = StringUtils.maskHomeDirectory(logContent);
-                        FileUtils.writeToFile(logContent, debugLogForZipFile);
+                        FileUtils.writeToPath(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                     URI uri = URI.create("jar:file:" + directory.resolve("bisq2-logs.zip").toUri().getRawPath());
                     Map<String, String> env = Map.of("create", "true");
                     List<Path> logPaths = Arrays.asList(
-                            baseDir.resolve("bisq.log"),
-                            debugLogForZipFile);
+                            appDataDirPath.resolve("bisq.log"),
+                            debugLogForZipFilePath);
                     try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
                         logPaths.forEach(logPath -> {
                             if (Files.isRegularFile(logPath)) {

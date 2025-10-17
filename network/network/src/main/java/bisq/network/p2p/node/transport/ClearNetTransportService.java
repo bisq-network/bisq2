@@ -39,8 +39,8 @@ public class ClearNetTransportService implements TransportService {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
-        public static Config from(Path dataDir, com.typesafe.config.Config config) {
-            return new Config(dataDir,
+        public static Config from(Path dataDirPath, com.typesafe.config.Config config) {
+            return new Config(dataDirPath,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("sendMessageThrottleTime"),
@@ -50,7 +50,7 @@ public class ClearNetTransportService implements TransportService {
             );
         }
 
-        private final Path dataDir;
+        private final Path dataDirPath;
         private final int defaultNodePort;
         private final int socketTimeout;
         private final int sendMessageThrottleTime;
@@ -58,14 +58,14 @@ public class ClearNetTransportService implements TransportService {
         private final int connectTimeoutMs;
         private final ClearNetAddressType clearNetAddressType;
 
-        public Config(Path dataDir,
+        public Config(Path dataDirPath,
                       int defaultNodePort,
                       int socketTimeout,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
                       int connectTimeoutMs,
                       ClearNetAddressType clearNetAddressType) {
-            this.dataDir = dataDir;
+            this.dataDirPath = dataDirPath;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
             this.sendMessageThrottleTime = sendMessageThrottleTime;

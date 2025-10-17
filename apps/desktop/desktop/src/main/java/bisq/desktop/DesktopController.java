@@ -121,7 +121,7 @@ public class DesktopController extends NavigationController {
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
 
-        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getBaseDir()));
+        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getAppDataDirPath()));
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);

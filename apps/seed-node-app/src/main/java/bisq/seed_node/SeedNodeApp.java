@@ -42,9 +42,9 @@ public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
         AddressByTransportTypeMap addressByTransportTypeMap =
                 applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap();
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
-        Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
+        Path path = applicationService.getConfig().getAppDataDirPath().resolve("default_node_address.json");
         try {
-            FileUtils.writeToFile(json, path);
+            FileUtils.writeToPath(json, path);
         } catch (IOException e) {
             log.error("Error at write json", e);
         }

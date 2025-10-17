@@ -48,14 +48,14 @@ public class ResourcesController implements Controller {
     @Getter
     private final ResourcesView view;
     private final ResourcesModel model;
-    private final Path baseDir;
+    private final Path appDataDirPath;
     private final String appName;
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
     private Pin backupLocationPin;
 
     public ResourcesController(ServiceProvider serviceProvider) {
-        baseDir = serviceProvider.getConfig().getBaseDir();
+        appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
         appName = serviceProvider.getConfig().getAppName();
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
@@ -81,21 +81,21 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenLogFile() {
-        PlatformUtils.open(baseDir.resolve("bisq.log"));
+        PlatformUtils.open(appDataDirPath.resolve("bisq.log"));
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(baseDir.resolve("tor").resolve("debug.log"));
+        PlatformUtils.open(appDataDirPath.resolve("tor").resolve("debug.log"));
     }
 
     void onOpenDataDir() {
-        PlatformUtils.open(baseDir);
+        PlatformUtils.open(appDataDirPath);
     }
 
     void onSetBackupLocation() {
         String backupLocation = model.getBackupLocation().get();
         Path path = StringUtils.isEmpty(backupLocation)
-                ? PlatformUtils.getHomeDirectory()
+                ? PlatformUtils.getHomeDirectoryPath()
                 : Path.of(backupLocation);
         String title = Res.get("support.resources.backup.selectLocation");
         FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
@@ -112,15 +112,15 @@ public class ResourcesController implements Controller {
                     if (throwable == null) {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destinationDirName = appName + "_backup_" + dateString;
-                        Path destination = Path.of(model.getBackupLocation().get(), destinationDirName);
+                        Path destinationPath = Path.of(model.getBackupLocation().get(), destinationDirName);
                         if (!Files.exists(Path.of(model.getBackupLocation().get()))) {
                             new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
                             return;
                         }
                         try {
                             // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy
-                            FileUtils.copyDirectory(baseDir, destination, Set.of("log"));
-                            new Popup().feedback(Res.get("support.resources.backup.success", destination)).show();
+                            FileUtils.copyDirectory(appDataDirPath, destinationPath, Set.of("log"));
+                            new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

@@ -18,10 +18,9 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
 import bisq.common.network.Address;
-import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
@@ -39,16 +38,20 @@ import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ConnectionHandshakeResponderTest {
 
-    private final Path tmpDir = FileUtils.createTempDir();
     private final BanList banList = mock(BanList.class);
     private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
     private final Capability responderCapability;

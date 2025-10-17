@@ -97,7 +97,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         walletService = Optional.empty();
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyBundleService(),
@@ -168,7 +168,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     restApiConfig, networkService, nodeMonitorService,
                     HttpApiRequestFilter.from(restApiConfig)
             );
-            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getBaseDir(), securityService, networkService));
+            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
         }
     }
 
@@ -280,7 +280,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         try {
             switch (OS.getOS()) {
                 case LINUX:
-                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                    return Optional.of(new LinuxNotificationService(config.getAppDataDirPath(), settingsService));
                 case MAC_OS:
                     return Optional.of(new OsxNotificationService());
                 case WINDOWS:

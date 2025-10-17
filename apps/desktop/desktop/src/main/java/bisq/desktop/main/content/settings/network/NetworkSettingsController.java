@@ -57,7 +57,7 @@ public class NetworkSettingsController implements Controller {
     private final SettingsService settingsService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final ApplicationService.Config appConfig;
-    private final Path baseDir;
+    private final Path appDataDirPath;
     private final ShutDownHandler shutDownHandler;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private Pin ignoreDiffAdjustmentFromSecManagerPin,
@@ -67,7 +67,7 @@ public class NetworkSettingsController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         appConfig = serviceProvider.getConfig();
-        baseDir = appConfig.getBaseDir();
+        appDataDirPath = appConfig.getAppDataDirPath();
         shutDownHandler = serviceProvider.getShutDownHandler();
 
         model = new NetworkSettingsModel();
@@ -80,7 +80,7 @@ public class NetworkSettingsController implements Controller {
         // but not updated when custom config would change.
 
         Config rootConfig = appConfig.getRootConfig();
-        Config currentCustomConfig = TypesafeConfigUtils.resolveCustomConfig(baseDir).orElse(ConfigFactory.empty());
+        Config currentCustomConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
         Config updatedRootConfig = currentCustomConfig
                 .withFallback(rootConfig)
                 .resolve();
@@ -194,7 +194,7 @@ public class NetworkSettingsController implements Controller {
                 "application.network.configByTransportType.i2p.bi2pGrpcPort", bi2pGrpcAddress.getPort()
         ));
 
-        Config customConfig = TypesafeConfigUtils.resolveCustomConfig(baseDir).orElse(ConfigFactory.empty());
+        Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
         Config config = newConfig
                 .withFallback(customConfig)
                 .resolve();
@@ -204,11 +204,11 @@ public class NetworkSettingsController implements Controller {
                 .setJson(false)             // keep HOCON instead of JSON
                 .setFormatted(true));       // pretty print
 
-        Path file = baseDir.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         try {
-            Files.writeString(file, rendered);
+            Files.writeString(customConfigFilePath, rendered);
         } catch (IOException e) {
-            log.error("Could not write config file {}", file.toAbsolutePath(), e);
+            log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             throw new RuntimeException(e);
         }
     }

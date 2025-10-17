@@ -95,9 +95,9 @@ public class EmbeddedTorProcess {
         String[] searchPaths = pathEnvironmentVariable.split(":");
 
         for (var path : searchPaths) {
-            Path torBinary = Path.of(path, "tor");
-            if (Files.exists(torBinary)) {
-                return Optional.of(torBinary);
+            Path torBinaryPath = Path.of(path, "tor");
+            if (Files.exists(torBinaryPath)) {
+                return Optional.of(torBinaryPath);
             }
         }
 
@@ -105,10 +105,10 @@ public class EmbeddedTorProcess {
     }
 
     private void createTorControlDirectory() {
-        Path controlDirFile = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
-        if (!Files.exists(controlDirFile)) {
+        Path controlDirFilePath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
+        if (!Files.exists(controlDirFilePath)) {
             try {
-                Files.createDirectories(controlDirFile);
+                Files.createDirectories(controlDirFilePath);
             } catch (IOException e) {
                 throw new TorStartupFailedException("Couldn't create Tor control directory.");
             }

@@ -97,12 +97,12 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        Path subPath = persistenceService.getBaseDir().resolve(DbSubDirectory.NETWORK_DB.getDbPath());
+        Path subPath = persistenceService.getAppDataDirPath().resolve(DbSubDirectory.NETWORK_DB.getDbPath());
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
-            Path directory = subPath.resolve(authStoreName);
-            if (Files.exists(directory)) {
-                getExistingStoreKeys(directory)
+            Path dirPath = subPath.resolve(authStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
                             AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
@@ -145,9 +145,9 @@ public class StorageService {
                         });
             }
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
-            directory = subPath.resolve(mailboxStoreName);
-            if (Files.exists(directory)) {
-                getExistingStoreKeys(directory)
+            dirPath = subPath.resolve(mailboxStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
                             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
@@ -180,9 +180,9 @@ public class StorageService {
             }
 
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
-            directory = subPath.resolve(appendStoreName);
-            if (Files.exists(directory)) {
-                getExistingStoreKeys(directory)
+            dirPath = subPath.resolve(appendStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
                             AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
@@ -602,11 +602,11 @@ public class StorageService {
                 .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
-    private Set<String> getExistingStoreKeys(Path directory) {
+    private Set<String> getExistingStoreKeys(Path dirPath) {
         return NetworkStorageWhiteList.getClassNames().stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
-                    return Files.exists(directory.resolve(storageFileName));
+                    return Files.exists(dirPath.resolve(storageFileName));
                 })
                 .collect(Collectors.toSet());
     }

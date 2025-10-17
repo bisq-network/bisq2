@@ -122,7 +122,7 @@ public class WebSocketService implements Service {
     public WebSocketService(Config config,
                             String restApiBaseAddress,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
-                            Path baseDir,
+                            Path appDataDirPath,
                             SecurityService securityService,
                             NetworkService networkService,
                             BondedRolesService bondedRolesService,
@@ -156,7 +156,7 @@ public class WebSocketService implements Service {
                     "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
         }
 
-        apiTorOnionService = new ApiTorOnionService(baseDir, securityService, networkService, config.getPort(), "webSocketServer");
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "webSocketServer");
     }
 
     @Override

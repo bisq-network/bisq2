@@ -33,13 +33,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PersistenceService {
     @Getter
-    private final Path baseDir;
+    private final Path appDataDirPath;
     @Getter
     protected final List<PersistenceClient<? extends PersistableProto>> clients = new CopyOnWriteArrayList<>();
     protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
 
-    public PersistenceService(Path baseDir) {
-        this.baseDir = baseDir;
+    public PersistenceService(Path appDataDirPath) {
+        this.appDataDirPath = appDataDirPath;
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
@@ -86,17 +86,17 @@ public class PersistenceService {
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                                 Path subDir,
+                                                                                 Path subDirPath,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore,
                                                                                  MaxBackupSize maxBackupSize) {
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
-        Path normalized = subDir.normalize();
-        if (normalized.isAbsolute()) {
-            throw new IllegalArgumentException("subDir must be relative to baseDir");
+        Path normalizedPath = subDirPath.normalize();
+        if (normalizedPath.isAbsolute()) {
+            throw new IllegalArgumentException("subDir must be relative to appDataDirPath");
         }
-        Persistence<T> persistence = new Persistence<>(baseDir.resolve(normalized), fileName, maxBackupSize);
+        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize);
         persistenceInstances.add(persistence);
         return persistence;
     }

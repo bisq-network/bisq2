@@ -168,15 +168,15 @@ public class RouterSetup {
     }
 
     private void mergeAndStoreRouterConfig(Properties overrides) {
-        Path configFile = i2pDirPath.resolve("router.config");
+        Path configFilePath = i2pDirPath.resolve("router.config");
         Properties properties = new OrderedProperties();
         properties.putAll(getPropertiesFromResources());
-        properties.putAll(getPropertiesI2pDir(configFile));
+        properties.putAll(getPropertiesI2pDir(configFilePath));
         properties.putAll(overrides);
         try {
-            DataHelper.storeProps(properties, configFile.toFile());
+            DataHelper.storeProps(properties, configFilePath.toFile());
         } catch (IOException e) {
-            log.warn("Could not store router.config file in i2p data directory {}", configFile.toAbsolutePath(), e);
+            log.warn("Could not store router.config file in i2p data directory {}", configFilePath.toAbsolutePath(), e);
         }
     }
 
@@ -190,27 +190,27 @@ public class RouterSetup {
         return properties;
     }
 
-    private Properties getPropertiesI2pDir(Path configFile) {
+    private Properties getPropertiesI2pDir(Path configFilePath) {
         Properties properties = new Properties();
-        if (Files.exists(configFile)) {
-            try (InputStream inputStream = Files.newInputStream(configFile)) {
+        if (Files.exists(configFilePath)) {
+            try (InputStream inputStream = Files.newInputStream(configFilePath)) {
                 DataHelper.loadProps(properties, inputStream);
             } catch (IOException e) {
-                log.warn("Could not load router.config file from i2p data directory {}", configFile.toAbsolutePath(), e);
+                log.warn("Could not load router.config file from i2p data directory {}", configFilePath.toAbsolutePath(), e);
             }
         } else {
             try {
-                Files.createFile(configFile);
+                Files.createFile(configFilePath);
             } catch (IOException e) {
-                log.warn("Could not create router.config file in i2p data directory {}", configFile.toAbsolutePath(), e);
+                log.warn("Could not create router.config file in i2p data directory {}", configFilePath.toAbsolutePath(), e);
             }
         }
         return properties;
     }
 
     private void createDirectoryAndSetProperty(String dirName, String propertyName) throws IOException {
-        Path dir = createDirectory(dirName);
-        System.setProperty(propertyName, dir.toAbsolutePath().toString());
+        Path dirPath = createDirectory(dirName);
+        System.setProperty(propertyName, dirPath.toAbsolutePath().toString());
     }
 
     private Path createDirectory(String dirName) throws IOException {
@@ -218,8 +218,8 @@ public class RouterSetup {
     }
 
     private Path createDirectory(Path parent, String child) throws IOException {
-        Path dir = parent.resolve(child);
-        Files.createDirectories(dir);
-        return dir;
+        Path dirPath = parent.resolve(child);
+        Files.createDirectories(dirPath);
+        return dirPath;
     }
 }

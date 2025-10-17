@@ -36,14 +36,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class LinuxNotificationService implements OsSpecificNotificationService {
-    private final Path baseDir;
+    private final Path baseDirPath;
     private final SettingsService settingsService;
     private boolean isSupported;
     @Nullable
     private String iconPath;
 
-    public LinuxNotificationService(Path baseDir, SettingsService settingsService) {
-        this.baseDir = baseDir;
+    public LinuxNotificationService(Path baseDirPath, SettingsService settingsService) {
+        this.baseDirPath = baseDirPath;
         this.settingsService = settingsService;
     }
 
@@ -65,16 +65,16 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
 
                     // We are running from source code and use icon from resources as Bisq2.png is not available
                     String fileName = "linux-notification-icon.png";
-                    Path destination = baseDir.resolve(fileName);
-                    if (!Files.exists(destination)) {
+                    Path destinationPath = baseDirPath.resolve(fileName);
+                    if (!Files.exists(destinationPath)) {
                         try {
-                            FileUtils.resourceToFile(fileName, destination);
-                            iconPath = destination.toAbsolutePath().toString();
+                            FileUtils.resourceToFile(fileName, destinationPath);
+                            iconPath = destinationPath.toAbsolutePath().toString();
                         } catch (IOException e) {
                             log.error("Copying notificationIcon from resources failed", e);
                         }
                     } else {
-                        iconPath = destination.toAbsolutePath().toString();
+                        iconPath = destinationPath.toAbsolutePath().toString();
                     }
                 }
 

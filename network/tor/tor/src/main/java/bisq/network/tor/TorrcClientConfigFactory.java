@@ -32,14 +32,14 @@ import static bisq.network.tor.common.torrc.Torrc.Keys.DISABLE_NETWORK;
 @Builder
 public class TorrcClientConfigFactory {
     private final boolean isTestNetwork;
-    private final Path dataDir;
+    private final Path dataDirPath;
     private final PasswordDigest hashedControlPassword;
 
     public TorrcClientConfigFactory(boolean isTestNetwork,
-                                    Path dataDir,
+                                    Path dataDirPath,
                                     PasswordDigest hashedControlPassword) {
         this.isTestNetwork = isTestNetwork;
-        this.dataDir = dataDir;
+        this.dataDirPath = dataDirPath;
         this.hashedControlPassword = hashedControlPassword;
     }
 
@@ -63,7 +63,7 @@ public class TorrcClientConfigFactory {
 
     private TorrcConfigGenerator baseTorrcGenerator() {
         return BaseTorrcGenerator.builder()
-                .dataDirPath(dataDir)
+                .dataDirPath(dataDirPath)
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
                 .isTestNetwork(isTestNetwork)
                 .build();

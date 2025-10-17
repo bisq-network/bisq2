@@ -59,8 +59,8 @@ public class I2PTransportService implements TransportService {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
-        public static Config from(Path dataDir, com.typesafe.config.Config config) {
-            return new Config(dataDir,
+        public static Config from(Path dataDirPath, com.typesafe.config.Config config) {
+            return new Config(dataDirPath,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("sendMessageThrottleTime"),
@@ -96,11 +96,11 @@ public class I2PTransportService implements TransportService {
         private final int httpProxyPort;
         private final boolean httpProxyEnabled;
         private final boolean embeddedRouter;
-        private final Path dataDir;
+        private final Path dataDirPath;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
 
-        public Config(Path dataDir,
+        public Config(Path dataDirPath,
                       int defaultNodePort,
                       int socketTimeout,
                       int sendMessageThrottleTime,
@@ -118,7 +118,7 @@ public class I2PTransportService implements TransportService {
                       int httpProxyPort,
                       boolean httpProxyEnabled,
                       boolean embeddedRouter) {
-            this.dataDir = dataDir;
+            this.dataDirPath = dataDirPath;
             this.defaultNodePort = defaultNodePort;
             this.socketTimeout = socketTimeout;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
@@ -177,8 +177,8 @@ public class I2PTransportService implements TransportService {
                     .orTimeout(i2pConfig.getRouterStartupTimeout(), TimeUnit.MILLISECONDS)
                     .get();
 
-            Path clientDir = i2pConfig.getDataDir().resolve("client");
-            i2pClient = new I2PClient(clientDir,
+            Path clientDirPath = i2pConfig.getDataDirPath().resolve("client");
+            i2pClient = new I2PClient(clientDirPath,
                     i2pConfig.getI2cpHost(),
                     i2pConfig.getI2cpPort(),
                     i2pConfig.getSocketTimeout(),

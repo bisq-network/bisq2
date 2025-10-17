@@ -37,33 +37,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ZipFileExtractorTest {
 
     @Test
-    void testExtractSingleFile(@TempDir Path tempDir) throws IOException {
+    void testExtractSingleFile(@TempDir Path tempDirPath) throws IOException {
         byte[] zipBytes = createZipWithSingleFile("test.txt", "Hello World");
         try (InputStream is = new ByteArrayInputStream(zipBytes);
-             ZipFileExtractor extractor = new ZipFileExtractor(is, tempDir)) {
+             ZipFileExtractor extractor = new ZipFileExtractor(is, tempDirPath)) {
             extractor.extractArchive();
         }
-        Path extractedFile = tempDir.resolve("test.txt");
-        assertTrue(Files.exists(extractedFile));
-        assertEquals("Hello World", Files.readString(extractedFile));
+        Path extractedFilePath = tempDirPath.resolve("test.txt");
+        assertTrue(Files.exists(extractedFilePath));
+        assertEquals("Hello World", Files.readString(extractedFilePath));
     }
 
     @Test
-    void testExtractDirectoryAndFile(@TempDir Path tempDir) throws IOException {
+    void testExtractDirectoryAndFile(@TempDir Path tempDirPath) throws IOException {
         byte[] zipBytes = createZipWithDirAndFile("dir/", "dir/file.txt", "Data");
         try (InputStream is = new ByteArrayInputStream(zipBytes);
-             ZipFileExtractor extractor = new ZipFileExtractor(is, tempDir)) {
+             ZipFileExtractor extractor = new ZipFileExtractor(is, tempDirPath)) {
             extractor.extractArchive();
         }
-        assertTrue(Files.isDirectory(tempDir.resolve("dir")));
-        assertTrue(Files.exists(tempDir.resolve("dir/file.txt")));
-        assertEquals("Data", Files.readString(tempDir.resolve("dir/file.txt")));
+        assertTrue(Files.isDirectory(tempDirPath.resolve("dir")));
+        assertTrue(Files.exists(tempDirPath.resolve("dir/file.txt")));
+        assertEquals("Data", Files.readString(tempDirPath.resolve("dir/file.txt")));
     }
 
     @Test
-    void testThrowExceptionForInvalidZip(@TempDir Path tempDir) {
+    void testThrowExceptionForInvalidZip(@TempDir Path tempDirPath) {
         ByteArrayInputStream invalidZip = new ByteArrayInputStream("not a zip".getBytes(StandardCharsets.UTF_8));
-        try (ZipFileExtractor extractor = new ZipFileExtractor(invalidZip, tempDir)) {
+        try (ZipFileExtractor extractor = new ZipFileExtractor(invalidZip, tempDirPath)) {
             assertThrows(ZipFileExtractionFailedException.class, extractor::extractArchive);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -72,7 +72,7 @@ public class ZipFileExtractorTest {
 
 
     @Test
-    void testThrowExceptionWhenZipEntryEscapesDestDirectory(@TempDir Path tempDir) throws IOException {
+    void testThrowExceptionWhenZipEntryEscapesDestDirectory(@TempDir Path tempDirPath) throws IOException {
         // Create a malicious zip with path traversal entry
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -82,7 +82,7 @@ public class ZipFileExtractorTest {
         }
 
         InputStream zipFileInputStream = new ByteArrayInputStream(baos.toByteArray());
-        ZipFileExtractor extractor = new ZipFileExtractor(zipFileInputStream, tempDir);
+        ZipFileExtractor extractor = new ZipFileExtractor(zipFileInputStream, tempDirPath);
 
         assertThrows(ZipFileExtractionFailedException.class, extractor::extractArchive);
     }

@@ -147,10 +147,10 @@ public class FileUtils {
      * @return The path to the created temporary directory
      * @throws IOException if an I/O error occurs
      */
-    public static Path createTempDir() throws IOException {
-        Path tempDirPath = Files.createTempDirectory(null);
-        recursiveDeleteOnShutdownHook(tempDirPath);
-        return tempDirPath;
+    public static Path createTempDirPath() throws IOException {
+        Path tempPath = Files.createTempDirectory(null);
+        recursiveDeleteOnShutdownHook(tempPath);
+        return tempPath;
     }
 
     private static void recursiveDeleteOnShutdownHook(Path path) {
@@ -160,18 +160,18 @@ public class FileUtils {
                     try {
                         Files.walkFileTree(path, new SimpleFileVisitor<>() {
                             @Override
-                            public FileVisitResult visitFile(Path file,
+                            public FileVisitResult visitFile(Path path,
                                                              @SuppressWarnings("unused") BasicFileAttributes attrs)
                                     throws IOException {
-                                Files.delete(file);
+                                Files.delete(path);
                                 return FileVisitResult.CONTINUE;
                             }
 
                             @Override
-                            public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                            public FileVisitResult postVisitDirectory(Path path, IOException e)
                                     throws IOException {
                                 if (e == null) {
-                                    Files.delete(dir);
+                                    Files.delete(path);
                                     return FileVisitResult.CONTINUE;
                                 }
                                 // directory iteration failed
@@ -187,15 +187,15 @@ public class FileUtils {
     /**
      * List all files (not directories) in the given directory up to the specified depth.
      *
-     * @param directory The directory to list files from
+     * @param path The directory to list files from
      * @param depth     The maximum depth to traverse
      * @return A set of file names (not paths) in the directory
      * @throws IOException if an I/O error occurs
      */
-    public static Set<String> listFilesInDirectory(Path directory, int depth) throws IOException {
-        try (Stream<Path> stream = Files.walk(directory, depth)) {
+    public static Set<String> listFilesInDirectory(Path path, int depth) throws IOException {
+        try (Stream<Path> stream = Files.walk(path, depth)) {
             return stream
-                    .filter(file -> !Files.isDirectory(file))
+                    .filter(p -> !Files.isDirectory(p))
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
@@ -210,7 +210,7 @@ public class FileUtils {
      * @param path    The path to the file
      * @throws IOException if an I/O error occurs
      */
-    public static void writeToFile(String content, Path path) throws IOException {
+    public static void writeToPath(String content, Path path) throws IOException {
         try {
             Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
         } catch (IOException e) {
@@ -259,21 +259,21 @@ public class FileUtils {
         }
     }
 
-    public static void copyFile(Path source, Path destination) throws IOException {
-        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+    public static void copyFile(Path sourcePath, Path destinationPath) throws IOException {
+        Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
         inputStream.transferTo(outputStream);
     }
 
-    public static Set<String> listFiles(Path dirPath) {
-        if (!dirPath.toFile().exists()) {
+    public static Set<String> listRegularFiles(Path dirPath) {
+        if (Files.notExists(dirPath)) {
             return new HashSet<>();
         }
         try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
-                    .filter(file -> !Files.isDirectory(file))
+                    .filter(Files::isRegularFile)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
@@ -284,7 +284,7 @@ public class FileUtils {
     }
 
     public static Set<String> listDirectories(Path dirPath) {
-        if (!dirPath.toFile().exists()) {
+        if (Files.notExists(dirPath)) {
             return new HashSet<>();
         }
         try (Stream<Path> stream = Files.list(dirPath)) {
@@ -316,27 +316,27 @@ public class FileUtils {
         }
     }
 
-    public static void backupCorruptedFile(Path directory, Path storageFile, String fileName, String backupFolderName)
+    public static void backupCorruptedFile(Path dirPath, Path storageFilePath, String fileName, String backupFolderName)
             throws IOException {
-        if (Files.exists(storageFile)) {
-            Path corruptedBackupDir = directory.resolve(backupFolderName);
-            Files.createDirectories(corruptedBackupDir);
+        if (Files.exists(storageFilePath)) {
+            Path corruptedBackupDirPath = dirPath.resolve(backupFolderName);
+            Files.createDirectories(corruptedBackupDirPath);
             String timestamp = String.valueOf(System.currentTimeMillis());
             String newFileName = fileName + "_at_" + timestamp;
-            Path target = directory.resolve(backupFolderName).resolve(newFileName);
-            Files.move(storageFile, target, StandardCopyOption.REPLACE_EXISTING);
+            Path targetPath = dirPath.resolve(backupFolderName).resolve(newFileName);
+            Files.move(storageFilePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
     public static HttpURLConnection downloadFile(URL url,
-                                                 Path destination,
+                                                 Path destinationPath,
                                                  Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         int fileSize;
         try {
             connection.connect();
             try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
-                 OutputStream outputStream = Files.newOutputStream(destination)) {
+                 OutputStream outputStream = Files.newOutputStream(destinationPath)) {
                 // If server does not provide contentLength it is -1
                 fileSize = connection.getContentLength();
                 double totalReadBytes = 0d;
@@ -363,11 +363,11 @@ public class FileUtils {
         return FileUtils.class.getClassLoader().getResource(fileName) != null;
     }
 
-    public static void copyDirectory(Path sourceDirectory,
-                                     Path destinationDirectory,
+    public static void copyDirectory(Path sourceDirPath,
+                                     Path destinationDirPath,
                                      Set<String> extensionsToSkip) throws IOException {
         AtomicReference<IOException> exception = new AtomicReference<>();
-        try (Stream<Path> stream = Files.walk(sourceDirectory)) {
+        try (Stream<Path> stream = Files.walk(sourceDirPath)) {
             stream.forEach(source -> {
                 boolean shouldSkip = false;
                 if (!Files.isDirectory(source)) {
@@ -380,10 +380,10 @@ public class FileUtils {
                 }
 
                 if (!shouldSkip) {
-                    Path relativePath = sourceDirectory.relativize(source);
-                    Path destination = destinationDirectory.resolve(relativePath);
+                    Path relativePath = sourceDirPath.relativize(source);
+                    Path destinationPath = destinationDirPath.resolve(relativePath);
                     try {
-                        Files.copy(source, destination);
+                        Files.copy(source, destinationPath);
                     } catch (IOException e) {
                         exception.set(e);
                     }
@@ -407,14 +407,14 @@ public class FileUtils {
         }
         String protocol = dirURL.getProtocol();
         if ("file".equals(protocol)) {
-            Path dir = Path.of(dirURL.toURI());
-            if (!Files.isDirectory(dir)) {
-                throw new IOException("Resource path is not a directory: " + dir);
+            Path dirPath = Path.of(dirURL.toURI());
+            if (!Files.isDirectory(dirPath)) {
+                throw new IOException("Resource path is not a directory: " + dirPath);
             }
-            try (Stream<Path> stream = Files.walk(dir)) {
+            try (Stream<Path> stream = Files.walk(dirPath)) {
                 return stream
                         .filter(Files::isRegularFile)
-                        .map(path -> dir.relativize(path).toString().replace(File.separatorChar, '/'))
+                        .map(path -> dirPath.relativize(path).toString().replace(File.separatorChar, '/'))
                         .collect(Collectors.toSet());
             }
         } else if ("jar".equals(protocol)) {
@@ -452,15 +452,15 @@ public class FileUtils {
         Set<String> resources = listResources(normalized);
         for (String resourceFile : resources) {
             String resourcePath = normalized + resourceFile; // classpath uses '/'
-            Path targetFile = path.resolve(resourceFile); // preserve relative layout
+            Path targetFilePath = path.resolve(resourceFile); // preserve relative layout
             try {
-                Path parent = targetFile.getParent();
-                if (parent != null) {
-                    Files.createDirectories(parent);
+                Path parentPath = targetFilePath.getParent();
+                if (parentPath != null) {
+                    Files.createDirectories(parentPath);
                 }
-                FileUtils.resourceToFile(resourcePath, targetFile);
+                FileUtils.resourceToFile(resourcePath, targetFilePath);
             } catch (IOException e) {
-                log.error("Could not copy resource {} to {}", resourcePath, targetFile, e);
+                log.error("Could not copy resource {} to {}", resourcePath, targetFilePath, e);
                 throw e;
             }
         }

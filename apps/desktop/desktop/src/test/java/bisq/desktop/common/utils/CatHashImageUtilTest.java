@@ -46,12 +46,12 @@ class CatHashImageUtilTest {
     }
 
     @Test
-    void testWriteAndReadRawImage(@TempDir Path tempDir) throws IOException {
+    void testWriteAndReadRawImage(@TempDir Path tempDirPath) throws IOException {
         Image image = createInMemoryImage(8, 8);
-        Path tempFile = tempDir.resolve("test.raw");
+        Path tempFilePath = tempDirPath.resolve("test.raw");
 
-        CatHashImageUtil.writeRawImage(image, tempFile);
-        Image readImage = CatHashImageUtil.readRawImage(tempFile);
+        CatHashImageUtil.writeRawImage(image, tempFilePath);
+        Image readImage = CatHashImageUtil.readRawImage(tempFilePath);
 
         assertEquals(image.getWidth(), readImage.getWidth());
         assertEquals(image.getHeight(), readImage.getHeight());

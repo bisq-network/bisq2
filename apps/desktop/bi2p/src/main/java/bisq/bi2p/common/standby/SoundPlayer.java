@@ -35,13 +35,13 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 class SoundPlayer implements PreventStandbyMode {
-    private final String baseDir;
+    private final String baseDirPath;
     private volatile boolean isPlaying;
     @Nullable
     private ExecutorService executor;
 
-    SoundPlayer(String baseDir) {
-        this.baseDir = baseDir;
+    SoundPlayer(String baseDirPath) {
+        this.baseDirPath = baseDirPath;
     }
 
     public void initialize() {
@@ -67,15 +67,15 @@ class SoundPlayer implements PreventStandbyMode {
     private void playSound() {
         try {
             String fileName = "prevent-app-nap-silent-sound.aiff";
-            Path soundFile = Path.of(baseDir, fileName);
-            if (!Files.exists(soundFile)) {
-                FileUtils.resourceToFile(fileName, soundFile);
+            Path soundFilePath = Path.of(baseDirPath, fileName);
+            if (!Files.exists(soundFilePath)) {
+                FileUtils.resourceToFile(fileName, soundFilePath);
             }
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;
             while (isPlaying) {
                 try {
-                    audioInputStream = AudioSystem.getAudioInputStream(soundFile.toFile());
+                    audioInputStream = AudioSystem.getAudioInputStream(soundFilePath.toFile());
                     sourceDataLine = getSourceDataLine(audioInputStream.getFormat());
                     byte[] tempBuffer = new byte[8192];
                     sourceDataLine.open(audioInputStream.getFormat());

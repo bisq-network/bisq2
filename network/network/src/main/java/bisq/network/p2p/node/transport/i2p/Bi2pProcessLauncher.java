@@ -42,7 +42,7 @@ public class Bi2pProcessLauncher implements Service {
     private final int i2cpPort;
     private final String bi2pGrpcHost;
     private final int bi2pGrpcPort;
-    private final Path i2pRouterDir;
+    private final Path i2pRouterDirPath;
     private final String httpProxyHost;
     private final int httpProxyPort;
     private final boolean httpProxyEnabled;
@@ -52,7 +52,7 @@ public class Bi2pProcessLauncher implements Service {
                                int i2cpPort,
                                String bi2pGrpcHost,
                                int bi2pGrpcPort,
-                               Path i2pRouterDir,
+                               Path i2pRouterDirPath,
                                String httpProxyHost,
                                int httpProxyPort,
                                boolean httpProxyEnabled) {
@@ -60,7 +60,7 @@ public class Bi2pProcessLauncher implements Service {
         this.i2cpPort = i2cpPort;
         this.bi2pGrpcHost = bi2pGrpcHost;
         this.bi2pGrpcPort = bi2pGrpcPort;
-        this.i2pRouterDir = i2pRouterDir;
+        this.i2pRouterDirPath = i2pRouterDirPath;
         this.httpProxyHost = httpProxyHost;
         this.httpProxyPort = httpProxyPort;
         this.httpProxyEnabled = httpProxyEnabled;
@@ -72,16 +72,16 @@ public class Bi2pProcessLauncher implements Service {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("bi2p/version.txt").trim();
-                Path jarFilePath = i2pRouterDir.resolve("bi2p-" + version + "-all.jar");
+                Path jarFilePath = i2pRouterDirPath.resolve("bi2p-" + version + "-all.jar");
 
                 // Extract ZIP if jar missing or dev mode
                 if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
                     String resourcePath = "bi2p/bi2p-" + version + ".zip";
                     try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                         if (inputStream == null) throw new FileNotFoundException("Resource not found: " + resourcePath);
-                        new ZipFileExtractor(inputStream, i2pRouterDir).extractArchive();
+                        new ZipFileExtractor(inputStream, i2pRouterDirPath).extractArchive();
                     }
-                    log.info("Extracted zip {} to {}", resourcePath, i2pRouterDir);
+                    log.info("Extracted zip {} to {}", resourcePath, i2pRouterDirPath);
                 }
 
                 // JVM & app arguments
@@ -101,7 +101,7 @@ public class Bi2pProcessLauncher implements Service {
                 command.add(getJavaExePath());
 
                 if (OS.isMacOs()) {
-                    Path iconPath = i2pRouterDir.resolve("bi2p-app_512.png");
+                    Path iconPath = i2pRouterDirPath.resolve("bi2p-app_512.png");
                     if (!Files.exists(iconPath)) {
                         FileUtils.resourceToFile("images/bi2p/bi2p-app_512.png", iconPath);
                     }
@@ -110,7 +110,7 @@ public class Bi2pProcessLauncher implements Service {
 
                 command.add("-jar");
                 command.add(jarFilePath.toString());
-                command.add("--i2pRouterDir=" + i2pRouterDir);
+                command.add("--i2pRouterDir=" + i2pRouterDirPath);
                 command.add("--i2cpHost=" + i2cpHost);
                 command.add("--i2cpPort=" + i2cpPort);
                 command.add("--bi2pGrpcHost=" + bi2pGrpcHost);
@@ -121,10 +121,10 @@ public class Bi2pProcessLauncher implements Service {
                 command.add("--language=" + LanguageRepository.getDefaultLanguage());
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);
-                processBuilder.directory(i2pRouterDir.toFile());
+                processBuilder.directory(i2pRouterDirPath.toFile());
 
-                Path stderrLog = i2pRouterDir.resolve("bi2p_err.log");
-                processBuilder.redirectError(stderrLog.toFile());
+                Path stderrLogPath = i2pRouterDirPath.resolve("bi2p_err.log");
+                processBuilder.redirectError(stderrLogPath.toFile());
                 // We have any the log file from the Bi2p router, so we discard.
                 processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
                 // processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);

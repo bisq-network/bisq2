@@ -34,16 +34,16 @@ import java.util.concurrent.CompletableFuture;
 public class ApiTorOnionService implements Service {
     private final NetworkService networkService;
     private final int port;
-    private final Path baseDir;
+    private final Path appDataDirPath;
     private final KeyBundleService keyBundleService;
     private final String identityTag;
 
-    public ApiTorOnionService(Path baseDir,
+    public ApiTorOnionService(Path appDataDirPath,
                               SecurityService securityService,
                               NetworkService networkService,
                               int port,
                               String identityTag) {
-        this.baseDir = baseDir;
+        this.appDataDirPath = appDataDirPath;
         keyBundleService = securityService.getKeyBundleService();
         this.identityTag = identityTag;
         this.networkService = networkService;
@@ -67,9 +67,8 @@ public class ApiTorOnionService implements Service {
                     String onionAddressWithPort = onionAddress + ":" + port;
                     log.info("{} published for {}", onionAddressWithPort, identityTag);
                     try {
-                        Path path = baseDir.resolve(identityTag + "_onionAddress.txt");
-
-                        FileUtils.writeToFile(onionAddressWithPort, path);
+                        Path path = appDataDirPath.resolve(identityTag + "_onionAddress.txt");
+                        FileUtils.writeToPath(onionAddressWithPort, path);
                         return true;
                     } catch (IOException e) {
                         log.error("Error at write onionAddress", e);

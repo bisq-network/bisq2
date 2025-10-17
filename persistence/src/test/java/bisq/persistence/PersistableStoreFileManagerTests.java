@@ -20,8 +20,8 @@ package bisq.persistence;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
@@ -29,33 +29,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PersistableStoreFileManagerTests {
-    private static final String BACKUP_DIR = "backup" + File.separator;
 
     @Test
-    void createParentDirIfExisting(@TempDir Path tempDir) {
-        Path storePath = tempDir.resolve("store");
+    void createParentDirIfExisting(@TempDir Path tempDirPath) {
+        Path storePath = tempDirPath.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
         storeFileManager.createParentDirectoriesIfNotExisting();
-        assertThat(tempDir).exists();
+        assertThat(tempDirPath).exists();
     }
 
     @Test
-    void createParentDirIfNotExisting(@TempDir Path tempDir) {
-        Path storePath = tempDir.resolve("parent_dir").resolve("store");
+    void createParentDirIfNotExisting(@TempDir Path tempDirPath) {
+        Path storePath = tempDirPath.resolve("parent_dir").resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
         storeFileManager.createParentDirectoriesIfNotExisting();
         assertThat(storePath.getParent()).exists();
     }
 
-
     @Test
-    void renameTempFileToCurrentFileIfCurrentNotExisting(@TempDir Path tempDir) throws IOException {
-        Path tmpFilePath = tempDir.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
-        createEmptyFile(tmpFilePath);
+    void renameTempFileToCurrentFileIfCurrentNotExisting(@TempDir Path tempDirPath) throws IOException {
+        Path tmpFilePath = tempDirPath.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
+        createEmptyFilePath(tmpFilePath);
 
-        Path storePath = tempDir.resolve("store");
+        Path storePath = tempDirPath.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
         storeFileManager.renameTempFileToCurrentFile();
@@ -65,26 +63,25 @@ public class PersistableStoreFileManagerTests {
     }
 
     @Test
-    void renameTempFileButStorageFileExists(@TempDir Path tempDir) throws IOException {
-        Path tmpFilePath = tempDir.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
-        createEmptyFile(tmpFilePath);
+    void renameTempFileButStorageFileExists(@TempDir Path tempDirPath) throws IOException {
+        Path tmpFilePath = tempDirPath.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
+        createEmptyFilePath(tmpFilePath);
 
-        Path storePath = tempDir.resolve("store");
-        createEmptyFile(storePath);
+        Path storePath = tempDirPath.resolve("store");
+        createEmptyFilePath(storePath);
 
         var storeFileManager = new PersistableStoreFileManager(storePath);
         assertThrows(IOException.class, storeFileManager::renameTempFileToCurrentFile);
     }
 
     @Test
-    void renameTempFileButTempFileDoesNotExist(@TempDir Path tempDir) {
-        Path storePath = tempDir.resolve("store");
+    void renameTempFileButTempFileDoesNotExist(@TempDir Path tempDirPath) {
+        Path storePath = tempDirPath.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
         assertThrows(NoSuchFileException.class, storeFileManager::renameTempFileToCurrentFile);
     }
 
-    public static void createEmptyFile(Path path) throws IOException {
-        boolean isSuccess = path.toFile().createNewFile();
-        assertThat(isSuccess).isTrue();
+    public static void createEmptyFilePath(Path path) throws IOException {
+        Files.createFile(path);
     }
 }

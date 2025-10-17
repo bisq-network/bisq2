@@ -37,12 +37,12 @@ public class UpdaterUtils {
     public static final String UPDATES_DIR = "updates";
     public static final String ASC_EXTENSION = ".asc";
 
-    public static String getSigningKeyId(Path directory) throws IOException {
-        return Files.readString(directory.resolve(SIGNING_KEY_FILE));
+    public static String getSigningKeyId(Path dirPath) throws IOException {
+        return Files.readString(dirPath.resolve(SIGNING_KEY_FILE));
     }
 
-    public static String getSigningKey(Path directory, String signingKeyId) throws IOException {
-        return Files.readString(directory.resolve(signingKeyId + ASC_EXTENSION));
+    public static String getSigningKey(Path dirPath, String signingKeyId) throws IOException {
+        return Files.readString(dirPath.resolve(signingKeyId + ASC_EXTENSION));
     }
 
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {
@@ -58,8 +58,8 @@ public class UpdaterUtils {
         return "desktop-app-" + version + "-" + platformName + "-all.jar";
     }
 
-    public static Optional<String> readVersionFromVersionFile(Path userDataDir) {
-        Path versionFilePath = userDataDir.resolve(VERSION_FILE_NAME);
+    public static Optional<String> readVersionFromVersionFile(Path userDataDirPath) {
+        Path versionFilePath = userDataDirPath.resolve(VERSION_FILE_NAME);
         return FileUtils.readFromFileIfPresent(versionFilePath);
     }
 

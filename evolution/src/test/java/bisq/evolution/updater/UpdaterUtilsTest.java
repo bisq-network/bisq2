@@ -31,11 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UpdaterUtilsTest {
 
     @Test
-    void testReadVersionFromVersionFile(@TempDir Path tempDir) throws IOException {
-        Path expectedPath = tempDir.resolve(UpdaterUtils.VERSION_FILE_NAME);
+    void testReadVersionFromVersionFile(@TempDir Path tempDirPath) throws IOException {
+        Path expectedPath = tempDirPath.resolve(UpdaterUtils.VERSION_FILE_NAME);
         Files.writeString(expectedPath, "12.3.6");
 
-        Optional<String> result = UpdaterUtils.readVersionFromVersionFile(tempDir);
+        Optional<String> result = UpdaterUtils.readVersionFromVersionFile(tempDirPath);
 
         assertTrue(result.isPresent());
         assertEquals("12.3.6", result.get());

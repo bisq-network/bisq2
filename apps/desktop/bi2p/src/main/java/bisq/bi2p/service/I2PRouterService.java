@@ -54,7 +54,7 @@ public class I2PRouterService implements Service {
     private volatile boolean shutdownInProgress;
 
     public I2PRouterService(Application.Parameters parameters, String bi2pDir) {
-        i2pDirPath = PlatformUtils.getUserDataDir().resolve(bi2pDir);
+        i2pDirPath = PlatformUtils.getUserDataDirPath().resolve(bi2pDir);
 
         String i2cpHost = Optional.ofNullable(parameters.getNamed().get("i2cpHost"))
                 .map(String::trim)

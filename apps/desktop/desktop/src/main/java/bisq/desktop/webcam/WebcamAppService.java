@@ -71,7 +71,7 @@ public class WebcamAppService implements Service {
         model = new WebcamAppModel(config);
         InputHandler inputHandler = new InputHandler(model);
         qrCodeListeningServer = new QrCodeListeningServer(SOCKET_TIMEOUT, inputHandler, this::handleException);
-        webcamProcessLauncher = new WebcamProcessLauncher(model.getBaseDir());
+        webcamProcessLauncher = new WebcamProcessLauncher(model.getAppDataDirPath());
 
         state.set(NEW);
     }

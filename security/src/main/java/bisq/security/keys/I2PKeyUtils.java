@@ -32,17 +32,17 @@ import java.nio.file.Path;
 
 @Slf4j
 public class I2PKeyUtils {
-    public static void writeDestination(I2PKeyPair i2pKeyPair, Path storageDir, String tag) {
-        Path i2pPrivateKeyDir = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "");
-        Path destination_b64Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b64");
-        Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "destination_b32");
-        Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDir, tag, "identity_b64");
+    public static void writeDestination(I2PKeyPair i2pKeyPair, Path storageDirPath, String tag) {
+        Path i2pPrivateKeyDirPath = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "");
+        Path destination_b64Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "destination_b64");
+        Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "destination_b32");
+        Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "identity_b64");
         try {
-            Files.createDirectories(i2pPrivateKeyDir);
-            FileUtils.writeToFile(i2pKeyPair.getDestinationBase64(), destination_b64Path);
-            FileUtils.writeToFile(i2pKeyPair.getDestinationBase32(), destination_b32Path);
-            FileUtils.writeToFile(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
-            log.info("Persisted the I2P private key and destinations into {}", i2pPrivateKeyDir);
+            Files.createDirectories(i2pPrivateKeyDirPath);
+            FileUtils.writeToPath(i2pKeyPair.getDestinationBase64(), destination_b64Path);
+            FileUtils.writeToPath(i2pKeyPair.getDestinationBase32(), destination_b32Path);
+            FileUtils.writeToPath(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
+            log.info("Persisted the I2P private key and destinations into {}", i2pPrivateKeyDirPath);
         } catch (Exception e) {
             log.error("Could not persist I2P destination files", e);
         }

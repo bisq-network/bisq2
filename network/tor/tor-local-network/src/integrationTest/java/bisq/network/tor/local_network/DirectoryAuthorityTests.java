@@ -21,7 +21,6 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.network.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Test;
@@ -39,49 +38,49 @@ public class DirectoryAuthorityTests {
     private static final String PASSPHRASE = "my_passphrase";
 
     @Test
-    public void createOneDA(@TempDir Path tempDir) throws IOException, InterruptedException {
+    public void createOneDA(@TempDir Path tempDirPath) throws IOException, InterruptedException {
         var firstDirectoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
-                .dataDir(tempDir)
+                .dataDirPath(tempDirPath)
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
         new DirectoryAuthorityFactory().createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
-        assertThat(tempDir).isNotEmptyDirectory();
-        assertThat(tempDir.resolve("keys")).isNotEmptyDirectory();
+        assertThat(tempDirPath).isNotEmptyDirectory();
+        assertThat(tempDirPath.resolve("keys")).isNotEmptyDirectory();
     }
 
     @Test
-    public void createThreeDA(@TempDir Path tempDir) throws IOException, InterruptedException {
+    public void createThreeDA(@TempDir Path tempDirPath) throws IOException, InterruptedException {
         var dirAuthFactory = new DirectoryAuthorityFactory();
 
-        Path firstDaDataDir = tempDir.resolve("da_1");
+        Path firstDaDataDirPath = tempDirPath.resolve("da_1");
         var firstDirectoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
-                .dataDir(firstDaDataDir)
+                .dataDirPath(firstDaDataDirPath)
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
         dirAuthFactory.createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
-        Path secondDaDataDir = tempDir.resolve("da_2");
+        Path secondDaDataDirPath = tempDirPath.resolve("da_2");
         var secondDirectoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_2")
-                .dataDir(secondDaDataDir)
+                .dataDirPath(secondDaDataDirPath)
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
         dirAuthFactory.createDirectoryAuthority(secondDirectoryAuthority, PASSPHRASE);
 
-        Path thirdDaDataDir = tempDir.resolve("da_3");
+        Path thirdDaDataDirPath = tempDirPath.resolve("da_3");
         var thirdDirectoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_3")
-                .dataDir(thirdDaDataDir)
+                .dataDirPath(thirdDaDataDirPath)
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();

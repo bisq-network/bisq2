@@ -25,17 +25,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class RouterCertificateUtil {
-    public static void copyCertificatesFromResources(Path i2pDir) throws IOException, URISyntaxException {
-        Path certDir = createDirectory(i2pDir, "certificates");
-        Path seedDir = createDirectory(certDir, "reseed");
-        Path sslDir = createDirectory(certDir, "ssl");
-        FileUtils.copyResourceDirectory("certificates/reseed/", seedDir);
-        FileUtils.copyResourceDirectory("certificates/ssl/", sslDir);
+    public static void copyCertificatesFromResources(Path i2pDirPath) throws IOException, URISyntaxException {
+        Path certDirPath = createDirectory(i2pDirPath, "certificates");
+        Path seedDirPath = createDirectory(certDirPath, "reseed");
+        Path sslDirPath = createDirectory(certDirPath, "ssl");
+        FileUtils.copyResourceDirectory("certificates/reseed/", seedDirPath);
+        FileUtils.copyResourceDirectory("certificates/ssl/", sslDirPath);
     }
 
-    private static Path createDirectory(Path parent, String child) throws IOException {
-        Path dir = parent.resolve(child);
-        Files.createDirectories(dir);
-        return dir;
+    private static Path createDirectory(Path parentPath, String child) throws IOException {
+        Path dirPath = parentPath.resolve(child);
+        Files.createDirectories(dirPath);
+        return dirPath;
     }
 }

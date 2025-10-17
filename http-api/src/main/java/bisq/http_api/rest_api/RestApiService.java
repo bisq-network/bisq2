@@ -100,13 +100,13 @@ public class RestApiService implements Service {
 
     public RestApiService(Config config,
                           BaseRestApiResourceConfig restApiResourceConfig,
-                          Path baseDir,
+                          Path appDataDirPath,
                           SecurityService securityService,
                           NetworkService networkService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
 
-        apiTorOnionService = new ApiTorOnionService(baseDir, securityService, networkService, config.getPort(), "restApiServer");
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "restApiServer");
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
             String host = config.getHost();

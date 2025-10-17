@@ -66,7 +66,7 @@ public class PopOverSkin implements Skin<PopOver> {
     private boolean tornOff;
 
     private final Path path;
-    private final Path clip;
+    private final Path clipPath;
 
     private final BorderPane content;
     private final StackPane titlePane;
@@ -193,13 +193,13 @@ public class PopOverSkin implements Skin<PopOver> {
         path.getStyleClass().add("border");
         path.setManaged(false);
 
-        clip = new Path();
+        clipPath = new Path();
 
         /*
          * The clip is a path and the path has to be filled with a color.
          * Otherwise, clipping will not work.
          */
-        clip.setFill(YELLOW);
+        clipPath.setFill(YELLOW);
 
         createPathElements();
         updatePath();
@@ -255,7 +255,7 @@ public class PopOverSkin implements Skin<PopOver> {
         stackPane.getChildren().add(path);
         stackPane.getChildren().add(content);
 
-        content.setClip(clip);
+        content.setClip(clipPath);
     }
 
     @Override
@@ -698,6 +698,6 @@ public class PopOverSkin implements Skin<PopOver> {
         elements.add(topCurveTo);
 
         path.getElements().setAll(elements);
-        clip.getElements().setAll(elements);
+        clipPath.getElements().setAll(elements);
     }
 }
