@@ -58,35 +58,40 @@ public class WizardOverlay extends VBox {
     public WizardOverlay warning() {
         ImageView icon = ImageUtil.getImageViewById("warning-white"); // default
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "default-warning");
+        headlineLabel.getStyleClass().add("default-warning");
         return this;
     }
 
     public WizardOverlay yellowWarning() {
         ImageView icon = ImageUtil.getImageViewById("warning-yellow");
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "yellow-warning");
+        headlineLabel.getStyleClass().add("yellow-warning");
         return this;
     }
 
     public WizardOverlay redWarning() {
         ImageView icon = ImageUtil.getImageViewById("warning-red");
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "red-warning");
+        headlineLabel.getStyleClass().add("red-warning");
         return this;
     }
 
     public WizardOverlay greenWarning() {
         ImageView icon = ImageUtil.getImageViewById("warning-green");
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "green-warning");
+        headlineLabel.getStyleClass().add("green-warning");
+        return this;
+    }
+
+    public WizardOverlay headlineIcon(Node icon) {
+        headlineLabel.setGraphic(icon);
         return this;
     }
 
     public WizardOverlay info() {
         ImageView icon = ImageUtil.getImageViewById("info-green"); // default
         headlineLabel.setGraphic(icon);
-        headlineLabel.getStyleClass().addAll("headline", "default-info");
+        headlineLabel.getStyleClass().add("default-info");
         return this;
     }
 
@@ -206,6 +211,7 @@ public class WizardOverlay extends VBox {
 
         if (headlineLabel != null) {
             headlineLabel.setGraphicTextGap(15);
+            headlineLabel.getStyleClass().add("headline");
             HBox headlineBox = new HBox(headlineLabel);
             headlineBox.setAlignment(Pos.CENTER);
             VBox.setMargin(headlineBox, new Insets(20, 0, 0, 0));

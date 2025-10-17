@@ -98,10 +98,12 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         learnHowToBuildReputationBox = new HBox(learnHowToBuildReputation);
         linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
-        overlay = new WizardOverlay(root,
-                "bisqEasy.tradeWizard.amount.limitInfo.overlay.headline",
-                createAndGetOverlayContent(amountLimitInfoOverlayInfo, linkToWikiText, linkToWiki, learnHowToBuildReputationBox),
-                closeOverlayButton);
+        overlay = new WizardOverlay(root)
+                .yellowWarning()
+                .headline("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline")
+                .description(createAndGetOverlayContent(amountLimitInfoOverlayInfo, linkToWikiText, linkToWiki, learnHowToBuildReputationBox))
+                .buttons(closeOverlayButton)
+                .build();
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);

@@ -98,10 +98,12 @@ public class TakeOfferPaymentView extends View<StackPane, TakeOfferPaymentModel,
         invalidInputOverlayTextLabel.setMaxWidth(invalidInputOverlayTextLabel.getMinWidth());
         invalidInputOverlayTextLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
         invalidInputOverlayCloseButton = new Button(Res.get("action.close"));
-        invalidInputOverlay = new WizardOverlay(root,
-                "bisqEasy.takeOffer.paymentMethods.invalidInputWizardOverlay.title",
-                new VBox(invalidInputOverlayTextLabel),
-                invalidInputOverlayCloseButton);
+        invalidInputOverlay = new WizardOverlay(root)
+                .yellowWarning()
+                .headline("bisqEasy.takeOffer.paymentMethods.invalidInputWizardOverlay.title")
+                .description(new VBox(invalidInputOverlayTextLabel))
+                .buttons(invalidInputOverlayCloseButton)
+                .build();
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 40, 0));
         VBox.setMargin(fiatGridPane, new Insets(0, 0, 45, 0));
