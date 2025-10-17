@@ -106,16 +106,19 @@ public class PeerGroupManager implements Node.Listener {
             this.maxSeeds = maxSeeds;
         }
 
-        public static Config from(com.typesafe.config.Config typesafeConfig, TransportType transportType) {
-            PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(typesafeConfig.getConfig("peerGroup"));
+        public static Config from(com.typesafe.config.Config typesafeConfig,
+                                  TransportType transportType,
+                                  Set<TransportType> supportedTransportTypes) {
+            PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(typesafeConfig.getConfig("peerGroup"), transportType, supportedTransportTypes);
+
             PeerExchangeService.Config peerExchangeServiceConfig = PeerExchangeService.Config.from(typesafeConfig.getConfig("peerExchange"));
             KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(typesafeConfig.getConfig("keepAlive"));
 
             String transportTypeName = transportType.name().toLowerCase(Locale.ROOT);
             // If a transport specific node and field is available we override the base field
             com.typesafe.config.Config merged = typesafeConfig.hasPath(transportTypeName)
-                            ? typesafeConfig.getConfig(transportTypeName).withFallback(typesafeConfig)
-                            : typesafeConfig;
+                    ? typesafeConfig.getConfig(transportTypeName).withFallback(typesafeConfig)
+                    : typesafeConfig;
 
             return new Config(peerGroupConfig,
                     peerExchangeServiceConfig,

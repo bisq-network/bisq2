@@ -74,12 +74,29 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
             this.minNumReportedPeers = minNumReportedPeers;
         }
 
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
+        public static Config from(com.typesafe.config.Config typesafeConfig,
+                                  TransportType transportType,
+                                  Set<TransportType> supportedTransportTypes) {
+            com.typesafe.config.Config config;
+            if (supportedTransportTypes.size() > 1 && typesafeConfig.hasPath("multipleTransports")) {
+                String transportTypeName = transportType.name().toLowerCase(Locale.ROOT);
+                com.typesafe.config.Config multipleTransports = typesafeConfig.getConfig("multipleTransports");
+                // If a transport specific node and field is available we override the base field
+                config = multipleTransports.hasPath(transportTypeName)
+                        ? multipleTransports.getConfig(transportTypeName).withFallback(typesafeConfig)
+                        : typesafeConfig;
+            } else {
+                config = typesafeConfig;
+            }
+            int maxNumConnectedPeers = config.getInt("maxNumConnectedPeers");
+            int minNumConnectedPeers = config.getInt("minNumConnectedPeers");
+            int minNumOutboundConnectedPeers = config.getInt("minNumOutboundConnectedPeers");
+            int minNumReportedPeers = config.getInt("minNumReportedPeers");
             return new PeerGroupService.Config(
-                    typesafeConfig.getInt("minNumConnectedPeers"),
-                    typesafeConfig.getInt("minNumOutboundConnectedPeers"),
-                    typesafeConfig.getInt("maxNumConnectedPeers"),
-                    typesafeConfig.getInt("minNumReportedPeers"));
+                    minNumConnectedPeers,
+                    minNumOutboundConnectedPeers,
+                    maxNumConnectedPeers,
+                    minNumReportedPeers);
         }
     }
 

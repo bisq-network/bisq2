@@ -158,7 +158,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
         serviceNodesByTransport = new ServiceNodesByTransport(configByTransportType,
                 config.getServiceNodeConfig(),
-                config.getPeerGroupServiceConfigByTransport(),
+                config.getPeerGroupManagerConfigByTransport(),
                 seedAddressesByTransportFromConfig,
                 config.getInventoryServiceConfig(),
                 config.getAuthorizationServiceConfig(),

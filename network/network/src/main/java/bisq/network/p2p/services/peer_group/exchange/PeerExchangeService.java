@@ -44,16 +44,16 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
 
     @Getter
     public static class Config {
-        private final int numSeedNodesAtBoostrap;
+        private final int numSeedNodesAtBootstrap;
         private final int numPersistedPeersAtBootstrap;
         private final int numReportedPeersAtBootstrap;
         private final boolean supportPeerReporting;
 
-        public Config(int numSeedNodesAtBoostrap,
+        public Config(int numSeedNodesAtBootstrap,
                       int numPersistedPeersAtBootstrap,
                       int numReportedPeersAtBootstrap,
                       boolean supportPeerReporting) {
-            this.numSeedNodesAtBoostrap = numSeedNodesAtBoostrap;
+            this.numSeedNodesAtBootstrap = numSeedNodesAtBootstrap;
             this.numPersistedPeersAtBootstrap = numPersistedPeersAtBootstrap;
             this.numReportedPeersAtBootstrap = numReportedPeersAtBootstrap;
             this.supportPeerReporting = supportPeerReporting;
@@ -61,7 +61,7 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
 
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             return new Config(
-                    typesafeConfig.getInt("numSeedNodesAtBoostrap"),
+                    typesafeConfig.getInt("numSeedNodesAtBootstrap"),
                     typesafeConfig.getInt("numPersistedPeersAtBootstrap"),
                     typesafeConfig.getInt("numReportedPeersAtBootstrap"),
                     typesafeConfig.getBoolean("supportPeerReporting"));

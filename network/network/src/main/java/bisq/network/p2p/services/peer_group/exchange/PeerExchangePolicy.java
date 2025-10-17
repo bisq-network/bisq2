@@ -267,7 +267,7 @@ class PeerExchangePolicy {
         return CollectionUtil.toShuffledList(peerGroupService.getSeedNodeAddresses()).stream()
                 .filter(node::notMyself)
                 .filter(peerGroupService::isNotBanned)
-                .limit(config.getNumSeedNodesAtBoostrap())
+                .limit(config.getNumSeedNodesAtBootstrap())
                 .collect(Collectors.toList());
     }
 

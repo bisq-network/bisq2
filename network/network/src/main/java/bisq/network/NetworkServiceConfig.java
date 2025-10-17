@@ -62,7 +62,7 @@ public final class NetworkServiceConfig {
         Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransportType = supportedTransportTypes.stream()
                 .collect(toMap(
                         transportType -> transportType,
-                        transportType -> PeerGroupManager.Config.from(peerGroupManagerConfig, transportType)
+                        transportType -> PeerGroupManager.Config.from(peerGroupManagerConfig, transportType, supportedTransportTypes)
                 ));
 
         Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(networkConfig);
@@ -167,7 +167,7 @@ public final class NetworkServiceConfig {
     private final AuthorizationService.Config authorizationServiceConfig;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
-    private final Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport;
+    private final Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport;
     private final Map<TransportType, Integer> defaultPortByTransportType;
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
@@ -182,7 +182,7 @@ public final class NetworkServiceConfig {
                                 ServiceNode.Config serviceNodeConfig,
                                 InventoryService.Config inventoryServiceConfig,
                                 AuthorizationService.Config authorizationServiceConfig,
-                                Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
+                                Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport,
                                 Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
@@ -196,7 +196,7 @@ public final class NetworkServiceConfig {
         this.authorizationServiceConfig = authorizationServiceConfig;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
-        this.peerGroupServiceConfigByTransport = filterMap(supportedTransportTypes, peerGroupServiceConfigByTransport);
+        this.peerGroupManagerConfigByTransport = filterMap(supportedTransportTypes, peerGroupManagerConfigByTransport);
         this.defaultPortByTransportType = filterMap(supportedTransportTypes, defaultPortByTransportType);
         this.seedAddressesByTransport = filterMap(supportedTransportTypes, seedAddressesByTransport);
         this.socks5ProxyAddress = socks5ProxyAddress;
