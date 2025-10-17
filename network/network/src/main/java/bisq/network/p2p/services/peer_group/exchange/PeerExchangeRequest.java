@@ -55,7 +55,6 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
         log.info("PeerExchangeRequest: Send {} peers.\n{}",
                 peers.size(),
                 Joiner.on("\n").join(peers.stream()
-                        .sorted()
                         .map(e -> e.getAddress() + " (" + e.getDate() + ")")
                         .collect(Collectors.toList())));
 

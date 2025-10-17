@@ -52,12 +52,11 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.peers);
 
-        log.info("PeerExchangeResponse: Received {} peers.\n{}",
-                peers.size(),
-                Joiner.on("\n").join(peers.stream()
-                                .sorted()
-                                .map(e -> e.getAddress() + " (" + e.getDate() + ")")
-                                .collect(Collectors.toList())));
+            log.info("PeerExchangeResponse: Received {} peers.\n{}",
+                    peers.size(),
+                    Joiner.on("\n").join(peers.stream()
+                            .map(e -> e.getAddress() + " (" + e.getDate() + ")")
+                            .collect(Collectors.toList())));
 
         verify();
     }

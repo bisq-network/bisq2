@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group;
 
 import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -40,6 +41,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -104,20 +106,27 @@ public class PeerGroupManager implements Node.Listener {
             this.maxSeeds = maxSeeds;
         }
 
-        public static Config from(PeerGroupService.Config peerGroupConfig,
-                                  PeerExchangeService.Config peerExchangeServiceConfig,
-                                  KeepAliveService.Config keepAliveServiceConfig,
-                                  com.typesafe.config.Config typesafeConfig) {
+        public static Config from(com.typesafe.config.Config typesafeConfig, TransportType transportType) {
+            PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(typesafeConfig.getConfig("peerGroup"));
+            PeerExchangeService.Config peerExchangeServiceConfig = PeerExchangeService.Config.from(typesafeConfig.getConfig("peerExchange"));
+            KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(typesafeConfig.getConfig("keepAlive"));
+
+            String transportTypeName = transportType.name().toLowerCase(Locale.ROOT);
+            // If a transport specific node and field is available we override the base field
+            com.typesafe.config.Config merged = typesafeConfig.hasPath(transportTypeName)
+                            ? typesafeConfig.getConfig(transportTypeName).withFallback(typesafeConfig)
+                            : typesafeConfig;
+
             return new Config(peerGroupConfig,
                     peerExchangeServiceConfig,
                     keepAliveServiceConfig,
-                    SECONDS.toMillis(typesafeConfig.getLong("bootstrapTimeInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("houseKeepingIntervalInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds")),
-                    HOURS.toMillis(typesafeConfig.getLong("maxAgeInHours")),
-                    typesafeConfig.getInt("maxPersisted"),
-                    typesafeConfig.getInt("maxReported"),
-                    typesafeConfig.getInt("maxSeeds")
+                    SECONDS.toMillis(merged.getLong("bootstrapTimeInSeconds")),
+                    SECONDS.toMillis(merged.getLong("houseKeepingIntervalInSeconds")),
+                    SECONDS.toMillis(merged.getLong("timeoutInSeconds")),
+                    HOURS.toMillis(merged.getLong("maxAgeInHours")),
+                    merged.getInt("maxReported"),
+                    merged.getInt("maxPersisted"),
+                    merged.getInt("maxSeeds")
             );
         }
     }
