@@ -769,12 +769,12 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + address)
-                .orElseGet(() -> "Node with networkId " + networkId.getInfo());
+        return findMyAddress().map(address -> transportType.name() + " node with address " + address)
+                .orElseGet(() -> "Node with networkId " + networkId.getInfo(transportType));
     }
 
     public String getNodeInfo() {
-        return getNetworkId().getInfo() + " @ " + getTransportType().name();
+        return getNetworkId().getInfo(transportType);
     }
 
 
@@ -812,6 +812,8 @@ public class Node implements Connection.Handler {
             log.info("SocketTimeoutException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof IOException) {
             log.info("IOException: {}", ExceptionUtil.getRootCauseMessage(exception));
+        }  else if (exception instanceof RejectedExecutionException) {
+            log.warn("RejectedExecutionException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof ConnectionException connectionException) {
             if (connectionException.getCause() instanceof SocketTimeoutException) {
                 handleException(connectionException.getCause());

@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.peer_group.PeerGroupManager.State.STOPPING;
@@ -217,11 +218,15 @@ public class PeerGroupManager implements Node.Listener {
                 setState(PeerGroupManager.State.INITIALIZING);
                 // blocking
                 peerExchangeService.initialize();
+                int timeout = 180;
                 Boolean result = peerExchangeService.startInitialPeerExchange()
-                        .orTimeout(180, SECONDS)
+                        .orTimeout(timeout, SECONDS)
                         .exceptionally(e -> {
-                            log.warn("Initial peer exchange timed out or failed: {}", e.toString());
-                            throw new IllegalStateException("Initial peer exchange failed", e);
+                            String errorMessage = e instanceof TimeoutException ?
+                                    "TimeoutException. Initial peer exchange did not complete after " + timeout + " sec." :
+                                    e.getClass().getSimpleName() + ": Initial peer exchange failed.";
+                            log.warn(errorMessage);
+                            throw new IllegalStateException(errorMessage, e);
                         })
                         .join();
                 log.info("Completed startInitialPeerExchange with result {}. Start periodic tasks with interval: {} sec",

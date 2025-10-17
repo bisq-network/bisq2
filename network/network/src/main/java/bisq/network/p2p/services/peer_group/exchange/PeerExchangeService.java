@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -171,8 +172,9 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                             });
                 });
 
+        int timeout = 90;
         CompletableFutureUtils.failureTolerantAllOf(futures)
-                .orTimeout(90, SECONDS)
+                .orTimeout(timeout, SECONDS)
                 .whenComplete((result, throwable) -> {
                     if (doRetryIfNeeded) {
                         if (batchedPeerExchangePolicy.requiresRetry(throwable)) {
@@ -180,6 +182,10 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                         }
                     }
                     if (throwable != null && !resultFuture.isDone()) {
+                        String errorMessage = throwable instanceof TimeoutException ?
+                                "TimeoutException. doBatchedPeerExchange did not complete after " + timeout + " sec." :
+                                throwable.getClass().getSimpleName() + ": doBatchedPeerExchange failed.";
+                        log.warn(errorMessage);
                         if (!isShutdownInProgress) {
                             resultFuture.completeExceptionally(throwable);
                         } else {

@@ -75,7 +75,9 @@ public class RequestFuture<T extends Request, R extends Response> extends Comple
                         if (!priorityFuture.isDone()) {
                             priorityFuture.completeExceptionally(throwable);
                         }
-                        if (isDone()) {
+                        if (isCompletedExceptionally()) {
+                            log.warn("We got a failed sendAsync but the response handler had already completed exceptionally our future.");
+                        } else if (isDone()) {
                             log.warn("We got a failed sendAsync but the response handler had already completed our future. This should never happen");
                         } else {
                             completeExceptionally(throwable);
