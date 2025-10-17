@@ -33,7 +33,7 @@ public abstract class JavaSeApplicationService extends ApplicationService {
     protected final MemoryReportService memoryReportService;
 
     public JavaSeApplicationService(String configFileName, String[] args) {
-        super(configFileName, args, PlatformUtils.getUserDataDir());
+        super(configFileName, args, PlatformUtils.getUserDataDirPath());
 
         // The JDKs for Java SE and Android have different API support, thus, we use a
         // facade with Android compatible APIs by default and set for Java SE based applicationServices

@@ -41,7 +41,7 @@ public class I2PRouterMain {
     public static void main(String[] args) {
         executor = ExecutorFactory.newSingleThreadExecutor("I2pRouter.start");
         CompletableFuture.runAsync(() -> {
-            Path i2pDirPath = PlatformUtils.getUserDataDir().resolve("Bisq2_I2P_router");
+            Path i2pDirPath = PlatformUtils.getUserDataDirPath().resolve("Bisq2_I2P_router");
             i2pRouter = new I2PRouter(i2pDirPath,
                     RouterSetup.DEFAULT_I2CP_HOST,
                     RouterSetup.DEFAULT_I2CP_PORT,

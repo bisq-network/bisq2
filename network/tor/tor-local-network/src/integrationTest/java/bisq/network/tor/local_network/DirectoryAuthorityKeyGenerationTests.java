@@ -29,23 +29,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class DirectoryAuthorityKeyGenerationTests {
     @Test
-    public void generateKeys(@TempDir Path dataDir) throws IOException, InterruptedException {
-        Path keysPath = dataDir.resolve("keys");
+    public void generateKeys(@TempDir Path dataDirPath) throws IOException, InterruptedException {
+        Path keysPath = dataDirPath.resolve("keys");
         Files.createDirectories(keysPath);
 
         var directoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("Nick")
-                .dataDir(dataDir)
+                .dataDirPath(dataDirPath)
                 .orPort(2)
                 .dirPort(3)
                 .build();
 
         DirectoryAuthorityKeyGenerator.generate(directoryAuthority, "my_passphrase");
 
-        assertThat(dataDir.resolve("fingerprint")).exists();
-        assertThat(dataDir.resolve("fingerprint-ed25519")).exists();
-        assertThat(dataDir.resolve("lock")).exists();
+        assertThat(dataDirPath.resolve("fingerprint")).exists();
+        assertThat(dataDirPath.resolve("fingerprint-ed25519")).exists();
+        assertThat(dataDirPath.resolve("lock")).exists();
 
         assertThat(keysPath.resolve("authority_certificate")).exists();
         assertThat(keysPath.resolve("authority_identity_key")).exists();

@@ -18,13 +18,13 @@ public class TorKeyUtils {
         return Arrays.copyOfRange(decodedOnionAddress, 0, 32);
     }
 
-    public static void writePrivateKey(TorKeyPair torKeyPair, Path storageDir, String tag) {
-        Path targetPath = storageDir.resolve(tag);
+    public static void writePrivateKey(TorKeyPair torKeyPair, Path storageDirPath, String tag) {
+        Path targetPath = storageDirPath.resolve(tag);
         try {
             Files.createDirectories(targetPath);
 
-            FileUtils.writeToFile(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
-            FileUtils.writeToFile(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));
+            FileUtils.writeToPath(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
+            FileUtils.writeToPath(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));
 
             log.info("We persisted the tor private key in hex encoding for onionAddress {} for tag {} to {}.",
                     torKeyPair.getOnionAddress(), tag, targetPath);

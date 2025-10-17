@@ -50,7 +50,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     private final String storeKey;
     @Getter
-    protected final Path subDirectory;
+    protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
@@ -61,9 +61,9 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
-        subDirectory = dbSubDirectory.getDbPath().resolve(storeName);
+        subDirPath = dbSubDirectory.getDbPath().resolve(storeName);
         persistence = persistenceService.getOrCreatePersistence(this,
-                subDirectory,
+                subDirPath,
                 storageFileName,
                 persistableStore,
                 MaxBackupSize.from(dbSubDirectory));

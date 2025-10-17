@@ -81,8 +81,8 @@ public class PgPUtilsTest {
         try {
             PGPSignature signature = getPGPSignature("testData.txt.asc");
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");
-            Path data = getDataAsFile("testData.txt");
-            boolean isValid = PgPUtils.isSignatureValid(signature, pgpPublicKeyRing.getPublicKey(), data);
+            Path dataPath = getDataAsFilePath("testData.txt");
+            boolean isValid = PgPUtils.isSignatureValid(signature, pgpPublicKeyRing.getPublicKey(), dataPath);
             assertTrue(isValid);
         } catch (Exception e) {
             log.error(e.toString());
@@ -91,41 +91,41 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        Path file = Path.of("temp", fileName);
+        Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName);
-                 OutputStream out = Files.newOutputStream(file)) {
+                 OutputStream out = Files.newOutputStream(filePath)) {
                 FileUtils.copy(resource, out);
             }
-            return PgPUtils.readPgpPublicKeyRing(file);
+            return PgPUtils.readPgpPublicKeyRing(filePath);
         } finally {
-            file.toFile().deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        Path file = Path.of("temp", fileName);
+        Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName);
-                 OutputStream out = Files.newOutputStream(file)) {
+                 OutputStream out = Files.newOutputStream(filePath)) {
                 FileUtils.copy(resource, out);
             }
-            return PgPUtils.readPgpSignature(file);
+            return PgPUtils.readPgpSignature(filePath);
         } finally {
-            file.toFile().deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 
-    private Path getDataAsFile(String fileName) throws IOException {
-        Path file = Path.of("temp", fileName);
+    private Path getDataAsFilePath(String fileName) throws IOException {
+        Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = Files.newOutputStream(file);
+                OutputStream out = Files.newOutputStream(filePath);
                 FileUtils.copy(resource, out);
             }
-            return file;
+            return filePath;
         } finally {
-            file.toFile().deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 }

@@ -51,7 +51,7 @@ public class TestNetworkTorrcGeneratorFactory {
 
     private static TorrcConfigGenerator baseTorrcGenerator(TorNode torNode) {
         return BaseTorrcGenerator.builder()
-                .dataDirPath(torNode.getDataDir())
+                .dataDirPath(torNode.getDataDirPath())
                 .hashedControlPassword(
                         torNode.getControlConnectionPassword()
                                 .getHashedPassword())

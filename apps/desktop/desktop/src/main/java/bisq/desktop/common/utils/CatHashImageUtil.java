@@ -69,14 +69,14 @@ public class CatHashImageUtil {
         return canvas.snapshot(snapshotParameters, null);
     }
 
-    public static Image readRawImage(Path file) throws IOException {
-        byte[] rawData = Files.readAllBytes(file);
+    public static Image readRawImage(Path filePath) throws IOException {
+        byte[] rawData = Files.readAllBytes(filePath);
         return byteArrayToImage(rawData);
     }
 
-    public static void writeRawImage(Image image, Path file) throws IOException {
+    public static void writeRawImage(Image image, Path filePath) throws IOException {
         byte[] rawData = imageToByteArray(image);
-        Files.write(file, rawData);
+        Files.write(filePath, rawData);
     }
 
     public static Image byteArrayToImage(byte[] data) {

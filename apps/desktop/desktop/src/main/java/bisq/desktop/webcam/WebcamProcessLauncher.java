@@ -38,38 +38,38 @@ import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 @Slf4j
 public class WebcamProcessLauncher {
-    private final Path webcamDir;
+    private final Path webcamDirPath;
     private Optional<Process> runningProcess = Optional.empty();
 
-    public WebcamProcessLauncher(Path baseDir) {
-        this.webcamDir = baseDir.resolve("webcam");
+    public WebcamProcessLauncher(Path appDataDirPath) {
+        this.webcamDirPath = appDataDirPath.resolve("webcam");
     }
 
     public CompletableFuture<Process> start(int port) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("webcam-app/version.txt");
-                Path jarFilePath = webcamDir.resolve("webcam-app-" + version + "-all.jar");
+                Path jarFilePath = webcamDirPath.resolve("webcam-app-" + version + "-all.jar");
 
                 if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
                     String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, webcamDir);
+                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, webcamDirPath);
                     zipFileExtractor.extractArchive();
-                    log.info("Extracted zip file {} to {}", resourcePath, webcamDir);
+                    log.info("Extracted zip file {} to {}", resourcePath, webcamDirPath);
                 }
 
                 String portParam = "--port=" + port;
-                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDir.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
+                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
                 String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 ProcessBuilder processBuilder;
                 if (OS.isMacOs()) {
-                    String iconPath = webcamDir + "/webcam-app-icon.png";
-                    Path bisqIcon = Path.of(iconPath);
-                    if (!Files.exists(bisqIcon)) {
-                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
+                    String iconPath = webcamDirPath + "/webcam-app-icon.png";
+                    Path bisqIconPath = Path.of(iconPath);
+                    if (!Files.exists(bisqIconPath)) {
+                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
                     processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageParam);

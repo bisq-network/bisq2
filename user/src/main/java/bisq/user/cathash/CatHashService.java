@@ -55,17 +55,17 @@ public abstract class CatHashService<T> {
 
     private final ConcurrentHashMap<BigInteger, T> cache = new ConcurrentHashMap<>();
     @Setter
-    private Path baseDir;
+    private Path appDataDirPath;
 
-    public CatHashService(Path baseDir) {
-        this.baseDir = baseDir;
+    public CatHashService(Path appDataDirPath) {
+        this.appDataDirPath = appDataDirPath;
     }
 
     protected abstract T composeImage(String[] paths, double size);
 
-    protected abstract void writeRawImage(T image, Path iconFile) throws IOException;
+    protected abstract void writeRawImage(T image, Path iconPath) throws IOException;
 
-    protected abstract T readRawImage(Path iconFile) throws IOException;
+    protected abstract T readRawImage(Path iconPath) throws IOException;
 
     public T getImage(UserProfile userProfile, double size) {
         return getImage(userProfile.getPubKeyHash(),
@@ -78,8 +78,8 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        Path iconsDir = getCatHashIconsDirectory().resolve("v" + avatarVersion);
-        Path iconFile = iconsDir.resolve(userProfileId + ".raw");
+        Path iconsDirPath = getCatHashIconsDirPath().resolve("v" + avatarVersion);
+        Path iconFilePath = iconsDirPath.resolve(userProfileId + ".raw");
 
         // We create the images internally with 2x size for retina resolution
         double scaledSize = 2 * size;
@@ -95,18 +95,18 @@ public abstract class CatHashService<T> {
                 return cache.get(catHashInput);
             }
 
-            if (!Files.exists(iconsDir)) {
+            if (!Files.exists(iconsDirPath)) {
                 try {
-                    Files.createDirectories(iconsDir);
+                    Files.createDirectories(iconsDirPath);
                 } catch (IOException e) {
                     log.error(e.toString());
                 }
             }
 
             // Next approach is to read the image from file
-            if (Files.exists(iconFile)) {
+            if (Files.exists(iconFilePath)) {
                 try {
-                    T image = readRawImage(iconFile);
+                    T image = readRawImage(iconFilePath);
                     if (cache.size() < getMaxCacheSize()) {
                         cache.put(catHashInput, image);
                     }
@@ -130,7 +130,7 @@ public abstract class CatHashService<T> {
         if (useCache && cache.size() < getMaxCacheSize()) {
             cache.put(catHashInput, image);
             try {
-                writeRawImage(image, iconFile);
+                writeRawImage(image, iconFilePath);
             } catch (IOException e) {
                 log.error("Write image failed", e);
             }
@@ -143,10 +143,10 @@ public abstract class CatHashService<T> {
         if (userProfiles.isEmpty()) {
             return;
         }
-        Path iconsDirectory = getCatHashIconsDirectory();
+        Path iconsDirPath = getCatHashIconsDirPath();
 
-        try (Stream<Path> versionDirStream = Files.list(iconsDirectory)) {
-            Map<String, List<Path>> iconFilesByVersion = versionDirStream
+        try (Stream<Path> versionDirStream = Files.list(iconsDirPath)) {
+            Map<String, List<Path>> iconFilesPathByVersion = versionDirStream
                     .filter(Files::isDirectory)
                     .filter(dir -> {
                         String name = dir.getFileName().toString();
@@ -169,11 +169,11 @@ public abstract class CatHashService<T> {
                     })
                     .collect(Collectors.toMap(
                             path -> path.getFileName().toString(),
-                            dir -> {
-                                try (Stream<Path> files = Files.list(dir)) {
+                            dirPath -> {
+                                try (Stream<Path> files = Files.list(dirPath)) {
                                     return files.collect(Collectors.toList());
                                 } catch (IOException e) {
-                                    log.error("Failed to list files in directory {}", dir, e);
+                                    log.error("Failed to list files in directory {}", dirPath, e);
                                     return Collections.emptyList();
                                 }
                             }
@@ -182,7 +182,7 @@ public abstract class CatHashService<T> {
             Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
                     .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
             CompletableFuture.runAsync(() -> {
-                iconFilesByVersion.forEach((versionDir, iconFiles) -> {
+                iconFilesPathByVersion.forEach((versionDir, iconFiles) -> {
                     try {
                         int version = Integer.parseInt(versionDir.replace("v", ""));
                         Set<String> fromDisk = iconFiles.stream()
@@ -201,12 +201,12 @@ public abstract class CatHashService<T> {
                             log.info("Removed user profile icons: {}", toRemove);
                         }
                         toRemove.forEach(fileName -> {
-                            Path file = iconsDirectory.resolve(versionDir).resolve(fileName);
+                            Path filePath = iconsDirPath.resolve(versionDir).resolve(fileName);
                             try {
-                                log.debug("Remove {}", file);
-                                Files.deleteIfExists(file);
+                                log.debug("Remove {}", filePath);
+                                Files.deleteIfExists(filePath);
                             } catch (IOException e) {
-                                log.error("Failed to remove file {}", file, e);
+                                log.error("Failed to remove file {}", filePath, e);
                             }
                         });
 
@@ -232,8 +232,8 @@ public abstract class CatHashService<T> {
         return MAX_CACHE_SIZE;
     }
 
-    private Path getCatHashIconsDirectory() {
-        return baseDir
+    private Path getCatHashIconsDirPath() {
+        return appDataDirPath
                 .resolve("db")
                 .resolve("cache")
                 .resolve("cat_hash_icons");

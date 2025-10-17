@@ -48,13 +48,13 @@ import static org.mockito.Mockito.*;
 @Disabled
 public class IdentityServiceTest {
     @TempDir
-    private Path tempDir;
+    private Path tempDirPath;
     private KeyBundleService keyBundleService;
     private IdentityService identityService;
 
     @BeforeEach
     void setUp() {
-        PersistenceService persistenceService = new PersistenceService(tempDir);
+        PersistenceService persistenceService = new PersistenceService(tempDirPath);
 
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));

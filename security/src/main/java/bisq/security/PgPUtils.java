@@ -44,34 +44,34 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PgPUtils {
 
-    public static boolean isSignatureValid(Path pubKeyFile, Path sigFile, Path dataFile) {
+    public static boolean isSignatureValid(Path pubKeyFilePath, Path sigFilePath, Path dataFilePath) {
         try {
-            PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFile);
-            PGPSignature pgpSignature = readPgpSignature(sigFile);
+            PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFilePath);
+            PGPSignature pgpSignature = readPgpSignature(sigFilePath);
             long keyIdFromSignature = pgpSignature.getKeyID();
             PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
-            return isSignatureValid(pgpSignature, publicKey, dataFile);
+            return isSignatureValid(pgpSignature, publicKey, dataFilePath);
         } catch (PGPException | IOException | SignatureException e) {
-            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \ndataFile={}.",
-                    pubKeyFile, sigFile, dataFile, e);
+            log.error("Signature verification failed. \npubKeyFilePath={} \nsigFilePath={} \ndataFilePath={}.",
+                    pubKeyFilePath, sigFilePath, dataFilePath, e);
             return false;
         }
     }
 
-    public static PGPPublicKeyRing readPgpPublicKeyRing(Path pubKeyFile) throws IOException, PGPException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(pubKeyFile))) {
+    public static PGPPublicKeyRing readPgpPublicKeyRing(Path pubKeyFilePath) throws IOException, PGPException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(pubKeyFilePath))) {
             PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(inputStream, new JcaKeyFingerprintCalculator());
             Iterator<PGPPublicKeyRing> iterator = publicKeyRingCollection.getKeyRings();
             if (iterator.hasNext()) {
                 return iterator.next();
             } else {
-                throw new PGPException("Could not find public keyring in provided key file");
+                throw new PGPException("Could not find public keyring in provided key file path");
             }
         }
     }
 
-    public static PGPSignature readPgpSignature(Path sigFile) throws IOException, SignatureException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(sigFile))) {
+    public static PGPSignature readPgpSignature(Path sigFilePath) throws IOException, SignatureException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(sigFilePath))) {
             PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
             Object signatureObject = pgpObjectFactory.nextObject();
             if (signatureObject instanceof PGPSignatureList signatureList) {
@@ -80,17 +80,17 @@ public class PgPUtils {
             } else if (signatureObject instanceof PGPSignature) {
                 return (PGPSignature) signatureObject;
             } else {
-                throw new SignatureException("Could not find signature in provided signature file");
+                throw new SignatureException("Could not find signature in provided signature file path");
             }
         }
     }
 
     public static boolean isSignatureValid(PGPSignature pgpSignature,
                                            PGPPublicKey publicKey,
-                                           Path dataFile) throws IOException, PGPException {
+                                           Path dataFilePath) throws IOException, PGPException {
         checkArgument(pgpSignature.getKeyID() == publicKey.getKeyID(), "Key ID from signature not matching key ID from pub Key");
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
-        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(Files.newInputStream((dataFile))))) {
+        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(Files.newInputStream((dataFilePath))))) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while (true) {

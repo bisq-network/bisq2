@@ -52,18 +52,18 @@ public class TypesafeConfigUtils {
         return ConfigFactory.parseMap(map);
     }
 
-    public static Optional<Config> resolveCustomConfig(Path appDataDir) {
+    public static Optional<Config> resolveCustomConfig(Path appDataDirPath) {
         // J8 compatible to avoid issues on mobile Samsung devices
         String configName = ApplicationService.CUSTOM_CONFIG_FILE_NAME;
-        Path customConfigFile = appDataDir.resolve(configName);
-        if (Files.exists(customConfigFile)) {
+        Path customConfigFilePath = appDataDirPath.resolve(configName);
+        if (Files.exists(customConfigFilePath)) {
             try {
-                com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFile.toFile());
+                com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFilePath.toFile());
                 config.checkValid(ConfigFactory.defaultReference(), "application");
-                log.info("Using custom config file: {}", customConfigFile.toAbsolutePath());
+                log.info("Using custom config file: {}", customConfigFilePath.toAbsolutePath());
                 return Optional.of(config);
             } catch (Exception e) {
-                log.error("Could not load custom config file {}", customConfigFile.toAbsolutePath(), e);
+                log.error("Could not load custom config file {}", customConfigFilePath.toAbsolutePath(), e);
             }
         }
         return Optional.empty();

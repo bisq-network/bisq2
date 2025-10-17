@@ -140,7 +140,7 @@ public class UpdaterController implements Controller {
 
         updateIgnoreVersionState();
         model.getFilteredList().setPredicate(
-                e -> !e.getDownloadItem().getDestinationFile().getFileName().toString().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
+                e -> !e.getDownloadItem().getDestinationFilePath().getFileName().toString().startsWith(UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX));
     }
 
     @Override
@@ -183,7 +183,7 @@ public class UpdaterController implements Controller {
     void onShutdown() {
         ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
         if (releaseNotification != null && releaseNotification.isLauncherUpdate()) {
-            PlatformUtils.open(PlatformUtils.getDownloadOfHomeDir());
+            PlatformUtils.open(PlatformUtils.getDownloadOfHomeDirPath());
         }
         serviceProvider.getShutDownHandler().shutdown();
     }

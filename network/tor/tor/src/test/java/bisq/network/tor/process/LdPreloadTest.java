@@ -32,23 +32,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LdPreloadTest {
 
     @Test
-    void computeLdPreloadVariable_returnsColonSeparatedPaths(@TempDir Path tempDir) throws IOException {
-        Path lib1 = Files.createFile(tempDir.resolve("libfoo.so.1"));
-        Path lib2 = Files.createFile(tempDir.resolve("libbar.so.2"));
-        Files.createFile(tempDir.resolve("notalib.txt"));
+    void computeLdPreloadVariable_returnsColonSeparatedPaths(@TempDir Path tempDirPath) throws IOException {
+        Path libPath1 = Files.createFile(tempDirPath.resolve("libfoo.so.1"));
+        Path libPath2 = Files.createFile(tempDirPath.resolve("libbar.so.2"));
+        Files.createFile(tempDirPath.resolve("notalib.txt"));
 
-        String result = LdPreload.computeLdPreloadVariable(tempDir);
+        String result = LdPreload.computeLdPreloadVariable(tempDirPath);
 
-        assertTrue(result.contains(lib1.toAbsolutePath().toString()));
-        assertTrue(result.contains(lib2.toAbsolutePath().toString()));
+        assertTrue(result.contains(libPath1.toAbsolutePath().toString()));
+        assertTrue(result.contains(libPath2.toAbsolutePath().toString()));
         assertFalse(result.contains("notalib.txt"));
         assertTrue(result.contains(":"));
     }
 
     @Test
-    void computeLdPreloadVariable_returnsEmptyStringIfNoSoFiles(@TempDir Path tempDir) throws IOException {
-        Files.createFile(tempDir.resolve("file.txt"));
-        String result = LdPreload.computeLdPreloadVariable(tempDir);
+    void computeLdPreloadVariable_returnsEmptyStringIfNoSoFiles(@TempDir Path tempDirPath) throws IOException {
+        Files.createFile(tempDirPath.resolve("file.txt"));
+        String result = LdPreload.computeLdPreloadVariable(tempDirPath);
         assertEquals("", result);
     }
 
@@ -58,18 +58,18 @@ class LdPreloadTest {
     }
 
     @Test
-    void computeLdPreloadVariable_throwsIllegalStateExceptionOnIOException(@TempDir Path tempDir) throws IOException {
-        Path notADir = Files.createFile(tempDir.resolve("notADir"));
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> LdPreload.computeLdPreloadVariable(notADir));
+    void computeLdPreloadVariable_throwsIllegalStateExceptionOnIOException(@TempDir Path tempDirPath) throws IOException {
+        Path notADirPath = Files.createFile(tempDirPath.resolve("notADir"));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> LdPreload.computeLdPreloadVariable(notADirPath));
         assertTrue(exception.getMessage().contains("Failed to list directory"));
     }
 
     @Test
-    void computeLdPreloadVariable_excludesUnversionedSoFiles(@TempDir Path tempDir) throws IOException {
-        Files.createFile(tempDir.resolve("libfoo.so"));  // unversioned
-        Files.createFile(tempDir.resolve("libbar.so.1")); // versioned
+    void computeLdPreloadVariable_excludesUnversionedSoFiles(@TempDir Path tempDirPath) throws IOException {
+        Files.createFile(tempDirPath.resolve("libfoo.so"));  // unversioned
+        Files.createFile(tempDirPath.resolve("libbar.so.1")); // versioned
 
-        String result = LdPreload.computeLdPreloadVariable(tempDir);
+        String result = LdPreload.computeLdPreloadVariable(tempDirPath);
 
         assertFalse(result.contains("libfoo.so"));
         assertTrue(result.contains("libbar.so.1"));

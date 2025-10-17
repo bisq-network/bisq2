@@ -65,7 +65,7 @@ public class HttpApiService implements Service {
 
     public HttpApiService(RestApiService.Config restApiConfig,
                           WebSocketService.Config webSocketConfig,
-                          Path baseDir,
+                          Path appDataDirPath,
                           SecurityService securityService,
                           NetworkService networkService,
                           UserService userService,
@@ -111,7 +111,7 @@ public class HttpApiService implements Service {
                         reputationRestApi,
                         userProfileRestApi,
                         HttpApiRequestFilter.from(restApiConfig));
-                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, baseDir, securityService, networkService));
+                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
             }
@@ -132,7 +132,7 @@ public class HttpApiService implements Service {
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
-                        baseDir,
+                        appDataDirPath,
                         securityService,
                         networkService,
                         bondedRolesService,

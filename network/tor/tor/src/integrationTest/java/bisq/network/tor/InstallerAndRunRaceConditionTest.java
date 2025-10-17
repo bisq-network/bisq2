@@ -31,18 +31,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class InstallerAndRunRaceConditionTest {
     @Test
-    void test(@TempDir Path tempDir) throws IOException, InterruptedException {
-        var torInstaller = new TorInstaller(tempDir);
+    void test(@TempDir Path tempDirPath) throws IOException, InterruptedException {
+        var torInstaller = new TorInstaller(tempDirPath);
         torInstaller.installIfNotUpToDate();
 
-        Path torBinaryPath = tempDir.resolve("tor");
+        Path torBinaryPath = tempDirPath.resolve("tor");
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--version"
         );
 
         Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(tempDir));
+        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(tempDirPath));
 
         Process process = processBuilder.start();
         boolean isSuccess = process.waitFor(30, TimeUnit.SECONDS);

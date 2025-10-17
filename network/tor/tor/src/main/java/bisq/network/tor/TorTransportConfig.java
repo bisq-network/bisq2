@@ -38,9 +38,9 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public class TorTransportConfig implements TransportConfig {
-    public static TorTransportConfig from(Path dataDir, com.typesafe.config.Config config) {
+    public static TorTransportConfig from(Path dataDirPath, com.typesafe.config.Config config) {
         return new TorTransportConfig(
-                dataDir,
+                dataDirPath,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("bootstrapTimeout")),
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("hsUploadTimeout")),
@@ -87,7 +87,7 @@ public class TorTransportConfig implements TransportConfig {
                 .unwrapped();
     }
 
-    private final Path dataDir;
+    private final Path dataDirPath;
     private final int defaultNodePort;
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
@@ -99,7 +99,7 @@ public class TorTransportConfig implements TransportConfig {
     private final int receiveMessageThrottleTime;
     private final boolean useExternalTor;
 
-    public TorTransportConfig(Path dataDir,
+    public TorTransportConfig(Path dataDirPath,
                               int defaultNodePort,
                               int bootstrapTimeout,
                               int hsUploadTimeout,
@@ -110,7 +110,7 @@ public class TorTransportConfig implements TransportConfig {
                               int sendMessageThrottleTime,
                               int receiveMessageThrottleTime,
                               boolean useExternalTor) {
-        this.dataDir = dataDir;
+        this.dataDirPath = dataDirPath;
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;

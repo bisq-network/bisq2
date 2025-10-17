@@ -31,7 +31,7 @@ public class PlatformUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
 
-    public static Path getUserDataDir() {
+    public static Path getUserDataDirPath() {
         if (OS.isWindows()) {
             return Path.of(System.getenv("APPDATA"));
         }
@@ -143,17 +143,17 @@ public class PlatformUtils {
         return parts.toArray(new String[0]);
     }
 
-    public static Path getDownloadOfHomeDir() {
-        Path homeDirectory = getHomeDirectory();
-        Path path = homeDirectory.resolve("Downloads");
+    public static Path getDownloadOfHomeDirPath() {
+        Path homeDirectoryPath = getHomeDirectoryPath();
+        Path path = homeDirectoryPath.resolve("Downloads");
         if (Files.exists(path)) {
             return path;
         } else {
-            return homeDirectory;
+            return homeDirectoryPath;
         }
     }
 
-    public static Path getHomeDirectory() {
+    public static Path getHomeDirectoryPath() {
         return Path.of(OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home"));
     }
 }

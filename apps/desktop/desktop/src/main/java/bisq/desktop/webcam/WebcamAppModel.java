@@ -30,7 +30,7 @@ import java.nio.file.Path;
 @Getter
 @Slf4j
 public class WebcamAppModel {
-    private final Path baseDir;
+    private final Path appDataDirPath;
     @Setter
     private int port;
     private final Observable<Boolean> imageRecognized = new Observable<>();
@@ -44,7 +44,7 @@ public class WebcamAppModel {
     private final Observable<Throwable> localException = new Observable<>();
 
     public WebcamAppModel(ApplicationService.Config config) {
-        baseDir = config.getBaseDir();
+        appDataDirPath = config.getAppDataDirPath();
     }
 
     public void reset() {

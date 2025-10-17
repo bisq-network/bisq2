@@ -202,15 +202,15 @@ public class UpdaterService implements Service {
 
         String version = releaseNotification.getVersionString();
         boolean isLauncherUpdate = releaseNotification.isLauncherUpdate();
-        Path baseDir = config.getBaseDir();
+        Path appDataDirPath = config.getAppDataDirPath();
         List<String> keyIds = config.getKeyIds();
         checkArgument(!keyIds.isEmpty());
 
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
-        Path destinationDirectory = isLauncherUpdate ? PlatformUtils.getDownloadOfHomeDir() :
-                baseDir.resolve(UPDATES_DIR).resolve(version);
-        Files.createDirectories(destinationDirectory);
-        downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
+        Path destinationDirPath = isLauncherUpdate ? PlatformUtils.getDownloadOfHomeDirPath() :
+                appDataDirPath.resolve(UPDATES_DIR).resolve(version);
+        Files.createDirectories(destinationDirPath);
+        downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
         if (executorService == null) {
             executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
         }
@@ -218,8 +218,8 @@ public class UpdaterService implements Service {
         return downloadAndVerify(version,
                 isLauncherUpdate,
                 downloadItemList,
-                destinationDirectory,
-                baseDir,
+                destinationDirPath,
+                appDataDirPath,
                 keyIds,
                 isIgnoreSigningKeyInResourcesCheck,
                 executorService);
@@ -265,14 +265,14 @@ public class UpdaterService implements Service {
     private static CompletableFuture<Void> downloadAndVerify(String version,
                                                              boolean isLauncherUpdate,
                                                              List<DownloadItem> downloadItemList,
-                                                             Path destinationDirectory,
-                                                             Path baseDir,
+                                                             Path destinationDirPath,
+                                                             Path appDataDirPath,
                                                              List<String> keyIds,
                                                              boolean ignoreSigningKeyInResourcesCheck,
                                                              ExecutorService executorService) {
         return download(downloadItemList, executorService)
-                .thenCompose(nil -> verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
-                .thenCompose(nil -> writeVersionFile(version, baseDir, executorService));
+                .thenCompose(nil -> verify(version, isLauncherUpdate, destinationDirPath, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                .thenCompose(nil -> writeVersionFile(version, appDataDirPath, executorService));
     }
 
     @VisibleForTesting
@@ -282,7 +282,7 @@ public class UpdaterService implements Service {
                 try {
                     log.info("Download {}", downloadItem);
                     URL url = URI.create(downloadItem.getUrlPath()).toURL();
-                    FileUtils.downloadFile(url, downloadItem.getDestinationFile(), downloadItem.getProgress());
+                    FileUtils.downloadFile(url, downloadItem.getDestinationFilePath(), downloadItem.getProgress());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);
@@ -295,14 +295,14 @@ public class UpdaterService implements Service {
     @VisibleForTesting
     static CompletableFuture<Void> verify(String version,
                                           boolean isLauncherUpdate,
-                                          Path destinationDir,
+                                          Path destinationDirPath,
                                           List<String> keyIds,
                                           boolean ignoreSigningKeyInResourcesCheck,
                                           ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 DownloadedFilesVerification.verify(
-                        destinationDir,
+                        destinationDirPath,
                         UpdaterUtils.getDownloadFileName(version, isLauncherUpdate), keyIds, ignoreSigningKeyInResourcesCheck);
                 return null;
             } catch (Exception e) {
@@ -313,10 +313,10 @@ public class UpdaterService implements Service {
     }
 
     @VisibleForTesting
-    static CompletionStage<Void> writeVersionFile(String version, Path baseDir, ExecutorService executorService) {
+    static CompletionStage<Void> writeVersionFile(String version, Path appDataDirPath, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                FileUtils.writeToFile(version, baseDir.resolve(VERSION_FILE_NAME));
+                FileUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));
                 return null;
             } catch (Exception e) {
                 e.printStackTrace();

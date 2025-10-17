@@ -18,12 +18,17 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
-import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
-import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
-import bisq.network.p2p.node.*;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.util.NetworkUtils;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.Feature;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.OutboundConnectionChannel;
+import bisq.network.p2p.node.OutboundConnectionManager;
+import bisq.network.p2p.node.OutboundConnectionMultiplexer;
+import bisq.network.p2p.node.ServerChannel;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -37,20 +42,23 @@ import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 @Slf4j
 public class OutboundConnectionsMultiplexerTest {
-
-    private final Path tmpDir = FileUtils.createTempDir();
 
     public OutboundConnectionsMultiplexerTest() throws IOException {
     }
@@ -117,10 +125,10 @@ public class OutboundConnectionsMultiplexerTest {
     }
 
   /*  private AuthorizationService createAuthorizationService() throws IOException {
-        Path persistenceBaseDir = Files.createTempDirectory(tmpDir, "persistence");
-        String baseDir = persistenceBaseDir.toAbsolutePath().toString();
+        Path persistenceBaseDirPath = Files.createTempDirectory(tmpDirPath, "persistence");
+        String baseDirString = persistenceBaseDirPath.toAbsolutePath().toString();
 
-        PersistenceService persistenceService = new PersistenceService(baseDir);
+        PersistenceService persistenceService = new PersistenceService(baseDirString);
         SecurityService securityService = new SecurityService(persistenceService, mock(SecurityService.Config.class));
         securityService.initialize();
 

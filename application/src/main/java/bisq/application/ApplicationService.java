@@ -57,9 +57,9 @@ public abstract class ApplicationService implements Service {
     public static final class Config {
         private static Config from(com.typesafe.config.Config rootConfig,
                                    com.typesafe.config.Config config,
-                                   Path baseDir) {
+                                   Path appDataDirPath) {
             return new Config(rootConfig,
-                    baseDir,
+                    appDataDirPath,
                     config.getString("appName"),
                     config.getBoolean("devMode"),
                     config.getLong("devModeReputationScore"),
@@ -73,7 +73,7 @@ public abstract class ApplicationService implements Service {
         }
 
         private final com.typesafe.config.Config rootConfig;
-        private final Path baseDir;
+        private final Path appDataDirPath;
         private final String appName;
         private final boolean devMode;
         private final long devModeReputationScore;
@@ -86,7 +86,7 @@ public abstract class ApplicationService implements Service {
         private final boolean checkInstanceLock;
 
         public Config(com.typesafe.config.Config rootConfig,
-                      Path baseDir,
+                      Path appDataDirPath,
                       String appName,
                       boolean devMode,
                       long devModeReputationScore,
@@ -98,7 +98,7 @@ public abstract class ApplicationService implements Service {
                       boolean includeThreadListInMemoryReport,
                       boolean checkInstanceLock) {
             this.rootConfig = rootConfig;
-            this.baseDir = baseDir;
+            this.appDataDirPath = appDataDirPath;
             this.appName = appName;
             this.devMode = devMode;
             this.devModeReputationScore = devModeReputationScore;
@@ -135,7 +135,7 @@ public abstract class ApplicationService implements Service {
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
-    public ApplicationService(String configFileName, String[] args, Path userDataDir) {
+    public ApplicationService(String configFileName, String[] args, Path userDataDirPath) {
         programArgConfig = TypesafeConfigUtils.parseArgsToConfig(args);
         jvmConfig = TypesafeConfigUtils.resolveFilteredJvmOptions();
         resourceConfig = ConfigFactory.parseResources(configFileName + ".conf").resolve();
@@ -149,22 +149,22 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         String appName = rootConfig.getString("application.appName");
-        Path baseDir = rootConfig.hasPath("application.baseDir")
+        Path appDataDirPath = rootConfig.hasPath("application.baseDir")
                 ? Path.of(rootConfig.getString("application.baseDir"))
-                : userDataDir.resolve(appName);
+                : userDataDirPath.resolve(appName);
         try {
-            Files.createDirectories(baseDir);
+            Files.createDirectories(appDataDirPath);
         } catch (IOException e) {
-            log.error("Could not create data directory {}", baseDir, e);
+            log.error("Could not create data directory {}", appDataDirPath, e);
             throw new RuntimeException(e);
         }
 
         log.info(AsciiLogo.getAsciiLogo());
-        log.info("Data directory: {}", baseDir);
+        log.info("Data directory: {}", appDataDirPath);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
 
-        customConfig = TypesafeConfigUtils.resolveCustomConfig(baseDir).orElse(ConfigFactory.empty());
+        customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
 
         // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
         rootConfig = programArgConfig
@@ -174,9 +174,9 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         applicationConfig = rootConfig.getConfig("application");
-        config = Config.from(rootConfig, applicationConfig, baseDir);
+        config = Config.from(rootConfig, applicationConfig, appDataDirPath);
 
-        setupLogging(baseDir);
+        setupLogging(appDataDirPath);
 
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {
@@ -195,8 +195,8 @@ public abstract class ApplicationService implements Service {
         Res.setAndApplyLanguage(LanguageRepository.getDefaultLanguage());
         ResolverConfig.config();
 
-        persistenceService = new PersistenceService(baseDir);
-        migrationService = new MigrationService(baseDir);
+        persistenceService = new PersistenceService(appDataDirPath);
+        migrationService = new MigrationService(appDataDirPath);
     }
 
     public CompletableFuture<Void> pruneAllBackups() {
@@ -230,12 +230,12 @@ public abstract class ApplicationService implements Service {
         log.info("New state {}", newState);
     }
 
-    protected void setupLogging(Path dataDir) {
+    protected void setupLogging(Path appDataDirPath) {
         com.typesafe.config.Config loggingConfig = getConfig("logging");
         int rollingPolicyMaxIndex = loggingConfig.getInt("rollingPolicyMaxIndex");
         String maxFileSize = loggingConfig.getString("maxFileSize");
         Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
-        LogSetup.setup(dataDir.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
+        LogSetup.setup(appDataDirPath.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
     }
 
     protected void checkInstanceLock() {
@@ -243,7 +243,7 @@ public abstract class ApplicationService implements Service {
         // Dynamic/private ports: 49152 – 65535
         int lowestPort = 49152;
         int highestPort = 65535;
-        int port = lowestPort + Math.abs(config.getBaseDir().hashCode() % (highestPort - lowestPort));
+        int port = lowestPort + Math.abs(config.getAppDataDirPath().hashCode() % (highestPort - lowestPort));
         instanceLockManager = new InstanceLockManager();
         instanceLockManager.acquireLock(port);
 

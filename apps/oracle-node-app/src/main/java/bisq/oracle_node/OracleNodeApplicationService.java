@@ -52,7 +52,7 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
-        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,

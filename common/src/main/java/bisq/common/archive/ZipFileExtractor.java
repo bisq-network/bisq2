@@ -45,11 +45,11 @@ public class ZipFileExtractor implements AutoCloseable {
         zipFileInputStream.close();
     }
 
-    private void createDirIfNotPresent(Path destDir) {
+    private void createDirIfNotPresent(Path destDirPath) {
         try {
-            Files.createDirectories(destDir);
+            Files.createDirectories(destDirPath);
         } catch (IOException e) {
-            throw new ZipFileExtractionFailedException("Couldn't create directory: " + destDir, e);
+            throw new ZipFileExtractionFailedException("Couldn't create directory: " + destDirPath, e);
         }
     }
 

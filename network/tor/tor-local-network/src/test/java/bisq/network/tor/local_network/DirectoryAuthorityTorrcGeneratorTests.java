@@ -40,15 +40,15 @@ import static org.mockito.Mockito.spy;
 @Disabled
 public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) throws IOException {
-        Path daAPath = tempDir.resolve("DA_A");
+    void basicTest(@TempDir Path tempDirPath) throws IOException {
+        Path daAPath = tempDirPath.resolve("DA_A");
         Files.createDirectory(daAPath);
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("A")
-                        .dataDir(daAPath)
+                        .dataDirPath(daAPath)
 
                         .orPort(2)
                         .dirPort(3)
@@ -68,7 +68,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("B")
-                        .dataDir(tempDir.resolve("DA_B"))
+                        .dataDirPath(tempDirPath.resolve("DA_B"))
 
                         .orPort(2)
                         .dirPort(3)

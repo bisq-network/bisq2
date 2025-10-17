@@ -85,7 +85,7 @@ public class WebcamApp extends Application {
                 port = Integer.parseInt(portParam);
             }
 
-            String logFile = PlatformUtils.getUserDataDir().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
+            String logFile = PlatformUtils.getUserDataDirPath().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
             String logFileParam = parameters.getNamed().get("logFile");
             if (logFileParam != null) {
                 logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);

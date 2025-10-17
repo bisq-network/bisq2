@@ -39,15 +39,15 @@ import static org.mockito.Mockito.spy;
 @Disabled
 public class RelayTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) throws IOException {
-        Path relayAPath = tempDir.resolve("RELAY_A");
+    void basicTest(@TempDir Path tempDirPath) throws IOException {
+        Path relayAPath = tempDirPath.resolve("RELAY_A");
         Files.createDirectory(relayAPath);
 
         TorNode firstRelay = spy(
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("A")
-                        .dataDir(relayAPath)
+                        .dataDirPath(relayAPath)
 
                         .orPort(2)
                         .dirPort(3)
@@ -67,7 +67,7 @@ public class RelayTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("B")
-                        .dataDir(tempDir.resolve("DA_B"))
+                        .dataDirPath(tempDirPath.resolve("DA_B"))
 
                         .orPort(2)
                         .dirPort(3)
@@ -90,7 +90,7 @@ public class RelayTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("A")
-                        .dataDir(tempDir.resolve("dir_auth"))
+                        .dataDirPath(tempDirPath.resolve("dir_auth"))
 
                         .orPort(2)
                         .dirPort(3)

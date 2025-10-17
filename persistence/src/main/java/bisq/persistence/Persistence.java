@@ -41,10 +41,10 @@ public class Persistence<T extends PersistableStore<T>> {
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
-    public Persistence(Path directory, String fileName, MaxBackupSize maxBackupSize) {
+    public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
-        storePath = directory.resolve(storageFileName + EXTENSION);
+        storePath = directoryPath.resolve(storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }

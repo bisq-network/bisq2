@@ -115,10 +115,10 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
 
         persistableStore = new KeyBundleStore(keyStoreSecretUid);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-        Path baseDir = persistenceService.getBaseDir();
-        defaultKeyStoragePath = baseDir.resolve("db").resolve("private").resolve("key");
-        torStoragePath = baseDir.resolve("db").resolve("private").resolve("tor");
-        i2pStoragePath = baseDir.resolve("db").resolve("private").resolve("i2p");
+        Path appDataDirPath = persistenceService.getAppDataDirPath();
+        defaultKeyStoragePath = appDataDirPath.resolve("db").resolve("private").resolve("key");
+        torStoragePath = appDataDirPath.resolve("db").resolve("private").resolve("tor");
+        i2pStoragePath = appDataDirPath.resolve("db").resolve("private").resolve("i2p");
 
         if (defaultPrivateKey.isPresent()) {
             log.warn("defaultPrivateKey is provided via the config and will replace the persisted key");
@@ -220,11 +220,11 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
                     log.error("Could not create {}", defaultKeyStoragePath);
                     throw new RuntimeException(e);
                 }
-                Path file = defaultKeyStoragePath.resolve("keyStoreSecretUid");
+                Path filePath = defaultKeyStoragePath.resolve("keyStoreSecretUid");
                 try {
-                    FileUtils.writeToFile(persistableStore.getSecretUid(), file);
+                    FileUtils.writeToPath(persistableStore.getSecretUid(), filePath);
                 } catch (IOException e) {
-                    log.error("Could not write keyStoreSecretUid to {}", file);
+                    log.error("Could not write keyStoreSecretUid to {}", filePath);
                 }
             }
 

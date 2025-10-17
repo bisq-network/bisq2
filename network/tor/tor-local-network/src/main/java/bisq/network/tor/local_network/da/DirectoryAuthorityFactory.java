@@ -34,10 +34,10 @@ public class DirectoryAuthorityFactory {
 
     public void createDirectoryAuthority(TorNode directoryAuthority,
                                          String passphrase) throws IOException, InterruptedException {
-        Path dataDir = directoryAuthority.getDataDir();
-        createDataDirIfNotPresent(dataDir);
+        Path dataDirPath = directoryAuthority.getDataDirPath();
+        createDataDirPathIfNotPresent(dataDirPath);
 
-        Path keysPath = dataDir.resolve("keys");
+        Path keysPath = dataDirPath.resolve("keys");
         if (!Files.exists(keysPath)) {
             try {
                 Files.createDirectories(keysPath);
@@ -50,10 +50,10 @@ public class DirectoryAuthorityFactory {
         allDirectoryAuthorities.add(directoryAuthority);
     }
 
-    private void createDataDirIfNotPresent(Path dataDir) {
-        if(!Files.exists(dataDir)) {
+    private void createDataDirPathIfNotPresent(Path dataDirPath) {
+        if(!Files.exists(dataDirPath)) {
             try {
-                Files.createDirectory(dataDir);
+                Files.createDirectory(dataDirPath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't create data directory for directory authority.", e);
             }

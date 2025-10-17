@@ -30,8 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PersistableStoreReaderWriterTests {
 
     @Test
-    void readNotExistingStore(@TempDir Path tempDir) {
-        Path storageFilePath = tempDir.resolve("protoFile");
+    void readNotExistingStore(@TempDir Path tempDirPath) {
+        Path storageFilePath = tempDirPath.resolve("protoFile");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath);
         var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager);
 
@@ -40,7 +40,7 @@ public class PersistableStoreReaderWriterTests {
     }
 
     @Test
-    void writeAndReadStore(@TempDir Path tempDir) {
+    void writeAndReadStore(@TempDir Path tempDirPath) {
         var timestampStore = new TimestampStore();
         Map<String, Long> timestampsByProfileId = timestampStore.getTimestampsByProfileId();
         timestampsByProfileId.put("A", 1L);
@@ -50,7 +50,7 @@ public class PersistableStoreReaderWriterTests {
         ProtoResolver<PersistableStore<?>> resolver = timestampStore.getResolver();
         PersistableStoreResolver.addResolver(resolver);
 
-        Path storageFilePath = tempDir.resolve("protoFile");
+        Path storageFilePath = tempDirPath.resolve("protoFile");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath);
         var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager);
         persistableStoreReaderWriter.write(timestampStore);
@@ -67,14 +67,14 @@ public class PersistableStoreReaderWriterTests {
     }
 
     @Test
-    void writeStoreTwice(@TempDir Path tempDir) {
+    void writeStoreTwice(@TempDir Path tempDirPath) {
         var timestampStore = new TimestampStore();
         Map<String, Long> timestampsByProfileId = timestampStore.getTimestampsByProfileId();
         timestampsByProfileId.put("A", 1L);
         timestampsByProfileId.put("B", 2L);
         timestampsByProfileId.put("C", 3L);
 
-        Path storageFilePath = tempDir.resolve("protoFile");
+        Path storageFilePath = tempDirPath.resolve("protoFile");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath);
         var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager);
         persistableStoreReaderWriter.write(timestampStore);

@@ -232,9 +232,9 @@ public class RichTableView<T> extends VBox {
             String csv = Csv.toCsv(headers, data);
             String initialFileName = headline.orElse("Bisq-table-data") + ".csv";
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
-                    .ifPresent(file -> {
+                    .ifPresent(filePath -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileUtils.writeToPath(csv, filePath);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

@@ -86,7 +86,7 @@ public class TorService implements Service {
 
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
-        this.torDataDirPath = transportConfig.getDataDir();
+        this.torDataDirPath = transportConfig.getDataDirPath();
     }
 
     @Override
@@ -123,9 +123,9 @@ public class TorService implements Service {
 
         Path torBinaryPath = getTorBinaryPath();
         if (!isTorRunning(torBinaryPath.toString())) {
-            Path lockFile = torDataDirPath.resolve("lock");
+            Path lockFilePath = torDataDirPath.resolve("lock");
             try {
-                Files.deleteIfExists(lockFile);
+                Files.deleteIfExists(lockFilePath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't remove tor lock file.", e);
             }
@@ -365,11 +365,11 @@ public class TorService implements Service {
     private void readExternalTorConfigMap() {
         try {
             String torConfigFileName = "external_tor.config";
-            Path torConfigFilePath = transportConfig.getDataDir().resolve(torConfigFileName);
+            Path torConfigFilePath = transportConfig.getDataDirPath().resolve(torConfigFileName);
             String torConfig;
             if (!Files.exists(torConfigFilePath)) {
                 torConfig = FileUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileUtils.writeToFile(torConfig, torConfigFilePath);
+                FileUtils.writeToPath(torConfig, torConfigFilePath);
             } else {
                 torConfig = FileUtils.readUTF8String(torConfigFilePath);
             }
@@ -403,7 +403,7 @@ public class TorService implements Service {
 
     private void makeTorDir() {
         try {
-            Path torDataDirPath = transportConfig.getDataDir();
+            Path torDataDirPath = transportConfig.getDataDirPath();
             Files.createDirectories(torDataDirPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -423,22 +423,22 @@ public class TorService implements Service {
     }
 
     private void installTorIfNotUpToDate() {
-        Path torDataDirPath = transportConfig.getDataDir();
+        Path torDataDirPath = transportConfig.getDataDirPath();
         var torInstaller = new TorInstaller(torDataDirPath);
         torInstaller.installIfNotUpToDate();
     }
 
-    private Map<String, String> createTorrcConfigFile(Path dataDir, PasswordDigest hashedControlPassword) {
+    private Map<String, String> createTorrcConfigFile(Path dataDirPath, PasswordDigest hashedControlPassword) {
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
-                .dataDir(dataDir)
+                .dataDirPath(dataDirPath)
                 .hashedControlPassword(hashedControlPassword)
                 .build();
 
         Map<String, String> torrcOverrideConfigs = transportConfig.getTorrcOverrides();
         Map<String, String> torrcConfigMap = torrcClientConfigFactory.torrcClientConfigMap(torrcOverrideConfigs);
 
-        Path torrcPath = dataDir.resolve("torrc");
+        Path torrcPath = dataDirPath.resolve("torrc");
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath,
                 torrcConfigMap,
                 transportConfig.getDirectoryAuthorities());

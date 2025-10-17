@@ -18,7 +18,6 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
@@ -51,7 +50,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -64,7 +62,6 @@ import static org.mockito.Mockito.mock;
 @Slf4j
 @Disabled("Excluded from test run as not fully implemented")
 public class InboundConnectionsManagerTests {
-    private final Path tmpDir = FileUtils.createTempDir();
     private final AuthorizationService authorizationService = createAuthorizationService();
     private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
 

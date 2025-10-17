@@ -92,13 +92,13 @@ public class BackupService {
         }
 
         try {
-            Path legacyBackupDir = storeFilePath.getParent().resolve("backup");
-            Path legacyBackupFile = legacyBackupDir.resolve(fileName);
-            if (Files.exists(legacyBackupFile)) {
-                Path newBackupFile = getBackupFile();
-                FileUtils.renameFile(legacyBackupFile, newBackupFile);
-                if (FileUtils.listFiles(legacyBackupDir).isEmpty()) {
-                    FileUtils.deleteFileOrDirectory(legacyBackupDir);
+            Path legacyBackupDirPath = storeFilePath.getParent().resolve("backup");
+            Path legacyBackupFilePath = legacyBackupDirPath.resolve(fileName);
+            if (Files.exists(legacyBackupFilePath)) {
+                Path newBackupFilePath = getBackupFilePath();
+                FileUtils.renameFile(legacyBackupFilePath, newBackupFilePath);
+                if (FileUtils.listRegularFiles(legacyBackupDirPath).isEmpty()) {
+                    FileUtils.deleteFileOrDirectory(legacyBackupDirPath);
                 }
             }
         } catch (IOException e) {
@@ -122,7 +122,7 @@ public class BackupService {
         }
 
         try {
-            return backup(getBackupFile());
+            return backup(getBackupFilePath());
         } catch (IOException ex) {
             log.error("Backup failed", ex);
             return false;
@@ -130,10 +130,10 @@ public class BackupService {
     }
 
     @VisibleForTesting
-    boolean backup(Path backupFile) throws IOException {
-        boolean success = FileUtils.renameFile(storeFilePath, backupFile);
+    boolean backup(Path backupFilePath) throws IOException {
+        boolean success = FileUtils.renameFile(storeFilePath, backupFilePath);
         if (!success) {
-            log.error("Could not rename {} to {}", storeFilePath, backupFile);
+            log.error("Could not rename {} to {}", storeFilePath, backupFilePath);
         }
         return success;
     }
@@ -145,7 +145,7 @@ public class BackupService {
 
         // TODO Consider to let that run in a background thread
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileUtils.listFiles(dirPath);
+        Set<String> fileNames = FileUtils.listRegularFiles(dirPath);
         List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
         LocalDateTime now = LocalDateTime.now();
         List<BackupFileInfo> outdatedBackupFileInfos = findOutdatedBackups(new ArrayList<>(backupFileInfoList), now, this::isMaxFileSizeReached);
@@ -217,7 +217,7 @@ public class BackupService {
 
     private long updateAndGetAccumulatedFileSize() {
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileUtils.listFiles(dirPath);
+        Set<String> fileNames = FileUtils.listRegularFiles(dirPath);
         createBackupFileInfo(fileName, fileNames)
                 .forEach(this::addAndGetAccumulatedFileSize);
         return accumulatedFileSize;
@@ -251,27 +251,27 @@ public class BackupService {
     @VisibleForTesting
     static Path resolveDirPath(Path dataDir, Path storeFilePath) {
         boolean isWindowsPath = dataDir.toString().contains("\\");
-        String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath, isWindowsPath);
-        String relativeBackupDir = relativeStoreFilePath
+        String relativeStoreFilePathString = getRelativePath(dataDir, storeFilePath, isWindowsPath);
+        String relativeBackupDirString = relativeStoreFilePathString
                 .replaceFirst("db", "backups")
                 .replace(Persistence.EXTENSION, "")
                 .replace("_store", "");
         // We don't use `resolve` as we use it in unit test which need to be OS independent.
-        return Path.of(dataDir.toString() + relativeBackupDir);
+        return Path.of(dataDir.toString() + relativeBackupDirString);
     }
 
     @VisibleForTesting
     static String getRelativePath(Path dataDir, Path filePath, boolean isWindowsPath) {
         // We don't use File.pathSeparator as we use it in unit test which need to be OS independent.
-        String normalizedDataDir = dataDir.toString().replace("\\", "/");
-        String normalizedFilePath = filePath.toString().replace("\\", "/");
+        String normalizedDataDirString = dataDir.toString().replace("\\", "/");
+        String normalizedFilePathString = filePath.toString().replace("\\", "/");
 
         // Ensure dataDir is a prefix of filePath
-        if (!normalizedFilePath.startsWith(normalizedDataDir)) {
+        if (!normalizedFilePathString.startsWith(normalizedDataDirString)) {
             throw new IllegalArgumentException("File path is not inside the data directory");
         }
 
-        String normalizedRelativePath = normalizedFilePath.substring(normalizedDataDir.length());
+        String normalizedRelativePath = normalizedFilePathString.substring(normalizedDataDirString.length());
         if (isWindowsPath) {
             return normalizedRelativePath.replace("/", "\\");
         } else {
@@ -280,12 +280,12 @@ public class BackupService {
     }
 
     @VisibleForTesting
-    Path getBackupFile() throws IOException {
-        return getBackupFile(LocalDateTime.now());
+    Path getBackupFilePath() throws IOException {
+        return getBackupFilePath(LocalDateTime.now());
     }
 
     @VisibleForTesting
-    Path getBackupFile(LocalDateTime localDateTime) throws IOException {
+    Path getBackupFilePath(LocalDateTime localDateTime) throws IOException {
         String formattedDate = DATE_FORMAT.format(localDateTime);
         String fileNamePath = fileName + "_" + formattedDate;
         Path backupFilePath = dirPath.resolve(fileNamePath);

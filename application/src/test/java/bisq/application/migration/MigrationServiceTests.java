@@ -14,30 +14,30 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MigrationServiceTests {
     @Test
-    void getDataDirVersionBeforeMigrationServiceIntroduced(@TempDir Path dataDir) {
-        MigrationService migrationService = new MigrationService(dataDir);
-        Version dataDirVersion = migrationService.getDataDirVersion();
-        assertThat(dataDirVersion)
+    void getStoredVersionBeforeMigrationServiceIntroduced(@TempDir Path appDataDirPath) {
+        MigrationService migrationService = new MigrationService(appDataDirPath);
+        Version storedVersion = migrationService.getStoredVersion();
+        assertThat(storedVersion)
                 .isEqualTo(MigrationService.VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED);
     }
 
     @Test
-    void getDataDirInvalidVersion(@TempDir Path dataDir) throws IOException {
-        Path versionFilePath = dataDir.resolve("version");
+    void getInvalidStoredVersion(@TempDir Path appDataDirPath) throws IOException {
+        Path versionFilePath = appDataDirPath.resolve("version");
         Files.writeString(versionFilePath, "2.1-alpha");
 
-        MigrationService migrationService = new MigrationService(dataDir);
-        assertThrows(InvalidVersionException.class, migrationService::getDataDirVersion);
+        MigrationService migrationService = new MigrationService(appDataDirPath);
+        assertThrows(InvalidVersionException.class, migrationService::getStoredVersion);
     }
 
     @Test
-    void getDataDirVersion(@TempDir Path dataDir) throws IOException {
-        Path versionFilePath = dataDir.resolve("version");
+    void getStoredVersion(@TempDir Path appDataDirPath) throws IOException {
+        Path versionFilePath = appDataDirPath.resolve("version");
         Files.writeString(versionFilePath, "2.1.34");
 
-        MigrationService migrationService = new MigrationService(dataDir);
-        Version dataDirVersion = migrationService.getDataDirVersion();
-        assertThat(dataDirVersion)
+        MigrationService migrationService = new MigrationService(appDataDirPath);
+        Version storedVersion = migrationService.getStoredVersion();
+        assertThat(storedVersion)
                 .isEqualTo(new Version("2.1.34"));
     }
 }

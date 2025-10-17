@@ -38,7 +38,7 @@ public class I2PClient {
     private final I2PSocketManagerByNodeId socketManagerByNodeId;
     private volatile boolean isShutdownInProgress;
 
-    public I2PClient(Path clientDir,
+    public I2PClient(Path clientDirPath,
                      String i2cpHost,
                      int i2cpPort,
                      int socketTimeout,
@@ -46,7 +46,7 @@ public class I2PClient {
         this.socketTimeout = socketTimeout;
         socketManagerByNodeId = new I2PSocketManagerByNodeId(i2cpHost, i2cpPort, connectTimeout);
 
-        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(clientDir+ "/log-@.log");
+        I2PAppContext.getGlobalContext().logManager().setBaseLogfilename(clientDirPath+ "/log-@.log");
         log.info("I2P client created with i2cpHost={}, i2cpPort={}", i2cpHost, i2cpPort);
     }
 

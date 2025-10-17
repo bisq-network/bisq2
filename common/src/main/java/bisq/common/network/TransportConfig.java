@@ -20,7 +20,7 @@ package bisq.common.network;
 import java.nio.file.Path;
 
 public interface TransportConfig {
-    Path getDataDir();
+    Path getDataDirPath();
 
     int getDefaultNodePort();
 

@@ -47,8 +47,8 @@ public class PersistableStoreFileManager {
         this.storeFilePath = storeFilePath;
         this.parentDirectoryPath = storeFilePath.getParent();
         this.tempFilePath = createTempFilePath();
-        Path dataDir = storeFilePath.getParent().getParent().getParent();
-        backupService = new BackupService(dataDir, storeFilePath, maxBackupSize);
+        Path dataDirPath = storeFilePath.getParent().getParent().getParent();
+        backupService = new BackupService(dataDirPath, storeFilePath, maxBackupSize);
     }
 
     public void createParentDirectoriesIfNotExisting() {

@@ -18,11 +18,10 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
-import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
-import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Feature;
@@ -47,7 +46,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +55,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class NetworkEnvelopeSocketChannelTests {
 
-    private final Path tmpDir = FileUtils.createTempDir();
     private ServerSocketChannel serverSocketChannel;
     private SocketChannel clientSocketChannel;
     private SocketChannel serverToClientSocketChannel;

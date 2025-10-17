@@ -29,21 +29,20 @@ import java.util.function.UnaryOperator;
 
 @Slf4j
 public class KeyFingerprintReader {
-    private final Path fingerprintFile;
+    private final Path fingerprintFilePath;
     private final Predicate<String> lineMatcher;
     private final UnaryOperator<String> dataExtractor;
 
-    public KeyFingerprintReader(Path fingerprintFile,
+    public KeyFingerprintReader(Path fingerprintFilePath,
                                 Predicate<String> lineMatcher,
                                 UnaryOperator<String> dataExtractor) {
-        this.fingerprintFile = fingerprintFile;
+        this.fingerprintFilePath = fingerprintFilePath;
         this.lineMatcher = lineMatcher;
         this.dataExtractor = dataExtractor;
     }
 
-
     public Optional<String> read() {
-        try (BufferedReader reader = Files.newBufferedReader(fingerprintFile)) {
+        try (BufferedReader reader = Files.newBufferedReader(fingerprintFilePath)) {
             String line = reader.readLine();
             while (line != null) {
 
@@ -56,7 +55,7 @@ public class KeyFingerprintReader {
                 line = reader.readLine();
             }
         } catch (IOException e) {
-            log.error("Cannot read {}", fingerprintFile.toAbsolutePath(), e);
+            log.error("Cannot read {}", fingerprintFilePath.toAbsolutePath(), e);
         }
 
         return Optional.empty();

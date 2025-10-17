@@ -105,9 +105,9 @@ public class SplashController implements Controller {
 
     public void onDeleteTor() {
         var conf = serviceProvider.getConfig();
-        Path torDir = conf.getBaseDir().resolve("tor");
-        if (Files.exists(torDir)) {
-            FileUtils.deleteOnExit(torDir);
+        Path torDirPath = conf.getAppDataDirPath().resolve("tor");
+        if (Files.exists(torDirPath)) {
+            FileUtils.deleteOnExit(torDirPath);
             serviceProvider.getShutDownHandler().shutdown();
         }
     }

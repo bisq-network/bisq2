@@ -17,30 +17,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class MigratorTest {
     @Test
-    void migrationSuccess(@TempDir Path dataDir) throws IOException {
-        Path versionFilePath = dataDir.resolve("version");
-        Version dataDirVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, dataDirVersion.toString());
+    void migrationSuccess(@TempDir Path appDataDirPath) throws IOException {
+        Path versionFilePath = appDataDirPath.resolve("version");
+        Version storedVersion = new Version("2.1.0");
+        Files.writeString(versionFilePath, storedVersion.toString());
 
         Version appVersion = ApplicationVersion.getVersion();
-        Migrator migrator = new Migrator(appVersion, dataDir, Collections.emptyList());
+        Migrator migrator = new Migrator(appVersion, appDataDirPath, Collections.emptyList());
 
         migrator.migrate();
 
-        String readVersion = Files.readString(dataDir.resolve("version"));
+        String readVersion = Files.readString(appDataDirPath.resolve("version"));
         assertThat(readVersion).isEqualTo(appVersion.toString());
     }
 
     @Test
-    void migrationFailure(@TempDir Path dataDir) throws IOException {
-        Path versionFilePath = dataDir.resolve("version");
-        Version dataDirVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, dataDirVersion.toString());
+    void migrationFailure(@TempDir Path appDataDirPath) throws IOException {
+        Path versionFilePath = appDataDirPath.resolve("version");
+        Version storedVersion = new Version("2.1.0");
+        Files.writeString(versionFilePath, storedVersion.toString());
 
         Version appVersion = ApplicationVersion.getVersion();
         var migration = new Migration() {
             @Override
-            public void run(Path dataDir) {
+            public void run(Path appDataDirPath) {
                 throw new MigrationFailedException("Migration failed.");
             }
 
@@ -50,10 +50,10 @@ public class MigratorTest {
             }
         };
 
-        Migrator migrator = new Migrator(appVersion, dataDir, List.of(migration, migration));
+        Migrator migrator = new Migrator(appVersion, appDataDirPath, List.of(migration, migration));
         migrator.migrate();
 
-        String readVersion = Files.readString(dataDir.resolve("version"));
-        assertThat(readVersion).isEqualTo(dataDirVersion.toString());
+        String readVersion = Files.readString(appDataDirPath.resolve("version"));
+        assertThat(readVersion).isEqualTo(storedVersion.toString());
     }
 }
