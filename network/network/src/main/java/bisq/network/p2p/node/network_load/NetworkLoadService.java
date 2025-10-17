@@ -185,13 +185,21 @@ public class NetworkLoadService {
             numReceivedDistributedDataByClassNameBuilder.append(value.get());
         });
 
+        String transportType = serviceNode.getTransportType().name();
+
+        String nodes = getAllCurrentConnections()
+                .map(Connection::getPeerAddress)
+                .map(address -> "- " + address)
+                .collect(Collectors.joining("\n    "));
         long numConnections = getAllCurrentConnections().count();
         long networkDatabaseSize = storageService.getNetworkDatabaseSize(); // takes about 50 ms
 
-        StringBuilder sb = new StringBuilder("\n\n/* --------------------------------------------------------------------- */");
-        sb.append("\nNetwork statistics").append(("\n/* --------------------------------------------------------------------- */"))
+        StringBuilder sb = new StringBuilder("\n\n/* --------------------------------------------------------------------- */\n");
+        sb.append(transportType).append(" network statistics")
+                .append(("\n/* --------------------------------------------------------------------- */"))
                 .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\nNumber of Connections: ").append(numConnections)
+                .append("\nPeer addresses:\n    ").append(nodes)
 
                 .append("\nSent messages:")
                 .append("\nData sent in last 5 min.: ").append(ByteUnit.BYTE.toMB(sentBytesOfLast5Minutes)).append(" MB")
