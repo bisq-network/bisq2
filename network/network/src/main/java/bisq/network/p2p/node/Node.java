@@ -812,6 +812,8 @@ public class Node implements Connection.Handler {
             log.info("SocketTimeoutException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof IOException) {
             log.info("IOException: {}", ExceptionUtil.getRootCauseMessage(exception));
+        }  else if (exception instanceof RejectedExecutionException) {
+            log.warn("RejectedExecutionException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof ConnectionException connectionException) {
             if (connectionException.getCause() instanceof SocketTimeoutException) {
                 handleException(connectionException.getCause());
