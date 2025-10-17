@@ -769,12 +769,12 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + address)
-                .orElseGet(() -> "Node with networkId " + networkId.getInfo());
+        return findMyAddress().map(address -> transportType.name() + " node with address " + address)
+                .orElseGet(() -> "Node with networkId " + networkId.getInfo(transportType));
     }
 
     public String getNodeInfo() {
-        return getNetworkId().getInfo() + " @ " + getTransportType().name();
+        return getNetworkId().getInfo(transportType);
     }
 
 
