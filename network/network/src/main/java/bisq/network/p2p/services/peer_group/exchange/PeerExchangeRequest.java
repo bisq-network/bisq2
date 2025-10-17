@@ -21,10 +21,12 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.peer_group.Peer;
+import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -48,6 +51,13 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.peers);
+
+        log.info("PeerExchangeRequest: Send {} peers.\n{}",
+                peers.size(),
+                Joiner.on("\n").join(peers.stream()
+                        .sorted()
+                        .map(e -> e.getAddress() + " (" + e.getDate() + ")")
+                        .collect(Collectors.toList())));
 
         verify();
     }
