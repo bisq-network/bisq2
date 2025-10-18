@@ -435,9 +435,10 @@ public class Node implements Connection.Handler {
     private CompletableFuture<Connection> createOutboundConnectionAsync(Address address, Capability myCapability) {
         try {
             return CompletableFuture.supplyAsync(() -> {
-                log.info("Create outbound connection to {}", address);
-                return createOutboundConnection(address, myCapability);
-            }, getExecutor());
+                        log.info("Create outbound connection to {}", address);
+                        return createOutboundConnection(address, myCapability);
+                    }, getExecutor())
+                    .orTimeout(120, SECONDS);
         } catch (RejectedExecutionException e) {
             log.error("Node executor rejected task at createOutboundConnectionAsync", e);
             return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at createOutboundConnectionAsync"));
@@ -812,7 +813,7 @@ public class Node implements Connection.Handler {
             log.info("SocketTimeoutException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof IOException) {
             log.info("IOException: {}", ExceptionUtil.getRootCauseMessage(exception));
-        }  else if (exception instanceof RejectedExecutionException) {
+        } else if (exception instanceof RejectedExecutionException) {
             log.warn("RejectedExecutionException: {}", ExceptionUtil.getRootCauseMessage(exception));
         } else if (exception instanceof ConnectionException connectionException) {
             if (connectionException.getCause() instanceof SocketTimeoutException) {

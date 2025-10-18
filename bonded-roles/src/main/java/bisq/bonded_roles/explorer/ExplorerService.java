@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,6 +54,16 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 public class ExplorerService implements Service {
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ExplorerService", 1, 5, 60);
+
+    private static class RetryException extends RuntimeException {
+        @Getter
+        private final AtomicInteger recursionDepth;
+
+        public RetryException(String message, AtomicInteger recursionDepth) {
+            super(message);
+            this.recursionDepth = recursionDepth;
+        }
+    }
 
     @Getter
     @ToString
@@ -179,7 +190,15 @@ public class ExplorerService implements Service {
 
     public CompletableFuture<Tx> requestTx(String txId) {
         try {
-            return requestTx(txId, new AtomicInteger(0));
+            return requestTx(txId, new AtomicInteger(0))
+                    .exceptionallyCompose(throwable -> {
+                        if (throwable instanceof RetryException retryException) {
+                            return requestTx(txId, retryException.getRecursionDepth());
+                        } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
+                            return requestTx(txId, retryException.getRecursionDepth());
+                        }
+                        return CompletableFuture.failedFuture(throwable);
+                    });
         } catch (RejectedExecutionException e) {
             return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
         }
@@ -198,46 +217,56 @@ public class ExplorerService implements Service {
         }
         try {
             return CompletableFuture.supplyAsync(() -> {
-                Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-                BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
-                httpClient = Optional.of(client);
-                long ts = System.currentTimeMillis();
-                String param = provider.getApiPath() + provider.getTxPath() + txId;
-                try {
-                    log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
-                    String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                    log.info("Received tx lookup response from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
-                    selectedProvider.set(selectNextProvider());
-                    shutdownHttpClient(client);
-                    return new ObjectMapper().readValue(json, Tx.class);
-                } catch (Exception e) {
-                    shutdownHttpClient(client);
-                    if (shutdownStarted) {
-                        throw new RuntimeException("Shutdown has already started");
-                    }
+                        Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
+                        BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
+                        httpClient = Optional.of(client);
+                        long ts = System.currentTimeMillis();
+                        String param = provider.getApiPath() + provider.getTxPath() + txId;
+                        try {
+                            log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
+                            String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                            log.info("Received tx lookup response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
+                            selectedProvider.set(selectNextProvider());
+                            shutdownHttpClient(client);
+                            return new ObjectMapper().readValue(json, Tx.class);
+                        } catch (Exception e) {
+                            shutdownHttpClient(client);
+                            if (shutdownStarted) {
+                                throw new RuntimeException("Shutdown has already started");
+                            }
 
-                    Throwable rootCause = ExceptionUtil.getRootCause(e);
-                    log.warn("{} at requestTx: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
-                    failedProviders.add(provider);
-                    selectedProvider.set(selectNextProvider());
+                            Throwable rootCause = ExceptionUtil.getRootCause(e);
+                            log.warn("Encountered exception for TxId={} from provider {}", txId, provider.getBaseUrl(), rootCause);
 
-                    if (rootCause instanceof HttpException httpException) {
-                        int responseCode = httpException.getResponseCode();
-                        // If not server error we pass the error to the client
-                        if (responseCode < 500) {
-                            throw new RuntimeException(e);
+                            if (rootCause instanceof HttpException httpException) {
+                                int responseCode = httpException.getResponseCode();
+                                // If not server error we pass the error to the client
+                                // 408 (Request Timeout) and 429 (Too Many Requests) are usually transient
+                                // and should rotate to another provider.
+                                if (responseCode < 500 && responseCode != 408 && responseCode != 429) {
+                                    throw new CompletionException(e);
+                                }
+                            }
+
+                            int numRecursions = recursionDepth.incrementAndGet();
+                            if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
+                                failedProviders.add(provider);
+                                selectedProvider.set(selectNextProvider());
+                                log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
+                                throw new RetryException("Retrying with next provider", recursionDepth);
+                            } else {
+                                log.warn("We exhausted all possible providers and give up");
+                                throw new RuntimeException("We failed at all possible providers and give up");
+                            }
                         }
-                    }
-                    int numRecursions = recursionDepth.incrementAndGet();
-                    if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                        log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                        return requestTx(txId, recursionDepth).join();
-                    } else {
-                        log.warn("We exhausted all possible providers and give up");
-                        throw new RuntimeException("We failed at all possible providers and give up");
-                    }
-                }
-            }, POOL).orTimeout(conf.getTimeoutInSeconds(), SECONDS);
+                    }, POOL)
+                    .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
+                    .thenCompose(tx -> {
+                        if (tx == null) {
+                            return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
+                        }
+                        return CompletableFuture.completedFuture(tx);
+                    });
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected requestTx task. TxId={}", txId, e);
             return CompletableFuture.failedFuture(e);
