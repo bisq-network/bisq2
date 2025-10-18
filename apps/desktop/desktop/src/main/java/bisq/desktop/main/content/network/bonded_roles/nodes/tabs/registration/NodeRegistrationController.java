@@ -21,6 +21,9 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.common.encoding.Hex;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.ClearnetAddress;
+import bisq.common.network.I2PAddress;
+import bisq.common.network.TorAddress;
 import bisq.common.network.TransportType;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -32,16 +35,15 @@ import bisq.desktop.main.content.network.bonded_roles.tabs.registration.BondedRo
 import bisq.desktop.main.content.network.bonded_roles.tabs.registration.BondedRolesRegistrationView;
 import bisq.user.identity.UserIdentity;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -123,11 +125,21 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
 
     private AddressByTransportTypeMap addressByNetworkTypeFromJson(String json) {
         try {
-            Type type = new TypeToken<HashMap<TransportType, Address>>() {
-            }.getType();
-            Map<TransportType, Address> map = new Gson().fromJson(json, type);
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
+            AddressByTransportTypeMap map = new AddressByTransportTypeMap();
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                TransportType transportType = TransportType.valueOf(entry.getKey());
+                Class<? extends Address> clazz = switch (transportType) {
+                    case I2P -> I2PAddress.class;
+                    case TOR -> TorAddress.class;
+                    case CLEAR -> ClearnetAddress.class;
+                };
+                Address address = gson.fromJson(entry.getValue(), clazz);
+                map.put(transportType, address);
+            }
             getNodesRegistrationModel().getJsonValid().set(true);
-            return new AddressByTransportTypeMap(map);
+            return map;
         } catch (Exception e) {
             log.error("Cannot process json data {}", json, e);
             getNodesRegistrationModel().getJsonValid().set(false);
