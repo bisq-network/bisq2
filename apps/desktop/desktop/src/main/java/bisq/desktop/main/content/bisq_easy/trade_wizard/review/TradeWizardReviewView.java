@@ -173,26 +173,29 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         // Overlays
         createOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.createOfferSuccessButton"));
         createOfferSuccessButton.setDefaultButton(true);
-        createOfferSuccessOverlay = new WizardOverlay(root,
-                "bisqEasy.tradeWizard.review.createOfferSuccess.headline",
-                "bisqEasy.tradeWizard.review.createOfferSuccess.subTitle",
-                createOfferSuccessButton);
+        createOfferSuccessOverlay = new WizardOverlay(root)
+                .info()
+                .headline("bisqEasy.tradeWizard.review.createOfferSuccess.headline")
+                .description("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle")
+                .buttons(createOfferSuccessButton)
+                .build();
 
-        List<String> takeOfferSendMessageTexts = Arrays.asList(
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info");
         takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
-        sendTakeOfferMessageOverlay = new WizardOverlay(root,
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline",
-                takeOfferSendMessageWaitingAnimation,
-                takeOfferSendMessageTexts);
+        sendTakeOfferMessageOverlay = new WizardOverlay(root)
+                .headlineIcon(takeOfferSendMessageWaitingAnimation)
+                .headline("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline")
+                .description("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
+                        "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info")
+                .build();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccessButton"));
         takeOfferSuccessButton.setDefaultButton(true);
-        takeOfferSuccessOverlay = new WizardOverlay(root,
-                "bisqEasy.tradeWizard.review.takeOfferSuccess.headline",
-                "bisqEasy.tradeWizard.review.takeOfferSuccess.subTitle",
-                takeOfferSuccessButton);
+        takeOfferSuccessOverlay = new WizardOverlay(root)
+                .info()
+                .headline("bisqEasy.tradeWizard.review.takeOfferSuccess.headline")
+                .description("bisqEasy.tradeWizard.review.takeOfferSuccess.subTitle")
+                .buttons(takeOfferSuccessButton)
+                .build();
 
         StackPane.setMargin(gridPane, new Insets(40));
         root.getChildren().addAll(gridPane, createOfferSuccessOverlay, sendTakeOfferMessageOverlay, takeOfferSuccessOverlay);

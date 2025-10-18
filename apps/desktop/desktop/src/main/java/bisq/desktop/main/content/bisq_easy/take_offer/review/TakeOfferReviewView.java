@@ -40,9 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Slf4j
 class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
     public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
@@ -157,21 +154,22 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(line3, 0, rowIndex);
 
         // Overlays
-        List<String> takeOfferSendMessageTexts = Arrays.asList(
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info");
         takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
-        sendTakeOfferMessageOverlay = new WizardOverlay(root,
-                "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline",
-                takeOfferSendMessageWaitingAnimation,
-                takeOfferSendMessageTexts);
+        sendTakeOfferMessageOverlay = new WizardOverlay(root)
+                .headlineIcon(takeOfferSendMessageWaitingAnimation)
+                .headline("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline")
+                .description("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
+                        "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info")
+                .build();
 
         takeOfferSuccessButton = new Button(Res.get("bisqEasy.takeOffer.review.takeOfferSuccessButton"));
         takeOfferSuccessButton.setDefaultButton(true);
-        takeOfferSuccessOverlay = new WizardOverlay(root,
-                "bisqEasy.takeOffer.review.takeOfferSuccess.headline",
-                "bisqEasy.takeOffer.review.takeOfferSuccess.subTitle",
-                takeOfferSuccessButton);
+        takeOfferSuccessOverlay = new WizardOverlay(root)
+                .info()
+                .headline("bisqEasy.takeOffer.review.takeOfferSuccess.headline")
+                .description("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle")
+                .buttons(takeOfferSuccessButton)
+                .build();
 
         StackPane.setMargin(content, new Insets(40));
         root.getChildren().addAll(content, sendTakeOfferMessageOverlay, takeOfferSuccessOverlay);

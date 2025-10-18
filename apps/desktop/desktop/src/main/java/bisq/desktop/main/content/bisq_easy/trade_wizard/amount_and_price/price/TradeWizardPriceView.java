@@ -160,10 +160,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
                 "learn-why-text", 7, 10, "- ", "- ");
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        overlay = new WizardOverlay(root,
-                "bisqEasy.price.feedback.learnWhySection.title",
-                new VBox(40, learnWhyIntroLabel, learnWhyExpositionList),
-                closeOverlayButton);
+        overlay = new WizardOverlay(root)
+                .info()
+                .headline("bisqEasy.price.feedback.learnWhySection.title")
+                .description(new VBox(40, learnWhyIntroLabel, learnWhyExpositionList))
+                .buttons(closeOverlayButton)
+                .build();
 
         VBox.setMargin(sliderBoxAndMarketPriceMarker, new Insets(22.5, 0, 0, 0));
         root.setAlignment(Pos.TOP_CENTER);

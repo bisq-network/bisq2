@@ -99,26 +99,30 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         noAccountOverlayCloseButton = new Button(Res.get("action.close"));
         createAccountButton = new Button(Res.get("muSig.takeOffer.paymentMethod.noAccountOverlay.createAccount"));
         createAccountButton.setDefaultButton(true);
-        noAccountOverlay = new WizardOverlay(root,
-                "",
-                "muSig.takeOffer.paymentMethod.noAccountOverlay.subTitle",
-                noAccountOverlayCloseButton, createAccountButton);
+        noAccountOverlay = new WizardOverlay(root)
+                .warning()
+                .description("muSig.takeOffer.paymentMethod.noAccountOverlay.subTitle")
+                .buttons(noAccountOverlayCloseButton, createAccountButton)
+                .build();
 
         // multipleAccount overlay
         multipleAccountsOverlayCloseButton = new Button(Res.get("action.close"));
         accountSelection = createComboBox();
         VBox multipleAccountsContentBox = createAndGetContentBox();
-        multipleAccountsOverlay = new WizardOverlay(root,
-                "",
-                multipleAccountsContentBox,
-                multipleAccountsOverlayCloseButton);
+        multipleAccountsOverlay = new WizardOverlay(root)
+                .warning()
+                .description(multipleAccountsContentBox)
+                .buttons(multipleAccountsOverlayCloseButton)
+                .build();
 
         // noPaymentMethodSelected overlay
         noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
-        noPaymentMethodSelectedOverlay = new WizardOverlay(root,
-                "muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.title",
-                "muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.subtitle",
-                noPaymentMethodSelectedOverlayCloseButton);
+        noPaymentMethodSelectedOverlay = new WizardOverlay(root)
+                .warning()
+                .headline("muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.title")
+                .description("muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.subtitle")
+                .buttons(noPaymentMethodSelectedOverlayCloseButton)
+                .build();
 
         StackPane.setMargin(content, new Insets(40));
         root.getChildren().addAll(content, noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay);

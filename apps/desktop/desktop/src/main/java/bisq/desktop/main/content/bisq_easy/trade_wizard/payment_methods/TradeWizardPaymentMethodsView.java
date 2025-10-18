@@ -107,10 +107,12 @@ public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPa
         overlayLabel.setMaxWidth(overlayLabel.getMinWidth());
         overlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
         closeOverlayButton = new Button(Res.get("action.close"));
-        overlay = new WizardOverlay(root,
-                "bisqEasy.tradeWizard.paymentMethods.wizardOverlay.title",
-                new VBox(overlayLabel),
-                closeOverlayButton);
+        overlay = new WizardOverlay(root)
+                .warning()
+                .headline("bisqEasy.tradeWizard.paymentMethods.wizardOverlay.title")
+                .description(new VBox(overlayLabel))
+                .buttons(closeOverlayButton)
+                .build();
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, -10, 0));
         VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
