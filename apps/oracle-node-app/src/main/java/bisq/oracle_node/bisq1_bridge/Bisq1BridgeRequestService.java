@@ -213,7 +213,7 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
                         false);
                 if (request.isCancellationRequest()) {
                     log.info("Remove authorizedBondedRole if matching data found");
-                    authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                    authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                             .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
                             .forEach(authorizedBondedRole -> {
                                         log.info("Remove authorizedBondedRole {}", data);
