@@ -208,12 +208,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         if (data instanceof AuthorizedOracleNode) {
             authorizedOracleNodes.add((AuthorizedOracleNode) data);
             reProcessFailedAuthorizedData();
-        } else if (data instanceof AuthorizedBondedRole) {
-            log.debug("BondedRoleType {}", ((AuthorizedBondedRole) data).getBondedRoleType());
-            validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                bondedRoles.add(new BondedRole(authorizedBondedRole));
-                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
-                    networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
+        } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
+            log.debug("BondedRoleType {}", authorizedBondedRole.getBondedRoleType());
+            validateBondedRole(authorizedData, authorizedBondedRole).ifPresent(role -> {
+                bondedRoles.add(new BondedRole(role));
+                if (role.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                    networkService.addSeedNodeAddressByTransport(role.getAddressByTransportTypeMap().orElseThrow());
                 }
             });
             reProcessFailedAuthorizedData();

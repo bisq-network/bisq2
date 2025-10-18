@@ -110,12 +110,14 @@ public class PersistenceService {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        List<String> storagePaths = clients.stream()
-                .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()
-                        .toAbsolutePath().toString())
-                .sorted()
-                .collect(Collectors.toList());
-        log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
+        if (log.isDebugEnabled()) {
+            List<String> storagePaths = clients.stream()
+                    .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()
+                            .toAbsolutePath().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+            log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
+        }
         return CompletableFutureUtils.allOf(clients.stream()
                         .map(persistenceClient -> persistenceClient.readPersisted()
                                 .whenComplete((optionalResult, throwable) -> {

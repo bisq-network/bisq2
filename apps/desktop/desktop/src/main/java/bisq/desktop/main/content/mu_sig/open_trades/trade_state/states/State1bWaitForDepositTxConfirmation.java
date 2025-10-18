@@ -133,6 +133,10 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
 
         public void openExplorer() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
+            if (provider == null) {
+                log.warn("SelectedProvider is null");
+                return;
+            }
             String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getTxId();
             Browser.open(url);
         }
@@ -156,7 +160,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
             }
 
             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup",
-                    explorerService.getSelectedProvider().get().getBaseUrl()));
+                    explorerService.getSelectedProviderBaseUrl()));
             requestFuture = explorerService.requestTx(paymentProof)
                     .whenComplete((tx, throwable) -> UIThread.run(() -> {
                         if (scheduler != null) {
@@ -181,7 +185,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
                             model.getConfirmationState().set(Model.ConfirmationState.FAILED);
                             Throwable rootCause = ExceptionUtil.getRootCause(throwable);
                             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
-                                    explorerService.getSelectedProvider().get().getBaseUrl(),
+                                    explorerService.getSelectedProviderBaseUrl(),
                                     rootCause.getClass().getSimpleName(),
                                     ExceptionUtil.getRootCauseMessage(rootCause)));
                         }

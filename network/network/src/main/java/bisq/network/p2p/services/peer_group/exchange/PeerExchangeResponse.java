@@ -21,7 +21,6 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.peer_group.Peer;
-import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,12 +50,6 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.peers);
-
-            log.info("PeerExchangeResponse: Received {} peers.\n{}",
-                    peers.size(),
-                    Joiner.on("\n").join(peers.stream()
-                            .map(e -> e.getAddress() + " (" + e.getDate() + ")")
-                            .collect(Collectors.toList())));
 
         verify();
     }
