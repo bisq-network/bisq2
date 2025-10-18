@@ -84,8 +84,11 @@ public class I2PAddress extends Address {
 
     @Override
     public String toString() {
-        String destination = destinationBase32.orElseGet(() -> StringUtils.truncate(host, 30) + "i2p");
-        return destination + ":" + port;
+        if (destinationBase32 != null && destinationBase32.isPresent()) {
+            return destinationBase32.get() + ":" + port;
+        } else {
+            return StringUtils.truncate(host, 30) + "i2p" + ":" + port;
+        }
     }
 
     public String getDestinationBase64() {

@@ -194,7 +194,9 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
                                                       BondedRoleRegistrationRequest request) {
         CompletableFuture.runAsync(() -> {
             try {
+                log.info("processBondedRoleRegistrationRequest {}", request);
                 BondedRoleVerificationResponse response = bondedRoleGrpcService.requestBondedRoleVerification(request, senderPublicKey);
+                log.info("BondedRoleVerificationResponse {}", response);
                 if (response.getErrorMessage().isPresent()) {
                     log.warn("Request BondedRoleVerification from Bisq 1 failed with error message {}", response.getErrorMessage().get());
                     return;
@@ -210,11 +212,31 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
                         Optional.of(myAuthorizedOracleNode),
                         false);
                 if (request.isCancellationRequest()) {
+                    log.info("Remove authorizedBondedRole if matching data found");
                     authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                             .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
-                            .forEach(this::removeAuthorizedData);
+                            .forEach(authorizedBondedRole -> {
+                                        log.info("Remove authorizedBondedRole {}", data);
+                                        removeAuthorizedData(authorizedBondedRole)
+                                                .whenComplete((broadcastResult, throwable) -> {
+                                                    if (throwable == null) {
+                                                        log.info("Tried to broadcast removeAuthorizedData message. Size of broadcastResult: {}", broadcastResult.size());
+                                                    } else {
+                                                        log.warn("Failed to broadcast removeAuthorizedData message");
+                                                    }
+                                                });
+                                    }
+                            );
                 } else {
-                    publishAuthorizedData(data);
+                    log.info("Publish authorizedBondedRole {}", data);
+                    publishAuthorizedData(data)
+                            .whenComplete((broadcastResult, throwable) -> {
+                        if (throwable == null) {
+                            log.info("Tried to broadcast authorizedBondedRole message. Size of broadcastResult: {}", broadcastResult.size());
+                        } else {
+                            log.warn("Failed to broadcast authorizedBondedRole message");
+                        }
+                    });
                 }
             } catch (Exception e) {
                 log.error("Request BondedRoleVerification failed", e);
