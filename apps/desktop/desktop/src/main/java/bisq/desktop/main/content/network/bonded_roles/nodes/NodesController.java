@@ -17,15 +17,15 @@
 
 package bisq.desktop.main.content.network.bonded_roles.nodes;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesController;
-import bisq.desktop.main.content.network.bonded_roles.BondedRolesListItem;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesModel;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesView;
 import bisq.desktop.main.content.network.bonded_roles.nodes.tabs.NodesTabController;
+import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Predicate;
 
 @Slf4j
 public class NodesController extends BondedRolesController {
@@ -35,17 +35,27 @@ public class NodesController extends BondedRolesController {
     }
 
     @Override
+    protected BondedRolesTabController<?> createAndGetNodesTabController() {
+        return new NodesTabController(serviceProvider);
+    }
+
+    @Override
     protected BondedRolesModel createAndGetModel() {
         return new NodesModel();
     }
 
     @Override
     protected BondedRolesView<? extends BondedRolesModel, ? extends BondedRolesController> createAndGetView() {
-        return new NodesView((NodesModel) model, this, new NodesTabController(serviceProvider).getView().getRoot());
+        return new NodesView((NodesModel) model, this, bondedRolesTabController.getView().getRoot());
     }
 
     @Override
-    protected Predicate<? super BondedRolesListItem> getPredicate() {
-        return (Predicate<BondedRolesListItem>) bondedRoleListItem -> bondedRoleListItem.getBondedRoleType().isNode();
+    protected  void handleNavigationTargetChange(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case REGISTER_SEED_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.SEED_NODE);
+            case REGISTER_ORACLE_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.ORACLE_NODE);
+            case REGISTER_EXPLORER_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.EXPLORER_NODE);
+            case REGISTER_MARKET_PRICE_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.MARKET_PRICE_NODE);
+        }
     }
 }

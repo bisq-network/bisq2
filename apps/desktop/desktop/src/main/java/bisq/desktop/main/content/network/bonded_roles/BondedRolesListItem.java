@@ -57,7 +57,8 @@ public class BondedRolesListItem {
     private final String userName;
     private final String address;
     private final String addressInfoJson;
-    private final String isBanned;
+    private final String isBannedString;
+    private final boolean isBanned;
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
@@ -66,12 +67,13 @@ public class BondedRolesListItem {
         this.bondedRole = bondedRole;
 
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
-        isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
+        isBanned = bondedRole.isBanned();
+        isBannedString = isBanned ? Res.get("confirmation.yes") : "";
         UserProfileService userProfileService = userService.getUserProfileService();
         userProfileId = authorizedBondedRoleData.getProfileId();
         userProfile = userProfileService.findUserProfile(userProfileId);
-        userName = userProfile.map(UserProfile::getUserName).orElseGet(() -> Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();
+        userName = userProfile.map(UserProfile::getUserName).orElseGet(() -> Res.get("data.na") + " (" + bondUserName + ")");
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();

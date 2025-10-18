@@ -43,7 +43,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
     public BondedRolesView(M model, C controller, VBox tabControllerRoot) {
         super(new VBox(20), model, controller);
 
-        richTableView = new RichTableView<>(model.getSortedList(), getTableHeadline(), controller::applySearchPredicate);
+        richTableView = new RichTableView<>(model.getSortedList(), getTableHeadline());
         configTableView();
 
         Label verificationHeadline = new Label(getVerificationHeadline());
@@ -79,7 +79,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userName = new Label();
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox hBox = new HBox(10, userProfileIcon, userName);
-            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), BisqTooltip.Style.DARK);
+            private final BisqTooltip rootNodeTooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), BisqTooltip.Style.DARK);
 
             {
                 userName.setId("chat-user-name");
@@ -92,18 +92,23 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    if (item.isRootNode()) {
-                        userName.setTooltip(tooltip);
+
+                    if (item.isBanned()) {
+                        userName.setTooltip(null);
+                        userName.setStyle("-fx-text-fill: -bisq2-yellow;");
+                    } else if (item.isRootNode()) {
+                        userName.setTooltip(rootNodeTooltip);
                         userName.setStyle("-fx-text-fill: -bisq2-green;");
                     } else {
                         userName.setTooltip(null);
                         userName.setStyle("-fx-text-fill: -fx-light-text-color;");
                     }
 
-                    item.getUserProfile().ifPresent(userProfile -> {
+                    item.getUserProfile().ifPresentOrElse(userProfile -> {
                         userProfileIcon.setUserProfile(userProfile);
-                        userProfileIcon.getStyleClass().add("hand-cursor");
                         userName.setOnMouseClicked(e -> controller.onOpenProfileCard(userProfile));
+                    }, () -> {
+                        userProfileIcon.setUserProfile(null, false);
                     });
                     setGraphic(hBox);
                 } else {

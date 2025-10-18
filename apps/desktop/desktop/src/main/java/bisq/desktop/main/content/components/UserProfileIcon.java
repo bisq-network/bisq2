@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
@@ -105,10 +105,12 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
         if (userProfile == null) {
             dispose();
+            catHashImageView.setId("no-available-cat-hash");
             return;
         }
 
         // Is cached in CatHash
+        catHashImageView.setId(null);
         catHashImageView.setImage(CatHash.getImage(userProfile, size));
 
         userProfileInfo = userProfile.getTooltipString();
@@ -138,6 +140,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     public void dispose() {
         livenessScheduler.dispose();
+        catHashImageView.setId(null);
         catHashImageView.setImage(null);
         setOnMouseClicked(null);
         userProfile = null;

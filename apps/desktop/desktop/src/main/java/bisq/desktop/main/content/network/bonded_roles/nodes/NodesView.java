@@ -97,13 +97,15 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 .valueSupplier(BondedRolesListItem::getSignature)
                 .setCellFactory(getSignatureCellFactory())
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        BisqTableColumn<BondedRolesListItem> isBannedColumn = new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .right()
                 .fixWidth(90)
-                .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
-                .valueSupplier(BondedRolesListItem::getIsBanned)
-                .build());
+                .comparator(Comparator.comparing(BondedRolesListItem::getIsBannedString))
+                .valueSupplier(BondedRolesListItem::getIsBannedString)
+                .build();
+        richTableView.getColumns().add(isBannedColumn);
+        richTableView.getSortOrder().add(isBannedColumn);
     }
 
     private Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem, BondedRolesListItem>> getAddressCellFactory() {
