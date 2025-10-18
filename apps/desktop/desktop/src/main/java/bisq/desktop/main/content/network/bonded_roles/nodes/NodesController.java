@@ -50,7 +50,7 @@ public class NodesController extends BondedRolesController {
     }
 
     @Override
-    protected  void handleNavigationTargetChange(NavigationTarget navigationTarget) {
+    protected void handleNavigationTargetChange(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case REGISTER_SEED_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.SEED_NODE);
             case REGISTER_ORACLE_NODE -> model.getSelectedBondedRoleType().set(BondedRoleType.ORACLE_NODE);
