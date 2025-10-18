@@ -19,7 +19,11 @@ public class HttpApiRequestFilter implements ContainerRequestFilter {
     private final RequestValidator validator;
 
     public HttpApiRequestFilter(List<String> whitelist, List<String> blacklist) {
-        this.validator = new RequestValidator(whitelist, blacklist);
+        this(new RequestValidator(whitelist, blacklist));
+    }
+
+    public HttpApiRequestFilter(RequestValidator requestValidator) {
+        this.validator = requestValidator;
     }
 
     @Override

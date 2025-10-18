@@ -134,6 +134,11 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
     }
 
     @Override
+    public String toString() {
+        return getFullAddress();
+    }
+
+    @Override
     public int compareTo(Address o) {
         return getFullAddress().compareTo(o.getFullAddress());
     }

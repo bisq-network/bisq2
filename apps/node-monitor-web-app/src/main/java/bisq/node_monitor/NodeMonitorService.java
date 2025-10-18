@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -66,7 +65,7 @@ public class NodeMonitorService implements Service {
                     .filter(entry -> supportedTransportTypes.contains(entry.getKey()))
                     .flatMap(entry -> entry.getValue().stream())
                     .filter(address -> !bannedAddresses.contains(address))
-                    .map(Address::toString)
+                    .map(Address::getFullAddress)
                     .collect(Collectors.toList());
 
             // Oracle Nodes
@@ -83,9 +82,9 @@ public class NodeMonitorService implements Service {
         Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
         return bondedRoles.stream()
                 .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap().stream().flatMap(addressMap -> addressMap.values().stream()
-                        .filter(address -> addressList.contains(address.toString())) // Nutze addressList
+                        .filter(address -> addressList.contains(address.getFullAddress()))
                         .map(address -> new AddressDetailsDto(
-                                address.toString(),
+                                address.getFullAddress(),
                                 bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
                                 userService.getUserProfileService()
                                         .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())

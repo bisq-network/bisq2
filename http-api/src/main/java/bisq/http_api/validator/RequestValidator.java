@@ -8,21 +8,33 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Slf4j
-class RequestValidator {
+public class RequestValidator {
     // Only allow alphanumeric characters and some special characters like /, -, _, .
     // Path traversal is blocked separately
-    private static final Pattern SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:]*$");
-    private static final Pattern SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=]*$");
+    private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:]*$");
+    private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=]*$");
+
     private final Set<Pattern> endpointWhitelistPatterns;
     private final Set<Pattern> endpointBlacklistPatterns;
+    private final Pattern safePath;
+    private final Pattern safeQuery;
 
     public RequestValidator(List<String> whitelistPatterns, List<String> blacklistPatterns) {
+        this(whitelistPatterns, blacklistPatterns, DEFAULT_SAFE_PATH, DEFAULT_SAFE_QUERY);
+    }
+
+    public RequestValidator(List<String> whitelistPatterns,
+                            List<String> blacklistPatterns,
+                            Pattern safePath,
+                            Pattern safeQuery) {
         endpointWhitelistPatterns = whitelistPatterns.stream()
                 .map(Pattern::compile)
                 .collect(java.util.stream.Collectors.toSet());
         endpointBlacklistPatterns = blacklistPatterns.stream()
                 .map(Pattern::compile)
                 .collect(java.util.stream.Collectors.toSet());
+        this.safePath = safePath;
+        this.safeQuery = safeQuery;
     }
 
     public boolean isValidUri(String uri) {
@@ -44,7 +56,7 @@ class RequestValidator {
             log.info("Invalid path: must start with '/'. path: {}", decodedPath);
             return false;
         }
-        if (!SAFE_PATH.matcher(decodedPath).matches()) {
+        if (!safePath.matcher(decodedPath).matches()) {
             log.info("Invalid decoded path contained unsafe characters. path: {}", decodedPath);
             return false;
         }
@@ -66,7 +78,7 @@ class RequestValidator {
         }
         String decodedQuery = uri.getQuery();
         if (decodedQuery != null) {
-            if (!SAFE_QUERY.matcher(decodedQuery).matches()) {
+            if (!safeQuery.matcher(decodedQuery).matches()) {
                 log.info("Invalid decoded query contained unsafe characters. query: {}", decodedQuery);
                 return false;
             }
