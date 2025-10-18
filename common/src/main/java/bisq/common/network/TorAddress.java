@@ -49,9 +49,4 @@ public class TorAddress extends Address {
     public TransportType getTransportType() {
         return TransportType.TOR;
     }
-
-    @Override
-    public String toString() {
-        return host + ":" + port;
-    }
 }

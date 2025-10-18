@@ -46,11 +46,6 @@ public class ClearnetAddress extends Address {
         return TransportType.CLEAR;
     }
 
-    @Override
-    public String toString() {
-        return host + ":" + port;
-    }
-
     public boolean isLocalhost() {
         return host.equals("127.0.0.1");
     }
