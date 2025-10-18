@@ -440,7 +440,7 @@ public class Node implements Connection.Handler {
                     }, getExecutor())
                     .orTimeout(120, SECONDS);
         } catch (RejectedExecutionException e) {
-            log.error("Node executor rejected task at createOutboundConnectionAsync", e);
+            log.error("Node executor rejected task at createOutboundConnectionAsync when trying to connect to {}", address, e);
             return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at createOutboundConnectionAsync"));
         }
     }

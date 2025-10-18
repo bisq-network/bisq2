@@ -17,15 +17,15 @@
 
 package bisq.desktop.main.content.network.bonded_roles.roles;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesController;
-import bisq.desktop.main.content.network.bonded_roles.BondedRolesListItem;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesModel;
 import bisq.desktop.main.content.network.bonded_roles.BondedRolesView;
 import bisq.desktop.main.content.network.bonded_roles.roles.tabs.RolesTabController;
+import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Predicate;
 
 @Slf4j
 public class RolesController extends BondedRolesController {
@@ -35,17 +35,28 @@ public class RolesController extends BondedRolesController {
     }
 
     @Override
+    protected BondedRolesTabController<?> createAndGetNodesTabController() {
+        return new RolesTabController(serviceProvider);
+    }
+
+    @Override
     protected BondedRolesModel createAndGetModel() {
         return new RolesModel();
     }
 
     @Override
     protected BondedRolesView<? extends BondedRolesModel, ? extends BondedRolesController> createAndGetView() {
-        return new RolesView((RolesModel) model, this, new RolesTabController(serviceProvider).getView().getRoot());
+        return new RolesView((RolesModel) model, this, bondedRolesTabController.getView().getRoot());
     }
 
     @Override
-    protected Predicate<? super BondedRolesListItem> getPredicate() {
-        return (Predicate<BondedRolesListItem>) bondedRoleListItem -> bondedRoleListItem.getBondedRoleType().isRole();
+    protected void handleNavigationTargetChange(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case REGISTER_MEDIATOR -> model.getSelectedBondedRoleType().set(BondedRoleType.MEDIATOR);
+            case REGISTER_ARBITRATOR -> model.getSelectedBondedRoleType().set(BondedRoleType.ARBITRATOR);
+            case REGISTER_MODERATOR -> model.getSelectedBondedRoleType().set(BondedRoleType.MODERATOR);
+            case REGISTER_SECURITY_MANAGER -> model.getSelectedBondedRoleType().set(BondedRoleType.SECURITY_MANAGER);
+            case REGISTER_RELEASE_MANAGER -> model.getSelectedBondedRoleType().set(BondedRoleType.RELEASE_MANAGER);
+        }
     }
 }

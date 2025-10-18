@@ -320,14 +320,6 @@ public class BootstrapElement {
             super(new HBox(5), model, controller);
 
             root.setAlignment(Pos.CENTER_LEFT);
-            //root.setPrefWidth(350);
-           // root.setMaxWidth(Double.MAX_VALUE);
-         /*   root.setMinWidth(500);
-            root.setPrefWidth(500);
-            root.setMaxWidth(500);*/
-            // root.setMinWidth(600);
-            //            root.setPrefWidth(600);
-            //            root.setMaxWidth(600);
 
             icon = new ImageView();
             icon.setMouseTransparent(true);

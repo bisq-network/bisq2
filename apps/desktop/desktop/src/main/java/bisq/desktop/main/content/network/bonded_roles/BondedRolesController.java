@@ -17,22 +17,25 @@
 
 package bisq.desktop.main.content.network.bonded_roles;
 
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.network.bonded_roles.tabs.BondedRolesTabController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.function.Predicate;
 
@@ -45,7 +48,10 @@ public abstract class BondedRolesController implements Controller {
     protected final ServiceProvider serviceProvider;
     protected final UserService userService;
     private final NetworkService networkService;
+    protected final BondedRolesTabController<?> bondedRolesTabController;
     protected Pin bondedRolesPin;
+    private Subscription selectedTabButtonPin;
+    private Subscription selectedBondedRoleTypePin;
 
     public BondedRolesController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -53,15 +59,11 @@ public abstract class BondedRolesController implements Controller {
         networkService = serviceProvider.getNetworkService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
+        bondedRolesTabController = createAndGetNodesTabController();
         model = createAndGetModel();
         view = createAndGetView();
     }
 
-    protected abstract BondedRolesModel createAndGetModel();
-
-    protected abstract BondedRolesView<? extends BondedRolesModel, ? extends BondedRolesController> createAndGetView();
-
-    protected abstract Predicate<? super BondedRolesListItem> getPredicate();
 
     @Override
     public void onActivate() {
@@ -69,30 +71,45 @@ public abstract class BondedRolesController implements Controller {
                 .map(data -> new BondedRolesListItem(data, userService, networkService))
                 .to(authorizedBondedRolesService.getBondedRoles());
 
-        model.getFilteredList().setPredicate(getPredicate());
+        selectedTabButtonPin = EasyBind.subscribe(bondedRolesTabController.getModel().getSelectedTabButton(),
+                selectedTabButton -> {
+                    if (selectedTabButton != null) {
+                        handleNavigationTargetChange(selectedTabButton.getNavigationTarget());
+                    }
+                });
+
+        selectedBondedRoleTypePin = EasyBind.subscribe(model.getSelectedBondedRoleType(),
+                selectedBondedRoleType -> model.getFilteredList().setPredicate(getPredicate()));
     }
 
     @Override
     public void onDeactivate() {
         bondedRolesPin.unbind();
+        selectedBondedRoleTypePin.unsubscribe();
+        selectedTabButtonPin.unsubscribe();
     }
 
     void onCopyPublicKeyAsHex(String publicKeyAsHex) {
         ClipboardUtil.copyToClipboard(publicKeyAsHex);
     }
 
-    void applySearchPredicate(String searchText) {
-        String string = searchText.toLowerCase();
-        model.getFilteredList().setPredicate(item ->
-                StringUtils.isEmpty(string) ||
-                        item.getUserName().toLowerCase().contains(string) ||
-                        item.getUserProfileId().contains(string) ||
-                        item.getBondUserName().contains(string) ||
-                        item.getAddress().toLowerCase().contains(string) ||
-                        item.getRoleTypeString().toLowerCase().contains(string));
-    }
-
     void onOpenProfileCard(UserProfile userProfile) {
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile));
+    }
+
+    protected abstract BondedRolesTabController<?> createAndGetNodesTabController();
+
+    protected abstract BondedRolesModel createAndGetModel();
+
+    protected abstract BondedRolesView<? extends BondedRolesModel, ? extends BondedRolesController> createAndGetView();
+
+    protected abstract void handleNavigationTargetChange(NavigationTarget navigationTarget);
+
+    protected Predicate<? super BondedRolesListItem> getPredicate() {
+        return (Predicate<BondedRolesListItem>) bondedRoleListItem ->
+        {
+            BondedRoleType selected = model.getSelectedBondedRoleType().get();
+            return selected == null || bondedRoleListItem.getBondedRoleType() == selected;
+        };
     }
 }

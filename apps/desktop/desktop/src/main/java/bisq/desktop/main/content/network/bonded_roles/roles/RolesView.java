@@ -82,8 +82,8 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .right()
                 .fixWidth(90)
-                .comparator(Comparator.comparing(BondedRolesListItem::getIsBanned))
-                .valueSupplier(BondedRolesListItem::getIsBanned)
+                .comparator(Comparator.comparing(BondedRolesListItem::getIsBannedString))
+                .valueSupplier(BondedRolesListItem::getIsBannedString)
                 .build());
     }
 }
