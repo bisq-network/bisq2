@@ -53,6 +53,7 @@ public class I2PAddress extends Address {
     }
 
     @Getter
+    @EqualsAndHashCode.Exclude
     private final transient Optional<String> destinationBase32;
 
     public I2PAddress(String host, int port) {
