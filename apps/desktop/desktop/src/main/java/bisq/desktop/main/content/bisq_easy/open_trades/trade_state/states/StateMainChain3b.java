@@ -39,7 +39,12 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
@@ -122,6 +127,10 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         public void openExplorer() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
+            if (provider == null) {
+                log.warn("SelectedProvider is null");
+                return;
+            }
             String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
             Browser.open(url);
         }
@@ -177,7 +186,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             }
 
             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup",
-                    explorerService.getSelectedProvider().get().getBaseUrl()));
+                    explorerService.getSelectedProviderBaseUrl()));
             requestFuture = explorerService.requestTx(paymentProof)
                     .whenComplete((tx, throwable) -> UIThread.run(() -> {
                         if (scheduler != null) {
@@ -203,7 +212,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
                             model.getConfirmationState().set(Model.ConfirmationState.FAILED);
                             Throwable rootCause = ExceptionUtil.getRootCause(throwable);
                             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
-                                    explorerService.getSelectedProvider().get().getBaseUrl(),
+                                    explorerService.getSelectedProviderBaseUrl(),
                                     rootCause.getClass().getSimpleName(),
                                     ExceptionUtil.getRootCauseMessage(rootCause)));
                         }

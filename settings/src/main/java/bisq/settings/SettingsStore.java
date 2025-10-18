@@ -49,7 +49,7 @@ import static bisq.settings.SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_D
 import static bisq.settings.SettingsService.MIN_TRADE_PRICE_DEVIATION;
 
 @Slf4j
-final class SettingsStore implements PersistableStore<SettingsStore> {
+final public class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();

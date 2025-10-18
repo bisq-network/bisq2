@@ -21,12 +21,13 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
+import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -114,7 +115,12 @@ public class ExplorerService implements Service {
             this(baseUrl, operator, "api/", "tx/", "address/", transportType);
         }
 
-        public Provider(String baseUrl, String operator, String apiPath, String txPath, String addressPath, TransportType transportType) {
+        public Provider(String baseUrl,
+                        String operator,
+                        String apiPath,
+                        String txPath,
+                        String addressPath,
+                        TransportType transportType) {
             this.baseUrl = baseUrl;
             this.operator = operator;
             this.apiPath = apiPath;
@@ -177,6 +183,10 @@ public class ExplorerService implements Service {
         } catch (RejectedExecutionException e) {
             return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
         }
+    }
+
+    public String getSelectedProviderBaseUrl() {
+        return Optional.ofNullable(selectedProvider.get()).map(ExplorerService.Provider::getBaseUrl).orElse(Res.get("data.na"));
     }
 
     private CompletableFuture<Tx> requestTx(String txId, AtomicInteger recursionDepth) {
