@@ -196,48 +196,52 @@ public class ExplorerService implements Service {
         if (shutdownStarted) {
             throw new RuntimeException("Shutdown has already started");
         }
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
+                BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
+                httpClient = Optional.of(client);
+                long ts = System.currentTimeMillis();
+                String param = provider.getApiPath() + provider.getTxPath() + txId;
+                try {
+                    log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
+                    String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                    log.info("Received tx lookup response from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
+                    selectedProvider.set(selectNextProvider());
+                    shutdownHttpClient(client);
+                    return new ObjectMapper().readValue(json, Tx.class);
+                } catch (Exception e) {
+                    shutdownHttpClient(client);
+                    if (shutdownStarted) {
+                        throw new RuntimeException("Shutdown has already started");
+                    }
 
-        return CompletableFuture.supplyAsync(() -> {
-            Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-            BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
-            httpClient = Optional.of(client);
-            long ts = System.currentTimeMillis();
-            String param = provider.getApiPath() + provider.getTxPath() + txId;
-            try {
-                log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
-                String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                log.info("Received tx lookup response from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
-                selectedProvider.set(selectNextProvider());
-                shutdownHttpClient(client);
-                return new ObjectMapper().readValue(json, Tx.class);
-            } catch (Exception e) {
-                shutdownHttpClient(client);
-                if (shutdownStarted) {
-                    throw new RuntimeException("Shutdown has already started");
-                }
+                    Throwable rootCause = ExceptionUtil.getRootCause(e);
+                    log.warn("{} at requestTx: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
+                    failedProviders.add(provider);
+                    selectedProvider.set(selectNextProvider());
 
-                Throwable rootCause = ExceptionUtil.getRootCause(e);
-                log.warn("{} at requestTx: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
-                failedProviders.add(provider);
-                selectedProvider.set(selectNextProvider());
-
-                if (rootCause instanceof HttpException httpException) {
-                    int responseCode = httpException.getResponseCode();
-                    // If not server error we pass the error to the client
-                    if (responseCode < 500) {
-                        throw new RuntimeException(e);
+                    if (rootCause instanceof HttpException httpException) {
+                        int responseCode = httpException.getResponseCode();
+                        // If not server error we pass the error to the client
+                        if (responseCode < 500) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    int numRecursions = recursionDepth.incrementAndGet();
+                    if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
+                        log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
+                        return requestTx(txId, recursionDepth).join();
+                    } else {
+                        log.warn("We exhausted all possible providers and give up");
+                        throw new RuntimeException("We failed at all possible providers and give up");
                     }
                 }
-                int numRecursions = recursionDepth.incrementAndGet();
-                if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                    log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                    return requestTx(txId, recursionDepth).join();
-                } else {
-                    log.warn("We exhausted all possible providers and give up");
-                    throw new RuntimeException("We failed at all possible providers and give up");
-                }
-            }
-        }, POOL).orTimeout(conf.getTimeoutInSeconds(), SECONDS);
+            }, POOL).orTimeout(conf.getTimeoutInSeconds(), SECONDS);
+        } catch (RejectedExecutionException e) {
+            log.error("Executor rejected requestTx task. TxId={}", txId, e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private Provider selectNextProvider() {
