@@ -21,16 +21,17 @@ import bisq.common.network.TransportType;
 import bisq.desktop.ServiceProvider;
 import bisq.identity.IdentityService;
 import javafx.geometry.Pos;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.GridPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static bisq.desktop.splash.BootstrapElement.BootstrapElementType.*;
+import static bisq.desktop.splash.BootstrapElement.BootstrapElementType.CONNECT_TO_PEER_GROUP;
+import static bisq.desktop.splash.BootstrapElement.BootstrapElementType.SERVER_SOCKET;
+import static bisq.desktop.splash.BootstrapElement.BootstrapElementType.TRANSPORT;
 import static bisq.identity.IdentityService.DEFAULT_IDENTITY_TAG;
 
 public class BootstrapElementsPerTransport {
@@ -86,19 +87,20 @@ public class BootstrapElementsPerTransport {
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<GridPane, Model, Controller> {
 
         private View(Model model, Controller controller) {
-            super(new VBox(5), model, controller);
+            super(new GridPane(5, 5), model, controller);
 
-            root.setAlignment(Pos.CENTER_LEFT);
+            root.setAlignment(Pos.TOP_LEFT);
         }
 
         @Override
         protected void onViewAttached() {
-            root.getChildren().addAll(model.getBootstrapElementList().stream()
-                    .map(bootstrapElement -> bootstrapElement.getView().getRoot())
-                    .collect(Collectors.toList()));
+            for (int i = 0; i < model.getBootstrapElementList().size(); i++) {
+                BootstrapElement bootstrapElement = model.getBootstrapElementList().get(i);
+                root.add(bootstrapElement.getView().getRoot(), 0, i);
+            }
         }
 
         @Override

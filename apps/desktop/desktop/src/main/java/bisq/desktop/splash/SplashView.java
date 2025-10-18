@@ -26,6 +26,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -40,6 +41,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
     private final ProgressBar progressBar;
     private final Label applicationServiceState, duration;
+    private final GridPane detailsGrid;
     private Button deleteTorButton;
     private Subscription isSlowStartupPin;
 
@@ -78,18 +80,22 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         progressBar.setMaxHeight(3);
         progressBar.setMinWidth(WIDTH);
 
+        detailsGrid = new GridPane();
+        detailsGrid.setVgap(5);
+        detailsGrid.setHgap(10);
+        detailsGrid.setAlignment(Pos.TOP_LEFT);
+
         VBox.setMargin(logoAndVersion, new Insets(-52, 0, 83, 0));
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
-        root.getChildren().addAll(logoAndVersion, hBox, progressBar);
+        root.getChildren().addAll(logoAndVersion, hBox, progressBar, new HBox(Spacer.fillHBox(), detailsGrid, Spacer.fillHBox()));
     }
 
     @Override
     protected void onViewAttached() {
-        model.getBootstrapElementsPerTransports().forEach(bootstrapStateDisplay -> {
-            VBox bootstrapStateDisplayRoot = bootstrapStateDisplay.getView().getRoot();
-            HBox hBox = new HBox(Spacer.fillHBox(), bootstrapStateDisplayRoot, Spacer.fillHBox());
-            root.getChildren().add(hBox);
-        });
+        for (int i = 0; i < model.getBootstrapElementsPerTransports().size(); i++) {
+            BootstrapElementsPerTransport bootstrapElementsPerTransport = model.getBootstrapElementsPerTransports().get(i);
+            detailsGrid.add(bootstrapElementsPerTransport.getView().getRoot(), 0, i);
+        }
 
         applicationServiceState.textProperty().bind(model.getApplicationServiceState());
         duration.textProperty().bind(model.getDuration());
