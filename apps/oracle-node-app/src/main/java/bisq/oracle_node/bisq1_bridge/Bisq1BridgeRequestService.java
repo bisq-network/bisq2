@@ -214,7 +214,16 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
                 if (request.isCancellationRequest()) {
                     log.info("Remove authorizedBondedRole if matching data found");
                     authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
-                            .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
+                            .filter(authorizedBondedRole -> {
+                                // We do not use authorizedBondedRole.equals(data) as that contains the networkId of the sender who did the registration.
+                                // This can be the node itself, and can change when I2P address got added.
+                                return authorizedBondedRole.getBondedRoleType() == data.getBondedRoleType() &&
+                                        authorizedBondedRole.getProfileId().equals(data.getProfileId()) &&
+                                        authorizedBondedRole.getBondUserName().equals(data.getBondUserName()) &&
+                                        authorizedBondedRole.getSignatureBase64().equals(data.getSignatureBase64()) &&
+                                        authorizedBondedRole.getAddressByTransportTypeMap().equals(data.getAddressByTransportTypeMap()) &&
+                                        authorizedBondedRole.getAuthorizedPublicKey().equals(data.getAuthorizedPublicKey());
+                            })
                             .forEach(authorizedBondedRole -> {
                                         log.info("Remove authorizedBondedRole {}", data);
                                         removeAuthorizedData(authorizedBondedRole)
@@ -231,12 +240,12 @@ public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bis
                     log.info("Publish authorizedBondedRole {}", data);
                     publishAuthorizedData(data)
                             .whenComplete((broadcastResult, throwable) -> {
-                        if (throwable == null) {
-                            log.info("Tried to broadcast authorizedBondedRole message. Size of broadcastResult: {}", broadcastResult.size());
-                        } else {
-                            log.warn("Failed to broadcast authorizedBondedRole message");
-                        }
-                    });
+                                if (throwable == null) {
+                                    log.info("Tried to broadcast authorizedBondedRole message. Size of broadcastResult: {}", broadcastResult.size());
+                                } else {
+                                    log.warn("Failed to broadcast authorizedBondedRole message");
+                                }
+                            });
                 }
             } catch (Exception e) {
                 log.error("Request BondedRoleVerification failed", e);
