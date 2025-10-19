@@ -90,20 +90,21 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noAccountOverlayCloseButton = new Button(Res.get("action.close"));
         createAccountButton = new Button(Res.get("muSig.createOffer.paymentMethod.noAccountOverlay.createAccount"));
         createAccountButton.setDefaultButton(true);
-        noAccountOverlay = new WizardOverlay(root,
-                "",
-                "muSig.createOffer.paymentMethod.noAccountOverlay.subTitle",
-                noAccountOverlayCloseButton,
-                createAccountButton);
+        noAccountOverlay = new WizardOverlay(root)
+                .warning()
+                .description("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle")
+                .buttons(noAccountOverlayCloseButton, createAccountButton)
+                .build();
 
         // multipleAccounts overlay
         multipleAccountsOverlayCloseButton = new Button(Res.get("action.close"));
         accountSelection = createComboBox();
         VBox multipleAccountsContentBox = createAndGetContentBox();
-        multipleAccountsOverlay = new WizardOverlay(root,
-                "",
-                multipleAccountsContentBox,
-                multipleAccountsOverlayCloseButton);
+        multipleAccountsOverlay = new WizardOverlay(root)
+                .warning()
+                .description(multipleAccountsContentBox)
+                .buttons(multipleAccountsOverlayCloseButton)
+                .build();
 
         // noPaymentMethodSelected overlay
         noPaymentMethodSelectedOverlayLabel = new Label();
@@ -111,10 +112,12 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noPaymentMethodSelectedOverlayLabel.setMaxWidth(noPaymentMethodSelectedOverlayLabel.getMinWidth());
         noPaymentMethodSelectedOverlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
         noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
-        noPaymentMethodSelectedOverlay = new WizardOverlay(root,
-                "muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.headline",
-                new VBox(noPaymentMethodSelectedOverlayLabel),
-                noPaymentMethodSelectedOverlayCloseButton);
+        noPaymentMethodSelectedOverlay = new WizardOverlay(root)
+                .warning()
+                .headline("muSig.createOffer.paymentMethods.noPaymentMethodSelectedOverlay.headline")
+                .description(new VBox(noPaymentMethodSelectedOverlayLabel))
+                .buttons(noPaymentMethodSelectedOverlayCloseButton)
+                .build();
 
         StackPane.setMargin(content, new Insets(40));
         root.getChildren().addAll(content, noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay);

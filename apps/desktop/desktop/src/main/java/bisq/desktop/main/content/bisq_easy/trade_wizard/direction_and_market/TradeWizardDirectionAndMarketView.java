@@ -126,7 +126,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
         gainReputationButton.setDefaultButton(true);
         reputationInfoOverlay = new WizardOverlay(root)
-                .yellowWarning()
+                .warning()
                 .headline("bisqEasy.tradeWizard.directionAndMarket.feedback.headline")
                 .description("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
                         "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2",

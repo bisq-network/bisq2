@@ -17,14 +17,12 @@
 
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.verify;
 
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -83,22 +81,23 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
             answerButtonsRow.getChildren().add(btn);
         }
 
-        Label warningIcon = new Label();
-        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
         wrongWordGoBackButton = new Button(Res.get("wallet.verifySeeds.wrongWord.closeButton"));
         wrongWordGoBackButton.setDefaultButton(true);
-        wrongWordOverlay = new WizardOverlay(root,
-                "wallet.verifySeeds.wrongWord.title",
-                warningIcon,
-                "wallet.verifySeeds.wrongWord.description",
-                wrongWordGoBackButton);
+        wrongWordOverlay = new WizardOverlay(root)
+                .warning()
+                .headline("wallet.verifySeeds.wrongWord.title")
+                .description("wallet.verifySeeds.wrongWord.description")
+                .buttons(wrongWordGoBackButton)
+                .build();
 
         createWalletSuccessButton = new Button(Res.get("wallet.verifySeeds.button.success.nextStep"));
         createWalletSuccessButton.setDefaultButton(true);
-        createWalletSuccessOverlay = new WizardOverlay(root,
-                "wallet.verifySeeds.success.title",
-                "wallet.verifySeeds.success.description",
-                createWalletSuccessButton);
+        createWalletSuccessOverlay = new WizardOverlay(root)
+                .info()
+                .headline("wallet.verifySeeds.success.title")
+                .description("wallet.verifySeeds.success.description")
+                .buttons(createWalletSuccessButton)
+                .build();
 
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, questionLabel, answerButtonsRow, Spacer.fillVBox());
         root.getChildren().addAll(content, createWalletSuccessOverlay, wrongWordOverlay);
