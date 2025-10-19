@@ -171,7 +171,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), false, true);
+                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), true, true);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(userProfileDisplay);
                 } else {
