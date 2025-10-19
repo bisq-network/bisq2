@@ -110,7 +110,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         });
 
         bondedRoleSelection = new AutoCompleteComboBox<>(model.getBondedRoleSortedList(), Res.get("authorizedRole.securityManager.selectBondedRole"));
-        bondedRoleSelection.setPrefWidth(800);
+        bondedRoleSelection.setMaxWidth(Double.MAX_VALUE);
         bondedRoleSelection.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRoleListItem listItem) {
@@ -243,7 +243,14 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         selectedAlertTypePin = EasyBind.subscribe(model.getSelectedAlertType(),
                 alertType -> alertTypeSelection.getSelectionModel().select(alertType));
         selectedBondedRolListItemPin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(),
-                bondedRole -> bondedRoleSelection.getSelectionModel().select(bondedRole));
+                bondedRole -> {
+                    if (bondedRole == null) {
+                        // FIXME: selection does not get cleared. Probably a bug inside of AutoCompleteComboBox
+                        bondedRoleSelection.getSelectionModel().clearSelection();
+                    } else {
+                        bondedRoleSelection.getSelectionModel().select(bondedRole);
+                    }
+                });
     }
 
     @Override
@@ -340,13 +347,17 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .comparator(Comparator.comparing(AlertListItem::getMinVersion))
                 .valueSupplier(AlertListItem::getMinVersion)
                 .build());
-        alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+
+        BisqTableColumn<AlertListItem> bannedRoleColumn = new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.bannedRole"))
                 .minWidth(150)
                 .comparator(Comparator.comparing(AlertListItem::getBondedRoleDisplayString))
                 .valueSupplier(AlertListItem::getBondedRoleDisplayString)
                 .tooltipSupplier(AlertListItem::getBondedRoleDisplayString)
-                .build());
+                .build();
+        alertTableView.getColumns().add(bannedRoleColumn);
+        alertTableView.getSortOrder().add(bannedRoleColumn);
+
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
                 .minWidth(200)
