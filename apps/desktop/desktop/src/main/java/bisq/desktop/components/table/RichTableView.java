@@ -184,6 +184,7 @@ public class RichTableView<T> extends VBox {
         tableInfoMenuItem = new BisqMenuItem("icon-help-grey", "icon-help-white");
         tableInfoMenuItem.setManaged(false);
         tableInfoMenuItem.setVisible(false);
+        tableInfoMenuItem.setTooltip(Res.get("component.standardTable.tableInfo"));
         HBox.setMargin(tableInfoMenuItem, new Insets(0, 0, 0, 5));
 
         headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton, tableInfoMenuItem);
