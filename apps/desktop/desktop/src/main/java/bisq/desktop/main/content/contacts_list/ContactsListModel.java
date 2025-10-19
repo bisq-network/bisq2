@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.contacts_list;
 
 import bisq.desktop.common.view.Model;
+import bisq.i18n.Res;
 import bisq.user.reputation.ReputationSource;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -38,6 +39,9 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public class ContactsListModel implements Model {
+    private final String tableInfoTitle = Res.get("contactsList.table.tableInfo.title");
+    private final String tableInfoContent = Res.get("contactsList.table.tableInfo.content");
+
     private final ObservableList<ContactsListView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<ContactsListView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<ContactsListView.ListItem> sortedList = new SortedList<>(filteredList);

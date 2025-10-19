@@ -77,6 +77,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     protected void onViewAttached() {
         richTableView.initialize();
         richTableView.resetSearch();
+        richTableView.setTableInfo(model.getTableInfoTitle(), model.getTableInfoContent());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
                 richTableView.refresh();
