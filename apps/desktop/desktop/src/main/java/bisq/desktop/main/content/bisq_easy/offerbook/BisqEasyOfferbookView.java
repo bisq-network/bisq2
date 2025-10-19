@@ -65,9 +65,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     public static final double COLLAPSED_LIST_WIDTH = 40;
     public static final double LIST_CELL_HEIGHT = 53;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     private static final long WIDTH_ANIMATION_DURATION = 200;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 

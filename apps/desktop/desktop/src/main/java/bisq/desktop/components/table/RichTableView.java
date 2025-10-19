@@ -21,12 +21,15 @@ import bisq.common.encoding.Csv;
 import bisq.common.file.FileUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.FileChooserUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -87,6 +90,7 @@ public class RichTableView<T> extends VBox {
     private final ListChangeListener<T> listChangeListener;
     private final String entriesUnit;
     private final HBox headerBox, subheaderBox;
+    private final BisqMenuItem tableInfoMenuItem;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
@@ -176,7 +180,14 @@ public class RichTableView<T> extends VBox {
         exportButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
         exportButton.getStyleClass().addAll("export-button", "normal-text");
 
-        headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton);
+        // Show table info button
+        tableInfoMenuItem = new BisqMenuItem("icon-help-grey", "icon-help-white");
+        tableInfoMenuItem.setManaged(false);
+        tableInfoMenuItem.setVisible(false);
+        tableInfoMenuItem.setTooltip(Res.get("component.standardTable.tableInfo"));
+        HBox.setMargin(tableInfoMenuItem, new Insets(0, 0, 0, 5));
+
+        headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton, tableInfoMenuItem);
         headerBox.getStyleClass().add("chat-container-header");
 
         VBox headerWithLineBox = new VBox(headerBox, Layout.hLine());
@@ -251,6 +262,7 @@ public class RichTableView<T> extends VBox {
             searchTextPin.unsubscribe();
         }
         exportButton.setOnAction(null);
+        tableInfoMenuItem.setOnAction(null);
     }
 
     public void resetSearch() {
@@ -312,6 +324,14 @@ public class RichTableView<T> extends VBox {
 
     public void setFixHeight(double value) {
         tableView.setFixHeight(value);
+    }
+
+    public void setTableInfo(String title, String content) {
+        tableInfoMenuItem.setManaged(true);
+        tableInfoMenuItem.setVisible(true);
+        tableInfoMenuItem.setOnAction(e ->
+            Navigation.navigateTo(NavigationTarget.SHOW_TABLE_INFO,
+                    new ShowTableInfo.InitData(title, content)));
     }
 
 

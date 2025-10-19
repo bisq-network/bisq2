@@ -150,6 +150,7 @@ public class AddToContactsListWindow {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        // TODO: move to model
         private static final TextMaxLengthValidator TAG_MAX_LENGTH_VALIDATOR =
                 new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
                         ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),

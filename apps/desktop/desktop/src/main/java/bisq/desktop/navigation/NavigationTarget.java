@@ -111,6 +111,8 @@ public enum NavigationTarget {
 
     MEDIATION_CASE_DETAILS(OVERLAY, false),
 
+    SHOW_TABLE_INFO(OVERLAY, false),
+
     REPORT_TO_MODERATOR(OVERLAY, false),
 
     BURN_BSQ(OVERLAY, false),
