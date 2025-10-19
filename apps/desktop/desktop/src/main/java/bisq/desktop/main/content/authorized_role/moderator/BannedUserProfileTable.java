@@ -261,7 +261,7 @@ public class BannedUserProfileTable {
                 private final Button icon = BisqIconButton.createInfoIconButton();
 
                 private final HBox hBox = new HBox(banReason, icon);
-                private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+                private final BisqTooltip tooltip = new BisqTooltip();
 
                 {
                     icon.setMouseTransparent(true);

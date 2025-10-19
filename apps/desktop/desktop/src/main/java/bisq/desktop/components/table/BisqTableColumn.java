@@ -373,7 +373,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     @Override
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
-                            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+                            private final BisqTooltip tooltip = new BisqTooltip();
 
                             @Override
                             protected void updateItem(S item, boolean empty) {

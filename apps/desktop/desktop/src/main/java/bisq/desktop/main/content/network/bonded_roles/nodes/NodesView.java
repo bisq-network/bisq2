@@ -113,7 +113,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
             private final Label address = new Label();
             private final Button icon = BisqIconButton.createInfoIconButton(Res.get("user.bondedRoles.table.columns.node.address.openPopup"));
             private final HBox hBox = new HBox(address, icon);
-            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+            private final BisqTooltip tooltip = new BisqTooltip();
 
             {
                 icon.setMinWidth(30);
