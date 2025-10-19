@@ -327,6 +327,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .title(Res.get("authorizedRole.securityManager.alert.table.data"))
                 .minWidth(200)
                 .comparator(Comparator.comparing(AlertListItem::getData))
+                .valueSupplier(AlertListItem::getData)
                 .setCellFactory(getDataCellFactory())
                 .build());
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()

@@ -42,10 +42,13 @@ div.node-header>span.role-type {
     border: 1px solid #b8daff;
 }
 
-.node-header .user-name {
-    font-style: italic;
-    color: #6c757d;
-    /* Gray color for user name */
+div.node-header>span.user-name {
+    font-weight: bold;
+    background-color: #ccffd5;
+    color: #128500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #b8ffbc;
 }
 
 /* Status indicator circles */
