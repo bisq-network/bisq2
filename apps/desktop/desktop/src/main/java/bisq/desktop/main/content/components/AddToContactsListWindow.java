@@ -146,26 +146,25 @@ public class AddToContactsListWindow {
         public final BooleanProperty isAddToContactsButtonDisabled = new SimpleBooleanProperty();
         @Setter
         private UserProfile userProfile;
-    }
 
-    @Slf4j
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        // TODO: move to model
-        private static final TextMaxLengthValidator TAG_MAX_LENGTH_VALIDATOR =
+        private final TextMaxLengthValidator tagMaxLengthValidator =
                 new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.tag.maxLength",
                         ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH),
                         ContactListService.CONTACT_LIST_ENTRY_MAX_TAG_LENGTH);
-        private static final PercentageValidator TRUST_SCORE_RANGE_VALIDATOR =
+        private final PercentageValidator trustScoreRangeValidator =
                 new PercentageValidator(Res.get("user.profileCard.myNotes.transparentTextField.trustScore.range",
                         ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE * 100,
                         ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE * 100),
                         ContactListService.CONTACT_LIST_ENTRY_MIN_TRUST_SCORE,
                         ContactListService.CONTACT_LIST_ENTRY_MAX_TRUST_SCORE);
-        private static final TextMaxLengthValidator NOTES_MAX_LENGTH_VALIDATOR =
+        private final TextMaxLengthValidator notesMaxLengthValidator =
                 new TextMaxLengthValidator(Res.get("user.profileCard.myNotes.transparentTextField.notes.maxLength",
                         ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH),
                         ContactListService.CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH);
+    }
 
+    @Slf4j
+    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Button cancelButton, addToContactsButton;
         private final MaterialTextField tagTextField, trustScoreTextField;
         private final MaterialTextArea notesTextArea;
@@ -191,17 +190,17 @@ public class AddToContactsListWindow {
                     Res.get("user.addToContactsList.popup.tag.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.tag.prompt"));
             tagTextField.showEditIcon();
-            tagTextField.setValidator(TAG_MAX_LENGTH_VALIDATOR);
+            tagTextField.setValidator(model.getTagMaxLengthValidator());
             trustScoreTextField = new MaterialTextField(
                     Res.get("user.addToContactsList.popup.trustScore.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.trustScore.prompt"));
             trustScoreTextField.showEditIcon();
-            trustScoreTextField.setValidator(TRUST_SCORE_RANGE_VALIDATOR);
+            trustScoreTextField.setValidator(model.getTrustScoreRangeValidator());
             notesTextArea = new MaterialTextArea(
                     Res.get("user.addToContactsList.popup.notes.description").toUpperCase(Locale.ROOT),
                     Res.get("user.addToContactsList.popup.notes.prompt"));
             notesTextArea.showEditIcon();
-            notesTextArea.setValidator(NOTES_MAX_LENGTH_VALIDATOR);
+            notesTextArea.setValidator(model.getNotesMaxLengthValidator());
             VBox inputFieldsBox = new VBox(15, tagTextField, trustScoreTextField, notesTextArea);
 
             cancelButton = new Button(Res.get("action.cancel"));

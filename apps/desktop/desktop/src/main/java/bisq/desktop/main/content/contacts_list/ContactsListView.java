@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.contacts_list;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -66,6 +67,8 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 controller::applySearchPredicate);
         richTableView.getExportButton().setVisible(false);
         richTableView.getExportButton().setManaged(false);
+        richTableView.getHeadlineLabel().setGraphic(ImageUtil.getImageViewById("contacts-green"));
+        richTableView.getHeadlineLabel().setGraphicTextGap(8);
 
         configTableView();
 
@@ -168,7 +171,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), false, true);
+                    userProfileDisplay = new UserProfileDisplay(item.getUserProfile(), true, true);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(userProfileDisplay);
                 } else {

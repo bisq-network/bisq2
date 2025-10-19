@@ -110,8 +110,8 @@ public class ProfileCardMyNotesController implements Controller {
     }
 
     private String getContactReasonAndDate(ContactListEntry contactListEntry) {
-        String contactReason = contactListEntry.getContactReason().getDisplayString();
         String date = DateFormatter.formatDayMonthOrDayMonthYear(contactListEntry.getDate());
-        return Res.get("user.profileCard.myNotes.transparentTextField.contactReason", contactReason, date);
+        String contactReason = contactListEntry.getContactReason().getDisplayString();
+        return Res.get("user.profileCard.myNotes.transparentTextField.contactReason", date, contactReason);
     }
 }
