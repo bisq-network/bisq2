@@ -127,7 +127,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userProfileId = new Label();
             private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(userProfileId, icon);
-            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+            private final BisqTooltip tooltip = new BisqTooltip();
             private final BisqTooltip copYTooltip = new BisqTooltip(Res.get("action.copyToClipboard"), BisqTooltip.Style.DARK);
 
             {
@@ -164,7 +164,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label signature = new Label();
             private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(signature, icon);
-            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+            private final BisqTooltip tooltip = new BisqTooltip();
 
             {
                 icon.setMinWidth(30);

@@ -17,12 +17,11 @@
 
 package bisq.node_monitor;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
-import bisq.common.network.TransportType;
 import bisq.http_api.rest_api.error.RestApiException;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
@@ -30,9 +29,6 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,46 +47,37 @@ public class NodeMonitorService implements Service {
 
     public List<String> getAddressList() {
         try {
-            Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
-                    .filter(BondedRole::isBanned)
-                    .map(BondedRole::getAuthorizedBondedRole)
-                    .map(AuthorizedBondedRole::getAddressByTransportTypeMap)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .flatMap(map -> map.values().stream())
-                    .collect(Collectors.toSet());
-            Map<TransportType, Set<Address>> seedAddressesByTransport = networkService.getSeedAddressesByTransportFromConfig();
-            Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-            List<String> addresslist = seedAddressesByTransport.entrySet().stream()
-                    .filter(entry -> supportedTransportTypes.contains(entry.getKey()))
-                    .flatMap(entry -> entry.getValue().stream())
-                    .filter(address -> !bannedAddresses.contains(address))
+            return bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
+                    .filter(BondedRole::isNotBanned)
+                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().getBondedRoleType() == BondedRoleType.ORACLE_NODE ||
+                            bondedRole.getAuthorizedBondedRole().getBondedRoleType() == BondedRoleType.SEED_NODE)
+                    .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap().stream()
+                            .flatMap(addressMap -> addressMap.values().stream()))
                     .map(Address::getFullAddress)
                     .collect(Collectors.toList());
-
-            // Oracle Nodes
-            addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:7777");
-            addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
-            addresslist.add("7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVu8dVGorWuLlMvLBiw734UfyQxp4MZj05suGa-n2eW9W7x1Uaita4uUy8sGLDvfhR~JDGngxmPTmy4Zr6fZ5b1bvHVRqK1ri5TLywYsO9-FH8kMaeDGY9ObLhmvp9nlvVn7lhpn3Ixttek7RE6zUExGBybDXNQsXwhYwXNvobCdMBQAEAAcAAA==:7777"); // Henrik I2P, same node as kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:
-            return addresslist;
         } catch (Exception e) {
             throw new RestApiException(e);
         }
     }
 
     public List<AddressDetailsDto> getAddressDetails(List<String> addressList) {
-        Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
-        return bondedRoles.stream()
-                .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap().stream().flatMap(addressMap -> addressMap.values().stream()
-                        .filter(address -> addressList.contains(address.getFullAddress()))
-                        .map(address -> new AddressDetailsDto(
-                                address.getFullAddress(),
-                                bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
-                                userService.getUserProfileService()
-                                        .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())
-                                        .map(UserProfile::getNickName)
-                                        .orElseGet(() -> bondedRole.getAuthorizedBondedRole().getBondUserName())
-                        ))))
+        return bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
+                .flatMap(bondedRole -> {
+                    String bondedRoleType = bondedRole.getAuthorizedBondedRole().getBondedRoleType().name();
+                    String nickNameOrBondUserName = userService.getUserProfileService()
+                            .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())
+                            .map(UserProfile::getNickName)
+                            .orElseGet(() -> bondedRole.getAuthorizedBondedRole().getBondUserName());
+
+                    return bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap().stream()
+                            .flatMap(addressMap -> addressMap.values().stream()
+                                    .filter(address -> addressList.contains(address.getFullAddress()))
+                                    .map(address -> new AddressDetailsDto(
+                                            address.getFullAddress(),
+                                            bondedRoleType,
+                                            nickNameOrBondUserName
+                                    )));
+                })
                 .collect(Collectors.toList());
     }
 

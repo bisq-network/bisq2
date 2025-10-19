@@ -18,6 +18,7 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -146,6 +147,13 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     public Optional<Address> getAddress(TransportType transportType) {
         return Optional.ofNullable(get(transportType));
+    }
+
+    @Override
+    public String toString() {
+        return Joiner.on("\n").join(map.entrySet().stream()
+                .map(entry -> entry.getKey().name() + ": " + entry.getValue().toString())
+                .collect(Collectors.toList()));
     }
 }
 

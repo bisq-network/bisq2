@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.converters.Converters;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -28,6 +29,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.NumberValidator;
@@ -44,7 +46,11 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -104,7 +110,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         });
 
         bondedRoleSelection = new AutoCompleteComboBox<>(model.getBondedRoleSortedList(), Res.get("authorizedRole.securityManager.selectBondedRole"));
-        bondedRoleSelection.setPrefWidth(800);
+        bondedRoleSelection.setMaxWidth(Double.MAX_VALUE);
         bondedRoleSelection.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRoleListItem listItem) {
@@ -237,7 +243,14 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         selectedAlertTypePin = EasyBind.subscribe(model.getSelectedAlertType(),
                 alertType -> alertTypeSelection.getSelectionModel().select(alertType));
         selectedBondedRolListItemPin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(),
-                bondedRole -> bondedRoleSelection.getSelectionModel().select(bondedRole));
+                bondedRole -> {
+                    if (bondedRole == null) {
+                        // FIXME: selection does not get cleared. Probably a bug inside of AutoCompleteComboBox
+                        bondedRoleSelection.getSelectionModel().clearSelection();
+                    } else {
+                        bondedRoleSelection.getSelectionModel().select(bondedRole);
+                    }
+                });
     }
 
     @Override
@@ -307,14 +320,15 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.alertType"))
                 .minWidth(150)
-                .comparator(Comparator.comparing(AlertListItem::getAlertType))
-                .valueSupplier(AlertListItem::getAlertType)
+                .comparator(Comparator.comparing(AlertListItem::getAlertTypeString))
+                .valueSupplier(AlertListItem::getAlertTypeString)
                 .build());
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
-                .title(Res.get("authorizedRole.securityManager.alert.table.message"))
+                .title(Res.get("authorizedRole.securityManager.alert.table.data"))
                 .minWidth(200)
-                .comparator(Comparator.comparing(AlertListItem::getMessage))
-                .valueSupplier(AlertListItem::getMessage)
+                .comparator(Comparator.comparing(AlertListItem::getData))
+                .valueSupplier(AlertListItem::getData)
+                .setCellFactory(getDataCellFactory())
                 .build());
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.haltTrading"))
@@ -334,19 +348,17 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .comparator(Comparator.comparing(AlertListItem::getMinVersion))
                 .valueSupplier(AlertListItem::getMinVersion)
                 .build());
-        alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+
+        BisqTableColumn<AlertListItem> bannedRoleColumn = new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.bannedRole"))
                 .minWidth(150)
                 .comparator(Comparator.comparing(AlertListItem::getBondedRoleDisplayString))
                 .valueSupplier(AlertListItem::getBondedRoleDisplayString)
                 .tooltipSupplier(AlertListItem::getBondedRoleDisplayString)
-                .build());
-        alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
-                .title(Res.get("authorizedRole.securityManager.alert.table.bannedAccountData"))
-                .minWidth(200)
-                .comparator(Comparator.comparing(AlertListItem::getBannedAccountData))
-                .setCellFactory(getBannedAccountDataCellFactory())
-                .build());
+                .build();
+        alertTableView.getColumns().add(bannedRoleColumn);
+        alertTableView.getSortOrder().add(bannedRoleColumn);
+
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
                 .minWidth(200)
@@ -356,32 +368,41 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .build());
     }
 
-    private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getBannedAccountDataCellFactory() {
-        return column -> new TableCell<>() {
-            private final Label label = new Label();
-            private final BisqIconButton copyButton = new BisqIconButton();
-            private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
+    private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getDataCellFactory() {
+        return column -> {
 
-            {
-                copyButton.setIcon(AwesomeIcon.COPY);
-                copyButton.setAlignment(Pos.TOP_RIGHT);
-                label.setAlignment(Pos.CENTER_LEFT);
-                hBox.setAlignment(Pos.CENTER_LEFT);
-            }
+            return new TableCell<>() {
+                private final Label label = new Label();
+                private final BisqIconButton copyButton = new BisqIconButton();
+                private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
+                private final BisqTooltip tooltip = new BisqTooltip();
 
-            @Override
-            protected void updateItem(AlertListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    label.setText(StringUtils.truncate(item.getBannedAccountData(), 25));
-                    copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getBannedAccountData()));
-                    setGraphic(hBox);
-                } else {
-                    copyButton.setOnAction(null);
-                    setGraphic(null);
+                {
+                    copyButton.setIcon(AwesomeIcon.COPY);
+                    copyButton.setAlignment(Pos.TOP_RIGHT);
+                    copyButton.setOpacity(0.8);
+                    label.setAlignment(Pos.CENTER_LEFT);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
                 }
-            }
+
+                @Override
+                protected void updateItem(AlertListItem item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    if (item != null && !empty) {
+                        String data = item.getData();
+                        label.setText(StringUtils.truncate(data, 25));
+                        tooltip.setText(data);
+                        label.setTooltip(tooltip);
+                        copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(data));
+                        setGraphic(hBox);
+                    } else {
+                        label.setTooltip(null);
+                        copyButton.setOnAction(null);
+                        setGraphic(null);
+                    }
+                }
+            };
         };
     }
 
@@ -454,21 +475,34 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         private final AuthorizedAlertData authorizedAlertData;
 
         private final long date;
-        private final String dateString, timeString, alertType, message, haltTrading, requireVersionForTrading,
-                minVersion, bondedRoleDisplayString, bannedAccountData;
+        private final String dateString, timeString, alertTypeString, haltTrading, requireVersionForTrading,
+                minVersion, bondedRoleDisplayString, data;
 
         public AlertListItem(AuthorizedAlertData authorizedAlertData, SecurityManagerController controller) {
             this.authorizedAlertData = authorizedAlertData;
-            date = this.authorizedAlertData.getDate();
+            date = authorizedAlertData.getDate();
             dateString = DateFormatter.formatDate(date);
             timeString = DateFormatter.formatTime(date);
-            alertType = Res.get("authorizedRole.securityManager.alertType." + this.authorizedAlertData.getAlertType().name());
-            message = this.authorizedAlertData.getMessage().orElse("");
-            minVersion = this.authorizedAlertData.getMinVersion().orElse("");
-            haltTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isHaltTrading());
-            requireVersionForTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isRequireVersionForTrading());
+            AlertType alertType = authorizedAlertData.getAlertType();
+            alertTypeString = Res.get("authorizedRole.securityManager.alertType." + alertType.name());
+            minVersion = authorizedAlertData.getMinVersion().orElse("");
+            haltTrading = BooleanFormatter.toYesNo(authorizedAlertData.isHaltTrading());
+            requireVersionForTrading = BooleanFormatter.toYesNo(authorizedAlertData.isRequireVersionForTrading());
             bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBannedBondedRoleDisplayString).orElse("");
-            bannedAccountData = this.authorizedAlertData.getBannedAccountData().orElse("");
+
+            String headline = authorizedAlertData.getHeadline().orElse(Res.get("data.na"));
+            String message = authorizedAlertData.getMessage().orElse(Res.get("data.na"));
+            String announcement = headline + "\n" + message;
+            switch (alertType) {
+                case INFO, WARN, EMERGENCY -> data = announcement;
+                case BAN -> data = authorizedAlertData.getBannedRole()
+                        .flatMap(role -> role.getAddressByTransportTypeMap()
+                                .map(AddressByTransportTypeMap::toString))
+                        .orElse(Res.get("data.na"));
+                case BANNED_ACCOUNT_DATA ->
+                        data = authorizedAlertData.getBannedAccountData().orElse(Res.get("data.na"));
+                default -> data = Res.get("data.na");
+            }
         }
     }
 
