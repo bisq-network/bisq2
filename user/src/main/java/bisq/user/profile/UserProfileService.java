@@ -65,9 +65,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(authenticatedData -> {
             if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
                 processUserProfileAddedOrRefreshed(userProfile, true);
-                persist();
             }
         }));
+        persist();
         numUserProfiles.set(getUserProfileById().size());
         return CompletableFuture.completedFuture(true);
     }
