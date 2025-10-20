@@ -64,7 +64,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
             NetworkDataValidation.validateText(host, 45);
         } else {
             // I2P
-            NetworkDataValidation.validateText(host, 512);
+            NetworkDataValidation.validateText(host, 700);
         }
     }
 
