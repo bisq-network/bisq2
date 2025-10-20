@@ -104,11 +104,10 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
             return;
         }
 
-        persistableStore.getContactListEntries().stream()
-                .filter(cle -> cle.equals(contactListEntry))
-                .findFirst()
-                .ifPresent(cle -> cle.setTag(newTag));
-        persist();
+        findContactListEntry(contactListEntry).ifPresent(cle -> {
+            cle.setTag(newTag);
+            persist();
+        });
     }
 
     public void setNotes(ContactListEntry contactListEntry, String newNotes) {
@@ -116,11 +115,10 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
             return;
         }
 
-        persistableStore.getContactListEntries().stream()
-                .filter(cle -> cle.equals(contactListEntry))
-                .findFirst()
-                .ifPresent(cle -> cle.setNotes(newNotes));
-        persist();
+        findContactListEntry(contactListEntry).ifPresent(cle -> {
+            cle.setNotes(newNotes);
+            persist();
+        });
     }
 
     public void setTrustScore(ContactListEntry contactListEntry, Double newTrustScore) {
@@ -130,10 +128,15 @@ public class ContactListService implements PersistenceClient<ContactListStore>, 
             return;
         }
 
-        persistableStore.getContactListEntries().stream()
+        findContactListEntry(contactListEntry).ifPresent(cle -> {
+            cle.setTrustScore(newTrustScore);
+            persist();
+        });
+    }
+
+    private Optional<ContactListEntry> findContactListEntry(ContactListEntry contactListEntry) {
+        return persistableStore.getContactListEntries().stream()
                 .filter(cle -> cle.equals(contactListEntry))
-                .findFirst()
-                .ifPresent(cle -> cle.setTrustScore(newTrustScore));
-        persist();
+                .findFirst();
     }
 }
