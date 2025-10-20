@@ -25,6 +25,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -52,6 +56,69 @@ public final class MetaData implements NetworkProto {
     public static final int HIGH_PRIORITY = 1;
     public static final int HIGHEST_PRIORITY = 2;
 
+    public static final Map<String, Integer> DEFAULT_MAX_MAP_SIZE_BY_CLASS_NAME = Map.ofEntries(
+            // AuthorizedDistributedData
+            new AbstractMap.SimpleEntry<>("AuthorizedOracleNode", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizedBondedRole", MAX_MAP_SIZE_100),
+
+            new AbstractMap.SimpleEntry<>("AuthorizeTimestampRequest", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizeAccountAgeRequest", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizeSignedWitnessRequest", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("BondedRoleRegistrationRequest", MAX_MAP_SIZE_100),
+
+            new AbstractMap.SimpleEntry<>("AuthorizedTimestampData", MAX_MAP_SIZE_50_000),
+            new AbstractMap.SimpleEntry<>("AuthorizedBondedReputationData", MAX_MAP_SIZE_50_000),
+            new AbstractMap.SimpleEntry<>("AuthorizedSignedWitnessData", MAX_MAP_SIZE_50_000),
+            new AbstractMap.SimpleEntry<>("AuthorizedProofOfBurnData", MAX_MAP_SIZE_50_000),
+            new AbstractMap.SimpleEntry<>("AuthorizedAccountAgeData", MAX_MAP_SIZE_50_000),
+
+            new AbstractMap.SimpleEntry<>("AuthorizedMarketPriceData", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizedAlertData", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("ReleaseNotification", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizedDifficultyAdjustmentData", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("AuthorizedMinRequiredReputationScoreData", MAX_MAP_SIZE_100),
+            new AbstractMap.SimpleEntry<>("BannedUserProfileData", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("UserProfile", MAX_MAP_SIZE_10_000),
+            new AbstractMap.SimpleEntry<>("ReportToModeratorMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("AckMessage", MAX_MAP_SIZE_10_000),
+
+            // Chat
+            new AbstractMap.SimpleEntry<>("CommonPublicChatMessage", MAX_MAP_SIZE_10_000),
+            new AbstractMap.SimpleEntry<>("CommonPublicChatMessageReaction", MAX_MAP_SIZE_10_000),
+
+            new AbstractMap.SimpleEntry<>("BisqEasyOfferbookMessage", MAX_MAP_SIZE_10_000),
+            new AbstractMap.SimpleEntry<>("BisqEasyOfferbookMessageReaction", MAX_MAP_SIZE_10_000),
+
+            new AbstractMap.SimpleEntry<>("TwoPartyPrivateChatMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("TwoPartyPrivateChatMessageReaction", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("BisqEasyOpenTradeMessage", MAX_MAP_SIZE_10_000),
+            new AbstractMap.SimpleEntry<>("BisqEasyOpenTradeMessageReaction", MAX_MAP_SIZE_1000),
+
+
+            // Trade
+            new AbstractMap.SimpleEntry<>("BisqEasyTakeOfferRequest", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("BisqEasyAccountDataMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyBtcAddressMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyConfirmFiatSentMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyConfirmFiatReceiptMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyConfirmBtcSentMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyTakeOfferResponse", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("BisqEasyRejectTradeMessage", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("BisqEasyCancelTradeMessage", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("MediationRequest", MAX_MAP_SIZE_1000),
+            new AbstractMap.SimpleEntry<>("MediatorsResponse", MAX_MAP_SIZE_1000),
+
+            new AbstractMap.SimpleEntry<>("BisqEasyReportErrorMessage", MAX_MAP_SIZE_1000)
+    );
+
+    public static final Map<String, Integer> MAX_MAP_SIZE_BY_CLASS_NAME = new HashMap<>();
+
+
     // How long data are kept in the storage map
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
@@ -78,11 +145,30 @@ public final class MetaData implements NetworkProto {
     }
 
     public MetaData(long ttl, int priority, String className, int maxMapSize) {
+        this(ttl, priority, className, maxMapSize, false);
+    }
+
+    private MetaData(long ttl, int priority, String className, int maxMapSize, boolean fromProto) {
         this.ttl = ttl;
         this.priority = priority;
         this.className = className;
-        this.maxMapSize = maxMapSize;
 
+        if (fromProto) {
+            // If we get it from protobuf, it might be an old metadata version, as well it is untrusted data.
+            // We first check for the map which we got filled by classed from our code base. If not found we look up
+            // statically defined entries, and only if that is not found either, we fall back to the value from protobuf.
+            this.maxMapSize = Optional.ofNullable(MAX_MAP_SIZE_BY_CLASS_NAME.get(className)).orElseGet(() ->
+                    Optional.ofNullable(DEFAULT_MAX_MAP_SIZE_BY_CLASS_NAME.get(className))
+                            .orElse(maxMapSize));
+            if (Optional.ofNullable(MAX_MAP_SIZE_BY_CLASS_NAME.get(className)).isEmpty()) {
+                if (Optional.ofNullable(DEFAULT_MAX_MAP_SIZE_BY_CLASS_NAME.get(className)).isEmpty()) {
+                    log.warn("DEFAULT_MAX_MAP_SIZE_BY_CLASS_NAME has no value for {}", className);
+                }
+            }
+        } else {
+            this.maxMapSize = maxMapSize;
+            MAX_MAP_SIZE_BY_CLASS_NAME.putIfAbsent(className, maxMapSize);
+        }
         verify();
     }
 
@@ -106,7 +192,7 @@ public final class MetaData implements NetworkProto {
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize(), true);
     }
 
     public double getCostFactor() {
