@@ -157,8 +157,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         // Overlay
         Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
         learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "wrap-text");
+        learnWhyIntroLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
                 "learn-why-text", 7, 10, "- ", "- ");
+        learnWhyExpositionList.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         overlay = new WizardOverlay(root)
                 .info()

@@ -39,6 +39,7 @@ import java.util.Arrays;
 
 public class WizardOverlay extends VBox {
     public static final double OVERLAY_WIDTH = 700;
+    public static final Insets TEXT_CONTENT_PADDING = new Insets(0, 30, 0, 30);
 
     private final Node owner;
     @Getter
@@ -184,7 +185,7 @@ public class WizardOverlay extends VBox {
                     return textLabel;
                 })
                 .forEach(textBox.getChildren()::add);
-        VBox.setMargin(textBox, new Insets(0, 30, 0, 30));
+        VBox.setMargin(textBox, TEXT_CONTENT_PADDING);
         return textBox;
     }
 

@@ -111,6 +111,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         noPaymentMethodSelectedOverlayLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
         noPaymentMethodSelectedOverlayLabel.setMaxWidth(noPaymentMethodSelectedOverlayLabel.getMinWidth());
         noPaymentMethodSelectedOverlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        noPaymentMethodSelectedOverlayLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         noPaymentMethodSelectedOverlayCloseButton = new Button(Res.get("action.close"));
         noPaymentMethodSelectedOverlay = new WizardOverlay(root)
                 .warning()
@@ -262,6 +263,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
 
         VBox vBox = new VBox(20, subtitleLabel, accountSelection);
         vBox.setAlignment(Pos.CENTER);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         return vBox;
     }
 

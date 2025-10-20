@@ -207,6 +207,9 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         VBox.setMargin(learnHowToBuildReputationBox, new Insets(0, 0, 40, 0));
         VBox.setMargin(linkBox, new Insets(-40, 0, 0, 0));
-        return new VBox(40, amountLimitInfo, learnHowToBuildReputationBox, linkBox);
+
+        VBox vBox = new VBox(40, amountLimitInfo, learnHowToBuildReputationBox, linkBox);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
+        return vBox;
     }
 }

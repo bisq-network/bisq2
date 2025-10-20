@@ -173,6 +173,8 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
 
-        return new VBox(amountLimitInfoOverlayInfo, linkBox);
+        VBox vBox = new VBox(amountLimitInfoOverlayInfo, linkBox);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
+        return vBox;
     }
 }
