@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.contacts_list;
 
+import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -57,6 +59,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
     private final RichTableView<ListItem> richTableView;
     private Subscription userProfileIdOfScoreUpdatePin;
+    private UIScheduler uiScheduler;
 
     public ContactsListView(ContactsListModel model,
                             ContactsListController controller) {
@@ -87,12 +90,19 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 richTableView.sort();
             }
         });
+
+        maybeShowLearnMorePopup();
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
         userProfileIdOfScoreUpdatePin.unsubscribe();
+
+        if (uiScheduler != null) {
+            uiScheduler.stop();
+            uiScheduler = null;
+        }
     }
 
     private void configTableView() {
@@ -160,6 +170,15 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .minWidth(150)
                 .includeForCsv(false)
                 .build());
+    }
+
+    private void maybeShowLearnMorePopup() {
+        UIThread.run(() -> {
+            if (model.isShouldShowLearnMorePopup()) {
+                uiScheduler = UIScheduler.run(richTableView::openLearnMorePopup).after(2000);
+                controller.onShowLearnMorePopup();
+            }
+        });
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
