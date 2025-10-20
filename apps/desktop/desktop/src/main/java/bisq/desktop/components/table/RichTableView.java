@@ -96,6 +96,8 @@ public class RichTableView<T> extends VBox {
     private Optional<List<String>> csvHeaders = Optional.empty();
     @Setter
     private Optional<List<List<String>>> csvData = Optional.empty();
+    private Optional<String> learnMoreTitle = Optional.empty();
+    private Optional<String> learnMoreContent = Optional.empty();
 
     public RichTableView(ObservableList<T> observableList) {
         this(new SortedList<>(observableList));
@@ -322,6 +324,14 @@ public class RichTableView<T> extends VBox {
         return tableView.getColumns();
     }
 
+    public BisqTableColumn<T> getSelectionMarkerColumn() {
+        return tableView.getSelectionMarkerColumn();
+    }
+
+    public TableView.TableViewSelectionModel<T> getSelectionModel() {
+        return tableView.getSelectionModel();
+    }
+
     public void setFixHeight(double value) {
         tableView.setFixHeight(value);
     }
@@ -329,9 +339,16 @@ public class RichTableView<T> extends VBox {
     public void setTableInfo(String title, String content) {
         tableInfoMenuItem.setManaged(true);
         tableInfoMenuItem.setVisible(true);
-        tableInfoMenuItem.setOnAction(e ->
+        learnMoreTitle = Optional.of(title);
+        learnMoreContent = Optional.of(content);
+        tableInfoMenuItem.setOnAction(e -> openLearnMorePopup());
+    }
+
+    public void openLearnMorePopup() {
+        if (learnMoreTitle.isPresent() && learnMoreContent.isPresent()) {
             Navigation.navigateTo(NavigationTarget.SHOW_TABLE_INFO,
-                    new ShowTableInfo.InitData(title, content)));
+                    new ShowTableInfo.InitData(learnMoreTitle.get(), learnMoreContent.get()));
+        }
     }
 
 
@@ -349,14 +366,6 @@ public class RichTableView<T> extends VBox {
 
     private void listItemsChanged() {
         numEntriesLabel.setText(String.format("(%s %s)", tableView.getItems().size(), entriesUnit.toLowerCase()));
-    }
-
-    public BisqTableColumn<T> getSelectionMarkerColumn() {
-        return tableView.getSelectionMarkerColumn();
-    }
-
-    public TableView.TableViewSelectionModel<T> getSelectionModel() {
-        return tableView.getSelectionModel();
     }
 
 

@@ -31,6 +31,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
@@ -50,8 +52,8 @@ public class ContactsListController implements Controller {
     private final UserProfileService userProfileService;
     private final ContactListService contactListService;
     private final ChatService chatService;
-    private Pin proofOfBurnScoreChangedFlagPin,
-            bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
+    private final SettingsService settingsService;
+    private Pin proofOfBurnScoreChangedFlagPin, bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin, contactsListEntriesPin;
 
     public ContactsListController(ServiceProvider serviceProvider) {
@@ -59,6 +61,7 @@ public class ContactsListController implements Controller {
         reputationService = serviceProvider.getUserService().getReputationService();
         contactListService = serviceProvider.getUserService().getContactListService();
         chatService = serviceProvider.getChatService();
+        settingsService = serviceProvider.getSettingsService();
 
         model = new ContactsListModel();
         view = new ContactsListView(model, this);
@@ -106,6 +109,8 @@ public class ContactsListController implements Controller {
                 .addObserver(this::updateScore);
         signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
+
+        model.setShouldShowLearnMorePopup(settingsService.getCookie().asBoolean(CookieKey.SHOW_CONTACTS_LIST_LEARN_MORE_POPUP).orElse(true));
     }
 
     @Override
@@ -149,6 +154,11 @@ public class ContactsListController implements Controller {
                         item.getTotalScoreString().toLowerCase().contains(string) ||
                         item.getProfileAgeString().toLowerCase().contains(string));
         applyPredicates();
+    }
+
+    void onShowLearnMorePopup() {
+        settingsService.setCookie(CookieKey.SHOW_CONTACTS_LIST_LEARN_MORE_POPUP, false);
+        model.setShouldShowLearnMorePopup(false);
     }
 
     private void doRemoveContact(ContactListEntry contactListEntry) {

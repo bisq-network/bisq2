@@ -53,4 +53,6 @@ public class ContactsListModel implements Model {
     private Predicate<ContactsListView.ListItem> filterItemPredicate = e -> true;
     @Setter
     private Predicate<ContactsListView.ListItem> searchStringPredicate = e -> true;
+    @Setter
+    private boolean shouldShowLearnMorePopup;
 }
