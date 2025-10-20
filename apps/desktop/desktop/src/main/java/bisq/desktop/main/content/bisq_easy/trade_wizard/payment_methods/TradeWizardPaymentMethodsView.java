@@ -106,6 +106,7 @@ public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPa
         overlayLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
         overlayLabel.setMaxWidth(overlayLabel.getMinWidth());
         overlayLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        overlayLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         closeOverlayButton = new Button(Res.get("action.close"));
         overlay = new WizardOverlay(root)
                 .warning()

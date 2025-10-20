@@ -21,6 +21,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -185,6 +186,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         amountLimitInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
         HBox amountLimitInfoBox = new HBox(amountLimitInfo);
         amountLimitInfoBox.setAlignment(Pos.BASELINE_LEFT);
+        amountLimitInfoBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
 
         linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
@@ -196,6 +198,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
 
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
+        linkBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
 
         VBox.setMargin(learnHowToBuildReputation, new Insets(0, 0, 40, 0));
         VBox.setMargin(linkBox, new Insets(-40, 0, 0, 0));

@@ -97,6 +97,7 @@ public class TakeOfferPaymentView extends View<StackPane, TakeOfferPaymentModel,
         invalidInputOverlayTextLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
         invalidInputOverlayTextLabel.setMaxWidth(invalidInputOverlayTextLabel.getMinWidth());
         invalidInputOverlayTextLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        invalidInputOverlayTextLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         invalidInputOverlayCloseButton = new Button(Res.get("action.close"));
         invalidInputOverlay = new WizardOverlay(root)
                 .warning()

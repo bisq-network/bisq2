@@ -298,6 +298,7 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
 
         VBox vBox = new VBox(20, subtitleLabel, accountSelection);
         vBox.setAlignment(Pos.CENTER);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         return vBox;
     }
 
