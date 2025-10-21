@@ -28,7 +28,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
@@ -45,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Slf4j
-public class IdentityService implements PersistenceClient<IdentityStore>, Service {
+public class IdentityService extends RateLimitedPersistenceClient<IdentityStore> implements Service {
     public static final String DEFAULT_IDENTITY_TAG = "default";
 
     @Getter
@@ -100,11 +100,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> persist() {
-        return PersistenceClient.super.persist();
     }
 
 

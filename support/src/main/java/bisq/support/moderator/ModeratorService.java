@@ -40,7 +40,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserProfileData;
@@ -58,7 +58,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.Listener {
+public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;

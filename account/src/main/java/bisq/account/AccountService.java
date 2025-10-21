@@ -28,8 +28,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class AccountService implements PersistenceClient<AccountStore>, Service {
+public class AccountService extends RateLimitedPersistenceClient<AccountStore> implements Service {
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;

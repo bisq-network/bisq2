@@ -28,8 +28,8 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
@@ -42,8 +42,8 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TimestampService implements Service, PersistenceClient<TimestampStore>,
-        ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
+public class TimestampService extends RateLimitedPersistenceClient<TimestampStore>
+        implements Service, ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
     @Getter
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter

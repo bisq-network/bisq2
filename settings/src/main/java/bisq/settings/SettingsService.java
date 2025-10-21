@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.backup.BackupService;
 import lombok.Getter;
@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class SettingsService implements PersistenceClient<SettingsStore>, Service {
+public class SettingsService extends RateLimitedPersistenceClient<SettingsStore> implements Service {
     @Deprecated(since = "2.1.1")
     public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
 
@@ -122,7 +122,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public CompletableFuture<Boolean> persist() {
         // We don't want to call persist from the addObserver calls at initialize
         if (isInitialized) {
-            return PersistenceClient.super.persist();
+            return super.persist();
         } else {
             return CompletableFuture.completedFuture(true);
         }
