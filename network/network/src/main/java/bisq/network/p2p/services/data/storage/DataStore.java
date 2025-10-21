@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,5 +88,12 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
     @Override
     public DataStore<T> getClone() {
         return new DataStore<>(Map.copyOf(map));
+    }
+
+    // This is only temporary to not risk that we get an exception if a client mutates
+    // the map which is a not valid case, but we the mobile release we prefer to avoid the risk to run into an exception.
+    // For main and for a major mobile update we should remove that.
+    public DataStore<T> getMutableClone() {
+        return new DataStore<>(new HashMap<>(map));
     }
 }

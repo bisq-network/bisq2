@@ -43,7 +43,6 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public synchronized Optional<T> read() {
         File storeFile = storeFilePath.toFile();
-        log.error("read persistableStore from {}", storeFilePath);
         if (!storeFile.exists()) {
             return Optional.empty();
         }
@@ -67,7 +66,6 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     public synchronized void write(T persistableStore) {
-        log.error("write persistableStore {}", persistableStore.getClass().getSimpleName());
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
             writeStoreToTempFile(persistableStore);
