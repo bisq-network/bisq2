@@ -292,7 +292,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
     @Override
     public SettingsStore getClone() {
         return new SettingsStore(cookie,
-                new HashMap<>(dontShowAgainMap),
+                Map.copyOf(dontShowAgainMap),
                 useAnimations.get(),
                 selectedMuSigMarket.get(),
                 minRequiredReputationScore.get(),
@@ -300,14 +300,14 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
                 isTacAccepted.get(),
-                new HashSet<>(consumedAlertIds),
+                Set.copyOf(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
                 languageCode.get(),
                 preventStandbyMode.get(),
-                new HashSet<>(supportedLanguageCodes),
+                Set.copyOf(supportedLanguageCodes),
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
-                new HashSet<>(favouriteMarkets),
+                Set.copyOf(favouriteMarkets),
                 ignoreMinRequiredReputationScoreFromSecManager.get(),
                 maxTradePriceDeviation.get(),
                 showBuyOffers.get(),
@@ -320,7 +320,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 numDaysAfterRedactingTradeData.get(),
                 muSigActivated.get(),
                 autoAddToContactsList.get(),
-                new HashMap<>(muSigLastSelectedMarketByBaseCurrencyMap));
+                Map.copyOf(muSigLastSelectedMarketByBaseCurrencyMap));
     }
 
     @Override

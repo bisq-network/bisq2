@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -47,7 +46,8 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
     @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeSignedWitnessRequest> signedWitnessRequests = new CopyOnWriteArraySet<>();
 
-    private Bisq1BridgeRequestStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests, Set<AuthorizeSignedWitnessRequest> signedWitnessRequests) {
+    private Bisq1BridgeRequestStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests,
+                                    Set<AuthorizeSignedWitnessRequest> signedWitnessRequests) {
         this.accountAgeRequests.addAll(accountAgeRequests);
         this.signedWitnessRequests.addAll(signedWitnessRequests);
     }
@@ -91,7 +91,7 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
 
     @Override
     public Bisq1BridgeRequestStore getClone() {
-        return new Bisq1BridgeRequestStore(new HashSet<>(accountAgeRequests), new HashSet<>(signedWitnessRequests));
+        return new Bisq1BridgeRequestStore(Set.copyOf(accountAgeRequests), Set.copyOf(signedWitnessRequests));
     }
 
     @Override

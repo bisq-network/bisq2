@@ -22,18 +22,18 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class ChatNotificationsStore implements PersistableStore<ChatNotificationsStore> {
     private final ObservableSet<ChatNotification> chatNotifications = new ObservableSet<>();
+
+    ChatNotificationsStore() {
+    }
 
     ChatNotificationsStore(Collection<ChatNotification> chatNotifications) {
         this.chatNotifications.setAll(chatNotifications);
@@ -72,7 +72,7 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
 
     @Override
     public ChatNotificationsStore getClone() {
-        return new ChatNotificationsStore(new HashSet<>(chatNotifications));
+        return new ChatNotificationsStore(Set.copyOf(chatNotifications));
     }
 
     @Override

@@ -160,7 +160,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
     @Override
     public UserIdentityStore getClone() {
         return new UserIdentityStore(getSelectedUserIdentityId(),
-                new HashSet<>(userIdentities),
+                Set.copyOf(userIdentities),
                 encryptedData,
                 scryptParameters,
                 aesSecretKey);

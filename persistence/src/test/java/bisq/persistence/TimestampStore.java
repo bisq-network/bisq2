@@ -75,7 +75,7 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
 
     @Override
     public TimestampStore getClone() {
-        return new TimestampStore(new HashMap<>(timestampsByProfileId));
+        return new TimestampStore(Map.copyOf(timestampsByProfileId));
     }
 
     @Override

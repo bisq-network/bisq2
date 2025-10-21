@@ -20,9 +20,6 @@ package bisq.persistence;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Interface for the outside envelope object persisted to disk.
- */
 public interface PersistenceClient<T extends PersistableStore<T>> {
     default CompletableFuture<Optional<T>> readPersisted() {
         return getPersistence().readAsync(persisted -> {

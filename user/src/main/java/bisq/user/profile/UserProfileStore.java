@@ -85,7 +85,7 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
     public UserProfileStore getClone() {
         UserProfileStore userProfileStore;
         synchronized (lock) {
-            userProfileStore = new UserProfileStore(new HashSet<>(ignoredUserProfileIds));
+            userProfileStore = new UserProfileStore(Set.copyOf(ignoredUserProfileIds));
         }
         return userProfileStore;
     }

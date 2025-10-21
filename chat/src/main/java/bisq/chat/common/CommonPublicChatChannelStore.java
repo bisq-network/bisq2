@@ -26,7 +26,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,7 +76,7 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
 
     @Override
     public CommonPublicChatChannelStore getClone() {
-        return new CommonPublicChatChannelStore(new HashSet<>(channels));
+        return new CommonPublicChatChannelStore(Set.copyOf(channels));
     }
 
     void setAll(Set<CommonPublicChatChannel> privateDiscussionChannels) {
