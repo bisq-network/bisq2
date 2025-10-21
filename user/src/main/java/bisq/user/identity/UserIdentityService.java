@@ -29,7 +29,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.AesSecretKey;
 import bisq.security.EncryptedData;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
+public class UserIdentityService extends RateLimitedPersistenceClient<UserIdentityStore> implements Service, DataService.Listener {
     public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
 
     @Getter

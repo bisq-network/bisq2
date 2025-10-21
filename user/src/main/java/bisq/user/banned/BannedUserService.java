@@ -26,8 +26,8 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class BannedUserService implements PersistenceClient<BannedUserStore>, Service, AuthorizedBondedRolesService.Listener {
+public class BannedUserService extends RateLimitedPersistenceClient<BannedUserStore> implements Service, AuthorizedBondedRolesService.Listener {
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     private final BannedUserStore persistableStore = new BannedUserStore();
@@ -61,12 +61,14 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }

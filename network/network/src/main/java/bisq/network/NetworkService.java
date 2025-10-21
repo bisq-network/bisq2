@@ -57,7 +57,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
@@ -95,7 +95,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
+public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceStore> implements Service {
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance

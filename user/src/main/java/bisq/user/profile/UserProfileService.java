@@ -27,7 +27,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
@@ -47,7 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener, Service {
+public class UserProfileService extends RateLimitedPersistenceClient<UserProfileStore> implements DataService.Listener, Service {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
     @Getter

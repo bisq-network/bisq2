@@ -48,7 +48,7 @@ import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
@@ -93,7 +93,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class MuSigTradeService implements PersistenceClient<MuSigTradeStore>, Service, ConfidentialMessageService.Listener {
+public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigTradeStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     public static class Config {
         private final String host;

@@ -18,11 +18,12 @@
 package bisq.chat;
 
 import bisq.common.application.Service;
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public abstract class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore>, Service {
+public abstract class ChatChannelSelectionService extends RateLimitedPersistenceClient<ChatChannelSelectionStore> implements Service {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();

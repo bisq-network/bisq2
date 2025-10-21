@@ -27,7 +27,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.Listener {
+public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<MessageDeliveryStatusStore> implements ConfidentialMessageService.Listener {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();

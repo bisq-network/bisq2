@@ -28,7 +28,7 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class ResendMessageService implements PersistenceClient<ResendMessageStore> {
+public class ResendMessageService extends RateLimitedPersistenceClient<ResendMessageStore> {
     private static final long RESEND_INTERVAL = TimeUnit.MINUTES.toMillis(2);
     private static final long RESEND_ON_FAILURE_INTERVAL = TimeUnit.SECONDS.toMillis(15);
     private static final int MAX_AUTO_RESENDS = 2;

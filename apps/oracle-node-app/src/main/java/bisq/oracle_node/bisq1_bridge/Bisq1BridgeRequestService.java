@@ -38,8 +38,8 @@ import bisq.oracle_node.bisq1_bridge.grpc.services.BondedRoleGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.SignedWitnessGrpcService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -54,7 +54,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class Bisq1BridgeRequestService implements Service, PersistenceClient<Bisq1BridgeRequestStore>, ConfidentialMessageService.Listener {
+public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq1BridgeRequestStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     private final Bisq1BridgeRequestStore persistableStore = new Bisq1BridgeRequestStore();
     @Getter

@@ -22,8 +22,8 @@ import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class ContactListService implements PersistenceClient<ContactListStore>, DataService.Listener, Service {
+public class ContactListService extends RateLimitedPersistenceClient<ContactListStore> implements Service, DataService.Listener {
     public final static int CONTACT_LIST_ENTRY_MAX_TAG_LENGTH = 30;
     public final static int CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH = 600;
     public final static double CONTACT_LIST_ENTRY_MIN_TRUST_SCORE = 0;

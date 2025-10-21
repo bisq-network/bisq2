@@ -23,8 +23,8 @@ import bisq.common.file.FileUtils;
 import bisq.common.timer.Scheduler;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.DigestUtil;
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -43,7 +43,7 @@ import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Service {
+public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStore> implements Service {
     private static final String DEFAULT_TAG = "default";
 
     @Getter
@@ -139,7 +139,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore>, Serv
 
     @Override
     public CompletableFuture<Optional<KeyBundleStore>> readPersisted() {
-        return PersistenceClient.super.readPersisted()
+        return super.readPersisted()
                 .whenComplete((persisted, throwable) -> {
                     // In pre-2.1.8 versions there was no I2P keypair set.
                     // In that case, we create a fresh one and persist .
