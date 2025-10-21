@@ -82,12 +82,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(authenticatedData -> {
-            if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-                processUserProfileAddedOrRefreshed(userProfile, true);
-                persist();
-            }
-        }));
+        networkService.getDataService().ifPresent(dataService -> {
+            dataService.getAuthenticatedData().forEach(authenticatedData -> {
+                if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+                    processUserProfileAddedOrRefreshed(userProfile, true);
+                }
+            });
+            persist();
+        });
+
         numUserProfiles.set(userProfileById.size());
         return CompletableFuture.completedFuture(true);
     }
