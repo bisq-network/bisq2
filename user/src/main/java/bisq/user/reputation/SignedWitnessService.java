@@ -204,9 +204,12 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     private void maybeRequestAgain() {
         long now = System.currentTimeMillis();
         if (now - persistableStore.getLastRequested() > AuthorizedSignedWitnessData.TTL / 2) {
-            persistableStore.getJsonRequests().forEach(this::doRequestAuthorization);
-            persistableStore.setLastRequested(now);
-            persist();
+            Set<String> jsonRequests = persistableStore.getJsonRequests();
+            if (!jsonRequests.isEmpty()) {
+                jsonRequests.forEach(this::doRequestAuthorization);
+                persistableStore.setLastRequested(now);
+                persist();
+            }
         }
     }
 }
