@@ -58,7 +58,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
@@ -92,7 +92,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
+public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceStore> implements Service {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("Network.IO", 5, 3000, 5);
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("Network.dispatcher");
 

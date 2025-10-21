@@ -25,6 +25,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -42,7 +43,7 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
 
     @Override
     public PocOpenOfferStore getClone() {
-        return new PocOpenOfferStore(new HashSet<>(openOffers));
+        return new PocOpenOfferStore(Set.copyOf(openOffers));
     }
 
     @Override

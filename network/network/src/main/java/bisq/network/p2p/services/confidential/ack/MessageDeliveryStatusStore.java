@@ -89,7 +89,7 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
 
     @Override
     public MessageDeliveryStatusStore getClone() {
-        return new MessageDeliveryStatusStore(new HashMap<>(messageDeliveryStatusByMessageId), new HashMap<>(creationDateByMessageId));
+        return new MessageDeliveryStatusStore(Map.copyOf(messageDeliveryStatusByMessageId), Map.copyOf(creationDateByMessageId));
     }
 
     ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {

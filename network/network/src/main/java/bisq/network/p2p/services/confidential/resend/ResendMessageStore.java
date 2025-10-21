@@ -88,7 +88,7 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
 
     @Override
     public ResendMessageStore getClone() {
-        return new ResendMessageStore(new HashMap<>(resendMessageDataByMessageId), new HashMap<>(numResendsByMessageId));
+        return new ResendMessageStore(Map.copyOf(resendMessageDataByMessageId), Map.copyOf(numResendsByMessageId));
     }
 
     Map<String, ResendMessageData> getResendMessageDataByMessageId() {

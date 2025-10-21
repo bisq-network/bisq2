@@ -95,7 +95,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public NetworkServiceStore getClone() {
-        return new NetworkServiceStore(new HashSet<>(seedNodes), new HashMap<>(networkIdByTag));
+        return new NetworkServiceStore(Set.copyOf(seedNodes), Map.copyOf(networkIdByTag));
     }
 
     Set<AddressByTransportTypeMap> getSeedNodes() {

@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -80,7 +81,7 @@ public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
 
     @Override
     public NetworkIdStore getClone() {
-        return new NetworkIdStore(new HashMap<>(networkIdByTag));
+        return new NetworkIdStore(Map.copyOf(networkIdByTag));
     }
 
     Map<String, NetworkId> getNetworkIdByTag() {

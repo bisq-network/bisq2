@@ -91,7 +91,7 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
 
     @Override
     public Bisq1BridgeStore getClone() {
-        return new Bisq1BridgeStore(new HashSet<>(accountAgeRequests), new HashSet<>(signedWitnessRequests));
+        return new Bisq1BridgeStore(Set.copyOf(accountAgeRequests), Set.copyOf(signedWitnessRequests));
     }
 
     @Override

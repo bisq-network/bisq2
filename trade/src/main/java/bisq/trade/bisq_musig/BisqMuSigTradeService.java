@@ -27,7 +27,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_musig.BisqMuSigOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_musig.protocol.*;
 import bisq.trade.protocol.TradeProtocol;
@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeStore>, Service, ConfidentialMessageService.Listener {
+public class BisqMuSigTradeService extends RateLimitedPersistenceClient<BisqMuSigTradeStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     private final BisqMuSigTradeStore persistableStore = new BisqMuSigTradeStore();
     @Getter

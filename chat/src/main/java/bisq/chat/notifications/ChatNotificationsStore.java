@@ -24,8 +24,8 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,7 +72,7 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
 
     @Override
     public ChatNotificationsStore getClone() {
-        return new ChatNotificationsStore(new HashSet<>(chatNotifications));
+        return new ChatNotificationsStore(Set.copyOf(chatNotifications));
     }
 
     @Override

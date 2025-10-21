@@ -41,8 +41,8 @@ import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -72,8 +72,8 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener,
-        AuthorizedBondedRolesService.Listener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService extends RateLimitedPersistenceClient<Bisq1BridgeStore>
+        implements Service, ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;

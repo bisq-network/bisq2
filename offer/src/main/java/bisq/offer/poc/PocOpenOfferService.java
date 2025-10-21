@@ -42,8 +42,8 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
-public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore> {
+public class PocOpenOfferService extends RateLimitedPersistenceClient<PocOpenOfferStore> {
 
     public interface Listener {
         void onOpenOfferAdded(PocOpenOffer openOffer);

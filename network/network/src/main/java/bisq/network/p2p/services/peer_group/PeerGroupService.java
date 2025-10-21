@@ -25,8 +25,8 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ import java.util.stream.Stream;
  * Maintains different collections of peers and connections
  */
 @Slf4j
-public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
+public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStore> {
     private static final long MIN_PRINT_INTERVAL = TimeUnit.MINUTES.toMillis(10);
 
     @Getter

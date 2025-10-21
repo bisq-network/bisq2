@@ -148,23 +148,23 @@ public class JvmMemoryReportService implements MemoryReportService {
                     });
 
             log.info("\n************************************************************************************************************************\n" +
-                            "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
+                            "Used memory: {}; Free memory: {}; Total memory: {}; Max memory: {}; No. of threads: {}\n" +
                             "************************************************************************************************************************\n\n" +
                             "{}{}",
-                    StringUtils.formatBytes(total),
                     StringUtils.formatBytes(used),
                     StringUtils.formatBytes(free),
+                    StringUtils.formatBytes(total),
                     StringUtils.formatBytes(runtime.maxMemory()),
                     Thread.activeCount(),
                     customBisqThreads,
                     jvmThreads);
         } else {
             log.info("\n************************************************************************************************************************\n" +
-                            "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
+                            "Used memory: {}; Free memory: {}; Total memory: {}; Max memory: {}; No. of threads: {}\n" +
                             "************************************************************************************************************************",
-                    StringUtils.formatBytes(total),
                     StringUtils.formatBytes(used),
                     StringUtils.formatBytes(free),
+                    StringUtils.formatBytes(total),
                     StringUtils.formatBytes(runtime.maxMemory()),
                     Thread.activeCount());
         }

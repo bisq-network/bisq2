@@ -33,8 +33,8 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
  */
 
 @Slf4j
-public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, AuthorizedBondedRolesService.Listener {
+public class MarketPriceService extends RateLimitedPersistenceClient<MarketPriceStore>
+        implements Service, AuthorizedBondedRolesService.Listener {
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
     @Getter

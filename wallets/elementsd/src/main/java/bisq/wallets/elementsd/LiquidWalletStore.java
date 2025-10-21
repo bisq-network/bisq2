@@ -81,7 +81,7 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
 
     @Override
     public LiquidWalletStore getClone() {
-        return new LiquidWalletStore(rpcConfig, new ArrayList<>(walletAddresses));
+        return new LiquidWalletStore(rpcConfig, List.copyOf(walletAddresses));
     }
 
     @Override

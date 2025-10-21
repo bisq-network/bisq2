@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSi
 
     @Override
     public MyBisqMuSigOffersStore getClone() {
-        return new MyBisqMuSigOffersStore(new HashSet<>(offers));
+        return new MyBisqMuSigOffersStore(Set.copyOf(offers));
     }
 
     @Override

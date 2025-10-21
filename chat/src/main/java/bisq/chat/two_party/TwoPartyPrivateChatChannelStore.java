@@ -77,7 +77,7 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
 
     @Override
     public TwoPartyPrivateChatChannelStore getClone() {
-        return new TwoPartyPrivateChatChannelStore(new HashSet<>(channels));
+        return new TwoPartyPrivateChatChannelStore(Set.copyOf(channels));
     }
 
     public void setAll(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {

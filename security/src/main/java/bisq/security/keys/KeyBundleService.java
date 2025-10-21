@@ -20,8 +20,8 @@ package bisq.security.keys;
 import bisq.common.encoding.Hex;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.DigestUtil;
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
+public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStore> {
     @Getter
     public static class Config {
         private final Optional<String> defaultTorPrivateKey;
