@@ -40,7 +40,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -407,10 +406,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
                     .collect(Collectors.toList());
-            var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElseGet(() -> persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
-                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}, Max size: {}",
+                    methodName,
+                    storeKey,
+                    added.size(),
+                    removed.size(),
+                    dataStore.getMap().size(),
+                    DataSizeFormatter.format(dataSize),
+                    getMaxMapSize());
         }
     }
 }

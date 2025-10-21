@@ -48,7 +48,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final DataStore<T> persistableStore = new DataStore<>();
     @Getter
-    private final String storeKey;
+    protected final String storeKey;
     @Getter
     protected final Path subDirPath;
     @Getter
