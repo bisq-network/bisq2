@@ -99,7 +99,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     @Override
     public BisqEasyTradeStore getClone() {
-        return new BisqEasyTradeStore(new HashSet<>(trades), new HashSet<>(tradeIds));
+        return new BisqEasyTradeStore(Set.copyOf(trades), Set.copyOf(tradeIds));
     }
 
     @Override

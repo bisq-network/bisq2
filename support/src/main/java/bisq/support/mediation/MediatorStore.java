@@ -73,7 +73,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
 
     @Override
     public MediatorStore getClone() {
-        return new MediatorStore(new HashSet<>(mediationCases));
+        return new MediatorStore(Set.copyOf(mediationCases));
     }
 
     @Override

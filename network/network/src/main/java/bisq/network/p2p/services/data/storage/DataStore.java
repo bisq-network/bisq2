@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,6 +86,6 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
 
     @Override
     public DataStore<T> getClone() {
-        return new DataStore<>(new HashMap<>(map));
+        return new DataStore<>(Map.copyOf(map));
     }
 }

@@ -25,6 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,7 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public BisqEasyOpenTradeChannelStore getClone() {
-        return new BisqEasyOpenTradeChannelStore(new HashSet<>(channels));
+        return new BisqEasyOpenTradeChannelStore(Set.copyOf(channels));
     }
 
     public void setAll(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {

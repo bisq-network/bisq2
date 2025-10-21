@@ -79,7 +79,7 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
 
     @Override
     public MarketPriceStore getClone() {
-        return new MarketPriceStore(new HashMap<>(marketPriceByCurrencyMap), selectedMarket.get());
+        return new MarketPriceStore(Map.copyOf(marketPriceByCurrencyMap), selectedMarket.get());
     }
 
     @Override

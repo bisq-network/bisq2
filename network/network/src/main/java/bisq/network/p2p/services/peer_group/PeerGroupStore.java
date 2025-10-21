@@ -72,7 +72,7 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
 
     @Override
     public PeerGroupStore getClone() {
-        return new PeerGroupStore(new HashMap<>(persistedPeersByAddress));
+        return new PeerGroupStore(Map.copyOf(persistedPeersByAddress));
     }
 
     @Override

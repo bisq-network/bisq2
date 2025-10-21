@@ -73,7 +73,7 @@ public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> 
 
     @Override
     public ProfileAgeStore getClone() {
-        return new ProfileAgeStore(new HashSet<>(profileIds), lastRequested);
+        return new ProfileAgeStore(Set.copyOf(profileIds), lastRequested);
     }
 
     @Override

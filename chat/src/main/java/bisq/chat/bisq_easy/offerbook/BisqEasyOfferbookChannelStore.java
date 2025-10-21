@@ -26,6 +26,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
@@ -76,6 +77,6 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public BisqEasyOfferbookChannelStore getClone() {
-        return new BisqEasyOfferbookChannelStore(new ArrayList<>(channels));
+        return new BisqEasyOfferbookChannelStore(List.copyOf(channels));
     }
 }

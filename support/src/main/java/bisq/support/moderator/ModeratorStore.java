@@ -72,7 +72,7 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
 
     @Override
     public ModeratorStore getClone() {
-        return new ModeratorStore(new HashSet<>(reportToModeratorMessages));
+        return new ModeratorStore(Set.copyOf(reportToModeratorMessages));
     }
 
     @Override

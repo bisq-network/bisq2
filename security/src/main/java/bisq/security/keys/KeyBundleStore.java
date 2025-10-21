@@ -50,7 +50,7 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
 
     @Override
     public KeyBundleStore getClone() {
-        return new KeyBundleStore(secretUid, new HashMap<>(keyBundleById));
+        return new KeyBundleStore(secretUid, Map.copyOf(keyBundleById));
     }
 
     @Override

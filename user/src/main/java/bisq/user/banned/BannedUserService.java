@@ -60,12 +60,14 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
