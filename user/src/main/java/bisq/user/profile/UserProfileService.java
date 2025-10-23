@@ -27,7 +27,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
@@ -47,7 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener, Service {
+public class UserProfileService extends RateLimitedPersistenceClient<UserProfileStore> implements DataService.Listener, Service {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
     @Getter
@@ -82,12 +82,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(authenticatedData -> {
-            if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
-                processUserProfileAddedOrRefreshed(userProfile, true);
-                persist();
-            }
-        }));
+        networkService.getDataService().ifPresent(dataService -> {
+            dataService.getAuthenticatedData().forEach(authenticatedData -> {
+                if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+                    processUserProfileAddedOrRefreshed(userProfile, true);
+                }
+            });
+            persist();
+        });
+
         numUserProfiles.set(userProfileById.size());
         return CompletableFuture.completedFuture(true);
     }
@@ -266,7 +269,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.add(nym);
-        persist();
     }
 
     private void removeNymFromNickNameHashMap(String nym, String nickName) {
@@ -276,6 +278,5 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.remove(nym);
-        persist();
     }
 }

@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
@@ -266,10 +265,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
                     .map(RemoveMailboxRequest::getClassName)
                     .toList();
-            var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElseGet(() -> persistence.getFileName().replace("Store", ""));
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
-                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}, Max size: {}",
+                    methodName,
+                    storeKey,
+                    added.size(),
+                    removed.size(),
+                    dataStore.getMap().size(),
+                    DataSizeFormatter.format(dataSize),
+                    getMaxMapSize());
         }
     }
 }

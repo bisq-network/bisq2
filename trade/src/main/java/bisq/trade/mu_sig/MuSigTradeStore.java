@@ -28,7 +28,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,7 +44,7 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
 
     @Override
     public MuSigTradeStore getClone() {
-        return new MuSigTradeStore(new HashMap<>(tradeById));
+        return new MuSigTradeStore(Map.copyOf(tradeById));
     }
 
     @Override

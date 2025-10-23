@@ -34,7 +34,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * Service used by mediators
  */
 @Slf4j
-public class MediatorService implements PersistenceClient<MediatorStore>, Service, ConfidentialMessageService.Listener {
+public class MediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter

@@ -21,17 +21,16 @@ import bisq.common.application.Service;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class MyMuSigOffersService implements PersistenceClient<MyMuSigOffersStore>, Service {
+public class MyMuSigOffersService extends RateLimitedPersistenceClient<MyMuSigOffersStore> implements Service {
     @Getter
     private final MyMuSigOffersStore persistableStore = new MyMuSigOffersStore();
     @Getter

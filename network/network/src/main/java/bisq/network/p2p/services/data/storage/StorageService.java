@@ -245,12 +245,13 @@ public class StorageService {
         return getAuthenticatedData(getStoreByFileName(storeKey));
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
+    private Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(this::getAuthenticatedData);
     }
 
     private Stream<AuthenticatedData> getAuthenticatedData(DataStorageService<? extends DataRequest> store) {
-        return store.getPersistableStore().getClone().getMap().values().stream()
+        // todo use getClone once tested enough on main
+        return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
                 .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
@@ -371,15 +372,18 @@ public class StorageService {
     }
 
     public Stream<Map<ByteArray, AuthenticatedDataRequest>> getAuthenticatedDataStoreMaps() {
-        return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map<ByteArray, MailboxRequest>> getMailboxStoreMaps() {
-        return mailboxStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return mailboxStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map<ByteArray, AddAppendOnlyDataRequest>> getAddAppendOnlyDataStoreMaps() {
-        return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map.Entry<ByteArray, ? extends DataRequest>> getAllDataRequestMapEntries() {
@@ -397,7 +401,8 @@ public class StorageService {
     }
 
     private Stream<MailboxData> getMailboxData(DataStorageService<? extends DataRequest> store) {
-        return store.getPersistableStore().getClone().getMap().values().stream()
+        // todo use getClone once tested enough on main
+        return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddMailboxRequest)
                 .map(e -> (AddMailboxRequest) e)
                 .map(e -> e.getMailboxSequentialData().getMailboxData());

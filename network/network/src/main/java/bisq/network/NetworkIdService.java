@@ -30,7 +30,7 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Service {
+public class NetworkIdService extends RateLimitedPersistenceClient<NetworkIdStore> implements Service {
 
     @Getter
     private final NetworkIdStore persistableStore = new NetworkIdStore();

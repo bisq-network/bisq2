@@ -179,7 +179,7 @@ public class FileUtils {
                             }
                         });
                     } catch (IOException e) {
-                        throw new RuntimeException("Failed to delete " + path, e);
+                        log.error("Failed to delete " + path, e);
                     }
                 }));
     }
@@ -187,8 +187,8 @@ public class FileUtils {
     /**
      * List all files (not directories) in the given directory up to the specified depth.
      *
-     * @param path The directory to list files from
-     * @param depth     The maximum depth to traverse
+     * @param path  The directory to list files from
+     * @param depth The maximum depth to traverse
      * @return A set of file names (not paths) in the directory
      * @throws IOException if an I/O error occurs
      */

@@ -86,7 +86,7 @@ final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(defaultIdentity, new HashMap<>(activeIdentityByTag), new HashSet<>(retired));
+        return new IdentityStore(defaultIdentity, Map.copyOf(activeIdentityByTag), Set.copyOf(retired));
     }
 
     @Override

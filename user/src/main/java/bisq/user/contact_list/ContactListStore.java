@@ -74,7 +74,7 @@ public final class ContactListStore implements PersistableStore<ContactListStore
 
     @Override
     public synchronized ContactListStore getClone() {
-        return new ContactListStore(new HashSet<>(contactListEntries));
+        return new ContactListStore(Set.copyOf(contactListEntries));
     }
 
     @Override

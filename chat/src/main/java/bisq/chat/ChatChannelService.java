@@ -23,7 +23,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
-        implements Service, PersistenceClient<S> {
+        extends RateLimitedPersistenceClient<S> implements Service {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;

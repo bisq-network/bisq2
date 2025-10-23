@@ -47,7 +47,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
 
     @Override
     public MyMuSigOffersStore getClone() {
-        return new MyMuSigOffersStore(new HashSet<>(offers), new HashSet<>(deactivatedOfferIds));
+        return new MyMuSigOffersStore(Set.copyOf(offers), Set.copyOf(deactivatedOfferIds));
     }
 
     @Override
