@@ -269,7 +269,6 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.add(nym);
-        persist();
     }
 
     private void removeNymFromNickNameHashMap(String nym, String nickName) {
@@ -279,6 +278,5 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.remove(nym);
-        persist();
     }
 }

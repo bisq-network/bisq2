@@ -27,17 +27,17 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -58,7 +58,7 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
-    private final Set<String> ackedMessageIds = new HashSet<>();
+    private final Set<String> ackedMessageIds = ConcurrentHashMap.newKeySet();
     @Nullable
     private Scheduler checkPendingScheduler;
 
@@ -145,10 +145,10 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
                 persistableStore.getCreationDateByMessageId().putIfAbsent(ackRequestingMessageId, System.currentTimeMillis());
                 messageDeliveryStatusByMessageId.put(ackRequestingMessageId, new Observable<>(status));
             }
-            log.info("Persist MessageDeliveryStatus {} with ackRequestingMessageId {}",
-                    messageDeliveryStatusByMessageId.get(ackRequestingMessageId).get(), ackRequestingMessageId);
-            persist();
         }
+        log.info("Persist MessageDeliveryStatus {} with ackRequestingMessageId {}",
+                messageDeliveryStatusByMessageId.get(ackRequestingMessageId).get(), ackRequestingMessageId);
+        persist();
     }
 
     public ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
@@ -212,14 +212,18 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
     }
 
     private void checkPending() {
-        Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItems = getMessageDeliveryStatusByMessageId().entrySet().stream()
-                .filter(e -> e.getValue().get() == MessageDeliveryStatus.CONNECTING ||
-                        e.getValue().get() == MessageDeliveryStatus.SENT ||
-                        e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
-                .collect(Collectors.toSet());
-        if (!pendingItems.isEmpty()) {
-            log.warn("We have pending messages which have not been successfully sent. pendingItems={}", pendingItems);
-            pendingItems.forEach(e -> getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));
+        Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItemsSnapshot;
+        var map = getMessageDeliveryStatusByMessageId();
+        synchronized (map) {
+            pendingItemsSnapshot = map.entrySet().stream()
+                    .filter(e -> e.getValue().get() == MessageDeliveryStatus.CONNECTING
+                            || e.getValue().get() == MessageDeliveryStatus.SENT
+                            || e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
+                    .collect(Collectors.toSet());
+        }
+        if (!pendingItemsSnapshot.isEmpty()) {
+            log.warn("We have pending messages which have not been successfully sent. pendingItems={}", pendingItemsSnapshot);
+            pendingItemsSnapshot.forEach(e -> map.get(e.getKey()).set(MessageDeliveryStatus.FAILED));
             persist();
         }
     }

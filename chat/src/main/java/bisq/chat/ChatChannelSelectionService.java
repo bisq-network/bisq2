@@ -18,13 +18,12 @@
 package bisq.chat;
 
 import bisq.common.application.Service;
-import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
