@@ -426,22 +426,22 @@ public class PeerGroupManager implements Node.Listener {
                 .collect(Collectors.toList());
         List<Peer> outDatedTorPeers = outDated.stream().filter(e -> e.getAddress().isTorAddress()).collect(Collectors.toList());
         if (!outDatedTorPeers.isEmpty()) {
-            log.info("Remove {} persisted Tor peers: {}",
+            /*log.info("Remove {} persisted Tor peers: {}",
                     outDatedTorPeers.size(),
                     outDatedTorPeers.stream()
                             .sorted()
                             .map(e -> "Age: " + StringUtils.formatTime(e.getAge()) + "; " + e.getAddress())
-                            .collect(Collectors.joining("\n")));
+                            .collect(Collectors.joining("\n")));*/
             peerGroupService.removePersistedPeers(outDatedTorPeers);
         }
         List<Peer> outDatedI2PPeers = outDated.stream().filter(e -> e.getAddress().isI2pAddress()).collect(Collectors.toList());
         if (!outDatedI2PPeers.isEmpty()) {
-            log.info("Remove {} persisted I2P peers: {}",
+            /*log.info("Remove {} persisted I2P peers: {}",
                     outDatedI2PPeers.size(),
                     outDatedI2PPeers.stream()
                             .sorted()
                             .map(e -> "Age: " + StringUtils.formatTime(e.getAge()) + "; " + e.getAddress())
-                            .collect(Collectors.joining("\n")));
+                            .collect(Collectors.joining("\n")));*/
             peerGroupService.removePersistedPeers(outDatedI2PPeers);
         }
     }
