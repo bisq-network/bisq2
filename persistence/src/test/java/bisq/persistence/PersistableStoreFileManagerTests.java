@@ -22,11 +22,14 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PersistableStoreFileManagerTests {
     private static final String BACKUP_DIR = "backup" + File.separator;
@@ -58,7 +61,7 @@ public class PersistableStoreFileManagerTests {
         Path storePath = tempDir.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        storeFileManager.renameTempFileToCurrentFile();
+        storeFileManager.renameTempFileToCurrentFile(tmpFilePath);
 
         assertThat(storePath).exists();
         assertThat(tmpFilePath).doesNotExist();
@@ -73,14 +76,20 @@ public class PersistableStoreFileManagerTests {
         createEmptyFile(storePath);
 
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        assertThrows(IOException.class, storeFileManager::renameTempFileToCurrentFile);
+        // Should succeed by replacing the existing file (for updates)
+        storeFileManager.renameTempFileToCurrentFile(tmpFilePath);
+
+        // Verify the store file exists and temp file is gone
+        assertTrue(Files.exists(storePath));
+        assertFalse(Files.exists(tmpFilePath));
     }
 
     @Test
     void renameTempFileButTempFileDoesNotExist(@TempDir Path tempDir) {
         Path storePath = tempDir.resolve("store");
+        Path tmpFilePath = tempDir.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        assertThrows(NoSuchFileException.class, storeFileManager::renameTempFileToCurrentFile);
+        assertThrows(NoSuchFileException.class, () -> storeFileManager.renameTempFileToCurrentFile(tmpFilePath));
     }
 
     public static void createEmptyFile(Path path) throws IOException {

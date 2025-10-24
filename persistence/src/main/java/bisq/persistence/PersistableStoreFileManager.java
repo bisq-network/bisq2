@@ -24,8 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 @Slf4j
 public class PersistableStoreFileManager {
@@ -35,8 +37,6 @@ public class PersistableStoreFileManager {
     private final Path storeFilePath;
     private final Path parentDirectoryPath;
     private final BackupService backupService;
-    @Getter
-    private final Path tempFilePath;
 
     public PersistableStoreFileManager(Path storeFilePath) {
         this(storeFilePath, MaxBackupSize.ZERO);
@@ -45,7 +45,6 @@ public class PersistableStoreFileManager {
     public PersistableStoreFileManager(Path storeFilePath, MaxBackupSize maxBackupSize) {
         this.storeFilePath = storeFilePath;
         this.parentDirectoryPath = storeFilePath.getParent();
-        this.tempFilePath = createTempFilePath();
         Path dataDir = storeFilePath.getParent().getParent().getParent();
         backupService = new BackupService(dataDir, storeFilePath, maxBackupSize);
     }
@@ -64,20 +63,35 @@ public class PersistableStoreFileManager {
         backupService.maybeMigrateLegacyBackupFile();
     }
 
-    public void renameTempFileToCurrentFile() throws IOException {
-        File storeFile = storeFilePath.toFile();
-        if (storeFile.exists()) {
-            throw new IOException(storeFilePath + " does already exist.");
-        }
-
+    public void renameTempFileToCurrentFile(Path tempFilePath) throws IOException {
         File tempFile = tempFilePath.toFile();
         if (!tempFile.exists()) {
+            // Log directory contents to help diagnose the issue
+            File parentDir = tempFile.getParentFile();
+            if (parentDir != null && parentDir.exists()) {
+                File[] files = parentDir.listFiles();
+                String fileList = files != null ? String.join(", ",
+                    java.util.Arrays.stream(files).map(File::getName).toArray(String[]::new)) : "null";
+                log.error("Temp file does not exist: {}. Parent directory contents: [{}]",
+                         tempFile.getAbsolutePath(), fileList);
+            }
             throw new NoSuchFileException(tempFile.getAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
 
-        boolean isSuccess = tempFile.renameTo(storeFile);
-        if (!isSuccess) {
-            throw new IOException("Couldn't rename " + tempFile + " to " + storeFilePath);
+        File storeFile = storeFilePath.toFile();
+        // Delete existing store file if it exists (for updates)
+        if (storeFile.exists()) {
+            Files.delete(storeFilePath);
+        }
+
+        // Use Files.move for atomic, platform-independent rename operation
+        // ATOMIC_MOVE ensures the operation is atomic on platforms that support it
+        try {
+            log.debug("Renaming temp file {} to {}", tempFilePath, storeFilePath);
+            Files.move(tempFilePath, storeFilePath, StandardCopyOption.ATOMIC_MOVE);
+            log.debug("Successfully renamed temp file to {}", storeFilePath);
+        } catch (IOException e) {
+            throw new IOException("Couldn't rename " + tempFile + " to " + storeFilePath, e);
         }
     }
 
@@ -89,8 +103,12 @@ public class PersistableStoreFileManager {
         backupService.prune();
     }
 
-    private Path createTempFilePath() {
-        String tempFileName = TEMP_FILE_PREFIX + storeFilePath.getFileName();
-        return parentDirectoryPath.resolve(tempFileName);
+    /**
+     * Creates a unique temp file path for each write operation to avoid race conditions
+     * when multiple threads try to persist concurrently (e.g., main thread + shutdown hook).
+     */
+    public Path createTempFilePath() throws IOException {
+        String prefix = TEMP_FILE_PREFIX + storeFilePath.getFileName().toString().replace(".protobuf", "_");
+        return Files.createTempFile(parentDirectoryPath, prefix, ".protobuf");
     }
 }

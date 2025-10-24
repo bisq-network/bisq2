@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -67,18 +68,25 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
+        Path tempFilePath = null;
         try {
-            writeStoreToTempFile(persistableStore);
+            // Create a unique temp file for this write operation to avoid race conditions
+            tempFilePath = storeFileManager.createTempFilePath();
+            writeStoreToTempFile(persistableStore, tempFilePath);
             boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
             if (!hasFileBeenBackedUp) {
                 File storeFile = storeFilePath.toFile();
                 FileUtils.deleteFile(storeFile);
             }
-            storeFileManager.renameTempFileToCurrentFile();
+            storeFileManager.renameTempFileToCurrentFile(tempFilePath);
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize {}", persistableStore, e);
+            cleanupTempFile(tempFilePath);
+            throw e; // Re-throw to prevent silent failures
         } catch (Exception e) {
-            log.error("Couldn't write persistable store to disk.", e);
+            log.error("Couldn't write persistable store to disk: {}", storeFilePath, e);
+            cleanupTempFile(tempFilePath);
+            throw new RuntimeException("Failed to persist store", e); // Re-throw to prevent silent failures
         }
     }
 
@@ -107,9 +115,21 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         }
     }
 
-    private void writeStoreToTempFile(T persistableStore) {
-        File tempFile = storeFileManager.getTempFilePath().toFile();
+    private void writeStoreToTempFile(T persistableStore, Path tempFilePath) {
+        File tempFile = tempFilePath.toFile();
+        log.debug("Writing store to temp file: {}", tempFile.getAbsolutePath());
         writeStoreToFile(persistableStore, tempFile);
+        log.debug("Successfully wrote store to temp file: {}", tempFile.getAbsolutePath());
+    }
+
+    private void cleanupTempFile(Path tempFilePath) {
+        if (tempFilePath != null) {
+            try {
+                Files.deleteIfExists(tempFilePath);
+            } catch (IOException e) {
+                log.warn("Failed to cleanup temp file: {}", tempFilePath, e);
+            }
+        }
     }
 
     private void writeStoreToFile(T persistableStore, File file) {
@@ -119,6 +139,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             // it requires static access).
             Any any = persistableStore.toAny();
             any.writeDelimitedTo(fileOutputStream);
+
+            // Ensure data is flushed to disk before closing
+            fileOutputStream.flush();
+            fileOutputStream.getFD().sync();
         } catch (IOException e) {
             throw new CouldNotSerializePersistableStore(e);
         }

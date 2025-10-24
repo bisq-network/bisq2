@@ -128,6 +128,25 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         }
     }
 
+    private static String normalizeLanguageTag(String code) {
+        if (code == null) return "en";
+        String[] parts = code.replace('_','-').split("-");
+        if (parts.length == 0) return "en";
+        StringBuilder sb = new StringBuilder(parts[0].toLowerCase());
+        for (int i = 1; i < parts.length; i++) {
+            String p = parts[i];
+            if (p.length() == 2 || p.length() == 3) {
+                sb.append('-').append(p.toUpperCase());
+            } else if (p.length() == 4) {
+                sb.append('-').append(Character.toUpperCase(p.charAt(0))).append(p.substring(1).toLowerCase());
+            } else if (!p.isEmpty()) {
+                sb.append('-').append(p);
+            }
+        }
+        return sb.toString();
+    }
+
+
 
     /* --------------------------------------------------------------------- */
     // API
@@ -135,12 +154,21 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        String languageCode = getLanguageCode().get();
+        String stored = getLanguageCode().get();
+        String languageCode = normalizeLanguageTag(stored);
+
+        if (!languageCode.equals(stored)) {
+            persistableStore.languageCode.set(languageCode);
+            persist();
+        }
 
         LanguageRepository.setDefaultLanguage(languageCode);
         Res.setLanguage(languageCode);
-        Locale currentLocale = LocaleRepository.getDefaultLocale();
-        Locale newLocale = new Locale(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        Locale newLocale = Locale.forLanguageTag(languageCode);
+        if (LocaleRepository.isLocaleInvalid(newLocale)) {
+            Locale currentLocale = LocaleRepository.getDefaultLocale();
+            newLocale = new Locale(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        }
         LocaleRepository.setDefaultLocale(newLocale);
         CountryRepository.applyDefaultLocale(newLocale);
         FiatCurrencyRepository.setLocale(newLocale);
@@ -291,8 +319,14 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     }
 
     public void setLanguageCode(String languageCode) {
-        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
-            persistableStore.languageCode.set(languageCode);
+        if (languageCode != null) {
+            String normalized = normalizeLanguageTag(languageCode);
+            String base = normalized.split("-", 2)[0];
+            if (LanguageRepository.I18N_CODES.contains(normalized) || LanguageRepository.CODES.contains(base)) {
+                persistableStore.languageCode.set(normalized);
+            } else {
+                log.warn("Ignoring unsupported language code: {}", languageCode);
+            }
         }
     }
 
