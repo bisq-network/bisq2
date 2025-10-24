@@ -212,10 +212,14 @@ class InventoryRequestPolicy {
                             "We repeat requests in {} seconds",
                     candidates.size(), delay / 1000);
             return delay;
-        } else {
+        } else if (!candidates.isEmpty()) {
             log.info("We got {} requests completed but data is still missing. " +
                     "We repeat requests in 1 second", candidates.size());
             return 1000;
+        } else {
+            log.info("We got no requests completed and data is still missing. " +
+                    "We repeat requests in 1 minute");
+            return 60_000;
         }
     }
 
