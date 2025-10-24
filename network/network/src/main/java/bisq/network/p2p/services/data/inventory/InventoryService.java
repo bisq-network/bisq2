@@ -287,7 +287,7 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
         periodicRequestScheduler.ifPresent(Scheduler::stop);
         periodicRequestScheduler = Optional.of(Scheduler.run(this::periodicRequest)
                 .host(this)
-                .runnableName("periodicRequest")
+                .runnableName("periodicRequest." + node.getTransportType().name())
                 .after(interval));
     }
 
