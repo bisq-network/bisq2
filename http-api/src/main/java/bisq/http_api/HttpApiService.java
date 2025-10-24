@@ -92,7 +92,8 @@ public class HttpApiService implements Service {
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
             PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
-            UserProfileRestApi userProfileRestApi = new UserProfileRestApi(userService.getUserProfileService());
+            UserProfileRestApi userProfileRestApi = new UserProfileRestApi(userService.getUserProfileService(),
+                    supportedService.getModerationRequestService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
