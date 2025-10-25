@@ -331,7 +331,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     }
 
     public void setLanguageCode(String languageCode) {
-        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
+        if (languageCode != null && LanguageRepository.I18N_CODES.contains(languageCode)) {
             persistableStore.languageCode.set(languageCode);
         }
     }
