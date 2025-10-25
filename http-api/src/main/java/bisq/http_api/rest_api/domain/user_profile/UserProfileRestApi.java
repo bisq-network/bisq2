@@ -20,6 +20,7 @@ package bisq.http_api.rest_api.domain.user_profile;
 import bisq.dto.DtoMappings;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
+import bisq.support.moderator.ModerationRequestService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,9 +47,12 @@ import java.util.stream.Collectors;
 @Tag(name = "User Profile API", description = "API for managing user profiles")
 public class UserProfileRestApi extends RestApiBase {
     private final UserProfileService userProfileService;
+    private final ModerationRequestService moderationRequestService;
 
-    public UserProfileRestApi(UserProfileService userProfileService) {
+    public UserProfileRestApi(UserProfileService userProfileService,
+                              ModerationRequestService moderationRequestService) {
         this.userProfileService = userProfileService;
+        this.moderationRequestService = moderationRequestService;
     }
 
     @POST
@@ -92,11 +96,11 @@ public class UserProfileRestApi extends RestApiBase {
     public Response undoIgnoreUserProfile(@PathParam("profileId") String profileId) {
         try {
             Optional<UserProfile> userProfile = userProfileService.findUserProfile(profileId);
-            
+
             if (userProfile.isEmpty()) {
                 return buildNotFoundResponse("User profile not found with ID: " + profileId);
             }
-            
+
             userProfileService.undoIgnoreUserProfile(userProfile.get());
             return Response.noContent().build();
         } catch (Exception e) {
@@ -160,6 +164,43 @@ public class UserProfileRestApi extends RestApiBase {
             return buildOkResponse(profiles);
         } catch (Exception e) {
             log.error("Error retrieving user profiles by IDs", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @POST
+    @Path("/report/{profileId}")
+    @Operation(
+            summary = "Report User Profile",
+            description = "Report a user profile to moderators for review",
+            requestBody = @RequestBody(
+                    description = "Report details including the reason message",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ReportUserProfileRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "User profile reported successfully"),
+                    @ApiResponse(responseCode = "404", description = "User profile not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response reportUserProfile(
+            @PathParam("profileId") String profileId, @Valid ReportUserProfileRequest request
+    ) {
+        try {
+            if (request == null || request.message() == null || request.message().isBlank()) {
+                return buildResponse(Response.Status.BAD_REQUEST, "Message must be provided and not empty");
+            }
+
+            Optional<UserProfile> userProfile = userProfileService.findUserProfile(profileId);
+            if (userProfile.isEmpty()) {
+                return buildNotFoundResponse("User profile not found with ID: " + profileId);
+            }
+
+            moderationRequestService.reportUserProfile(userProfile.get(), request.message());
+            return Response.noContent().build();
+        } catch (Exception e) {
+            log.error("Error reporting user profile", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
