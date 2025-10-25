@@ -38,7 +38,7 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -49,7 +49,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

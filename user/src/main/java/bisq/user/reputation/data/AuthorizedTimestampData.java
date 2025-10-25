@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 // Data size: 49 bytes
 @Slf4j
@@ -45,7 +45,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     public static final long TTL = TTL_30_DAYS;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
+    private transient final MetaData metaData = new MetaData(TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_50_000);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

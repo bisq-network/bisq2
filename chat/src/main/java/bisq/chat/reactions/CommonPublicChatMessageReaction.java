@@ -26,6 +26,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.network.p2p.services.data.storage.MetaData.*;
+
 @Slf4j
 @Getter
 @ToString(callSuper = true)
@@ -33,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CommonPublicChatMessageReaction extends ChatMessageReaction implements DistributedData {
     // Metadata needs to be symmetric with CommonPublicChatMessage.
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public CommonPublicChatMessageReaction(String id,
                                            String userProfileId,

@@ -20,12 +20,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -35,9 +29,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
@@ -80,81 +76,76 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         }
 
         int maxSize = getMaxMapSize();
-        Map<ByteArray, T> pruned = map.entrySet().stream()
+        int originalSize = map.size();
+        log.debug("Maybe pruning persisted data for {}: size={}, maxSize={}", storeKey, originalSize, maxSize);
+
+        Map<String, AtomicInteger> numEntriesByDataRequest = new TreeMap<>();
+        Map<ByteArray, T> newMap = map.entrySet().stream()
                 .filter(entry -> {
                     T dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
+                    String dataRequestName = dataRequest.getClass().getSimpleName();
+                    numEntriesByDataRequest
+                            .computeIfAbsent(dataRequestName, k -> new AtomicInteger(0))
+                            .incrementAndGet();
+                    if (dataRequest.isExpired()) {
+                        // log.debug("{} is expired (was created: {})", storeKey, new Date(dataRequest.getCreated()));
+                        return false;
                     }
-                    return !isExpired;
+                    return true;
                 })
-                .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(maxSize)
+                .sorted(Comparator.comparingLong((Map.Entry<ByteArray, T> e) -> e.getValue().getCreated()).reversed())
+                .limit(getMaxMapSize())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (numEntriesByDataRequest.values().stream().mapToInt(AtomicInteger::get).sum() > 0) {
+            log.info("Add/Remove distribution for {}: {}", storeKey, numEntriesByDataRequest);
+        }
+
+        // If no change, nothing to do
+        if (newMap.size() == originalSize) {
+            return persisted;
+        }
+
+        // Determine pruned/expired entries efficiently
+        Set<ByteArray> retainedKeys = newMap.keySet();
+        List<T> removedEntries = map.entrySet().stream()
+                .filter(e -> !retainedKeys.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+
+        prunedAndExpiredDataRequests.addAll(removedEntries);
+        log.info("Pruned {} entries for {}", removedEntries.size(), storeKey);
+
+        // Apply changes atomically
         map.clear();
-        map.putAll(pruned);
+        map.putAll(newMap);
+
+        // We do not call persist and delegate it to the event when the map gets updated at initial data requests.
+
         return persisted;
     }
 
-    protected int getMaxMapSize() {
-        if (maxMapSize.isEmpty()) {
-            int size = persistableStore.getMap().values().stream()
-                    .map(DataRequest::getMaxMapSize)
-                    .findFirst()
-                    .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 10000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
-        }
-        return maxMapSize.get();
-    }
-
     protected boolean isExceedingMapSize() {
-        int size = persistableStore.getMap().size();
+        Map<ByteArray, T> map = persistableStore.getMap();
+        int size = map.size();
         boolean isExceeding = size > getMaxMapSize();
         if (isExceeding) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
-            log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
-                    className, size, getMaxMapSize());
+            log.debug("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
+                    storeKey, size, getMaxMapSize());
         }
         if (size > 20_000) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
-            log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);
+            log.info("Map size for {} reached > 20 000 entries. map.size()={}", storeKey, size);
         }
         return isExceeding;
     }
+
+    protected int getMaxMapSize() {
+        return Optional.ofNullable(MetaData.MAX_MAP_SIZE_BY_CLASS_NAME.get(storeKey))
+                .orElseGet(() -> Optional.ofNullable(MetaData.DEFAULT_MAX_MAP_SIZE_BY_CLASS_NAME.get(storeKey))
+                        .orElseGet(() -> {
+                            log.warn("We did not find the map size for {} and use the default value of {}", storeKey, MAX_MAP_SIZE_10_000);
+                            return MAX_MAP_SIZE_10_000;
+                        }));
+    }
+
 }
