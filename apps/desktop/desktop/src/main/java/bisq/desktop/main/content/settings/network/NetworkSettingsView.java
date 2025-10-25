@@ -134,10 +134,12 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(transportOptionsVBox, new Insets(0, 5, 0, 5));
         VBox.setMargin(i2pOptionsVBox, new Insets(0, 5, 0, 5));
+
+        // Until I2P is ready for release we hide the I2P options
         VBox contentBox = new VBox(50,
-                transportOptionsHeadlineHBox, separator(), transportOptionsVBox,
+               /* transportOptionsHeadlineHBox, separator(), transportOptionsVBox,
                 i2pOptionsHeadline, separator(), i2pOptionsVBox,
-                buttons,
+                buttons,*/
                 difficultyAdjustmentHeadline, separator(), difficultyAdjustmentVBox
         );
 
