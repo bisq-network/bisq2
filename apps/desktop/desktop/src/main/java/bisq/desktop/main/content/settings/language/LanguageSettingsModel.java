@@ -31,12 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class LanguageSettingsModel implements Model {
     @Setter
-    private String selectedLanguageCode;
-    private final StringProperty selectedLSupportedLanguageCode = new SimpleStringProperty();
-    private final ObservableList<String> languageCodes = FXCollections.observableArrayList();
-    private final ObservableList<String> supportedLanguageCodes = FXCollections.observableArrayList();
-    private final FilteredList<String> supportedLanguageCodeFilteredList = new FilteredList<>(supportedLanguageCodes);
-    private final ObservableList<String> selectedSupportedLanguageCodes = FXCollections.observableArrayList();
+    private String selectedLanguageTag;
+    private final StringProperty selectedLSupportedLanguageTag = new SimpleStringProperty();
+    private final ObservableList<String> languageTags = FXCollections.observableArrayList();
+    private final ObservableList<String> supportedLanguageTags = FXCollections.observableArrayList();
+    private final FilteredList<String> supportedLanguageTagsFilteredList = new FilteredList<>(supportedLanguageTags);
+    private final ObservableList<String> selectedSupportedLanguageTags = FXCollections.observableArrayList();
 
     public LanguageSettingsModel() {
     }

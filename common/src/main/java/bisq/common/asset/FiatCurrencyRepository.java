@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -87,15 +88,16 @@ public class FiatCurrencyRepository {
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
+        if (StringUtils.isEmpty(countryCode)) {
+            return new FiatCurrency("USD");
+        }
+
         if (countryCode.equals("XK")) {
             return new FiatCurrency("EUR");
         }
 
-        // The language and variant components of the locale at Currency.getInstance are ignored.
-        Locale countryLocale = new Locale.Builder()
-                .setLanguage(locale.getLanguage())
-                .setRegion(countryCode)
-                .build();
+        // The variant component of the locale at Currency.getInstance are ignored.
+        Locale countryLocale = Locale.of(locale.getLanguage(), countryCode);
         try {
             Currency currency = Currency.getInstance(countryLocale);
             return new FiatCurrency(currency);
@@ -134,6 +136,7 @@ public class FiatCurrencyRepository {
     public static String getDisplayNameAndCode(String currencyCode) {
         return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getDisplayNameAndCode();
     }
+
     public static String getCodeAndDisplayName(String currencyCode) {
         return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getCodeAndDisplayName();
     }

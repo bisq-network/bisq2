@@ -93,12 +93,12 @@ public class WebcamApp extends Application {
             LogSetup.setup(logFile);
             log.info("Webcam app logging to {}", logFile);
 
-            String language = "en";
-            String languageParam = parameters.getNamed().get("language");
-            if (languageParam != null) {
-                language = URLDecoder.decode(languageParam, StandardCharsets.UTF_8);
+            String languageTag = "en";
+            String languageTagParam = parameters.getNamed().get("languageTag");
+            if (languageTagParam != null) {
+                languageTag = URLDecoder.decode(languageTagParam, StandardCharsets.UTF_8);
             }
-            Res.setAndApplyLanguage(language);
+            Res.setAndApplyLanguageTag(languageTag);
 
             qrCodeSender = new QrCodeSender(port);
         } catch (Exception e) {

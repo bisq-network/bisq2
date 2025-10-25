@@ -64,11 +64,7 @@ public class CountryRepository {
     }
 
     public static String getLocalizedCountryDisplayString(String countryCode) {
-        return new Locale.Builder()
-                .setLanguage(LanguageRepository.getDefaultLanguage())
-                .setRegion(countryCode)
-                .build()
-                .getDisplayCountry();
+        return Locale.of("", countryCode).getDisplayCountry(LocaleRepository.getDefaultLocale());
     }
 
     public static Country getCountry(String countryCode) {

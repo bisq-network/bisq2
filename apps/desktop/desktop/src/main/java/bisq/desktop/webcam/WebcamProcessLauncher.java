@@ -61,7 +61,7 @@ public class WebcamProcessLauncher {
 
                 String portParam = "--port=" + port;
                 String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
-                String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
+                String languageTagParam = "--languageTag=" + LanguageRepository.getDefaultLanguageTag();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 ProcessBuilder processBuilder;
@@ -72,9 +72,9 @@ public class WebcamProcessLauncher {
                         FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 }
                 log.info("ProcessBuilder commands: {}", processBuilder.command());
                 Process process = processBuilder.start();
