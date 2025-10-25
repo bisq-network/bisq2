@@ -33,8 +33,8 @@ import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.backup.BackupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -102,10 +102,10 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getPreventStandbyMode().addObserver(value -> persist()));
         pins.add(getCloseMyOfferWhenTaken().addObserver(value -> persist()));
         pins.add(getConsumedAlertIds().addObserver(this::persist));
-        pins.add(getSupportedLanguageCodes().addObserver(this::persist));
+        pins.add(getSupportedLanguageTags().addObserver(this::persist));
         pins.add(getSelectedMuSigMarket().addObserver(value -> persist()));
         pins.add(getTradeRulesConfirmed().addObserver(value -> persist()));
-        pins.add(getLanguageCode().addObserver(value -> persist()));
+        pins.add(getLanguageTag().addObserver(value -> persist()));
         pins.add(getDifficultyAdjustmentFactor().addObserver(value -> persist()));
         pins.add(getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist()));
         pins.add(getFavouriteMarkets().addObserver(this::persist));
@@ -159,12 +159,11 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        String languageCode = getLanguageCode().get();
-
-        LanguageRepository.setDefaultLanguage(languageCode);
-        Res.setAndApplyLanguage(languageCode);
-        Locale currentLocale = LocaleRepository.getDefaultLocale();
-        Locale newLocale = Locale.of(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        String languageTag = getLanguageTag().get();
+        LanguageRepository.setDefaultLanguageTag(languageTag);
+        Res.setAndApplyLanguageTag(languageTag);
+        Locale locale = Locale.forLanguageTag(languageTag);
+        Locale newLocale = LocaleRepository.ensureValidLocale(locale);
         LocaleRepository.setDefaultLocale(newLocale);
         CountryRepository.applyDefaultLocale(newLocale);
         FiatCurrencyRepository.setLocale(newLocale);
@@ -215,16 +214,16 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return persistableStore.consumedAlertIds;
     }
 
-    public ObservableSet<String> getSupportedLanguageCodes() {
-        return persistableStore.supportedLanguageCodes;
+    public ObservableSet<String> getSupportedLanguageTags() {
+        return persistableStore.supportedLanguageTags;
     }
 
     public ReadOnlyObservable<Boolean> getCloseMyOfferWhenTaken() {
         return persistableStore.closeMyOfferWhenTaken;
     }
 
-    public ReadOnlyObservable<String> getLanguageCode() {
-        return persistableStore.languageCode;
+    public ReadOnlyObservable<String> getLanguageTag() {
+        return persistableStore.languageTag;
     }
 
     public ObservableSet<Market> getFavouriteMarkets() {
@@ -330,9 +329,9 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         persistableStore.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
     }
 
-    public void setLanguageCode(String languageCode) {
-        if (languageCode != null && LanguageRepository.I18N_CODES.contains(languageCode)) {
-            persistableStore.languageCode.set(languageCode);
+    public void setLanguageTag(String languageTag) {
+        if (languageTag != null && LanguageRepository.LANGUAGE_TAGS.contains(languageTag)) {
+            persistableStore.languageTag.set(languageTag);
         }
     }
 

@@ -76,13 +76,13 @@ public class Res {
         updateBundles();
     }
 
-    public static void setLanguage(String languageCode) {
+    public static void setLanguageTag(String languageTag) {
         // We use Locale.ROOT so that the i18n file without language suffix is used. in our case that's english.
-        locale = "en".equalsIgnoreCase(languageCode) ? Locale.ROOT : Locale.forLanguageTag(languageCode);
+        locale = "en".equalsIgnoreCase(languageTag) ? Locale.ROOT : Locale.forLanguageTag(languageTag);
     }
 
-    public static void setAndApplyLanguage(String languageCode) {
-        setLanguage(languageCode);
+    public static void setAndApplyLanguageTag(String languageTag) {
+        setLanguageTag(languageTag);
         updateBundles();
     }
 

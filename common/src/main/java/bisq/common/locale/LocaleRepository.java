@@ -53,29 +53,25 @@ public class LocaleRepository {
         }
     }
 
-    public static void setDefaultLocale(Locale defaultLocale) {
-        if (isLocaleInvalid(defaultLocale)) {
-            defaultLocale = Locale.US;
-        }
-        LocaleRepository.defaultLocale = defaultLocale;
+    public static void setDefaultLocale(Locale locale) {
+        LocaleRepository.defaultLocale = locale;
     }
 
-    public static boolean isLocaleInvalid(Locale locale) {
-        // On some systems there is no country defined, in that case we use en_US
-        boolean isInvalid = locale == null ||
-                locale.getCountry() == null ||
-                locale.getCountry().isEmpty() ||
-                locale.getDisplayCountry() == null ||
-                locale.getDisplayCountry().isEmpty() ||
-                locale.getLanguage() == null ||
-                locale.getLanguage().isEmpty() ||
-                locale.getDisplayLanguage() == null ||
-                locale.getDisplayLanguage().isEmpty();
-        if (isInvalid) {
-            log.warn("Provided locale is invalid. We use Locale.US instead. Provided locale={}", locale);
+    public static Locale ensureValidLocale(Locale locale) {
+        if (locale.getCountry().isEmpty()) {
+            log.warn("Locale has no country defined. locale={}", locale);
+            Locale currentLocale = LocaleRepository.getDefaultLocale();
 
+            if (!locale.getLanguage().isEmpty() && !currentLocale.getCountry().isEmpty()) {
+                log.warn("Locale has no country defined. We apply the country from the current locale.");
+                return Locale.of(locale.getLanguage(), currentLocale.getCountry());
+            } else {
+                log.warn("Could not set the new locale, we fall back to Locale.US");
+                return Locale.US;
+            }
+        } else {
+            return locale;
         }
-        return isInvalid;
     }
 
     // Data from https://restcountries.eu/rest/v2/all?fields=name;region;subregion;alpha2Code;languages

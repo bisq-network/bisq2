@@ -219,10 +219,10 @@ public class Bi2pApp extends Application {
     }
 
     private void setupRes(Parameters parameters) {
-        String language = Optional.ofNullable(parameters.getNamed().get("language"))
-                .map(languageParam -> URLDecoder.decode(languageParam, StandardCharsets.UTF_8))
+        String languageTag = Optional.ofNullable(parameters.getNamed().get("languageTag"))
+                .map(languageTagParam -> URLDecoder.decode(languageTagParam, StandardCharsets.UTF_8))
                 .orElse("en");
-        Res.setAndApplyLanguage(language);
+        Res.setAndApplyLanguageTag(languageTag);
     }
 }
 

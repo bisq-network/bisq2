@@ -104,10 +104,10 @@ public class SettingsRestApi extends RestApiBase {
                 settingsService.setTradeRulesConfirmed(request.tradeRulesConfirmed());
             } else if (request.closeMyOfferWhenTaken() != null) {
                 settingsService.setCloseMyOfferWhenTaken(request.closeMyOfferWhenTaken());
-            } else if (request.languageCode() != null) {
-                settingsService.setLanguageCode(request.languageCode());
+            } else if (request.languageCode() != null) { // TODO rename VO for json and apply to mobile
+                settingsService.setLanguageTag(request.languageCode());
             } else if (request.supportedLanguageCodes() != null) {
-                ObservableSet<String> supportedLanguageCodes = settingsService.getSupportedLanguageCodes();
+                ObservableSet<String> supportedLanguageCodes = settingsService.getSupportedLanguageTags();
                 supportedLanguageCodes.clear();
                 supportedLanguageCodes.addAll(request.supportedLanguageCodes());
             } else if (request.maxTradePriceDeviation() != null) {

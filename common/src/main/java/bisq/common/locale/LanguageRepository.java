@@ -18,7 +18,6 @@
 package bisq.common.locale;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -30,11 +29,25 @@ import java.util.stream.Collectors;
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class LanguageRepository {
-    @Getter
-    @Setter
-    private static String defaultLanguage = "en";
+    public static void setDefaultLanguageTag(String languageTag) {
+        if (LANGUAGE_TAGS.contains(languageTag)) {
+            defaultLanguageTag = languageTag;
+        } else {
+            // If we don't have the language with specified region we fall back to the languageCode
+            String languageCode = Locale.forLanguageTag(languageTag).getLanguage();
+            // Find any supported tag matching this language code
+            defaultLanguageTag = LANGUAGE_TAGS.stream()
+                    .filter(tag -> Locale.forLanguageTag(tag).getLanguage().equals(languageCode))
+                    .findFirst()
+                    .orElse("en");
+        }
+    }
 
-    public static final List<String> CODES = LocaleRepository.LOCALES.stream()
+    // IETF BCP 47 language tag string.  E.g. pt-BR
+    @Getter
+    private static String defaultLanguageTag = "en";
+
+    public static final List<String> LANGUAGE_CODES = LocaleRepository.LOCALES.stream()
             .filter(locale -> !locale.getLanguage().isEmpty() &&
                     !locale.getDisplayLanguage().isEmpty())
             .map(Locale::getLanguage)
@@ -54,7 +67,7 @@ public class LanguageRepository {
 
     // Returns language in defaut locale language (e.g. Spanish if "en" is default)
     public static String getDisplayLanguage(Locale locale) {
-        return locale.getDisplayLanguage(Locale.forLanguageTag(defaultLanguage));
+        return locale.getDisplayLanguage(Locale.forLanguageTag(defaultLanguageTag));
     }
 
     // Returns language in locale's language (e.g. español)
@@ -62,21 +75,22 @@ public class LanguageRepository {
         return locale.getDisplayName(locale);
     }
 
-    public static final List<String> I18N_CODES = List.of(
+    // IETF BCP 47 language tag string.  E.g. pt-BR
+    public static final List<String> LANGUAGE_TAGS = List.of(
             "en", // English
             "de", // German
             "es", // Spanish
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
-            "pcm", // Nigerian Pidgin
+            "pcm-NG", // Nigerian Pidgin
             "ru", // Russian
             "af-ZA" // Afrikaans
             /*
             // not translated yet
             "pt", // Portuguese
-            "zh-Hans", // Chinese [Han Simplified]
-            "zh-Hant", // Chinese [Han Traditional]
+            "zh-Hans", // Chinese [Han Simplified] -> zh-Hans-CN to support country
+            "zh-Hant", // Chinese [Han Traditional]-> zh-Hant-CN to support country
             "fr", // French
             "vi", // Vietnamese
             "th", // Thai
@@ -123,7 +137,8 @@ public class LanguageRepository {
     );
 
     public static boolean isDefaultLanguageRTL() {
-        return RTL_LANGUAGES_CODES.contains(defaultLanguage);
+        String languageCode = Locale.forLanguageTag(defaultLanguageTag).getLanguage();
+        return RTL_LANGUAGES_CODES.contains(languageCode);
     }
 
     public static final List<String> RTL_LANGUAGES_CODES = List.of(

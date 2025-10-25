@@ -19,6 +19,7 @@ package bisq.desktop.main.content.settings.language;
 
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
@@ -35,7 +36,7 @@ public class LanguageSettingsController implements Controller {
     private final LanguageSettingsModel model;
     private final SettingsService settingsService;
 
-    private Pin supportedLanguageCodesPin;
+    private Pin supportedLanguageTagsPin;
 
     public LanguageSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -45,49 +46,50 @@ public class LanguageSettingsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
-        model.setSelectedLanguageCode(settingsService.getLanguageCode().get());
-        model.getSupportedLanguageCodes().setAll(LanguageRepository.CODES);
+        model.getLanguageTags().setAll(LanguageRepository.LANGUAGE_TAGS);
+        model.setSelectedLanguageTag(settingsService.getLanguageTag().get());
+        model.getSupportedLanguageTags().setAll(LanguageRepository.LANGUAGE_TAGS);
 
-        supportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
-                .to(settingsService.getSupportedLanguageCodes());
+        supportedLanguageTagsPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageTags())
+                .to(settingsService.getSupportedLanguageTags());
 
-        model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
+        model.getSupportedLanguageTagsFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageTags().contains(e));
     }
 
     @Override
     public void onDeactivate() {
-        supportedLanguageCodesPin.unbind();
+        supportedLanguageTagsPin.unbind();
     }
 
-    void onSelectLanguage(String languageCode) {
-        model.setSelectedLanguageCode(languageCode);
-        settingsService.setLanguageCode(languageCode);
+    void onSelectLanguageTag(String languageTag) {
+        model.setSelectedLanguageTag(languageTag);
+        settingsService.setLanguageTag(languageTag);
         new Popup().feedback(Res.get("settings.language.restart")).useShutDownButton().show();
     }
 
-    String getDisplayLanguage(String languageCode) {
-        return LanguageRepository.getDisplayString(languageCode);
+    String getDisplayLanguage(String languageTag) {
+        return LanguageRepository.getDisplayString(languageTag);
     }
 
-    void onSelectSupportedLanguage(String languageCode) {
-        if (languageCode != null) {
-            model.getSelectedLSupportedLanguageCode().set(languageCode);
+    void onSelectSupportedLanguage(String languageTag) {
+        if (languageTag != null) {
+            model.getSelectedLSupportedLanguageTag().set(languageTag);
         }
     }
 
     void onAddSupportedLanguage() {
-        if (model.getSelectedLSupportedLanguageCode() != null) {
-            settingsService.getSupportedLanguageCodes().add(model.getSelectedLSupportedLanguageCode().get());
-            model.getSelectedLSupportedLanguageCode().set(null);
-            model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
+        String selected = model.getSelectedLSupportedLanguageTag().get();
+        if (StringUtils.isNotEmpty(selected)) {
+            settingsService.getSupportedLanguageTags().add(selected);
+            model.getSelectedLSupportedLanguageTag().set(null);
+            model.getSupportedLanguageTagsFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageTags().contains(e));
         }
     }
 
-    void onRemoveSupportedLanguage(String languageCode) {
-        if (languageCode != null) {
-            settingsService.getSupportedLanguageCodes().remove(languageCode);
-            model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
+    void onRemoveSupportedLanguage(String languageTag) {
+        if (StringUtils.isNotEmpty(languageTag)) {
+            settingsService.getSupportedLanguageTags().remove(languageTag);
+            model.getSupportedLanguageTagsFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageTags().contains(e));
         }
     }
 }

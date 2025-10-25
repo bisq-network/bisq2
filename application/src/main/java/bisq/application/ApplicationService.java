@@ -190,9 +190,9 @@ public abstract class ApplicationService implements Service {
 
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguage(locale.getLanguage());
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
         FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguage(LanguageRepository.getDefaultLanguage());
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
         ResolverConfig.config();
 
         persistenceService = new PersistenceService(appDataDirPath);

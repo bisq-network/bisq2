@@ -118,7 +118,7 @@ public class Bi2pProcessLauncher implements Service {
                 command.add("--httpProxyHost=" + httpProxyHost);
                 command.add("--httpProxyPort=" + httpProxyPort);
                 command.add("--httpProxyEnabled=" + httpProxyEnabled);
-                command.add("--language=" + LanguageRepository.getDefaultLanguage());
+                command.add("--languageTag=" + LanguageRepository.getDefaultLanguageTag());
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);
                 processBuilder.directory(i2pRouterDirPath.toFile());

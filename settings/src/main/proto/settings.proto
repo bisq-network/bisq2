@@ -57,9 +57,9 @@ message SettingsStore {
   bool isTacAccepted = 9;
   repeated string consumedAlertIds = 10;
   bool closeMyOfferWhenTaken = 11;
-  string languageCode = 12;
+  string languageTag = 12;
   bool preventStandbyMode = 13;
-  repeated string supportedLanguageCodes = 14;
+  repeated string supportedLanguageTags = 14;
   double difficultyAdjustmentFactor = 15;
   bool ignoreDiffAdjustmentFromSecManager = 16;
   repeated common.Market favouriteMarkets = 17;

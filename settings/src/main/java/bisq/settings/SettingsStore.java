@@ -66,8 +66,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> isTacAccepted = new Observable<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
     final Observable<Boolean> preventStandbyMode = new Observable<>();
-    final Observable<String> languageCode = new Observable<>();
-    final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
+    final Observable<String> languageTag = new Observable<>();
+    final ObservableSet<String> supportedLanguageTags = new ObservableSet<>();
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
@@ -99,9 +99,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 true,
-                LanguageRepository.getDefaultLanguage(),
+                LanguageRepository.getDefaultLanguageTag(),
                 true,
-                Set.of(LanguageRepository.getDefaultLanguage()),
+                Set.of(LanguageRepository.getDefaultLanguageTag()),
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
                 false,
                 new HashSet<>(),
@@ -131,9 +131,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                   boolean isTacAccepted,
                   Set<String> consumedAlertIds,
                   boolean closeMyOfferWhenTaken,
-                  String languageCode,
+                  String languageTag,
                   boolean preventStandbyMode,
-                  Set<String> supportedLanguageCodes,
+                  Set<String> supportedLanguageTags,
                   double difficultyAdjustmentFactor,
                   boolean ignoreDiffAdjustmentFromSecManager,
                   Set<Market> favouriteMarkets,
@@ -161,9 +161,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
         this.isTacAccepted.set(isTacAccepted);
         this.consumedAlertIds.setAll(consumedAlertIds);
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
-        this.languageCode.set(languageCode);
+        this.languageTag.set(languageTag);
         this.preventStandbyMode.set(preventStandbyMode);
-        this.supportedLanguageCodes.setAll(supportedLanguageCodes);
+        this.supportedLanguageTags.setAll(supportedLanguageTags);
         this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
         this.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
         this.favouriteMarkets.setAll(favouriteMarkets);
@@ -197,9 +197,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 .setIsTacAccepted(isTacAccepted.get())
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
-                .setLanguageCode(languageCode.get())
+                .setLanguageTag(languageTag.get())
                 .setPreventStandbyMode(preventStandbyMode.get())
-                .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
+                .addAllSupportedLanguageTags(new ArrayList<>(supportedLanguageTags))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
                 .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(serializeForHash)).collect(Collectors.toList()))
@@ -255,9 +255,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getIsTacAccepted(),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
                 proto.getCloseMyOfferWhenTaken(),
-                proto.getLanguageCode(),
+                proto.getLanguageTag(),
                 proto.getPreventStandbyMode(),
-                new HashSet<>(proto.getSupportedLanguageCodesList()),
+                new HashSet<>(proto.getSupportedLanguageTagsList()),
                 proto.getDifficultyAdjustmentFactor(),
                 proto.getIgnoreDiffAdjustmentFromSecManager(),
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
@@ -302,9 +302,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 isTacAccepted.get(),
                 Set.copyOf(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
-                languageCode.get(),
+                languageTag.get(),
                 preventStandbyMode.get(),
-                Set.copyOf(supportedLanguageCodes),
+                Set.copyOf(supportedLanguageTags),
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
                 Set.copyOf(favouriteMarkets),
@@ -337,9 +337,9 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
             isTacAccepted.set(persisted.isTacAccepted.get());
             consumedAlertIds.setAll(persisted.consumedAlertIds);
             closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
-            languageCode.set(persisted.languageCode.get());
+            languageTag.set(persisted.languageTag.get());
             preventStandbyMode.set(persisted.preventStandbyMode.get());
-            supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
+            supportedLanguageTags.setAll(persisted.supportedLanguageTags);
             difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
             favouriteMarkets.setAll(persisted.favouriteMarkets);
