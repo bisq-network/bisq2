@@ -31,8 +31,8 @@ import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.backup.BackupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -291,7 +291,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     }
 
     public void setLanguageCode(String languageCode) {
-        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
+        if (languageCode != null && LanguageRepository.I18N_CODES.contains(languageCode)) {
             persistableStore.languageCode.set(languageCode);
         }
     }
