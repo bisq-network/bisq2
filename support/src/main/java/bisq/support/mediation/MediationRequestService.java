@@ -29,7 +29,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.DateUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
@@ -43,7 +42,6 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import com.google.common.primitives.Ints;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -51,8 +49,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -67,9 +63,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class MediationRequestService implements Service, ConfidentialMessageService.Listener {
-    // TODO adjust at release date
-    public final static Date MEDIATION_SELECTION_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
-
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
@@ -203,32 +196,17 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
             return userProfileService.findUserProfile(mediators.iterator().next().getProfileId());
         }
 
-        int index = new Date().after(MEDIATION_SELECTION_V1_ACTIVATION_DATE)
-                ? getDeterministicIndex_V1(mediators, makersProfileId, takersProfileId, offerId)
-                : getDeterministicIndex_V0(mediators, makersProfileId, takersProfileId);
+        int index = getDeterministicIndex(mediators, makersProfileId, takersProfileId, offerId);
 
         ArrayList<AuthorizedBondedRole> list = new ArrayList<>(mediators);
         list.sort(Comparator.comparing(AuthorizedBondedRole::getProfileId));
         return userProfileService.findUserProfile(list.get(index).getProfileId());
     }
 
-    private int getDeterministicIndex_V0(Set<AuthorizedBondedRole> mediators,
-                                         String makersProfileId,
-                                         String takersProfileId) {
-        try {
-            String combined = makersProfileId + takersProfileId;
-            int space = Math.abs(Ints.fromByteArray(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))));
-            return space % mediators.size();
-        } catch (Exception e) {
-            log.error("getDeterministicIndex_V0 failed", e);
-            return 0;
-        }
-    }
-
-    private int getDeterministicIndex_V1(Set<AuthorizedBondedRole> mediators,
-                                         String makersProfileId,
-                                         String takersProfileId,
-                                         String offerId) {
+    private int getDeterministicIndex(Set<AuthorizedBondedRole> mediators,
+                                      String makersProfileId,
+                                      String takersProfileId,
+                                      String offerId) {
         String input = makersProfileId + takersProfileId + offerId;
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8)); // returns 20 bytes
         // XOR multiple 4-byte chunks to use more of the hash
