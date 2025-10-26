@@ -67,7 +67,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copyAction, deleteAction);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copy, deleteAction);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
@@ -176,7 +176,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
+        copy.setOnAction(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
             editAction.setOnAction(e -> onEditMessage());
         }
@@ -237,7 +237,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         saveEditButton.setOnAction(null);
         cancelEditButton.setOnAction(null);
-        copyAction.setOnAction(null);
+        copy.setOnAction(null);
         editAction.setOnAction(null);
         deleteAction.setOnAction(null);
 
