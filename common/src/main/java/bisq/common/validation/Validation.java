@@ -18,7 +18,11 @@
 package bisq.common.validation;
 
 public interface Validation {
-    boolean isValid(String input);
+    default boolean isValid(String input) {
+        return true;
+    }
 
-    String getI18nKey();
+    default String getI18nKey() {
+        return "validation.invalid";
+    }
 }
