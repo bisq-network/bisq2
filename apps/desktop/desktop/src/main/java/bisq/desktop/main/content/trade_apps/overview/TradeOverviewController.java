@@ -88,13 +88,13 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MU_SIG_PROTOCOL,
                 TradeProtocolType.MU_SIG,
                 new Pair<>(10000L, 700000L),
-                "Q4/25"
+                "Q1/26"
         );
         ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
                 NavigationTarget.SUBMARINE,
                 TradeProtocolType.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                "Q2/26"
+                "Q3/26"
         );
         ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
                 NavigationTarget.BISQ_LIGHTNING,
