@@ -51,7 +51,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
@@ -78,7 +77,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -500,19 +498,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     public boolean wasOfferAlreadyTaken(MuSigOffer muSigOffer, NetworkId takerNetworkId) {
-        if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
-            // We do only check if we have a trade with same offer and takerNetworkId.
-            // As we include after TRADE_ID_V1_ACTIVATION_DATE the takeOffer date in the trade ID we might have
-            // multiple trades with the same offer and takerNetworkId combination.
-            // To verify that we do not have the same trade we need to use the tradeExists method.
-            return getTrades().stream().anyMatch(trade ->
-                    trade.getOffer().getId().equals(muSigOffer.getId()) &&
-                            trade.getTaker().getNetworkId().getId().equals(takerNetworkId.getId())
-            );
-        } else {
-            String tradeId = Trade.createId(muSigOffer.getId(), takerNetworkId.getId());
-            return tradeExists(tradeId);
-        }
+        return getTrades().stream().anyMatch(trade ->
+                trade.getOffer().getId().equals(muSigOffer.getId()) &&
+                        trade.getTaker().getNetworkId().getId().equals(takerNetworkId.getId())
+        );
     }
 
     public Collection<MuSigTrade> getTrades() {
