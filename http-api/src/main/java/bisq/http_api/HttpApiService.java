@@ -35,8 +35,6 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
-import bisq.http_api.validator.HttpApiRequestFilter;
-import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -99,7 +97,7 @@ public class HttpApiService implements Service {
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
             if (restApiConfigEnabled) {
-                var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
+                var restApiResourceConfig = new RestApiResourceConfig(restApiConfig,
                         offerbookRestApi,
                         tradeRestApi,
                         tradeChatMessagesRestApi,
@@ -109,15 +107,14 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi,
-                        HttpApiRequestFilter.from(restApiConfig));
+                        userProfileRestApi);
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
             }
 
             if (webSocketConfigEnabled) {
-                var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
+                var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig,
                         offerbookRestApi,
                         tradeRestApi,
                         tradeChatMessagesRestApi,
@@ -127,10 +124,8 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         paymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi,
-                        HttpApiRequestFilter.from(webSocketConfig));
+                        userProfileRestApi);
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
-                        webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
                         appDataDirPath,
                         securityService,
@@ -140,8 +135,7 @@ public class HttpApiService implements Service {
                         tradeService,
                         userService,
                         bisqEasyService,
-                        openTradeItemsService,
-                        WebSocketRequestValidator.from(webSocketConfig)));
+                        openTradeItemsService));
             } else {
                 webSocketService = Optional.empty();
             }

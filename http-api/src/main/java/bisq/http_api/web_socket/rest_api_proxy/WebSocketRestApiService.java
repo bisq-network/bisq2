@@ -18,6 +18,7 @@
 package bisq.http_api.web_socket.rest_api_proxy;
 
 import bisq.common.application.Service;
+import bisq.http_api.auth.AuthConstants;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,8 +27,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -70,15 +73,22 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
+        final String authToken;
+        if (webSocket instanceof DefaultWebSocket ws) {
+            authToken = ws.getUpgradeRequest().getHeader(AuthConstants.AUTH_HEADER);
+        } else {
+            authToken = null;
+        }
+
         WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(this::sendToRestApiServer)
+                .map(request -> sendToRestApiServer(request, authToken))
                 .flatMap(response -> response.toJson(objectMapper))
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
                                 "\nJson={}", json));
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
+    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request, @Nullable String authToken) {
         String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
@@ -92,6 +102,7 @@ public class WebSocketRestApiService implements Service {
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
+                .header(AuthConstants.AUTH_HEADER, authToken != null ? authToken : "")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
         try {
             HttpRequest httpRequest = requestBuilder.build();
