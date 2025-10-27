@@ -128,7 +128,7 @@ class DelayedPayoutTxReceiverServiceTest {
     void testComputeReceivers_allFiltered() {
         long feeRateSatPerKwu = 10 * 250; // 10 sats per vbyte
         // 999 sats for one P2TR output, plus 430 sats for its fee contribution:
-        long availableAmountMsat = 1_149_008;
+        long availableAmountMsat = 1_429_000;
 
         // The first receiver to be paid 999 sats, if he alone was included:
         //noinspection SpellCheckingInspection
