@@ -102,8 +102,10 @@ public class WebSocketRestApiService implements Service {
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
-                .header(AuthConstants.AUTH_HEADER, authToken != null ? authToken : "")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
+        if (authToken != null) {
+            requestBuilder.header(AuthConstants.AUTH_HEADER, authToken);
+        }
         try {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Send {} httpRequest to {}. httpRequest={} ", method, url, httpRequest);
