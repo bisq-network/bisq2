@@ -15,7 +15,7 @@ public class AuthenticationAddOn implements AddOn {
     public void setup(NetworkListener networkListener, FilterChainBuilder builder) {
         int httpServerFilterIdx = builder.indexOfType(HttpServerFilter.class);
         if (httpServerFilterIdx >= 0) {
-            builder.add(httpServerFilterIdx, new WebSocketAuthenticationFilter(password));
+            builder.add(httpServerFilterIdx, new WebSocketAuthFilter(password));
         } else {
             throw new RuntimeException("Expected HttpServerFilter to be present but was not. This prevents AuthenticationAddOn from setting up correctly, which is critical for security as a password has been set.");
         }

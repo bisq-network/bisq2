@@ -11,6 +11,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.MessageDigest;
 
@@ -25,21 +26,26 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
-        if (passwordHash.length > 0) {
-            byte[] authTokenBytes = null;
+    public void filter(ContainerRequestContext ctx) throws IOException {
+        String passwordHash = ctx.getHeaderString(AuthConstants.AUTH_HEADER);
+        if (!isCorrectPassword(passwordHash)) {
+            log.warn("HttpRequest rejected: Invalid or missing authorization token");
+            ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
+    }
+
+    private boolean isCorrectPassword(@Nullable String receivedPassHash) {
+        byte[] receivedPassHashBytes = null;
+        if (receivedPassHash != null) {
             try {
-                authTokenBytes = Hex.decode(requestContext.getHeaderString(AuthConstants.AUTH_HEADER));
+                receivedPassHashBytes = Hex.decode(receivedPassHash);
             } catch (Exception e) {
                 // no need to handle
             }
-
-            if (authTokenBytes == null || !MessageDigest.isEqual(authTokenBytes, passwordHash)) {
-                log.warn("HttpRequest rejected: Invalid or missing authorization token");
-                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-            }
         }
+        return receivedPassHashBytes != null && MessageDigest.isEqual(receivedPassHashBytes, passwordHash);
     }
+
 
     public static HttpApiAuthFilter from(CommonApiConfig config) {
         return new HttpApiAuthFilter(config.getPassword());

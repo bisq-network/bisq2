@@ -16,10 +16,10 @@ import javax.annotation.Nullable;
 import java.security.MessageDigest;
 
 @Slf4j
-public class WebSocketAuthenticationFilter extends BaseFilter {
+public class WebSocketAuthFilter extends BaseFilter {
     private final byte[] passwordHash;
 
-    public WebSocketAuthenticationFilter(String password) {
+    public WebSocketAuthFilter(String password) {
         this.passwordHash = DigestUtil.sha256(password.getBytes());
     }
 
