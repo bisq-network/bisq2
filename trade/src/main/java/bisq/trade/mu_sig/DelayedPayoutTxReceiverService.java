@@ -21,6 +21,7 @@ import bisq.burningman.BurningmanData;
 import bisq.burningman.BurningmanService;
 import bisq.common.application.Service;
 import bisq.trade.protobuf.ReceiverAddressAndAmount;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,9 +62,14 @@ public class DelayedPayoutTxReceiverService implements Service {
             double newTotalShare = totalShare + bm.getCappedBurnAmountShare();
             long newTotalToReceiveMsat = totalToReceiveMsat - outputCostMsat(bm.getReceiverAddress(), numReceivers, feeRateSatPerKwu);
             long newTotalToReceive = newTotalToReceiveMsat / 1000;
-            long outputAmount = (long) (newTotalToReceive * (bm.getCappedBurnAmountShare() / newTotalShare));
+            long outputAmount = Math.round(newTotalToReceive * (bm.getCappedBurnAmountShare() / newTotalShare));
             if (outputAmount < minOutputAmount) {
-                // No further receivers with this share size or smaller can be added economically.
+                // No further receivers with this share size or smaller can be economically added.
+                break;
+            }
+            if (minOutputAmount * (numReceivers + 1) > newTotalToReceive) {
+                // We would get stuck if we include any more outputs, since there are insufficient funds for all of
+                // them, even paying each the allowed minimum.
                 break;
             }
             totalShare = newTotalShare;
@@ -80,7 +86,7 @@ public class DelayedPayoutTxReceiverService implements Service {
         long totalToReceive = totalToReceiveMsat / 1000;
         long[] outputAmounts = sortedBM.stream()
                 .limit(numReceivers)
-                .mapToLong(bm -> (long) (totalToReceive * bm.getCappedBurnAmountShare() / finalTotalShare))
+                .mapToLong(bm -> Math.round(totalToReceive * (bm.getCappedBurnAmountShare() / finalTotalShare)))
                 .toArray();
 
         // Correct any slight total overpayment/underpayment to the receivers (likely just a few satoshis), by
@@ -101,7 +107,7 @@ public class DelayedPayoutTxReceiverService implements Service {
     }
 
     private static long minOutputAmount(long feeRateSatPerKwu) {
-        return Math.max(MIN_OUTPUT_AMOUNT, MIN_OUTPUT_EQUIVALENT_WEIGHT * feeRateSatPerKwu / 1000);
+        return Math.max(MIN_OUTPUT_AMOUNT, (MIN_OUTPUT_EQUIVALENT_WEIGHT * feeRateSatPerKwu + 999) / 1000);
     }
 
     private static long outputCostMsat(String address, int index, long feeRateSatPerKwu) {
@@ -109,7 +115,8 @@ public class DelayedPayoutTxReceiverService implements Service {
         return weight * feeRateSatPerKwu;
     }
 
-    private static int scriptPubKeyLength(String address) {
+    @VisibleForTesting
+    static int scriptPubKeyLength(String address) {
         var matcher = BECH32_PATTERN.matcher(address);
         if (matcher.matches()) {
             return matcher.group(1).length() * 5 / 8 - 2;
