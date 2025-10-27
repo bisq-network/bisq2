@@ -1,7 +1,5 @@
 package bisq.http_api.auth;
 
-import bisq.common.encoding.Hex;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -12,15 +10,12 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.http.Protocol;
 import org.glassfish.grizzly.http.util.HttpStatus;
 
-import javax.annotation.Nullable;
-import java.security.MessageDigest;
-
 @Slf4j
 public class WebSocketAuthFilter extends BaseFilter {
-    private final byte[] passwordHash;
+    private final String password;
 
     public WebSocketAuthFilter(String password) {
-        this.passwordHash = DigestUtil.sha256(password.getBytes());
+        this.password = password;
     }
 
     @Override
@@ -30,29 +25,18 @@ public class WebSocketAuthFilter extends BaseFilter {
         if (message instanceof HttpContent httpContent && httpContent.getHttpHeader() instanceof HttpRequestPacket request) {
             String upgradeHeader = request.getHeader("Upgrade");
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
-                String passwordHash = request.getHeader(AuthConstants.AUTH_HEADER);
-                if (!isCorrectPassword(passwordHash)) {
+                String timestamp = request.getHeader(AuthConstants.AUTH_TIMESTAMP_HEADER);
+                String receivedHmac = request.getHeader(AuthConstants.AUTH_HEADER);
+                if (!AuthConstants.isValidAuthentication(password, timestamp, receivedHmac)) {
                     log.warn("WebSocket connection rejected: Invalid or missing authorization token");
                     sendUnauthorizedResponse(ctx, request);
                     return ctx.getStopAction();
                 }
             }
         }
+
         // http api requests are handled using HttpApiAuthFilter
-
         return ctx.getInvokeAction();
-    }
-
-    private boolean isCorrectPassword(@Nullable String receivedPassHash) {
-        byte[] receivedPassHashBytes = null;
-        if (receivedPassHash != null) {
-            try {
-                receivedPassHashBytes = Hex.decode(receivedPassHash);
-            } catch (Exception e) {
-                // no need to handle
-            }
-        }
-        return receivedPassHashBytes != null && MessageDigest.isEqual(receivedPassHashBytes, passwordHash);
     }
 
     private void sendUnauthorizedResponse(FilterChainContext ctx, HttpRequestPacket request) {

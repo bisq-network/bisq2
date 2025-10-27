@@ -81,14 +81,16 @@ public class WebSocketRestApiService implements Service {
         }
 
         WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(request -> sendToRestApiServer(request, authToken))
+                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs()))
                 .flatMap(response -> response.toJson(objectMapper))
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
                                 "\nJson={}", json));
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request, @Nullable String authToken) {
+    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request,
+                                                         @Nullable String authToken,
+                                                         @Nullable String authTs) {
         String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
@@ -103,8 +105,9 @@ public class WebSocketRestApiService implements Service {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
-        if (authToken != null) {
+        if (authToken != null && authTs != null) {
             requestBuilder.header(AuthConstants.AUTH_HEADER, authToken);
+            requestBuilder.header(AuthConstants.AUTH_TIMESTAMP_HEADER, authTs);
         }
         try {
             HttpRequest httpRequest = requestBuilder.build();
