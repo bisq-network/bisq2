@@ -40,39 +40,18 @@ public class ValidatorBase {
 
     protected final Validation validation;
 
-
-    //todo
     public ValidatorBase(String message) {
         this(new Validation() {
-            @Override
-            public boolean isValid(String input) {
-                return true;
-            }
-
-            @Override
-            public String getI18nKey() {
-                return "";
-            }
         }, message);
     }
 
     public ValidatorBase() {
         this(new Validation() {
-            @Override
-            public boolean isValid(String input) {
-                return true;
-            }
-
-            @Override
-            public String getI18nKey() {
-                return "";
-            }
         });
     }
 
     public ValidatorBase(Validation validation) {
-        this.validation = validation;
-        this.setMessage(Res.get(validation.getI18nKey()));
+        this(validation, Res.get(validation.getI18nKey()));
     }
 
     public ValidatorBase(Validation validation, String message) {

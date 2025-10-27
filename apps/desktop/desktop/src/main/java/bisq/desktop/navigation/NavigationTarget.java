@@ -218,8 +218,8 @@ public enum NavigationTarget {
 
     // NETWORK
     NETWORK(CONTENT),
-    NETWORK_PEERS(NETWORK),
     NETWORK_P2P(NETWORK),
+    NETWORK_PEERS(NETWORK),
     ROLES(NETWORK),
     NODES(NETWORK),
 

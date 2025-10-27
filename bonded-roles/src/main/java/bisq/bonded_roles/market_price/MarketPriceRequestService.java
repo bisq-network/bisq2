@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -376,9 +377,13 @@ public class MarketPriceRequestService {
                     if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);
-                    } else if (!marketPrice.getMarket().getBaseCurrencyCode().equals("DCR")) {
-                        // We get an old DCR price from the price servers. Need to be fixed in price server
-                        log.warn("We got an outdated market price. {}", marketPrice);
+                    } else {
+                        if (marketPrice.getMarket().getBaseCurrencyCode().equals("DCR")) {
+                            log.warn("We got an outdated market price for DCR and ignore that");
+                            // We get an old DCR price from the price servers. Need to be fixed in price server
+                        } else {
+                            log.warn("We got an outdated market price. timestamp={}\n{}", new Date(marketPrice.getTimestamp()), marketPrice);
+                        }
                     }
                 }
             } catch (Exception e) {

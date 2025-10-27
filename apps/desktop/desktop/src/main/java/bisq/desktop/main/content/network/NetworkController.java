@@ -43,8 +43,8 @@ public class NetworkController extends ContentTabController<NetworkModel> {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case NETWORK_PEERS -> Optional.of(new NetworkPeersController(serviceProvider));
             case NETWORK_P2P -> Optional.of(new P2PNetworkController(serviceProvider));
+            case NETWORK_PEERS -> Optional.of(new NetworkPeersController(serviceProvider));
             case ROLES -> Optional.of(new RolesController(serviceProvider));
             case NODES -> Optional.of(new NodesController(serviceProvider));
             default -> Optional.empty();

@@ -22,7 +22,6 @@ import bisq.common.fsm.State;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
-import bisq.common.util.DateUtils;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
@@ -33,8 +32,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,35 +40,15 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
-    // TODO adjust at release date
-    public final static Date TRADE_ID_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
-
     public static String createId(String offerId, String takerPubKeyHash) {
         return createId(offerId, takerPubKeyHash, Optional.empty());
     }
 
     public static String createId(String offerId, String takerPubKeyHash, long takeOfferDate) {
-        if (new Date().after(TRADE_ID_V1_ACTIVATION_DATE)) {
-            return createId_V1(offerId, takerPubKeyHash, Optional.of(takeOfferDate));
-        } else {
-            return createId_V0(offerId, takerPubKeyHash);
-        }
+        return createId(offerId, takerPubKeyHash, Optional.of(takeOfferDate));
     }
 
-    private static String createId(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
-        if (new Date().after(TRADE_ID_V1_ACTIVATION_DATE)) {
-            return createId_V1(offerId, takerPubKeyHash, takeOfferDate);
-        } else {
-            return createId_V0(offerId, takerPubKeyHash);
-        }
-    }
-
-    private static String createId_V0(String offerId, String takerPubKeyHash) {
-        String combined = offerId + takerPubKeyHash;
-        return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
-    }
-
-    public static String createId_V1(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
+    public static String createId(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
         String combined = offerId + takerPubKeyHash + takeOfferDate.map(String::valueOf).orElse("");
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }

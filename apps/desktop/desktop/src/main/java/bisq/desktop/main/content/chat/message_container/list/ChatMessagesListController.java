@@ -73,7 +73,6 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -89,7 +88,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -356,19 +354,15 @@ public class ChatMessagesListController implements Controller {
         NetworkId takerNetworkId = userProfile.getNetworkId();
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         if (bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId)) {
-            if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
-                if (dontShowAgainService.showAgain(OFFER_ALREADY_TAKEN_WARN)) {
-                    new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
-                            .dontShowAgainId(OFFER_ALREADY_TAKEN_WARN)
-                            .actionButtonText(Res.get("confirmation.yes"))
-                            .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
-                            .closeButtonText(Res.get("confirmation.no"))
-                            .show();
-                } else {
-                    doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer);
-                }
+            if (dontShowAgainService.showAgain(OFFER_ALREADY_TAKEN_WARN)) {
+                new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
+                        .dontShowAgainId(OFFER_ALREADY_TAKEN_WARN)
+                        .actionButtonText(Res.get("confirmation.yes"))
+                        .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
+                        .closeButtonText(Res.get("confirmation.no"))
+                        .show();
             } else {
-                new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
+                doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer);
             }
         } else {
             doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer);
