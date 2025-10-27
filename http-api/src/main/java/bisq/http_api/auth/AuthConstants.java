@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -24,7 +25,11 @@ public final class AuthConstants {
     // but also increases the window of vulnerability for replay attacks
     public static final long AUTH_TIMESTAMP_VALIDITY_MS = 45_000;
 
-    public static boolean isValidAuthentication(String password,
+    public static SecretKeySpec getSecretKey(String password) {
+        return new SecretKeySpec(password.getBytes(StandardCharsets.UTF_8), AuthConstants.AUTH_HMAC_ALGORITHM);
+    }
+
+    public static boolean isValidAuthentication(SecretKey secretKey,
                                                 @Nullable String timestamp,
                                                 @Nullable String receivedHmac) {
         if (timestamp == null || receivedHmac == null) {
@@ -41,12 +46,8 @@ public final class AuthConstants {
             }
 
             Mac mac = Mac.getInstance(AuthConstants.AUTH_HMAC_ALGORITHM);
-            SecretKeySpec secretKey = new SecretKeySpec(
-                    timestamp.getBytes(StandardCharsets.UTF_8),
-                    AuthConstants.AUTH_HMAC_ALGORITHM
-            );
             mac.init(secretKey);
-            byte[] expectedHmac = mac.doFinal(password.getBytes(StandardCharsets.UTF_8));
+            byte[] expectedHmac = mac.doFinal(timestamp.getBytes(StandardCharsets.UTF_8));
 
             byte[] receivedHmacBytes = Hex.decode(receivedHmac);
 
