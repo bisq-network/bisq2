@@ -27,7 +27,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 
 import javax.annotation.Nullable;
@@ -73,13 +72,6 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        final String authToken;
-        if (webSocket instanceof DefaultWebSocket ws) {
-            authToken = ws.getUpgradeRequest().getHeader(AuthConstants.AUTH_HEADER);
-        } else {
-            authToken = null;
-        }
-
         WebSocketRestApiRequest.fromJson(objectMapper, json)
                 .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs()))
                 .flatMap(response -> response.toJson(objectMapper))

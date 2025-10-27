@@ -20,8 +20,10 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
                 .register(RestApiException.Mapper.class)
                 .register(mapper);
 
-        if (!config.getPassword().isEmpty()) {
-            HttpApiAuthFilter httpApiAuthFilter = HttpApiAuthFilter.from(config);
+
+        String password = config.getPassword();
+        if (password != null && !password.isEmpty()) {
+            HttpApiAuthFilter httpApiAuthFilter = new HttpApiAuthFilter(password);
             register(httpApiAuthFilter);
         }
 

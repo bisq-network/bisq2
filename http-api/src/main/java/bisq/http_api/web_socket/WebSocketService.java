@@ -152,8 +152,9 @@ public class WebSocketService implements Service {
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
-                    if (!config.getPassword().isEmpty()) {
-                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(config.getPassword()));
+                    String password = config.getPassword();
+                    if (password != null && !password.isEmpty()) {
+                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
                     }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);
