@@ -134,14 +134,14 @@ tx pull -t -l fr
 
 Before committing the new translation files, you need to populate them with translations. You have several options:
 
-**Option A: Use AI Translation Tools** (Recommended for initial translations)
+### Option A: Use AI Translation Tools (Recommended for initial translations)
 ```bash
 # Use an AI-powered translation service to translate all keys
 # This can be done via Claude Code agents or other translation automation tools
 # Example: Use Claude Code's translation agents to translate each locale
 ```
 
-**Option B: Manual Translation via Transifex**
+### Option B: Manual Translation via Transifex
 ```bash
 # Push the source files to Transifex
 cd i18n
@@ -152,7 +152,7 @@ tx push -s
 tx pull -l fr
 ```
 
-**Option C: Manual Translation Locally**
+### Option C: Manual Translation Locally
 - Open each `*_fr.properties` file and replace English values with French translations
 - Preserve all placeholders like `{0}`, `{1}`, etc.
 - Maintain multi-line continuation format with `\n\`
