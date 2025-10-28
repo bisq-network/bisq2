@@ -21,6 +21,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.auth.AuthenticationAddOn;
 import bisq.http_api.config.CommonApiConfig;
@@ -153,7 +154,7 @@ public class WebSocketService implements Service {
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
                     String password = config.getPassword();
-                    if (password != null && !password.isEmpty()) {
+                    if (StringUtils.isNotEmpty(password)) {
                         server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
                     }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());

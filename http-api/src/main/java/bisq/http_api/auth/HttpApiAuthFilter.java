@@ -18,14 +18,14 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
     private final SecretKey secretKey;
 
     public HttpApiAuthFilter(String password) {
-        this.secretKey = AuthConstants.getSecretKey(password);
+        this.secretKey = AuthUtils.getSecretKey(password);
     }
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
-        String timestamp = ctx.getHeaderString(AuthConstants.AUTH_TIMESTAMP_HEADER);
-        String receivedHmac = ctx.getHeaderString(AuthConstants.AUTH_HEADER);
-        if (!AuthConstants.isValidAuthentication(secretKey, timestamp, receivedHmac)) {
+        String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
+        String receivedHmac = ctx.getHeaderString(AuthUtils.AUTH_HEADER);
+        if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac)) {
             log.warn("HttpRequest rejected: Invalid or missing authorization token");
             ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }

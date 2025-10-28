@@ -1,5 +1,6 @@
 package bisq.http_api.rest_api;
 
+import bisq.common.util.StringUtils;
 import bisq.http_api.auth.HttpApiAuthFilter;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.error.CustomExceptionMapper;
@@ -22,7 +23,7 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
 
 
         String password = config.getPassword();
-        if (password != null && !password.isEmpty()) {
+        if (StringUtils.isNotEmpty(password)) {
             HttpApiAuthFilter httpApiAuthFilter = new HttpApiAuthFilter(password);
             register(httpApiAuthFilter);
         }

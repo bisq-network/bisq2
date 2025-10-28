@@ -13,20 +13,20 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 @Slf4j
-public final class AuthConstants {
-    private AuthConstants() {
+public final class AuthUtils {
+    private AuthUtils() {
         throw new AssertionError("Cannot instantiate constants class");
     }
 
     public static final String AUTH_HEADER = "AUTH-TOKEN";
     public static final String AUTH_TIMESTAMP_HEADER = "AUTH-TS";
-    public static final String AUTH_HMAC_ALGORITHM = "HmacSHA256";
+    private static final String AUTH_HMAC_ALGORITHM = "HmacSHA256";
     // timestamp validity is long to allow Tor requests to succeed
     // but also increases the window of vulnerability for replay attacks
-    public static final long AUTH_TIMESTAMP_VALIDITY_MS = 45_000;
+    private static final long AUTH_TIMESTAMP_VALIDITY_MS = 45_000;
 
     public static SecretKeySpec getSecretKey(String password) {
-        return new SecretKeySpec(password.getBytes(StandardCharsets.UTF_8), AuthConstants.AUTH_HMAC_ALGORITHM);
+        return new SecretKeySpec(password.getBytes(StandardCharsets.UTF_8), AUTH_HMAC_ALGORITHM);
     }
 
     public static boolean isValidAuthentication(SecretKey secretKey,
@@ -40,12 +40,12 @@ public final class AuthConstants {
             long requestTime = Long.parseLong(timestamp);
             long currentTime = System.currentTimeMillis();
 
-            if (Math.abs(currentTime - requestTime) > AuthConstants.AUTH_TIMESTAMP_VALIDITY_MS) {
+            if (Math.abs(currentTime - requestTime) > AUTH_TIMESTAMP_VALIDITY_MS) {
                 log.warn("Request timestamp expired or too far in future");
                 return false;
             }
 
-            Mac mac = Mac.getInstance(AuthConstants.AUTH_HMAC_ALGORITHM);
+            Mac mac = Mac.getInstance(AUTH_HMAC_ALGORITHM);
             mac.init(secretKey);
             byte[] expectedHmac = mac.doFinal(timestamp.getBytes(StandardCharsets.UTF_8));
 

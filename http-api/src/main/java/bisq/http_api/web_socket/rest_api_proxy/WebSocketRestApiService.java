@@ -18,7 +18,7 @@
 package bisq.http_api.web_socket.rest_api_proxy;
 
 import bisq.common.application.Service;
-import bisq.http_api.auth.AuthConstants;
+import bisq.http_api.auth.AuthUtils;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,8 +98,8 @@ public class WebSocketRestApiService implements Service {
                 .header("Accept", "application/json")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
         if (authToken != null && authTs != null) {
-            requestBuilder.header(AuthConstants.AUTH_HEADER, authToken);
-            requestBuilder.header(AuthConstants.AUTH_TIMESTAMP_HEADER, authTs);
+            requestBuilder.header(AuthUtils.AUTH_HEADER, authToken);
+            requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, authTs);
         }
         try {
             HttpRequest httpRequest = requestBuilder.build();
