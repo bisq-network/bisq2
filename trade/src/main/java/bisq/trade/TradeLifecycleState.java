@@ -17,5 +17,4 @@ public enum TradeLifecycleState implements ProtoEnum {
     public static TradeLifecycleState fromProto(bisq.trade.protobuf.TradeLifecycleState proto) {
         return ProtobufUtils.enumFromProto(TradeLifecycleState.class, proto.name(), ACTIVE);
     }
-
 }

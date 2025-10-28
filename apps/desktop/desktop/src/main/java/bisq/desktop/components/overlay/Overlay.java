@@ -147,6 +147,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         WARNING(AnimationType.ScaleDownToCenter),
         INVALID(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),
+        FAILURE(AnimationType.ScaleDownToCenter),
         ERROR(AnimationType.ScaleDownToCenter);
 
         public final AnimationType animationType;
@@ -426,6 +427,28 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T failure(String header, String errorMessage, String footer) {
+        type = Type.FAILURE;
+        width = 800;
+        if (headline == null) {
+            this.headline = Res.get("popup.headline.failure");
+        }
+
+        processMessage(header);
+
+        Label footerLabel = new Label(footer);
+        footerLabel.getStyleClass().add("overlay-message");
+        footerLabel.setWrapText(true);
+        footerLabel.setMinWidth(width);
+
+        TextArea textArea = getFailureTextArea(errorMessage, width);
+        VBox.setMargin(textArea, new Insets(-15, 0, 5, 0));
+        VBox vBox = new VBox(10, textArea, footerLabel);
+        content(vBox);
+
+        return cast();
+    }
+
     public T invalid(String message) {
         type = Type.INVALID;
 
@@ -468,6 +491,18 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private static TextArea getErrorTextArea(String text, double width) {
         TextArea textArea = new TextArea(text);
+        textArea.setContextMenu(new ContextMenu());
+        textArea.setEditable(false);
+        textArea.setPrefWidth(width);
+        textArea.setWrapText(true);
+        textArea.getStyleClass().addAll("code-block", "error-log");
+        return textArea;
+    }
+
+    private static TextArea getFailureTextArea(String text, double width) {
+        TextArea textArea = new TextArea(text);
+        textArea.setPadding(new Insets(5));
+        textArea.setMaxHeight(140);
         textArea.setContextMenu(new ContextMenu());
         textArea.setEditable(false);
         textArea.setPrefWidth(width);
@@ -874,6 +909,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     headlineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
                     break;
+                case FAILURE:
                 case ERROR:
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
                     headlineLabel.getStyleClass().add("overlay-headline-error");
@@ -901,7 +937,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             headlineIcon.setManaged(false);
             headlineIcon.setVisible(false);
             headlineIcon.setAlignment(Pos.CENTER);
-            headlineIcon.setPadding(new Insets(-2, 5, 0, 0));
+            headlineIcon.setPadding(new Insets(0, 5, 0, 0));
             headlineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)

@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,6 +35,7 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
 
     private final String errorMessage;
     private final String stackTrace;
+    private final TradeProtocolFailure tradeProtocolFailure;
 
     public MuSigReportErrorMessage(String id,
                                    String tradeId,
@@ -41,10 +43,12 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
                                    NetworkId sender,
                                    NetworkId receiver,
                                    String errorMessage,
-                                   String stackTrace) {
+                                   String stackTrace,
+                                   TradeProtocolFailure tradeProtocolFailure) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.errorMessage = errorMessage;
         this.stackTrace = stackTrace;
+        this.tradeProtocolFailure = tradeProtocolFailure;
 
         verify();
     }
@@ -71,7 +75,8 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
     private bisq.trade.protobuf.MuSigReportErrorMessage.Builder getMuSigReportErrorMessageBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.MuSigReportErrorMessage.newBuilder()
                 .setErrorMessage(errorMessage)
-                .setStackTrace(stackTrace);
+                .setStackTrace(stackTrace)
+                .setTradeProtocolFailure(tradeProtocolFailure.toProtoEnum());
     }
 
     public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -83,7 +88,8 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 muSigReportErrorMessage.getErrorMessage(),
-                muSigReportErrorMessage.getStackTrace());
+                muSigReportErrorMessage.getStackTrace(),
+                TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
     }
 
     @Override

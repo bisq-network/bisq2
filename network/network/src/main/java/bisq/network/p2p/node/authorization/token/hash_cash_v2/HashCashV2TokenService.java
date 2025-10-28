@@ -258,7 +258,7 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
                     if (averagePowTimePerMessage > 1000) {
                         log.warn("Average time/message used for PoW is very high");
                     } else if (averagePowTimePerMessage > 300) {
-                        log.warn("Average time/message used for PoW is higher as expected");
+                        log.warn("Average time/message used for PoW is higher than expected");
                     }
                     log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
                             MathUtils.roundDoubleToLong(accumulatedPoWDuration / 1000d),

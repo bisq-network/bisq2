@@ -72,8 +72,10 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 pins.add(observePaymentProof(bisqEasyTrade, tradeId));
                 pins.add(observeErrorMessage(bisqEasyTrade, tradeId));
                 pins.add(observeErrorStackTrace(bisqEasyTrade, tradeId));
+                pins.add(observeTradeProtocolFailure(bisqEasyTrade, tradeId));
                 pins.add(observePeersErrorMessage(bisqEasyTrade, tradeId));
                 pins.add(observePeersErrorStackTrace(bisqEasyTrade, tradeId));
+                pins.add(observePeersTradeProtocolFailure(bisqEasyTrade, tradeId));
             }
 
             @Override
@@ -165,6 +167,16 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
         });
     }
 
+    private Pin observeTradeProtocolFailure(BisqEasyTrade bisqEasyTrade, String tradeId) {
+        return bisqEasyTrade.tradeProtocolFailureObservable().addObserver(value -> {
+            if (value != null) {
+                var data = new TradePropertiesDto();
+                data.tradeProtocolFailure = Optional.of(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(value));
+                send(Map.of(tradeId, data));
+            }
+        });
+    }
+
     private Pin observePeersErrorMessage(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.peersErrorMessageObservable().addObserver(value -> {
             if (value != null) {
@@ -180,6 +192,15 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             if (value != null) {
                 var data = new TradePropertiesDto();
                 data.peersErrorStackTrace = Optional.of(value);
+                send(Map.of(tradeId, data));
+            }
+        });
+    }
+    private Pin observePeersTradeProtocolFailure(BisqEasyTrade bisqEasyTrade, String tradeId) {
+        return bisqEasyTrade.peersTradeProtocolFailureObservable().addObserver(value -> {
+            if (value != null) {
+                var data = new TradePropertiesDto();
+                data.peersTradeProtocolFailure = Optional.of(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(value));
                 send(Map.of(tradeId, data));
             }
         });
@@ -208,8 +229,10 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                     data.paymentProof = Optional.ofNullable(bisqEasyTrade.getPaymentProof().get());
                     data.errorMessage = Optional.ofNullable(bisqEasyTrade.getErrorMessage());
                     data.errorStackTrace = Optional.ofNullable(bisqEasyTrade.getErrorStackTrace());
+                    data.tradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getTradeProtocolFailure()));
                     data.peersErrorMessage = Optional.ofNullable(bisqEasyTrade.getPeersErrorMessage());
                     data.peersErrorStackTrace = Optional.ofNullable(bisqEasyTrade.getPeersErrorStackTrace());
+                    data.peersTradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getPeersTradeProtocolFailure()));
                     return Map.of(bisqEasyTrade.getId(), data);
                 })
                 .collect(Collectors.toList());

@@ -54,6 +54,14 @@ enum TradeLifecycleState {
   TRADELIFECYCLESTATE_FAILED = 3;
 }
 
+enum TradeProtocolFailure {
+  TRADEPROTOCOLFAILURE_UNSPECIFIED = 0;
+  TRADEPROTOCOLFAILURE_UNKNOWN = 1;
+  TRADEPROTOCOLFAILURE_PRICE_DEVIATION = 2;
+  TRADEPROTOCOLFAILURE_NO_MATCHING_OFFER_FOUND = 3;
+  TRADEPROTOCOLFAILURE_MEDIATORS_NOT_MATCHING = 4;
+}
+
 message Trade {
   string state = 1;
   string id = 2;
@@ -67,6 +75,8 @@ message Trade {
   optional string peersErrorMessage = 10;
   optional string peersErrorStackTrace = 11;
   TradeLifecycleState lifecycleState = 12;
+  optional TradeProtocolFailure tradeProtocolFailure = 13;
+  optional TradeProtocolFailure peersTradeProtocolFailure = 14;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;
@@ -146,6 +156,7 @@ message BisqEasyCancelTradeMessage {
 message BisqEasyReportErrorMessage {
   string errorMessage = 1;
   string stackTrace = 2;
+  TradeProtocolFailure tradeProtocolFailure = 3;
 }
 
 
@@ -232,6 +243,7 @@ message MuSigTradeMessage {
 message MuSigReportErrorMessage {
   string errorMessage = 1;
   string stackTrace = 2;
+  TradeProtocolFailure tradeProtocolFailure = 3;
 }
 
 message SetupTradeMessage_A {

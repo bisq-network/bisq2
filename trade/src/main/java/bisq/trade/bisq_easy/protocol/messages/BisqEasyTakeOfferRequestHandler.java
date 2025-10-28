@@ -34,6 +34,8 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandlerAsMessageSender;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,7 +91,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                         "trade with that offer was found.\n" +
                         "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
                 log.error(errorMessage);
-                throw new RuntimeException(errorMessage);
+                throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
             }
         }
 
@@ -107,10 +109,12 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 .selectMediator(takersOffer.getMakersUserProfileId(),
                         trade.getTaker().getNetworkId().getId(),
                         trade.getOffer().getId());
-        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)),
-                "Mediators do not match. " +
-                        "\nmediator=" + mediator +
-                        "\ntakersContract.getMediator()=" + takersContract.getMediator());
+        if (!mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId))) {
+            String errorMessage = String.format("Mediators do not match.\n" +
+                    "Maker's mediator: %s\n" +
+                    "Taker's mediator: %s", mediator, takersContract.getMediator());
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.MEDIATORS_NOT_MATCHING);
+        }
 
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
@@ -184,10 +188,10 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         double maxTradePriceDeviation = serviceProvider.getSettingsService().getMaxTradePriceDeviation().get();
         double warnDeviation = maxTradePriceDeviation / 2;
         double warnThreshold, errorThreshold;
-        boolean showWaring = false;
+        boolean showWarning = false;
         boolean throwException = false;
         String message = "";
-
+        TradeProtocolFailure tradeProtocolFailure = TradeProtocolFailure.UNKNOWN;
         if (trade.isBuyer()) {
             // If I am buyer I accept if takers amount is larger than my expected amount (good for me as I receive more BTC).
             // If takers amount is below my maxTradePriceDeviation the trade fails.
@@ -197,12 +201,13 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 throwException = true;
                 message = "Takers (sellers) Bitcoin amount is too low. " +
                         "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price.\n";
+                        "to manipulate the price.";
+                tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
             } else if (takersAmount < warnThreshold) {
-                showWaring = true;
-                message = "Takers (sellers) Bitcoin amount is lower as expected. " +
+                showWarning = true;
+                message = "Takers (sellers) Bitcoin amount is lower than expected. " +
                         "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price. We still tolerate that deviation.\n";
+                        "to manipulate the price. We still tolerate that deviation.";
             }
         } else {
             // If I am seller I accept if takers amount is smaller than my expected amount (good for me as I need to send less BTC).
@@ -213,12 +218,13 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 throwException = true;
                 message = "Takers (buyers) Bitcoin amount is too high. " +
                         "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price.\n";
+                        "to manipulate the price.";
+                tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
             } else if (takersAmount > warnThreshold) {
-                showWaring = true;
-                message = "Takers (sellers) Bitcoin amount is lower as expected. " +
+                showWarning = true;
+                message = "Takers (buyers) Bitcoin amount is higher than expected. " +
                         "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price. We still tolerate that deviation.\n";
+                        "to manipulate the price. We still tolerate that deviation.";
             }
         }
 
@@ -229,10 +235,10 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
                 "takersContract=" + takersContract;
         if (throwException) {
-            log.error("message={}, details={}", message, details);
-            throw new IllegalArgumentException(message);
-        } else if (showWaring) {
-            log.warn("message={}, details={}", message, details);
+            log.error("message={}\ndetails={}", message, details);
+            throw new TradeProtocolException(message, tradeProtocolFailure);
+        } else if (showWarning) {
+            log.warn("message={}\ndetails={}", message, details);
         } else if (myAmount != takersAmount) {
             log.info("My amount and the amount set by the taker are not the same. This is expected if the offer used a " +
                     "market based price and the taker had a different market price.\n" +
