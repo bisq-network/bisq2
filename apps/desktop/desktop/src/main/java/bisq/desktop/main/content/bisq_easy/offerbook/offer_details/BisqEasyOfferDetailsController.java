@@ -144,8 +144,9 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
     }
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {
+        String codes = market.getMarketCodes();
         Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote);
-        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElseGet(() -> Res.get("data.na"));
+        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::format).orElseGet(() -> Res.get("data.na"));
         Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
         double percent = percentFromMarketPrice.orElse(0d);
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
@@ -161,7 +162,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                     .orElseGet(() -> Res.get("data.na"));
             if (priceSpec instanceof FloatPriceSpec) {
                 model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.float",
-                        percentAsString, aboveOrBelow, marketPriceAsString));
+                        percentAsString, aboveOrBelow, marketPriceAsString, codes));
             } else {
                 if (percent == 0) {
                     if (percentFromMarketPrice.isEmpty()) {
@@ -169,11 +170,11 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                         model.setPriceDetails("");
                     } else {
                         model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.fix.atMarket",
-                                marketPriceAsString));
+                                marketPriceAsString, codes));
                     }
                 } else {
                     model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.fix",
-                            percentAsString, aboveOrBelow, marketPriceAsString));
+                            percentAsString, aboveOrBelow, marketPriceAsString, codes));
                 }
             }
         }

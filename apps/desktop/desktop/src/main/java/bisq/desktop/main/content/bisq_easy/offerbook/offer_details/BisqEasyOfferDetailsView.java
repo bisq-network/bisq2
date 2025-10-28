@@ -44,9 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsModel, BisqEasyOfferDetailsController> {
     private final Button closeButton;
     private final Label offerDate, makersTradeTermsDescription, direction, quoteSideAmountDescription,
-            baseSideAmountDescription, priceDetails, baseSidePaymentMethodDescription, baseSidePaymentMethod,
+            baseSideAmountDescription, baseSidePaymentMethodDescription, baseSidePaymentMethod,
             quoteSidePaymentMethodDescription, quoteSidePaymentMethod, offerId;
-    private final TextFlow quoteSideAmount, baseSideAmount, price;
+    private final TextFlow quoteSideAmount, baseSideAmount, price, priceDetails;
     private final BisqMenuItem offerIdCopyButton;
     private final TextArea makersTradeTerms;
 
@@ -142,7 +142,7 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
         priceDetailsDescription.getStyleClass().add(descriptionStyle);
         gridPane.add(priceDetailsDescription, 0, rowIndex);
 
-        priceDetails = new Label();
+        priceDetails = new TextFlow();
         priceDetails.getStyleClass().add(valueStyle);
         GridPane.setColumnSpan(priceDetails, 3);
         gridPane.add(priceDetails, 1, rowIndex);
@@ -250,7 +250,7 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
         TextFlowUtils.updateTextFlow(baseSideAmount, model.getBaseSideAmount());
 
         TextFlowUtils.updateTextFlow(price, model.getPrice());
-        priceDetails.setText(model.getPriceDetails());
+        TextFlowUtils.updateTextFlow(priceDetails, model.getPriceDetails());
 
         quoteSidePaymentMethodDescription.setText(model.getQuoteSidePaymentMethodDescription());
         quoteSidePaymentMethod.setText(model.getQuoteSidePaymentMethods());
