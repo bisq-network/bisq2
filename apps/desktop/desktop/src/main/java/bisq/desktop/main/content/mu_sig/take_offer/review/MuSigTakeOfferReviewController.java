@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.take_offer.review;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
@@ -40,7 +41,6 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -163,9 +163,9 @@ public class MuSigTakeOfferReviewController implements Controller {
                     takersQuoteSideAmount,
                     paymentMethodSpec,
                     model.getTakersAccount());
-            MuSigTrade muSigTrade = muSigProtocol.getTrade();
-            model.setMuSigTrade(muSigTrade);
-            muSigService.createMuSigOpenTradeChannel(muSigTrade, takerIdentity);
+            MuSigTrade trade = muSigProtocol.getTrade();
+            model.setMuSigTrade(trade);
+            muSigService.createMuSigOpenTradeChannel(trade, takerIdentity);
 
             if (timeoutScheduler != null) {
                 timeoutScheduler.stop();
@@ -178,27 +178,49 @@ public class MuSigTakeOfferReviewController implements Controller {
             // We have 120 seconds socket timeout, so we should never
             // get triggered here, as the message will be sent as mailbox message
 
-            errorMessagePin = muSigTrade.errorMessageObservable().addObserver(errorMessage -> {
+            errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
-                            UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                            errorMessage,
-                                            StringUtils.truncate(muSigTrade.getErrorStackTrace(), 2000)))
-                                    .show());
+                            UIThread.run(() -> {
+                                if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                                    String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
+                                    new Popup().error(Res.get("bisqEasy.openTrades.failed.errorPopup.message",
+                                                    errorMessage,
+                                                    errorStackTrace))
+                                            .show();
+                                } else {
+                                    new Popup().headline(Res.get("bisqEasy.openTrades.failure.popup.headline"))
+                                            .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                    errorMessage,
+                                                    Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                            .show();
+                                }
+                            });
                         }
                     }
             );
-            peersErrorMessagePin = muSigTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+            peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
-                            UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                            peersErrorMessage,
-                                            StringUtils.truncate(muSigTrade.getPeersErrorStackTrace(), 2000)))
-                                    .show());
+                            UIThread.run(() -> {
+                                if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
+                                    String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
+                                    new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
+                                                    peersErrorMessage,
+                                                    errorStackTrace))
+                                            .show();
+                                } else {
+                                    new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
+                                            .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                    peersErrorMessage,
+                                                    Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                            .show();
+                                }
+                            });
                         }
                     }
             );
 
             // Start the protocol
-            muSigService.takeOffer(muSigTrade);
+            muSigService.takeOffer(trade);
 
             // todo We send the protocol message and log message inside the protocol handler and don't have an easy way
             //  to get notified about the delivery state.

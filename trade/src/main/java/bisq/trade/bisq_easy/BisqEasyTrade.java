@@ -29,6 +29,7 @@ import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -82,14 +83,14 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     private BisqEasyTrade(BisqEasyContract contract,
-                         BisqEasyTradeState state,
-                         String id,
-                         TradeRole tradeRole,
-                         Identity myIdentity,
-                         BisqEasyTradeParty taker,
-                         BisqEasyTradeParty maker,
-                         TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker,lifecycleState);
+                          BisqEasyTradeState state,
+                          String id,
+                          TradeRole tradeRole,
+                          Identity myIdentity,
+                          BisqEasyTradeParty taker,
+                          BisqEasyTradeParty maker,
+                          TradeLifecycleState lifecycleState) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -138,6 +139,12 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         }
         if (proto.hasPeersErrorStackTrace()) {
             trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+        }
+        if (proto.hasTradeProtocolFailure()) {
+            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+        }
+        if (proto.hasPeersTradeProtocolFailure()) {
+            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
         }
 
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();

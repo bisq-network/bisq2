@@ -29,6 +29,7 @@ import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import lombok.EqualsAndHashCode;
@@ -131,6 +132,12 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         }
         if (proto.hasPeersErrorStackTrace()) {
             trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+        }
+        if (proto.hasTradeProtocolFailure()) {
+            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+        }
+        if (proto.hasPeersTradeProtocolFailure()) {
+            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
         }
 
         if (muSigTradeProto.hasTradeCompletedDate()) {

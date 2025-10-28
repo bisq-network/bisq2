@@ -26,11 +26,13 @@ import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,8 +74,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final C contract;
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<String> errorStackTrace = new Observable<>();
+    private final Observable<TradeProtocolFailure> tradeProtocolFailure = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+    private final Observable<TradeProtocolFailure> peersTradeProtocolFailure = new Observable<>();
 
     // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
@@ -132,13 +136,16 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
+        Optional.ofNullable(getTradeProtocolFailure()).ifPresent(e -> builder.setTradeProtocolFailure(e.toProtoEnum()));
+        Optional.ofNullable(getPeersTradeProtocolFailure()).ifPresent(e -> builder.setPeersTradeProtocolFailure(e.toProtoEnum()));
         return builder;
     }
 
-    public void setErrorMessage(String errorMessage) {
+    protected void setErrorMessage(String errorMessage) {
         this.errorMessage.set(errorMessage);
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessage.get();
     }
@@ -147,11 +154,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorMessage;
     }
 
-
-    public void setErrorStackTrace(String peersErrorStacktrace) {
+    protected void setErrorStackTrace(String peersErrorStacktrace) {
         this.errorStackTrace.set(peersErrorStacktrace);
     }
 
+    @Nullable
     public String getErrorStackTrace() {
         return errorStackTrace.get();
     }
@@ -160,11 +167,34 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorStackTrace;
     }
 
-
-    public void setPeersErrorMessage(String errorMessage) {
-        this.peersErrorMessage.set(errorMessage);
+    protected void setTradeProtocolFailure(TradeProtocolFailure tradeProtocolFailure) {
+        this.tradeProtocolFailure.set(tradeProtocolFailure);
     }
 
+    @Nullable
+    public TradeProtocolFailure getTradeProtocolFailure() {
+        return tradeProtocolFailure.get();
+    }
+
+    public ReadOnlyObservable<TradeProtocolFailure> tradeProtocolFailureObservable() {
+        return tradeProtocolFailure;
+    }
+
+
+    public void setErrorData(TradeProtocolFailure tradeProtocolFailure,
+                             String errorStackTrace,
+                             String errorMessage) {
+        this.tradeProtocolFailure.set(tradeProtocolFailure);
+        this.errorStackTrace.set(errorStackTrace);
+        this.errorMessage.set(errorMessage);
+    }
+
+
+    protected void setPeersErrorMessage(String peersErrorMessage) {
+        this.peersErrorMessage.set(peersErrorMessage);
+    }
+
+    @Nullable
     public String getPeersErrorMessage() {
         return peersErrorMessage.get();
     }
@@ -173,16 +203,39 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return peersErrorMessage;
     }
 
-    public void setPeersErrorStackTrace(String peersErrorStackTrace) {
+    protected void setPeersErrorStackTrace(String peersErrorStackTrace) {
         this.peersErrorStackTrace.set(peersErrorStackTrace);
     }
 
+    @Nullable
     public String getPeersErrorStackTrace() {
         return peersErrorStackTrace.get();
     }
 
     public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
         return peersErrorStackTrace;
+    }
+
+    protected void setPeersTradeProtocolFailure(TradeProtocolFailure peersTradeProtocolFailure) {
+        this.peersTradeProtocolFailure.set(peersTradeProtocolFailure);
+    }
+
+    @Nullable
+    public TradeProtocolFailure getPeersTradeProtocolFailure() {
+        return peersTradeProtocolFailure.get();
+    }
+
+    public ReadOnlyObservable<TradeProtocolFailure> peersTradeProtocolFailureObservable() {
+        return peersTradeProtocolFailure;
+    }
+
+
+    public void setPeersErrorData(TradeProtocolFailure peersTradeProtocolFailure,
+                                  String peersErrorStackTrace,
+                                  String peersErrorMessage) {
+        this.peersTradeProtocolFailure.set(peersTradeProtocolFailure);
+        this.peersErrorStackTrace.set(peersErrorStackTrace);
+        this.peersErrorMessage.set(peersErrorMessage);
     }
 
 

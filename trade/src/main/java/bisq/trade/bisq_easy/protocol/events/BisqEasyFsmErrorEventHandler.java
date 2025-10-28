@@ -22,6 +22,8 @@ import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, FsmErrorEvent> {
     private String errorMessage;
     private String errorStackTrace;
+    private TradeProtocolFailure tradeProtocolFailure;
 
     public BisqEasyFsmErrorEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
@@ -43,15 +46,18 @@ public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMes
     @Override
     public void process(FsmErrorEvent event) {
         FsmException fsmException = event.getFsmException();
+        if (fsmException.getCause() instanceof TradeProtocolException bisqEasyProtocolException) {
+            tradeProtocolFailure = bisqEasyProtocolException.getTradeProtocolFailure();
+        } else {
+            tradeProtocolFailure = TradeProtocolFailure.UNKNOWN;
+        }
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
         errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
     }
 
     @Override
     protected void commit() {
-        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
-        trade.setErrorStackTrace(errorStackTrace);
-        trade.setErrorMessage(errorMessage);
+        trade.setErrorData(tradeProtocolFailure, errorStackTrace, errorMessage);
     }
 
     @Override
@@ -64,6 +70,7 @@ public class BisqEasyFsmErrorEventHandler extends BisqEasyTradeEventHandlerAsMes
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
-                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
+                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE),
+                tradeProtocolFailure));
     }
 }

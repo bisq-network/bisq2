@@ -97,6 +97,7 @@ import bisq.dto.security.keys.PublicKeyDto;
 import bisq.dto.security.keys.TorKeyPairDto;
 import bisq.dto.security.pow.ProofOfWorkDto;
 import bisq.dto.settings.SettingsDto;
+import bisq.dto.trade.TradeProtocolFailureDto;
 import bisq.dto.trade.TradeRoleDto;
 import bisq.dto.trade.bisq_easy.BisqEasyTradeDto;
 import bisq.dto.trade.bisq_easy.BisqEasyTradePartyDto;
@@ -134,6 +135,7 @@ import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -1161,6 +1163,32 @@ public class DtoMappings {
                 case BUYER_AS_MAKER -> TradeRoleDto.BUYER_AS_MAKER;
                 case SELLER_AS_TAKER -> TradeRoleDto.SELLER_AS_TAKER;
                 case SELLER_AS_MAKER -> TradeRoleDto.SELLER_AS_MAKER;
+            };
+        }
+    }
+
+    public static class TradeProtocolFailureMapping {
+        public static TradeProtocolFailure toBisq2Model(TradeProtocolFailureDto value) {
+            if (value == null) {
+                return null;
+            }
+            return switch (value) {
+                case UNKNOWN -> TradeProtocolFailure.UNKNOWN;
+                case PRICE_DEVIATION -> TradeProtocolFailure.PRICE_DEVIATION;
+                case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailure.NO_MATCHING_OFFER_FOUND;
+                case MEDIATORS_NOT_MATCHING -> TradeProtocolFailure.MEDIATORS_NOT_MATCHING;
+            };
+        }
+
+        public static TradeProtocolFailureDto fromBisq2Model(TradeProtocolFailure value) {
+            if (value == null) {
+                return null;
+            }
+            return switch (value) {
+                case UNKNOWN -> TradeProtocolFailureDto.UNKNOWN;
+                case PRICE_DEVIATION -> TradeProtocolFailureDto.PRICE_DEVIATION;
+                case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailureDto.NO_MATCHING_OFFER_FOUND;
+                case MEDIATORS_NOT_MATCHING -> TradeProtocolFailureDto.MEDIATORS_NOT_MATCHING;
             };
         }
     }

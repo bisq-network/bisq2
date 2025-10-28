@@ -31,13 +31,13 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_details.MuSigTradeDetailsController;
-import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State2BuyerSendPayment;
-import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3BuyerWaitForSellersPaymentReceiptConfirmation;
-import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State2SellerWaitForPayment;
-import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3aSellerConfirmPaymentReceipt;
-import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3bSellerWaitForBuyerToCloseTrade;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State1aSetupDepositTx;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State1bWaitForDepositTxConfirmation;
+import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State2BuyerSendPayment;
+import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State2SellerWaitForPayment;
+import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3BuyerWaitForSellersPaymentReceiptConfirmation;
+import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3aSellerConfirmPaymentReceipt;
+import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State3bSellerWaitForBuyerToCloseTrade;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_state.states.State4TradeClosed;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -137,26 +137,50 @@ public class MuSigTradeStateController implements Controller {
 
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
-                            String key = "errorMessage_" + model.getTrade().get().getId();
+                            String key = "errorMessage_" + trade.getId();
                             if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                                errorMessage,
-                                                StringUtils.truncate(trade.getErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
+                                UIThread.run(() -> {
+                                    if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                                        String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
+                                        new Popup().error(Res.get("bisqEasy.openTrades.failed.errorPopup.message",
+                                                        errorMessage,
+                                                        errorStackTrace))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    } else {
+                                        new Popup().headline(Res.get("bisqEasy.openTrades.failure.popup.headline"))
+                                                .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                        errorMessage,
+                                                        Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    }
+                                });
                             }
                         }
                     }
             );
             peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
-                            String key = "peersErrorMessage_" + model.getTrade().get().getId();
+                            String key = "peersErrorMessage_" + trade.getId();
                             if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                                peersErrorMessage,
-                                                StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
+                                UIThread.run(() -> {
+                                    if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
+                                        String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
+                                        new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
+                                                        peersErrorMessage,
+                                                        errorStackTrace))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    } else {
+                                        new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
+                                                .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                        peersErrorMessage,
+                                                        Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    }
+                                });
                             }
                         }
                     }
@@ -315,14 +339,14 @@ public class MuSigTradeStateController implements Controller {
                 model.getPhaseAndInfoVisible().set(false);
                 model.getError().set(true);
                 model.getShowReportToMediatorButton().set(false);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed.errorMessage",
                         model.getTrade().get().getErrorMessage()));
             }
             case FAILED_AT_PEER -> {
                 model.getPhaseAndInfoVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer.errorMessage",
                         model.getTrade().get().getPeersErrorMessage()));
             }
 

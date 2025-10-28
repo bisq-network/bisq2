@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
     private String stackTrace;
     private String errorMessage;
+    private TradeProtocolFailure tradeProtocolFailure;
 
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
@@ -42,11 +44,11 @@ public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandl
                 message.getErrorMessage(), message.getStackTrace(), trade.getId());
         stackTrace = message.getStackTrace();
         errorMessage = message.getErrorMessage();
+        tradeProtocolFailure = message.getTradeProtocolFailure();
     }
 
     @Override
     protected void commit() {
-        trade.setPeersErrorStackTrace(stackTrace);
-        trade.setPeersErrorMessage(errorMessage);
+        trade.setPeersErrorData(tradeProtocolFailure, stackTrace, errorMessage);
     }
 }

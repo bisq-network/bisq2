@@ -21,6 +21,8 @@ import bisq.common.fsm.FsmErrorEvent;
 import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
@@ -35,6 +37,7 @@ import static bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage.MAX_LEN
 public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, FsmErrorEvent> {
     private String errorMessage;
     private String errorStackTrace;
+    private TradeProtocolFailure tradeProtocolFailure;
 
     public MuSigFsmErrorEventHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -43,15 +46,18 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
     @Override
     public void process(FsmErrorEvent event) {
         FsmException fsmException = event.getFsmException();
+        if (fsmException.getCause() instanceof TradeProtocolException bisqEasyProtocolException) {
+            tradeProtocolFailure = bisqEasyProtocolException.getTradeProtocolFailure();
+        } else {
+            tradeProtocolFailure = TradeProtocolFailure.UNKNOWN;
+        }
         errorMessage = ExceptionUtil.getRootCauseMessage(fsmException);
         errorStackTrace = ExceptionUtil.getSafeStackTraceAsString(fsmException);
     }
 
     @Override
     protected void commit() {
-        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
-        trade.setErrorStackTrace(errorStackTrace);
-        trade.setErrorMessage(errorMessage);
+        trade.setErrorData(tradeProtocolFailure, errorStackTrace, errorMessage);
     }
 
     @Override
@@ -64,7 +70,8 @@ public final class MuSigFsmErrorEventHandler extends MuSigTradeEventHandlerAsMes
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
-                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE)));
+                truncate(errorStackTrace, MAX_LENGTH_STACKTRACE),
+                tradeProtocolFailure));
     }
 
     @Override

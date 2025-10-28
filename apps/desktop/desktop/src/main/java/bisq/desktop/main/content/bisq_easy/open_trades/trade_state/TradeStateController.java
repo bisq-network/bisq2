@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -35,7 +34,22 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState3a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState4;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateLightning3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateMainChain3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState1;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState3a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState4;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateLightning3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateMainChain3b;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -125,39 +139,63 @@ public class TradeStateController implements Controller {
 
             isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
 
-            BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
-            model.getBisqEasyTrade().set(bisqEasyTrade);
+            BisqEasyTrade trade = optionalBisqEasyTrade.get();
+            model.getBisqEasyTrade().set(trade);
 
-            tradePhaseBox.setBisqEasyTrade(bisqEasyTrade);
+            tradePhaseBox.setBisqEasyTrade(trade);
 
-            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
+            bisqEasyTradeStatePin = trade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> {
                         applyStateInfoVBox(state);
                         updateShouldShowSellerPriceApprovalOverlay();
                     }));
 
-            errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+            errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
-                            String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
+                            String key = "errorMessage_" + trade.getId();
                             if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                                errorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
+                                UIThread.run(() -> {
+                                    if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                                        String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
+                                        new Popup().error(Res.get("bisqEasy.openTrades.failed.errorPopup.message",
+                                                        errorMessage,
+                                                        errorStackTrace))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    } else {
+                                        new Popup().headline(Res.get("bisqEasy.openTrades.failure.popup.headline"))
+                                                .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                        errorMessage,
+                                                        Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    }
+                                });
                             }
                         }
                     }
             );
-            peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+            peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
-                            String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                            String key = "peersErrorMessage_" + trade.getId();
                             if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                                peersErrorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
-                                        .dontShowAgainId(key)
-                                        .show());
+                                UIThread.run(() -> {
+                                    if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
+                                        String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
+                                        new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
+                                                        peersErrorMessage,
+                                                        errorStackTrace))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    } else {
+                                        new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
+                                                .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                        peersErrorMessage,
+                                                        Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                                .dontShowAgainId(key)
+                                                .show();
+                                    }
+                                });
                             }
                         }
                     }
@@ -168,10 +206,10 @@ public class TradeStateController implements Controller {
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(trade.getContract().getPriceSpec())));
 
             messageDeliveryStatusByMessageIdPin = networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
                 @Override
@@ -443,7 +481,7 @@ public class TradeStateController implements Controller {
                 model.getError().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed.errorMessage",
                         model.getBisqEasyTrade().get().getErrorMessage()));
                 break;
             case FAILED_AT_PEER:
@@ -451,7 +489,7 @@ public class TradeStateController implements Controller {
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer.errorMessage",
                         model.getBisqEasyTrade().get().getPeersErrorMessage()));
                 break;
 

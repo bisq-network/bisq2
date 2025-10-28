@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.events;
 
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandler<MuSigTrade, MuSigReportErrorMessage> {
     private String errorMessage;
     private String stackTrace;
+    private TradeProtocolFailure tradeProtocolFailure;
 
     public MuSigReportErrorMessageHandler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -40,6 +42,7 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
     protected void process(MuSigReportErrorMessage message) {
         errorMessage = message.getErrorMessage();
         stackTrace = message.getStackTrace();
+        tradeProtocolFailure = message.getTradeProtocolFailure();
         log.warn("We received an error report from our peer.\n" +
                         "errorMessage={}\nstackTrace={}\ntradeId={}",
                 errorMessage, stackTrace, trade.getId());
@@ -47,8 +50,7 @@ public final class MuSigReportErrorMessageHandler extends MuSigTradeMessageHandl
 
     @Override
     protected void commit() {
-        trade.setPeersErrorStackTrace(stackTrace);
-        trade.setPeersErrorMessage(errorMessage);
+        trade.setPeersErrorData(tradeProtocolFailure, stackTrace, errorMessage);
     }
 
     @Override

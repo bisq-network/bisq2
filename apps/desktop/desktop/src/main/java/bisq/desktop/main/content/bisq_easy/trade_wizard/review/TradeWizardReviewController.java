@@ -18,8 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -53,10 +57,6 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -251,7 +251,8 @@ public class TradeWizardReviewController implements Controller {
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onShowOfferbook);
-        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {});
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
+        });
     }
 
     // direction is from user perspective not offer direction
@@ -468,35 +469,58 @@ public class TradeWizardReviewController implements Controller {
                 mediator,
                 sellersPriceSpec,
                 marketPrice);
-        BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
-        log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
-        model.setBisqEasyTrade(bisqEasyTrade);
-        errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+        BisqEasyTrade trade = bisqEasyProtocol.getModel();
+        log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
+        model.setBisqEasyTrade(trade);
+
+        errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                     if (errorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                        errorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
-                                .show());
+                        UIThread.run(() -> {
+                            if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                                String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
+                                new Popup().error(Res.get("bisqEasy.openTrades.failed.errorPopup.message",
+                                                errorMessage,
+                                                errorStackTrace))
+                                        .show();
+                            } else {
+                                new Popup().headline(Res.get("bisqEasy.openTrades.failure.popup.headline"))
+                                        .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                errorMessage,
+                                                Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                        .show();
+                            }
+                        });
                     }
                 }
         );
-        peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+        peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                     if (peersErrorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
-                                        peersErrorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
-                                .show());
+                        UIThread.run(() -> {
+                            if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
+                                String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
+                                new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
+                                                peersErrorMessage,
+                                                errorStackTrace))
+                                        .show();
+                            } else {
+                                new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
+                                        .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                                peersErrorMessage,
+                                                Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                        .show();
+                            }
+                        });
                     }
                 }
         );
 
-        bisqEasyTradeService.takeOffer(bisqEasyTrade);
+        bisqEasyTradeService.takeOffer(trade);
         model.getTakeOfferStatus().set(TradeWizardReviewModel.TakeOfferStatus.SENT);
 
-        BisqEasyContract contract = bisqEasyTrade.getContract();
+        BisqEasyContract contract = trade.getContract();
 
         mainButtonsVisibleHandler.accept(false);
-        String tradeId = bisqEasyTrade.getId();
+        String tradeId = trade.getId();
 
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
