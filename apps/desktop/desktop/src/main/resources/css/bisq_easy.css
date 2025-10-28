@@ -1806,3 +1806,38 @@
     -fx-border-radius: 0;
     -fx-border-insets: 0 0 -7.5 0;
 }
+
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Offer details                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.offer-details-description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.offer-details-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+.offer-details-code {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.offer-details-details {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
