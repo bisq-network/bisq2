@@ -1,6 +1,7 @@
 package bisq.http_api.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -33,14 +34,14 @@ public final class AuthUtils {
     public static String normalizePathAndQuery(URI requestUri) {
         // we strip trailing slash and add query if not empty
         String rawPath = requestUri.getRawPath();
-        if (rawPath == null) {
+        if (StringUtils.isEmpty(rawPath)) {
             rawPath = "/";
         } else if (rawPath.length() > 1 && rawPath.endsWith("/")) {
             rawPath = rawPath.substring(0, rawPath.length() - 1);
         }
         String rawQuery = requestUri.getRawQuery();
         String result = rawPath;
-        if (rawQuery != null) {
+        if (StringUtils.isNotEmpty(rawQuery)) {
             result += "?" + rawQuery;
         }
         return result;
