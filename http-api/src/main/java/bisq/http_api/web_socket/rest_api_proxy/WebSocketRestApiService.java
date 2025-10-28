@@ -103,7 +103,7 @@ public class WebSocketRestApiService implements Service {
         }
         try {
             HttpRequest httpRequest = requestBuilder.build();
-            log.info("Send {} httpRequest to {}. httpRequest={} ", method, url, httpRequest);
+            log.info("Forwarding {} request to {}", method, url);
             // Blocking send
             HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
             log.info("httpResponse {}", httpResponse);
