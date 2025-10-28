@@ -68,6 +68,107 @@ Commit the following to your Git repository:
 2.  The updated `.tx/config` file.
 3.  All the new empty translation files (e.g., `new_feature_de.properties`, etc.).
 
+### Use Case 3: Adding a New Language/Locale
+
+When you want to add a completely new language to Bisq 2 (e.g., French, Japanese, etc.), you need to update both the codebase and Transifex configuration. This is a comprehensive process that involves multiple steps.
+
+**Step 1: Add Language to Transifex**
+
+1.  Log in to Transifex at https://app.transifex.com/
+2.  Navigate to the Bisq 2 project
+3.  Go to **Languages** settings
+4.  Click **Add Language** and select the target language
+5.  Confirm the addition
+
+**Note**: You must have "Project Maintainer" rights to add new languages.
+
+**Step 2: Update LanguageRepository.java**
+
+Add the new language code to the `I18N_CODES` list in `common/src/main/java/bisq/common/locale/LanguageRepository.java`.
+
+*Example for adding French (fr)*:
+```java
+public static final List<String> I18N_CODES = List.of(
+        "en", // English
+        "de", // German
+        "es", // Spanish
+        "fr", // French  <-- Add your new language here
+        "it", // Italian
+        "pt-BR", // Portuguese (Brazil)
+        "cs", // Czech
+        "pcm", // Nigerian Pidgin
+        "ru", // Russian
+        "af-ZA" // Afrikaans
+);
+```
+
+**Important**: Use the correct language tag format:
+- Simple language codes: `fr`, `de`, `ja`, `ko`
+- Language with region: `pt-BR`, `af-ZA`, `zh-Hans`
+- Use hyphens (`-`), not underscores for region variants
+
+**Step 3: Create Translation Files for All Bundles**
+
+Create empty translation files for **all 17 translation bundles** with your new language code. Navigate to `i18n/src/main/resources/` and run:
+
+```bash
+# Replace 'fr' with your language code (use underscore format for filenames)
+for bundle in academy account application authorized_role bi2p bisq_easy chat default mu_sig network reputation settings support trade_apps user wallet webcam; do
+  touch "${bundle}_fr.properties"
+done
+```
+
+**Note**: File naming uses underscores (`_`) to separate the base name from the language code, even though the language code in Java uses hyphens. For example:
+- Language code in Java: `pt-BR`
+- Filename: `default_pt_BR.properties`
+
+**Step 4: Update Transifex Configuration** (Optional but Recommended)
+
+While Transifex will automatically handle the new language for existing resources, you should verify the `.tx/config` file patterns support your new language code format.
+
+Check that the `file_filter` patterns in `.tx/config` use `<lang>` placeholder:
+```ini
+file_filter = i18n/src/main/resources/default_<lang>.properties
+```
+
+This pattern will automatically work for your new language files.
+
+**Step 5: Pull Initial Translations from Transifex**
+
+Once translators have started working in Transifex, pull the translations:
+
+```bash
+# Navigate to i18n module
+cd i18n
+
+# Pull translations for the new language
+tx pull -l fr
+
+# Or pull all languages including the new one
+tx pull
+```
+
+**Step 6: Commit All Changes**
+
+Commit the following to your Git repository:
+1.  Updated `LanguageRepository.java` with the new language code
+2.  All 17 new empty translation files (e.g., `default_fr.properties`, `chat_fr.properties`, etc.)
+3.  Later, commit translated files pulled from Transifex
+
+**Step 7: Test the New Language**
+
+1.  Build the application: `./gradlew clean build`
+2.  Run the desktop app
+3.  Navigate to **Settings → Language**
+4.  Verify your new language appears in the dropdown
+5.  Select it and restart the application
+6.  Verify the UI displays in the new language (or shows translation keys if not yet translated)
+
+**Notes**:
+- Empty translation files will fall back to English (the source language)
+- The application must be restarted for language changes to take effect
+- RTL (Right-to-Left) languages like Arabic, Hebrew, or Persian require additional configuration in `LanguageRepository.RTL_LANGUAGES_CODES`
+
 
 [^1]: https://developers.transifex.com/docs/cli
 [^2]: https://developers.transifex.com/reference/api-authentication

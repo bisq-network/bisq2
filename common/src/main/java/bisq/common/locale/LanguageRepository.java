@@ -83,15 +83,18 @@ public class LanguageRepository {
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
-            "pcm-NG", // Nigerian Pidgin
+            "pcm", // Nigerian Pidgin
             "ru", // Russian
-            "af-ZA" // Afrikaans
+            "af-ZA", // Afrikaans
+            "pt-PT", // Portuguese
+            "fr", // French
+            "tl", //Tagalog
+            "bn", //Bengali
+            "ta" //Tamil
             /*
             // not translated yet
-            "pt", // Portuguese
-            "zh-Hans", // Chinese [Han Simplified] -> zh-Hans-CN to support country
-            "zh-Hant", // Chinese [Han Traditional]-> zh-Hant-CN to support country
-            "fr", // French
+            "zh-Hans", // Chinese [Han Simplified]
+            "zh-Hant", // Chinese [Han Traditional]
             "vi", // Vietnamese
             "th", // Thai
             "ja", // Japanese
