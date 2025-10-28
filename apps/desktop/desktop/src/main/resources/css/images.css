@@ -1228,6 +1228,14 @@
     -fx-image: url("/images/chat/report/report-white.png");
 }
 
+#offer-details-grey {
+    -fx-image: url("/images/chat/offer-details/offer-details-grey.png");
+}
+
+#offer-details-white {
+    -fx-image: url("/images/chat/offer-details/offer-details-white.png");
+}
+
 #ignore-green {
     -fx-image: url("/images/chat/ignore/ignore-green.png");
 }

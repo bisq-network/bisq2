@@ -89,7 +89,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox amountAndPriceBox;
     protected final HBox paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
-    protected BisqMenuItem copyAction;
+    protected BisqMenuItem copy;
     protected DropdownMenu moreActionsMenu;
     private Subscription showHighlightedPin, reactMenuPin;
     private Timeline timeline;
@@ -178,11 +178,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected void setUpActions() {
-        copyAction = new BisqMenuItem("copy-grey", "copy-white");
-        copyAction.useIconOnly();
-        copyAction.setTooltip(Res.get("action.copyToClipboard"));
+        copy = new BisqMenuItem("copy-grey", "copy-white");
+        copy.useIconOnly();
+        copy.setTooltip(Res.get("action.copyToClipboard"));
+
         actionsHBox.setVisible(false);
-        HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(copy, ACTION_ITEMS_MARGIN);
         HBox.setMargin(reactMenuBox, ACTION_ITEMS_MARGIN);
     }
 

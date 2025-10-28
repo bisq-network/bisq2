@@ -18,30 +18,27 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
 import bisq.desktop.common.view.Model;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
+@Setter
 public class BisqEasyOfferDetailsModel implements Model {
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-    private final StringProperty offerType = new SimpleStringProperty();
-    private final StringProperty baseSideAmount = new SimpleStringProperty();
-    private final StringProperty quoteSideAmount = new SimpleStringProperty();
-    private final StringProperty quoteSideAmountDescription = new SimpleStringProperty("");
-    private final StringProperty price = new SimpleStringProperty();
-    private final StringProperty priceDescription = new SimpleStringProperty();
-    private final StringProperty paymentMethods = new SimpleStringProperty();
-
-    private final StringProperty id = new SimpleStringProperty();
-    private final StringProperty date = new SimpleStringProperty();
-    private final StringProperty makersTradeTerms = new SimpleStringProperty();
-    private final BooleanProperty makersTradeTermsVisible = new SimpleBooleanProperty();
+    private String direction;
+    private String baseSideAmount;
+    private String quoteSideAmount;
+    private String baseSideCurrencyCode;
+    private String quoteSideCurrencyCode;
+    private String price;
+    private String priceDetails;
+    private String quoteSidePaymentMethodDescription;
+    private String quoteSidePaymentMethods;
+    private String baseSidePaymentMethodDescription;
+    private String baseSidePaymentMethods;
+    private String id;
+    private String date;
+    private String makersTradeTerms;
+    private Boolean makersTradeTermsVisible;
 }

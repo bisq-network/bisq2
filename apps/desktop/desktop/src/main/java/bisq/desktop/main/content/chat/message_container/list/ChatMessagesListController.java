@@ -60,6 +60,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
@@ -532,6 +533,13 @@ public class ChatMessagesListController implements Controller {
                 .onAction(() -> doIgnoreUser(chatMessage))
                 .closeButtonText(Res.get("action.cancel"))
                 .show();
+    }
+
+    public void onShowOfferDetails(ChatMessage chatMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFER_DETAILS,
+                    new BisqEasyOfferDetailsController.InitData(bisqEasyOfferbookMessage.getBisqEasyOffer().get()));
+        }
     }
 
     public void doIgnoreUser(ChatMessage chatMessage) {

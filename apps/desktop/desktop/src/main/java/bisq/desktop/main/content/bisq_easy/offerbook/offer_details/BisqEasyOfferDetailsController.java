@@ -17,9 +17,14 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecFormatter;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.overlay.OverlayController;
@@ -28,8 +33,9 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -39,6 +45,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 
 // TODO (low prio) not used yet, but keep it until we are sure that it will not be used
@@ -70,15 +77,16 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
     @Override
     public void initWithData(InitData data) {
         BisqEasyOffer bisqEasyOffer = data.getBisqEasyOffer();
-        model.setBisqEasyOffer(bisqEasyOffer);
+        model.setDirection(bisqEasyOffer.getDirection().isBuy() ?
+                Res.get("bisqEasy.offerDetails.direction.buy") :
+                Res.get("bisqEasy.offerDetails.direction.sell"));
 
-        model.getOfferType().set(bisqEasyOffer.getDirection().isBuy() ?
-                Res.get("bisqEasy.offerDetails.buy") :
-                Res.get("bisqEasy.offerDetails.sell"));
         Market market = bisqEasyOffer.getMarket();
-        model.getQuoteSideAmountDescription().set(Res.get("bisqEasy.offerDetails.quoteSideAmount",
-                market.getQuoteCurrencyCode()));
+        String quoteCurrencyCode = market.getQuoteCurrencyCode();
+        String baseCurrencyCode = market.getBaseCurrencyCode();
 
+        model.setQuoteSideCurrencyCode(quoteCurrencyCode);
+        model.setBaseSideCurrencyCode(baseCurrencyCode);
 
         boolean isRangeAmount = bisqEasyOffer.hasAmountRange();
         AmountSpec amountSpec = bisqEasyOffer.getAmountSpec();
@@ -92,36 +100,83 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
             String formattedMinBaseAmount = AmountFormatter.formatBaseAmount(minBaseSideAmount);
             String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
             String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
-            model.getBaseSideAmount().set(formattedMinBaseAmount + " – " + formattedMaxBaseAmount);
-            model.getQuoteSideAmount().set(formattedMinQuoteAmount + " – " + formattedMaxQuoteAmount);
+
+            model.setBaseSideAmount(Res.get("bisqEasy.offerDetails.baseSideRangeAmount", formattedMinBaseAmount, formattedMaxBaseAmount, baseCurrencyCode));
+            model.setQuoteSideAmount(Res.get("bisqEasy.offerDetails.quoteSideRangeAmount", formattedMinQuoteAmount, formattedMaxQuoteAmount, quoteCurrencyCode));
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
             Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
-            model.getBaseSideAmount().set(formattedBaseAmount);
-            model.getQuoteSideAmount().set(formattedQuoteAmount);
+
+            model.setBaseSideAmount(Res.get("bisqEasy.offerDetails.baseSideAmount", formattedBaseAmount, baseCurrencyCode));
+            model.setQuoteSideAmount(Res.get("bisqEasy.offerDetails.quoteSideAmount", formattedQuoteAmount, quoteCurrencyCode));
         }
 
-        model.getPrice().set(PriceUtil.findQuote(marketPriceService, bisqEasyOffer)
-                .map(quote -> {
-                    String price = PriceFormatter.format(quote, true);
-                    String percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
-                            .map(PercentageFormatter::formatToPercentWithSymbol)
-                            .orElse("");
-                    return Res.get("bisqEasy.offerDetails.priceValue", price, percentFromMarketPrice);
-                })
-                .orElseGet(() -> Res.get("data.na")));
-        model.getPriceDescription().set(Res.get("bisqEasy.offerDetails.price", bisqEasyOffer.getMarket().getMarketCodes()));
-        model.getPaymentMethods().set(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs()));
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
+        String formattedPrice = priceQuote
+                .map(PriceFormatter::format)
+                .orElse("");
+        model.setPrice(Res.get("bisqEasy.offerDetails.price", formattedPrice, market.getMarketCodes()));
 
-        model.getId().set(bisqEasyOffer.getId());
-        model.getDate().set(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
+        applyPriceDetails(priceSpec, market);
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        model.setQuoteSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(quoteSidePaymentMethodSpecs));
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = bisqEasyOffer.getBaseSidePaymentMethodSpecs();
+        model.setBaseSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(baseSidePaymentMethodSpecs));
+        model.setBaseSidePaymentMethodDescription(
+                baseSidePaymentMethodSpecs.size() == 1
+                        ? Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescription")
+                        : Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescriptions")
+        );
+        model.setQuoteSidePaymentMethodDescription(
+                quoteSidePaymentMethodSpecs.size() == 1
+                        ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription")
+                        : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions")
+        );
+
+        model.setId(bisqEasyOffer.getId());
+        model.setDate(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
         Optional<String> tradeTerms = OfferOptionUtil.findMakersTradeTerms(bisqEasyOffer.getOfferOptions());
-        model.getMakersTradeTermsVisible().set(tradeTerms.isPresent());
-        tradeTerms.ifPresent(makersTradeTerms ->
-                model.getMakersTradeTerms().set(makersTradeTerms));
+        model.setMakersTradeTermsVisible(tradeTerms.isPresent());
+        tradeTerms.ifPresent(model::setMakersTradeTerms);
+    }
+
+    private void applyPriceDetails(PriceSpec priceSpec, Market market) {
+        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote);
+        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElseGet(() -> Res.get("data.na"));
+        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
+        double percent = percentFromMarketPrice.orElse(0d);
+        if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
+            if (percentFromMarketPrice.isEmpty()) {
+                log.warn("No market price available");
+                model.setPriceDetails("");
+            } else {
+                model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.marketPrice"));
+            }
+        } else {
+            String aboveOrBelow = percent > 0 ? Res.get("offer.price.above") : Res.get("offer.price.below");
+            String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
+                    .orElseGet(() -> Res.get("data.na"));
+            if (priceSpec instanceof FloatPriceSpec) {
+                model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.float",
+                        percentAsString, aboveOrBelow, marketPriceAsString));
+            } else {
+                if (percent == 0) {
+                    if (percentFromMarketPrice.isEmpty()) {
+                        log.warn("No market price available");
+                        model.setPriceDetails("");
+                    } else {
+                        model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.fix.atMarket",
+                                marketPriceAsString));
+                    }
+                } else {
+                    model.setPriceDetails(Res.get("bisqEasy.offerDetails.priceDetails.fix",
+                            percentAsString, aboveOrBelow, marketPriceAsString));
+                }
+            }
+        }
     }
 
     @Override
