@@ -115,7 +115,7 @@ After adding the language to Transifex and updating the configuration, pull the 
 # Navigate to i18n module
 cd i18n
 
-# Pull source files (-t flag) for the new language to get English structure
+# Pull translation files based on sources (-t flag) for the new language to get English structure
 tx pull -t -l fr
 
 # This creates all translation files with:
@@ -130,21 +130,34 @@ tx pull -t -l fr
 - Language code in Java: `pt-BR`
 - Filename: `default_pt_BR.properties`
 
-### Step 4: Run Translation Pipeline Locally
+### Step 4: Translate the Files
 
-Before committing the new translation files, run the translation pipeline locally to populate them with initial translations:
+Before committing the new translation files, you need to populate them with translations. You have several options:
 
+**Option A: Use AI Translation Tools** (Recommended for initial translations)
 ```bash
-# Run the local translation pipeline
-# This will translate all keys using the configured translation service
-# Replace 'fr' with your language code
-./scripts/translate_locale.sh fr
-
-# Or run the full translation pipeline for all bundles
-# (Check your project's specific translation pipeline scripts)
+# Use an AI-powered translation service to translate all keys
+# This can be done via Claude Code agents or other translation automation tools
+# Example: Use Claude Code's translation agents to translate each locale
 ```
 
-This ensures that when you commit the new language files, they already contain translations rather than just English placeholders.
+**Option B: Manual Translation via Transifex**
+```bash
+# Push the source files to Transifex
+cd i18n
+tx push -s
+
+# Translators can then work in the Transifex web interface
+# Pull completed translations when ready
+tx pull -l fr
+```
+
+**Option C: Manual Translation Locally**
+- Open each `*_fr.properties` file and replace English values with French translations
+- Preserve all placeholders like `{0}`, `{1}`, etc.
+- Maintain multi-line continuation format with `\n\`
+
+**Important**: Whichever method you choose, ensure translations are complete before committing. Files should contain actual translations, not English placeholders.
 
 ### Step 5: Verify Translation Files
 
