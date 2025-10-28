@@ -2,12 +2,12 @@
 
 This guide outlines the process for managing translations using the Transifex platform and the Transifex Client (`tx`)[^1].
 
-### One-Time Setup
+## One-Time Setup
 
 1.  **Install the Transifex Client**: Follow the instructions on the official documentation.
 2.  **Get an API token**: Generate an API token[^2] from your Transifex user profile. You must have "Project Maintainer" rights for the Bisq project to push source files and manage resources.
 
-### Use Case 1: Syncing Existing Translations (e.g., Before a Release)
+## Use Case 1: Syncing Existing Translations (e.g., Before a Release)
 
 This is the most common task. It pulls the latest completed translations from Transifex into your local repository.
 
@@ -18,15 +18,15 @@ This is the most common task. It pulls the latest completed translations from Tr
     ```
 3.  Commit the updated `..._<lang>.properties` files to the repository.
 
-### Use Case 2: Adding a New Translatable File
+## Use Case 2: Adding a New Translatable File
 
 When a new source file (e.g., `new_feature.properties`) is added to the project, it must be properly registered with Transifex and the repository. This is a multi-step process.
 
-**Step 1: Add the New Source File**
+### Step 1: Add the New Source File
 
 Place your new `.properties` file in the `i18n/src/main/resources/` directory.
 
-**Step 2: Update Transifex Configuration**
+### Step 2: Update Transifex Configuration
 
 Manually add a new resource block to the `.tx/config` file in the project's root directory. Copy an existing block and change the resource name and file paths. The resource name in the `[...]` brackets must be unique.
 
@@ -38,7 +38,7 @@ source_file            = i18n/src/main/resources/new_feature.properties
 type                   = UNICODEPROPERTIES
 ```
 
-**Step 3: Push the New Source File to Transifex**
+### Step 3: Push the New Source File to Transifex
 
 This command uploads the English source strings to Transifex, making the resource visible and ready for translation. This replaces older workflows that may have used `tx add`.
 
@@ -48,7 +48,7 @@ tx push --source
 tx push -s
 ```
 
-**Step 4: Create Initial Local Files for Each Language**
+### Step 4: Create Initial Local Files for Each Language
 
 The `tx pull` command **will not** create local translation files (e.g., `new_feature_de.properties`) if no translations for them exist on Transifex yet. You must create these empty files manually so they can be tracked by Git and populated later.
 
@@ -61,20 +61,20 @@ for lang in cs de es it pt_BR pcm ru af_ZA; do
 done
 ```
 
-**Step 5: Commit All Changes**
+### Step 5: Commit All Changes
 
 Commit the following to your Git repository:
 1.  The new source file (e.g., `new_feature.properties`).
 2.  The updated `.tx/config` file.
 3.  All the new empty translation files (e.g., `new_feature_de.properties`, etc.).
 
-### Use Case 3: Adding a New Language/Locale
+## Use Case 3: Adding a New Language/Locale
 
 When you want to add a completely new language to Bisq 2 (e.g., French, Japanese, etc.), you need to update both the codebase and Transifex configuration. This is a comprehensive process that involves multiple steps.
 
-**Step 1: Add Language to Transifex**
+### Step 1: Add Language to Transifex
 
-1.  Log in to Transifex at https://app.transifex.com/
+1.  Log in to Transifex at <https://app.transifex.com/>
 2.  Navigate to the Bisq 2 project
 3.  Go to **Languages** settings
 4.  Click **Add Language** and select the target language
@@ -82,7 +82,7 @@ When you want to add a completely new language to Bisq 2 (e.g., French, Japanese
 
 **Note**: You must have "Project Maintainer" rights to add new languages.
 
-**Step 2: Update LanguageRepository.java**
+### Step 2: Update LanguageRepository.java
 
 Add the new language code to the `LANGUAGE_TAGS` list in `common/src/main/java/bisq/common/locale/LanguageRepository.java`.
 
@@ -107,7 +107,7 @@ public static final List<String> LANGUAGE_TAGS = List.of(
 - Language with region: `pt-BR`, `af-ZA`, `zh-Hans`
 - Use hyphens (`-`), not underscores for region variants
 
-**Step 3: Pull English Source Structure for New Translation Files**
+### Step 3: Pull English Source Structure for New Translation Files
 
 After adding the language to Transifex and updating the configuration, pull the English source structure to create properly formatted translation files:
 
@@ -130,7 +130,7 @@ tx pull -t -l fr
 - Language code in Java: `pt-BR`
 - Filename: `default_pt_BR.properties`
 
-**Step 4: Run Translation Pipeline Locally**
+### Step 4: Run Translation Pipeline Locally
 
 Before committing the new translation files, run the translation pipeline locally to populate them with initial translations:
 
@@ -146,7 +146,7 @@ Before committing the new translation files, run the translation pipeline locall
 
 This ensures that when you commit the new language files, they already contain translations rather than just English placeholders.
 
-**Step 5: Verify Translation Files**
+### Step 5: Verify Translation Files
 
 After running the translation pipeline, verify the files:
 
@@ -158,7 +158,7 @@ ls -lh i18n/src/main/resources/*_fr.properties
 head -50 i18n/src/main/resources/default_fr.properties
 ```
 
-**Step 6: Commit All Changes**
+### Step 6: Commit All Changes
 
 Commit the following to your Git repository:
 1.  Updated `LanguageRepository.java` with the new language code
@@ -170,7 +170,7 @@ Commit the following to your Git repository:
 - Initial translations (not English placeholders)
 - Proper key ordering matching source files
 
-**Step 7: Test the New Language**
+### Step 7: Test the New Language
 
 1.  Build the application: `./gradlew clean build`
 2.  Run the desktop app
