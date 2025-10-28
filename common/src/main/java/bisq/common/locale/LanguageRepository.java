@@ -86,45 +86,44 @@ public class LanguageRepository {
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
-            "pcm-NG", // Nigerian Pidgin
+            "pcm", // Nigerian Pidgin
             "ru", // Russian
-            "af-ZA" // Afrikaans
-            /*
-            // in preparation:
+            "af-ZA", // Afrikaans
             "pt-PT", // Portuguese
             "fr", // French
-            "tl", // Tagalog (Philippines)
-            "bn", // Bengali (Bangladesh, India)
-            "ta", // Tamil (India, Sri Lanka, and Singapore)
-            "pl", // Polish
-            "hi", // Hindi (India, Fiji, Nepal and Mauritius)
-            "zh-Hans", // Chinese (Simplified)
-            "zh-Hant", // Chinese (Traditional)
-            "sv", // Swedish
-            "th", // Thai
-            "tr", // Turkish
-            "ja", // Japanese
-            "ko", // Korean
+            "tl", //Tagalog
+            "bn", //Bengali
+            "ta" //Tamil
+            /*
+            // not translated yet
+            "zh-Hans", // Chinese [Han Simplified]
+            "zh-Hant", // Chinese [Han Traditional]
             "vi", // Vietnamese
-            "id", // Indonesian
-            "nl", // Dutch
+            "th", // Thai
+            "ja", // Japanese
+            "fa", // Persian
             "el", // Greek
+            "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
+            "tr" // Turkish
+            "iw", // Hebrew
+            "hi", // Hindi
+            "ko", // Korean
+            "pl", // Polish
+            "sv", // Swedish
             "no", // Norwegian
+            "nl", // Dutch
+            "be", // Belarusian
             "fi", // Finnish
             "bg", // Bulgarian
-            "da", // Danish
-            "sk", // Slovak
-            "hr", // Croatian
-            "sl", // Slovenian
-            "et", // Estonian
-            "lv", // Latvian
             "lt", // Lithuanian
-            "is", // Icelandic
+            "lv", // Latvian
+            "hr", // Croatian
+            "uk", // Ukrainian
+            "sk", // Slovak
+            "sl", // Slovenian
             "ga", // Irish
-            "sr", // Serbian
-            "be", // Belarusian
             "sq", // Albanian
             "ca", // Catalan
             "mk", // Macedonian
