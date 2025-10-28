@@ -173,8 +173,11 @@ public class FileUtilsTest {
 
     @Test
     void testReadFromScanner() {
-        Scanner scanner = new Scanner("line1\nline2");
-        assertEquals("line1\nline2", FileUtils.readFromScanner(scanner));
+        String input = String.format("%s%s%s", "line1", System.lineSeparator(), "line2");
+        Scanner scanner = new Scanner(input);
+        String expected = String.format("%s%s%s", "line1", System.lineSeparator(), "line2");
+        String actual = FileUtils.readFromScanner(scanner);
+        assertEquals(expected, actual);
     }
 
     @Test
