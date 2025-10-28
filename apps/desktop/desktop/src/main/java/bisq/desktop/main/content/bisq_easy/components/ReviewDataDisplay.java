@@ -154,7 +154,7 @@ public class ReviewDataDisplay {
         @SuppressWarnings("UnnecessaryUnicodeEscape")
         private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
-        private final Triple<Text, Label, VBox> direction, paymentMethod;
+        private final Triple<Text, Label, VBox> direction;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount;
         private final Text toSendMinAmount, toReceiveMinAmount;
 
@@ -183,7 +183,6 @@ public class ReviewDataDisplay {
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSendMaxOrFixedAmount = getAmountElements();
             toReceiveMaxOrFixedAmount = getAmountElements();
-            paymentMethod = getElements();
 
             toSendMinAmount = new Text();
             toSendMinAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
@@ -207,8 +206,6 @@ public class ReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
-            paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
-            paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
@@ -240,7 +237,6 @@ public class ReviewDataDisplay {
                         amountHBox.getChildren().addAll(toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
-//                    VBox.setMargin(toSendMaxOrFixedAmount.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
 
@@ -269,10 +265,8 @@ public class ReviewDataDisplay {
                         amountHBox.getChildren().addAll(toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
                     }
                     amountHBox.setAlignment(Pos.BASELINE_LEFT);
-//                    VBox.setMargin(toReceiveMaxOrFixedAmount.getSecond(), new Insets(0, 0, 0, 0));
                 }
             });
-
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSendMaxOrFixedAmount.getThird();
@@ -280,14 +274,13 @@ public class ReviewDataDisplay {
                 rangeAmountVBox.getChildren().clear();
                 rangeAmountVBox.setAlignment(Pos.TOP_LEFT);
                 root.getChildren().clear();
-                HBox.setMargin(paymentMethod.getThird(), new Insets(0, 10, 0, 0));
 
                 if (isRangeAmount) {
                     VBox.setMargin(toReceiveVBox, new Insets(-10, 0, 0, 0));
                     rangeAmountVBox.getChildren().addAll(toSendVBox, toReceiveVBox);
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox, Spacer.fillHBox(), paymentMethod.getThird());
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox);
                 } else {
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), paymentMethod.getThird());
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox);
                 }
             });
         }
@@ -303,8 +296,6 @@ public class ReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().unbind();
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().unbind();
             toReceiveMinAmount.textProperty().unbind();
-            paymentMethod.getFirst().textProperty().unbind();
-            paymentMethod.getSecond().textProperty().unbind();
 
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
@@ -320,10 +311,6 @@ public class ReviewDataDisplay {
             bitcoinAmountDisplay.applyMediumCompactConfig();
             bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
-        }
-
-        private Triple<Text, Label, VBox> getElements() {
-            return getElements(null);
         }
 
         private Triple<Text, Label, VBox> getElements(@Nullable String description) {
