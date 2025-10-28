@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -29,9 +30,27 @@ public final class AuthUtils {
         return new SecretKeySpec(password.getBytes(StandardCharsets.UTF_8), AUTH_HMAC_ALGORITHM);
     }
 
+    public static String normalizePathAndQuery(URI requestUri) {
+        // we strip trailing slash and add query if not empty
+        String rawPath = requestUri.getRawPath();
+        if (rawPath == null) {
+            rawPath = "/";
+        } else if (rawPath.length() > 1 && rawPath.endsWith("/")) {
+            rawPath = rawPath.substring(0, rawPath.length() - 1);
+        }
+        String rawQuery = requestUri.getRawQuery();
+        String result = rawPath;
+        if (rawQuery != null) {
+            result += "?" + rawQuery;
+        }
+        return result;
+    }
+
     public static boolean isValidAuthentication(SecretKey secretKey,
                                                 @Nullable String timestamp,
-                                                @Nullable String receivedHmac) {
+                                                @Nullable String receivedHmac,
+                                                String method,
+                                                String encodedPathAndQuery) {
         if (timestamp == null || receivedHmac == null) {
             return false;
         }
@@ -47,7 +66,10 @@ public final class AuthUtils {
 
             Mac mac = Mac.getInstance(AUTH_HMAC_ALGORITHM);
             mac.init(secretKey);
-            byte[] expectedHmac = mac.doFinal(timestamp.getBytes(StandardCharsets.UTF_8));
+            String canonical = timestamp
+                    + "\n" + method.toUpperCase(java.util.Locale.ROOT)
+                    + "\n" + encodedPathAndQuery;
+            byte[] expectedHmac = mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8));
 
             byte[] receivedHmacBytes = Hex.decode(receivedHmac);
 

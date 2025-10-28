@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
+import java.net.URI;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION)
@@ -25,7 +26,9 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext ctx) throws IOException {
         String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
         String receivedHmac = ctx.getHeaderString(AuthUtils.AUTH_HEADER);
-        if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac)) {
+        URI requestUri = ctx.getUriInfo().getRequestUri();
+        String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(requestUri);
+        if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac, ctx.getMethod(), normalizedPathAndQuery)) {
             log.warn("HttpRequest rejected: Invalid or missing authorization token");
             ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }

@@ -11,6 +11,7 @@ import org.glassfish.grizzly.http.Protocol;
 import org.glassfish.grizzly.http.util.HttpStatus;
 
 import javax.crypto.SecretKey;
+import java.net.URI;
 
 @Slf4j
 public class WebSocketAuthFilter extends BaseFilter {
@@ -29,7 +30,10 @@ public class WebSocketAuthFilter extends BaseFilter {
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
                 String timestamp = request.getHeader(AuthUtils.AUTH_TIMESTAMP_HEADER);
                 String receivedHmac = request.getHeader(AuthUtils.AUTH_HEADER);
-                if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac)) {
+                String method = "GET";
+                String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(URI.create(request.getRequestURI()));
+
+                if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac, method, normalizedPathAndQuery)) {
                     log.warn("WebSocket connection rejected: Invalid or missing authorization token");
                     sendUnauthorizedResponse(ctx, request);
                     return ctx.getStopAction();
