@@ -84,11 +84,11 @@ When you want to add a completely new language to Bisq 2 (e.g., French, Japanese
 
 **Step 2: Update LanguageRepository.java**
 
-Add the new language code to the `I18N_CODES` list in `common/src/main/java/bisq/common/locale/LanguageRepository.java`.
+Add the new language code to the `LANGUAGE_TAGS` list in `common/src/main/java/bisq/common/locale/LanguageRepository.java`.
 
 *Example for adding French (fr)*:
 ```java
-public static final List<String> I18N_CODES = List.of(
+public static final List<String> LANGUAGE_TAGS = List.of(
         "en", // English
         "de", // German
         "es", // Spanish
@@ -107,53 +107,68 @@ public static final List<String> I18N_CODES = List.of(
 - Language with region: `pt-BR`, `af-ZA`, `zh-Hans`
 - Use hyphens (`-`), not underscores for region variants
 
-**Step 3: Create Translation Files for All Bundles**
+**Step 3: Pull English Source Structure for New Translation Files**
 
-Create empty translation files for **all 17 translation bundles** with your new language code. Navigate to `i18n/src/main/resources/` and run:
-
-```bash
-# Replace 'fr' with your language code (use underscore format for filenames)
-for bundle in academy account application authorized_role bi2p bisq_easy chat default mu_sig network reputation settings support trade_apps user wallet webcam; do
-  touch "${bundle}_fr.properties"
-done
-```
-
-**Note**: File naming uses underscores (`_`) to separate the base name from the language code, even though the language code in Java uses hyphens. For example:
-- Language code in Java: `pt-BR`
-- Filename: `default_pt_BR.properties`
-
-**Step 4: Update Transifex Configuration** (Optional but Recommended)
-
-While Transifex will automatically handle the new language for existing resources, you should verify the `.tx/config` file patterns support your new language code format.
-
-Check that the `file_filter` patterns in `.tx/config` use `<lang>` placeholder:
-```ini
-file_filter = i18n/src/main/resources/default_<lang>.properties
-```
-
-This pattern will automatically work for your new language files.
-
-**Step 5: Pull Initial Translations from Transifex**
-
-Once translators have started working in Transifex, pull the translations:
+After adding the language to Transifex and updating the configuration, pull the English source structure to create properly formatted translation files:
 
 ```bash
 # Navigate to i18n module
 cd i18n
 
-# Pull translations for the new language
-tx pull -l fr
+# Pull source files (-t flag) for the new language to get English structure
+tx pull -t -l fr
 
-# Or pull all languages including the new one
-tx pull
+# This creates all translation files with:
+# - Complete file structure (comments, section headers, empty lines)
+# - All translation keys with English values as placeholders
+# - Proper formatting matching the source files
+```
+
+**Important**: The `-t` flag pulls the source language (English) as a template, creating files with the complete structure. This ensures translation files have proper formatting from the start.
+
+**Note**: File naming uses underscores (`_`) to separate the base name from the language code, even though the language code in Java uses hyphens. For example:
+- Language code in Java: `pt-BR`
+- Filename: `default_pt_BR.properties`
+
+**Step 4: Run Translation Pipeline Locally**
+
+Before committing the new translation files, run the translation pipeline locally to populate them with initial translations:
+
+```bash
+# Run the local translation pipeline
+# This will translate all keys using the configured translation service
+# Replace 'fr' with your language code
+./scripts/translate_locale.sh fr
+
+# Or run the full translation pipeline for all bundles
+# (Check your project's specific translation pipeline scripts)
+```
+
+This ensures that when you commit the new language files, they already contain translations rather than just English placeholders.
+
+**Step 5: Verify Translation Files**
+
+After running the translation pipeline, verify the files:
+
+```bash
+# Check that files have proper structure and translations
+ls -lh i18n/src/main/resources/*_fr.properties
+
+# Verify a sample file has translations (not just English)
+head -50 i18n/src/main/resources/default_fr.properties
 ```
 
 **Step 6: Commit All Changes**
 
 Commit the following to your Git repository:
 1.  Updated `LanguageRepository.java` with the new language code
-2.  All 17 new empty translation files (e.g., `default_fr.properties`, `chat_fr.properties`, etc.)
-3.  Later, commit translated files pulled from Transifex
+2.  All 17 new translation files with complete structure and initial translations (e.g., `default_fr.properties`, `chat_fr.properties`, etc.)
+3.  Updated `.tx/config` if modified
+
+**Important**: The first commit should include translation files that already have:
+- Complete file structure (comments, headers, formatting)
+- Initial translations (not English placeholders)
+- Proper key ordering matching source files
 
 **Step 7: Test the New Language**
 
