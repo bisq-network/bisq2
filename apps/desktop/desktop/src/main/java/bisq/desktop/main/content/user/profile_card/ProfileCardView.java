@@ -45,7 +45,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
-    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report, addToContacts, inMyContactList;
+    private BisqMenuItem sendPrivateMsg, addToContacts, inMyContactList, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
     private BondedRoleBadge bondedRoleBadge;
@@ -100,45 +100,45 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
             rankingLabel.setText(reputationScore.getRankingAsString());
         }
 
-        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not());
-        ignore.managedProperty().bind(model.getIgnoreUserSelected().not());
-        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected());
-        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
         addToContacts.visibleProperty().bind(model.getIsUserInMyContactList().not());
         addToContacts.managedProperty().bind(model.getIsUserInMyContactList().not());
         inMyContactList.visibleProperty().bind(model.getIsUserInMyContactList());
         inMyContactList.managedProperty().bind(model.getIsUserInMyContactList());
+        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not());
+        ignore.managedProperty().bind(model.getIgnoreUserSelected().not());
+        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected());
+        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
         myNotesTabButton.visibleProperty().bind(model.getIsUserInMyContactList());
         myNotesTabButton.managedProperty().bind(model.getIsUserInMyContactList());
 
         sendPrivateMsg.setOnAction(e -> controller.onSendPrivateMessage());
+        addToContacts.setOnAction(e -> controller.onAddToContacts());
+        inMyContactList.setOnAction(e -> controller.onGoToMyContactList());
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
         undoIgnore.setOnAction(e -> controller.onToggleIgnoreUser());
         report.setOnAction(e -> controller.onReportUser());
-        addToContacts.setOnAction(e -> controller.onAddToContacts());
-        inMyContactList.setOnAction(e -> controller.onGoToMyContactList());
         closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
-        ignore.visibleProperty().unbind();
-        ignore.managedProperty().unbind();
-        undoIgnore.visibleProperty().unbind();
-        undoIgnore.managedProperty().unbind();
         addToContacts.visibleProperty().unbind();
         addToContacts.managedProperty().unbind();
         inMyContactList.visibleProperty().unbind();
         inMyContactList.managedProperty().unbind();
+        ignore.visibleProperty().unbind();
+        ignore.managedProperty().unbind();
+        undoIgnore.visibleProperty().unbind();
+        undoIgnore.managedProperty().unbind();
         myNotesTabButton.visibleProperty().unbind();
         myNotesTabButton.managedProperty().unbind();
 
         sendPrivateMsg.setOnAction(null);
+        addToContacts.setOnAction(null);
+        inMyContactList.setOnAction(null);
         ignore.setOnAction(null);
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
-        addToContacts.setOnAction(null);
-        inMyContactList.setOnAction(null);
         closeButton.setOnAction(null);
 
         bondedRoleBadge.dispose();
@@ -181,22 +181,22 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
                 Res.get("user.profileCard.userActions.sendPrivateMessage"));
+        addToContacts = new BisqMenuItem("contacts-grey", "contacts-white",
+                Res.get("user.profileCard.userActions.addToContacts"));
+        inMyContactList = new BisqMenuItem("contacts-green", "contacts-green",
+                Res.get("user.profileCard.userActions.inMyContacts"));
+        inMyContactList.getStyleClass().add("in-my-contact-list-menu-item");
         ignore = new BisqMenuItem("ignore-grey", "ignore-white",
                 Res.get("user.profileCard.userActions.ignore"));
         undoIgnore = new BisqMenuItem("undo-ignore-grey", "undo-ignore-white",
                 Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
-        addToContacts = new BisqMenuItem("contacts-grey", "contacts-white",
-                Res.get("user.profileCard.userActions.addToContacts"));
-        inMyContactList = new BisqMenuItem("contacts-green", "contacts-green",
-                Res.get("user.profileCard.userActions.inMyContacts"));
-        inMyContactList.getStyleClass().add("in-my-contact-list-menu-item");
 
         HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
-        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report, addToContacts, inMyContactList);
+        userActionsBox = new HBox(30, sendPrivateMsg, addToContacts, inMyContactList, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
