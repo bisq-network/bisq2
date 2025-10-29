@@ -33,11 +33,10 @@ import java.util.stream.Collectors;
 public class SepaAccountDetails extends FiatAccountDetails<SepaAccount> {
     public SepaAccountDetails(SepaAccount account) {
         super(account);
-
     }
 
     @Override
-    protected void addDetails(SepaAccount account) {
+    protected void addDetails() {
         SepaAccountPayload accountPayload = account.getAccountPayload();
 
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),

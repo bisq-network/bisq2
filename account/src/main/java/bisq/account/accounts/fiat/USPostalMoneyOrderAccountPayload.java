@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String postalAddress;
 

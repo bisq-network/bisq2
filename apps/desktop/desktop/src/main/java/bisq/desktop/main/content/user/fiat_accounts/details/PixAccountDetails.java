@@ -27,7 +27,7 @@ public class PixAccountDetails extends FiatAccountDetails<PixAccount> {
     }
 
     @Override
-    protected void addDetails(PixAccount account) {
+    protected void addDetails() {
         PixAccountPayload accountPayload = account.getAccountPayload();
 
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),

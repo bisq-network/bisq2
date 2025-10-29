@@ -36,9 +36,11 @@ import lombok.extern.slf4j.Slf4j;
 public class FiatPaymentAccountsModel implements Model {
     private final BooleanProperty noAccountsAvailable = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty saveButtonVisible = new SimpleBooleanProperty();
 
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccounts = new SortedList<>(accounts);
     private final ObjectProperty<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new SimpleObjectProperty<>();
-    private final ObjectProperty<AccountDetails<?, ?>> accountDetailsGridPane = new SimpleObjectProperty<>();
+    private final ObjectProperty<AccountDetails<?, ?>> accountDetails = new SimpleObjectProperty<>();
 }

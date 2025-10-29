@@ -34,8 +34,8 @@ public abstract class FiatAccountDetails<A extends Account<?, ?>> extends Accoun
     }
 
     @Override
-    protected void addHeader(Account<?, ?> account) {
-        super.addHeader(account);
+    protected void addHeader() {
+        super.addHeader();
 
         if (account instanceof CountryBasedAccount<?> countryBasedAccount) {
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.country"),
@@ -45,11 +45,11 @@ public abstract class FiatAccountDetails<A extends Account<?, ?>> extends Accoun
     }
 
     @Override
-    protected void addRestrictions(A account) {
+    protected void addRestrictions() {
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             addDescriptionAndValue(Res.get("paymentAccounts.chargebackRisk"),
                     fiatPaymentRail.getChargebackRisk().toString());
         }
-        super.addRestrictions(account);
+        super.addRestrictions();
     }
 }

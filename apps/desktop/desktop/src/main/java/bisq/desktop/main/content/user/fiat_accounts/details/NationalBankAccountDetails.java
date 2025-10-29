@@ -28,7 +28,7 @@ public class NationalBankAccountDetails extends FiatAccountDetails<NationalBankA
     }
 
     @Override
-    protected void addDetails(NationalBankAccount account) {
+    protected void addDetails() {
         NationalBankAccountPayload accountPayload = account.getAccountPayload();
         String countryCode = accountPayload.getCountryCode();
 

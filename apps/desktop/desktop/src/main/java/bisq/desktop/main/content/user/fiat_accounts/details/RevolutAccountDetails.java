@@ -34,7 +34,7 @@ public class RevolutAccountDetails extends FiatAccountDetails<RevolutAccount> {
     }
 
     @Override
-    protected void addDetails(RevolutAccount account) {
+    protected void addDetails() {
         RevolutAccountPayload accountPayload = account.getAccountPayload();
 
         addDescriptionAndValue(Res.get("paymentAccounts.userName"),
