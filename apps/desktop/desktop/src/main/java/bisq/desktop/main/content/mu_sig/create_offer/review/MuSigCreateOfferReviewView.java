@@ -54,12 +54,15 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
     private final TextFlow price;
+    private final HBox reviewDataDisplay;
     private Subscription showCreateOfferSuccessPin;
 
     MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model,
                                MuSigCreateOfferReviewController controller,
                                HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
+
+        this.reviewDataDisplay = reviewDataDisplay;
 
         gridPane = new GridPane();
         gridPane.setHgap(10);
@@ -79,7 +82,6 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.add(line1, 0, rowIndex, 4, 1);
 
         rowIndex++;
-        GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
         gridPane.add(reviewDataDisplay, 0, rowIndex, 4, 1);
 
         rowIndex++;
@@ -172,15 +174,21 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
 
         showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
-            show -> {
-                createOfferSuccess.setVisible(show);
-                if (show) {
-                    Transitions.blurStrong(gridPane, 0);
-                    Transitions.slideInTop(createOfferSuccess, 450);
-                } else {
-                    Transitions.removeEffect(gridPane);
-                }
-            });
+                show -> {
+                    createOfferSuccess.setVisible(show);
+                    if (show) {
+                        Transitions.blurStrong(gridPane, 0);
+                        Transitions.slideInTop(createOfferSuccess, 450);
+                    } else {
+                        Transitions.removeEffect(gridPane);
+                    }
+                });
+
+        if (model.isRangeAmount() && model.getMarket().isCrypto()) {
+            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
+        } else {
+            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
+        }
     }
 
     @Override

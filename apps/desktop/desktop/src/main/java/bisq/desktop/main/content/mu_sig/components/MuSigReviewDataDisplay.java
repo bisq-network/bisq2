@@ -114,6 +114,10 @@ public class MuSigReviewDataDisplay {
         controller.model.getPriceCode().set(value);
     }
 
+    public void setIsCryptoMarket(Boolean value) {
+        controller.model.getIsCryptoMarket().set(value);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
         private final View view;
@@ -152,6 +156,7 @@ public class MuSigReviewDataDisplay {
         private final StringProperty priceDescription = new SimpleStringProperty();
         private final StringProperty price = new SimpleStringProperty();
         private final StringProperty priceCode = new SimpleStringProperty();
+        private final BooleanProperty isCryptoMarket = new SimpleBooleanProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -278,7 +283,10 @@ public class MuSigReviewDataDisplay {
                 VBox toSendVBox = toSendMaxOrFixedAmount.getThird();
                 VBox toReceiveVBox = toReceiveMaxOrFixedAmount.getThird();
                 root.getChildren().clear();
-                if (isRangeAmount) {
+                if (model.getIsCryptoMarket().get() && isRangeAmount) {
+                    VBox sendAndReceiveVBox = new VBox(toSendVBox, toReceiveVBox);
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), sendAndReceiveVBox, Spacer.fillHBox(), price.getThird());
+                } else if (isRangeAmount) {
                     root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox);
                 } else {
                     VBox.setMargin(price.getSecond(), null);

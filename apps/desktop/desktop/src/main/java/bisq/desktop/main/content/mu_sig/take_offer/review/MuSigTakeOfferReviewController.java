@@ -320,6 +320,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigReviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());
         muSigReviewDataDisplay.setPrice(model.getPrice());
         muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
+        muSigReviewDataDisplay.setIsCryptoMarket(model.getMuSigOffer().getMarket().isCrypto());
     }
 
     @Override

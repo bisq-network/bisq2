@@ -318,6 +318,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setPriceDescription(model.getPriceDescription().toUpperCase());
         muSigReviewDataDisplay.setPrice(model.getPrice());
         muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
+        muSigReviewDataDisplay.setIsCryptoMarket(model.getMarket().isCrypto());
     }
 
     public void reset() {
