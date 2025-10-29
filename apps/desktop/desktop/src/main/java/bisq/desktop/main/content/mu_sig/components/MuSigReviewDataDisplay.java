@@ -114,7 +114,7 @@ public class MuSigReviewDataDisplay {
         controller.model.getPriceCode().set(value);
     }
 
-    public void setIsCryptoMarket(Boolean value) {
+    public void setIsCryptoMarket(boolean value) {
         controller.model.getIsCryptoMarket().set(value);
     }
 

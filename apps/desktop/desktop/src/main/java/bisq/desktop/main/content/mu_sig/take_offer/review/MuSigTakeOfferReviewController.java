@@ -316,7 +316,6 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(toReceiveAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
-        muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
         muSigReviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());
         muSigReviewDataDisplay.setPrice(model.getPrice());
         muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
