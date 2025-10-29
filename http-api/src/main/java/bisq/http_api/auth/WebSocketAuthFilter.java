@@ -28,12 +28,12 @@ public class WebSocketAuthFilter extends BaseFilter {
         if (message instanceof HttpContent httpContent && httpContent.getHttpHeader() instanceof HttpRequestPacket request) {
             String upgradeHeader = request.getHeader("Upgrade");
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
-                String timestamp = request.getHeader(AuthUtils.AUTH_TIMESTAMP_HEADER);
-                String receivedHmac = request.getHeader(AuthUtils.AUTH_HEADER);
                 String method = "GET";
                 String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(URI.create(request.getRequestURI()));
+                String timestamp = request.getHeader(AuthUtils.AUTH_TIMESTAMP_HEADER);
+                String receivedHmac = request.getHeader(AuthUtils.AUTH_HEADER);
 
-                if (!AuthUtils.isValidAuthentication(secretKey, timestamp, receivedHmac, method, normalizedPathAndQuery)) {
+                if (!AuthUtils.isValidAuthentication(secretKey, method, normalizedPathAndQuery, timestamp, receivedHmac)) {
                     log.warn("WebSocket connection rejected: Invalid or missing authorization token");
                     sendUnauthorizedResponse(ctx, request);
                     return ctx.getStopAction();

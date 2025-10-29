@@ -48,10 +48,19 @@ public final class AuthUtils {
     }
 
     public static boolean isValidAuthentication(SecretKey secretKey,
+                                                String method,
+                                                String encodedPathAndQuery,
+                                                @Nullable String timestamp,
+                                                @Nullable String receivedHmac) {
+        return isValidAuthentication(secretKey, method, encodedPathAndQuery, timestamp, receivedHmac, null);
+    }
+
+    public static boolean isValidAuthentication(SecretKey secretKey,
+                                                String method,
+                                                String encodedPathAndQuery,
                                                 @Nullable String timestamp,
                                                 @Nullable String receivedHmac,
-                                                String method,
-                                                String encodedPathAndQuery) {
+                                                @Nullable String bodySha256Hex) {
         if (timestamp == null || receivedHmac == null) {
             return false;
         }
@@ -69,7 +78,8 @@ public final class AuthUtils {
             mac.init(secretKey);
             String canonical = timestamp
                     + "\n" + method.toUpperCase(java.util.Locale.ROOT)
-                    + "\n" + encodedPathAndQuery;
+                    + "\n" + encodedPathAndQuery
+                    + "\n" + (bodySha256Hex == null ? "" : bodySha256Hex);
             byte[] expectedHmac = mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8));
 
             byte[] receivedHmacBytes = Hex.decode(receivedHmac);
