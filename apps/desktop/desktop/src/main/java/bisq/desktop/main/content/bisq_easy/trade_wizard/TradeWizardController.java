@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -31,6 +30,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market.Tra
 import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReviewController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer.TradeWizardSelectOfferController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
@@ -271,7 +271,7 @@ public class TradeWizardController extends NavigationController implements InitW
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
+        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent,getView().getRoot(),this::onNext);
     }
 
     void onBack() {

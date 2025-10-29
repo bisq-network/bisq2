@@ -130,7 +130,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::navigateNext);
+        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent,getView().getRoot(),this::navigateNext);
     }
 
     void onNext() {
