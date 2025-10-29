@@ -17,7 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -27,11 +28,10 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.take_offer.amount.TakeOfferAmountController;
 import bisq.desktop.main.content.bisq_easy.take_offer.payment_methods.TakeOfferPaymentController;
 import bisq.desktop.main.content.bisq_easy.take_offer.review.TakeOfferReviewController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
@@ -224,7 +224,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
+        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent,getView().getRoot(),this::onNext);
     }
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {

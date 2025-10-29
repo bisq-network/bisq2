@@ -17,8 +17,10 @@
 
 package bisq.desktop.common.utils;
 
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.Node;
 
 public class KeyHandlerUtil {
 
@@ -40,6 +42,18 @@ public class KeyHandlerUtil {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             handler.run();
+        }
+    }
+
+    public static void handleEnterKeyEventWithTextInputFocusCheck(KeyEvent keyEvent, Node node, Runnable handler) {
+        if (node != null && node.getScene() != null && node.getScene().getFocusOwner() instanceof TextInputControl textInputControl) {
+            handleEnterKeyEvent(keyEvent, () -> {
+                if (textInputControl.getParent() != null) {
+                    textInputControl.getParent().requestFocus();
+                }
+            });
+        } else {
+            handleEnterKeyEvent(keyEvent, handler);
         }
     }
 }
