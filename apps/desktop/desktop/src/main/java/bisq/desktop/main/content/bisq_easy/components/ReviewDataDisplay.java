@@ -172,16 +172,13 @@ public class ReviewDataDisplay {
         private final Triple<Text, Label, VBox> direction;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount, price;
         private final Text toSendMinAmount, toReceiveMinAmount;
-
-        private final VBox rangeAmountVBox = new VBox(0);
-        private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
-
         private final BitcoinAmountDisplay toSendBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toSendBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final Label toSendDashLabel = new Label(DASH_SYMBOL);
         private final Label toReceiveDashLabel = new Label(DASH_SYMBOL);
         private final BitcoinAmountDisplay toReceiveBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toReceiveBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
@@ -290,17 +287,11 @@ public class ReviewDataDisplay {
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSendMaxOrFixedAmount.getThird();
                 VBox toReceiveVBox = toReceiveMaxOrFixedAmount.getThird();
-                rangeAmountVBox.getChildren().clear();
-                rangeAmountVBox.setAlignment(Pos.TOP_LEFT);
                 root.getChildren().clear();
-                VBox.setMargin(price.getSecond(), null);
-
-                if (isRangeAmount) {
-                    VBox.setMargin(toReceiveVBox, new Insets(-10, 0, 0, 0));
-                    rangeAmountVBox.getChildren().addAll(toSendVBox, toReceiveVBox);
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox, Spacer.fillHBox(), price.getThird());
-                } else {
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), price.getThird());
+                root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox);
+                if (!isRangeAmount) {
+                    VBox.setMargin(price.getSecond(), null);
+                    root.getChildren().addAll(Spacer.fillHBox(), price.getThird());
                 }
             });
         }
@@ -344,7 +335,6 @@ public class ReviewDataDisplay {
             valueLabel.setMaxWidth(250);
 
             VBox.setVgrow(valueLabel, Priority.ALWAYS);
-            VBox.setMargin(valueLabel, new Insets(-2, 0, 0, 0));
             VBox vBox = new VBox(0, descriptionLabel, valueLabel);
             vBox.setFillWidth(true);
             vBox.setAlignment(Pos.TOP_LEFT);
