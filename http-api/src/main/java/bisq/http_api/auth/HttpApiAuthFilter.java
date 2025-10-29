@@ -52,23 +52,19 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
     @Nullable
     private byte[] getBody(ContainerRequestContext ctx) {
-        byte[] bytes = null;
         if (ctx.getLength() <= 0) {
-            return bytes;
+            return null;
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         InputStream entityStream = ctx.getEntityStream();
         try {
             entityStream.transferTo(baos);
-            bytes = baos.toByteArray();
+            byte[] bytes = baos.toByteArray();
             ctx.setEntityStream(new ByteArrayInputStream(bytes));
+            return bytes;
         } catch (Exception e) {
-            try {
-                entityStream.close();
-            } catch (Exception ex) {
-                // no need
-            }
+            log.error("Failed to read request body for authentication, will result in auth failure", e);
+            return null;
         }
-        return bytes;
     }
 }
