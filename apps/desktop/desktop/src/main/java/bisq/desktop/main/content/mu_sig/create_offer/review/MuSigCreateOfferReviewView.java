@@ -137,7 +137,6 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         Region line3 = getLine();
         gridPane.add(line3, 0, rowIndex, 4, 1);
 
-
         // Feedback overlays
         createOfferSuccessButton = new Button(Res.get("bisqEasy.tradeWizard.review.createOfferSuccessButton"));
         createOfferSuccess = new VBox(20);
@@ -154,7 +153,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         detailsHeadline.setText(model.getDetailsHeadline());
 
         priceDescription.setText(model.getPriceDescription());
-        TextFlowUtils.updateTextFlow(price, model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPriceWithCode());
         priceDetails.setText(model.getPriceDetails());
 
         paymentMethodDescription.setText(model.getPaymentMethodDescription());
@@ -185,7 +184,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
                     }
                 });
 
-        if (model.isRangeAmount()) {
+        if (model.isRangeAmount() && model.getMarket().isCrypto()) {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
         } else {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));

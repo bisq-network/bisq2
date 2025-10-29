@@ -248,7 +248,7 @@ public class ReviewDataDisplay {
                 } else {
                     if (isRangeAmount) {
                         amountHBox.getChildren().addAll(toSendMinAmount, toSendDashLabel, toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
-                        toSendDashLabel.setTranslateY(-2);
+                        toSendDashLabel.setTranslateY(-1);
                     } else {
                         amountHBox.getChildren().addAll(toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
                     }
@@ -276,7 +276,7 @@ public class ReviewDataDisplay {
                 } else {
                     if (isRangeAmount) {
                         amountHBox.getChildren().addAll(toReceiveMinAmount, toReceiveDashLabel, toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
-                        toReceiveDashLabel.setTranslateY(-2);
+                        toReceiveDashLabel.setTranslateY(-1);
                     } else {
                         amountHBox.getChildren().addAll(toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
                     }
@@ -346,13 +346,13 @@ public class ReviewDataDisplay {
         private Triple<Triple<Text, Text, Text>, HBox, VBox> getElements() {
             Text descriptionLabel = new Text();
             descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
-            Text amount = new Text();
-            amount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            Text value = new Text();
+            value.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
 
-            HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
-            HBox hBox = new HBox(5, amount, code);
+            HBox.setMargin(value, new Insets(0.5, 0, 0, 0));
+            HBox hBox = new HBox(5, value, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
             VBox.setMargin(hBox, new Insets(-2, 0, 0, 0));
             VBox.setVgrow(hBox, Priority.ALWAYS);
@@ -361,7 +361,7 @@ public class ReviewDataDisplay {
             vBox.setAlignment(Pos.TOP_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
-            return new Triple<>(new Triple<>(descriptionLabel, amount, code), hBox, vBox);
+            return new Triple<>(new Triple<>(descriptionLabel, value, code), hBox, vBox);
         }
     }
 }

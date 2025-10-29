@@ -74,9 +74,13 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String priceDescription;
     @Setter
-    private String price;
+    private String priceWithCode;
     @Setter
     private String priceDetails;
+    @Setter
+    private String price;
+    @Setter
+    private String priceCode;
     @Setter
     private String fee;
     @Setter
@@ -105,8 +109,10 @@ class MuSigCreateOfferReviewModel implements Model {
         paymentMethodDescription = null;
         paymentMethodsDisplayString = null;
         priceDescription = null;
-        price = null;
+        priceWithCode = null;
         priceDetails = null;
+        price = null;
+        priceCode = null;
         fee = null;
         feeDetails = null;
         marketPrice = 0;

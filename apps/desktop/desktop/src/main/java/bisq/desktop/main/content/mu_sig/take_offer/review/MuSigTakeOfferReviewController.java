@@ -316,6 +316,10 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigReviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(toReceiveAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
+        muSigReviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());
+        muSigReviewDataDisplay.setPrice(model.getPrice());
+        muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
+        muSigReviewDataDisplay.setIsCryptoMarket(model.getMuSigOffer().getMarket().isCrypto());
     }
 
     @Override
@@ -368,6 +372,8 @@ public class MuSigTakeOfferReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPrice(formattedPrice);
+        model.setPriceCode(codes);
     }
 }

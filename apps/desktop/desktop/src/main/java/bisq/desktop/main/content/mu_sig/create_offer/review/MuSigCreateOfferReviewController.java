@@ -223,7 +223,9 @@ public class MuSigCreateOfferReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPrice(formattedPrice);
+        model.setPriceCode(codes);
 
         applyPriceDetails(model.getPriceSpec(), market);
 
@@ -313,6 +315,10 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setToReceiveMaxOrFixedAmount(currentToReceiveMaxOrFixedAmount);
         muSigReviewDataDisplay.setToReceiveCode(toReceiveCode);
         muSigReviewDataDisplay.setPaymentMethodDescription(model.getPaymentMethodDescription().toUpperCase());
+        muSigReviewDataDisplay.setPriceDescription(model.getPriceDescription().toUpperCase());
+        muSigReviewDataDisplay.setPrice(model.getPrice());
+        muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
+        muSigReviewDataDisplay.setIsCryptoMarket(model.getMarket().isCrypto());
     }
 
     public void reset() {
