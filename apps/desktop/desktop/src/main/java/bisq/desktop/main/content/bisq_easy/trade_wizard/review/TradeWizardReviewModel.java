@@ -92,9 +92,13 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private String priceDescription;
     @Setter
-    private String price;
+    private String priceWithCode;
     @Setter
     private String priceDetails;
+    @Setter
+    private String price;
+    @Setter
+    private String priceCode;
     @Setter
     private String fee;
     @Setter
@@ -128,8 +132,10 @@ class TradeWizardReviewModel implements Model {
         headline = null;
         detailsHeadline = null;
         priceDescription = null;
-        price = null;
+        priceWithCode = null;
         priceDetails = null;
+        price = null;
+        priceCode = null;
         bitcoinPaymentMethodDescription = null;
         bitcoinPaymentMethod = null;
         fiatPaymentMethodDescription = null;

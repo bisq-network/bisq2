@@ -205,7 +205,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         detailsHeadline.setText(model.getDetailsHeadline());
 
         priceDescription.setText(model.getPriceDescription());
-        TextFlowUtils.updateTextFlow(price, model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPriceWithCode());
         priceDetails.setText(model.getPriceDetails());
 
         bitcoinPaymentMethodDescription.setText(model.getBitcoinPaymentMethodDescription());

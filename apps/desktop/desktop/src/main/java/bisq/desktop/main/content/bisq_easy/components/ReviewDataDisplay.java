@@ -110,6 +110,18 @@ public class ReviewDataDisplay {
         controller.model.getFiatPaymentMethod().set(value);
     }
 
+    public void setPriceDescription(String value) {
+        controller.model.getPriceDescription().set(value);
+    }
+
+    public void setPrice(String value) {
+        controller.model.getPrice().set(value);
+    }
+
+    public void setPriceCode(String value) {
+        controller.model.getPriceCode().set(value);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
         private final View view;
@@ -147,6 +159,9 @@ public class ReviewDataDisplay {
         private final StringProperty toSendMaxOrFixedAmount = new SimpleStringProperty();
         private final StringProperty toReceiveMinAmount = new SimpleStringProperty();
         private final StringProperty toReceiveMaxOrFixedAmount = new SimpleStringProperty();
+        private final StringProperty priceDescription = new SimpleStringProperty();
+        private final StringProperty price = new SimpleStringProperty();
+        private final StringProperty priceCode = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -155,7 +170,7 @@ public class ReviewDataDisplay {
         private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
         private final Triple<Text, Label, VBox> direction;
-        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount;
+        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount, price;
         private final Text toSendMinAmount, toReceiveMinAmount;
 
         private final VBox rangeAmountVBox = new VBox(0);
@@ -181,8 +196,9 @@ public class ReviewDataDisplay {
             toReceiveDashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
-            toSendMaxOrFixedAmount = getAmountElements();
-            toReceiveMaxOrFixedAmount = getAmountElements();
+            toSendMaxOrFixedAmount = getElements();
+            toReceiveMaxOrFixedAmount = getElements();
+            price = getElements();
 
             toSendMinAmount = new Text();
             toSendMinAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
@@ -206,6 +222,9 @@ public class ReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
+            price.getFirst().getFirst().textProperty().bind(model.getPriceDescription());
+            price.getFirst().getSecond().textProperty().bind(model.getPrice());
+            price.getFirst().getThird().textProperty().bind(model.getPriceCode());
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
@@ -274,13 +293,14 @@ public class ReviewDataDisplay {
                 rangeAmountVBox.getChildren().clear();
                 rangeAmountVBox.setAlignment(Pos.TOP_LEFT);
                 root.getChildren().clear();
+                VBox.setMargin(price.getSecond(), null);
 
                 if (isRangeAmount) {
                     VBox.setMargin(toReceiveVBox, new Insets(-10, 0, 0, 0));
                     rangeAmountVBox.getChildren().addAll(toSendVBox, toReceiveVBox);
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox);
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox, Spacer.fillHBox(), price.getThird());
                 } else {
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox);
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), price.getThird());
                 }
             });
         }
@@ -296,6 +316,9 @@ public class ReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().unbind();
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().unbind();
             toReceiveMinAmount.textProperty().unbind();
+            price.getFirst().getFirst().textProperty().unbind();
+            price.getFirst().getSecond().textProperty().unbind();
+            price.getFirst().getThird().textProperty().unbind();
 
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
@@ -330,7 +353,7 @@ public class ReviewDataDisplay {
             return new Triple<>(descriptionLabel, valueLabel, vBox);
         }
 
-        private Triple<Triple<Text, Text, Text>, HBox, VBox> getAmountElements() {
+        private Triple<Triple<Text, Text, Text>, HBox, VBox> getElements() {
             Text descriptionLabel = new Text();
             descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
             Text amount = new Text();

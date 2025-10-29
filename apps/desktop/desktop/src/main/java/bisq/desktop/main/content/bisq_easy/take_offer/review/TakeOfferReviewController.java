@@ -333,6 +333,9 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
         reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
         reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
+        reviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());
+        reviewDataDisplay.setPrice(model.getPrice());
+        reviewDataDisplay.setPriceCode(model.getPriceCode());
     }
 
     @Override
@@ -385,6 +388,8 @@ public class TakeOfferReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPrice(formattedPrice);
+        model.setPriceCode(codes);
     }
 }
