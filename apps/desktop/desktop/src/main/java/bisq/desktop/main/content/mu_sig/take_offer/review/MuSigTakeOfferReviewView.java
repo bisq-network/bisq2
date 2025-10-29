@@ -170,7 +170,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     @Override
     protected void onViewAttached() {
-        TextFlowUtils.updateTextFlow(price, model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPriceWithCode());
         priceDetails.setText(model.getPriceDetails());
 
         paymentMethod.setText(model.getPaymentMethodDisplayString());

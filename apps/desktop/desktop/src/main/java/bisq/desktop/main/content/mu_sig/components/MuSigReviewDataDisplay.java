@@ -21,7 +21,6 @@ import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
@@ -103,6 +102,18 @@ public class MuSigReviewDataDisplay {
         controller.model.getPaymentMethodDisplayString().set(value);
     }
 
+    public void setPriceDescription(String value) {
+        controller.model.getPriceDescription().set(value);
+    }
+
+    public void setPrice(String value) {
+        controller.model.getPrice().set(value);
+    }
+
+    public void setPriceCode(String value) {
+        controller.model.getPriceCode().set(value);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
         private final View view;
@@ -138,6 +149,9 @@ public class MuSigReviewDataDisplay {
         private final StringProperty toSendMaxOrFixedAmount = new SimpleStringProperty();
         private final StringProperty toReceiveMinAmount = new SimpleStringProperty();
         private final StringProperty toReceiveMaxOrFixedAmount = new SimpleStringProperty();
+        private final StringProperty priceDescription = new SimpleStringProperty();
+        private final StringProperty price = new SimpleStringProperty();
+        private final StringProperty priceCode = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -145,19 +159,16 @@ public class MuSigReviewDataDisplay {
         @SuppressWarnings("UnnecessaryUnicodeEscape")
         private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
-        private final Triple<Text, Label, VBox> direction, paymentMethod;
-        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount;
+        private final Triple<Text, Label, VBox> direction;
+        private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSendMaxOrFixedAmount, toReceiveMaxOrFixedAmount, price;
         private final Text toSendMinAmount, toReceiveMinAmount;
-
-        private final VBox rangeAmountVBox = new VBox(0);
-        private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
-
         private final BitcoinAmountDisplay toSendBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toSendBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final Label toSendDashLabel = new Label(DASH_SYMBOL);
         private final Label toReceiveDashLabel = new Label(DASH_SYMBOL);
         private final BitcoinAmountDisplay toReceiveBitcoinMinAmountDisplay = new BitcoinAmountDisplay("0", false);
         private final BitcoinAmountDisplay toReceiveBitcoinMaxOrFixedAmountDisplay = new BitcoinAmountDisplay("0", false);
+        private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
@@ -172,9 +183,9 @@ public class MuSigReviewDataDisplay {
             toReceiveDashLabel.setAlignment(Pos.CENTER);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
-            toSendMaxOrFixedAmount = getAmountElements();
-            toReceiveMaxOrFixedAmount = getAmountElements();
-            paymentMethod = getElements();
+            toSendMaxOrFixedAmount = getElements();
+            toReceiveMaxOrFixedAmount = getElements();
+            price = getElements();
 
             toSendMinAmount = new Text();
             toSendMinAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
@@ -198,11 +209,9 @@ public class MuSigReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().bind(model.getToReceiveMaxOrFixedAmount());
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             toReceiveMinAmount.textProperty().bind(model.getToReceiveMinAmount());
-            paymentMethod.getFirst().textProperty().bind(model.getPaymentMethodDescription());
-            paymentMethod.getSecond().textProperty().bind(model.getPaymentMethodDisplayString());
-            if (model.getPaymentMethodDisplayString().get().length() > 20) {
-                paymentMethod.getSecond().setTooltip(new BisqTooltip(model.getPaymentMethodDisplayString().get()));
-            }
+            price.getFirst().getFirst().textProperty().bind(model.getPriceDescription());
+            price.getFirst().getSecond().textProperty().bind(model.getPrice());
+            price.getFirst().getThird().textProperty().bind(model.getPriceCode());
 
             toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
             toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
@@ -229,7 +238,7 @@ public class MuSigReviewDataDisplay {
                 } else {
                     if (isRangeAmount) {
                         amountHBox.getChildren().addAll(toSendMinAmount, toSendDashLabel, toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
-                        toSendDashLabel.setTranslateY(-2);
+                        toSendDashLabel.setTranslateY(-1);
                     } else {
                         amountHBox.getChildren().addAll(toSendMaxOrFixedAmount.getFirst().getSecond(), toSendMaxOrFixedAmount.getFirst().getThird());
                     }
@@ -257,7 +266,7 @@ public class MuSigReviewDataDisplay {
                 } else {
                     if (isRangeAmount) {
                         amountHBox.getChildren().addAll(toReceiveMinAmount, toReceiveDashLabel, toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
-                        toReceiveDashLabel.setTranslateY(-2);
+                        toReceiveDashLabel.setTranslateY(-1);
                     } else {
                         amountHBox.getChildren().addAll(toReceiveMaxOrFixedAmount.getFirst().getSecond(), toReceiveMaxOrFixedAmount.getFirst().getThird());
                     }
@@ -268,17 +277,12 @@ public class MuSigReviewDataDisplay {
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSendMaxOrFixedAmount.getThird();
                 VBox toReceiveVBox = toReceiveMaxOrFixedAmount.getThird();
-                rangeAmountVBox.getChildren().clear();
-                rangeAmountVBox.setAlignment(Pos.TOP_LEFT);
                 root.getChildren().clear();
-                HBox.setMargin(paymentMethod.getThird(), new Insets(0, 10, 0, 0));
-
                 if (isRangeAmount) {
-                    VBox.setMargin(toReceiveVBox, new Insets(-10, 0, 0, 0));
-                    rangeAmountVBox.getChildren().addAll(toSendVBox, toReceiveVBox);
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), rangeAmountVBox, Spacer.fillHBox(), paymentMethod.getThird());
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox);
                 } else {
-                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), paymentMethod.getThird());
+                    VBox.setMargin(price.getSecond(), null);
+                    root.getChildren().addAll(direction.getThird(), Spacer.fillHBox(), toSendVBox, Spacer.fillHBox(), toReceiveVBox, Spacer.fillHBox(), price.getThird());
                 }
             });
         }
@@ -294,9 +298,9 @@ public class MuSigReviewDataDisplay {
             toReceiveMaxOrFixedAmount.getFirst().getSecond().textProperty().unbind();
             toReceiveMaxOrFixedAmount.getFirst().getThird().textProperty().unbind();
             toReceiveMinAmount.textProperty().unbind();
-            paymentMethod.getFirst().textProperty().unbind();
-            paymentMethod.getSecond().textProperty().unbind();
-            paymentMethod.getSecond().setTooltip(null);
+            price.getFirst().getFirst().textProperty().unbind();
+            price.getFirst().getSecond().textProperty().unbind();
+            price.getFirst().getThird().textProperty().unbind();
 
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
@@ -314,10 +318,6 @@ public class MuSigReviewDataDisplay {
             bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
         }
 
-        private Triple<Text, Label, VBox> getElements() {
-            return getElements(null);
-        }
-
         private Triple<Text, Label, VBox> getElements(@Nullable String description) {
             Text descriptionLabel = description == null ? new Text() : new Text(description.toUpperCase());
             descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
@@ -326,7 +326,6 @@ public class MuSigReviewDataDisplay {
             valueLabel.setMaxWidth(250);
 
             VBox.setVgrow(valueLabel, Priority.ALWAYS);
-            VBox.setMargin(valueLabel, new Insets(-2, 0, 0, 0));
             VBox vBox = new VBox(0, descriptionLabel, valueLabel);
             vBox.setFillWidth(true);
             vBox.setAlignment(Pos.TOP_LEFT);
@@ -335,16 +334,16 @@ public class MuSigReviewDataDisplay {
             return new Triple<>(descriptionLabel, valueLabel, vBox);
         }
 
-        private Triple<Triple<Text, Text, Text>, HBox, VBox> getAmountElements() {
+        private Triple<Triple<Text, Text, Text>, HBox, VBox> getElements() {
             Text descriptionLabel = new Text();
             descriptionLabel.getStyleClass().add("bisq-easy-trade-wizard-review-header-description");
-            Text amount = new Text();
-            amount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
+            Text value = new Text();
+            value.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
             Text code = new Text();
             code.getStyleClass().add("bisq-easy-trade-wizard-review-header-code");
 
-            HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
-            HBox hBox = new HBox(5, amount, code);
+            HBox.setMargin(value, new Insets(0.5, 0, 0, 0));
+            HBox hBox = new HBox(5, value, code);
             hBox.setAlignment(Pos.BASELINE_LEFT);
             VBox.setMargin(hBox, new Insets(-2, 0, 0, 0));
             VBox.setVgrow(hBox, Priority.ALWAYS);
@@ -353,7 +352,7 @@ public class MuSigReviewDataDisplay {
             vBox.setAlignment(Pos.TOP_LEFT);
             vBox.setMinHeight(HEIGHT);
             vBox.setMaxHeight(HEIGHT);
-            return new Triple<>(new Triple<>(descriptionLabel, amount, code), hBox, vBox);
+            return new Triple<>(new Triple<>(descriptionLabel, value, code), hBox, vBox);
         }
     }
 }
