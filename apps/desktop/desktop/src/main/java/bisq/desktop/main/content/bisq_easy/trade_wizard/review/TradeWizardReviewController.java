@@ -278,7 +278,9 @@ public class TradeWizardReviewController implements Controller {
                 .map(PriceFormatter::format)
                 .orElse("");
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
-        model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
+        model.setPrice(formattedPrice);
+        model.setPriceCode(codes);
 
         applyPriceDetails(model.getPriceSpec(), market);
 
@@ -404,6 +406,9 @@ public class TradeWizardReviewController implements Controller {
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setBitcoinPaymentMethodDescription(model.getBitcoinPaymentMethodDescription().toUpperCase());
         reviewDataDisplay.setFiatPaymentMethodDescription(model.getFiatPaymentMethodDescription().toUpperCase());
+        reviewDataDisplay.setPriceDescription(model.getPriceDescription().toUpperCase());
+        reviewDataDisplay.setPrice(model.getPrice());
+        reviewDataDisplay.setPriceCode(model.getPriceCode());
     }
 
     public void reset() {

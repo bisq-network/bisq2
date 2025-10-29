@@ -51,9 +51,13 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
-    private String price;
+    private String priceWithCode;
     @Setter
     private String priceDetails;
+    @Setter
+    private String price;
+    @Setter
+    private String priceCode;
     @Setter
     private String bitcoinPaymentMethod;
     @Setter

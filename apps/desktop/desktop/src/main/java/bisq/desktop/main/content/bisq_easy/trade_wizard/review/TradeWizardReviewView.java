@@ -46,8 +46,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
 
 @Slf4j
 class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
@@ -58,7 +56,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final GridPane gridPane;
     private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
     private final TextFlow price;
-    private final HBox reviewDataDisplay;
     private final WaitingAnimation takeOfferSendMessageWaitingAnimation;
     @Nullable
     private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
@@ -71,8 +68,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                           TradeWizardReviewController controller,
                           HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
-
-        this.reviewDataDisplay = reviewDataDisplay;
 
         gridPane = new GridPane();
         gridPane.setHgap(10);
@@ -99,6 +94,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         rowIndex++;
         GridPane.setColumnSpan(reviewDataDisplay, 4);
+        GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
         gridPane.add(reviewDataDisplay, 0, rowIndex);
 
         rowIndex++;
@@ -207,7 +203,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         detailsHeadline.setText(model.getDetailsHeadline());
 
         priceDescription.setText(model.getPriceDescription());
-        TextFlowUtils.updateTextFlow(price, model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPriceWithCode());
         priceDetails.setText(model.getPriceDetails());
 
         bitcoinPaymentMethodDescription.setText(model.getBitcoinPaymentMethodDescription());
@@ -262,7 +258,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             bitcoinPaymentMethodValuePane.getChildren().setAll(bitcoinPaymentMethod);
         }
 
-
         if (model.getTakersFiatPaymentMethods().size() > 1) {
             fiatPaymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
             fiatPaymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
@@ -291,12 +286,6 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         } else {
             GridPane.setMargin(fiatPaymentMethodValuePane, new Insets(0, 0, 0, 0));
             fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethod);
-        }
-
-        if (model.isRangeAmount()) {
-            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
-        } else {
-            GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
         }
     }
 
