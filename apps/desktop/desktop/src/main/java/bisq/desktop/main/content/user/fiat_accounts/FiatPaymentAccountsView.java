@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel, FiatPaymentAccountsController> {
     private final Label headline;
-    private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
+    private final Button createButtonWithAccounts, createButtonNoAccounts, saveButton, deletedButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
@@ -97,6 +97,9 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         comboBoxAndCreateButtonHBox = new HBox(20, accountsComboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
+        saveButton = new Button(Res.get("action.save"));
+        saveButton.setDefaultButton(true);
+
         deletedButton = new Button(Res.get("paymentAccounts.deleteAccount"));
 
         accountDisplayPane = new StackPane();
@@ -109,7 +112,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                deletedButton);
+                new HBox(10, saveButton, deletedButton));
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);
@@ -119,7 +122,9 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
     @Override
     protected void onViewAttached() {
         deletedButton.disableProperty().bind(model.getDeleteButtonDisabled());
-
+        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
+        saveButton.visibleProperty().bind(model.getSaveButtonVisible());
+        saveButton.managedProperty().bind(model.getSaveButtonVisible());
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsAvailable(), noAccountsSetup -> {
             boolean anyAccountSetup = !noAccountsSetup;
             lineAfterHeadline.setVisible(anyAccountSetup);
@@ -140,9 +145,9 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
         selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
                 account -> accountsComboBox.getSelectionModel().select(account));
 
-        accountDisplayPin = EasyBind.subscribe(model.getAccountDetailsGridPane(), accountDisplay -> {
-            if (accountDisplay != null) {
-                accountDisplayPane.getChildren().setAll(accountDisplay);
+        accountDisplayPin = EasyBind.subscribe(model.getAccountDetails(), accountDetails -> {
+            if (accountDetails != null) {
+                accountDisplayPane.getChildren().setAll(accountDetails);
             } else {
                 accountDisplayPane.getChildren().clear();
             }
@@ -158,13 +163,16 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         createButtonNoAccounts.setOnAction(e -> controller.onCreateAccount());
         createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
+        saveButton.setOnAction(e -> controller.onSaveAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
     }
 
     @Override
     protected void onViewDetached() {
         deletedButton.disableProperty().unbind();
-
+        saveButton.disableProperty().unbind();
+        saveButton.visibleProperty().unbind();
+        saveButton.managedProperty().unbind();
         noAccountsSetupPin.unsubscribe();
         selectedAccountPin.unsubscribe();
         accountDisplayPin.unsubscribe();
@@ -173,6 +181,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         createButtonNoAccounts.setOnAction(null);
         createButtonWithAccounts.setOnAction(null);
+        saveButton.setOnAction(null);
         deletedButton.setOnAction(null);
     }
 }

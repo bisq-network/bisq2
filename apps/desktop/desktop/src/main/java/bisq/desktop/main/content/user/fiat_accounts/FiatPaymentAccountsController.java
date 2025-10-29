@@ -28,11 +28,13 @@ import bisq.account.accounts.fiat.PixAccount;
 import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -49,12 +51,16 @@ import bisq.desktop.main.content.user.fiat_accounts.details.UserDefinedAccountDe
 import bisq.desktop.main.content.user.fiat_accounts.details.ZelleAccountDetails;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
+import javafx.beans.property.ReadOnlyStringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class FiatPaymentAccountsController implements Controller {
@@ -65,6 +71,8 @@ public class FiatPaymentAccountsController implements Controller {
     private final MuSigService muSigService;
     private Subscription selectedAccountSubscription;
     private Pin accountsPin, selectedAccountPin;
+    @Nullable
+    private Subscription userDefinedAccountDetailsPin;
 
     public FiatPaymentAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
@@ -117,15 +125,28 @@ public class FiatPaymentAccountsController implements Controller {
                 selectedAccount -> {
                     accountService.setSelectedAccount(selectedAccount);
                     applyDataDisplay(selectedAccount);
-                    updateButtonStates();
+
+                    if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
+                        disposeUserDefinedAccountDetailsPin();
+                        if (UserDefinedAccountDetails.USE_LEGACY_DESIGN && selectedAccount instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
+                            AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
+                            if (accountDetails instanceof UserDefinedAccountDetails userDefinedAccountDetails) {
+                                ReadOnlyStringProperty textAreaTextProperty = userDefinedAccountDetails.getTextAreaTextProperty();
+                                if (textAreaTextProperty != null) {
+                                    String accountData = textAreaTextProperty.get();
+                                    userDefinedAccountDetailsPin = EasyBind.subscribe(textAreaTextProperty, newValue -> {
+                                        String oldValue = userDefinedFiatAccount.getAccountPayload().getAccountData();
+                                        model.getSaveButtonDisabled().set(StringUtils.isEmpty(newValue) || StringUtils.isEmpty(oldValue) || oldValue.equals(newValue));
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    updateDeleteButtonStates();
                 });
 
         maybeSelectFirstAccount();
         updateNoAccountsState();
-    }
-
-    private void updateNoAccountsState() {
-        model.getNoAccountsAvailable().set(!accountService.hasAccounts());
     }
 
     @Override
@@ -133,6 +154,7 @@ public class FiatPaymentAccountsController implements Controller {
         accountsPin.unbind();
         selectedAccountPin.unbind();
         selectedAccountSubscription.unsubscribe();
+        disposeUserDefinedAccountDetailsPin();
         model.getAccounts().clear();
     }
 
@@ -151,6 +173,33 @@ public class FiatPaymentAccountsController implements Controller {
         }
     }
 
+    void onSaveAccount() {
+        var selectedAccount = model.getSelectedAccount().get();
+        if (selectedAccount instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
+            AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
+            if (accountDetails instanceof UserDefinedAccountDetails userDefinedAccountDetails) {
+                ReadOnlyStringProperty textAreaTextProperty = userDefinedAccountDetails.getTextAreaTextProperty();
+                String accountData = textAreaTextProperty != null ? textAreaTextProperty.get() : null;
+                if (StringUtils.isEmpty(accountData)) {
+                    return;
+                }
+                checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
+
+                String accountId = userDefinedFiatAccount.getId();
+                long creationDate = userDefinedFiatAccount.getCreationDate();
+                String accountName = userDefinedFiatAccount.getAccountName();
+                UserDefinedFiatAccountPayload newAccountPayload = new UserDefinedFiatAccountPayload(accountId, accountData);
+                UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountId,
+                        creationDate,
+                        accountName,
+                        newAccountPayload);
+                accountService.removePaymentAccount(selectedAccount);
+                accountService.addPaymentAccount(newAccount);
+                accountService.setSelectedAccount(newAccount);
+            }
+        }
+    }
+
     void onDeleteAccount() {
         Account<? extends PaymentMethod<?>, ?> account = model.getSelectedAccount().get();
         accountService.removePaymentAccount(account);
@@ -158,8 +207,15 @@ public class FiatPaymentAccountsController implements Controller {
         maybeSelectFirstAccount();
     }
 
-    private void updateButtonStates() {
+    private void updateDeleteButtonStates() {
         model.getDeleteButtonDisabled().set(model.getSelectedAccount().get() == null);
+    }
+
+    private void updateNoAccountsState() {
+        model.getNoAccountsAvailable().set(!accountService.hasAccounts());
+        if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
+            model.getSaveButtonVisible().set(accountService.hasAccounts());
+        }
     }
 
     private void maybeSelectFirstAccount() {
@@ -171,14 +227,14 @@ public class FiatPaymentAccountsController implements Controller {
 
     private void applyDataDisplay(Account<? extends PaymentMethod<?>, ?> account) {
         if (account == null) {
-            model.getAccountDetailsGridPane().set(null);
+            model.getAccountDetails().set(null);
             return;
         }
 
         AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetails<?, ?> detailsVBox = getAccountDetails(account, fiatPaymentRail);
-            model.getAccountDetailsGridPane().set(detailsVBox);
+            AccountDetails<?, ?> accountDetails = getAccountDetails(account, fiatPaymentRail);
+            model.getAccountDetails().set(accountDetails);
         }
     }
 
@@ -222,5 +278,12 @@ public class FiatPaymentAccountsController implements Controller {
             case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
         };
+    }
+
+    private void disposeUserDefinedAccountDetailsPin() {
+        if (userDefinedAccountDetailsPin != null) {
+            userDefinedAccountDetailsPin.unsubscribe();
+            userDefinedAccountDetailsPin = null;
+        }
     }
 }

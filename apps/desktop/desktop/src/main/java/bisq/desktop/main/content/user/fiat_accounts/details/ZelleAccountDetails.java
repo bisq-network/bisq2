@@ -27,7 +27,7 @@ public class ZelleAccountDetails extends FiatAccountDetails<ZelleAccount> {
     }
 
     @Override
-    protected void addDetails(ZelleAccount account) {
+    protected void addDetails() {
         ZelleAccountPayload accountPayload = account.getAccountPayload();
 
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),

@@ -27,7 +27,7 @@ public class FasterPaymentsAccountDetails extends FiatAccountDetails<FasterPayme
     }
 
     @Override
-    protected void addDetails(FasterPaymentsAccount account) {
+    protected void addDetails() {
         FasterPaymentsAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),
                 accountPayload.getHolderName());

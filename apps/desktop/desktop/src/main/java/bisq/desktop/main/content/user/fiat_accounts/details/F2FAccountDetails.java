@@ -27,7 +27,7 @@ public class F2FAccountDetails extends FiatAccountDetails<F2FAccount> {
     }
 
     @Override
-    protected void addDetails(F2FAccount account) {
+    protected void addDetails() {
         F2FAccountPayload accountPayload = account.getAccountPayload();
         addDescriptionAndValue(Res.get("paymentAccounts.f2f.city"),
                 accountPayload.getCity());

@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class InteracETransferAccountPayload extends AccountPayload<FiatPaymentMethod> {
+public final class InteracETransferAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String email;
     private final String question;
@@ -55,7 +56,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         return resolveBuilder(getInteracETransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.InteracETransferAccountPayload.Builder getInteracETransferAccountPayloadBuilder(boolean serializeForHash) {
+    private bisq.account.protobuf.InteracETransferAccountPayload.Builder getInteracETransferAccountPayloadBuilder(
+            boolean serializeForHash) {
         return bisq.account.protobuf.InteracETransferAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setEmail(email)
