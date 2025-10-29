@@ -53,7 +53,8 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
     private final Button tradeProtocols, buildReputation;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
     private final GridPane gridPane;
-    private Subscription isNotificationVisiblePin;
+    private final HBox marketPriceHBox;
+    private Subscription isNotificationVisiblePin, marketPricePin;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new ScrollPane(), model, controller);
@@ -65,9 +66,9 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         GridPaneUtil.setGridPaneTwoColumnsConstraints(gridPane);
 
         //First row
-        Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
-        VBox marketPrice = priceTriple.getFirst();
-        marketPrice.setPrefWidth(350);
+        Triple<Pair<HBox, VBox>, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
+        marketPriceHBox = priceTriple.getFirst().getFirst();
+        VBox marketPrice = priceTriple.getFirst().getSecond();
         marketPriceLabel = priceTriple.getSecond();
         marketCodeLabel = priceTriple.getThird();
 
@@ -80,7 +81,6 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         VBox activeUsers = usersPair.getFirst();
         activeUsersLabel = usersPair.getSecond();
 
-        HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
         hBox.getStyleClass().add("bisq-box-2");
         hBox.setPadding(new Insets(20, 40, 20, 40));
@@ -164,6 +164,24 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
             }
         });
 
+        marketPricePin = EasyBind.subscribe(model.getMarketPrice(), value -> {
+            if (value != null) {
+                double standardLength = 9; // USD
+                int length = value.length();
+                double ratio = Math.min(1, standardLength / length);
+
+                double priceFontSize = 3.4 * ratio;
+                marketPriceLabel.setStyle("-fx-font-size: " + priceFontSize + "em;");
+
+                double codeFontSize = 2.0 * ratio;
+                marketCodeLabel.setStyle("-fx-font-size: " + codeFontSize + "em;");
+
+                double hBoxTop = 50 - (50 * ratio);
+                VBox.setMargin(marketPriceHBox, new Insets(hBoxTop, 0, 0, 0));
+
+            }
+        });
+
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
         buildReputation.setOnAction(e -> controller.onBuildReputation());
     }
@@ -176,12 +194,13 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         activeUsersLabel.textProperty().unbind();
 
         isNotificationVisiblePin.unsubscribe();
+        marketPricePin.unsubscribe();
 
         tradeProtocols.setOnAction(null);
         buildReputation.setOnAction(null);
     }
 
-    private Triple<VBox, Label, Label> getPriceBox(String title) {
+    private Triple<Pair<HBox, VBox>, Label, Label> getPriceBox(String title) {
         Label titleLabel = new Label(title);
         titleLabel.setTextAlignment(TextAlignment.CENTER);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
@@ -194,11 +213,11 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
         HBox hBox = new HBox(9, valueLabel, codeLabel);
         hBox.setAlignment(Pos.BASELINE_CENTER);
-        VBox.setMargin(titleLabel, new Insets(0, 100, 0, 0));
-        VBox box = new VBox(titleLabel, hBox);
-        box.setAlignment(Pos.TOP_CENTER);
-        HBox.setHgrow(box, Priority.ALWAYS);
-        return new Triple<>(box, valueLabel, codeLabel);
+        VBox.setMargin(titleLabel, new Insets(0, 80, 0, 0));
+        VBox vBox = new VBox(titleLabel, hBox);
+        vBox.setAlignment(Pos.TOP_CENTER);
+        HBox.setHgrow(vBox, Priority.ALWAYS);
+        return new Triple<>(new Pair<>(hBox, vBox), valueLabel, codeLabel);
     }
 
     private Pair<VBox, Label> getValueBox(String title) {
