@@ -116,7 +116,7 @@ public class ShowTableInfo {
             HBox headlineBox = new HBox(Spacer.fillHBox(), titleLabel, Spacer.fillHBox());
 
             contentLabel = new Label();
-            contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+            contentLabel.getStyleClass().addAll("popup-text", "wrap-text");
             contentLabel.setPadding(new Insets(0, 70, 0, 70));
 
             closeButton = new Button(Res.get("action.close"));

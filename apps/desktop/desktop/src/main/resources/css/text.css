@@ -296,6 +296,13 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.popup-text {
+    -fx-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 
 /* Generic Label properties */
 
