@@ -83,15 +83,21 @@ public class LanguageRepository {
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
-            "pcm-NG", // Nigerian Pidgin
+            "pcm", // Nigerian Pidgin
             "ru", // Russian
-            "af-ZA" // Afrikaans
+            "af-ZA", // Afrikaans
+            "pt-PT", // Portuguese
+            "fr", // French
+            "tl", // Tagalog
+            "bn", // Bengali
+            "ta", // Tamil
+            "pl", // Polish
+            "hi", // Hindi
+            "zh-Hans", // Chinese (Simplified)
+            "zh-Hant", // Chinese (Traditional)
+            "sv" // Swedish
             /*
             // not translated yet
-            "pt", // Portuguese
-            "zh-Hans", // Chinese [Han Simplified] -> zh-Hans-CN to support country
-            "zh-Hant", // Chinese [Han Traditional]-> zh-Hant-CN to support country
-            "fr", // French
             "vi", // Vietnamese
             "th", // Thai
             "ja", // Japanese
@@ -104,8 +110,6 @@ public class LanguageRepository {
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
-            "pl", // Polish
-            "sv", // Swedish
             "no", // Norwegian
             "nl", // Dutch
             "be", // Belarusian
