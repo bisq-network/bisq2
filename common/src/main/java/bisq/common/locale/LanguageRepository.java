@@ -91,13 +91,16 @@ public class LanguageRepository {
             "af-ZA", // Afrikaans
             "pt-PT", // Portuguese
             "fr", // French
-            "tl", //Tagalog
-            "bn", //Bengali
-            "ta" //Tamil
+            "tl", // Tagalog
+            "bn", // Bengali
+            "ta", // Tamil
+            "pl", // Polish
+            "hi", // Hindi
+            "zh-Hans", // Chinese (Simplified)
+            "zh-Hant", // Chinese (Traditional)
+            "sv" // Swedish
             /*
             // not translated yet
-            "zh-Hans", // Chinese [Han Simplified]
-            "zh-Hant", // Chinese [Han Traditional]
             "vi", // Vietnamese
             "th", // Thai
             "ja", // Japanese
@@ -110,8 +113,6 @@ public class LanguageRepository {
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
-            "pl", // Polish
-            "sv", // Swedish
             "no", // Norwegian
             "nl", // Dutch
             "be", // Belarusian
