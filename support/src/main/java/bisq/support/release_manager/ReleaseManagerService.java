@@ -78,7 +78,7 @@ public class ReleaseManagerService implements Service {
         String releaseManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         ReleaseNotification releaseNotification = new ReleaseNotification(StringUtils.createUid(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isPreRelease,
                 isLauncherUpdate,
                 releaseNotes,

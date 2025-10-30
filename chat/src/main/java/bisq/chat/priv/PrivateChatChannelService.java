@@ -229,7 +229,7 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processQueuedReactions() {
-        long now = new Date().getTime();
+        long now = System.currentTimeMillis();
         unprocessedReactions.forEach(reaction -> {
             unprocessedReactions.remove(reaction);
             long age = now - reaction.getDate();

@@ -123,7 +123,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                 authorUserProfileId.getId(),
                 text,
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false);
     }
 
@@ -161,6 +161,6 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 }

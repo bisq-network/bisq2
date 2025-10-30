@@ -79,7 +79,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -193,7 +192,7 @@ public class TradeWizardReviewController implements Controller {
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),
                     Optional.empty(),
-                    new Date().getTime(),
+                    System.currentTimeMillis(),
                     false);
 
             model.setMyOfferMessage(myOfferMessage);

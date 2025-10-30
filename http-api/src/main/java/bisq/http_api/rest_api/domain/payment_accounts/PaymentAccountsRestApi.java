@@ -142,7 +142,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
         });
         try {
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), request.accountData());
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(), new Date().getTime(), request.accountName(), accountPayload));
+            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(), System.currentTimeMillis(), request.accountName(), accountPayload));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));

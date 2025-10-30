@@ -143,7 +143,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 Optional.empty(),
                 Optional.of(text),
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false);
     }
 
@@ -183,7 +183,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyOfferbookChannel channel) {

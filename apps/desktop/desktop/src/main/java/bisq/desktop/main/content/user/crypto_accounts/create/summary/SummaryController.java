@@ -103,11 +103,11 @@ public class SummaryController implements Controller {
         CryptoAssetAccountPayload accountPayload = model.getAccountPayload();
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
             account = new MoneroAccount(StringUtils.createUid(),
-                    new Date().getTime(),
+                    System.currentTimeMillis(),
                     accountName, moneroAccountPayload);
         } else if (accountPayload instanceof OtherCryptoAssetAccountPayload otherCryptoAssetAccountPayload) {
             account = new OtherCryptoAssetAccount(StringUtils.createUid(),
-                    new Date().getTime(),
+                    System.currentTimeMillis(),
                     accountName, otherCryptoAssetAccountPayload);
         } else {
             throw new UnsupportedOperationException("Unsupported accountPayload " + accountPayload.getClass().getSimpleName());

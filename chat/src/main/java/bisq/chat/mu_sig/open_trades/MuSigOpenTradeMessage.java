@@ -128,7 +128,7 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
                 receiverNetworkId,
                 Optional.empty(),
                 Optional.empty(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false,
                 chatMessageType,
                 new HashSet<>());

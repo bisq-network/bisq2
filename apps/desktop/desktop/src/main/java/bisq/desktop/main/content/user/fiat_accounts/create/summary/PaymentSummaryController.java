@@ -192,30 +192,30 @@ public class PaymentSummaryController implements Controller {
             return switch (fiatPaymentRail) {
                 case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
                 case SEPA ->
-                        new SepaAccount(StringUtils.createUid(), new Date().getTime(), accountName, (SepaAccountPayload) model.getAccountPayload());
+                        new SepaAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (SepaAccountPayload) model.getAccountPayload());
                 case SEPA_INSTANT ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ZELLE ->
-                        new ZelleAccount(StringUtils.createUid(), new Date().getTime(), accountName, (ZelleAccountPayload) model.getAccountPayload());
+                        new ZelleAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (ZelleAccountPayload) model.getAccountPayload());
                 case REVOLUT ->
-                        new RevolutAccount(StringUtils.createUid(), new Date().getTime(), accountName, (RevolutAccountPayload) model.getAccountPayload());
+                        new RevolutAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (RevolutAccountPayload) model.getAccountPayload());
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case NATIONAL_BANK ->
-                        new NationalBankAccount(StringUtils.createUid(), new Date().getTime(), accountName, (NationalBankAccountPayload) model.getAccountPayload());
+                        new NationalBankAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (NationalBankAccountPayload) model.getAccountPayload());
                 case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case F2F ->
-                        new F2FAccount(StringUtils.createUid(), new Date().getTime(), accountName, (F2FAccountPayload) model.getAccountPayload());
+                        new F2FAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (F2FAccountPayload) model.getAccountPayload());
                 case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ACH_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PIX ->
-                        new PixAccount(StringUtils.createUid(), new Date().getTime(), accountName, (PixAccountPayload) model.getAccountPayload());
+                        new PixAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (PixAccountPayload) model.getAccountPayload());
                 case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case FASTER_PAYMENTS ->
-                        new FasterPaymentsAccount(StringUtils.createUid(), new Date().getTime(), accountName, (FasterPaymentsAccountPayload) model.getAccountPayload());
+                        new FasterPaymentsAccount(StringUtils.createUid(), System.currentTimeMillis(), accountName, (FasterPaymentsAccountPayload) model.getAccountPayload());
                 case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case US_POSTAL_MONEY_ORDER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
