@@ -28,7 +28,7 @@ public class WebSocketAuthFilter extends BaseFilter {
         if (message instanceof HttpContent httpContent && httpContent.getHttpHeader() instanceof HttpRequestPacket request) {
             String upgradeHeader = request.getHeader("Upgrade");
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
-                String method = "GET";
+                String method = request.getMethod().getMethodString().toUpperCase();
                 String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(URI.create(request.getRequestURI()));
                 String timestamp = request.getHeader(AuthUtils.AUTH_TIMESTAMP_HEADER);
                 String receivedHmac = request.getHeader(AuthUtils.AUTH_HEADER);
