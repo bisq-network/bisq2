@@ -33,11 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public final class NetworkId implements NetworkProto {
     private final PubKey pubKey;
-    private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+    private final AddressByTransportTypeMap addressByTransportTypeMap;
 
     public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey) {
         this.pubKey = pubKey;
-        this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
+        this.addressByTransportTypeMap = new AddressByTransportTypeMap(addressByTransportTypeMap);
     }
 
     @Override
