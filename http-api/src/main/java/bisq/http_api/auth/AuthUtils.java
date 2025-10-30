@@ -14,6 +14,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public final class AuthUtils {
@@ -27,7 +28,7 @@ public final class AuthUtils {
     private static final String AUTH_HMAC_ALGORITHM = "HmacSHA256";
     // timestamp validity is long to allow Tor requests to succeed
     // but also increases the window of vulnerability for replay attacks
-    private static final long AUTH_TIMESTAMP_VALIDITY_MS = 3_600_000; // 1 hour, to account for out of sync clocks
+    private static final long AUTH_TIMESTAMP_VALIDITY_MS = TimeUnit.HOURS.toMillis(1); // to account for out of sync clocks
     // Map to hold used nonces for the duration of AUTH_TIMESTAMP_VALIDITY_MS
     private static final ConcurrentHashMap<String, Long> usedNonces = new ConcurrentHashMap<>();
 
