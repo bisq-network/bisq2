@@ -38,6 +38,8 @@ import bisq.user.reputation.ReputationService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -59,6 +61,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<ListItem> richTableView;
+    private Hyperlink learnMoreLink;
     private Subscription userProfileIdOfScoreUpdatePin;
     private UIScheduler uiScheduler;
 
@@ -73,6 +76,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.getExportButton().setManaged(false);
         richTableView.getHeadlineLabel().setGraphic(ImageUtil.getImageViewById("contacts-green"));
         richTableView.getHeadlineLabel().setGraphicTextGap(8);
+        richTableView.getTableView().setPlaceholder(createAndGetPlaceholderContent());
 
         configTableView();
 
@@ -99,6 +103,10 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     protected void onViewDetached() {
         richTableView.dispose();
         userProfileIdOfScoreUpdatePin.unsubscribe();
+
+        if (learnMoreLink != null) {
+            learnMoreLink.setOnAction(null);
+        }
 
         if (uiScheduler != null) {
             uiScheduler.stop();
@@ -180,6 +188,19 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 controller.onShowLearnMorePopup();
             }
         });
+    }
+
+    private VBox createAndGetPlaceholderContent() {
+        Label label = new Label(Res.get("contactsList.table.placeholder.title"));
+        label.getStyleClass().addAll("thin-text", "very-large-text");
+
+        learnMoreLink = new Hyperlink(Res.get("contactsList.table.placeholder.hyperlink"));
+        learnMoreLink.setOnAction(e -> richTableView.openLearnMorePopup());
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(label, learnMoreLink);
+        contentBox.setAlignment(Pos.CENTER);
+        return contentBox;
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
