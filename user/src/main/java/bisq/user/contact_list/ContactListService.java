@@ -64,8 +64,8 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
         return persistableStore.getContactListEntries();
     }
 
-    public boolean addContactListEntry(UserProfile userProfile, ContactReason contactReason) {
-        return addContactListEntry(new ContactListEntry(userProfile, contactReason));
+    public boolean addContactListEntry(UserProfile userProfile, UserProfile myUserProfile, ContactReason contactReason) {
+        return addContactListEntry(new ContactListEntry(userProfile, myUserProfile, contactReason));
     }
 
     public boolean addContactListEntry(ContactListEntry contactListEntry) {

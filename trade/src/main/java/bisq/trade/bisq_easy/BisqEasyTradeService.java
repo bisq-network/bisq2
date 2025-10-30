@@ -68,6 +68,7 @@ import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.protobuf.User;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -299,7 +300,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         persistableStore.addTrade(bisqEasyTrade);
         persist();
 
-        maybeAddPeerToContactList(makerNetworkId.getId());
+        maybeAddPeerToContactList(makerNetworkId.getId(), takerNetworkId.getId());
 
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
@@ -401,7 +402,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         persistableStore.addTrade(bisqEasyTrade);
         persist();
 
-        maybeAddPeerToContactList(sender.getId());
+        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
 
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
@@ -476,10 +477,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Misc
     /* --------------------------------------------------------------------- */
 
-    private void maybeAddPeerToContactList(String peersProfileId) {
+    private void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
-            userProfileService.findUserProfile(peersProfileId)
-                    .ifPresent(userProfile -> contactListService.addContactListEntry(userProfile, ContactReason.BISQ_EASY_TRADE));
+            Optional<UserProfile> peersProfile = userProfileService.findUserProfile(peersProfileId);
+            Optional<UserProfile> myProfile = userProfileService.findUserProfile(myProfileId);
+            if (peersProfile.isPresent() && myProfile.isPresent()) {
+                contactListService.addContactListEntry(peersProfile.get(), myProfile.get(), ContactReason.BISQ_EASY_TRADE);
+            }
         }
     }
 }

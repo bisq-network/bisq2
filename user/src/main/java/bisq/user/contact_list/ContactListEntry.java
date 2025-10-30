@@ -30,15 +30,18 @@ import java.util.Optional;
 @ToString
 @Getter
 public final class ContactListEntry implements PersistableProto {
-    private final UserProfile userProfile;
+    private final UserProfile userProfile; // Contact
+    private final UserProfile myUserProfile; // User profile used to add this contact
     private final long date; // Data when the entry was added
     private final ContactReason contactReason; // What was the reason of the contact
     private Optional<Double> trustScore; // 0-1, 1 = 100% - highest trust score
     private Optional<String> tag; // Short tag for quick identification
     private Optional<String> notes;
 
-    public ContactListEntry(UserProfile userProfile, ContactReason contactReason) {
-        this(userProfile, System.currentTimeMillis(),
+    public ContactListEntry(UserProfile userProfile, UserProfile myUserProfile, ContactReason contactReason) {
+        this(userProfile,
+                myUserProfile,
+                System.currentTimeMillis(),
                 contactReason,
                 Optional.empty(),
                 Optional.empty(),
@@ -46,12 +49,14 @@ public final class ContactListEntry implements PersistableProto {
     }
 
     public ContactListEntry(UserProfile userProfile,
+                            UserProfile myUserProfile,
                             long date,
                             ContactReason contactReason,
                             Optional<Double> trustScore,
                             Optional<String> tag,
                             Optional<String> notes) {
         this.userProfile = userProfile;
+        this.myUserProfile = myUserProfile;
         this.date = date;
         this.contactReason = contactReason;
         this.trustScore = trustScore;
@@ -64,7 +69,8 @@ public final class ContactListEntry implements PersistableProto {
         bisq.user.protobuf.ContactListEntry.Builder builder = bisq.user.protobuf.ContactListEntry.newBuilder()
                 .setUserProfile(userProfile.toProto(serializeForHash))
                 .setDate(date)
-                .setContactReason(contactReason.toProtoEnum());
+                .setContactReason(contactReason.toProtoEnum())
+                .setMyUserProfile(myUserProfile.toProto(serializeForHash));
         trustScore.ifPresent(builder::setTrustScore);
         tag.ifPresent(builder::setTag);
         notes.ifPresent(builder::setNotes);
@@ -78,6 +84,7 @@ public final class ContactListEntry implements PersistableProto {
 
     public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto) {
         return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
+                UserProfile.fromProto(proto.getMyUserProfile()),
                 proto.getDate(),
                 ContactReason.fromProto(proto.getContactReason()),
                 OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),

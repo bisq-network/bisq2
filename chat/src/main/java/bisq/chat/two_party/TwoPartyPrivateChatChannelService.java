@@ -168,7 +168,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer,
                                                                            UserIdentity myUserIdentity) {
         if (settingsService.getDoAutoAddToContactList()) {
-            contactListService.addContactListEntry(peer, ContactReason.PRIVATE_CHAT);
+            contactListService.addContactListEntry(peer, myUserIdentity.getUserProfile(), ContactReason.PRIVATE_CHAT);
         }
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
