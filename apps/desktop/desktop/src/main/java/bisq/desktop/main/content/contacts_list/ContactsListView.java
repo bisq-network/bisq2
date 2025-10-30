@@ -28,6 +28,7 @@ import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.profile.UserProfile;
@@ -318,9 +319,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         private final ReputationService reputationService;
         private final UserProfileService userProfileService;
         private final ContactsListController controller;
-
-        private final String userName, profileAgeString, trustScore, tag, notes,
-                contactReasonString, addedDateString;
+        private final String userName, profileAgeString, trustScore, tag, notes, contactReasonString, addedDateString;
         private final long profileAge;
         private final long addedDate;
         private ReputationScore reputationScore;
@@ -341,7 +340,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             contactReasonString = contactListEntry.getContactReason().getDisplayString();
             tag = contactListEntry.getTag().orElseGet(() -> Res.get("data.na"));
             //todo use custom trust display
-            trustScore = contactListEntry.getTrustScore().map(String::valueOf).orElseGet(() -> Res.get("data.na"));
+            trustScore = contactListEntry.getTrustScore().map(PercentageFormatter::formatToPercentNoDecimalsWithSymbol).orElseGet(() -> Res.get("data.na"));
             notes = contactListEntry.getNotes().orElseGet(() -> Res.get("data.na"));
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
