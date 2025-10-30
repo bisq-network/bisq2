@@ -1,6 +1,7 @@
 package bisq.http_api.auth;
 
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.attributes.AttributeHolder;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
@@ -28,16 +29,26 @@ public class WebSocketAuthFilter extends BaseFilter {
         if (message instanceof HttpContent httpContent && httpContent.getHttpHeader() instanceof HttpRequestPacket request) {
             String upgradeHeader = request.getHeader("Upgrade");
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
+                // The Grizzly filter chain may deliver the HTTP upgrade request in multiple chunks
+                // Check if we've already authenticated this connection
+                if (hasAttribute(ctx, "ws_authenticated")) {
+                    return ctx.getInvokeAction();
+                }
+
                 String method = request.getMethod().getMethodString().toUpperCase();
                 String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(URI.create(request.getRequestURI()));
                 String timestamp = request.getHeader(AuthUtils.AUTH_TIMESTAMP_HEADER);
                 String receivedHmac = request.getHeader(AuthUtils.AUTH_HEADER);
+                String nonce = request.getHeader(AuthUtils.AUTH_NONCE_HEADER);
 
-                if (!AuthUtils.isValidAuthentication(secretKey, method, normalizedPathAndQuery, timestamp, receivedHmac)) {
+                if (!AuthUtils.isValidAuthentication(secretKey, method, normalizedPathAndQuery, nonce, timestamp, receivedHmac)) {
                     log.warn("WebSocket connection rejected: Invalid or missing authorization token");
                     sendUnauthorizedResponse(ctx, request);
                     return ctx.getStopAction();
                 }
+
+                // Mark connection as authenticated
+                setAttribute(ctx, "ws_authenticated", true);
             }
         }
 
@@ -54,5 +65,19 @@ public class WebSocketAuthFilter extends BaseFilter {
 
         ctx.write(response);
         ctx.getConnection().closeSilently();
+    }
+
+    private boolean hasAttribute(FilterChainContext ctx, String attribute) {
+        AttributeHolder holder = ctx.getConnection().getAttributes();
+        return holder != null && holder.getAttribute(attribute) != null;
+    }
+
+    private void setAttribute(FilterChainContext ctx, String attribute, Object value) {
+        AttributeHolder holder = ctx.getConnection().getAttributes();
+        if (holder != null) {
+            holder.setAttribute(attribute, value);
+        } else {
+            log.warn("Failed to set attribute of {} on holder as it was not initialized yet", attribute);
+        }
     }
 }

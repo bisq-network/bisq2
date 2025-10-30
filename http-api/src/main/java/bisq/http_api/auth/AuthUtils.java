@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public final class AuthUtils {
@@ -22,10 +23,24 @@ public final class AuthUtils {
 
     public static final String AUTH_HEADER = "AUTH-TOKEN";
     public static final String AUTH_TIMESTAMP_HEADER = "AUTH-TS";
+    public static final String AUTH_NONCE_HEADER = "AUTH-NONCE";
     private static final String AUTH_HMAC_ALGORITHM = "HmacSHA256";
     // timestamp validity is long to allow Tor requests to succeed
     // but also increases the window of vulnerability for replay attacks
-    private static final long AUTH_TIMESTAMP_VALIDITY_MS = 45_000;
+    private static final long AUTH_TIMESTAMP_VALIDITY_MS = 3_600_000; // 1 hour, to account for out of sync clocks
+    // Map to hold used nonces for the duration of AUTH_TIMESTAMP_VALIDITY_MS
+    private static final ConcurrentHashMap<String, Long> usedNonces = new ConcurrentHashMap<>();
+
+    /**
+     * Checks if a nonce is unused and marks it as used for the duration of AUTH_TIMESTAMP_VALIDITY_MS.
+     * Returns true if the nonce was not used before, false otherwise.
+     */
+    private static boolean canUseNonce(String nonce) {
+        long now = System.currentTimeMillis();
+        usedNonces.entrySet().removeIf(e -> now - e.getValue() > AUTH_TIMESTAMP_VALIDITY_MS);
+        Long previous = usedNonces.putIfAbsent(nonce, now);
+        return previous == null;
+    }
 
     public static SecretKeySpec getSecretKey(String password) {
         return new SecretKeySpec(password.getBytes(StandardCharsets.UTF_8), AUTH_HMAC_ALGORITHM);
@@ -50,18 +65,20 @@ public final class AuthUtils {
     public static boolean isValidAuthentication(SecretKey secretKey,
                                                 String method,
                                                 String normalizedPathAndQuery,
+                                                @Nullable String nonce,
                                                 @Nullable String timestamp,
                                                 @Nullable String receivedHmac) {
-        return isValidAuthentication(secretKey, method, normalizedPathAndQuery, timestamp, receivedHmac, null);
+        return isValidAuthentication(secretKey, method, normalizedPathAndQuery, nonce, timestamp, receivedHmac, null);
     }
 
     public static boolean isValidAuthentication(SecretKey secretKey,
                                                 String method,
                                                 String normalizedPathAndQuery,
+                                                @Nullable String nonce,
                                                 @Nullable String timestamp,
                                                 @Nullable String receivedHmac,
                                                 @Nullable String bodySha256Hex) {
-        if (timestamp == null || receivedHmac == null) {
+        if (timestamp == null || receivedHmac == null || nonce == null || !canUseNonce(nonce)) {
             return false;
         }
 
@@ -76,7 +93,8 @@ public final class AuthUtils {
 
             Mac mac = Mac.getInstance(AUTH_HMAC_ALGORITHM);
             mac.init(secretKey);
-            String canonical = timestamp
+            String canonical = nonce
+                    + "\n" + timestamp
                     + "\n" + method.toUpperCase(java.util.Locale.ROOT)
                     + "\n" + normalizedPathAndQuery
                     + "\n" + (bodySha256Hex == null ? "" : bodySha256Hex);

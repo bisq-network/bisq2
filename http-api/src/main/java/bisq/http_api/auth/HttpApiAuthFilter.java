@@ -35,8 +35,9 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(requestUri);
         String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
         String receivedHmac = ctx.getHeaderString(AuthUtils.AUTH_HEADER);
+        String nonce = ctx.getHeaderString(AuthUtils.AUTH_NONCE_HEADER);
         String bodySha256Hex = getBodySha256Hex(ctx);
-        if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, timestamp, receivedHmac, bodySha256Hex)) {
+        if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, nonce, timestamp, receivedHmac, bodySha256Hex)) {
             log.warn("HttpRequest rejected: Invalid or missing authorization token");
             ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }

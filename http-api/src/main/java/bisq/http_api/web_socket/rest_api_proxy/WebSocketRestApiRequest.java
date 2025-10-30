@@ -40,6 +40,7 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String body;
     private String authToken;
     private String authTs;
+    private String authNonce;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&

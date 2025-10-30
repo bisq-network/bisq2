@@ -73,7 +73,7 @@ public class WebSocketRestApiService implements Service {
 
     public void onMessage(String json, WebSocket webSocket) {
         WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs()))
+                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs(), request.getAuthNonce()))
                 .flatMap(response -> response.toJson(objectMapper))
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
@@ -82,7 +82,8 @@ public class WebSocketRestApiService implements Service {
 
     private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request,
                                                          @Nullable String authToken,
-                                                         @Nullable String authTs) {
+                                                         @Nullable String authTs,
+                                                         @Nullable String authNonce) {
         String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
@@ -97,9 +98,10 @@ public class WebSocketRestApiService implements Service {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
-        if (authToken != null && authTs != null) {
+        if (authToken != null && authTs != null && authNonce != null) {
             requestBuilder.header(AuthUtils.AUTH_HEADER, authToken);
             requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, authTs);
+            requestBuilder.header(AuthUtils.AUTH_NONCE_HEADER, authNonce);
         }
         try {
             HttpRequest httpRequest = requestBuilder.build();
