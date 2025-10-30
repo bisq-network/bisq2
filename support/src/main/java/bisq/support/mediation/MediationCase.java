@@ -18,7 +18,7 @@ public class MediationCase implements PersistableProto {
     private Optional<Long> closeCaseDate;
 
     public MediationCase(MediationRequest mediationRequest) {
-        this(mediationRequest, new Date().getTime(), false, Optional.empty());
+        this(mediationRequest, System.currentTimeMillis(), false, Optional.empty());
     }
 
     private MediationCase(MediationRequest mediationRequest,
@@ -55,7 +55,7 @@ public class MediationCase implements PersistableProto {
     }
 
     public void setClosed(boolean closed) {
-        closeCaseDate = closed ? Optional.of(new Date().getTime()) : Optional.empty();
+        closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
         isClosed.set(closed);
     }
 }

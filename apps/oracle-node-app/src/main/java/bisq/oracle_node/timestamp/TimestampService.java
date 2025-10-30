@@ -145,7 +145,7 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
         String profileId = request.getProfileId();
         long date;
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            date = new Date().getTime();
+            date = System.currentTimeMillis();
             persistableStore.getTimestampsByProfileId().put(profileId, date);
             persist();
         } else {

@@ -95,7 +95,7 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
     }
 
     public long getAge() {
-        return new Date().getTime() - created;
+        return System.currentTimeMillis() - created;
     }
 
     // Descending order

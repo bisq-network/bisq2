@@ -85,7 +85,7 @@ public class SecurityManagerService implements Service {
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 alertType,
                 headline,
                 message,
@@ -114,7 +114,7 @@ public class SecurityManagerService implements Service {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
+        AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(System.currentTimeMillis(),
                 difficultyAdjustmentFactor,
                 securityManagerProfileId,
                 staticPublicKeysProvided);

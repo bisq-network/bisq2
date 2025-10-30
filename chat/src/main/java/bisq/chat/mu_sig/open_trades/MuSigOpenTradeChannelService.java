@@ -142,7 +142,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                                                              ChatMessageType chatMessageType,
                                                              MuSigOpenTradeChannel channel) {
         String messageId = StringUtils.createUid();
-        long date = new Date().getTime();
+        long date = System.currentTimeMillis();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
             String senderId = channel.getMyUserIdentity().getId();
             List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
@@ -172,7 +172,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
         super.leaveChannel(channel);
 
         // We want to send a leave message even the peer has not sent any message so far (is not participant yet).
-        long date = new Date().getTime();
+        long date = System.currentTimeMillis();
         Stream.concat(channel.getTraders().stream(), channel.getMediator().stream())
                 .filter(userProfile -> allowSendLeaveMessage(channel, userProfile))
                 .forEach(userProfile -> sendLeaveMessage(channel, userProfile, date));
@@ -201,7 +201,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                 receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false,
                 channel.getMediator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
@@ -281,7 +281,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isRemoved
         );
     }

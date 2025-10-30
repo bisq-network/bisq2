@@ -203,7 +203,7 @@ public class OfferbookRestApi extends RestApiBase {
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),
                     Optional.empty(),
-                    new Date().getTime(),
+                    System.currentTimeMillis(),
                     false);
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateOfferResponse(bisqEasyOffer.getId())));

@@ -145,7 +145,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                 receiverNetworkId,
                 Optional.empty(),
                 Optional.empty(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false,
                 chatMessageType,
                 new HashSet<>());

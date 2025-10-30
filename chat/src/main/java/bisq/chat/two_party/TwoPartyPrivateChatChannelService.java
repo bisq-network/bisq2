@@ -110,7 +110,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
         if (!channel.getChatMessages().isEmpty()) {
-            sendLeaveMessage(channel, channel.getPeer(), new Date().getTime());
+            sendLeaveMessage(channel, channel.getPeer(), System.currentTimeMillis());
         }
 
         super.leaveChannel(channel);
@@ -125,7 +125,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 channel,
                 channel.getPeer(),
                 ChatMessageType.TEXT,
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 
     public CompletableFuture<SendMessageResult> sendTextMessageReaction(TwoPartyPrivateChatMessage message,
@@ -158,7 +158,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 receiverUserProfile.getNetworkId(),
                 text,
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 wasEdited,
                 chatMessageType,
                 new HashSet<>());
@@ -189,7 +189,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isRemoved
         );
     }

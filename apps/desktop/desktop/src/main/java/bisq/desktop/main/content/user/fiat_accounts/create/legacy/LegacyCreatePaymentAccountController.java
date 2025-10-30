@@ -88,7 +88,7 @@ public class LegacyCreatePaymentAccountController implements Controller {
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                     "Account data must not be longer than 1000 characters");
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), accountData);
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(), new Date().getTime(), model.getAccountName(), accountPayload);
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(), System.currentTimeMillis(), model.getAccountName(), accountPayload);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
             close();
