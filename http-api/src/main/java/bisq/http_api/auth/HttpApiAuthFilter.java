@@ -73,6 +73,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
                     total += read;
                     if (total > MAX_BODY_SIZE_BYTES) {
                         log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", total, MAX_BODY_SIZE_BYTES);
+                        ctx.setEntityStream(new ByteArrayInputStream(new byte[0])); // replace stream to not leave it in half read state
                         return null;
                     }
                     buffer.write(chunk, 0, read);
