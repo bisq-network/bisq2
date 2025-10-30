@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -34,11 +33,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(requestUri);
         String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
         String receivedHmac = ctx.getHeaderString(AuthUtils.AUTH_HEADER);
-        String bodySha256Hex = null;
-        byte[] bodyBytes = getBody(ctx);
-        if (bodyBytes != null && bodyBytes.length > 0) {
-            bodySha256Hex = Hex.encode(DigestUtil.sha256(bodyBytes));
-        }
+        String bodySha256Hex = getBodySha256Hex(ctx);
         if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, timestamp, receivedHmac, bodySha256Hex)) {
             log.warn("HttpRequest rejected: Invalid or missing authorization token");
             ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
@@ -46,16 +41,15 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
     }
 
     @Nullable
-    private byte[] getBody(ContainerRequestContext ctx) {
+    private String getBodySha256Hex(ContainerRequestContext ctx) {
         if (ctx.getLength() <= 0) {
             return null;
         }
-        try (InputStream entityStream = ctx.getEntityStream();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            entityStream.transferTo(baos);
-            byte[] bytes = baos.toByteArray();
+        try {
+            InputStream entityStream = ctx.getEntityStream();
+            byte[] bytes = entityStream.readAllBytes();
             ctx.setEntityStream(new ByteArrayInputStream(bytes));
-            return bytes;
+            return Hex.encode(DigestUtil.sha256(bytes));
         } catch (Exception e) {
             log.error("Failed to read request body for authentication, will result in auth failure", e);
             return null;
