@@ -38,9 +38,14 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
         String receivedHmac = ctx.getHeaderString(AuthUtils.AUTH_HEADER);
         String nonce = ctx.getHeaderString(AuthUtils.AUTH_NONCE_HEADER);
-        String bodySha256Hex = getBodySha256Hex(ctx);
-        if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, nonce, timestamp, receivedHmac, bodySha256Hex)) {
-            log.warn("HttpRequest rejected: Invalid or missing authorization token");
+        try {
+            String bodySha256Hex = getBodySha256Hex(ctx);
+            if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, nonce, timestamp, receivedHmac, bodySha256Hex)) {
+                log.warn("HttpRequest rejected: Invalid or missing authorization token");
+                ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+            }
+        } catch (Exception e) {
+            log.error("Error while reading body of request for authentication", e);
             ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
@@ -56,8 +61,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
         // If length is known and too large, return early
         if (declaredLength > MAX_BODY_SIZE_BYTES) {
-            log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", declaredLength, MAX_BODY_SIZE_BYTES);
-            return null;
+            throw new RuntimeException("Request body exceeds maximum allowed size of " + MAX_BODY_SIZE_BYTES + " bytes");
         }
 
         try {
@@ -72,9 +76,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
                 while ((read = entityStream.read(chunk)) != -1) {
                     total += read;
                     if (total > MAX_BODY_SIZE_BYTES) {
-                        log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", total, MAX_BODY_SIZE_BYTES);
-                        ctx.setEntityStream(new ByteArrayInputStream(new byte[0])); // replace stream to not leave it in half read state
-                        return null;
+                        throw new RuntimeException("Request body exceeds maximum allowed size of " + MAX_BODY_SIZE_BYTES + " bytes");
                     }
                     buffer.write(chunk, 0, read);
                 }
@@ -89,8 +91,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
                 return Hex.encode(DigestUtil.sha256(bytes));
             }
         } catch (Exception e) {
-            log.error("Failed to read request body for authentication. This will result in auth failure", e);
-            return null;
+            throw new RuntimeException("Failed to read request body for authentication. This will result in auth failure", e);
         }
     }
 }
