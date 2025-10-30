@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -21,7 +22,8 @@ import java.net.URI;
 @Priority(Priorities.AUTHENTICATION)
 @Slf4j
 public class HttpApiAuthFilter implements ContainerRequestFilter {
-    private static final int MAX_BODY_SIZE_BYTES = 5 * 1024 * 1024; // 10 MB
+    private static final int MAX_BODY_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    private static final int BUFFER_SIZE = 8192;
 
     private final SecretKey secretKey;
 
@@ -45,18 +47,46 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
     @Nullable
     private String getBodySha256Hex(ContainerRequestContext ctx) {
-        if (ctx.getLength() <= 0) {
+        int declaredLength = ctx.getLength(); // uses Content-Length so can be incorrectly sent
+
+        // If length is known and empty, return early
+        if (declaredLength == 0) {
             return null;
         }
-        if (ctx.getLength() > MAX_BODY_SIZE_BYTES) {
-            log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", ctx.getLength(), MAX_BODY_SIZE_BYTES);
+
+        // If length is known and too large, return early
+        if (declaredLength > MAX_BODY_SIZE_BYTES) {
+            log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", declaredLength, MAX_BODY_SIZE_BYTES);
             return null;
         }
+
         try {
             InputStream entityStream = ctx.getEntityStream();
-            byte[] bytes = entityStream.readAllBytes();
-            ctx.setEntityStream(new ByteArrayInputStream(bytes));
-            return Hex.encode(DigestUtil.sha256(bytes));
+            // Use declared length if larger, otherwise use default buffer size to
+            // reduce unnecessary array copying if a small number was used maliciously
+            int initialCapacity = Math.max(declaredLength, BUFFER_SIZE);
+            try (ByteArrayOutputStream buffer = new ByteArrayOutputStream(initialCapacity)) {
+                byte[] chunk = new byte[BUFFER_SIZE];
+                int total = 0;
+                int read;
+                while ((read = entityStream.read(chunk)) != -1) {
+                    total += read;
+                    if (total > MAX_BODY_SIZE_BYTES) {
+                        log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", total, MAX_BODY_SIZE_BYTES);
+                        return null;
+                    }
+                    buffer.write(chunk, 0, read);
+                }
+                byte[] bytes = buffer.toByteArray();
+
+                // Empty body is valid - return null for consistency with early length check
+                if (bytes.length == 0) {
+                    return null;
+                }
+
+                ctx.setEntityStream(new ByteArrayInputStream(bytes));
+                return Hex.encode(DigestUtil.sha256(bytes));
+            }
         } catch (Exception e) {
             log.error("Failed to read request body for authentication. This will result in auth failure", e);
             return null;
