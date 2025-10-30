@@ -412,7 +412,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         persistableStore.addTrade(muSigTrade);
         persist();
 
-        maybeAddPeerToContactList(makerNetworkId.getId());
+        maybeAddPeerToContactList(makerNetworkId.getId(), takerNetworkId.getId());
 
         return createAndAddTradeProtocol(muSigTrade);
     }
@@ -556,7 +556,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         persistableStore.addTrade(trade);
         persist();
 
-        maybeAddPeerToContactList(sender.getId());
+        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
 
         return createAndAddTradeProtocol(trade);
     }
@@ -626,10 +626,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Misc
     /* --------------------------------------------------------------------- */
 
-    private void maybeAddPeerToContactList(String peersProfileId) {
+    private void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
-            userProfileService.findUserProfile(peersProfileId)
-                    .ifPresent(userProfile -> contactListService.addContactListEntry(userProfile, ContactReason.MUSIG_TRADE));
+            Optional<UserProfile> peersProfile = userProfileService.findUserProfile(peersProfileId);
+            Optional<UserProfile> myProfile = userProfileService.findUserProfile(myProfileId);
+            if (peersProfile.isPresent() && myProfile.isPresent()) {
+                contactListService.addContactListEntry(peersProfile.get(), myProfile.get(), ContactReason.MUSIG_TRADE);
+            }
         }
     }
 }

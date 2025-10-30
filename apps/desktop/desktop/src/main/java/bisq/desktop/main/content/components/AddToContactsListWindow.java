@@ -33,6 +33,7 @@ import bisq.i18n.Res;
 import bisq.user.contact_list.ContactListEntry;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -79,9 +80,11 @@ public class AddToContactsListWindow {
         private final View view;
         private final Model model;
         private final ContactListService contactListService;
+        private final UserIdentityService userIdentityService;
 
         private Controller(ServiceProvider serviceProvider) {
             contactListService = serviceProvider.getUserService().getContactListService();
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             model = new Model();
             view = new View(model, this);
         }
@@ -103,6 +106,7 @@ public class AddToContactsListWindow {
         }
 
         void onAddToContacts() {
+            UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
             Optional<String> tag = model.getTag().get().isBlank()
                     ? Optional.empty()
                     : Optional.of(model.getTag().get().trim());
@@ -111,6 +115,7 @@ public class AddToContactsListWindow {
                     : Optional.of(model.getNotes().get());
             Optional<Double> trustScore = getTrustScore(model.getTrustScore().get());
             contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
+                    myUserProfile,
                     System.currentTimeMillis(),
                     ContactReason.MANUALLY_ADDED,
                     trustScore,

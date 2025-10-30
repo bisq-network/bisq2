@@ -33,7 +33,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
@@ -41,8 +40,6 @@ import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.settings.SettingsService;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -75,7 +72,6 @@ public class TradeWizardSelectOfferController implements Controller {
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
-    private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
 
     public TradeWizardSelectOfferController(ServiceProvider serviceProvider,
@@ -88,13 +84,11 @@ public class TradeWizardSelectOfferController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        SettingsService settingsService = serviceProvider.getSettingsService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
-        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
         model = new TradeWizardSelectOfferModel();
         view = new TradeWizardSelectOfferView(model, this);
@@ -268,9 +262,6 @@ public class TradeWizardSelectOfferController implements Controller {
                         bannedUserService.isUserProfileBanned(makerUserProfile)) {
                     return false;
                 }
-
-                UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-                NetworkId myNetworkId = myUserProfile.getNetworkId();
 
                 Monetary myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec(), model.getPriceSpec(), model.getMarket()).orElseThrow();
                 Monetary peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer).orElseThrow();
