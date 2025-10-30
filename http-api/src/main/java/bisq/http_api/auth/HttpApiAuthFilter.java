@@ -21,6 +21,8 @@ import java.net.URI;
 @Priority(Priorities.AUTHENTICATION)
 @Slf4j
 public class HttpApiAuthFilter implements ContainerRequestFilter {
+    private static final int MAX_BODY_SIZE_BYTES = 5 * 1024 * 1024; // 10 MB
+
     private final SecretKey secretKey;
 
     public HttpApiAuthFilter(String password) {
@@ -45,13 +47,17 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         if (ctx.getLength() <= 0) {
             return null;
         }
+        if (ctx.getLength() > MAX_BODY_SIZE_BYTES) {
+            log.warn("Request body too large: {} bytes, max: {}. This will result in auth failure", ctx.getLength(), MAX_BODY_SIZE_BYTES);
+            return null;
+        }
         try {
             InputStream entityStream = ctx.getEntityStream();
             byte[] bytes = entityStream.readAllBytes();
             ctx.setEntityStream(new ByteArrayInputStream(bytes));
             return Hex.encode(DigestUtil.sha256(bytes));
         } catch (Exception e) {
-            log.error("Failed to read request body for authentication, will result in auth failure", e);
+            log.error("Failed to read request body for authentication. This will result in auth failure", e);
             return null;
         }
     }
