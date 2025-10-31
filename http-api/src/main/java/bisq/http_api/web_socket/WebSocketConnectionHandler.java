@@ -27,14 +27,12 @@ import org.glassfish.grizzly.websockets.DataFrame;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
-import java.net.http.HttpClient;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class WebSocketConnectionHandler extends WebSocketApplication implements Service {
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService) {

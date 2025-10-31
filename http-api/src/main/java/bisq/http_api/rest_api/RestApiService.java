@@ -19,6 +19,7 @@ package bisq.http_api.rest_api;
 
 import bisq.common.application.Service;
 import bisq.http_api.ApiTorOnionService;
+import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.util.StaticFileHandler;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
@@ -43,18 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class RestApiService implements Service {
     @Getter
-    public static class Config {
-        private final boolean enabled;
-        private final String protocol;
-        private final String host;
-        private final int port;
-        private final boolean localhostOnly;
-        private final List<String> whiteListEndPoints;
-        private final List<String> blackListEndPoints;
-        private final List<String> supportedAuth;
-        private final String restApiBaseAddress;
-        private final String restApiBaseUrl;
-
+    public static class Config extends CommonApiConfig {
         public Config(boolean enabled,
                       String protocol,
                       String host,
@@ -62,18 +52,9 @@ public class RestApiService implements Service {
                       boolean localhostOnly,
                       List<String> whiteListEndPoints,
                       List<String> blackListEndPoints,
-                      List<String> supportedAuth) {
-            this.enabled = enabled;
-            this.protocol = protocol;
-            this.host = host;
-            this.port = port;
-            this.localhostOnly = localhostOnly;
-            this.whiteListEndPoints = whiteListEndPoints;
-            this.blackListEndPoints = blackListEndPoints;
-            this.supportedAuth = supportedAuth;
-
-            restApiBaseAddress = protocol + host + ":" + port;
-            restApiBaseUrl = restApiBaseAddress + REST_API_BASE_PATH;
+                      List<String> supportedAuth,
+                      String password) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password);
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -86,12 +67,12 @@ public class RestApiService implements Service {
                     config.getBoolean("localhostOnly"),
                     config.getStringList("whiteListEndPoints"),
                     config.getStringList("blackListEndPoints"),
-                    config.getStringList("supportedAuth")
+                    config.getStringList("supportedAuth"),
+                    config.getString("password")
             );
         }
     }
 
-    public static final String REST_API_BASE_PATH = "/api/v1";
     private final RestApiService.Config config;
     private final BaseRestApiResourceConfig restApiResourceConfig;
     private final ApiTorOnionService apiTorOnionService;
