@@ -63,7 +63,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 signature);
     }
 
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @ExcludeForHash
     private final MetaData metaData;
 
     @ExcludeForHash

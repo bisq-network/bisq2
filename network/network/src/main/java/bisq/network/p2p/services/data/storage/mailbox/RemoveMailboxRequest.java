@@ -60,7 +60,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 created);
     }
 
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @ExcludeForHash
     private final MetaData metaData;
 
     @ExcludeForHash
