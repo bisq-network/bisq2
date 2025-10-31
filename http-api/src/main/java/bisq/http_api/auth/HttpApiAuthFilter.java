@@ -52,12 +52,8 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
     @Nullable
     private String getBodySha256Hex(ContainerRequestContext ctx) {
-        int declaredLength = ctx.getLength(); // uses Content-Length so can be incorrectly sent
-
-        // If length is known and empty, return early
-        if (declaredLength == 0) {
-            return null;
-        }
+        // Content-Length may be spoofed; we always consume the stream to confirm whether a body is present.
+        int declaredLength = ctx.getLength();
 
         // If length is known and too large, return early
         if (declaredLength > MAX_BODY_SIZE_BYTES) {
