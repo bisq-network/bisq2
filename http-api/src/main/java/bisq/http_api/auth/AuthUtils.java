@@ -34,7 +34,7 @@ public final class AuthUtils {
 
     /**
      * Checks if a nonce is unused and marks it as used for the duration of AUTH_TIMESTAMP_VALIDITY_MS.
-     * Returns true if the nonce was not used before, false otherwise.
+     * @return true if the nonce was not used before, false otherwise.
      */
     private static boolean canUseNonce(String nonce) {
         long now = System.currentTimeMillis();
@@ -79,7 +79,7 @@ public final class AuthUtils {
                                                 @Nullable String timestamp,
                                                 @Nullable String receivedHmac,
                                                 @Nullable String bodySha256Hex) {
-        if (timestamp == null || receivedHmac == null || nonce == null || !canUseNonce(nonce)) {
+        if (timestamp == null || receivedHmac == null || nonce == null) {
             return false;
         }
 
@@ -104,7 +104,7 @@ public final class AuthUtils {
             byte[] receivedHmacBytes = Hex.decode(receivedHmac);
 
             // Constant-time comparison
-            return MessageDigest.isEqual(expectedHmac, receivedHmacBytes);
+            return MessageDigest.isEqual(expectedHmac, receivedHmacBytes) && canUseNonce(nonce);
 
         } catch (NumberFormatException | NoSuchAlgorithmException | InvalidKeyException e) {
             log.warn("Error validating authentication", e);
