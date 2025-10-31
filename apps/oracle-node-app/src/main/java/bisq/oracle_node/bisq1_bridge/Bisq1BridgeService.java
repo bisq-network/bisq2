@@ -25,7 +25,6 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -168,10 +167,7 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
         synchronized (executorLock) {
             if (executor != null) return;
-            int numAllConnections = networkService.getServiceNodesByTransport().getAllServiceNodes().stream()
-                    .map(ServiceNode::getDefaultNode)
-                    .mapToInt(Node::getNumConnections)
-                    .sum();
+            int numAllConnections = networkService.getNumConnectionsOnAllTransports();
             if (numAllConnections >= config.getNumConnectionsForRepublish()) {
                 ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
                 tmp.scheduleWithFixedDelay(() -> {

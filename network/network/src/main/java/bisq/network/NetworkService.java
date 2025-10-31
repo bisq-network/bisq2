@@ -57,8 +57,8 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.TorKeyPair;
@@ -450,6 +450,13 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         return serviceNodesByTransport.getAllServiceNodes().stream()
                 .flatMap(serviceNode -> serviceNode.getNetworkLoadService().stream())
                 .collect(Collectors.toSet());
+    }
+
+    public int getNumConnectionsOnAllTransports() {
+        return serviceNodesByTransport.getAllServiceNodes().stream()
+                .map(ServiceNode::getDefaultNode)
+                .mapToInt(Node::getNumConnections)
+                .sum();
     }
 
 
