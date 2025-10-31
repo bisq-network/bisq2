@@ -1,5 +1,6 @@
 package bisq.http_api.rest_api;
 
+import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
@@ -10,7 +11,6 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
-import bisq.http_api.validator.HttpApiRequestFilter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -18,7 +18,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 @Getter
 @Slf4j
 public class RestApiResourceConfig extends BaseRestApiResourceConfig {
-    public RestApiResourceConfig(String swaggerBaseUrl,
+    public RestApiResourceConfig(CommonApiConfig config,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatRestApi tradeChatRestApi,
@@ -28,9 +28,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
-                                 UserProfileRestApi userProfileRestApi,
-                                 HttpApiRequestFilter httpApiRequestFilter) {
-        super(swaggerBaseUrl, httpApiRequestFilter);
+                                 UserProfileRestApi userProfileRestApi) {
+        super(config);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
 
