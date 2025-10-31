@@ -78,7 +78,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
                 }
                 byte[] bytes = buffer.toByteArray();
 
-                // Empty body is valid - return null for consistency with early length check
+                // Empty body is valid - return null to indicate no body content
                 if (bytes.length == 0) {
                     return null;
                 }
