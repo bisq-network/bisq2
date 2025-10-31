@@ -21,7 +21,10 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
+import bisq.http_api.auth.AuthenticationAddOn;
+import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
@@ -54,18 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class WebSocketService implements Service {
     @Getter
-    public static class Config {
-        private final boolean enabled;
+    public static class Config extends CommonApiConfig {
         private final boolean includeRestApi;
-        private final String protocol;
-        private final String host;
-        private final int port;
-        private final boolean localhostOnly;
-        private final List<String> whiteListEndPoints;
-        private final List<String> blackListEndPoints;
-        private final List<String> supportedAuth;
-        private final String restApiBaseAddress;
-        private final String restApiBaseUrl;
 
         public Config(boolean enabled,
                       boolean includeRestApi,
@@ -75,19 +68,10 @@ public class WebSocketService implements Service {
                       boolean localhostOnly,
                       List<String> whiteListEndPoints,
                       List<String> blackListEndPoints,
-                      List<String> supportedAuth) {
-            this.enabled = enabled;
+                      List<String> supportedAuth,
+                      String password) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password);
             this.includeRestApi = includeRestApi;
-            this.protocol = protocol;
-            this.host = host;
-            this.port = port;
-            this.localhostOnly = localhostOnly;
-            this.whiteListEndPoints = whiteListEndPoints;
-            this.blackListEndPoints = blackListEndPoints;
-            this.supportedAuth = supportedAuth;
-
-            restApiBaseAddress = protocol + host + ":" + port;
-            restApiBaseUrl = restApiBaseAddress + REST_API_BASE_PATH;
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -101,12 +85,11 @@ public class WebSocketService implements Service {
                     config.getBoolean("localhostOnly"),
                     config.getStringList("whiteListEndPoints"),
                     config.getStringList("blackListEndPoints"),
-                    config.getStringList("supportedAuth")
+                    config.getStringList("supportedAuth"),
+                    config.getString("password")
             );
         }
     }
-
-    public static final String REST_API_BASE_PATH = "/api/v1";
 
     private final Config config;
 
@@ -115,12 +98,10 @@ public class WebSocketService implements Service {
     private final WebSocketConnectionHandler webSocketConnectionHandler;
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
-    private final WebSocketRequestValidator requestValidator;
     private Optional<HttpServer> httpServer = Optional.empty();
     private final ApiTorOnionService apiTorOnionService;
 
     public WebSocketService(Config config,
-                            String restApiBaseAddress,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
                             Path appDataDirPath,
                             SecurityService securityService,
@@ -130,11 +111,9 @@ public class WebSocketService implements Service {
                             TradeService tradeService,
                             UserService userService,
                             BisqEasyService bisqEasyService,
-                            OpenTradeItemsService openTradeItemsService,
-                            WebSocketRequestValidator requestValidator) {
+                            OpenTradeItemsService openTradeItemsService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
-        this.requestValidator = requestValidator;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
 
@@ -147,7 +126,8 @@ public class WebSocketService implements Service {
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
-        webSocketRestApiService = new WebSocketRestApiService(objectMapper, restApiBaseAddress, requestValidator);
+        WebSocketRequestValidator requestValidator = WebSocketRequestValidator.from(config);
+        webSocketRestApiService = new WebSocketRestApiService(objectMapper, config.getRestApiBaseAddress(), requestValidator);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
@@ -173,6 +153,10 @@ public class WebSocketService implements Service {
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
+                    String password = config.getPassword();
+                    if (StringUtils.isNotEmpty(password)) {
+                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
+                    }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);
 

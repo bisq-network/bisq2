@@ -1,7 +1,6 @@
 package bisq.http_api.validator;
 
-import bisq.http_api.rest_api.RestApiService;
-import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.config.CommonApiConfig;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -14,7 +13,7 @@ import java.net.URI;
 import java.util.List;
 
 @Provider
-@Priority(Priorities.AUTHENTICATION)
+@Priority(Priorities.AUTHORIZATION)
 public class HttpApiRequestFilter implements ContainerRequestFilter {
     private final RequestValidator validator;
 
@@ -34,11 +33,7 @@ public class HttpApiRequestFilter implements ContainerRequestFilter {
         }
     }
 
-    public static HttpApiRequestFilter from(RestApiService.Config config) {
-        return new HttpApiRequestFilter(config.getWhiteListEndPoints(), config.getBlackListEndPoints());
-    }
-
-    public static HttpApiRequestFilter from(WebSocketService.Config config) {
+    public static HttpApiRequestFilter from(CommonApiConfig config) {
         return new HttpApiRequestFilter(config.getWhiteListEndPoints(), config.getBlackListEndPoints());
     }
 }

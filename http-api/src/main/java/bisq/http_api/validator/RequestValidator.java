@@ -10,9 +10,10 @@ import java.util.regex.Pattern;
 @Slf4j
 public class RequestValidator {
     // Only allow alphanumeric characters and some special characters like /, -, _, .
+    // ~, and : chars are used in i2p addresses
     // Path traversal is blocked separately
-    private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:]*$");
-    private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=]*$");
+    private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:=~]*$");
+    private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=~]*$");
 
     private final Set<Pattern> endpointWhitelistPatterns;
     private final Set<Pattern> endpointBlacklistPatterns;

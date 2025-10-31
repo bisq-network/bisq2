@@ -28,8 +28,6 @@ import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
 import bisq.http_api.rest_api.RestApiService;
-import bisq.http_api.validator.HttpApiRequestFilter;
-import bisq.http_api.validator.RequestValidator;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -57,7 +55,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -166,15 +163,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         if (restApiConfig.isEnabled()) {
-            // I2P addresses contain ~, = and :
-            Pattern safePath = Pattern.compile("^[a-zA-Z0-9/_\\-.,:=~]*$");
-            Pattern safeQuery = Pattern.compile("^[a-zA-Z0-9/_\\-.,:=~?&]*$");
-            RequestValidator requestValidator = new RequestValidator(restApiConfig.getWhiteListEndPoints(),
-                    restApiConfig.getBlackListEndPoints(),
-                    safePath,
-                    safeQuery);
-            HttpApiRequestFilter httpApiRequestFilter = new HttpApiRequestFilter(requestValidator);
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService, httpApiRequestFilter);
+            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
             restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
         }
     }
