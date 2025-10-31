@@ -103,9 +103,12 @@ public final class AuthUtils {
 
             byte[] receivedHmacBytes = Hex.decode(receivedHmac);
 
-            // Constant-time comparison
-            return MessageDigest.isEqual(expectedHmac, receivedHmacBytes) && canUseNonce(nonce);
+            // Constant-time comparison - only check nonce if HMAC is valid
+            if (!MessageDigest.isEqual(expectedHmac, receivedHmacBytes)) {
+                return false;
+            }
 
+            return canUseNonce(nonce);
         } catch (NumberFormatException | NoSuchAlgorithmException | InvalidKeyException e) {
             log.warn("Error validating authentication", e);
             return false;
