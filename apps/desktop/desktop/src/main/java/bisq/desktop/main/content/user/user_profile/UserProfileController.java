@@ -161,7 +161,8 @@ public class UserProfileController implements Controller {
 
     void onSave() {
         var userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
+        UserIdentity oldUserIdentity = model.getSelectedUserIdentity().get();
+        if (userIdentity == null || oldUserIdentity == null) {
             // This should never happen as the combobox selection is validated before getting here
             new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return;
@@ -170,7 +171,8 @@ public class UserProfileController implements Controller {
             new Popup().warning(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
             return;
         }
-        userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
+
+        userIdentityService.editUserProfile(oldUserIdentity, model.getTerms().get(), model.getStatement().get())
                 .thenAccept(result -> UIThread.runOnNextRenderFrame(() -> {
                     UserIdentity value = userIdentityService.getSelectedUserIdentity();
                     model.getSelectedUserIdentity().set(value);

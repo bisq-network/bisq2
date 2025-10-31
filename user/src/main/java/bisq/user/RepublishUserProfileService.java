@@ -19,7 +19,12 @@ package bisq.user;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
-import bisq.common.timer.Scheduler;
+import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -31,77 +36,119 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class RepublishUserProfileService implements Service {
-    public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.MINUTES.toMillis(5);
+public class RepublishUserProfileService implements Service, Node.Listener {
+    public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.HOURS.toMillis(12);
+    public static final long MIN_PAUSE_TO_NEXT_REFRESH = TimeUnit.MINUTES.toMillis(5);
 
     private final UserIdentityService userIdentityService;
-    private UserIdentity selectedUserIdentity;
+    private final NetworkService networkService;
+    private volatile UserIdentity selectedUserIdentity;
     private long lastPublished;
-    private long republishCounter;
+    private long lastRefreshed;
     @Nullable
     private Pin selectedUserIdentityPin;
-    @Nullable
-    private Scheduler republishScheduler;
+    private int numAllConnections;
+    private final Object lock = new Object();
 
-    public RepublishUserProfileService(UserIdentityService userIdentityService) {
+    public RepublishUserProfileService(UserIdentityService userIdentityService, NetworkService networkService) {
         this.userIdentityService = userIdentityService;
+        this.networkService = networkService;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
             if (userIdentity != null && !userIdentity.getIdentity().isDefaultTag()) {
-                selectedUserIdentity = userIdentity;
-                publishSelectedUserProfile();
-                userActivityDetected();
+                synchronized (lock) {
+                    selectedUserIdentity = userIdentity;
+                    maybeRepublishOrRefresh();
+                }
             }
         });
 
-        republishScheduler = Scheduler.run(this::publishSelectedUserProfile)
-                .host(this)
-                .runnableName("republish")
-                .repeated(1, 30, TimeUnit.SECONDS, 3);
+        networkService.addDefaultNodeListener(this);
+        onNumConnectionsChanged();
+
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeDefaultNodeListener(this);
+
         if (selectedUserIdentityPin != null) {
             selectedUserIdentityPin.unbind();
             selectedUserIdentityPin = null;
         }
 
-        if (republishScheduler != null) {
-            republishScheduler.stop();
-            republishScheduler = null;
-        }
-
         return CompletableFuture.completedFuture(true);
     }
 
-    public void userActivityDetected() {
-        long now = System.currentTimeMillis();
-        if (now - lastPublished < MIN_PAUSE_TO_NEXT_REPUBLISH || selectedUserIdentity == null) {
-            return;
-        }
-        lastPublished = now;
-        KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        UserProfile userProfile = selectedUserIdentity.getUserProfile();
 
-        // Every 10 times we publish instead of refresh for more resilience in case the data has not reached the whole network.
-        republishCounter++;
-        if (republishCounter % 10 == 0) {
-            userIdentityService.publishUserProfile(userProfile, keyPair);
-        } else {
-            userIdentityService.refreshUserProfile(userProfile, keyPair);
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+        onNumConnectionsChanged();
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
+
+    public void userActivityDetected() {
+        synchronized (lock) {
+            maybeRepublishOrRefresh();
         }
     }
 
-    private void publishSelectedUserProfile() {
-        if (selectedUserIdentity != null) {
-            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-            UserProfile userProfile = selectedUserIdentity.getUserProfile();
-            userIdentityService.publishUserProfile(userProfile, keyPair);
+
+    private void onNumConnectionsChanged() {
+        synchronized (lock) {
+            numAllConnections = networkService.getNumConnectionsOnAllTransports();
+            if (numAllConnections >= 8) {
+                publishUserProfile();
+                networkService.removeDefaultNodeListener(this);
+            }
         }
+    }
+
+    private void maybeRepublishOrRefresh() {
+        if (selectedUserIdentity == null) {
+            return;
+        }
+        if (numAllConnections < 4) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastPublished > MIN_PAUSE_TO_NEXT_REPUBLISH) {
+            publishUserProfile();
+        } else if (now - lastRefreshed > MIN_PAUSE_TO_NEXT_REFRESH) {
+            refreshUserProfile();
+        }
+    }
+
+    private void refreshUserProfile() {
+        if (selectedUserIdentity == null) {
+            return;
+        }
+        KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        UserProfile userProfile = selectedUserIdentity.getUserProfile();
+        userIdentityService.refreshUserProfile(userProfile, keyPair);
+        lastRefreshed = System.currentTimeMillis();
+    }
+
+    private void publishUserProfile() {
+        if (selectedUserIdentity == null) {
+            return;
+        }
+        KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        UserProfile userProfile = selectedUserIdentity.getUserProfile();
+        userIdentityService.publishUserProfile(userProfile, keyPair);
+        lastPublished = System.currentTimeMillis();
+        lastRefreshed = lastPublished;
     }
 }

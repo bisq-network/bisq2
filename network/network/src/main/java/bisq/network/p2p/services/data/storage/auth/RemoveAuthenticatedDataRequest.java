@@ -52,14 +52,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
         return new RemoveAuthenticatedDataRequest(VERSION,
                 authenticatedData.getMetaData(),
                 hash,
                 publicKey.getEncoded(),
                 publicKey,
-                newSequenceNumber,
+                sequenceNumber,
                 signature);
     }
 

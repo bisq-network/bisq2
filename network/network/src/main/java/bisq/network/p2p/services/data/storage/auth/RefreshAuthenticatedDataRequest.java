@@ -47,14 +47,14 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
         return new RefreshAuthenticatedDataRequest(VERSION,
                 authenticatedData.getMetaData(),
                 hash,
                 publicKey.getEncoded(),
                 publicKey,
-                newSequenceNumber,
+                sequenceNumber,
                 signature,
                 System.currentTimeMillis());
     }

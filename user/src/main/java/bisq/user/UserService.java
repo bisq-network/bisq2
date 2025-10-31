@@ -58,7 +58,7 @@ public class UserService implements Service {
                 identityService,
                 networkService);
 
-        republishUserProfileService = new RepublishUserProfileService(userIdentityService);
+        republishUserProfileService = new RepublishUserProfileService(userIdentityService, networkService);
 
         bannedUserService = new BannedUserService(persistenceService,
                 bondedRolesService.getAuthorizedBondedRolesService());
