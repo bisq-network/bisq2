@@ -38,7 +38,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -414,6 +416,37 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
                     getMaxMapSize());
+            boolean showDetails = false;
+            if (showDetails) {
+                long now = System.currentTimeMillis();
+                String summaryAdded = dataStore.getMap().values().stream()
+                        .filter(AddAuthenticatedDataRequest.class::isInstance)
+                        .map(AddAuthenticatedDataRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+                String summaryRemoved = dataStore.getMap().values().stream()
+                        .filter(RemoveAuthenticatedDataRequest.class::isInstance)
+                        .map(RemoveAuthenticatedDataRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+
+                log.info("AddAuthenticatedDataRequest: {}\n{}", storeKey, summaryAdded);
+                log.info("RemoveAuthenticatedDataRequest: {}\n{}", storeKey, summaryRemoved);
+            }
         }
     }
 }
