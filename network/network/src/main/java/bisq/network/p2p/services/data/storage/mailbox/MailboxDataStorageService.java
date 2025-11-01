@@ -32,7 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -273,6 +275,38 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
                     getMaxMapSize());
+
+            boolean showDetails = false;
+            if (showDetails) {
+                long now = System.currentTimeMillis();
+                String summaryAdded = dataStore.getMap().values().stream()
+                        .filter(AddMailboxRequest.class::isInstance)
+                        .map(AddMailboxRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+                String summaryRemoved = dataStore.getMap().values().stream()
+                        .filter(RemoveMailboxRequest.class::isInstance)
+                        .map(RemoveMailboxRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+
+                log.info("AddMailboxRequest: {}\n{}", storeKey, summaryAdded);
+                log.info("RemoveMailboxRequest: {}\n{}", storeKey, summaryRemoved);
+            }
         }
     }
 }
