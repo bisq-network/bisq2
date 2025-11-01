@@ -35,7 +35,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -43,13 +42,13 @@ import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
+    public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
 
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
@@ -70,7 +69,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
 
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
