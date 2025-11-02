@@ -24,7 +24,7 @@ import "network_identity.proto";
 import "security.proto";
 
 message Identity {
-  string domainId = 1;
+  string tag = 1;
   network.identity.NetworkId networkId = 2;
   security.KeyBundle keyBundle = 3;
 }
