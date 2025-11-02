@@ -138,15 +138,14 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
     }
 
     @Override
-    public CompletableFuture<Optional<KeyBundleStore>> readPersistedAsync() {
-        return super.readPersistedAsync()
-                .whenComplete((persisted, throwable) -> {
-                    // In pre-2.1.8 versions there was no I2P keypair set.
-                    // In that case, we create a fresh one and persist .
-                    if (persisted != null && persisted.isPresent() && persisted.get().hadEmptyI2PKeyPair()) {
-                        Scheduler.run(this::persist).after(500);
-                    }
-                });
+    public Optional<KeyBundleStore> readPersisted() {
+        Optional<KeyBundleStore> persisted = super.readPersisted();
+        if (persisted.isPresent() && persisted.get().hadEmptyI2PKeyPair()) {
+            // In pre-2.1.8 versions there was no I2P keypair set.
+            // In that case, we create a fresh one and persist .
+            Scheduler.run(this::persist).after(500);
+        }
+        return persisted;
     }
 
     @Override

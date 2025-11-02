@@ -21,15 +21,15 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface PersistenceClient<T extends PersistableStore<T>> {
-    default CompletableFuture<Optional<T>> readPersistedAsync() {
-        return getPersistence().readAsync()
-                .whenComplete((result, throwable) ->
-                        result.ifPresent(persisted -> {
-                            persisted = preProcessPersisted(persisted);
-                            persisted = prunePersisted(persisted);
-                            getPersistableStore().applyPersisted(persisted);
-                            onPersistedApplied(persisted);
-                        }));
+    default Optional<T> readPersisted() {
+        return getPersistence().read()
+                .map(persisted -> {
+                    persisted = preProcessPersisted(persisted);
+                    persisted = prunePersisted(persisted);
+                    getPersistableStore().applyPersisted(persisted);
+                    onPersistedApplied(persisted);
+                    return persisted;
+                });
     }
 
     // In case we want to apply changes to persisted data

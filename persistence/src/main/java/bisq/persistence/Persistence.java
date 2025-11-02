@@ -48,8 +48,8 @@ public class Persistence<T extends PersistableStore<T>> {
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
 
-    public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, EXECUTOR);
+    public Optional<T> read() {
+        return persistableStoreReaderWriter.read();
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
