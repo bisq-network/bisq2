@@ -189,7 +189,7 @@ public class Node implements Connection.Handler {
                 NetworkLoadSnapshot networkLoadSnapshot,
                 AuthorizationService authorizationService) {
         this.networkId = networkId;
-        keyBundle = keyBundleService.getOrCreateKeyBundle(networkId.getKeyId());
+        keyBundle = keyBundleService.getKeyBundle(networkId.getKeyId());
         this.isDefaultNode = isDefaultNode;
         this.config = config;
         transportType = config.getTransportType();
