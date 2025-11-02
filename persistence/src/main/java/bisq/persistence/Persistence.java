@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
@@ -47,10 +46,6 @@ public class Persistence<T extends PersistableStore<T>> {
         storePath = directoryPath.resolve(storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
-    }
-
-    public CompletableFuture<Optional<T>> readAsync(Consumer<T> consumer) {
-        return readAsync().whenComplete((result, throwable) -> result.ifPresent(consumer));
     }
 
     public CompletableFuture<Optional<T>> readAsync() {

@@ -19,14 +19,17 @@ package bisq.persistence;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
 public interface PersistenceClient<T extends PersistableStore<T>> {
     default CompletableFuture<Optional<T>> readPersistedAsync() {
-        return getPersistence().readAsync(persisted -> {
-            persisted = preProcessPersisted(persisted);
-            persisted = prunePersisted(persisted);
-            getPersistableStore().applyPersisted(persisted);
-            onPersistedApplied(persisted);
-        });
+        return getPersistence().readAsync()
+                .whenComplete((result, throwable) ->
+                        result.ifPresent(persisted -> {
+                            persisted = preProcessPersisted(persisted);
+                            persisted = prunePersisted(persisted);
+                            getPersistableStore().applyPersisted(persisted);
+                            onPersistedApplied(persisted);
+                        }));
     }
 
     // In case we want to apply changes to persisted data
