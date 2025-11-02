@@ -138,8 +138,8 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
     }
 
     @Override
-    public CompletableFuture<Optional<KeyBundleStore>> readPersisted() {
-        return super.readPersisted()
+    public CompletableFuture<Optional<KeyBundleStore>> readPersistedAsync() {
+        return super.readPersistedAsync()
                 .whenComplete((persisted, throwable) -> {
                     // In pre-2.1.8 versions there was no I2P keypair set.
                     // In that case, we create a fresh one and persist .

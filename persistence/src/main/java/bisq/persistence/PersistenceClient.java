@@ -20,7 +20,7 @@ package bisq.persistence;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 public interface PersistenceClient<T extends PersistableStore<T>> {
-    default CompletableFuture<Optional<T>> readPersisted() {
+    default CompletableFuture<Optional<T>> readPersistedAsync() {
         return getPersistence().readAsync(persisted -> {
             persisted = preProcessPersisted(persisted);
             persisted = prunePersisted(persisted);

@@ -119,7 +119,7 @@ public class PersistenceService {
             log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
         }
         return CompletableFutureUtils.allOf(clients.stream()
-                        .map(persistenceClient -> persistenceClient.readPersisted()
+                        .map(persistenceClient -> persistenceClient.readPersistedAsync()
                                 .whenComplete((optionalResult, throwable) -> {
                                     String storagePath = persistenceClient.getPersistence().getStorePath()
                                             .toAbsolutePath().toString();

@@ -447,7 +447,7 @@ public class StorageService {
             dataStore.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
             authenticatedDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            return dataStore.readPersistedAsync().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }
@@ -487,7 +487,7 @@ public class StorageService {
             dataStore.addListener(listener);
             mailboxStoresListeners.put(storeKey, listener);
             mailboxStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            return dataStore.readPersistedAsync().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(mailboxStores.get(storeKey));
         }
@@ -510,7 +510,7 @@ public class StorageService {
             dataStore.addListener(listener);
             appendOnlyDataStoresListeners.put(storeKey, listener);
             appendOnlyDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            return dataStore.readPersistedAsync().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
         }
