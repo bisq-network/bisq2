@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
@@ -29,8 +30,8 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,6 +46,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class IdentityService extends RateLimitedPersistenceClient<IdentityStore> implements Service {
@@ -68,6 +71,26 @@ public class IdentityService extends RateLimitedPersistenceClient<IdentityStore>
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
         networkIdService = networkService.getNetworkIdService();
+    }
+
+    @Override
+    public IdentityStore preProcessPersisted(IdentityStore persisted) {
+        // We store the key bundle also in identity. To ensure it is in sync with the key bundle from
+        // key bundle service, we check for equality and if not matching we replace the key bundle.
+        var optionalDefaultIdentity = persisted.getDefaultIdentity()
+                .map(this::maybeUpdateKeyBundle);
+
+        var activeIdentityByTag = persisted.getActiveIdentityByTag().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> maybeUpdateKeyBundle(e.getValue())
+                ));
+
+        var retired = persisted.getRetired().stream()
+                .map(this::maybeUpdateKeyBundle)
+                .collect(Collectors.toSet());
+
+        return new IdentityStore(optionalDefaultIdentity, Map.copyOf(activeIdentityByTag), Set.copyOf(retired));
     }
 
 
@@ -300,5 +323,18 @@ public class IdentityService extends RateLimitedPersistenceClient<IdentityStore>
                         persist();
                     }
                 });
+    }
+
+    private Identity maybeUpdateKeyBundle(Identity identity) {
+        var optionalKeyBundle = keyBundleService.findKeyBundle(identity.getKeyBundle().getKeyId());
+        checkArgument(optionalKeyBundle.isPresent(), "keyBundle from keyBundleService must be present. IdentityTag=" + identity.getTag());
+        var keyBundle = optionalKeyBundle.get();
+        if (!identity.getKeyBundle().equals(keyBundle)) {
+            log.warn("keyBundle from identity is not matching the one from keyBundleService. " +
+                    "Updating Identity with keyBundle from keyBundleService. IdentityTag={}", identity.getTag());
+            Scheduler.run(this::persist).after(2000);
+            return new Identity(identity.getTag(), identity.getNetworkId(), keyBundle);
+        }
+        return identity;
     }
 }

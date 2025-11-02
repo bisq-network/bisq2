@@ -34,13 +34,13 @@ import java.util.stream.Collectors;
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class IdentityStore implements PersistableStore<IdentityStore> {
+public final class IdentityStore implements PersistableStore<IdentityStore> {
     // Is only empty before we get initialize called the first time
     private Optional<Identity> defaultIdentity = Optional.empty();
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
 
-    private IdentityStore(Optional<Identity> defaultIdentity,
+    IdentityStore(Optional<Identity> defaultIdentity,
                           Map<String, Identity> activeIdentityByTag,
                           Set<Identity> retired) {
         this.defaultIdentity = defaultIdentity;
