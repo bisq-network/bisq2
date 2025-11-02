@@ -256,9 +256,15 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
         return new KeyBundle(keyId, keyPair, torKeyPair, i2pKeyPair);
     }
 
-    private Optional<KeyBundle> findKeyBundle(String keyId) {
+    public Optional<KeyBundle> findKeyBundle(String keyId) {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         return persistableStore.findKeyBundle(keyId);
+    }
+
+    public KeyBundle getKeyBundle(String keyId) {
+        Optional<KeyBundle> keyBundle = findKeyBundle(keyId);
+        checkArgument(keyBundle.isPresent(), "keyBundle must be present at getKeyBundle. keyId=" + keyId);
+        return keyBundle.get();
     }
 
     public Optional<KeyBundle> findDefaultKeyBundle() {
