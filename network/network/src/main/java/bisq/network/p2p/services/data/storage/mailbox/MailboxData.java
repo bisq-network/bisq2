@@ -41,7 +41,7 @@ public final class MailboxData implements StorageData {
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
 
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
 
     @EqualsAndHashCode.Exclude
