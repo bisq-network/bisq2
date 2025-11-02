@@ -415,7 +415,7 @@ public class StorageService {
 
     public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
         if (!authenticatedDataStores.containsKey(storeKey)) {
-            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
+            AuthenticatedDataStorageService storageService = new AuthenticatedDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     storeKey);
@@ -444,10 +444,11 @@ public class StorageService {
                 }
             };
 
-            dataStore.addListener(listener);
+            storageService.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
-            authenticatedDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            authenticatedDataStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }
@@ -455,7 +456,7 @@ public class StorageService {
 
     public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
         if (!mailboxStores.containsKey(storeKey)) {
-            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
+            MailboxDataStorageService storageService = new MailboxDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     MAILBOX_DATA_STORE.getStoreName(),
                     storeKey);
@@ -484,10 +485,13 @@ public class StorageService {
                 }
             };
 
-            dataStore.addListener(listener);
+            storageService.addListener(listener);
             mailboxStoresListeners.put(storeKey, listener);
-            mailboxStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            mailboxStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
+
+
         } else {
             return CompletableFuture.completedFuture(mailboxStores.get(storeKey));
         }
@@ -495,7 +499,7 @@ public class StorageService {
 
     public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
         if (!appendOnlyDataStores.containsKey(storeKey)) {
-            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
+            AppendOnlyDataStorageService storageService = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
                     storeKey);
 
@@ -507,10 +511,11 @@ public class StorageService {
                 }
             });
 
-            dataStore.addListener(listener);
+            storageService.addListener(listener);
             appendOnlyDataStoresListeners.put(storeKey, listener);
-            appendOnlyDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            appendOnlyDataStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
         }

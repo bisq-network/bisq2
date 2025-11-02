@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
@@ -49,12 +48,8 @@ public class Persistence<T extends PersistableStore<T>> {
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
 
-    public CompletableFuture<Optional<T>> readAsync(Consumer<T> consumer) {
-        return readAsync().whenComplete((result, throwable) -> result.ifPresent(consumer));
-    }
-
-    public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, EXECUTOR);
+    public Optional<T> read() {
+        return persistableStoreReaderWriter.read();
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {

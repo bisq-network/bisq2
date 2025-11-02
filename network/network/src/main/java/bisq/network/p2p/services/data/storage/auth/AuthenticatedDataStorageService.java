@@ -122,7 +122,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             if (authenticatedData instanceof AuthorizedData authorizedData) {
                 if (authorizedData.isNotAuthorized()) {
-                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 500));
+                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
                     return new DataStorageResult(false).isNotAuthorized();
                 }
             }
