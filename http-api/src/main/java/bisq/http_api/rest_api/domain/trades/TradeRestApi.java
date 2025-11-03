@@ -66,6 +66,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -331,6 +332,56 @@ public class TradeRestApi extends RestApiBase {
             bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         }
         bisqEasyTradeService.btcConfirmed(trade);
+    }
+
+    @POST
+    @Path("/{tradeId}/mediation")
+    @Operation(
+            summary = "Request mediation for a trade",
+            description = "Request mediation for a specific trade by providing the trade ID. " +
+                    "This will initiate the mediation process with the selected mediator for the trade.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Mediation request sent successfully"),
+                    @ApiResponse(responseCode = "404", description = "Trade or trade channel not found"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                    @ApiResponse(responseCode = "409", description = "Conflict - No mediator found for this trade"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Service unavailable - Request timed out")
+            }
+    )
+    public void requestMediation(@PathParam("tradeId") String tradeId, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never get triggered here, as the message will be sent as mailbox message
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+
+        try {
+            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findTrade(tradeId);
+            if (optionalTrade.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Trade not found for ID " + tradeId));
+                return;
+            }
+
+            Optional<BisqEasyOpenTradeChannel> optionalChannel = bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId);
+            if (optionalChannel.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Open trade channel not found for trade with ID " + tradeId));
+                return;
+            }
+
+            BisqEasyTrade trade = optionalTrade.get();
+            BisqEasyOpenTradeChannel channel = optionalChannel.get();
+            BisqEasyContract contract = trade.getContract();
+
+            mediationRequestService.requestMediation(channel, contract);
+
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+        } catch (NoSuchElementException e) {
+            asyncResponse.resume(buildResponse(Response.Status.CONFLICT, "No mediator found for this trade."));
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid request: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
     }
 
 }
