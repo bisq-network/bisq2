@@ -217,7 +217,10 @@ public class OracleNodeService implements Service {
                     .repeated(10, 60, TimeUnit.SECONDS, 3);
 
             // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
-            scheduler = Scheduler.run(() -> publishMyAuthorizedData(myAuthorizedOracleNode, authorizedBondedRole, keyPair))
+            scheduler = Scheduler.run(() -> {
+                        bisq1BridgeService.republishAuthorizedBondedRoles();
+                        publishMyAuthorizedData(myAuthorizedOracleNode, authorizedBondedRole, keyPair);
+                    })
                     .host(this)
                     .runnableName("publishMyAuthorizedDataAfter50Days")
                     .periodically(50, TimeUnit.DAYS);

@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
@@ -29,6 +30,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BsqBlockGrpcService;
@@ -38,13 +40,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Bisq1BridgeService implements Service, Node.Listener {
@@ -78,12 +83,16 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     private final Bisq1BridgeService.Config config;
     private final IdentityService identityService;
     private final NetworkService networkService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     private final BsqBlockGrpcService bsqBlockGrpcService;
     private final BurningmanGrpcService burningmanGrpcService;
+    private final AuthorizedOracleNode myAuthorizedOracleNode;
     private final Bisq1BridgeRequestService bisq1BridgeRequestService;
     private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
+    @Nullable
+    private KeyPair keyPair;
     @Nullable
     private volatile ScheduledExecutorService executor;
     private final Object executorLock = new Object();
@@ -102,6 +111,8 @@ public class Bisq1BridgeService implements Service, Node.Listener {
         this.config = config;
         this.identityService = identityService;
         this.networkService = networkService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.myAuthorizedOracleNode = myAuthorizedOracleNode;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
 
@@ -163,12 +174,15 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        // We ensure with the null check against executor that we only start the ScheduledExecutorService once.
         if (executor != null) return;
 
         synchronized (executorLock) {
             if (executor != null) return;
             int numAllConnections = networkService.getNumConnectionsOnAllTransports();
             if (numAllConnections >= config.getNumConnectionsForRepublish()) {
+                networkService.removeDefaultNodeListener(this);
+
                 ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
                 tmp.scheduleWithFixedDelay(() -> {
                     AuthorizedDistributedData data = queue.poll();
@@ -177,6 +191,8 @@ public class Bisq1BridgeService implements Service, Node.Listener {
                     }
                 }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
                 executor = tmp;
+
+                republishAuthorizedBondedRoles();
             }
         }
     }
@@ -185,13 +201,31 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
+    // The OracleNodeService has scheduler for republishing oracle data every 50 days and is also used to call our
+    // republishAuthorizedBondedRoles. AuthorizedBondedRole has a 100 day TTL.
+    public void republishAuthorizedBondedRoles() {
+        Set<AuthorizedBondedRole> bannedAuthorizedBondedRoleSet = authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream().collect(Collectors.toSet());
+        networkService.getDataService().stream()
+                .flatMap(dataService -> dataService.getAuthorizedData()
+                        .map(AuthorizedData::getAuthorizedDistributedData)
+                        .filter(AuthorizedBondedRole.class::isInstance)
+                        .map(AuthorizedBondedRole.class::cast)
+                        .filter(authorizedBondedRole -> !bannedAuthorizedBondedRoleSet.contains(authorizedBondedRole))
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().isPresent())
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().get().getProfileId().equals(myAuthorizedOracleNode.getProfileId()))
+                )
+                .forEach(queue::offer);
+    }
 
     private void publishAuthorizedData(AuthorizedDistributedData data) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
+        if (keyPair == null) {
+            Identity identity = identityService.getOrCreateDefaultIdentity();
+            keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
+        }
+
         networkService.publishAuthorizedData(data,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
+                keyPair,
                 authorizedPrivateKey,
                 authorizedPublicKey);
     }
-
 }
