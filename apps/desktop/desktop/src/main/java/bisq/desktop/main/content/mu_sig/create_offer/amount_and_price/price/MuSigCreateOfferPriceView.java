@@ -140,8 +140,19 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
+        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
+        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "wrap-text");
+        learnWhyIntroLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
+        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
+                "learn-why-text", 7, 10, "- ", "- ");
+        learnWhyExpositionList.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        overlay = createOverlay();
+        overlay = new WizardOverlay(root)
+                .info()
+                .headline("bisqEasy.price.feedback.learnWhySection.title")
+                .description(new VBox(40, learnWhyIntroLabel, learnWhyExpositionList))
+                .buttons(closeOverlayButton)
+                .build();
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
         root.setAlignment(Pos.TOP_CENTER);
@@ -255,25 +266,5 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             percentagePriceButton.setGraphic(percentagePriceIconGreen);
             fixedPriceButton.setGraphic(fixedPriceIconGrey);
         }
-    }
-
-    private VBox createOverlay() {
-        Label headlineLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
-        headlineLabel.getStyleClass().addAll("learn-why-title-label", "large-text");
-        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
-        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label", "wrap-text");
-        learnWhyIntroLabel.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
-        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
-                "learn-why-text", 7, 10, "- ", "- ");
-        learnWhyExpositionList.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
-        VBox.setMargin(closeOverlayButton, new Insets(10, 0, 0, 0));
-        VBox content = new VBox(40, headlineLabel, learnWhyIntroLabel, learnWhyExpositionList, closeOverlayButton);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
-
-        VBox vBox = new VBox(content, Spacer.fillVBox());
-        content.setMaxWidth(700);
-        return vBox;
     }
 }
