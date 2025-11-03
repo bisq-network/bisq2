@@ -163,12 +163,15 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        // We ensure with the null check against executor that we only start the ScheduledExecutorService once.
         if (executor != null) return;
 
         synchronized (executorLock) {
             if (executor != null) return;
             int numAllConnections = networkService.getNumConnectionsOnAllTransports();
             if (numAllConnections >= config.getNumConnectionsForRepublish()) {
+                networkService.removeDefaultNodeListener(this);
+
                 ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
                 tmp.scheduleWithFixedDelay(() -> {
                     AuthorizedDistributedData data = queue.poll();
@@ -185,7 +188,6 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
-
     private void publishAuthorizedData(AuthorizedDistributedData data) {
         Identity identity = identityService.getOrCreateDefaultIdentity();
         networkService.publishAuthorizedData(data,
@@ -193,5 +195,4 @@ public class Bisq1BridgeService implements Service, Node.Listener {
                 authorizedPrivateKey,
                 authorizedPublicKey);
     }
-
 }
