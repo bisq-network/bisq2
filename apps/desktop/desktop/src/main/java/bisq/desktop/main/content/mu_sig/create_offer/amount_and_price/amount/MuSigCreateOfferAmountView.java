@@ -20,7 +20,6 @@ package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
@@ -46,7 +45,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountLimitInfoHBox;
+    private final HBox amountLimitInfoHBox, learnHowToBuildReputationBox;
     private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public MuSigCreateOfferAmountView(MuSigCreateOfferAmountModel model,
@@ -96,11 +95,15 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
         learnHowToBuildReputation = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.learnHowToBuildReputation"));
         learnHowToBuildReputation.getStyleClass().add("outlined-button");
+        learnHowToBuildReputationBox = new HBox(learnHowToBuildReputation);
         linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
-        linkToWiki.getStyleClass().add("text-fill-green");
-        overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
-                linkToWikiText, linkToWiki, learnHowToBuildReputation);
+        overlay = new WizardOverlay(root)
+                .warning()
+                .headline("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline")
+                .description(createAndGetOverlayContent(amountLimitInfoOverlayInfo, linkToWikiText, linkToWiki, learnHowToBuildReputationBox))
+                .buttons(closeOverlayButton)
+                .build();
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);
@@ -118,8 +121,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         amountLimitInfoHBox.managedProperty().bind(model.getShouldShowAmountLimitInfo());
         learnMore.visibleProperty().bind(model.getLearnMoreVisible());
         learnMore.managedProperty().bind(model.getLearnMoreVisible());
-        learnHowToBuildReputation.visibleProperty().bind(model.getShouldShowHowToBuildReputationButton());
-        learnHowToBuildReputation.managedProperty().bind(model.getShouldShowHowToBuildReputationButton());
+        learnHowToBuildReputationBox.visibleProperty().bind(model.getShouldShowHowToBuildReputationButton());
+        learnHowToBuildReputationBox.managedProperty().bind(model.getShouldShowHowToBuildReputationButton());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
         warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
 
@@ -157,8 +160,8 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         learnMore.managedProperty().unbind();
         amountLimitInfoHBox.visibleProperty().unbind();
         amountLimitInfoHBox.managedProperty().unbind();
-        learnHowToBuildReputation.visibleProperty().unbind();
-        learnHowToBuildReputation.managedProperty().unbind();
+        learnHowToBuildReputationBox.visibleProperty().unbind();
+        learnHowToBuildReputationBox.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
 
@@ -175,22 +178,21 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         root.setOnKeyPressed(null);
     }
 
-    private static VBox createOverlay(Label amountLimitInfo,
-                                      Button closeOverlayButton,
-                                      Label linkToWikiText,
-                                      Hyperlink linkToWiki,
-                                      Button learnHowToBuildReputation) {
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+    private static VBox createAndGetOverlayContent(Label amountLimitInfo,
+                                                   Label linkToWikiText,
+                                                   Hyperlink linkToWiki,
+                                                   HBox learnHowToBuildReputationBox) {
+        amountLimitInfo.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        amountLimitInfo.setMaxWidth(amountLimitInfo.getMinWidth());
+        amountLimitInfo.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfo.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        amountLimitInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
-        HBox amountLimitInfoBox = new HBox(amountLimitInfo);
-        amountLimitInfoBox.setAlignment(Pos.BASELINE_LEFT);
-        amountLimitInfoBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
+        learnHowToBuildReputationBox.setAlignment(Pos.CENTER);
 
-        linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        linkToWikiText.setMaxWidth(linkToWikiText.getMinWidth());
+        linkToWikiText.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        linkToWiki.getStyleClass().addAll("bisq-text-21");
+        linkToWiki.getStyleClass().addAll("normal-text", "text-fill-green");
         String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
                 ? Res.get("popup.hyperlink.copy.tooltip", linkToWiki.getText())
                 : Res.get("popup.hyperlink.openInBrowser.tooltip", linkToWiki.getText());
@@ -198,19 +200,12 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
 
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
-        linkBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
 
-        VBox.setMargin(learnHowToBuildReputation, new Insets(0, 0, 40, 0));
+        VBox.setMargin(learnHowToBuildReputationBox, new Insets(0, 0, 40, 0));
         VBox.setMargin(linkBox, new Insets(-40, 0, 0, 0));
-        VBox.setMargin(closeOverlayButton, new Insets(10, 0, 0, 0));
-        VBox content = new VBox(40, headlineLabel, amountLimitInfoBox,
-                learnHowToBuildReputation, linkBox, closeOverlayButton);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
 
-        VBox vBox = new VBox(content, Spacer.fillVBox());
-        vBox.setMaxWidth(700);
+        VBox vBox = new VBox(40, amountLimitInfo, learnHowToBuildReputationBox, linkBox);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         return vBox;
     }
 }
