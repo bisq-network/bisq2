@@ -52,8 +52,12 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
     @Nullable
     private String getBodySha256Hex(ContainerRequestContext ctx) {
-        // Content-Length may be spoofed; we always consume the stream to confirm whether a body is present.
+        // Content-Length may be spoofed; But it is an important indicator of a present body set by clients
         int declaredLength = ctx.getLength();
+
+        if (declaredLength == 0) {
+            return null;
+        }
 
         // If length is known and too large, return early
         if (declaredLength > MAX_BODY_SIZE_BYTES) {
