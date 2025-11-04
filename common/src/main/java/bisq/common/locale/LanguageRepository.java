@@ -99,22 +99,22 @@ public class LanguageRepository {
             "zh-Hans", // Chinese (Simplified)
             "zh-Hant", // Chinese (Traditional)
             "sv", // Swedish
-            "th" // Thai
+            "th", // Thai
+            "tr", // Turkish
+            "ja", // Japanese
+            "ko", // Korean
+            "vi", // Vietnamese
+            "id", // Indonesian
+            "nl" // Dutch
             /*
             // not translated yet
-            "vi", // Vietnamese
-            "ja", // Japanese
             "fa", // Persian
             "el", // Greek
-            "sr", // Serbian [Latin] (Serbia)
+            "sr", // Serbian
             "hu", // Hungarian
             "ro", // Romanian
-            "tr" // Turkish
-            "iw", // Hebrew
-            "hi", // Hindi
-            "ko", // Korean
+            "he", // Hebrew
             "no", // Norwegian
-            "nl", // Dutch
             "be", // Belarusian
             "fi", // Finnish
             "bg", // Bulgarian
