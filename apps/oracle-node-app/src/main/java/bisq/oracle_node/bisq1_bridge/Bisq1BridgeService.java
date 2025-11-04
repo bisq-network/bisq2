@@ -142,8 +142,9 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
         return grpcClient.initialize()
                 .thenCompose(result -> bisq1BridgeRequestService.initialize())
-                .thenCompose(result -> bsqBlockGrpcService.initialize())
-                .thenCompose(result -> burningmanGrpcService.initialize());
+                .thenCompose(result -> bsqBlockGrpcService.initialize());
+        // v.2.1.7 does not know AuthorizedBurningmanListByBlock thus we do not
+        // .thenCompose(result -> burningmanGrpcService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -162,8 +163,9 @@ public class Bisq1BridgeService implements Service, Node.Listener {
             ExecutorFactory.shutdownAndAwaitTermination(toShutdown, 100);
         }
 
-        return burningmanGrpcService.shutdown()
-                .thenCompose(result -> bsqBlockGrpcService.shutdown())
+        // v.2.1.7 does not know AuthorizedBurningmanListByBlock thus we do not use burningmanGrpcService yet
+        //burningmanGrpcService.shutdown()
+        return bsqBlockGrpcService.shutdown()
                 .thenCompose(result -> bisq1BridgeRequestService.shutdown())
                 .thenCompose(result -> grpcClient.shutdown());
     }
