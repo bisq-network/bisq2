@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.DateUtils;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -29,6 +30,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,6 +43,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public final class AuthorizedBurningmanListByBlock implements AuthorizedDistributedData {
+    // Can be removed after 2.1.7 is not used anymore
+    public static final Date BM_ACTIVATION_DATE = DateUtils.getUTCDate(2026, GregorianCalendar.JANUARY, 1);
+    public static final boolean IS_BM_ACTIVATED = new Date().after(BM_ACTIVATION_DATE);
+
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
@@ -117,6 +124,10 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
+        // Can be removed after 2.1.7 is not used anymore
+        if (!IS_BM_ACTIVATED) {
+            return true;
+        }
         return false;
     }
 
