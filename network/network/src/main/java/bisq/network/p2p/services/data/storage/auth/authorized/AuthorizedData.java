@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -41,6 +44,11 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
+    // Can be removed after I2P is activated
+    public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
+    public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
+
+
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
