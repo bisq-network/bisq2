@@ -98,15 +98,15 @@ public class LanguageRepository {
             "hi", // Hindi
             "zh-Hans", // Chinese (Simplified)
             "zh-Hant", // Chinese (Traditional)
-            "sv" // Swedish
+            "sv", // Swedish
+            "th" // Thai
             /*
             // not translated yet
             "vi", // Vietnamese
-            "th", // Thai
             "ja", // Japanese
             "fa", // Persian
             "el", // Greek
-            "sr-Latn-RS", // Serbian [Latin] (Serbia)
+            "sr", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
             "tr" // Turkish
