@@ -20,7 +20,7 @@ package bisq.desktop.components.controls.validator;
 public class ExplorerResultValidator extends ValidatorBase {
 
     public ExplorerResultValidator() {
-        super();
+        super((String) null);
     }
 
     @Override
