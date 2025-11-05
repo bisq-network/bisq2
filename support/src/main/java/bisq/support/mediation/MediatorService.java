@@ -115,8 +115,9 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
     /* --------------------------------------------------------------------- */
 
     public void closeMediationCase(MediationCase mediationCase) {
-        mediationCase.setClosed(true);
-        persist();
+        if (mediationCase.setClosed(true)) {
+            persist();
+        }
     }
 
     public void removeMediationCase(MediationCase mediationCase) {
@@ -125,8 +126,9 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
     }
 
     public void reOpenMediationCase(MediationCase mediationCase) {
-        mediationCase.setClosed(false);
-        persist();
+        if (mediationCase.setClosed(false)) {
+            persist();
+        }
     }
 
     public ObservableSet<MediationCase> getMediationCases() {

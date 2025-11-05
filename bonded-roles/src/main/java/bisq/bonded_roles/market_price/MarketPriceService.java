@@ -145,8 +145,9 @@ public class MarketPriceService extends RateLimitedPersistenceClient<MarketPrice
     /* --------------------------------------------------------------------- */
 
     public void setSelectedMarket(Market market) {
-        getSelectedMarket().set(market);
-        persist();
+        if (getSelectedMarket().set(market)) {
+            persist();
+        }
     }
 
     public Optional<MarketPrice> findMarketPrice(Market market) {

@@ -114,8 +114,9 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     //todo do we need that?
     public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
-        selectedAccountAsObservable().set(account);
-        persist();
+        if (selectedAccountAsObservable().set(account)) {
+            persist();
+        }
     }
 
     public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {

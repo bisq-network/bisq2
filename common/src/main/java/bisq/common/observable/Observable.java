@@ -54,9 +54,9 @@ public class Observable<S> implements ReadOnlyObservable<S> {
         observers.remove(observer);
     }
 
-    public void set(S value) {
+    public boolean set(S value) {
         if ((this.value == null && value == null) || (this.value != null && this.value.equals(value))) {
-            return;
+            return false;
         }
         this.value = value;
         observers.forEach(observer -> {
@@ -66,6 +66,7 @@ public class Observable<S> implements ReadOnlyObservable<S> {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }
         });
+        return true;
     }
 
     public S get() {

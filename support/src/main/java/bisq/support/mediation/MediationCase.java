@@ -5,7 +5,6 @@ import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Getter
@@ -54,8 +53,11 @@ public class MediationCase implements PersistableProto {
                 proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
     }
 
-    public void setClosed(boolean closed) {
-        closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
-        isClosed.set(closed);
+    public boolean setClosed(boolean closed) {
+        boolean changed = isClosed.set(closed);
+        if (changed) {
+            closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
+        }
+        return changed;
     }
 }
