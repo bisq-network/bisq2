@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
 @Getter
@@ -37,7 +37,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public MuSigOpenTradeMessageReaction(String id,
                                          UserProfile senderUserProfile,
