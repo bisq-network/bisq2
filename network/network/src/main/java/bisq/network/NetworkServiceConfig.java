@@ -34,6 +34,7 @@ import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
+@Slf4j
 @Getter
 public final class NetworkServiceConfig {
     public static NetworkServiceConfig from(Path baseDir, Config config) {
@@ -133,22 +135,27 @@ public final class NetworkServiceConfig {
     }
 
     private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
-        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
-        Path dataDir;
-        return switch (transportType) {
-            case TOR -> {
-                dataDir = baseDir.resolve("tor");
-                yield TorTransportConfig.from(dataDir, transportConfig);
-            }
-            case I2P -> {
-                dataDir = baseDir.resolve("i2p");
-                yield I2PTransportService.Config.from(dataDir, transportConfig);
-            }
-            case CLEAR -> {
-                dataDir = baseDir;
-                yield ClearNetTransportService.Config.from(dataDir, transportConfig);
-            }
-        };
+        try {
+            Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase(Locale.ROOT));
+            Path dataDir;
+            return switch (transportType) {
+                case TOR -> {
+                    dataDir = baseDir.resolve("tor");
+                    yield TorTransportConfig.from(dataDir, transportConfig);
+                }
+                case I2P -> {
+                    dataDir = baseDir.resolve("i2p");
+                    yield I2PTransportService.Config.from(dataDir, transportConfig);
+                }
+                case CLEAR -> {
+                    dataDir = baseDir;
+                    yield ClearNetTransportService.Config.from(dataDir, transportConfig);
+                }
+            };
+        } catch (Exception e) {
+            log.error("createTransportConfig failed", e);
+            throw e;
+        }
     }
 
     private static Set<Address> getSeedAddresses(TransportType transportType, Config config) {
