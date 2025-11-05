@@ -105,23 +105,22 @@ public class LanguageRepository {
             "ko", // Korean
             "vi", // Vietnamese
             "id", // Indonesian
-            "nl" // Dutch
+            "nl", // Dutch
+            "el", // Greek
+            "hu", // Hungarian
+            "ro", // Romanian
+            "no", // Norwegian
+            "fi", // Finnish
+            "bg" // Bulgarian
             /*
             // not translated yet
             "fa", // Persian
-            "el", // Greek
             "sr", // Serbian
-            "hu", // Hungarian
-            "ro", // Romanian
             "he", // Hebrew
-            "no", // Norwegian
             "be", // Belarusian
-            "fi", // Finnish
-            "bg", // Bulgarian
             "lt", // Lithuanian
             "lv", // Latvian
             "hr", // Croatian
-            "uk", // Ukrainian
             "sk", // Slovak
             "sl", // Slovenian
             "ga", // Irish
