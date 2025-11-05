@@ -38,11 +38,12 @@ public class FiatPaymentRailUtil {
     public static List<FiatPaymentRail> getPaymentRails(String currencyCode) {
         return getPaymentRails().stream()
                 .filter(fiatPaymentRail -> {
-                    if (currencyCode.equals("EUR") &&
-                            (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK)) {
-                        // For EUR, we don't add NATIONAL_BANK as SEPA is the common payment rail for EUR
-                        // SWIFT is added to support non-EUR countries offering EUR accounts like Switzerland
-                        return false;
+                    if (currencyCode.equals("EUR")) {
+                        if (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK || fiatPaymentRail == FiatPaymentRail.SAME_BANK) {
+                            // For EUR, we don't add NATIONAL_BANK/SAME_BANK as SEPA is the common payment rail for EUR
+                            // SWIFT is added to support non-EUR countries offering EUR accounts like Switzerland
+                            return false;
+                        }
                     }
                     // We add NATIONAL_BANK to all others
                     if (fiatPaymentRail == FiatPaymentRail.NATIONAL_BANK) {
