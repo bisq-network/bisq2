@@ -267,7 +267,7 @@ public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPa
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveCustomBitcoinMethod(bitcoinPaymentMethod));
                             },
                             () -> {
-                                // Lookup for an image with the id of the enum name (REVOLUT)
+                                // Lookup for an image with the id of the enum name (MAIN_CHAIN)
                                 ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getPaymentRailName());
                                 ColorAdjust colorAdjust = new ColorAdjust();
                                 colorAdjust.setBrightness(-0.2);
