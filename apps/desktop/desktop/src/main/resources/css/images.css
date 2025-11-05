@@ -648,15 +648,45 @@
 
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
-/* TODO  create icons*/
 #DOMESTIC_WIRE_TRANSFER {
-    -fx-image: url("/images/payment/undefined.png");
+    -fx-image: url("/images/payment/domestic-wire-transfer.png");
 }
 
 #SAME_BANK {
-    -fx-image: url("/images/payment/undefined.png");
+    -fx-image: url("/images/payment/same-bank.png");
 }
 
+#WISE_USD {
+    -fx-image: url("/images/payment/wise-us.png");
+}
+
+#PIN_4 {
+    -fx-image: url("/images/payment/pin-4.png");
+}
+
+#SWISH {
+    -fx-image: url("/images/payment/swish.png");
+}
+
+#PROMPT_PAY {
+    -fx-image: url("/images/payment/prompt-pay.png");
+}
+
+#UPHOLD {
+    -fx-image: url("/images/payment/uphold.png");
+}
+
+#MONEY_BEAM {
+    -fx-image: url("/images/payment/money-beam.png");
+}
+
+#MONEY_GRAM {
+    -fx-image: url("/images/payment/money-gram.png");
+}
+
+#HAL_CASH {
+    -fx-image: url("/images/payment/hal-cash.png");
+}
 
 #SEPA {
     -fx-image: url("/images/payment/sepa.png");
