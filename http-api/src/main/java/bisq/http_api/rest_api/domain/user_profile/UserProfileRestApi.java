@@ -21,6 +21,7 @@ import bisq.dto.DtoMappings;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.support.moderator.ModerationRequestService;
+import bisq.user.RepublishUserProfileService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/user-profiles")
@@ -48,11 +48,14 @@ import java.util.stream.Collectors;
 public class UserProfileRestApi extends RestApiBase {
     private final UserProfileService userProfileService;
     private final ModerationRequestService moderationRequestService;
+    private final RepublishUserProfileService republishUserProfileService;
 
     public UserProfileRestApi(UserProfileService userProfileService,
-                              ModerationRequestService moderationRequestService) {
+                              ModerationRequestService moderationRequestService,
+                              RepublishUserProfileService republishUserProfileService) {
         this.userProfileService = userProfileService;
         this.moderationRequestService = moderationRequestService;
+        this.republishUserProfileService = republishUserProfileService;
     }
 
     @POST
@@ -205,4 +208,23 @@ public class UserProfileRestApi extends RestApiBase {
         }
     }
 
-} 
+    @POST
+    @Path("/activity")
+    @Operation(
+            summary = "Trigger User Activity Detection",
+            description = "Triggers user activity detection which will republish or refresh the user profile if the minimum pause time has elapsed",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "User activity detection triggered successfully"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response triggerUserActivityDetection() {
+        try {
+            republishUserProfileService.userActivityDetected();
+            return Response.noContent().build();
+        } catch (Exception e) {
+            log.error("Error triggering user activity detection", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+}
