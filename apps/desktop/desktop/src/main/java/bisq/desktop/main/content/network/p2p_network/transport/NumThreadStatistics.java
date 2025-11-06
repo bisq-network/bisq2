@@ -36,6 +36,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -167,6 +168,7 @@ public class NumThreadStatistics {
 
             lineChart = new LineChart<>(xAxis, yAxis);
             lineChart.setAnimated(false);
+            lineChart.setLegendVisible(true);
             lineChart.setCreateSymbols(false);
             lineChart.getStyleClass().add("network-details-view");
             lineChart.setPadding(new Insets(10, 20, 10, 10));
@@ -177,6 +179,7 @@ public class NumThreadStatistics {
             numThreadsInfo.setAlignment(Pos.TOP_LEFT);
             numThreadsInfo.setMaxWidth(Double.MAX_VALUE);
 
+            VBox.setVgrow(lineChart, Priority.ALWAYS);
             root.getChildren().addAll(numThreadStatisticsHeadline, lineChart, numThreadsInfo);
         }
 
@@ -215,6 +218,11 @@ public class NumThreadStatistics {
             });
 
             lineChart.getData().setAll(allSeries);
+
+            // Ensure that the chart area keeps same height and the lineChart container grows with the number of
+            // legend rows. Without that the legends get sometimes hidden. The legend container is not accessible in
+            // lineChart.
+            lineChart.setPrefHeight(33 * Math.ceil(allSeries.size() / 4d) + 250);
         }
     }
 }
