@@ -62,7 +62,7 @@ public class MaxSizeAwareDeque extends LinkedBlockingDeque<Runnable> {
     }
 
     protected boolean shouldInsert() {
-        if (executor == null) {
+        if (executor == null || executor.isShutdown() || executor.isTerminated() || executor.isTerminating()) {
             return false;
         }
         if (super.remainingCapacity() == 0) {
