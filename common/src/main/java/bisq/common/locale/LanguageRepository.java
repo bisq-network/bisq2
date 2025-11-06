@@ -158,6 +158,6 @@ public class LanguageRepository {
     public static final List<String> RTL_LANGUAGES_CODES = List.of(
             "fa", // Persian
             "ar", // Arabic
-            "iw" // Hebrew
+            "he" // Hebrew
     );
 }

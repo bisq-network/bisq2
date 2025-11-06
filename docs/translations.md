@@ -64,7 +64,7 @@ tx pull -t --force -l de,es,fr
 **Important**:
 
 - Run this command from the **project root** directory
-- The `-t` flag pulls the source language (English) as a template
+- The `-t` flag pulls translation files; when translations don't exist yet, Transifex returns the source (English) as a fallback
 - The `--force` flag ensures all files are created even if they don't exist locally yet
 - This eliminates the need to manually create empty files for each locale
 
@@ -132,7 +132,7 @@ tx pull -t --force -l fr
 **Important**:
 
 - Run this command from the **project root** directory, not from the i18n module
-- The `-t` flag pulls the source language (English) as a template, creating files with the complete structure
+- The `-t` flag pulls translation files; when translations don't exist yet, Transifex returns the source (English) as a fallback, creating files with the complete structure
 - The `--force` flag ensures all files are created even if they don't exist locally yet
 - This eliminates the need to manually create empty files for each locale
 
