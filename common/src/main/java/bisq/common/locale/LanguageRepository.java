@@ -120,21 +120,17 @@ public class LanguageRepository {
             "lv", // Latvian
             "lt", // Lithuanian
             "is", // Icelandic
-            "ga" // Irish
-            /*
-            // not translated yet
-            "fa", // Persian
+            "ga", // Irish
             "sr", // Serbian
-            "he", // Hebrew
             "be", // Belarusian
             "sq", // Albanian
             "ca", // Catalan
             "mk", // Macedonian
-            "kk", // Kazakh (Kazakhstan and parts of China (Xinjiang), Mongolia, Uzbekistan, Russia, and Kyrgyzstan)
-            "km", // Khmer (Cambodia, Thailand and Vietnam)
-            "sw", // Swahili (Tanzania, Kenya, Uganda, Democratic Republic of the Congo, Mozambique, and parts of Rwanda, Burundi, and Comoros)
-            "ms" // Malay (Malaysia , Brunei, Singapore, and Indonesia)
-
+            "kk", // Kazakh
+            "km", // Khmer
+            "sw", // Swahili
+            "ms" // Malay
+            /*
             Missing languages:
             | Code | Language        | Countries / Regions                                                                    | Estimated Speakers                                                                                     | Direction |
             | ---- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
@@ -150,6 +146,7 @@ public class LanguageRepository {
             | ar   | Arabic          | 20+ countries in Middle East & North Africa (e.g., Egypt, Saudi Arabia, Iraq, Algeria) | ~310 million native + many L2.                                                                         | RTL       |
             | fa   | Persian (Farsi) | Iran (official), Afghanistan (Dari), Tajikistan (Tajik)                                | ~70-110 million total speakers.                                                                        | RTL       |
             | ur   | Urdu            | Pakistan (official national), India (recognized), diaspora worldwide                   | ~100-160 million speakers (native + L2)                                                                | RTL       |
+
             */
     );
 

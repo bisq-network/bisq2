@@ -48,18 +48,25 @@ tx push --source
 tx push -s
 ```
 
-### Step 4: Create Initial Local Files for Each Language
+### Step 4: Pull Translation Files for the New Resource
 
-The `tx pull` command **will not** create local translation files (e.g., `new_feature_de.properties`) if no translations for them exist on Transifex yet. You must create these empty files manually so they can be tracked by Git and populated later.
-
-Navigate to the resources directory and run the following command, replacing `new_feature` with the base name of your new file.
+After pushing the source file to Transifex, pull all translation files for each supported language:
 
 ```bash
-# In the i18n/src/main/resources/ directory, run this command:
-for lang in cs de es it pt_BR pcm ru af_ZA; do
-  touch "new_feature_${lang}.properties"
-done
+# From project root directory, pull all locales for the new resource
+# This creates files with English source content as placeholders
+tx pull -t --force
+
+# Or pull for specific languages only (comma-separated):
+tx pull -t --force -l de,es,fr
 ```
+
+**Important**:
+
+- Run this command from the **project root** directory
+- The `-t` flag pulls the source language (English) as a template
+- The `--force` flag ensures all files are created even if they don't exist locally yet
+- This eliminates the need to manually create empty files for each locale
 
 ### Step 5: Commit All Changes
 
@@ -107,16 +114,14 @@ public static final List<String> LANGUAGE_TAGS = List.of(
 - Language with region: `pt-BR`, `af-ZA`, `zh-Hans`
 - Use hyphens (`-`), not underscores for region variants
 
-### Step 3: Pull English Source Structure for New Translation Files
+### Step 3: Pull Translation Files for New Locale
 
-After adding the language to Transifex and updating the configuration, pull the English source structure to create properly formatted translation files:
+After adding the language to Transifex and updating `LanguageRepository.java`, pull all translation files for the new
+locale from the project root:
 
 ```bash
-# Navigate to i18n module
-cd i18n
-
-# Pull translation files based on sources (-t flag) for the new language to get English structure
-tx pull -t -l fr
+# From project root directory, pull all translation files for the new language
+tx pull -t --force -l fr
 
 # This creates all translation files with:
 # - Complete file structure (comments, section headers, empty lines)
@@ -124,7 +129,12 @@ tx pull -t -l fr
 # - Proper formatting matching the source files
 ```
 
-**Important**: The `-t` flag pulls the source language (English) as a template, creating files with the complete structure. This ensures translation files have proper formatting from the start.
+**Important**:
+
+- Run this command from the **project root** directory, not from the i18n module
+- The `-t` flag pulls the source language (English) as a template, creating files with the complete structure
+- The `--force` flag ensures all files are created even if they don't exist locally yet
+- This eliminates the need to manually create empty files for each locale
 
 **Note**: File naming uses underscores (`_`) to separate the base name from the language code, even though the language code in Java uses hyphens. For example:
 - Language code in Java: `pt-BR`
