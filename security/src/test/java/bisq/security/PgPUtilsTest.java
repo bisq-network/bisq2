@@ -17,7 +17,8 @@
 
 package bisq.security;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -47,7 +48,7 @@ public class PgPUtilsTest {
 
     @AfterEach
     void tearDown() throws IOException {
-        FileUtils.deleteFileOrDirectory(Path.of("temp"));
+        FileMutatorUtils.deleteFileOrDirectory(Path.of("temp"));
     }
 
     @Test
@@ -93,9 +94,9 @@ public class PgPUtilsTest {
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
         Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = Files.newOutputStream(filePath)) {
-                FileUtils.copy(resource, out);
+                FileMutatorUtils.copy(resource, out);
             }
             return PgPUtils.readPgpPublicKeyRing(filePath);
         } finally {
@@ -106,9 +107,9 @@ public class PgPUtilsTest {
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
         Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = Files.newOutputStream(filePath)) {
-                FileUtils.copy(resource, out);
+                FileMutatorUtils.copy(resource, out);
             }
             return PgPUtils.readPgpSignature(filePath);
         } finally {
@@ -119,9 +120,9 @@ public class PgPUtilsTest {
     private Path getDataAsFilePath(String fileName) throws IOException {
         Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName)) {
                 OutputStream out = Files.newOutputStream(filePath);
-                FileUtils.copy(resource, out);
+                FileMutatorUtils.copy(resource, out);
             }
             return filePath;
         } finally {

@@ -17,7 +17,7 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.security.PgPUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,7 +75,7 @@ public class DownloadedFilesVerification {
                                                          Path dataFilePath) throws IOException {
         String signingKeyFileName = FROM_RESOURCES_PREFIX + signingKeyId + ASC_EXTENSION;
         Path signingKeyFilePath = dirPath.resolve(signingKeyFileName); // E.g. from_resources_E222AA02.asc
-        FileUtils.resourceToFile("keys/" + signingKeyId + ASC_EXTENSION, signingKeyFilePath); // We copy key from resources to download directory
+        FileMutatorUtils.resourceToFile("keys/" + signingKeyId + ASC_EXTENSION, signingKeyFilePath); // We copy key from resources to download directory
         checkArgument(PgPUtils.isSignatureValid(signingKeyFilePath, sigFilePath, dataFilePath), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
     }
 }

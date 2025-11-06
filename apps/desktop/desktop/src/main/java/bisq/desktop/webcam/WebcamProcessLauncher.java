@@ -19,7 +19,8 @@ package bisq.desktop.webcam;
 
 import bisq.common.application.DevMode;
 import bisq.common.archive.ZipFileExtractor;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
@@ -48,7 +49,7 @@ public class WebcamProcessLauncher {
     public CompletableFuture<Process> start(int port) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String version = FileUtils.readStringFromResource("webcam-app/version.txt");
+                String version = FileReaderUtils.readStringFromResource("webcam-app/version.txt");
                 Path jarFilePath = webcamDirPath.resolve("webcam-app-" + version + "-all.jar");
 
                 if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
@@ -60,7 +61,7 @@ public class WebcamProcessLauncher {
                 }
 
                 String portParam = "--port=" + port;
-                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
+                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileReaderUtils.FILE_SEP + "webcam-app";
                 String languageTagParam = "--languageTag=" + LanguageRepository.getDefaultLanguageTag();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
@@ -69,7 +70,7 @@ public class WebcamProcessLauncher {
                     String iconPath = webcamDirPath + "/webcam-app-icon.png";
                     Path bisqIconPath = Path.of(iconPath);
                     if (!Files.exists(bisqIconPath)) {
-                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
+                        FileMutatorUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
                     processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);

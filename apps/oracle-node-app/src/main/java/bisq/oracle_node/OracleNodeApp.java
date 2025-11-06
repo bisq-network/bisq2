@@ -18,7 +18,7 @@
 package bisq.oracle_node;
 
 import bisq.application.Executable;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.AddressByTransportTypeMap;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class OracleNodeApp extends Executable<OracleNodeApplicationService> {
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         Path path = applicationService.getConfig().getAppDataDirPath().resolve("default_node_address.json");
         try {
-            FileUtils.writeToPath(json, path);
+            FileMutatorUtils.writeToPath(json, path);
         } catch (IOException e) {
             log.error("Error at write json", e);
         }

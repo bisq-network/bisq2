@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,7 +93,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     private void tryToBackupCorruptedStoreFile() {
         try {
-            FileUtils.backupCorruptedFile(
+            FileMutatorUtils.backupCorruptedFile(
                     parentDirectoryPath,
                     storeFilePath,
                     storeFilePath.getFileName().toString(),

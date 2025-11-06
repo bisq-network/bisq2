@@ -19,7 +19,7 @@ package bisq.webcam;
 
 
 import bisq.common.data.WebcamControlSignals;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
@@ -85,7 +85,7 @@ public class WebcamApp extends Application {
                 port = Integer.parseInt(portParam);
             }
 
-            String logFile = PlatformUtils.getUserDataDirPath().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
+            String logFile = PlatformUtils.getUserDataDirPath().resolve("Bisq-webcam-app").toAbsolutePath() + FileReaderUtils.FILE_SEP + "webcam-app";
             String logFileParam = parameters.getNamed().get("logFile");
             if (logFileParam != null) {
                 logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);

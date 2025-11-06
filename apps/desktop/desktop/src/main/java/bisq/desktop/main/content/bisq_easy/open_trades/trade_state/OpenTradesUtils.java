@@ -3,7 +3,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.encoding.Csv;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -61,7 +61,7 @@ public class OpenTradesUtils {
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToPath(csv, file);
+                            FileMutatorUtils.writeToPath(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

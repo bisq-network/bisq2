@@ -19,7 +19,8 @@ package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.platform.Platform;
@@ -1018,10 +1019,10 @@ public abstract class Overlay<T extends Overlay<T>> {
                     Path debugLogForZipFilePath = Path.of(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
                     try {
                         Files.deleteIfExists(debugLogForZipFilePath);
-                        FileUtils.copyFile(debugLogPath, debugLogForZipFilePath);
-                        String logContent = FileUtils.readUTF8String(debugLogForZipFilePath);
+                        FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
+                        String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
                         logContent = StringUtils.maskHomeDirectory(logContent);
-                        FileUtils.writeToPath(logContent, debugLogForZipFilePath);
+                        FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

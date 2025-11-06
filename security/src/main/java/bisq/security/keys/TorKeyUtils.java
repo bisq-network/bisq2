@@ -1,7 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 
@@ -23,8 +23,8 @@ public class TorKeyUtils {
         try {
             Files.createDirectories(targetPath);
 
-            FileUtils.writeToPath(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
-            FileUtils.writeToPath(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));
+            FileMutatorUtils.writeToPath(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
+            FileMutatorUtils.writeToPath(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));
 
             log.info("We persisted the tor private key in hex encoding for onionAddress {} for tag {} to {}.",
                     torKeyPair.getOnionAddress(), tag, targetPath);

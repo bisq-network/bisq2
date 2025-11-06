@@ -17,7 +17,7 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Platform;
 import bisq.common.platform.PlatformUtils;
 
@@ -60,7 +60,7 @@ public class UpdaterUtils {
 
     public static Optional<String> readVersionFromVersionFile(Path userDataDirPath) {
         Path versionFilePath = userDataDirPath.resolve(VERSION_FILE_NAME);
-        return FileUtils.readFromFileIfPresent(versionFilePath);
+        return FileReaderUtils.readFromFileIfPresent(versionFilePath);
     }
 
     public static boolean isDownloadedFile(String fileName) {

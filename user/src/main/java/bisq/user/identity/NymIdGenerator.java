@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.util.ByteArrayUtils;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +84,7 @@ public class NymIdGenerator {
     @VisibleForTesting
     static List<String> read(String resource) {
         List<String> list = new ArrayList<>();
-        try (Scanner scanner = new Scanner(FileUtils.getResourceAsStream(resource))) {
+        try (Scanner scanner = new Scanner(FileReaderUtils.getResourceAsStream(resource))) {
             while (scanner.hasNextLine()) {
                 list.add(scanner.nextLine());
             }

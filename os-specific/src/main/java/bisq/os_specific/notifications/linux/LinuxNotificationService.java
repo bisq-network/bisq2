@@ -17,7 +17,7 @@
 
 package bisq.os_specific.notifications.linux;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.settings.CookieKey;
@@ -68,7 +68,7 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
                     Path destinationPath = baseDirPath.resolve(fileName);
                     if (!Files.exists(destinationPath)) {
                         try {
-                            FileUtils.resourceToFile(fileName, destinationPath);
+                            FileMutatorUtils.resourceToFile(fileName, destinationPath);
                             iconPath = destinationPath.toAbsolutePath().toString();
                         } catch (IOException e) {
                             log.error("Copying notificationIcon from resources failed", e);

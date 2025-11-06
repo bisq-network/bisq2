@@ -17,7 +17,7 @@
 
 package bisq.network.i2p.router.utils;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -29,8 +29,8 @@ public class RouterCertificateUtil {
         Path certDirPath = createDirectory(i2pDirPath, "certificates");
         Path seedDirPath = createDirectory(certDirPath, "reseed");
         Path sslDirPath = createDirectory(certDirPath, "ssl");
-        FileUtils.copyResourceDirectory("certificates/reseed/", seedDirPath);
-        FileUtils.copyResourceDirectory("certificates/ssl/", sslDirPath);
+        FileMutatorUtils.copyResourceDirectory("certificates/reseed/", seedDirPath);
+        FileMutatorUtils.copyResourceDirectory("certificates/ssl/", sslDirPath);
     }
 
     private static Path createDirectory(Path parentPath, String child) throws IOException {

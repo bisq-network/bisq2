@@ -19,7 +19,7 @@ package bisq.desktop.splash;
 
 import bisq.application.State;
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -107,7 +107,7 @@ public class SplashController implements Controller {
         var conf = serviceProvider.getConfig();
         Path torDirPath = conf.getAppDataDirPath().resolve("tor");
         if (Files.exists(torDirPath)) {
-            FileUtils.deleteOnExit(torDirPath);
+            FileMutatorUtils.deleteOnExit(torDirPath);
             serviceProvider.getShutDownHandler().shutdown();
         }
     }
