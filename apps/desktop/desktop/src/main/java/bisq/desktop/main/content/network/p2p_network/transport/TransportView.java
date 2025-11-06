@@ -23,6 +23,7 @@ import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class TransportView extends View<VBox, TransportModel, TransportController> {
@@ -42,6 +43,7 @@ public class TransportView extends View<VBox, TransportModel, TransportControlle
         myAddress.setEditable(false);
         myAddress.showCopyIcon();
 
+        VBox.setVgrow(numThreadStatistics, Priority.ALWAYS);
         root.getChildren().addAll(headline,
                 SettingsViewUtils.getLineAfterHeadline(getRoot().getSpacing()),
                 myAddress,
