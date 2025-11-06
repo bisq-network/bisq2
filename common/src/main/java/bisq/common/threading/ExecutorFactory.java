@@ -86,24 +86,47 @@ public class ExecutorFactory {
     /* --------------------------------------------------------------------- */
 
     /**
-     * Creates a cached thread pool similar to {@link Executors#newCachedThreadPool()}, but allows customization
-     * of {@code corePoolSize}, {@code maxPoolSize}, and {@code keepAliveInSeconds}, which the standard
-     * factory method does not support.
-     * <p>
-     * This thread pool uses a {@link SynchronousQueue}, meaning it does not queue tasks but instead hands them
-     * directly off to available threads. If no threads are available and the pool has not yet reached
-     * {@code maxPoolSize}, a new thread is created. If the pool has reached {@code maxPoolSize}, the task is
-     * rejected and handled by the {@link ThreadPoolExecutor.AbortPolicy}.
-     * <p>
-     * Unlike {@link Executors#newCachedThreadPool()}, which sets {@code corePoolSize = 0} and
-     * {@code maximumPoolSize = Integer.MAX_VALUE}, this method provides control over the thread pool bounds to
-     * better manage system resources and apply safety limits.
+     * Creates a cached-style {@link ExecutorService} backed by a {@link ThreadPoolExecutor}
+     * that dynamically creates new threads as needed and reuses idle threads when possible.
+     * This configuration uses a {@link SynchronousQueue}, meaning tasks are never queued:
+     * each submitted task must be immediately handed off to an available thread.
      *
-     * @param name               the thread name prefix
-     * @param corePoolSize       the number of threads to keep alive even when idle
-     * @param maxPoolSize        the maximum number of threads to allow in the pool
-     * @param keepAliveInSeconds the time to keep excess idle threads alive
-     * @return a configured {@link ExecutorService} instance
+     * <p><b>Behavior summary when submitting tasks:</b></p>
+     * <ol>
+     *   <li>If fewer than {@code corePoolSize} threads are running, a new thread is created
+     *       immediately to execute the task.</li>
+     *   <li>If {@code corePoolSize} threads are already running but a previously created thread
+     *       has become idle (within {@code keepAliveInSeconds}), that thread will be reused.</li>
+     *   <li>If all threads are busy and the current pool size is less than {@code maxPoolSize},
+     *       a new thread is created to handle the incoming task.</li>
+     *   <li>If all threads are busy and the pool has already reached {@code maxPoolSize},
+     *       the task is <b>rejected</b> and passed to the configured
+     *       {@link RejectedExecutionHandler} (by default {@link AbortPolicyWithLogging}).</li>
+     * </ol>
+     *
+     * <p><b>Role of the {@link SynchronousQueue}:</b>
+     * A {@code SynchronousQueue} has <em>no capacity</em> — it acts as a direct handoff between
+     * producer and worker thread. Tasks are never stored or buffered. Consequently:</p>
+     * <ul>
+     *   <li>The pool size can grow rapidly under heavy load, up to {@code maxPoolSize}.</li>
+     *   <li>There is no task queuing delay, but rejection occurs as soon as all threads are busy
+     *       and the pool is full.</li>
+     *   <li>This makes it suitable for highly concurrent workloads with short-lived tasks.</li>
+     * </ul>
+     *
+     * <p>Threads above the core size that remain idle for longer than
+     * {@code keepAliveInSeconds} are terminated, allowing the pool to shrink back toward the
+     * core size when demand decreases.</p>
+     *
+     * @param name              the name prefix for threads created by this executor
+     * @param corePoolSize      the minimum number of threads to keep in the pool
+     * @param maxPoolSize       the maximum number of threads allowed in the pool
+     * @param keepAliveInSeconds the time for which idle non-core threads are kept alive
+     * @return a new {@link ExecutorService} that behaves like a bounded cached thread pool
+     *
+     * @see ThreadPoolExecutor
+     * @see SynchronousQueue
+     * @see RejectedExecutionHandler
      */
     public static ExecutorService newCachedThreadPool(String name,
                                                       int corePoolSize,
@@ -132,31 +155,45 @@ public class ExecutorFactory {
     /* --------------------------------------------------------------------- */
 
     /**
-     * Creates a thread pool that scales between a minimum and maximum number of threads, with a bounded task queue.
-     * <p>
-     * This pool starts with {@code corePoolSize} threads and can grow up to {@code maxPoolSize}
-     * if the task load exceeds the capacity of the core threads. Idle threads beyond the core size
-     * will be terminated after {@code keepAliveInSeconds}.
-     * <p>
-     * Tasks are submitted to a bounded {@link LinkedBlockingQueue}, and rejected tasks are handled by the provided
-     * {@link RejectedExecutionHandler}.
+     * Creates a bounded, cached-style {@link ExecutorService} backed by a {@link ThreadPoolExecutor}
+     * that maintains a configurable core and maximum pool size, an optional bounded queue,
+     * and a custom thread factory and rejection policy.
      *
-     * <p>This configuration is useful when you want:</p>
-     * <ul>
-     *   <li>Moderate parallelism with resource control</li>
-     *   <li>Thread reuse for performance</li>
-     *   <li>Backpressure through bounded queuing and potential CallerRunsPolicy</li>
-     * </ul>
+     * <p><b>Behavior summary when submitting tasks:</b></p>
+     * <ol>
+     *   <li>If fewer than {@code corePoolSize} threads are running, a new thread is created immediately
+     *       to execute the task (bypassing the queue).</li>
+     *   <li>Once the number of running threads reaches {@code corePoolSize}, new tasks are
+     *       <b>enqueued</b> in the {@link LinkedBlockingQueue} (up to {@code queueCapacity}).</li>
+     *   <li>If the queue is full and fewer than {@code maxPoolSize} threads are active, a new
+     *       thread is created to handle the task.</li>
+     *   <li>If both the queue is full and the pool has already reached {@code maxPoolSize},
+     *       the task is <b>rejected</b> and passed to the provided
+     *       {@link RejectedExecutionHandler}.</li>
+     * </ol>
      *
-     * @param name               the base name for thread naming (used by the thread factory)
-     * @param corePoolSize       the number of threads to keep in the pool, even if they are idle, unless allowCoreThreadTimeOut is set
-     * @param maxPoolSize        the maximum number of threads to allow in the pool
-     * @param keepAliveInSeconds the time to keep extra threads alive when idle
-     * @param queueCapacity      the maximum number of tasks to queue before applying the {@code handler}
-     * @param handler            the handler to apply when the pool is saturated
-     * @return the configured {@link ExecutorService}
+     * <p><b>Important:</b> The {@link LinkedBlockingQueue} used here is <em>bounded</em> by
+     * {@code queueCapacity}. If an unbounded queue were used instead (e.g. new
+     * {@code LinkedBlockingQueue<>()}), the executor would never create more than
+     * {@code corePoolSize} threads, because the queue would never appear "full". Tasks would
+     * simply accumulate in the queue, potentially leading to unbounded memory usage.</p>
+     *
+     * <p>Threads above the core size that remain idle for longer than
+     * {@code keepAliveInSeconds} are terminated, allowing the pool to shrink back toward the
+     * core size under low load.</p>
+     *
+     * @param name              the name prefix used for threads created by this executor
+     * @param corePoolSize      the minimum number of threads to keep in the pool
+     * @param maxPoolSize       the maximum number of threads to allow in the pool
+     * @param keepAliveInSeconds time to keep extra threads alive when idle
+     * @param queueCapacity     the maximum number of tasks that can be queued before new threads are created
+     * @param handler           the handler invoked when execution is blocked and the queue is full
+     * @return a new {@link ExecutorService} with bounded caching behavior
+     *
+     * @see ThreadPoolExecutor
+     * @see LinkedBlockingQueue
+     * @see RejectedExecutionHandler
      */
-
     public static ExecutorService boundedCachedPool(String name,
                                                     int corePoolSize,
                                                     int maxPoolSize,
