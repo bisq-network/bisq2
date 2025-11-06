@@ -40,14 +40,14 @@ public class TransportController implements Controller {
 
         Traffic traffic = new Traffic(serviceProvider, transportType);
         SystemLoad systemLoad = new SystemLoad(serviceProvider, transportType);
-        NumThreadStatistics numThreadStatistics= new NumThreadStatistics(serviceProvider, transportType);
+       // NumThreadStatistics numThreadStatistics= new NumThreadStatistics(serviceProvider, transportType);
         ConnectionsAndNodes connectionsAndNodes = new ConnectionsAndNodes(serviceProvider, transportType);
         model = new TransportModel(transportType, defaultNode);
         view = new TransportView(model, this,
                 traffic.getViewRoot(),
                 systemLoad.getViewRoot(),
-                connectionsAndNodes.getViewRoot(),
-                numThreadStatistics.getViewRoot());
+                connectionsAndNodes.getViewRoot()/*,
+                numThreadStatistics.getViewRoot()*/);
     }
 
     @Override
