@@ -105,6 +105,9 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
         }
 
         findContactListEntry(contactListEntry).ifPresent(cle -> {
+            if (cle.getTag().isPresent() && cle.getTag().get().equals(newTag)) {
+                return;
+            }
             cle.setTag(newTag);
             persist();
         });
@@ -116,6 +119,9 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
         }
 
         findContactListEntry(contactListEntry).ifPresent(cle -> {
+            if (cle.getNotes().isPresent() && cle.getNotes().get().equals(newNotes)) {
+                return;
+            }
             cle.setNotes(newNotes);
             persist();
         });
@@ -129,6 +135,9 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
         }
 
         findContactListEntry(contactListEntry).ifPresent(cle -> {
+            if (cle.getTrustScore().isPresent() && cle.getTrustScore().get().equals(newTrustScore)) {
+                return;
+            }
             cle.setTrustScore(newTrustScore);
             persist();
         });
