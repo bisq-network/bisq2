@@ -405,7 +405,7 @@ public class TorService implements Service {
     private void makeTorDir() {
         try {
             Path torDataDirPath = transportConfig.getDataDirPath();
-            Files.createDirectories(torDataDirPath);
+            FileMutatorUtils.createRestrictedDirectories(torDataDirPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

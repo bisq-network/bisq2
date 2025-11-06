@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Objects;
@@ -214,7 +213,7 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
             }
             if (writeKeyStoreSecretUidToFile) {
                 try {
-                    Files.createDirectories(defaultKeyStoragePath);
+                    FileMutatorUtils.createRestrictedDirectories(defaultKeyStoragePath);
                 } catch (IOException e) {
                     log.error("Could not create {}", defaultKeyStoragePath);
                     throw new RuntimeException(e);

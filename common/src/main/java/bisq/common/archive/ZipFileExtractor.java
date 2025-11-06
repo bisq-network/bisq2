@@ -17,11 +17,11 @@
 
 package bisq.common.archive;
 
+import bisq.common.file.FileMutatorUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -47,7 +47,7 @@ public class ZipFileExtractor implements AutoCloseable {
 
     private void createDirIfNotPresent(Path destDirPath) {
         try {
-            Files.createDirectories(destDirPath);
+            FileMutatorUtils.createRestrictedDirectories(destDirPath);
         } catch (IOException e) {
             throw new ZipFileExtractionFailedException("Couldn't create directory: " + destDirPath, e);
         }
@@ -69,12 +69,12 @@ public class ZipFileExtractor implements AutoCloseable {
                     throw new IOException("Entry is outside of the target directory");
                 }
                 if (zipEntry.isDirectory()) {
-                    Files.createDirectories(targetPath);
+                    FileMutatorUtils.createRestrictedDirectories(targetPath);
                 } else {
                     // Ensure parent directories exist
-                    Files.createDirectories(targetPath.getParent());
+                    FileMutatorUtils.createRestrictedDirectories(targetPath.getParent());
                     // Copy stream content to file
-                    Files.copy(zipInputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    FileMutatorUtils.inputStreamToFile(zipInputStream, targetPath);
                 }
             } while ((zipEntry = zipInputStream.getNextEntry()) != null);
         } catch (IOException e) {

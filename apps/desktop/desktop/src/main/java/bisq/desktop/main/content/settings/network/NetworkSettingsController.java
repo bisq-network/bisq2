@@ -22,6 +22,7 @@ import bisq.application.ShutDownHandler;
 import bisq.application.TypesafeConfigUtils;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.DevMode;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
@@ -41,7 +42,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -206,7 +206,7 @@ public class NetworkSettingsController implements Controller {
 
         Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         try {
-            Files.writeString(customConfigFilePath, rendered);
+            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
         } catch (IOException e) {
             log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             throw new RuntimeException(e);

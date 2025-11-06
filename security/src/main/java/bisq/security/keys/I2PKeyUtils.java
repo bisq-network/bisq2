@@ -27,7 +27,6 @@ import net.i2p.data.PrivateKeyFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Slf4j
@@ -38,7 +37,7 @@ public class I2PKeyUtils {
         Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "destination_b32");
         Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "identity_b64");
         try {
-            Files.createDirectories(i2pPrivateKeyDirPath);
+            FileMutatorUtils.createRestrictedDirectories(i2pPrivateKeyDirPath);
             FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase64(), destination_b64Path);
             FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase32(), destination_b32Path);
             FileMutatorUtils.writeToPath(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);

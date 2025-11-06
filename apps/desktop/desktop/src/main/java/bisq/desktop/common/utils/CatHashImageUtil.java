@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import bisq.common.file.FileMutatorUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -76,7 +77,7 @@ public class CatHashImageUtil {
 
     public static void writeRawImage(Image image, Path filePath) throws IOException {
         byte[] rawData = imageToByteArray(image);
-        Files.write(filePath, rawData);
+        FileMutatorUtils.writeToPath(rawData, filePath);
     }
 
     public static Image byteArrayToImage(byte[] data) {

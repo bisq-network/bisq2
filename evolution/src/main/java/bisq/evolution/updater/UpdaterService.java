@@ -43,7 +43,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -209,7 +208,7 @@ public class UpdaterService implements Service {
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         Path destinationDirPath = isLauncherUpdate ? PlatformUtils.getDownloadOfHomeDirPath() :
                 appDataDirPath.resolve(UPDATES_DIR).resolve(version);
-        Files.createDirectories(destinationDirPath);
+        FileMutatorUtils.createRestrictedDirectories(destinationDirPath);
         downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
         if (executorService == null) {
             executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");

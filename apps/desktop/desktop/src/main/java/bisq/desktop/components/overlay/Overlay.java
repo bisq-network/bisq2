@@ -90,7 +90,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1035,7 +1034,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                         logPaths.forEach(logPath -> {
                             if (Files.isRegularFile(logPath)) {
                                 try {
-                                    Files.copy(logPath, zipFileSystem.getPath(logPath.getFileName().toString()), StandardCopyOption.REPLACE_EXISTING);
+                                    FileMutatorUtils.copyFile(logPath, zipFileSystem.getPath(logPath.getFileName().toString()));
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }

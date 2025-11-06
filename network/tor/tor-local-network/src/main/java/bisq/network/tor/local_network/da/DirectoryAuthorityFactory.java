@@ -17,6 +17,7 @@
 
 package bisq.network.tor.local_network.da;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import lombok.Getter;
@@ -40,7 +41,7 @@ public class DirectoryAuthorityFactory {
         Path keysPath = dataDirPath.resolve("keys");
         if (!Files.exists(keysPath)) {
             try {
-                Files.createDirectories(keysPath);
+                FileMutatorUtils.createRestrictedDirectories(keysPath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.", e);
             }
@@ -53,7 +54,7 @@ public class DirectoryAuthorityFactory {
     private void createDataDirPathIfNotPresent(Path dataDirPath) {
         if(!Files.exists(dataDirPath)) {
             try {
-                Files.createDirectory(dataDirPath);
+                FileMutatorUtils.createRestrictedDirectory(dataDirPath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't create data directory for directory authority.", e);
             }

@@ -21,7 +21,6 @@ import bisq.common.file.FileMutatorUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class RouterCertificateUtil {
@@ -35,7 +34,7 @@ public class RouterCertificateUtil {
 
     private static Path createDirectory(Path parentPath, String child) throws IOException {
         Path dirPath = parentPath.resolve(child);
-        Files.createDirectories(dirPath);
+        FileMutatorUtils.createRestrictedDirectories(dirPath);
         return dirPath;
     }
 }

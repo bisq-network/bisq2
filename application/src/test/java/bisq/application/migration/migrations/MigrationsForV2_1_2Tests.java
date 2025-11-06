@@ -1,5 +1,6 @@
 package bisq.application.migration.migrations;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -60,7 +61,7 @@ public class MigrationsForV2_1_2Tests {
     }
 
     private void createFakeTorPath(Path torPath) throws IOException {
-        Files.createDirectories(torPath);
+        FileMutatorUtils.createRestrictedDirectories(torPath);
 
         List<String> torPathFiles = List.of("lock",
                 "libssl.so.1.1",

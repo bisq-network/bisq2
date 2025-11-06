@@ -18,6 +18,7 @@
 package bisq.user.cathash;
 
 import bisq.common.encoding.Hex;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ByteArrayUtils;
 import bisq.user.profile.UserProfile;
@@ -97,7 +98,7 @@ public abstract class CatHashService<T> {
 
             if (!Files.exists(iconsDirPath)) {
                 try {
-                    Files.createDirectories(iconsDirPath);
+                    FileMutatorUtils.createRestrictedDirectories(iconsDirPath);
                 } catch (IOException e) {
                     log.error(e.toString());
                 }
