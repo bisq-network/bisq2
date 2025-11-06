@@ -17,7 +17,8 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -60,7 +61,7 @@ public class UpdaterIntegrationTest {
             executorService.shutdownNow();
         }
         if (Files.exists(destinationBaseDirPath)) {
-            FileUtils.deleteFileOrDirectory(destinationBaseDirPath);
+            FileMutatorUtils.deleteFileOrDirectory(destinationBaseDirPath);
         }
     }
 
@@ -88,8 +89,8 @@ public class UpdaterIntegrationTest {
                     })
                     .join();
 
-            List<String> filesInSourceDirectory = FileUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
-            List<String> filesInDestinationDirectory = FileUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInSourceDirectory = FileReaderUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInDestinationDirectory = FileReaderUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
             assertEquals(filesInSourceDirectory, filesInDestinationDirectory);
 
             Optional<String> versionFromFile = readVersionFromVersionFile(destinationBaseDirPath);
@@ -125,8 +126,8 @@ public class UpdaterIntegrationTest {
                     })
                     .join();
 
-            List<String> filesInSourceDirectory = FileUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
-            List<String> filesInDestinationDirectory = FileUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInSourceDirectory = FileReaderUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInDestinationDirectory = FileReaderUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
             assertEquals(filesInSourceDirectory, filesInDestinationDirectory);
 
             Optional<String> versionFromFile = readVersionFromVersionFile(destinationBaseDirPath);
@@ -144,7 +145,7 @@ public class UpdaterIntegrationTest {
         return CompletableFuture.supplyAsync(() -> {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
-                    FileUtils.copyFile(
+                    FileMutatorUtils.copyFile(
                             Path.of(localDevTestSrcDir, downloadItem.getSourceFileName()),
                             downloadItem.getDestinationFilePath());
                     downloadItem.getProgress().set(1d);

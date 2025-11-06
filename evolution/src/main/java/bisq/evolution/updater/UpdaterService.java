@@ -25,7 +25,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -282,7 +282,7 @@ public class UpdaterService implements Service {
                 try {
                     log.info("Download {}", downloadItem);
                     URL url = URI.create(downloadItem.getUrlPath()).toURL();
-                    FileUtils.downloadFile(url, downloadItem.getDestinationFilePath(), downloadItem.getProgress());
+                    FileMutatorUtils.downloadFile(url, downloadItem.getDestinationFilePath(), downloadItem.getProgress());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);
@@ -316,7 +316,7 @@ public class UpdaterService implements Service {
     static CompletionStage<Void> writeVersionFile(String version, Path appDataDirPath, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                FileUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));
+                FileMutatorUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));
                 return null;
             } catch (Exception e) {
                 e.printStackTrace();

@@ -17,7 +17,7 @@
 
 package bisq.webcam.view;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import javafx.beans.binding.BooleanBinding;
@@ -94,7 +94,7 @@ public class WebcamView extends StackPane {
 
         String versionNumber = "n/a";
         try {
-            versionNumber = FileUtils.readStringFromResource("webcam-app/version.txt");
+            versionNumber = FileReaderUtils.readStringFromResource("webcam-app/version.txt");
         } catch (IOException e) {
             log.error("Could not read version. Run gradle task `copyWebcamAppVersionToResources`.", e);
         }

@@ -20,7 +20,7 @@ package bisq.bi2p.ui;
 import bisq.bi2p.common.threading.UIClock;
 import bisq.bi2p.common.threading.UIThread;
 import bisq.bi2p.service.I2PRouterService;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Pin;
 import bisq.common.util.MathUtils;
 import bisq.i18n.Res;
@@ -187,7 +187,7 @@ public class Bi2pController {
 
     private String getVersion() {
         try {
-            return FileUtils.readStringFromResource("bi2p/version.txt");
+            return FileReaderUtils.readStringFromResource("bi2p/version.txt");
         } catch (IOException e) {
             log.error("Could not read version. Run gradle task `copyI2pRouterAppVersionToResources`.", e);
             return "n/a";

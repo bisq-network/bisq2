@@ -20,7 +20,8 @@ package bisq.network.tor;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
@@ -144,7 +145,7 @@ public class TorService implements Service {
         Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         Path controlPortFilePath = controlDirPath.resolve("control");
         try {
-            FileUtils.deleteFileAndWait(controlPortFilePath, 5000);
+            FileMutatorUtils.deleteFileAndWait(controlPortFilePath, 5000);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete tor control port file", e);
         }
@@ -154,14 +155,14 @@ public class TorService implements Service {
         embeddedTorProcess.start();
 
         try {
-            FileUtils.waitUntilFileExists(controlPortFilePath, 5000);
+            FileReaderUtils.waitUntilFileExists(controlPortFilePath, 5000);
         } catch (Exception e) {
             throw new RuntimeException("Error while waiting for tor control port file to exist", e);
         }
 
         int controlPort = ControlPortFileParser.parse(controlPortFilePath);
 
-        FileUtils.deleteOnExit(controlPortFilePath);
+        FileMutatorUtils.deleteOnExit(controlPortFilePath);
 
         torController.initialize(controlPort);
         torController.authenticate(hashedControlPassword);
@@ -368,10 +369,10 @@ public class TorService implements Service {
             Path torConfigFilePath = transportConfig.getDataDirPath().resolve(torConfigFileName);
             String torConfig;
             if (!Files.exists(torConfigFilePath)) {
-                torConfig = FileUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileUtils.writeToPath(torConfig, torConfigFilePath);
+                torConfig = FileReaderUtils.readStringFromResource("tor/" + torConfigFileName);
+                FileMutatorUtils.writeToPath(torConfig, torConfigFilePath);
             } else {
-                torConfig = FileUtils.readUTF8String(torConfigFilePath);
+                torConfig = FileReaderUtils.readUTF8String(torConfigFilePath);
             }
             Set<String> lines = torConfig.lines().collect(Collectors.toSet());
             for (String line : lines) {

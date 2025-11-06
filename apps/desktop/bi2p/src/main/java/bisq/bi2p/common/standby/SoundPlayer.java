@@ -17,7 +17,7 @@
 
 package bisq.bi2p.common.standby;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,7 +69,7 @@ class SoundPlayer implements PreventStandbyMode {
             String fileName = "prevent-app-nap-silent-sound.aiff";
             Path soundFilePath = Path.of(baseDirPath, fileName);
             if (!Files.exists(soundFilePath)) {
-                FileUtils.resourceToFile(fileName, soundFilePath);
+                FileMutatorUtils.resourceToFile(fileName, soundFilePath);
             }
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;

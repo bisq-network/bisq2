@@ -17,7 +17,7 @@
 
 package bisq.security.keys;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PSessionException;
 import net.i2p.data.Base64;
@@ -39,9 +39,9 @@ public class I2PKeyUtils {
         Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "identity_b64");
         try {
             Files.createDirectories(i2pPrivateKeyDirPath);
-            FileUtils.writeToPath(i2pKeyPair.getDestinationBase64(), destination_b64Path);
-            FileUtils.writeToPath(i2pKeyPair.getDestinationBase32(), destination_b32Path);
-            FileUtils.writeToPath(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
+            FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase64(), destination_b64Path);
+            FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase32(), destination_b32Path);
+            FileMutatorUtils.writeToPath(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
             log.info("Persisted the I2P private key and destinations into {}", i2pPrivateKeyDirPath);
         } catch (Exception e) {
             log.error("Could not persist I2P destination files", e);

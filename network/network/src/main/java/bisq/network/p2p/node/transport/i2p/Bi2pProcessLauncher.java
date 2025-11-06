@@ -20,7 +20,8 @@ package bisq.network.p2p.node.transport.i2p;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.archive.ZipFileExtractor;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
@@ -71,7 +72,7 @@ public class Bi2pProcessLauncher implements Service {
         executor = ExecutorFactory.newSingleThreadScheduledExecutor("Bi2pProcessLauncher");
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String version = FileUtils.readStringFromResource("bi2p/version.txt").trim();
+                String version = FileReaderUtils.readStringFromResource("bi2p/version.txt").trim();
                 Path jarFilePath = i2pRouterDirPath.resolve("bi2p-" + version + "-all.jar");
 
                 // Extract ZIP if jar missing or dev mode
@@ -103,7 +104,7 @@ public class Bi2pProcessLauncher implements Service {
                 if (OS.isMacOs()) {
                     Path iconPath = i2pRouterDirPath.resolve("bi2p-app_512.png");
                     if (!Files.exists(iconPath)) {
-                        FileUtils.resourceToFile("images/bi2p/bi2p-app_512.png", iconPath);
+                        FileMutatorUtils.resourceToFile("images/bi2p/bi2p-app_512.png", iconPath);
                     }
                     command.add("-Xdock:icon=" + iconPath);
                 }

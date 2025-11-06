@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.support.resources;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.StringUtils;
@@ -119,7 +119,7 @@ public class ResourcesController implements Controller {
                         }
                         try {
                             // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy
-                            FileUtils.copyDirectory(appDataDirPath, destinationPath, Set.of("log"));
+                            FileMutatorUtils.copyDirectory(appDataDirPath, destinationPath, Set.of("log"));
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();

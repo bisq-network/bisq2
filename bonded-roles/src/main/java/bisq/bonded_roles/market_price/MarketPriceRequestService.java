@@ -20,7 +20,7 @@ package bisq.bonded_roles.market_price;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
@@ -208,7 +208,7 @@ public class MarketPriceRequestService {
     Map<Market, MarketPrice> loadStaticDevMarketPrice() {
         String resourceName = "dev_market_price.json";
         try {
-            String json = FileUtils.readStringFromResource(resourceName);
+            String json = FileReaderUtils.readStringFromResource(resourceName);
             Map<Market, MarketPrice> map = parseResponse(json);
             log.warn("We applied developer market price data from resources. " +
                     "This data is outdated and serves only for the case that the clearnet provider is offline.");

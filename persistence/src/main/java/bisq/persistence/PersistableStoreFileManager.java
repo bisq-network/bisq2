@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.persistence.backup.BackupService;
 import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
@@ -74,7 +74,7 @@ public class PersistableStoreFileManager {
             throw new NoSuchFileException(tempFilePath.toAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
 
-        FileUtils.renameFile(tempFilePath, storeFilePath);
+        FileMutatorUtils.renameFile(tempFilePath, storeFilePath);
     }
 
     public boolean maybeBackup() {

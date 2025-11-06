@@ -17,7 +17,7 @@
 
 package bisq.persistence.backup;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.PlatformUtils;
 import bisq.persistence.Persistence;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class BackupServiceTest {
 
     @AfterEach
     void tearDown() throws IOException {
-        FileUtils.deleteFileOrDirectory(dataDirPath);
+        FileMutatorUtils.deleteFileOrDirectory(dataDirPath);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class BackupServiceTest {
 
     @Test
     void testBackup() throws IOException {
-        FileUtils.writeToPath("test", storeFilePath);
+        FileMutatorUtils.writeToPath("test", storeFilePath);
         assertThat(storeFilePath).exists();
         Path backupFilePath = backupService.getBackupFilePath();
         assertThat(backupFilePath).doesNotExist();
@@ -494,7 +494,7 @@ public class BackupServiceTest {
             LocalDateTime localDateTime = LocalDateTime.ofInstant(calendarTime.toInstant(), ZoneId.systemDefault());
             Path backupFilePath = backupService.getBackupFilePath(localDateTime);
             // As we rename the storage file at backup we need to create it before backup.
-            FileUtils.writeToPath("test", storeFilePath);
+            FileMutatorUtils.writeToPath("test", storeFilePath);
             backupService.backup(backupFilePath);
         }
         log.error("createBackups took {} ms", System.currentTimeMillis() - ts); // seconds * minutes * hours -> took 16275 ms

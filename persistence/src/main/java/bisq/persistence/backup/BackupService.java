@@ -18,7 +18,8 @@
 package bisq.persistence.backup;
 
 import bisq.common.data.ByteUnit;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.persistence.Persistence;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Setter;
@@ -96,9 +97,9 @@ public class BackupService {
             Path legacyBackupFilePath = legacyBackupDirPath.resolve(fileName);
             if (Files.exists(legacyBackupFilePath)) {
                 Path newBackupFilePath = getBackupFilePath();
-                FileUtils.renameFile(legacyBackupFilePath, newBackupFilePath);
-                if (FileUtils.listRegularFiles(legacyBackupDirPath).isEmpty()) {
-                    FileUtils.deleteFileOrDirectory(legacyBackupDirPath);
+                FileMutatorUtils.renameFile(legacyBackupFilePath, newBackupFilePath);
+                if (FileReaderUtils.listRegularFiles(legacyBackupDirPath).isEmpty()) {
+                    FileMutatorUtils.deleteFileOrDirectory(legacyBackupDirPath);
                 }
             }
         } catch (IOException e) {
@@ -131,7 +132,7 @@ public class BackupService {
 
     @VisibleForTesting
     boolean backup(Path backupFilePath) throws IOException {
-        boolean success = FileUtils.renameFile(storeFilePath, backupFilePath);
+        boolean success = FileMutatorUtils.renameFile(storeFilePath, backupFilePath);
         if (!success) {
             log.error("Could not rename {} to {}", storeFilePath, backupFilePath);
         }
@@ -145,7 +146,7 @@ public class BackupService {
 
         // TODO Consider to let that run in a background thread
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileUtils.listRegularFiles(dirPath);
+        Set<String> fileNames = FileReaderUtils.listRegularFiles(dirPath);
         List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
         LocalDateTime now = LocalDateTime.now();
         List<BackupFileInfo> outdatedBackupFileInfos = findOutdatedBackups(new ArrayList<>(backupFileInfoList), now, this::isMaxFileSizeReached);
@@ -217,7 +218,7 @@ public class BackupService {
 
     private long updateAndGetAccumulatedFileSize() {
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileUtils.listRegularFiles(dirPath);
+        Set<String> fileNames = FileReaderUtils.listRegularFiles(dirPath);
         createBackupFileInfo(fileName, fileNames)
                 .forEach(this::addAndGetAccumulatedFileSize);
         return accumulatedFileSize;

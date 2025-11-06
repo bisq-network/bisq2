@@ -43,7 +43,7 @@
 
 package bisq.common.jvm;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -113,7 +113,7 @@ public class DeleteOnExitHook {
         for (String filename : toBeDeleted) {
             Path path = Path.of(filename);
             try {
-                FileUtils.deleteFileOrDirectory(path);
+                FileMutatorUtils.deleteFileOrDirectory(path);
             } catch (IOException e) {
                 log.warn("Deleting {} failed", filename);
                 throw new RuntimeException(e);

@@ -20,7 +20,7 @@ package bisq.network;
 
 import bisq.common.application.Service;
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.I2PAddress;
@@ -191,7 +191,7 @@ public class NetworkIdService extends RateLimitedPersistenceClient<NetworkIdStor
         Path storeFilePath = persistence.getStorePath();
         Path parentDirectoryPath = storeFilePath.getParent();
         try {
-            FileUtils.backupCorruptedFile(
+            FileMutatorUtils.backupCorruptedFile(
                     parentDirectoryPath,
                     storeFilePath,
                     storeFilePath.getFileName().toString(),

@@ -1,6 +1,6 @@
 package bisq.application.migration.migrations;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.OS;
 import bisq.common.platform.Version;
 
@@ -14,7 +14,7 @@ public class MigrationsForV2_1_2 implements Migration {
         try {
             if (OS.isLinux()) {
                 Path torPath = appDataDirPath.resolve("tor");
-                FileUtils.deleteFileOrDirectory(torPath);
+                FileMutatorUtils.deleteFileOrDirectory(torPath);
             }
         } catch (IOException e) {
             throw new MigrationFailedException(e);
