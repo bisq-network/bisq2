@@ -159,7 +159,7 @@ tx push -s
 
 # Translators can then work in the Transifex web interface
 # Pull completed translations when ready
-tx pull -l fr
+tx pull -t -l fr
 ```
 
 ### Option C: Manual Translation Locally
@@ -185,7 +185,7 @@ head -50 i18n/src/main/resources/default_fr.properties
 
 Commit the following to your Git repository:
 1.  Updated `LanguageRepository.java` with the new language code
-2.  All 17 new translation files with complete structure and initial translations (e.g., `default_fr.properties`, `chat_fr.properties`, etc.)
+2.  All translation files for the new language with complete structure and initial translations (e.g., `default_fr.properties`, `chat_fr.properties`, etc.)
 3.  Updated `.tx/config` if modified
 
 **Important**: The first commit should include translation files that already have:
