@@ -38,8 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class MaxSizeAwareDeque extends LinkedBlockingDeque<Runnable> {
     private ThreadPoolExecutor executor;
     // Can be lower as executor.getMaximumPoolSize() to add some tolerance in case the
-    // executor.getPoolSize() returns a stale value. It is locked inside ThreadPoolExecutor and cannot be
-    // accessed in a thread safe manner to en
+    // executor.getPoolSize() returns a stale value.
     private int insertThreshold;
 
     public MaxSizeAwareDeque(int capacity) {

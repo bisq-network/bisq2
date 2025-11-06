@@ -10,9 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// We keep the test deactivate as they are time-sensitive and might fail under high CPU load.
 @Slf4j
 public class ThreadPoolExecutorTest {
-   // @Test
+    // @Test
     public void testThreadPoolExecutor() throws InterruptedException {
         AtomicInteger numCompleted = new AtomicInteger();
         AtomicInteger numRejected = new AtomicInteger();
@@ -61,10 +62,13 @@ public class ThreadPoolExecutorTest {
         assertEquals(numTasks, numCompleted.get());
         assertEquals(0, numRejected.get());
         assertEquals(numTasks - threshold, numQueued.get());
+
+        executor.shutdown();
+        executor.awaitTermination(5, TimeUnit.SECONDS);
     }
 
 
-   // @Test
+    // @Test
     public void testThreadPoolExecutor2() throws InterruptedException {
         AtomicInteger numCompleted = new AtomicInteger();
         AtomicInteger numRejected = new AtomicInteger();
@@ -113,6 +117,9 @@ public class ThreadPoolExecutorTest {
         assertEquals(4, numCompleted.get());
         assertEquals(6, numRejected.get());
         assertEquals(2, numQueued.get());
+
+        executor.shutdown();
+        executor.awaitTermination(5, TimeUnit.SECONDS);
     }
 
     private static void sleep(long time) {

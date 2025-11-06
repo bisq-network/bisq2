@@ -37,10 +37,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class MaxSizeAwareQueue extends LinkedBlockingQueue<Runnable> {
     private ThreadPoolExecutor executor;
-
     // Can be lower as executor.getMaximumPoolSize() to add some tolerance in case the
-    // executor.getPoolSize() returns a stale value. It is locked inside ThreadPoolExecutor and cannot be
-    // accessed in a thread safe manner to en
+    // executor.getPoolSize() returns a stale value.
     private int insertThreshold;
 
     public MaxSizeAwareQueue(int capacity) {
