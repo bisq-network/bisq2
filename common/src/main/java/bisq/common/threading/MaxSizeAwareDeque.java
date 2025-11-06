@@ -17,7 +17,6 @@
 
 package bisq.common.threading;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
@@ -25,17 +24,59 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * The executor.getPoolSize() call might return a stale value which does not represent the internal value in the
+ * ThreadPoolExecutor. This could lead to shouldInsert returning false which triggers the ThreadPoolExecutor to spin
+ * up a new thread, but in case it had already reached the maximumPoolSize the rejection handler is triggered.
+ * To avoid that edge case, we use the executor.getActiveCount() as well, but as that value could also be stale, we
+ * additionally allow to use a smaller insertThreshold for the comparison. If that insertThreshold is for instance
+ * maximumPoolSize - 2, we have some good buffer to not run into those edge cases.
+ */
 @Slf4j
 public class MaxSizeAwareDeque extends LinkedBlockingDeque<Runnable> {
-    @Setter
     private ThreadPoolExecutor executor;
+    // Can be lower as executor.getMaximumPoolSize() to add some tolerance in case the
+    // executor.getPoolSize() returns a stale value.
+    private int insertThreshold;
 
     public MaxSizeAwareDeque(int capacity) {
         super(capacity);
     }
 
-    private boolean shouldInsert() {
-        return executor != null && executor.getPoolSize() >= executor.getMaximumPoolSize();
+    public void applyExecutor(ThreadPoolExecutor executor) {
+        applyExecutor(executor, executor.getMaximumPoolSize());
+    }
+
+    public void applyExecutor(ThreadPoolExecutor executor, int insertThreshold) {
+        this.executor = executor;
+        int maximumPoolSize = executor.getMaximumPoolSize();
+        checkArgument(insertThreshold <= maximumPoolSize, "insertThreshold must not be larger as executor.getMaximumPoolSize()");
+        if (insertThreshold <= 0) {
+            log.warn("insertThreshold is <= 0. We use the maximumPoolSize instead. insertThreshold={}", insertThreshold);
+            insertThreshold = maximumPoolSize;
+        }
+        this.insertThreshold = insertThreshold;
+    }
+
+    protected boolean shouldInsert() {
+        if (executor == null || executor.isShutdown() || executor.isTerminated() || executor.isTerminating()) {
+            return false;
+        }
+        if (super.remainingCapacity() == 0) {
+            //log.debug("No capacity left.");
+            return false;
+        }
+        if (executor.getPoolSize() >= insertThreshold) {
+            // log.debug("poolSize exceeds threshold. {} / {}", executor.getPoolSize(), threshold);
+            return true;
+        }
+        if (executor.getActiveCount() >= insertThreshold) {
+            // log.debug("activeCount exceeds threshold. {} / {}", executor.getActiveCount(), threshold);
+            return true;
+        }
+        return false;
     }
 
     @Override

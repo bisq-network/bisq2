@@ -396,7 +396,7 @@ public abstract class Connection {
                 deque,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
                 new AbortPolicyWithLogging(name, queueCapacity, executorMaxPoolSize));
-        deque.setExecutor(executor);
+        deque.applyExecutor(executor, executorMaxPoolSize - 2);
         return executor;
     }
 
@@ -412,7 +412,7 @@ public abstract class Connection {
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
                 new AbortPolicyWithLogging(name, queueCapacity, executorMaxPoolSize));
-        queue.setExecutor(executor);
+        queue.applyExecutor(executor, executorMaxPoolSize - 2);
         return executor;
     }
 

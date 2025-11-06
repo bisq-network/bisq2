@@ -62,7 +62,7 @@ public class NetworkExecutors {
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
                 new DiscardOldestPolicy(name, queueCapacity, maxPoolSize));
-        queue.setExecutor(executor);
+        queue.applyExecutor(executor, maxPoolSize - 2);
         return executor;
     }
 }

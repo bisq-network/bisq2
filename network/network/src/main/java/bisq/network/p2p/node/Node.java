@@ -935,7 +935,7 @@ public class Node implements Connection.Handler {
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
                 new AbortPolicyWithLogging(name, queueCapacity, maximumPoolSize));
-        queue.setExecutor(executor);
+        queue.applyExecutor(executor, maximumPoolSize - 2);
         return executor;
     }
 
