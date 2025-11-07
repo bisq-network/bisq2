@@ -58,7 +58,10 @@ public class LanguageRepository {
 
     public static String getDisplayString(String code) {
         Locale locale = Locale.forLanguageTag(code);
-        return getDisplayLanguage(locale) + " (" + getDisplayLanguageInLocale(locale) + ")";
+        // languageInLocale with country code would return: Portuguese (Brazil). We remove the brackets to get
+        // Portuguese - Brazil, so that full string is: "Portuguese (Portuguese - Brazil)"
+        String languageInLocale = getDisplayLanguageInLocale(locale).replace("(", " - ").replace(")", "");
+        return getDisplayLanguage(locale) + " (" + languageInLocale + ")";
     }
 
     public static String getDisplayLanguage(String code) {
@@ -70,9 +73,9 @@ public class LanguageRepository {
         return locale.getDisplayLanguage(Locale.forLanguageTag(defaultLanguageTag));
     }
 
-    // Returns language in locale's language (e.g. español)
+    // Returns language in users OS default locale's language
     public static String getDisplayLanguageInLocale(Locale locale) {
-        return locale.getDisplayName(locale);
+        return locale.getDisplayName(Locale.getDefault());
     }
 
     // IETF BCP 47 language tag string.  E.g. pt-BR
@@ -87,52 +90,64 @@ public class LanguageRepository {
             "ru", // Russian
             "af-ZA" // Afrikaans
             /*
-            // not translated yet
-            "pt", // Portuguese
-            "zh-Hans", // Chinese [Han Simplified] -> zh-Hans-CN to support country
-            "zh-Hant", // Chinese [Han Traditional]-> zh-Hant-CN to support country
+            // in preparation:
+            "pt-PT", // Portuguese
             "fr", // French
-            "vi", // Vietnamese
+            "tl", // Tagalog (Philippines)
+            "bn", // Bengali (Bangladesh, India)
+            "ta", // Tamil (India, Sri Lanka, and Singapore)
+            "pl", // Polish
+            "hi", // Hindi (India, Fiji, Nepal and Mauritius)
+            "zh-Hans", // Chinese (Simplified)
+            "zh-Hant", // Chinese (Traditional)
+            "sv", // Swedish
             "th", // Thai
+            "tr", // Turkish
             "ja", // Japanese
-            "fa", // Persian
+            "ko", // Korean
+            "vi", // Vietnamese
+            "id", // Indonesian
+            "nl", // Dutch
             "el", // Greek
-            "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
             "ro", // Romanian
-            "tr" // Turkish
-            "iw", // Hebrew
-            "hi", // Hindi
-            "ko", // Korean
-            "pl", // Polish
-            "sv", // Swedish
             "no", // Norwegian
-            "nl", // Dutch
-            "be", // Belarusian
             "fi", // Finnish
             "bg", // Bulgarian
-            "lt", // Lithuanian
-            "lv", // Latvian
-            "hr", // Croatian
-            "uk", // Ukrainian
+            "da", // Danish
             "sk", // Slovak
+            "hr", // Croatian
             "sl", // Slovenian
+            "et", // Estonian
+            "lv", // Latvian
+            "lt", // Lithuanian
+            "is", // Icelandic
             "ga", // Irish
+            "sr", // Serbian
+            "be", // Belarusian
             "sq", // Albanian
             "ca", // Catalan
             "mk", // Macedonian
-            "kk", // Kazakh
-            "km", // Khmer
-            "sw", // Swahili
-            "in", // Indonesian
-            "ms", // Malay
-            "is", // Icelandic
-            "et", // Estonian
-            "ar", // Arabic
-            "vi", // Vietnamese
-            "th", // Thai
-            "da", // Danish
-            "mt"  // Maltese
+            "kk", // Kazakh (Kazakhstan and parts of China (Xinjiang), Mongolia, Uzbekistan, Russia, and Kyrgyzstan)
+            "km", // Khmer (Cambodia, Thailand and Vietnam)
+            "sw", // Swahili (Tanzania, Kenya, Uganda, Democratic Republic of the Congo, Mozambique, and parts of Rwanda, Burundi, and Comoros)
+            "ms" // Malay (Malaysia , Brunei, Singapore, and Indonesia)
+
+            Missing languages:
+            | Code | Language        | Countries / Regions                                                                    | Estimated Speakers                                                                                     | Direction |
+            | ---- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
+            | pa   | Punjabi         | India (Punjab), Pakistan (Punjab region)                                               | ~90-125 million+ (depending on dialect) – general figure from world-language listings                  | LTR       |
+            | am   | Amharic         | Ethiopia (official)                                                                    | ~57 million+ speakers                                                                                  | LTR       |
+            | ha   | Hausa           | Nigeria (north), Niger, and wider West Africa                                          | ~72 million native + many L2 (100+m total)                                                             | LTR       |
+            | yo   | Yoruba          | Nigeria, Benin, Togo                                                                   | ~45-50 million+ (various sources) – ranked in world-language listings                                  | LTR       |
+            | jv   | Javanese        | Indonesia (Java)                                                                       | ~68-80 million+ speakers                                                                               | LTR       |
+
+            Missing RTL languages:
+            | Code | Language        | Countries / Regions                                                                    | Estimated Speakers                                                                                     | Direction |
+            | ---- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
+            | ar   | Arabic          | 20+ countries in Middle East & North Africa (e.g., Egypt, Saudi Arabia, Iraq, Algeria) | ~310 million native + many L2.                                                                         | RTL       |
+            | fa   | Persian (Farsi) | Iran (official), Afghanistan (Dari), Tajikistan (Tajik)                                | ~70-110 million total speakers.                                                                        | RTL       |
+            | ur   | Urdu            | Pakistan (official national), India (recognized), diaspora worldwide                   | ~100-160 million speakers (native + L2)                                                                | RTL       |
             */
     );
 
