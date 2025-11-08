@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager.tabs;
+package bisq.desktop.main.content.authorized_role.release_manager;
 
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
@@ -38,29 +38,29 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public class ReleaseManagerController implements Controller {
+public class ReleaseNotificationController implements Controller {
     @Getter
-    private final ReleaseManagerView view;
-    private final ReleaseManagerModel model;
+    private final ReleaseNotificationView view;
+    private final ReleaseNotificationModel model;
     private final UserIdentityService userIdentityService;
     private final ReleaseNotificationsService releaseNotificationsService;
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
 
-    public ReleaseManagerController(ServiceProvider serviceProvider, AppType appType) {
+    public ReleaseNotificationController(ServiceProvider serviceProvider, AppType appType) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
-        model = new ReleaseManagerModel(appType);
-        view = new ReleaseManagerView(model, this);
+        model = new ReleaseNotificationModel(appType);
+        view = new ReleaseNotificationView(model, this);
     }
 
     @Override
     public void onActivate() {
         model.getIsLauncherUpdate().set(true);
-        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ListItem>bind(model.getListItems())
-                .map(ReleaseManagerView.ListItem::new)
+        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseNotificationView.ListItem>bind(model.getListItems())
+                .map(ReleaseNotificationView.ListItem::new)
                 .filter(releaseNotification -> releaseNotification.getAppType() == model.getAppType())
                 .to(releaseNotificationsService.getReleaseNotifications());
 

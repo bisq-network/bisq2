@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager.tabs;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerView.AlertListItem;
-import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerView.BondedRoleListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.AlertView.AlertListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.AlertView.BondedRoleListItem;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class SecurityManagerModel implements Model {
+public class AlertModel implements Model {
     private final AppType appType;
 
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
@@ -61,7 +61,7 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<AlertListItem> alertListItems = FXCollections.observableArrayList();
     private final SortedList<AlertListItem> sortedAlertListItems = new SortedList<>(alertListItems);
 
-    public SecurityManagerModel(AppType appType) {
+    public AlertModel(AppType appType) {
         this.appType = appType;
     }
 }

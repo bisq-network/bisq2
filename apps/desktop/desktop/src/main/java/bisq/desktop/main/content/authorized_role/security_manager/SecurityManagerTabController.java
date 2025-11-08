@@ -21,7 +21,6 @@ import bisq.bonded_roles.release.AppType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +51,11 @@ public class SecurityManagerTabController extends TabController<SecurityManagerT
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case DESKTOP_SECURITY_MANAGER -> Optional.of(new SecurityManagerController(serviceProvider, AppType.DESKTOP));
+            case DESKTOP_SECURITY_MANAGER -> Optional.of(new AlertController(serviceProvider, AppType.DESKTOP));
             case MOBILE_NODE_SECURITY_MANAGER ->
-                    Optional.of(new SecurityManagerController(serviceProvider, AppType.MOBILE_NODE));
+                    Optional.of(new AlertController(serviceProvider, AppType.MOBILE_NODE));
             case MOBILE_CLIENT_SECURITY_MANAGER ->
-                    Optional.of(new SecurityManagerController(serviceProvider, AppType.MOBILE_CLIENT));
+                    Optional.of(new AlertController(serviceProvider, AppType.MOBILE_CLIENT));
             default -> Optional.empty();
         };
     }

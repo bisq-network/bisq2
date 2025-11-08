@@ -21,7 +21,6 @@ import bisq.bonded_roles.release.AppType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.authorized_role.release_manager.tabs.ReleaseManagerController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,11 +52,11 @@ public class ReleaseManagerTabController extends TabController<ReleaseManagerTab
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case DESKTOP_RELEASE_MANAGER -> Optional.of(new ReleaseManagerController(serviceProvider, AppType.DESKTOP));
+            case DESKTOP_RELEASE_MANAGER -> Optional.of(new ReleaseNotificationController(serviceProvider, AppType.DESKTOP));
             case MOBILE_NODE_RELEASE_MANAGER ->
-                    Optional.of(new ReleaseManagerController(serviceProvider, AppType.MOBILE_NODE));
+                    Optional.of(new ReleaseNotificationController(serviceProvider, AppType.MOBILE_NODE));
             case MOBILE_CLIENT_RELEASE_MANAGER ->
-                    Optional.of(new ReleaseManagerController(serviceProvider, AppType.MOBILE_CLIENT));
+                    Optional.of(new ReleaseNotificationController(serviceProvider, AppType.MOBILE_CLIENT));
             default -> Optional.empty();
         };
     }

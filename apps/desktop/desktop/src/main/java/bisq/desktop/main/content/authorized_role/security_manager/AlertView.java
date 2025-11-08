@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager.tabs;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
@@ -60,7 +60,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public class SecurityManagerView extends View<VBox, SecurityManagerModel, SecurityManagerController> {
+public class AlertView extends View<VBox, AlertModel, AlertController> {
     private final Button sendAlertButton;
     private final MaterialTextArea message, bannedAccountData;
     private final MaterialTextField headline, minVersion;
@@ -72,7 +72,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     private Subscription selectedAlertTypePin, selectedBondedRolListItemPin;
 
-    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller) {
+    public AlertView(AlertModel model, AlertController controller) {
         super(new VBox(10), model, controller);
 
         root.setPadding(new Insets(20, 0, 0, 0));
@@ -373,7 +373,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         private final String dateString, timeString, alertTypeString, haltTrading, requireVersionForTrading,
                 minVersion, bondedRoleDisplayString, data;
 
-        public AlertListItem(AuthorizedAlertData authorizedAlertData, SecurityManagerController controller) {
+        public AlertListItem(AuthorizedAlertData authorizedAlertData, AlertController controller) {
             this.authorizedAlertData = authorizedAlertData;
             date = authorizedAlertData.getDate();
             dateString = DateFormatter.formatDate(date);
@@ -409,7 +409,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
         private final String displayString;
 
-        public BondedRoleListItem(BondedRole bondedRole, SecurityManagerController controller) {
+        public BondedRoleListItem(BondedRole bondedRole, AlertController controller) {
             this.bondedRole = bondedRole;
             displayString = controller.getBondedRoleDisplayString(bondedRole);
         }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager.tabs;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -49,28 +49,28 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class SecurityManagerController implements Controller {
+public class AlertController implements Controller {
     @Getter
-    private final SecurityManagerView view;
-    private final SecurityManagerModel model;
+    private final AlertView view;
+    private final AlertModel model;
     private final UserIdentityService userIdentityService;
     private final SecurityManagerService securityManagerService;
     private final AlertService alertService;
     private final UserProfileService userProfileService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final ListChangeListener<SecurityManagerView.AlertListItem> alertListItemsListener;
+    private final ListChangeListener<AlertView.AlertListItem> alertListItemsListener;
     private Pin userIdentityPin, alertsPin, bondedRoleSetPin;
     private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin,
             bannedAccountDataPin;
 
-    public SecurityManagerController(ServiceProvider serviceProvider, AppType appType) {
+    public AlertController(ServiceProvider serviceProvider, AppType appType) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
-        model = new SecurityManagerModel(appType);
-        view = new SecurityManagerView(model, this);
+        model = new AlertModel(appType);
+        view = new AlertView(model, this);
 
         alertListItemsListener = c -> applyBondedRolePredicate();
     }
@@ -86,13 +86,13 @@ public class SecurityManagerController implements Controller {
         minVersionPin = EasyBind.subscribe(model.getMinVersion(), e -> updateSendButtonDisabled());
         selectedBondedRolePin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(), e -> updateSendButtonDisabled());
 
-        alertsPin = FxBindings.<AuthorizedAlertData, SecurityManagerView.AlertListItem>bind(model.getAlertListItems())
-                .map(authorizedAlertData -> new SecurityManagerView.AlertListItem(authorizedAlertData, this))
+        alertsPin = FxBindings.<AuthorizedAlertData, AlertView.AlertListItem>bind(model.getAlertListItems())
+                .map(authorizedAlertData -> new AlertView.AlertListItem(authorizedAlertData, this))
                 .filter(authorizedAlertData -> authorizedAlertData.getAppType() == model.getAppType())
                 .to(alertService.getAuthorizedAlertDataSet());
 
-        bondedRoleSetPin = FxBindings.<BondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
-                .map(bondedRole -> new SecurityManagerView.BondedRoleListItem(bondedRole, this))
+        bondedRoleSetPin = FxBindings.<BondedRole, AlertView.BondedRoleListItem>bind(model.getBondedRoleListItems())
+                .map(bondedRole -> new AlertView.BondedRoleListItem(bondedRole, this))
                 .to(authorizedBondedRolesService.getBondedRoles());
 
         bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
@@ -127,7 +127,7 @@ public class SecurityManagerController implements Controller {
         }
     }
 
-    void onBondedRoleListItem(SecurityManagerView.BondedRoleListItem bondedRoleListItem) {
+    void onBondedRoleListItem(AlertView.BondedRoleListItem bondedRoleListItem) {
         if (bondedRoleListItem != null) {
             model.getSelectedBondedRoleListItem().set(bondedRoleListItem);
         }
@@ -146,7 +146,7 @@ public class SecurityManagerController implements Controller {
             return;
         }
 
-        SecurityManagerView.BondedRoleListItem bondedRoleListItem = model.getSelectedBondedRoleListItem().get();
+        AlertView.BondedRoleListItem bondedRoleListItem = model.getSelectedBondedRoleListItem().get();
         Optional<AuthorizedBondedRole> bannedRole = bondedRoleListItem == null ? Optional.empty() :
                 Optional.ofNullable(bondedRoleListItem.getBondedRole().getAuthorizedBondedRole());
         securityManagerService.publishAlert(model.getSelectedAlertType().get(),

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager.tabs;
+package bisq.desktop.main.content.authorized_role.release_manager;
 
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.desktop.common.view.View;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 
 @Slf4j
-public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseManagerController> {
+public class ReleaseNotificationView extends View<VBox, ReleaseNotificationModel, ReleaseNotificationController> {
 
     private final Button sendButton;
     private final MaterialTextArea releaseNotes;
@@ -53,7 +53,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     private final CheckBox isPreReleaseCheckBox, isLauncherUpdateCheckBox;
     private final RichTableView<ListItem> richTableView;
 
-    public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller) {
+    public ReleaseNotificationView(ReleaseNotificationModel model, ReleaseNotificationController controller) {
         super(new VBox(10), model, controller);
 
         root.setPadding(new Insets(20, 0, 0, 0));
