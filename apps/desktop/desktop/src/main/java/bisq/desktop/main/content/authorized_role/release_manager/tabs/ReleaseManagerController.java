@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.release_manager.tabs;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.observable.Pin;
@@ -60,6 +61,7 @@ public class ReleaseManagerController implements Controller {
         model.getIsLauncherUpdate().set(true);
         getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ListItem>bind(model.getListItems())
                 .map(ReleaseManagerView.ListItem::new)
+                .filter(releaseNotification -> releaseNotification.getAppType() == model.getAppType())
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));
@@ -86,7 +88,8 @@ public class ReleaseManagerController implements Controller {
         releaseManagerService.publishReleaseNotification(model.getIsPreRelease().get(),
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,
-                        model.getVersion().get())
+                        model.getVersion().get(),
+                        model.getAppType())
                 .whenComplete((result, throwable) -> UIThread.run(() -> {
                     if (throwable != null) {
                         new Popup().error(throwable).show();

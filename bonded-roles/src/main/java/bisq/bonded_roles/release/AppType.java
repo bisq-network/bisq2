@@ -15,16 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager.tabs;
+package bisq.bonded_roles.release;
 
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
-public enum AppType {
+public enum AppType implements ProtoEnum {
     DESKTOP,
     MOBILE_NODE,
     MOBILE_CLIENT;
 
+    @Override
+    public bisq.bonded_roles.protobuf.AppType toProtoEnum() {
+        return bisq.bonded_roles.protobuf.AppType.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) {
+        return ProtobufUtils.enumFromProto(AppType.class, proto.name(), DESKTOP);
+    }
+
     public String getDisplayString() {
-        return Res.get("authorizedRole.releaseManager."+name());
+        return Res.get("authorizedRole.releaseManager.appType."+name());
     }
 }

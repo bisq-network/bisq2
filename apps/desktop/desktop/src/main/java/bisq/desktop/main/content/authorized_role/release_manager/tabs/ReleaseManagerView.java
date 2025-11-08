@@ -183,7 +183,8 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         @EqualsAndHashCode.Include
         private final ReleaseNotification releaseNotification;
 
-        private final String dateString, timeString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
+        private final String dateString, timeString, isLauncherUpdate, releaseNotes, version,
+                isPreRelease, releaseManagerProfileId;
         private final long date;
 
         public ListItem(ReleaseNotification releaseNotification) {

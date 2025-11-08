@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.release_manager.tabs;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

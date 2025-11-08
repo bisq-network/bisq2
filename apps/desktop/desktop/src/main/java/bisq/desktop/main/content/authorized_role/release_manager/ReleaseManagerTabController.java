@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.authorized_role.release_manager;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.main.content.authorized_role.release_manager.tabs.AppType;
 import bisq.desktop.main.content.authorized_role.release_manager.tabs.ReleaseManagerController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
