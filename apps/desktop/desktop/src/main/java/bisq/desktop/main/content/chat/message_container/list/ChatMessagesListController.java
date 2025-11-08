@@ -130,6 +130,7 @@ public class ChatMessagesListController implements Controller {
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
+    private static  final String DONT_SHOW_DELETED_CHATS_INDICATOR_KEY = "deletedChatsWarning";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -617,6 +618,16 @@ public class ChatMessagesListController implements Controller {
                 .show();
     }
 
+    public void onDismissChatDeletedMessagesWarning() {
+        new Popup().information(Res.get("chat.public.deletedChatsIndicator"))
+                .hideCloseButton()
+                .secondaryActionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.secondaryActionButtonText"))
+                .onSecondaryAction(this::dismissChatDeletedMessagesIndicatorWarningJustOnce)
+                .actionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.actionButtonText"))
+                .onAction(this::permanentlyDismissChatDeletedMessagesIndicatorWarning)
+                .show();
+    }
+
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
         chatMessageId.ifPresent(messageId -> {
             model.getChatMessages().forEach(item -> {
@@ -717,6 +728,12 @@ public class ChatMessagesListController implements Controller {
 
         if (shouldShowWarningMessageForNoneMediator) {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
+        }
+
+        boolean shouldShowDeletedMessagesIndicator = dontShowAgainService.showAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY);
+
+        if (shouldShowDeletedMessagesIndicator) {
+            addDeletedChatsIndicator(channel);
         }
 
         maybeScrollDownOnNewItemAdded();
@@ -848,6 +865,13 @@ public class ChatMessagesListController implements Controller {
         }
     }
 
+    private <M extends ChatMessage, C extends ChatChannel<M>> void addDeletedChatsIndicator(C channel) {
+        if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
+            CommonPublicChatMessage commonPublicChatMessage = createChatRulesWarningMessage(commonPublicChatChannel);
+            model.getChatMessages().add(createChatMessageListItem(commonPublicChatMessage, commonPublicChatChannel));
+        }
+    }
+
     private TwoPartyPrivateChatMessage createChatRulesWarningMessage(TwoPartyPrivateChatChannel channel) {
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         UserProfile senderUserProfile = channel.getPeer();
@@ -906,6 +930,21 @@ public class ChatMessagesListController implements Controller {
                 new HashSet<>());
     }
 
+    public CommonPublicChatMessage createChatRulesWarningMessage(CommonPublicChatChannel channel) {
+        UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        return new CommonPublicChatMessage(
+                StringUtils.createUid(),
+                channel.getChatChannelDomain(),
+                channel.getId(),
+                senderUserProfile.getId(),
+                Optional.of(Res.get("chat.public.deletedChatsIndicator.text")),
+                Optional.empty(),
+                0L,
+                false,
+                ChatMessageType.DELETED_CHATS_INDICATOR
+        );
+    }
+
     private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message,
                                                                                                                   C channel) {
         return new ChatMessageListItem<>(message,
@@ -962,6 +1001,27 @@ public class ChatMessagesListController implements Controller {
     private void deleteChatRulesWarning() {
         model.getSortedChatMessages().stream()
                 .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
+                .findFirst()
+                .ifPresent(itemToRemove -> {
+                    UIThread.run(() -> {
+                        itemToRemove.dispose();
+                        model.getChatMessages().remove(itemToRemove);
+                    });
+                });
+    }
+
+    private void dismissChatDeletedMessagesIndicatorWarningJustOnce() {
+        deleteChatDeletedMessagesIndicatorWarning();
+    }
+
+    private void permanentlyDismissChatDeletedMessagesIndicatorWarning() {
+        dontShowAgainService.putDontShowAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY, true);
+        deleteChatDeletedMessagesIndicatorWarning();
+    }
+
+    private void deleteChatDeletedMessagesIndicatorWarning() {
+        model.getSortedChatMessages().stream()
+                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.DELETED_CHATS_INDICATOR)
                 .findFirst()
                 .ifPresent(itemToRemove -> {
                     UIThread.run(() -> {

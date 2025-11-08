@@ -59,15 +59,15 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 ChatMessageType.TEXT);
     }
 
-    private CommonPublicChatMessage(String messageId,
-                                    ChatChannelDomain chatChannelDomain,
-                                    String channelId,
-                                    String authorUserProfileId,
-                                    Optional<String> text,
-                                    Optional<Citation> citation,
-                                    long date,
-                                    boolean wasEdited,
-                                    ChatMessageType chatMessageType) {
+    public CommonPublicChatMessage(String messageId,
+                                   ChatChannelDomain chatChannelDomain,
+                                   String channelId,
+                                   String authorUserProfileId,
+                                   Optional<String> text,
+                                   Optional<Citation> citation,
+                                   long date,
+                                   boolean wasEdited,
+                                   ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
                 channelId,

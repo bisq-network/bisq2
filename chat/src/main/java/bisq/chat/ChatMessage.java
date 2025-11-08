@@ -86,7 +86,9 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         NetworkDataValidation.validateText(channelId, 200); // For private channels we combine user profile IDs for channelId
         NetworkDataValidation.validateProfileId(authorUserProfileId);
         NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
-        NetworkDataValidation.validateDate(date);
+        if(this.chatMessageType != ChatMessageType.DELETED_CHATS_INDICATOR) {
+            NetworkDataValidation.validateDate(date);
+        }
     }
 
     protected bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder(boolean serializeForHash) {
