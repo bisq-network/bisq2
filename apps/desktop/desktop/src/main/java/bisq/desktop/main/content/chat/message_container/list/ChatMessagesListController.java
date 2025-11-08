@@ -867,7 +867,7 @@ public class ChatMessagesListController implements Controller {
 
     private <M extends ChatMessage, C extends ChatChannel<M>> void addDeletedChatsIndicator(C channel) {
         if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
-            CommonPublicChatMessage commonPublicChatMessage = createChatRulesWarningMessage(commonPublicChatChannel);
+            CommonPublicChatMessage commonPublicChatMessage = createDeletedChatsIndicator(commonPublicChatChannel);
             model.getChatMessages().add(createChatMessageListItem(commonPublicChatMessage, commonPublicChatChannel));
         }
     }
@@ -930,7 +930,7 @@ public class ChatMessagesListController implements Controller {
                 new HashSet<>());
     }
 
-    public CommonPublicChatMessage createChatRulesWarningMessage(CommonPublicChatChannel channel) {
+    public CommonPublicChatMessage createDeletedChatsIndicator(CommonPublicChatChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         return new CommonPublicChatMessage(
                 StringUtils.createUid(),
