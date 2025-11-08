@@ -130,7 +130,7 @@ public class ChatMessagesListController implements Controller {
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
-    private static  final String DONT_SHOW_DELETED_CHATS_INDICATOR_KEY = "deletedChatsWarning";
+    private static  final String DONT_SHOW_DELETED_CHATS_INDICATOR_KEY = "deletedChatsIndicator";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -730,7 +730,8 @@ public class ChatMessagesListController implements Controller {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
-        boolean shouldShowDeletedMessagesIndicator = dontShowAgainService.showAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY);
+        boolean shouldShowDeletedMessagesIndicator = dontShowAgainService.showAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY)
+                && channel instanceof CommonPublicChatChannel;
 
         if (shouldShowDeletedMessagesIndicator) {
             addDeletedChatsIndicator(channel);
