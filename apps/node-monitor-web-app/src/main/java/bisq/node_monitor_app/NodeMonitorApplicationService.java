@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -142,7 +143,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService,
-                accountService, burningmanService);
+                accountService, burningmanService, AppType.DESKTOP);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,

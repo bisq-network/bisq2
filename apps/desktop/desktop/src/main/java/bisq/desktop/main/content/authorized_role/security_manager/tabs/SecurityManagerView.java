@@ -20,10 +20,8 @@ package bisq.desktop.main.content.authorized_role.security_manager.tabs;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
-import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.converters.Converters;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -32,18 +30,14 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.NumberValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
-import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -67,19 +61,14 @@ import java.util.Comparator;
 
 @Slf4j
 public class SecurityManagerView extends View<VBox, SecurityManagerModel, SecurityManagerController> {
-    private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
-            new NumberValidator(Res.get("authorizedRole.securityManager.difficultyAdjustment.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT, false);
-
-    private final Button difficultyAdjustmentButton, sendAlertButton;
+    private final Button sendAlertButton;
     private final MaterialTextArea message, bannedAccountData;
-    private final MaterialTextField headline, minVersion, difficultyAdjustmentFactor;
+    private final MaterialTextField headline, minVersion;
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
     private final AutoCompleteComboBox<BondedRoleListItem> bondedRoleSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
     private final HBox requireVersionForTradingHBox;
     private final RichTableView<AlertListItem> alertTableView;
-    private final RichTableView<DifficultyAdjustmentListItem> difficultyAdjustmentTableView;
 
     private Subscription selectedAlertTypePin, selectedBondedRolListItemPin;
 
@@ -146,29 +135,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         configAlertTableView();
 
 
-        // difficultyAdjustment
-        Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
-        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
-
-        difficultyAdjustmentFactor = new MaterialTextField(Res.get("authorizedRole.securityManager.difficultyAdjustment.description"));
-        difficultyAdjustmentFactor.setMaxWidth(400);
-        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-
-        difficultyAdjustmentButton = new Button(Res.get("authorizedRole.securityManager.difficultyAdjustment.button"));
-        difficultyAdjustmentButton.setDefaultButton(true);
-
-        difficultyAdjustmentTableView = new RichTableView<>(model.getDifficultyAdjustmentListItems(),
-                Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
-        configDifficultyAdjustmentTableView();
-        difficultyAdjustmentTableView.setMaxHeight(50);
-
-
         VBox.setMargin(alertTableView, new Insets(40, 0, 0, 0));
-        VBox.setMargin(difficultyAdjustmentButton, new Insets(0, 0, 10, 0));
         VBox.setMargin(sendAlertButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(difficultyAdjustmentHeadline, new Insets(20, 0, 0, 0));
-        VBox.setVgrow(difficultyAdjustmentTableView, Priority.NEVER);
         VBox.setVgrow(alertTableView, Priority.NEVER);
         this.root.getChildren().addAll(
                 alertHeadline,
@@ -177,18 +146,12 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 bondedRoleSelection,
                 bannedAccountData,
                 sendAlertButton,
-                alertTableView,
-                difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
-                difficultyAdjustmentTableView);
+                alertTableView);
     }
 
     @Override
     protected void onViewAttached() {
         alertTableView.initialize();
-        difficultyAdjustmentTableView.initialize();
-
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
-                Converters.DOUBLE_STRING_CONVERTER);
 
         haltTradingCheckBox.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.EMERGENCY));
         haltTradingCheckBox.managedProperty().bind(haltTradingCheckBox.visibleProperty());
@@ -196,7 +159,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingHBox.managedProperty().bind(haltTradingCheckBox.visibleProperty());
         minVersion.textProperty().bindBidirectional(model.getMinVersion());
         minVersion.disableProperty().bind(requireVersionForTradingCheckBox.selectedProperty().not());
-        difficultyAdjustmentButton.disableProperty().bind(model.getDifficultyAdjustmentFactorButtonDisabled());
         bondedRoleSelection.visibleProperty().bind(model.getBondedRoleSelectionVisible());
         bondedRoleSelection.managedProperty().bind(model.getBondedRoleSelectionVisible());
 
@@ -231,7 +193,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             controller.onBondedRoleListItem(bondedRoleSelection.getSelectionModel().getSelectedItem());
         });
 
-        difficultyAdjustmentButton.setOnAction(e -> controller.onPublishDifficultyAdjustmentFactor());
         sendAlertButton.setOnAction(e -> controller.onSendAlert());
         haltTradingCheckBox.selectedProperty().bindBidirectional(model.getHaltTrading());
         requireVersionForTradingCheckBox.selectedProperty().bindBidirectional(model.getRequireVersionForTrading());
@@ -252,9 +213,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @Override
     protected void onViewDetached() {
         alertTableView.dispose();
-        difficultyAdjustmentTableView.dispose();
-
-        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
 
         haltTradingCheckBox.visibleProperty().unbind();
         haltTradingCheckBox.managedProperty().unbind();
@@ -262,7 +220,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingHBox.managedProperty().unbind();
         minVersion.textProperty().unbindBidirectional(model.getMinVersion());
         minVersion.disableProperty().unbind();
-        difficultyAdjustmentButton.disableProperty().unbind();
 
         bondedRoleSelection.visibleProperty().unbind();
         bondedRoleSelection.managedProperty().unbind();
@@ -284,7 +241,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         haltTradingCheckBox.selectedProperty().unbindBidirectional(model.getHaltTrading());
         requireVersionForTradingCheckBox.selectedProperty().unbindBidirectional(model.getRequireVersionForTrading());
 
-        difficultyAdjustmentButton.setOnAction(null);
         alertTypeSelection.setOnChangeConfirmed(null);
         bondedRoleSelection.setOnChangeConfirmed(null);
 
@@ -292,22 +248,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
         selectedAlertTypePin.unsubscribe();
         selectedBondedRolListItemPin.unsubscribe();
-    }
-
-    private void configDifficultyAdjustmentTableView() {
-        difficultyAdjustmentTableView.getColumns().add(DateColumnUtil.getDateColumn(difficultyAdjustmentTableView.getSortOrder()));
-        difficultyAdjustmentTableView.getColumns().add(new BisqTableColumn.Builder<DifficultyAdjustmentListItem>()
-                .title(Res.get("authorizedRole.securityManager.difficultyAdjustment.table.value"))
-                .minWidth(150)
-                .comparator(Comparator.comparing(DifficultyAdjustmentListItem::getDifficultyAdjustmentFactor))
-                .valueSupplier(DifficultyAdjustmentListItem::getDifficultyAdjustmentFactorString)
-                .build());
-        difficultyAdjustmentTableView.getColumns().add(new BisqTableColumn.Builder<DifficultyAdjustmentListItem>()
-                .isSortable(false)
-                .minWidth(200)
-                .right()
-                .setCellFactory(getRemoveDifficultyAdjustmentCellFactory())
-                .build());
     }
 
     private void configAlertTableView() {
@@ -410,7 +350,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             protected void updateItem(AlertListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (item != null && !empty && controller.isRemoveDifficultyAdjustmentButtonVisible(item.getAuthorizedAlertData())) {
+                if (item != null && !empty && controller.isAlertButtonVisible(item.getAuthorizedAlertData())) {
                     button.setOnAction(e -> controller.onRemoveAlert(item.getAuthorizedAlertData()));
                     setGraphic(button);
                 } else {
@@ -421,47 +361,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         };
     }
 
-    private Callback<TableColumn<DifficultyAdjustmentListItem, DifficultyAdjustmentListItem>,
-            TableCell<DifficultyAdjustmentListItem, DifficultyAdjustmentListItem>> getRemoveDifficultyAdjustmentCellFactory() {
-        return column -> new TableCell<>() {
-            private final Button button = new Button(Res.get("data.remove"));
-
-            @Override
-            protected void updateItem(DifficultyAdjustmentListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty && controller.isRemoveDifficultyAdjustmentButtonVisible(item.getData())) {
-                    button.setOnAction(e -> controller.onRemoveDifficultyAdjustmentListItem(item));
-                    setGraphic(button);
-                } else {
-                    button.setOnAction(null);
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    @Getter
-    @ToString
-    public static class DifficultyAdjustmentListItem implements DateTableItem {
-        @EqualsAndHashCode.Include
-        private final AuthorizedDifficultyAdjustmentData data;
-
-        private final long date;
-        private final String dateString, timeString, difficultyAdjustmentFactorString;
-        private final double difficultyAdjustmentFactor;
-
-        public DifficultyAdjustmentListItem(AuthorizedDifficultyAdjustmentData data) {
-            this.data = data;
-            date = data.getDate();
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
-            difficultyAdjustmentFactor = data.getDifficultyAdjustmentFactor();
-            difficultyAdjustmentFactorString = String.valueOf(difficultyAdjustmentFactor);
-        }
-    }
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter

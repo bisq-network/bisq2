@@ -35,8 +35,13 @@ public class SecurityManager {
         public Controller(ServiceProvider serviceProvider) {
             SecurityManagerTabController releaseManagerTabController = new SecurityManagerTabController(serviceProvider);
             Model model = new Model();
+            DifficultyAdjustmentController difficultyAdjustmentController = new DifficultyAdjustmentController(serviceProvider);
             RoleInfo roleInfo = new RoleInfo(serviceProvider);
-            view = new View(model, this, releaseManagerTabController.getView().getRoot(), roleInfo.getRoot());
+            view = new View(model,
+                    this,
+                    releaseManagerTabController.getView().getRoot(),
+                    difficultyAdjustmentController.getView().getRoot(),
+                    roleInfo.getRoot());
         }
 
         @Override
@@ -57,6 +62,7 @@ public class SecurityManager {
         public View(Model model,
                     Controller controller,
                     Pane tabViewRoot,
+                    Pane difficultyAdjustment,
                     Pane roleInfo) {
             super(new VBox(30), model, controller);
 
@@ -64,7 +70,7 @@ public class SecurityManager {
             root.setAlignment(Pos.TOP_LEFT);
 
             VBox.setMargin(roleInfo, new Insets(0, -40, 0, -40));
-            root.getChildren().addAll(tabViewRoot, roleInfo);
+            root.getChildren().addAll(tabViewRoot, difficultyAdjustment, roleInfo);
         }
 
         @Override
