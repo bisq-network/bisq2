@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager;
+package bisq.desktop.main.content.authorized_role.release_manager.tabs;
 
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.desktop.common.view.View;
@@ -30,8 +30,11 @@ import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -50,10 +53,10 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     private final CheckBox isPreReleaseCheckBox, isLauncherUpdateCheckBox;
     private final RichTableView<ListItem> richTableView;
 
-    public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller, Pane roleInfo) {
+    public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller) {
         super(new VBox(10), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setPadding(new Insets(20, 0, 0, 0));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("authorizedRole.releaseManager.headline"));
@@ -76,19 +79,16 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 Res.get("authorizedRole.releaseManager.table.headline"));
         configTableView();
 
-        roleInfo.setPadding(new Insets(0));
-
         VBox.setMargin(sendButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(isPreReleaseCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
+        VBox.setMargin(richTableView, new Insets(40, 0, 0, 0));
         root.getChildren().addAll(headline,
                 releaseNotes,
                 version,
                 isPreReleaseCheckBox,
                 isLauncherUpdateCheckBox,
                 sendButton,
-                richTableView,
-                roleInfo);
+                richTableView);
     }
 
     @Override

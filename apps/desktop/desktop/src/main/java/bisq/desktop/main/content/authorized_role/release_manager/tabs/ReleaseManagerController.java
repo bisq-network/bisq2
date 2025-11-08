@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager;
+package bisq.desktop.main.content.authorized_role.release_manager.tabs;
 
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
@@ -26,7 +26,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.i18n.Res;
 import bisq.support.release_manager.ReleaseManagerService;
 import bisq.user.identity.UserIdentity;
@@ -47,14 +46,13 @@ public class ReleaseManagerController implements Controller {
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
 
-    public ReleaseManagerController(ServiceProvider serviceProvider) {
+    public ReleaseManagerController(ServiceProvider serviceProvider, AppType appType) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
-        RoleInfo roleInfo = new RoleInfo(serviceProvider);
-        model = new ReleaseManagerModel();
-        view = new ReleaseManagerView(model, this, roleInfo.getRoot());
+        model = new ReleaseManagerModel(appType);
+        view = new ReleaseManagerView(model, this);
     }
 
     @Override

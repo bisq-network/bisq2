@@ -1841,3 +1841,15 @@
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Release manager                                                              *
+ *                                                                             *
+ ******************************************************************************/
+
+.release-manager-tab-view {
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-background-radius: 8;
+}

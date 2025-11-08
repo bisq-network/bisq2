@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.authorized_role;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -33,8 +32,9 @@ import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
-import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManagerController;
+import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManager;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -92,7 +92,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
             case MEDIATOR -> Optional.of(new MediatorController(serviceProvider));
             case MODERATOR -> Optional.of(new ModeratorController(serviceProvider));
             case SECURITY_MANAGER -> Optional.of(new SecurityManagerController(serviceProvider));
-            case RELEASE_MANAGER -> Optional.of(new ReleaseManagerController(serviceProvider));
+            case RELEASE_MANAGER -> Optional.of(new ReleaseManager.Controller(serviceProvider));
             case SEED_NODE, ORACLE_NODE, EXPLORER_NODE, MARKET_PRICE_NODE ->
                     Optional.of(new RoleInfo(serviceProvider).getController());
             default -> Optional.empty();

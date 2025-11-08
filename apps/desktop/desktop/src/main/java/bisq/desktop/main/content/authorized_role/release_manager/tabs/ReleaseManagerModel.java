@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager;
+package bisq.desktop.main.content.authorized_role.release_manager.tabs;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
@@ -30,12 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class ReleaseManagerModel implements Model {
+    private final AppType appType;
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty releaseNotes = new SimpleStringProperty();
     private final StringProperty version = new SimpleStringProperty();
     private final BooleanProperty isPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
     private final ObservableList<ReleaseManagerView.ListItem> listItems = FXCollections.observableArrayList();
-    public ReleaseManagerModel() {
+
+    public ReleaseManagerModel(AppType appType) {
+        this.appType = appType;
     }
 }
