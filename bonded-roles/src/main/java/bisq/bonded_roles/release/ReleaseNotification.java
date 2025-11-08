@@ -67,8 +67,9 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
+    // Once we can expect all users have updated to 2.1.8 we can update the version to 2, thus the appType will not be excluded anymore.
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final AppType appType;
 
     // transient fields are excluded by default for EqualsAndHashCode

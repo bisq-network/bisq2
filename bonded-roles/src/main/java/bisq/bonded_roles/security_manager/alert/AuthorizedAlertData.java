@@ -78,8 +78,9 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     // Added in version 2.1.6
     private final Optional<String> bannedAccountData;
 
+    // Once we can expect all users have updated to 2.1.8 we can update the version to 2, thus the appType will not be excluded anymore.
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final AppType appType;
 
     public AuthorizedAlertData(String id,
