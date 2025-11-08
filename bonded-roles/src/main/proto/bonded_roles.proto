@@ -81,6 +81,7 @@ message AuthorizedAlertData {
   optional string headline = 11;
   sint32 version = 12;
   optional string bannedAccountData = 13;
+  AppType appType = 14;
 }
 
 message ReleaseNotification {

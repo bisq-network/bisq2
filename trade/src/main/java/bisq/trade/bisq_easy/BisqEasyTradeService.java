@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -68,7 +69,6 @@ import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.protobuf.User;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,6 +96,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final AlertService alertService;
 
     private final Persistence<BisqEasyTradeStore> persistence;
+    private final AppType appType;
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
     // We don't persist the protocol, only the model.
@@ -111,7 +112,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
-    public BisqEasyTradeService(ServiceProvider serviceProvider) {
+    public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
@@ -122,6 +123,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        this.appType = appType;
     }
 
 
@@ -140,7 +142,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
                     if (authorizedAlertData.isHaltTrading()) {
                         haltTrading = true;
                     }
@@ -154,7 +156,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             @Override
             public void remove(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
                         if (authorizedAlertData.isHaltTrading()) {
                             haltTrading = false;
                         }

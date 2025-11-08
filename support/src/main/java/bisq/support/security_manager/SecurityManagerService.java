@@ -19,6 +19,7 @@ package bisq.support.security_manager;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
@@ -33,7 +34,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -79,7 +79,8 @@ public class SecurityManagerService implements Service {
                                                    boolean requireVersionForTrading,
                                                    Optional<String> minVersion,
                                                    Optional<AuthorizedBondedRole> bannedRole,
-                                                   Optional<String> bannedAccountData
+                                                   Optional<String> bannedAccountData,
+                                                   AppType appType
     ) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String securityManagerProfileId = userIdentity.getId();
@@ -95,7 +96,8 @@ public class SecurityManagerService implements Service {
                 bannedRole,
                 securityManagerProfileId,
                 staticPublicKeysProvided,
-                bannedAccountData);
+                bannedAccountData,
+                appType);
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

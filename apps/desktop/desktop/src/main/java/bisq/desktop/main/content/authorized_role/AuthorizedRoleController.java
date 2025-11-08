@@ -33,7 +33,7 @@ import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
 import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManager;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerController;
+import bisq.desktop.main.content.authorized_role.security_manager.SecurityManager;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -91,7 +91,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         return switch (navigationTarget) {
             case MEDIATOR -> Optional.of(new MediatorController(serviceProvider));
             case MODERATOR -> Optional.of(new ModeratorController(serviceProvider));
-            case SECURITY_MANAGER -> Optional.of(new SecurityManagerController(serviceProvider));
+            case SECURITY_MANAGER -> Optional.of(new SecurityManager.Controller(serviceProvider));
             case RELEASE_MANAGER -> Optional.of(new ReleaseManager.Controller(serviceProvider));
             case SEED_NODE, ORACLE_NODE, EXPLORER_NODE, MARKET_PRICE_NODE ->
                     Optional.of(new RoleInfo(serviceProvider).getController());

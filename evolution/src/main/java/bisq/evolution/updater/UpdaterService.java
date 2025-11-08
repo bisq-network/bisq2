@@ -135,7 +135,9 @@ public class UpdaterService implements Service {
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                        authorizedAlertData.isRequireVersionForTrading() &&
+                        authorizedAlertData.getAppType() == appType) {
                     requireVersionForTrading = true;
                     minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
                     reapplyAllReleaseNotifications();
@@ -145,7 +147,9 @@ public class UpdaterService implements Service {
             @Override
             public void remove(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                            authorizedAlertData.isRequireVersionForTrading() &&
+                            authorizedAlertData.getAppType() == appType) {
                         requireVersionForTrading = false;
                         minRequiredVersionForTrading = Optional.empty();
                         reapplyAllReleaseNotifications();

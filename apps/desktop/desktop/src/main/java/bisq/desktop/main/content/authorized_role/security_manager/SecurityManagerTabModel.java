@@ -15,27 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.release;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.proto.ProtobufUtils;
-import bisq.i18n.Res;
+import bisq.desktop.common.view.TabModel;
+import bisq.desktop.navigation.NavigationTarget;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public enum AppType implements ProtoEnum {
-    DESKTOP,
-    MOBILE_NODE,
-    MOBILE_CLIENT;
-
+@Slf4j
+@Getter
+public class SecurityManagerTabModel extends TabModel {
     @Override
-    public bisq.bonded_roles.protobuf.AppType toProtoEnum() {
-        return bisq.bonded_roles.protobuf.AppType.valueOf(getProtobufEnumPrefix() + name());
-    }
-
-    public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) {
-        return ProtobufUtils.enumFromProto(AppType.class, proto.name());
-    }
-
-    public String getDisplayString() {
-        return Res.get("authorizedRole.releaseManager.appType."+name());
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.DESKTOP_SECURITY_MANAGER;
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager;
+package bisq.desktop.main.content.authorized_role.security_manager.tabs;
 
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
@@ -52,7 +52,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -84,10 +83,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     private Subscription selectedAlertTypePin, selectedBondedRolListItemPin;
 
-    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller, Pane roleInfo) {
+    public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller) {
         super(new VBox(10), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setPadding(new Insets(20, 0, 0, 0));
         root.setAlignment(Pos.TOP_LEFT);
 
 
@@ -161,16 +160,14 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         difficultyAdjustmentTableView = new RichTableView<>(model.getDifficultyAdjustmentListItems(),
                 Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
         configDifficultyAdjustmentTableView();
+        difficultyAdjustmentTableView.setMaxHeight(50);
 
 
-        // Role info
-        roleInfo.setPadding(new Insets(0));
-
+        VBox.setMargin(alertTableView, new Insets(40, 0, 0, 0));
         VBox.setMargin(difficultyAdjustmentButton, new Insets(0, 0, 10, 0));
         VBox.setMargin(sendAlertButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
         VBox.setMargin(difficultyAdjustmentHeadline, new Insets(20, 0, 0, 0));
-        VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
         VBox.setVgrow(difficultyAdjustmentTableView, Priority.NEVER);
         VBox.setVgrow(alertTableView, Priority.NEVER);
         this.root.getChildren().addAll(
@@ -182,8 +179,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 sendAlertButton,
                 alertTableView,
                 difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
-                difficultyAdjustmentTableView,
-                roleInfo);
+                difficultyAdjustmentTableView);
     }
 
     @Override

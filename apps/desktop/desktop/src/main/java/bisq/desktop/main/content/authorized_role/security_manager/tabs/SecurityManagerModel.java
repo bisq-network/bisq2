@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager;
+package bisq.desktop.main.content.authorized_role.security_manager.tabs;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.AlertListItem;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.BondedRoleListItem;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.DifficultyAdjustmentListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerView.AlertListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerView.BondedRoleListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.tabs.SecurityManagerView.DifficultyAdjustmentListItem;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class SecurityManagerModel implements Model {
+    private final AppType appType;
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
     private final BooleanProperty difficultyAdjustmentFactorButtonDisabled = new SimpleBooleanProperty();
     private final ObservableList<DifficultyAdjustmentListItem> difficultyAdjustmentListItems = FXCollections.observableArrayList();
@@ -58,6 +60,7 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<AlertListItem> alertListItems = FXCollections.observableArrayList();
     private final SortedList<AlertListItem> sortedAlertListItems = new SortedList<>(alertListItems);
 
-    public SecurityManagerModel() {
+    public SecurityManagerModel(AppType appType) {
+        this.appType = appType;
     }
 }

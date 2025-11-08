@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.security_manager;
+package bisq.desktop.main.content.authorized_role.security_manager.tabs;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -33,7 +34,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.support.security_manager.SecurityManagerService;
@@ -67,16 +67,15 @@ public class SecurityManagerController implements Controller {
     private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin,
             difficultyAdjustmentPin, bannedAccountDataPin;
 
-    public SecurityManagerController(ServiceProvider serviceProvider) {
+    public SecurityManagerController(ServiceProvider serviceProvider, AppType appType) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
-        RoleInfo roleInfo = new RoleInfo(serviceProvider);
-        model = new SecurityManagerModel();
-        view = new SecurityManagerView(model, this, roleInfo.getRoot());
+        model = new SecurityManagerModel(appType);
+        view = new SecurityManagerView(model, this);
 
         alertListItemsListener = c -> applyBondedRolePredicate();
     }
@@ -93,7 +92,8 @@ public class SecurityManagerController implements Controller {
         selectedBondedRolePin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(), e -> updateSendButtonDisabled());
 
         alertsPin = FxBindings.<AuthorizedAlertData, SecurityManagerView.AlertListItem>bind(model.getAlertListItems())
-                .map(authorizedBondedRole -> new SecurityManagerView.AlertListItem(authorizedBondedRole, this))
+                .map(authorizedAlertData -> new SecurityManagerView.AlertListItem(authorizedAlertData, this))
+                .filter(authorizedAlertData -> authorizedAlertData.getAppType() == model.getAppType())
                 .to(alertService.getAuthorizedAlertDataSet());
 
         bondedRoleSetPin = FxBindings.<BondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
@@ -176,7 +176,8 @@ public class SecurityManagerController implements Controller {
                         model.getRequireVersionForTrading().get(),
                         StringUtils.toOptional(model.getMinVersion().get()),
                         bannedRole,
-                        StringUtils.toOptional(bannedAccountData))
+                        StringUtils.toOptional(bannedAccountData),
+                        model.getAppType())
                 .whenComplete((result, throwable) -> UIThread.run(() -> {
                     if (throwable != null) {
                         new Popup().error(throwable).show();

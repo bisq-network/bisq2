@@ -176,7 +176,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService,
-                accountService, burningmanService);
+                accountService, burningmanService, AppType.DESKTOP);
 
         updaterService = new UpdaterService(getConfig(),
                 settingsService,
@@ -214,7 +214,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
+        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService(), AppType.DESKTOP);
 
         favouriteMarketsService = new FavouriteMarketsService(settingsService);
 

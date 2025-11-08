@@ -17,6 +17,7 @@
 
 package bisq.desktop.overlay.update;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
@@ -112,7 +113,9 @@ public class UpdaterController implements Controller {
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                        authorizedAlertData.isRequireVersionForTrading() &&
+                        authorizedAlertData.getAppType() == AppType.DESKTOP) {
                     model.setRequireVersionForTrading(true);
                     model.setMinRequiredVersionForTrading(authorizedAlertData.getMinVersion());
                     updateIgnoreVersionState();
@@ -122,7 +125,9 @@ public class UpdaterController implements Controller {
             @Override
             public void remove(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                            authorizedAlertData.isRequireVersionForTrading() &&
+                            authorizedAlertData.getAppType() == AppType.DESKTOP) {
                         model.setRequireVersionForTrading(false);
                         model.setMinRequiredVersionForTrading(Optional.empty());
                         updateIgnoreVersionState();

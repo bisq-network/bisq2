@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -82,7 +83,8 @@ public class TradeService implements Service, ServiceProvider {
                         UserService userService,
                         SettingsService settingsService,
                         AccountService accountService,
-                        BurningmanService burningmanService) {
+                        BurningmanService burningmanService,
+                        AppType appType) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -98,9 +100,8 @@ public class TradeService implements Service, ServiceProvider {
 
         delayedPayoutTxReceiverService = new DelayedPayoutTxReceiverService(burningmanService);
 
-        bisqEasyTradeService = new BisqEasyTradeService(this);
-        muSigTradeService = new MuSigTradeService(MuSigTradeService.Config.from(config.getMuSigConfig()),
-                this);
+        bisqEasyTradeService = new BisqEasyTradeService(this, appType);
+        muSigTradeService = new MuSigTradeService(MuSigTradeService.Config.from(config.getMuSigConfig()), this, appType);
     }
 
 

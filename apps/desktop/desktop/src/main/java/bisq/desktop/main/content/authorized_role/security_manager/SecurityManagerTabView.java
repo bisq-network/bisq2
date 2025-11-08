@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.threading.UIThread;
@@ -33,8 +33,8 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ReleaseManagerTabView extends TabView<ReleaseManagerTabModel, ReleaseManagerTabController> {
-    public ReleaseManagerTabView(ReleaseManagerTabModel model, ReleaseManagerTabController controller) {
+public class SecurityManagerTabView extends TabView<SecurityManagerTabModel, SecurityManagerTabController> {
+    public SecurityManagerTabView(SecurityManagerTabModel model, SecurityManagerTabController controller) {
         super(model, controller);
 
         root.setPadding(new Insets(20, 40, 20, 40));
@@ -43,13 +43,13 @@ public class ReleaseManagerTabView extends TabView<ReleaseManagerTabModel, Relea
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("authorizedRole.appType.DESKTOP"),
-                NavigationTarget.DESKTOP_RELEASE_MANAGER,
+                NavigationTarget.DESKTOP_SECURITY_MANAGER,
                 styles);
         addTab(Res.get("authorizedRole.appType.MOBILE_NODE"),
-                NavigationTarget.MOBILE_NODE_RELEASE_MANAGER,
+                NavigationTarget.MOBILE_NODE_SECURITY_MANAGER,
                 styles);
         addTab(Res.get("authorizedRole.appType.MOBILE_CLIENT"),
-                NavigationTarget.MOBILE_CLIENT_RELEASE_MANAGER,
+                NavigationTarget.MOBILE_CLIENT_SECURITY_MANAGER,
                 styles);
 
         // We apply the height of the viewpoint according the content height as we delegate the scrolling to the parent.
