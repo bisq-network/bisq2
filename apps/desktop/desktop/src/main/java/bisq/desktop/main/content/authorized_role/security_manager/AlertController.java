@@ -87,8 +87,8 @@ public class AlertController implements Controller {
         selectedBondedRolePin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(), e -> updateSendButtonDisabled());
 
         alertsPin = FxBindings.<AuthorizedAlertData, AlertView.AlertListItem>bind(model.getAlertListItems())
-                .map(authorizedAlertData -> new AlertView.AlertListItem(authorizedAlertData, this))
                 .filter(authorizedAlertData -> authorizedAlertData.getAppType() == model.getAppType())
+                .map(authorizedAlertData -> new AlertView.AlertListItem(authorizedAlertData, this))
                 .to(alertService.getAuthorizedAlertDataSet());
 
         bondedRoleSetPin = FxBindings.<BondedRole, AlertView.BondedRoleListItem>bind(model.getBondedRoleListItems())

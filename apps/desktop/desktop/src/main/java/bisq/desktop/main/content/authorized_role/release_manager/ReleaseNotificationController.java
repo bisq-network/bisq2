@@ -60,8 +60,8 @@ public class ReleaseNotificationController implements Controller {
     public void onActivate() {
         model.getIsLauncherUpdate().set(true);
         getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseNotificationView.ListItem>bind(model.getListItems())
-                .map(ReleaseNotificationView.ListItem::new)
                 .filter(releaseNotification -> releaseNotification.getAppType() == model.getAppType())
+                .map(ReleaseNotificationView.ListItem::new)
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));

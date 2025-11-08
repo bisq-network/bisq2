@@ -1845,11 +1845,11 @@
 
 /*******************************************************************************
  *                                                                             *
- * Release manager                                                              *
+ * Release/Security manager                                                              *
  *                                                                             *
  ******************************************************************************/
 
-.release-manager-tab-view {
+.manager-tab-view {
     -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8;
 }

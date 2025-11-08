@@ -39,7 +39,7 @@ public class ReleaseManagerTabView extends TabView<ReleaseManagerTabModel, Relea
 
         root.setPadding(new Insets(20, 40, 20, 40));
         root.setAlignment(Pos.TOP_LEFT);
-        root.getStyleClass().add("release-manager-tab-view");
+        root.getStyleClass().add("manager-tab-view");
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
         addTab(Res.get("authorizedRole.appType.DESKTOP"),
