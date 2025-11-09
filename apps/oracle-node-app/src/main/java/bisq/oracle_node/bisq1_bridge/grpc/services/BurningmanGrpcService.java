@@ -20,23 +20,32 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 import bisq.bridge.protobuf.BurningmanBlockSubscription;
 import bisq.burningman.AuthorizedBurningmanListByBlock;
 import bisq.burningman.BurningmanData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BurningmanBlockDto;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BurningmanBlocksRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BurningmanBlocksResponse;
 import io.grpc.stub.StreamObserver;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<BurningmanBlockDto> {
-    public BurningmanGrpcService(boolean staticPublicKeysProvided,
-                                 GrpcClient grpcClient,
-                                 BlockingQueue<AuthorizedDistributedData> queue) {
-        super(staticPublicKeysProvided, grpcClient, queue);
+    @Getter
+    private final BlockingQueue<AuthorizedBurningmanListByBlock> authorizedBurningmanListByBlockQueue = new LinkedBlockingQueue<>(10000);
+
+    public BurningmanGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
+        super(staticPublicKeysProvided, grpcClient);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        authorizedBurningmanListByBlockQueue.clear();
+        return super.shutdown();
     }
 
     @Override
@@ -51,7 +60,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
     protected void handleResponse(BurningmanBlockDto data) {
         log.info("Received BurningmanBlockDto at height {}", data.getHeight());
         var authorizedBurningmanListByBlock = toAuthorizedBurningmanListByBlock(data);
-        queue.offer(authorizedBurningmanListByBlock);
+        authorizedBurningmanListByBlockQueue.offer(authorizedBurningmanListByBlock);
     }
 
     @Override

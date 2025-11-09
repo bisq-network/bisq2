@@ -19,14 +19,12 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.Service;
 import bisq.common.timer.Delay;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -40,18 +38,14 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
 
     protected final boolean staticPublicKeysProvided;
     protected final GrpcClient grpcClient;
-    protected final BlockingQueue<AuthorizedDistributedData> queue;
     protected final AtomicLong subscribeRetryInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestAttempts = new AtomicLong(0);
     protected volatile boolean shutdownCalled;
 
-    public BridgeSubscriptionGrpcService(boolean staticPublicKeysProvided,
-                                         GrpcClient grpcClient,
-                                         BlockingQueue<AuthorizedDistributedData> queue) {
+    public BridgeSubscriptionGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
         this.grpcClient = grpcClient;
-        this.queue = queue;
     }
 
 

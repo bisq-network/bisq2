@@ -21,6 +21,8 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
+import bisq.common.data.ByteArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -30,12 +32,16 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BsqBlockGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BurningmanGrpcService;
 import bisq.persistence.PersistenceService;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.data.AuthorizedBondedReputationData;
+import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,13 +57,21 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Processes the queues for republishing data on a short interval (1 sec by default).
+ * For AuthorizedProofOfBurnData and AuthorizedBondedReputationData we check if the associated user profile is in our
+ * network DB and only publish those. Data from inactive user profiles got swapped to the end of the queues, thus they
+ * will get re-evaluated at the next scheduler run.
+ * Republishing of AuthorizedAccountAgeData, AuthorizedSignedWitnessData and AuthorizedTimestampData is done by the
+ * user by re-doing the requests before TTL expires.
+ */
 @Slf4j
-public class Bisq1BridgeService implements Service, Node.Listener {
+public class Bisq1BridgeService implements Service, Node.Listener, DataService.Listener {
     @Getter
     public static class Config {
         private final int grpcServicePort;
-        private final int initialDelayInSeconds;
-        private final int throttleDelayInSeconds;
+        private final int initialDelayInSeconds; // 120 sec by default
+        private final int throttleDelayInSeconds; // 1 sec by default
         private final int numConnectionsForRepublish;
 
         public Config(int grpcServicePort,
@@ -90,7 +104,10 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     private final BurningmanGrpcService burningmanGrpcService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
     private final Bisq1BridgeRequestService bisq1BridgeRequestService;
-    private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
+    private final BlockingQueue<AuthorizedBondedRole> authorizedBondedRoleQueue = new LinkedBlockingQueue<>(10000);
+    private final Set<ByteArray> userProfileProofOfBurnHashes = new ObservableSet<>();
+    private final Set<ByteArray> userProfileBondedReputationHashes = new ObservableSet<>();
+
     @Nullable
     private KeyPair keyPair;
     @Nullable
@@ -116,13 +133,9 @@ public class Bisq1BridgeService implements Service, Node.Listener {
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
 
-        bsqBlockGrpcService = new BsqBlockGrpcService(staticPublicKeysProvided,
-                grpcClient,
-                queue);
+        bsqBlockGrpcService = new BsqBlockGrpcService(staticPublicKeysProvided, grpcClient);
 
-        burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided,
-                grpcClient,
-                queue);
+        burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided, grpcClient);
 
         bisq1BridgeRequestService = new Bisq1BridgeRequestService(persistenceService,
                 identityService,
@@ -140,6 +153,18 @@ public class Bisq1BridgeService implements Service, Node.Listener {
 
         networkService.addDefaultNodeListener(this);
 
+        networkService.addDataServiceListener(this);
+        String storageKey = UserProfile.class.getSimpleName();
+        networkService.getDataService()
+                .stream() // turns Optional<DataService> into Stream<DataService>
+                .flatMap(dataService ->
+                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                .map(AuthenticatedData::getDistributedData)
+                                .filter(UserProfile.class::isInstance)
+                                .map(UserProfile.class::cast)
+                )
+                .forEach(this::handleUserProfileAdded);
+
         return grpcClient.initialize()
                 .thenCompose(result -> bisq1BridgeRequestService.initialize())
                 .thenCompose(result -> bsqBlockGrpcService.initialize());
@@ -151,8 +176,7 @@ public class Bisq1BridgeService implements Service, Node.Listener {
         log.info("shutdown");
 
         networkService.removeDefaultNodeListener(this);
-
-        queue.clear();
+        networkService.removeDataServiceListener(this);
 
         ScheduledExecutorService toShutdown;
         synchronized (executorLock) {
@@ -170,6 +194,11 @@ public class Bisq1BridgeService implements Service, Node.Listener {
                 .thenCompose(result -> grpcClient.shutdown());
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Node.Listener
+    /* --------------------------------------------------------------------- */
+
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
     }
@@ -186,12 +215,7 @@ public class Bisq1BridgeService implements Service, Node.Listener {
                 networkService.removeDefaultNodeListener(this);
 
                 ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
-                tmp.scheduleWithFixedDelay(() -> {
-                    AuthorizedDistributedData data = queue.poll();
-                    if (data != null) {
-                        publishAuthorizedData(data);
-                    }
-                }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                tmp.scheduleWithFixedDelay(this::maybePublish, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
                 executor = tmp;
 
                 republishAuthorizedBondedRoles();
@@ -203,20 +227,93 @@ public class Bisq1BridgeService implements Service, Node.Listener {
     public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // DataService.Listener
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            handleUserProfileAdded(userProfile);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            handleUserProfileRemoved(userProfile);
+        }
+    }
+
+
     // The OracleNodeService has scheduler for republishing oracle data every 50 days and is also used to call our
     // republishAuthorizedBondedRoles. AuthorizedBondedRole has a 100 day TTL.
     public void republishAuthorizedBondedRoles() {
         Set<AuthorizedBondedRole> bannedAuthorizedBondedRoleSet = authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream().collect(Collectors.toSet());
-        networkService.getDataService().stream()
-                .flatMap(dataService -> dataService.getAuthorizedData()
-                        .map(AuthorizedData::getAuthorizedDistributedData)
-                        .filter(AuthorizedBondedRole.class::isInstance)
-                        .map(AuthorizedBondedRole.class::cast)
-                        .filter(authorizedBondedRole -> !bannedAuthorizedBondedRoleSet.contains(authorizedBondedRole))
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().isPresent())
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().get().getProfileId().equals(myAuthorizedOracleNode.getProfileId()))
+
+        String storageKey = AuthorizedBondedRole.class.getSimpleName();
+        String myAuthorizedOracleNodeProfileId = myAuthorizedOracleNode.getProfileId();
+        networkService.getDataService()
+                .stream() // turns Optional<DataService> into Stream<DataService>
+                .flatMap(dataService ->
+                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                .map(AuthenticatedData::getDistributedData)
+                                .filter(AuthorizedBondedRole.class::isInstance)
+                                .map(AuthorizedBondedRole.class::cast)
+                                .filter(authorizedBondedRole -> !bannedAuthorizedBondedRoleSet.contains(authorizedBondedRole))
+                                .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().isPresent())
+                                .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().get().getProfileId().equals(myAuthorizedOracleNodeProfileId))
                 )
-                .forEach(queue::offer);
+                .forEach(authorizedBondedRoleQueue::offer);
+    }
+
+    private void maybePublish() {
+        //  Highest priority: AuthorizedBondedRole
+        AuthorizedDistributedData data = authorizedBondedRoleQueue.poll();
+
+        if (data == null) {
+            // Next: AuthorizedProofOfBurnData (only from active profiles)
+            data = this.pollIfActive(bsqBlockGrpcService.getAuthorizedProofOfBurnDataQueue());
+        }
+
+        if (data == null) {
+            // Then: AuthorizedBondedReputationData (only from active profiles)
+            data = pollIfActive(bsqBlockGrpcService.getAuthorizedBondedReputationDataQueue());
+        }
+
+        if (data == null) {
+            // Finally: AuthorizedBurningmanListByBlock
+            data = burningmanGrpcService.getAuthorizedBurningmanListByBlockQueue().poll();
+        }
+
+        if (data != null) {
+            publishAuthorizedData(data);
+        }
+    }
+
+    private <T extends AuthorizedDistributedData> T pollIfActive(BlockingQueue<T> queue) {
+        T data = queue.poll();
+        if (data == null) {
+            return null;
+        }
+        if (userProfileInactive(data)) {
+            // Reinsert inactive data to the end (reordering intentionally)
+            queue.offer(data);
+            return null;
+        }
+        return data;
+    }
+
+    private boolean userProfileInactive(AuthorizedDistributedData data) {
+        if (data instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
+            return !userProfileProofOfBurnHashes.contains(new ByteArray(authorizedProofOfBurnData.getHash()));
+        } else if (data instanceof AuthorizedBondedReputationData authorizedBondedReputationData) {
+            return !userProfileBondedReputationHashes.contains(new ByteArray(authorizedBondedReputationData.getHash()));
+        } else {
+            // Unexpected as we get called only for AuthorizedProofOfBurnData and AuthorizedBondedReputationData
+            return false;
+        }
     }
 
     private void publishAuthorizedData(AuthorizedDistributedData data) {
@@ -229,5 +326,15 @@ public class Bisq1BridgeService implements Service, Node.Listener {
                 keyPair,
                 authorizedPrivateKey,
                 authorizedPublicKey);
+    }
+
+    private void handleUserProfileAdded(UserProfile userProfile) {
+        userProfileProofOfBurnHashes.add(userProfile.getProofOfBurnKey());
+        userProfileBondedReputationHashes.add(userProfile.getBondedReputationKey());
+    }
+
+    private void handleUserProfileRemoved(UserProfile userProfile) {
+        userProfileProofOfBurnHashes.remove(userProfile.getProofOfBurnKey());
+        userProfileBondedReputationHashes.remove(userProfile.getProofOfBurnKey());
     }
 }
