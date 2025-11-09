@@ -47,6 +47,11 @@ public final class BurningmanBlocksRequest implements NetworkProto {
         return getBuilder(serializeForHash).build();
     }
 
+    @Override
+    public bisq.bridge.protobuf.BurningmanBlocksRequest completeProto() {
+        return toProto(false);
+    }
+
     public static BurningmanBlocksRequest fromProto(bisq.bridge.protobuf.BurningmanBlocksRequest proto) {
         return new BurningmanBlocksRequest(proto.getStartBlockHeight());
     }

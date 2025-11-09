@@ -48,6 +48,11 @@ public final class BsqBlocksRequest implements NetworkProto {
         return getBuilder(serializeForHash).build();
     }
 
+    @Override
+    public bisq.bridge.protobuf.BsqBlocksRequest completeProto() {
+        return toProto(false);
+    }
+
     public static BsqBlocksRequest fromProto(bisq.bridge.protobuf.BsqBlocksRequest proto) {
         return new BsqBlocksRequest(proto.getStartBlockHeight());
     }

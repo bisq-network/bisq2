@@ -47,6 +47,11 @@ public final class AccountAgeWitnessDateRequest implements NetworkProto {
         return getBuilder(serializeForHash).build();
     }
 
+    @Override
+    public bisq.bridge.protobuf.AccountAgeWitnessDateRequest completeProto() {
+        return toProto(false);
+    }
+
     public static AccountAgeWitnessDateRequest fromProto(bisq.bridge.protobuf.AccountAgeWitnessDateRequest proto) {
         return new AccountAgeWitnessDateRequest(proto.getHashAsHex());
     }

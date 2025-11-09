@@ -47,6 +47,11 @@ public final class SignedWitnessDateRequest implements NetworkProto {
         return getBuilder(serializeForHash).build();
     }
 
+    @Override
+    public bisq.bridge.protobuf.SignedWitnessDateRequest completeProto() {
+        return toProto(false);
+    }
+
     public static SignedWitnessDateRequest fromProto(bisq.bridge.protobuf.SignedWitnessDateRequest proto) {
         return new SignedWitnessDateRequest(proto.getHashAsHex());
     }
