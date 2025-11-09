@@ -26,10 +26,13 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -43,7 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
@@ -64,6 +67,10 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     // and use default `@ExcludeForHash` instead.
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final boolean staticPublicKeysProvided;
+
+    @EqualsAndHashCode.Exclude
+    @Setter
+    private transient long publishDate;
 
     public AuthorizedProofOfBurnData(long blockTime,
                                      long amount,
