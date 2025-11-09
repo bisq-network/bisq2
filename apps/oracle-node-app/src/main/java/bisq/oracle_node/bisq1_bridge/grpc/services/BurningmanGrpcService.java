@@ -41,7 +41,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
 
     @Override
     protected List<BurningmanBlockDto> doRequest(int startBlockHeight) {
-        var protoRequest = new BurningmanBlocksRequest(startBlockHeight).toProto(true);
+        var protoRequest = new BurningmanBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = grpcClient.getBurningmanBlockingStub().requestBurningmanBlocks(protoRequest);
         BurningmanBlocksResponse response = BurningmanBlocksResponse.fromProto(protoResponse);
         return response.getBlocks();
@@ -60,7 +60,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
         grpcClient.getBurningmanStub().subscribe(subscription, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bridge.protobuf.BurningmanBlockDto proto) {
-                 handleResponse(BurningmanBlockDto.fromProto(proto));
+                handleResponse(BurningmanBlockDto.fromProto(proto));
 
                 // reset
                 subscribeRetryInterval.set(1);

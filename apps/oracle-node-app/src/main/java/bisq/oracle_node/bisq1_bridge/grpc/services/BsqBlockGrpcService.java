@@ -44,7 +44,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
 
     @Override
     protected List<BsqBlockDto> doRequest(int startBlockHeight) {
-        var protoRequest = new BsqBlocksRequest(startBlockHeight).toProto(true);
+        var protoRequest = new BsqBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = grpcClient.getBsqBlockBlockingStub().requestBsqBlocks(protoRequest);
         BsqBlocksResponse response = BsqBlocksResponse.fromProto(protoResponse);
         return response.getBlocks();

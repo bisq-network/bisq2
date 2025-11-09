@@ -79,7 +79,7 @@ public class AccountAgeWitnessGrpcService implements Service {
     }
 
     private long requestDate(String hashAsHex) {
-        var protoRequest = new AccountAgeWitnessDateRequest(hashAsHex).toProto(true);
+        var protoRequest = new AccountAgeWitnessDateRequest(hashAsHex).completeProto();
         var protoResponse = grpcClient.getAccountAgeWitnessBlockingStub().requestAccountAgeWitnessDate(protoRequest);
         AccountAgeWitnessDateResponse response = AccountAgeWitnessDateResponse.fromProto(protoResponse);
         return response.getDate();
