@@ -20,6 +20,7 @@ package bisq.oracle_node.timestamp;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.util.MathUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class TimestampService extends RateLimitedPersistenceClient<TimestampStore>
@@ -144,7 +146,12 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
         String profileId = request.getProfileId();
         long date;
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            date = System.currentTimeMillis();
+            date = request.getDate();
+            // Old clients have no date set (0 default)
+            if (date == 0 || isDateTooFarOff(date)) {
+                // Round to second to avoid different dates at different oracles
+                date = MathUtils.roundDoubleToLong(MathUtils.roundDouble(System.currentTimeMillis() / 1000d, 0) * 1000);
+            }
             persistableStore.getTimestampsByProfileId().put(profileId, date);
             persist();
         } else {
@@ -154,6 +161,10 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
         }
         AuthorizedTimestampData authorizedTimestampData = new AuthorizedTimestampData(profileId, date, staticPublicKeysProvided);
         publishAuthorizedData(authorizedTimestampData);
+    }
+
+    private static boolean isDateTooFarOff(long date) {
+        return Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(1);
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {

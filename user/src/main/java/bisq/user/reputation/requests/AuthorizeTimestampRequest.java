@@ -39,9 +39,11 @@ public final class AuthorizeTimestampRequest implements MailboxMessage, External
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final String profileId;
+    private final long date;
 
-    public AuthorizeTimestampRequest(String profileId) {
+    public AuthorizeTimestampRequest(String profileId, long date) {
         this.profileId = profileId;
+        this.date = date;
 
         verify();
     }
@@ -54,11 +56,12 @@ public final class AuthorizeTimestampRequest implements MailboxMessage, External
     @Override
     public bisq.user.protobuf.AuthorizeTimestampRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizeTimestampRequest.newBuilder()
-                .setProfileId(profileId);
+                .setProfileId(profileId)
+                .setDate(date);
     }
 
     public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto) {
-        return new AuthorizeTimestampRequest(proto.getProfileId());
+        return new AuthorizeTimestampRequest(proto.getProfileId(), proto.getDate());
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
