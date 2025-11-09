@@ -129,17 +129,13 @@ public class LanguageRepository {
             "kk", // Kazakh
             "km", // Khmer
             "sw", // Swahili
-            "ms" // Malay
+            "ms", // Malay
+            "pa", // Punjabi
+            "am", // Amharic
+            "ha", // Hausa
+            "yo", // Yoruba
+            "jv" // Javanese
             /*
-            Missing languages:
-            | Code | Language        | Countries / Regions                                                                    | Estimated Speakers                                                                                     | Direction |
-            | ---- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
-            | pa   | Punjabi         | India (Punjab), Pakistan (Punjab region)                                               | ~90-125 million+ (depending on dialect) – general figure from world-language listings                  | LTR       |
-            | am   | Amharic         | Ethiopia (official)                                                                    | ~57 million+ speakers                                                                                  | LTR       |
-            | ha   | Hausa           | Nigeria (north), Niger, and wider West Africa                                          | ~72 million native + many L2 (100+m total)                                                             | LTR       |
-            | yo   | Yoruba          | Nigeria, Benin, Togo                                                                   | ~45-50 million+ (various sources) – ranked in world-language listings                                  | LTR       |
-            | jv   | Javanese        | Indonesia (Java)                                                                       | ~68-80 million+ speakers                                                                               | LTR       |
-
             Missing RTL languages:
             | Code | Language        | Countries / Regions                                                                    | Estimated Speakers                                                                                     | Direction |
             | ---- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- |
