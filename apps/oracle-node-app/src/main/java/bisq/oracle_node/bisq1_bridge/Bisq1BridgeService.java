@@ -347,6 +347,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     private void handleUserProfileRemoved(UserProfile userProfile) {
         userProfileProofOfBurnHashes.remove(userProfile.getProofOfBurnKey());
-        userProfileBondedReputationHashes.remove(userProfile.getProofOfBurnKey());
+        userProfileBondedReputationHashes.remove(userProfile.getBondedReputationKey());
     }
 }
