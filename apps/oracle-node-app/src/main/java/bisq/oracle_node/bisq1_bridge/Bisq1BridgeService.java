@@ -33,6 +33,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
@@ -73,15 +74,18 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         private final int initialDelayInSeconds; // 120 sec by default
         private final int throttleDelayInSeconds; // 1 sec by default
         private final int numConnectionsForRepublish;
+        private final boolean ignorePublishAgeCheck;
 
         public Config(int grpcServicePort,
                       int initialDelayInSeconds,
                       int throttleDelayInSeconds,
-                      int numConnectionsForRepublish) {
+                      int numConnectionsForRepublish,
+                      boolean ignorePublishAgeCheck) {
             this.grpcServicePort = grpcServicePort;
             this.initialDelayInSeconds = initialDelayInSeconds;
             this.throttleDelayInSeconds = throttleDelayInSeconds;
             this.numConnectionsForRepublish = numConnectionsForRepublish;
+            this.ignorePublishAgeCheck = ignorePublishAgeCheck;
         }
 
         public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
@@ -89,7 +93,8 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
             return new Bisq1BridgeService.Config(grpcService.getInt("port"),
                     config.getInt("initialDelayInSeconds"),
                     config.getInt("throttleDelayInSeconds"),
-                    config.getInt("numConnectionsForRepublish"));
+                    config.getInt("numConnectionsForRepublish"),
+                    config.getBoolean("ignorePublishAgeCheck"));
         }
     }
 
@@ -288,7 +293,14 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         }
 
         if (data != null) {
-            publishAuthorizedData(data);
+            if (!config.isIgnorePublishAgeCheck() && data instanceof PublishDateAware publishDateAware) {
+                long publishAge = System.currentTimeMillis() - publishDateAware.getPublishDate();
+                if (publishAge > data.getMetaData().getTtl() / 2) {
+                    publishAuthorizedData(data);
+                }
+            } else {
+                publishAuthorizedData(data);
+            }
         }
     }
 
