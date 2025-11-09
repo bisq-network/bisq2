@@ -118,9 +118,9 @@ public class OracleNodeService implements Service {
     private Pin bondedRolesPin;
 
     public OracleNodeService(Config config,
-                             IdentityService identityService,
-                             NetworkService networkService,
                              PersistenceService persistenceService,
+                             NetworkService networkService,
+                             IdentityService identityService,
                              AuthorizedBondedRolesService authorizedBondedRolesService,
                              MarketPriceRequestService marketPriceRequestService,
                              MemoryReportService memoryReportService) {
