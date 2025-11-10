@@ -68,7 +68,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
         // and this check can be removed.
         // In case we would get old protobuf data where txId and blockHeight are not present, we would get an empty string
         // and 0 as values (default values for missing fields).
-        return data.getTxId().length() == 64 && data.getBlockHeight() > 0;
+        return data.getLockupTxId().length() == 64 && data.getBlockHeight() > 0;
     }
 
     @Override
