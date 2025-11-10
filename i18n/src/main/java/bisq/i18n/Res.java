@@ -138,10 +138,11 @@ public class Res {
         /**
          * Generates the candidate locales for bundle lookup, preserving BCP 47 format throughout the fallback chain.
          *
-         * <p>For script-based locales, this ensures the fallback chain maintains hyphenated format:
+         * <p>For script-based locales, this ensures the fallback chain maintains hyphenated format while
+         * preserving the full Java default fallback chain including language-country combinations:
          * <ul>
-         *   <li>{@code zh-Hant-HK} → {@code zh-Hant} → {@code zh} → root</li>
-         *   <li>{@code zh-Hans-CN} → {@code zh-Hans} → {@code zh} → root</li>
+         *   <li>{@code zh-Hant-HK} → {@code zh-Hant} → {@code zh_HK} → {@code zh} → root</li>
+         *   <li>{@code zh-Hans-CN} → {@code zh-Hans} → {@code zh_CN} → {@code zh} → root</li>
          * </ul>
          *
          * <p>For standard locales, uses Java's default fallback:
@@ -160,37 +161,21 @@ public class Res {
                 return List.of(Locale.ROOT);
             }
 
-            String language = locale.getLanguage();
-            String script = locale.getScript();
-            String country = locale.getCountry();
-            String variant = locale.getVariant();
-
-            // For script-based locales, generate proper BCP 47 fallback chain
-            if (!script.isEmpty()) {
-                List<Locale> candidates = new ArrayList<>(4);
-
-                // Full locale (e.g., zh-Hant-HK)
-                candidates.add(locale);
-
-                // Language + Script (e.g., zh-Hant from zh-Hant-HK)
-                if (!country.isEmpty() || !variant.isEmpty()) {
-                    candidates.add(new Locale.Builder()
-                            .setLanguage(language)
-                            .setScript(script)
-                            .build());
-                }
-
-                // Language only (e.g., zh)
-                candidates.add(Locale.of(language));
-
-                // Root (default)
-                candidates.add(Locale.ROOT);
-
-                return candidates;
+            if (locale.getScript().isEmpty()) {
+                return super.getCandidateLocales(baseName, locale);
             }
 
-            // For standard locales, use default behavior
-            return super.getCandidateLocales(baseName, locale);
+            List<Locale> defaults = super.getCandidateLocales(baseName, locale);
+            List<Locale> normalized = new ArrayList<>(defaults.size());
+            for (Locale candidate : defaults) {
+                Locale normalizedCandidate = candidate.getScript().isEmpty()
+                        ? candidate
+                        : Locale.forLanguageTag(candidate.toLanguageTag());
+                if (!normalized.contains(normalizedCandidate)) {
+                    normalized.add(normalizedCandidate);
+                }
+            }
+            return normalized;
         }
 
         /**
