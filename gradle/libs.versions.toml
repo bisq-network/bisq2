@@ -75,6 +75,8 @@ typesafe-config-lib = { strictly = '1.4.3' }
 
 zxing-lib = { strictly = '3.5.3' }
 
+netty-lib = { strictly = '4.2.7.Final' }
+
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
@@ -174,6 +176,15 @@ typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-conf
 
 zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }
 
+netty-all = { module = 'io.netty:netty-all', version.ref = 'netty-lib' }
+netty-transport = { module = 'io.netty:netty-transport', version.ref = 'netty-lib' }
+netty-buffer = { module = 'io.netty:netty-buffer', version.ref = 'netty-lib' }
+netty-common = { module = 'io.netty:netty-common', version.ref = 'netty-lib' }
+netty-handler = { module = 'io.netty:netty-handler', version.ref = 'netty-lib' }
+netty-handler-proxy = { module = 'io.netty:netty-handler-proxy', version.ref = 'netty-lib' }
+netty-codec-socks = { module = 'io.netty:netty-codec-socks', version.ref = 'netty-lib' }
+netty-codec-protobuf = { module = 'io.netty:netty-codec-protobuf', version.ref = 'netty-lib' }
+
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
 [bundles]
@@ -190,6 +201,8 @@ rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfi
     'jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'glassfish-jersey-containers-grizzly',
     'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jackson-databind', 'jackson-datatype', 'swagger-swagger-annotations']
+nonblockingio = ['netty-all', 'netty-transport', 'netty-buffer', 'netty-common', 'netty-handler', 'netty-handler-proxy',
+    'netty-codec-socks', 'netty-codec-protobuf']
 
 # Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
 # Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,

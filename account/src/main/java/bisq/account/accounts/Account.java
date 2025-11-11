@@ -65,11 +65,6 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
         return resolveProto(serializeForHash);
     }
 
-    @Override
-    public bisq.account.protobuf.Account completeProto() {
-        return toProto(false);
-    }
-
     protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.Account.newBuilder()
                 .setId(id)
