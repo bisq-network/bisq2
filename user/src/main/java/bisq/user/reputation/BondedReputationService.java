@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -77,13 +78,52 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
+    protected void addToDataSet(Set<AuthorizedBondedReputationData> dataSet, AuthorizedBondedReputationData data) {
+        if (dataSet.isEmpty()) {
+            dataSet.add(data);
+            return;
+        }
+
+        // New data is from an unlock tx.
+        if (data.getUnlockTxId().isPresent()) {
+            // We check if we have already data for the matching lockup tx and remove those.
+            dataSet.stream()
+                    .filter(e -> e.getLockupTxId().equals(data.getLockupTxId()))
+                    .filter(e -> e.getUnlockTxId().isEmpty())
+                    .forEach(dataSet::remove);
+            // We need to store the unlock bond data to be able to handle out of order cases (see below).
+            dataSet.add(data);
+            log.info("We got a AuthorizedBondedReputationData with an unlockTxId. We remove all previously added " +
+                    "data with the same lockupTxId from our data set");
+        }
+
+        // New data is from a lockup tx.
+        if (data.getUnlockTxId().isEmpty()) {
+            // In case we find an entry in the data set with a matching lockup txId and with a unlockTxId set,
+            // we ignore the new data. This can happen as the order how we get added the data is undefined.
+            if (dataSet.stream().anyMatch(e -> e.getUnlockTxId().isPresent() &&
+                    e.getLockupTxId().equals(data.getLockupTxId()))) {
+                log.info("We got added AuthorizedBondedReputationData but we had a previous data added with a present unlockTxId, " +
+                        "thus we drop the new entry.");
+            } else {
+                // We have no associated unlock tx and add our new data.
+                dataSet.add(data);
+            }
+        }
+    }
+
+    @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
         return userProfile.getBondedReputationKey();
     }
 
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
-        checkArgument(data.getLockTime() >= LOCK_TIME);
+        if (data.getUnlockTxId().isPresent()) {
+            // We store unlock bond data to be able to handle out of order cases, thus we need to handle it here.
+            return 0;
+        }
+        checkArgument(data.getLockTime() >= LOCK_TIME, "Lock time must be at least 50000. AuthorizedBondedReputationData: " + data);
         return doCalculateScore(data.getAmount(), data.getBlockTime());
     }
 

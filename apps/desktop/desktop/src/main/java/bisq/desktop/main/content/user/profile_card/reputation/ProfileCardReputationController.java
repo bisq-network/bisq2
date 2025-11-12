@@ -70,7 +70,8 @@ public class ProfileCardReputationController implements Controller {
                                 data.getBlockTime(),
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
-                                Optional.of(data.getLockTime())))
+                                Optional.of(data.getLockTime()),
+                                data.getUnlockTxId()))
                         .toList()));
 
         AccountAgeService accountAgeService = reputationService.getAccountAgeService();

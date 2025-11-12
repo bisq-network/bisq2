@@ -92,7 +92,7 @@ public class MuSigCreateOfferPaymentView extends View<StackPane, MuSigCreateOffe
         createAccountButton.setDefaultButton(true);
         noAccountOverlay = new WizardOverlay(root)
                 .warning()
-                .description("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle")
+                .descriptionFromI18nKey("muSig.createOffer.paymentMethod.noAccountOverlay.subTitle")
                 .buttons(noAccountOverlayCloseButton, createAccountButton)
                 .build();
 

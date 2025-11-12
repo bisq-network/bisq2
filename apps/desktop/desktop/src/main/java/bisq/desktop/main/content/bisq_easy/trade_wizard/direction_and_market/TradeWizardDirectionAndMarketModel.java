@@ -43,6 +43,8 @@ public class TradeWizardDirectionAndMarketModel implements Model {
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final ObjectProperty<TradeWizardDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
+    @Setter
+    private long myReputationScore;
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObservableList<TradeWizardDirectionAndMarketView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<TradeWizardDirectionAndMarketView.ListItem> filteredList = new FilteredList<>(listItems);
