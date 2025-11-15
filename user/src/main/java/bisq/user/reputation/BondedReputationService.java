@@ -87,10 +87,8 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
         // New data is from an unlock tx.
         if (data.getUnlockTxId().isPresent()) {
             // We check if we have already data for the matching lockup tx and remove those.
-            dataSet.stream()
-                    .filter(e -> e.getLockupTxId().equals(data.getLockupTxId()))
-                    .filter(e -> e.getUnlockTxId().isEmpty())
-                    .forEach(dataSet::remove);
+            dataSet.removeIf(e -> e.getLockupTxId().equals(data.getLockupTxId())
+                    && e.getUnlockTxId().isEmpty());
             // We need to store the unlock bond data to be able to handle out of order cases (see below).
             dataSet.add(data);
             log.info("We got a AuthorizedBondedReputationData with an unlockTxId. We remove all previously added " +

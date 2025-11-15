@@ -31,6 +31,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.offer.Direction;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
@@ -198,7 +199,12 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     private void setIsAllowedToCreateOffer() {
-        UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        if (selectedUserIdentity == null) {
+            log.warn("selectedUserIdentity is null at setIsAllowedToCreateOffer. This is not expected.");
+            return;
+        }
+        UserProfile userProfile = selectedUserIdentity.getUserProfile();
         model.setMyReputationScore(reputationService.getReputationScore(userProfile).getTotalScore());
         model.setAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(
                 reputationService, userProfile));

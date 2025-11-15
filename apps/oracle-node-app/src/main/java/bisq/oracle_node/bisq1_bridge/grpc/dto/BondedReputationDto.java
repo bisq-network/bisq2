@@ -52,6 +52,8 @@ public final class BondedReputationDto implements NetworkProto {
     @Override
     public void verify() {
         NetworkDataValidation.validateHash(bondedReputationHash);
+        NetworkDataValidation.validateBtcTxId(lockupTxId);
+        unlockTxId.ifPresent(NetworkDataValidation::validateBtcTxId);
     }
 
     @Override

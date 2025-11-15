@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.burningman.AuthorizedBurningmanListByBlock;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
@@ -348,12 +349,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
                 ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
                 int initialDelayInSeconds = DevMode.isDevMode() ? 1 : config.getInitialDelayInSeconds();
-                tmp.scheduleWithFixedDelay(() -> {
-                    AuthorizedDistributedData data = queue.poll();
-                    if (data != null) {
-                        publishAuthorizedData(data);
-                    }
-                }, initialDelayInSeconds, config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                tmp.scheduleWithFixedDelay(this::maybePublish, initialDelayInSeconds, config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
                 executor = tmp;
 
                 republishAuthorizedBondedRoles();
