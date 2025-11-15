@@ -33,7 +33,7 @@ jobs:
           
           # Get actual source files from i18n directory (excluding locale-specific files)
           i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
-            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
+            | grep -v -E '(_[a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|_pcm)\.properties$' \
             | sed 's|i18n/src/main/resources/||' \
             | sort -u)
           
@@ -100,7 +100,7 @@ jobs:
             s_args="push -s"
           else
             s_resources="" # This will be the comma-separated list
-            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E '\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
+            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E '\.properties$' | grep -v -E '(_[a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|_pcm)\.properties$' -- || true)
             if [ -n "$CHANGED_SOURCE_FILES" ]; then
               for file in $CHANGED_SOURCE_FILES; do
                 resource_slug_line=$(awk -v file="$file" '
@@ -130,10 +130,10 @@ jobs:
 
           # --- Handle TRANSLATION file pushes (-t) ---
           declare -A lang_resources
-          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
+          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|_pcm)\.properties$' -- || true)
           if [ -n "$CHANGED_TRANSLATION_FILES" ]; then
             for file in $CHANGED_TRANSLATION_FILES; do
-              lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(_[A-Z]{2})?|pcm)\.properties$/\1/')
+              lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|pcm)\.properties$/\1/')
               resource_slug_line=$(awk -v file="$file" -v lang="$lang" '
                 BEGIN{FS="="}
                 $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}

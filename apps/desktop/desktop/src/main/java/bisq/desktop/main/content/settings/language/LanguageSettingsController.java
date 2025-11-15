@@ -29,6 +29,8 @@ import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Slf4j
 public class LanguageSettingsController implements Controller {
     @Getter
@@ -46,14 +48,20 @@ public class LanguageSettingsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getLanguageTags().setAll(LanguageRepository.LANGUAGE_TAGS);
+        model.getLanguageTags().setAll(getSortedLanguageTags());
         model.setSelectedLanguageTag(settingsService.getLanguageTag().get());
-        model.getSupportedLanguageTags().setAll(LanguageRepository.LANGUAGE_TAGS);
+        model.getSupportedLanguageTags().setAll(getSortedLanguageTags());
 
         supportedLanguageTagsPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageTags())
                 .to(settingsService.getSupportedLanguageTags());
 
         model.getSupportedLanguageTagsFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageTags().contains(e));
+    }
+
+    private List<String> getSortedLanguageTags() {
+        return LanguageRepository.LANGUAGE_TAGS.stream()
+                .sorted((tag1, tag2) -> getDisplayLanguage(tag1).compareTo(getDisplayLanguage(tag2)))
+                .toList();
     }
 
     @Override
