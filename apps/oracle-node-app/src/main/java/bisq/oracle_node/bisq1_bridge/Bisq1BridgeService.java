@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.burningman.AuthorizedBurningmanListByBlock;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
@@ -33,6 +34,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
@@ -73,15 +75,18 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         private final int initialDelayInSeconds; // 120 sec by default
         private final int throttleDelayInSeconds; // 1 sec by default
         private final int numConnectionsForRepublish;
+        private final boolean ignorePublishAgeCheck;
 
         public Config(int grpcServicePort,
                       int initialDelayInSeconds,
                       int throttleDelayInSeconds,
-                      int numConnectionsForRepublish) {
+                      int numConnectionsForRepublish,
+                      boolean ignorePublishAgeCheck) {
             this.grpcServicePort = grpcServicePort;
             this.initialDelayInSeconds = initialDelayInSeconds;
             this.throttleDelayInSeconds = throttleDelayInSeconds;
             this.numConnectionsForRepublish = numConnectionsForRepublish;
+            this.ignorePublishAgeCheck = ignorePublishAgeCheck;
         }
 
         public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
@@ -89,7 +94,8 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
             return new Bisq1BridgeService.Config(grpcService.getInt("port"),
                     config.getInt("initialDelayInSeconds"),
                     config.getInt("throttleDelayInSeconds"),
-                    config.getInt("numConnectionsForRepublish"));
+                    config.getInt("numConnectionsForRepublish"),
+                    config.getBoolean("ignorePublishAgeCheck"));
         }
     }
 
@@ -271,20 +277,30 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     private void maybePublish() {
         //  Highest priority: AuthorizedBondedRole
         AuthorizedDistributedData data = authorizedBondedRoleQueue.poll();
+        // We don't call pollIfOldPublishAge as AuthorizedBondedRole is not of type PublishDateAware
 
         if (data == null) {
             // Next: AuthorizedProofOfBurnData (only from active profiles)
-            data = this.pollIfActive(bsqBlockGrpcService.getAuthorizedProofOfBurnDataQueue());
+            data = pollIfActive(bsqBlockGrpcService.getAuthorizedProofOfBurnDataQueue());
+            if (data instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
+                data = skipRecentPublishAge(bsqBlockGrpcService.getAuthorizedProofOfBurnDataQueue(), authorizedProofOfBurnData);
+            }
         }
 
         if (data == null) {
             // Then: AuthorizedBondedReputationData (only from active profiles)
             data = pollIfActive(bsqBlockGrpcService.getAuthorizedBondedReputationDataQueue());
+            if (data instanceof AuthorizedBondedReputationData authorizedBondedReputationData) {
+                data = skipRecentPublishAge(bsqBlockGrpcService.getAuthorizedBondedReputationDataQueue(), authorizedBondedReputationData);
+            }
         }
 
         if (data == null) {
             // Finally: AuthorizedBurningmanListByBlock
             data = burningmanGrpcService.getAuthorizedBurningmanListByBlockQueue().poll();
+            if (data instanceof AuthorizedBurningmanListByBlock authorizedBurningmanListByBlock) {
+                data = skipRecentPublishAge(burningmanGrpcService.getAuthorizedBurningmanListByBlockQueue(), authorizedBurningmanListByBlock);
+            }
         }
 
         if (data != null) {
@@ -301,6 +317,23 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
             // Reinsert inactive data to the end (reordering intentionally)
             queue.offer(data);
             return null;
+        }
+
+        return data;
+    }
+
+    private <T extends AuthorizedDistributedData> T skipRecentPublishAge(BlockingQueue<T> queue, T data) {
+        if (config.isIgnorePublishAgeCheck()) {
+            return data;
+        }
+
+        if (data instanceof PublishDateAware publishDateAware) {
+            long publishAge = System.currentTimeMillis() - publishDateAware.getPublishDate();
+            if (publishAge < data.getMetaData().getTtl() / 2) {
+                // Reinsert recently published data to the end (reordering intentionally)
+                queue.offer(data);
+                return null;
+            }
         }
         return data;
     }
@@ -335,6 +368,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     private void handleUserProfileRemoved(UserProfile userProfile) {
         userProfileProofOfBurnHashes.remove(userProfile.getProofOfBurnKey());
-        userProfileBondedReputationHashes.remove(userProfile.getProofOfBurnKey());
+        userProfileBondedReputationHashes.remove(userProfile.getBondedReputationKey());
     }
 }
