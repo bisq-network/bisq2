@@ -178,7 +178,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     private boolean requestTimestamp(UserIdentity userIdentity) {
         log.info("Request timestamp for {}", userIdentity.getUserProfile().getUserName());
-        return send(userIdentity, new AuthorizeTimestampRequest(userIdentity.getId()));
+        return send(userIdentity, new AuthorizeTimestampRequest(userIdentity.getId(), System.currentTimeMillis()));
     }
 
     private void maybeRequestTimestampForAllUserProfiles() {

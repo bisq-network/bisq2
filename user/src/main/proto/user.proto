@@ -106,6 +106,7 @@ message AuthorizeSignedWitnessRequest {
 
 message AuthorizeTimestampRequest {
   string profileId = 1;
+  sint64 date = 2;
 }
 
 message AuthorizedProofOfBurnData {
