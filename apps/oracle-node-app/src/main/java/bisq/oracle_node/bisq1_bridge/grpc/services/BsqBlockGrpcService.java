@@ -18,7 +18,6 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockSubscription;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
@@ -29,22 +28,39 @@ import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksResponse;
 import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import io.grpc.stub.StreamObserver;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Requests BSQ blocks to extract AuthorizedProofOfBurnData and AuthorizedBondedReputationData.
+ * Put the data into linkedBlockingQueues for processing by Bisq1BridgeService.
+ */
 @Slf4j
 public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockDto> {
-    public BsqBlockGrpcService(boolean staticPublicKeysProvided,
-                               GrpcClient grpcClient,
-                               BlockingQueue<AuthorizedDistributedData> queue) {
-        super(staticPublicKeysProvided, grpcClient, queue);
+    @Getter
+    private final BlockingQueue<AuthorizedProofOfBurnData> authorizedProofOfBurnDataQueue = new LinkedBlockingQueue<>(10000);
+    @Getter
+    private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
+
+    public BsqBlockGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
+        super(staticPublicKeysProvided, grpcClient);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        authorizedProofOfBurnDataQueue.clear();
+        authorizedBondedReputationDataQueue.clear();
+        return super.shutdown();
     }
 
     @Override
     protected List<BsqBlockDto> doRequest(int startBlockHeight) {
-        var protoRequest = new BsqBlocksRequest(startBlockHeight).toProto(true);
+        var protoRequest = new BsqBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = grpcClient.getBsqBlockBlockingStub().requestBsqBlocks(protoRequest);
         BsqBlocksResponse response = BsqBlocksResponse.fromProto(protoResponse);
         return response.getBlocks();
@@ -57,10 +73,10 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
                 .forEach(txDto -> {
                     txDto.getProofOfBurnDto()
                             .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(data, txDto, proofOfBurnDto))
-                            .ifPresent(queue::offer);
+                            .ifPresent(authorizedProofOfBurnDataQueue::offer);
                     txDto.getBondedReputationDto()
                             .map(bondedReputationDto -> toAuthorizedBondedReputationData(data, txDto, bondedReputationDto))
-                            .ifPresent(queue::offer);
+                            .ifPresent(authorizedBondedReputationDataQueue::offer);
                 });
     }
 

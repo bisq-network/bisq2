@@ -81,7 +81,7 @@ public class SignedWitnessGrpcService implements Service {
     }
 
     private long requestDate(String hashAsHex) {
-        var protoRequest = new SignedWitnessDateRequest(hashAsHex).toProto(true);
+        var protoRequest = new SignedWitnessDateRequest(hashAsHex).completeProto();
         var protoResponse = grpcClient.getSignedWitnessBlockingStub().requestSignedWitnessDate(protoRequest);
         SignedWitnessDateResponse response = SignedWitnessDateResponse.fromProto(protoResponse);
         return response.getDate();

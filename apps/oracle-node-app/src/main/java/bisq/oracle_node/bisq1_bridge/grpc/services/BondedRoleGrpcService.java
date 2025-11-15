@@ -53,7 +53,7 @@ public class BondedRoleGrpcService implements Service {
             String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
             String bondUserName = request.getBondUserName();
             String signatureBase64 = request.getSignatureBase64();
-            var protoRequest = new BondedRoleVerificationRequest(bondUserName, bisq1RoleTypeName, profileId, signatureBase64).toProto(true);
+            var protoRequest = new BondedRoleVerificationRequest(bondUserName, bisq1RoleTypeName, profileId, signatureBase64).completeProto();
             var protoResponse = grpcClient.getBondedRoleBlockingStub().requestBondedRoleVerification(protoRequest);
             return BondedRoleVerificationResponse.fromProto(protoResponse);
         } catch (Exception e) {

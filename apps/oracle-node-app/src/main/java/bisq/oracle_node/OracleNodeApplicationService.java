@@ -78,9 +78,9 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
-                identityService,
-                networkService,
                 persistenceService,
+                networkService,
+                identityService,
                 bondedRolesService.getAuthorizedBondedRolesService(),
                 marketPriceRequestService,
                 memoryReportService);
