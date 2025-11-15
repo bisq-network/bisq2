@@ -17,6 +17,7 @@
 
 package bisq.network.tor.process;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
@@ -108,7 +109,7 @@ public class EmbeddedTorProcess {
         Path controlDirFilePath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         if (!Files.exists(controlDirFilePath)) {
             try {
-                Files.createDirectories(controlDirFilePath);
+                FileMutatorUtils.createRestrictedDirectories(controlDirFilePath);
             } catch (IOException e) {
                 throw new TorStartupFailedException("Couldn't create Tor control directory.");
             }

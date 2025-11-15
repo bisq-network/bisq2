@@ -11,7 +11,6 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -31,7 +30,7 @@ public class KeyPairUtils {
     public static void writePrivateKey(KeyPair keyPair, Path storageDirPath, String tag) {
         Path targetPath = storageDirPath.resolve(tag);
         try {
-            Files.createDirectories(targetPath);
+            FileMutatorUtils.createRestrictedDirectories(targetPath);
 
             ECPrivateKey ecPrivate = (ECPrivateKey) keyPair.getPrivate();
             byte[] priv32 = toUnsignedFixedLength(ecPrivate.getS(), 32);

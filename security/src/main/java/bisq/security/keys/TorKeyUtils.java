@@ -5,7 +5,6 @@ import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Locale;
@@ -21,7 +20,7 @@ public class TorKeyUtils {
     public static void writePrivateKey(TorKeyPair torKeyPair, Path storageDirPath, String tag) {
         Path targetPath = storageDirPath.resolve(tag);
         try {
-            Files.createDirectories(targetPath);
+            FileMutatorUtils.createRestrictedDirectories(targetPath);
 
             FileMutatorUtils.writeToPath(Hex.encode(torKeyPair.getPrivateKey()), targetPath.resolve("private_key_hex"));
             FileMutatorUtils.writeToPath(torKeyPair.getOnionAddress(), targetPath.resolve("hostname"));

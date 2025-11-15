@@ -52,7 +52,7 @@ public class LogSetup {
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
+        RollingFileAppender<ILoggingEvent> appender = new RestrictedRollingFileAppender();
         appender.setContext(loggerContext);
         appender.setFile(fileName + ".log");
 

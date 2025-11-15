@@ -17,6 +17,7 @@
 
 package bisq.network.i2p.router;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.PropertiesReader;
 import bisq.common.logging.LogSetup;
 import bisq.network.i2p.router.utils.I2PLogLevel;
@@ -200,7 +201,7 @@ public class RouterSetup {
             }
         } else {
             try {
-                Files.createFile(configFilePath);
+                FileMutatorUtils.createRestrictedFile(configFilePath);
             } catch (IOException e) {
                 log.warn("Could not create router.config file in i2p data directory {}", configFilePath.toAbsolutePath(), e);
             }
@@ -219,7 +220,7 @@ public class RouterSetup {
 
     private Path createDirectory(Path parent, String child) throws IOException {
         Path dirPath = parent.resolve(child);
-        Files.createDirectories(dirPath);
+        FileMutatorUtils.createRestrictedDirectories(dirPath);
         return dirPath;
     }
 }

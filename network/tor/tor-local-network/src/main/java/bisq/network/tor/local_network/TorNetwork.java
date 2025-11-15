@@ -17,6 +17,7 @@
 
 package bisq.network.tor.local_network;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
@@ -122,7 +123,7 @@ public class TorNetwork {
         }
 
         try {
-            Files.createDirectory(nodeDataDirPath);
+            FileMutatorUtils.createRestrictedDirectory(nodeDataDirPath);
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create data directory: " + nodeDataDirPath.toAbsolutePath(), e);
         }
