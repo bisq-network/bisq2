@@ -17,12 +17,17 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.AlertListItem;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.BondedRoleListItem;
-import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.DifficultyAdjustmentListItem;
-import javafx.beans.property.*;
+import bisq.desktop.main.content.authorized_role.security_manager.AlertView.AlertListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.AlertView.BondedRoleListItem;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -32,10 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class SecurityManagerModel implements Model {
-    private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
-    private final BooleanProperty difficultyAdjustmentFactorButtonDisabled = new SimpleBooleanProperty();
-    private final ObservableList<DifficultyAdjustmentListItem> difficultyAdjustmentListItems = FXCollections.observableArrayList();
+public class AlertModel implements Model {
+    private final AppType appType;
 
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
@@ -58,6 +61,7 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<AlertListItem> alertListItems = FXCollections.observableArrayList();
     private final SortedList<AlertListItem> sortedAlertListItems = new SortedList<>(alertListItems);
 
-    public SecurityManagerModel() {
+    public AlertModel(AppType appType) {
+        this.appType = appType;
     }
 }

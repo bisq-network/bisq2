@@ -18,6 +18,7 @@
 package bisq.evolution.updater;
 
 import bisq.application.ApplicationService;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
@@ -73,6 +74,7 @@ public class UpdaterService implements Service {
     @Nullable
     private ExecutorService executorService;
     private final CollectionObserver<ReleaseNotification> releaseNotificationsObserver;
+    private final AppType appType;
     @Getter
     private boolean requireVersionForTrading;
     @Getter
@@ -83,7 +85,8 @@ public class UpdaterService implements Service {
     public UpdaterService(ApplicationService.Config config,
                           SettingsService settingsService,
                           ReleaseNotificationsService releaseNotificationsService,
-                          AlertService alertService) {
+                          AlertService alertService,
+                          AppType appType) {
         this.config = config;
 
         this.settingsService = settingsService;
@@ -119,6 +122,7 @@ public class UpdaterService implements Service {
                 isNewReleaseAvailable.set(false);
             }
         };
+        this.appType = appType;
     }
 
     @Override
@@ -130,7 +134,9 @@ public class UpdaterService implements Service {
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                        authorizedAlertData.isRequireVersionForTrading() &&
+                        authorizedAlertData.getAppType() == appType) {
                     requireVersionForTrading = true;
                     minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
                     reapplyAllReleaseNotifications();
@@ -140,7 +146,9 @@ public class UpdaterService implements Service {
             @Override
             public void remove(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.isRequireVersionForTrading()) {
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                            authorizedAlertData.isRequireVersionForTrading() &&
+                            authorizedAlertData.getAppType() == appType) {
                         requireVersionForTrading = false;
                         minRequiredVersionForTrading = Optional.empty();
                         reapplyAllReleaseNotifications();
@@ -236,6 +244,11 @@ public class UpdaterService implements Service {
             isNewReleaseAvailable.set(false);
             return;
         }
+        if (newReleaseNotification.getAppType() != appType) {
+            isNewReleaseAvailable.set(false);
+            log.debug("We received a newReleaseNotification but it does not match our appType");
+            return;
+        }
 
         Version newVersion = newReleaseNotification.getReleaseVersion();
         boolean isNewRelease = ApplicationVersion.getVersion().below(newVersion);
@@ -312,7 +325,9 @@ public class UpdaterService implements Service {
     }
 
     @VisibleForTesting
-    static CompletionStage<Void> writeVersionFile(String version, Path appDataDirPath, ExecutorService executorService) {
+    static CompletionStage<Void> writeVersionFile(String version,
+                                                  Path appDataDirPath,
+                                                  ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 FileMutatorUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));

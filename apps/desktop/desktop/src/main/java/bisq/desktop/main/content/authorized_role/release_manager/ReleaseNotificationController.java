@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.release_manager;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.observable.Pin;
@@ -26,7 +27,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.i18n.Res;
 import bisq.support.release_manager.ReleaseManagerService;
 import bisq.user.identity.UserIdentity;
@@ -38,30 +38,30 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public class ReleaseManagerController implements Controller {
+public class ReleaseNotificationController implements Controller {
     @Getter
-    private final ReleaseManagerView view;
-    private final ReleaseManagerModel model;
+    private final ReleaseNotificationView view;
+    private final ReleaseNotificationModel model;
     private final UserIdentityService userIdentityService;
     private final ReleaseNotificationsService releaseNotificationsService;
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
 
-    public ReleaseManagerController(ServiceProvider serviceProvider) {
+    public ReleaseNotificationController(ServiceProvider serviceProvider, AppType appType) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
-        RoleInfo roleInfo = new RoleInfo(serviceProvider);
-        model = new ReleaseManagerModel();
-        view = new ReleaseManagerView(model, this, roleInfo.getRoot());
+        model = new ReleaseNotificationModel(appType);
+        view = new ReleaseNotificationView(model, this);
     }
 
     @Override
     public void onActivate() {
         model.getIsLauncherUpdate().set(true);
-        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ListItem>bind(model.getListItems())
-                .map(ReleaseManagerView.ListItem::new)
+        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseNotificationView.ListItem>bind(model.getListItems())
+                .filter(releaseNotification -> releaseNotification.getAppType() == model.getAppType())
+                .map(ReleaseNotificationView.ListItem::new)
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));
@@ -88,7 +88,8 @@ public class ReleaseManagerController implements Controller {
         releaseManagerService.publishReleaseNotification(model.getIsPreRelease().get(),
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,
-                        model.getVersion().get())
+                        model.getVersion().get(),
+                        model.getAppType())
                 .whenComplete((result, throwable) -> UIThread.run(() -> {
                     if (throwable != null) {
                         new Popup().error(throwable).show();

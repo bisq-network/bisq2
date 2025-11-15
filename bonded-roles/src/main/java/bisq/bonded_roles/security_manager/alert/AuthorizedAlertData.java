@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.release.AppType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
@@ -77,6 +78,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     // Added in version 2.1.6
     private final Optional<String> bannedAccountData;
 
+    // Once we can expect all users have updated to 2.1.8 we can update the version to 2, thus the appType will not be excluded anymore.
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final AppType appType;
+
     public AuthorizedAlertData(String id,
                                long date,
                                AlertType alertType,
@@ -88,7 +94,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                Optional<AuthorizedBondedRole> bannedRole,
                                String securityManagerProfileId,
                                boolean staticPublicKeysProvided,
-                               Optional<String> bannedAccountData) {
+                               Optional<String> bannedAccountData,
+                               AppType appType) {
         this(VERSION,
                 id,
                 date,
@@ -101,7 +108,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 bannedRole,
                 securityManagerProfileId,
                 staticPublicKeysProvided,
-                bannedAccountData);
+                bannedAccountData,
+                appType);
     }
 
     private AuthorizedAlertData(int version,
@@ -116,7 +124,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                 Optional<AuthorizedBondedRole> bannedRole,
                                 String securityManagerProfileId,
                                 boolean staticPublicKeysProvided,
-                                Optional<String> bannedAccountData) {
+                                Optional<String> bannedAccountData,
+                                AppType appType) {
         this.version = version;
         this.id = id;
         this.date = date;
@@ -130,6 +139,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
         this.bannedAccountData = bannedAccountData;
+        this.appType = appType;
 
         verify();
     }
@@ -154,7 +164,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 .setRequireVersionForTrading(requireVersionForTrading)
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .setVersion(version);
+                .setVersion(version)
+                .setAppType(appType.toProtoEnum());
         message.ifPresent(builder::setMessage);
         headline.ifPresent(headline -> {
             // We only set the headline if defaultHeadline is present (not AlertType.BAN) and
@@ -192,7 +203,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
                 proto.getSecurityManagerProfileId(),
                 proto.getStaticPublicKeysProvided(),
-                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty()
+                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty(),
+                AppType.fromProto(proto.getAppType())
         );
     }
 

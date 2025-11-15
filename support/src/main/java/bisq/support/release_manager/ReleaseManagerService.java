@@ -19,6 +19,7 @@ package bisq.support.release_manager;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -31,7 +32,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -73,7 +73,8 @@ public class ReleaseManagerService implements Service {
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
                                                                  boolean isLauncherUpdate,
                                                                  String releaseNotes,
-                                                                 String version) {
+                                                                 String version,
+                                                                 AppType appType) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String releaseManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
@@ -84,7 +85,8 @@ public class ReleaseManagerService implements Service {
                 releaseNotes,
                 version,
                 releaseManagerProfileId,
-                staticPublicKeysProvided);
+                staticPublicKeysProvided,
+                appType);
         return networkService.publishAuthorizedData(releaseNotification, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

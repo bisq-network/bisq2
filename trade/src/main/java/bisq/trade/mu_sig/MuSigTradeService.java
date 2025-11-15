@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -125,6 +126,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private final Persistence<MuSigTradeStore> persistence;
     @Getter
     private final MusigGrpcClient musigGrpcClient;
+    private final AppType appType;
 
     // We don't persist the protocol, only the model.
     private final Map<String, MuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
@@ -141,7 +143,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
     private ExecutorService executor;
 
-    public MuSigTradeService(Config config, ServiceProvider serviceProvider) {
+    public MuSigTradeService(Config config, ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
@@ -155,6 +157,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
         musigGrpcClient = new MusigGrpcClient(config.getHost(), config.getPort());
+        this.appType = appType;
     }
 
 
@@ -184,7 +187,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
                         @Override
                         public void add(AuthorizedAlertData authorizedAlertData) {
-                            if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                            if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
                                 if (authorizedAlertData.isHaltTrading()) {
                                     haltTrading = true;
                                 }
@@ -198,7 +201,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                         @Override
                         public void remove(Object element) {
                             if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY&& authorizedAlertData.getAppType() == appType ) {
                                     if (authorizedAlertData.isHaltTrading()) {
                                         haltTrading = false;
                                     }

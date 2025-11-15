@@ -60,6 +60,13 @@ enum AlertType {
   ALERTTYPE_BANNED_ACCOUNT_DATA = 5;
 }
 
+enum AppType {
+  APPTYPE_UNSPECIFIED = 0;
+  APPTYPE_DESKTOP = 1;
+  APPTYPE_MOBILE_NODE = 2;
+  APPTYPE_MOBILE_CLIENT = 3;
+}
+
 message AuthorizedAlertData {
   string id = 1;
   sint64 date = 2;
@@ -74,6 +81,7 @@ message AuthorizedAlertData {
   optional string headline = 11;
   sint32 version = 12;
   optional string bannedAccountData = 13;
+  AppType appType = 14;
 }
 
 message ReleaseNotification {
@@ -86,6 +94,7 @@ message ReleaseNotification {
   string releaseManagerProfileId = 7;
   bool staticPublicKeysProvided = 8;
   sint32 version = 9;
+  AppType appType = 10;
 }
 
 message AuthorizedDifficultyAdjustmentData {

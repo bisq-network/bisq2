@@ -22,6 +22,7 @@ import bisq.application.ShutDownHandler;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
@@ -175,12 +176,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService,
-                accountService, burningmanService);
+                accountService, burningmanService, AppType.DESKTOP);
 
         updaterService = new UpdaterService(getConfig(),
                 settingsService,
                 bondedRolesService.getReleaseNotificationsService(),
-                bondedRolesService.getAlertService());
+                bondedRolesService.getAlertService(),
+                AppType.DESKTOP);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -212,7 +214,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
+        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService(), AppType.DESKTOP);
 
         favouriteMarketsService = new FavouriteMarketsService(settingsService);
 

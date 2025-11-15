@@ -35,7 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @ToString
@@ -66,6 +67,11 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
+    // Once we can expect all users have updated to 2.1.8 we can update the version to 2, thus the appType will not be excluded anymore.
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final AppType appType;
+
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final Version releaseVersion;
 
@@ -76,7 +82,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                                String releaseNotes,
                                String versionString,
                                String releaseManagerProfileId,
-                               boolean staticPublicKeysProvided) {
+                               boolean staticPublicKeysProvided,
+                               AppType appType) {
         this(VERSION,
                 id,
                 date,
@@ -85,7 +92,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 releaseNotes,
                 versionString,
                 releaseManagerProfileId,
-                staticPublicKeysProvided);
+                staticPublicKeysProvided,
+                appType);
     }
 
     private ReleaseNotification(int version,
@@ -96,7 +104,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                                 String releaseNotes,
                                 String versionString,
                                 String releaseManagerProfileId,
-                                boolean staticPublicKeysProvided) {
+                                boolean staticPublicKeysProvided,
+                                AppType appType) {
         this.version = version;
         this.id = id;
         this.date = date;
@@ -106,6 +115,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.versionString = versionString;
         this.releaseManagerProfileId = releaseManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+        this.appType = appType;
 
         releaseVersion = new Version(versionString);
 
@@ -132,7 +142,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .setVersion(version);
+                .setVersion(version)
+                .setAppType(appType.toProtoEnum());
     }
 
     @Override
@@ -150,7 +161,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 proto.getReleaseNotes(),
                 proto.getVersionString(),
                 proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
+                proto.getStaticPublicKeysProvided(),
+                AppType.fromProto(proto.getAppType())
         );
     }
 

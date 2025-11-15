@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.security_manager.alert;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -36,15 +37,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AlertNotificationsService implements Service {
     private final SettingsService settingsService;
     private final AlertService alertService;
+    private final AppType appType;
     @Getter
     private final ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
     @Getter
     private final Observable<Boolean> isAlertBannerVisible = new Observable<>(false);
     private Pin authorizedAlertDataSetPin, unconsumedAlertsPin;
 
-    public AlertNotificationsService(SettingsService settingsService, AlertService alertService) {
+    public AlertNotificationsService(SettingsService settingsService, AlertService alertService, AppType appType) {
         this.settingsService = settingsService;
         this.alertService = alertService;
+        this.appType = appType;
     }
 
     @Override
@@ -57,16 +60,17 @@ public class AlertNotificationsService implements Service {
                 if (authorizedAlertData == null) {
                     return;
                 }
-
-                if (shouldProcessAlert(authorizedAlertData)) {
+                if (authorizedAlertData.getAppType() == appType && shouldProcessAlert(authorizedAlertData)) {
                     unconsumedAlerts.add(authorizedAlertData);
                 }
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof AuthorizedAlertData) {
-                    unconsumedAlerts.remove((AuthorizedAlertData) element);
+                if (element instanceof AuthorizedAlertData authorizedAlertData) {
+                    if (authorizedAlertData.getAppType() == appType) {
+                        unconsumedAlerts.remove(authorizedAlertData);
+                    }
                 }
             }
 

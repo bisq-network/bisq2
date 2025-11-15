@@ -64,7 +64,9 @@ public class BondedRolesService implements Service {
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final ReleaseNotificationsService releaseNotificationsService;
 
-    public BondedRolesService(Config config, PersistenceService persistenceService, NetworkService networkService) {
+    public BondedRolesService(Config config,
+                              PersistenceService persistenceService,
+                              NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);

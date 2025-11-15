@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.release_manager;
+package bisq.desktop.main.content.authorized_role.security_manager;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -29,13 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ReleaseManagerModel implements Model {
-    private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
-    private final StringProperty releaseNotes = new SimpleStringProperty();
-    private final StringProperty version = new SimpleStringProperty();
-    private final BooleanProperty isPreRelease = new SimpleBooleanProperty();
-    private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
-    private final ObservableList<ReleaseManagerView.ListItem> listItems = FXCollections.observableArrayList();
-    public ReleaseManagerModel() {
+public class DifficultyAdjustmentModel implements Model {
+    private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
+    private final BooleanProperty difficultyAdjustmentFactorButtonDisabled = new SimpleBooleanProperty();
+    private final ObservableList<DifficultyAdjustmentView.DifficultyAdjustmentListItem> difficultyAdjustmentListItems = FXCollections.observableArrayList();
+
+    public DifficultyAdjustmentModel() {
     }
 }
