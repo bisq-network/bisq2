@@ -34,6 +34,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -60,6 +61,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import com.google.common.base.Joiner;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -355,6 +357,12 @@ public class MuSigCreateOfferReviewController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OFFERBOOK);
     }
 
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onShowOfferbook);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, () -> {
+        });
+    }
+
     private void resetSelectedPaymentMethod() {
         model.setTakersSelectedPaymentMethod(null);
     }
@@ -398,6 +406,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         if (paymentMethods == null || paymentMethods.isEmpty()) {
             throw new IllegalArgumentException("No payment methods provided");
         }
+
         boolean allFiat = paymentMethods.stream().allMatch(pm -> pm instanceof FiatPaymentMethod);
         boolean allCrypto = paymentMethods.stream().allMatch(pm -> pm instanceof CryptoPaymentMethod);
         if (!(allFiat || allCrypto)) {

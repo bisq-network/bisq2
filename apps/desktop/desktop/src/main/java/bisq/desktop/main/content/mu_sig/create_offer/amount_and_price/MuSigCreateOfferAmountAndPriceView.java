@@ -58,9 +58,6 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
         content.getStyleClass().add("content-box");
 
         StackPane layeredContent = new StackPane(content, amountOverlay, priceOverlay);
-        StackPane.setMargin(amountOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        // For unclear reasons the priceOverlay is not centered
-        StackPane.setMargin(priceOverlay, new Insets(-MuSigCreateOfferView.TOP_PANE_HEIGHT, 0, 0, 70));
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }
