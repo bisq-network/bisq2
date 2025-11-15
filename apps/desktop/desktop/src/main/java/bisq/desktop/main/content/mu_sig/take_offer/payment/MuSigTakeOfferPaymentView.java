@@ -101,7 +101,7 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         createAccountButton.setDefaultButton(true);
         noAccountOverlay = new WizardOverlay(root)
                 .warning()
-                .description("muSig.takeOffer.paymentMethod.noAccountOverlay.subTitle")
+                .descriptionFromI18nKey("muSig.takeOffer.paymentMethod.noAccountOverlay.subTitle")
                 .buttons(noAccountOverlayCloseButton, createAccountButton)
                 .build();
 
@@ -120,7 +120,7 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         noPaymentMethodSelectedOverlay = new WizardOverlay(root)
                 .warning()
                 .headline("muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.title")
-                .description("muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.subtitle")
+                .descriptionFromI18nKey("muSig.takeOffer.paymentMethods.noPaymentMethodSelectedWizardOverlay.subtitle")
                 .buttons(noPaymentMethodSelectedOverlayCloseButton)
                 .build();
 

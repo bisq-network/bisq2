@@ -24,6 +24,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -31,24 +33,38 @@ public final class BondedReputationDto implements NetworkProto {
     private final long amount;
     private final byte[] bondedReputationHash;
     private final int lockTime;
+    private final String lockupTxId;
+    private final Optional<String> unlockTxId; // Only set at unlock tx
 
-    public BondedReputationDto(long amount, byte[] bondedReputationHash, int lockTime) {
+
+    public BondedReputationDto(long amount,
+                               byte[] bondedReputationHash,
+                               int lockTime,
+                               String lockupTxId,
+                               Optional<String> unlockTxId) {
         this.amount = amount;
         this.bondedReputationHash = bondedReputationHash;
         this.lockTime = lockTime;
+        this.lockupTxId = lockupTxId;
+        this.unlockTxId = unlockTxId;
     }
 
     @Override
     public void verify() {
-         NetworkDataValidation.validateHash(bondedReputationHash);
+        NetworkDataValidation.validateHash(bondedReputationHash);
+        NetworkDataValidation.validateBtcTxId(lockupTxId);
+        unlockTxId.ifPresent(NetworkDataValidation::validateBtcTxId);
     }
 
     @Override
     public bisq.bridge.protobuf.BondedReputationDto.Builder getBuilder(boolean serializeForHash) {
-        return bisq.bridge.protobuf.BondedReputationDto.newBuilder()
+        bisq.bridge.protobuf.BondedReputationDto.Builder builder = bisq.bridge.protobuf.BondedReputationDto.newBuilder()
                 .setAmount(amount)
                 .setBondedReputationHash(ByteString.copyFrom(bondedReputationHash))
-                .setLockTime(lockTime);
+                .setLockTime(lockTime)
+                .setLockupTxId(lockupTxId);
+        unlockTxId.ifPresent(builder::setUnlockTxId);
+        return builder;
     }
 
     @Override
@@ -59,6 +75,8 @@ public final class BondedReputationDto implements NetworkProto {
     public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {
         return new BondedReputationDto(proto.getAmount(),
                 proto.getBondedReputationHash().toByteArray(),
-                proto.getLockTime());
+                proto.getLockTime(),
+                proto.getLockupTxId(),
+                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
     }
 }

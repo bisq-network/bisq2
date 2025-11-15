@@ -86,7 +86,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         wrongWordOverlay = new WizardOverlay(root)
                 .warning()
                 .headline("wallet.verifySeeds.wrongWord.title")
-                .description("wallet.verifySeeds.wrongWord.description")
+                .descriptionFromI18nKey("wallet.verifySeeds.wrongWord.description")
                 .buttons(wrongWordGoBackButton)
                 .build();
 
@@ -95,7 +95,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         createWalletSuccessOverlay = new WizardOverlay(root)
                 .info()
                 .headline("wallet.verifySeeds.success.title")
-                .description("wallet.verifySeeds.success.description")
+                .descriptionFromI18nKey("wallet.verifySeeds.success.description")
                 .buttons(createWalletSuccessButton)
                 .build();
 

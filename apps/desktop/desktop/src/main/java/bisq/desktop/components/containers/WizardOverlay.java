@@ -97,13 +97,23 @@ public class WizardOverlay extends VBox {
         return this;
     }
 
+    public WizardOverlay descriptionFromI18nKey(String i18nKey) {
+        textContentBox = createAndGetTextBoxFromI18nKeys(i18nKey);
+        return this;
+    }
+
+    public WizardOverlay descriptionFromI18nKeys(String... i18nKeys) {
+        textContentBox = createAndGetTextBoxFromI18nKeys(i18nKeys);
+        return this;
+    }
+
     public WizardOverlay description(String text) {
         textContentBox = createAndGetTextBox(text);
         return this;
     }
 
-    public WizardOverlay description(String... texts) {
-        textContentBox = createAndGetTextBox(texts);
+    public WizardOverlay description(String... text) {
+        textContentBox = createAndGetTextBox(text);
         return this;
     }
 
@@ -174,11 +184,11 @@ public class WizardOverlay extends VBox {
         return content;
     }
 
-    private VBox createAndGetTextBox(String... texts) {
+    private VBox createAndGetTextBox(String... textValues) {
         VBox textBox = new VBox(15);
-        Arrays.stream(texts)
-                .map(t -> {
-                    Label textLabel = new Label(Res.get(t));
+        Arrays.stream(textValues)
+                .map(text -> {
+                    Label textLabel = new Label(text);
                     textLabel.setMinWidth(OVERLAY_WIDTH - 100);
                     textLabel.setMaxWidth(textLabel.getMinWidth());
                     textLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
@@ -187,6 +197,12 @@ public class WizardOverlay extends VBox {
                 .forEach(textBox.getChildren()::add);
         VBox.setMargin(textBox, TEXT_CONTENT_PADDING);
         return textBox;
+    }
+
+    private VBox createAndGetTextBoxFromI18nKeys(String... i18nKeys) {
+        return createAndGetTextBox(Arrays.stream(i18nKeys)
+                .map(Res::get)
+                .toArray(String[]::new));
     }
 
     private HBox createAndGetButtonsBox(Button... buttons) {

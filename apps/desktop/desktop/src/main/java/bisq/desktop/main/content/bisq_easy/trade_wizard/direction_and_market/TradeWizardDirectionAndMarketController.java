@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -30,8 +29,11 @@ import bisq.common.market.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.offer.Direction;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
@@ -197,8 +199,15 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     private void setIsAllowedToCreateOffer() {
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        if (selectedUserIdentity == null) {
+            log.warn("selectedUserIdentity is null at setIsAllowedToCreateOffer. This is not expected.");
+            return;
+        }
+        UserProfile userProfile = selectedUserIdentity.getUserProfile();
+        model.setMyReputationScore(reputationService.getReputationScore(userProfile).getTotalScore());
         model.setAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(
-                reputationService, userIdentityService.getSelectedUserIdentity().getUserProfile()));
+                reputationService, userProfile));
     }
 
     private void applyShowReputationInfo() {

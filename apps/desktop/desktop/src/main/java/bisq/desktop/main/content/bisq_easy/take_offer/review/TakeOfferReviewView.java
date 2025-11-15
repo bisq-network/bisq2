@@ -158,7 +158,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         sendTakeOfferMessageOverlay = new WizardOverlay(root)
                 .headlineIcon(takeOfferSendMessageWaitingAnimation)
                 .headline("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline")
-                .description("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
+                .descriptionFromI18nKeys("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle",
                         "bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info")
                 .build();
 
@@ -167,7 +167,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferSuccessOverlay = new WizardOverlay(root)
                 .info()
                 .headline("bisqEasy.takeOffer.review.takeOfferSuccess.headline")
-                .description("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle")
+                .descriptionFromI18nKey("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle")
                 .buttons(takeOfferSuccessButton)
                 .build();
 

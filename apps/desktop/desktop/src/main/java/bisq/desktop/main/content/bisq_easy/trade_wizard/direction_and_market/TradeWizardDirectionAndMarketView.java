@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.market.Market;
 import bisq.desktop.common.Transitions;
@@ -128,9 +129,11 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         reputationInfoOverlay = new WizardOverlay(root)
                 .warning()
                 .headline("bisqEasy.tradeWizard.directionAndMarket.feedback.headline")
-                .description("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
-                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2",
-                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3")
+                .description(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
+                                model.getMyReputationScore(),
+                                BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER),
+                        Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2"),
+                        Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3"))
                 .buttons(backToBuyButton, gainReputationButton)
                 .build();
 

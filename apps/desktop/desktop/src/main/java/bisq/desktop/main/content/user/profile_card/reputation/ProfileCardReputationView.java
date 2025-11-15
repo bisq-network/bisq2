@@ -38,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class ProfileCardReputationView extends View<VBox, ProfileCardReputationModel, ProfileCardReputationController> {
     private final BisqTableView<ListItem> tableView;
@@ -115,18 +117,19 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
         private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
         public ListItem(ReputationSource reputationSource, long blockTime, long score) {
-            this(reputationSource, blockTime, score, Optional.empty(), Optional.empty());
+            this(reputationSource, blockTime, score, Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         public ListItem(ReputationSource reputationSource, long blockTime, long score, long amount) {
-            this(reputationSource, blockTime, score, Optional.of(amount), Optional.empty());
+            this(reputationSource, blockTime, score, Optional.of(amount), Optional.empty(), Optional.empty());
         }
 
         public ListItem(ReputationSource reputationSource,
                         long blockTime,
                         long score,
                         Optional<Long> optionalAmount,
-                        Optional<Long> optionalLockTime) {
+                        Optional<Long> optionalLockTime,
+                        Optional<String> unlockTxId) {
             this.reputationSource = reputationSource;
             this.date = blockTime;
             this.score = score;
@@ -139,7 +142,12 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
             ageString = TimeFormatter.formatAgeInDaysAndYears(blockTime);
             sourceString = reputationSource.getDisplayString();
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"), false)).orElse("-");
-            scoreString = String.valueOf(score);
+            if (reputationSource == ReputationSource.BSQ_BOND && unlockTxId.isPresent()) {
+                checkArgument(score == 0, "At an unlock bond item we expect score to be 0");
+                scoreString = Res.get("reputation.score.BSQ_BOND.score.unlockedBond");
+            } else {
+                scoreString = String.valueOf(score);
+            }
             lockTimeString = optionalLockTime.map(String::valueOf).orElse("-");
         }
     }

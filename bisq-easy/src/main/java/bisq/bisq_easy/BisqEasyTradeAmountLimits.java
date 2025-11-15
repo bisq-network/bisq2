@@ -53,7 +53,7 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(0, "USD");
     private static final double REQUIRED_REPUTATION_SCORE_PER_USD = 200d;
     public static final double TOLERANCE = 0.05;
-    private static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
+    public static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
     private static final Set<String> SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION = new HashSet<>();
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {

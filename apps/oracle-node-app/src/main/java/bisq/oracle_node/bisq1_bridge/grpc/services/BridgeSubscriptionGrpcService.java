@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.timer.Delay;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
@@ -88,7 +89,8 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     }
 
     protected int getStartBlockHeight() {
-        return LAUNCH_BLOCK_HEIGHT;
+        // For regtest we use devMode
+        return DevMode.isDevMode() ? 0 : LAUNCH_BLOCK_HEIGHT;
     }
 
     protected abstract List<T> doRequest(int startBlockHeight);

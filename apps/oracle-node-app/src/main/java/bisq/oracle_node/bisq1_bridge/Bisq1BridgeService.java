@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.burningman.AuthorizedBurningmanListByBlock;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
@@ -158,6 +159,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         log.info("initialize");
 
         networkService.addDefaultNodeListener(this);
+        handleNewConnection();
 
         networkService.addDataServiceListener(this);
         String storageKey = UserProfile.class.getSimpleName();
@@ -211,22 +213,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     @Override
     public void onConnection(Connection connection) {
-        // We ensure with the null check against executor that we only start the ScheduledExecutorService once.
-        if (executor != null) return;
-
-        synchronized (executorLock) {
-            if (executor != null) return;
-            int numAllConnections = networkService.getNumConnectionsOnAllTransports();
-            if (numAllConnections >= config.getNumConnectionsForRepublish()) {
-                networkService.removeDefaultNodeListener(this);
-
-                ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
-                tmp.scheduleWithFixedDelay(this::maybePublish, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
-                executor = tmp;
-
-                republishAuthorizedBondedRoles();
-            }
-        }
+        handleNewConnection();
     }
 
     @Override
@@ -346,6 +333,27 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         } else {
             // Unexpected as we get called only for AuthorizedProofOfBurnData and AuthorizedBondedReputationData
             return false;
+        }
+    }
+
+    private void handleNewConnection() {
+        // We ensure with the null check against executor that we only start the ScheduledExecutorService once.
+        if (executor != null) return;
+
+        synchronized (executorLock) {
+            if (executor != null) return;
+            int numAllConnections = networkService.getNumConnectionsOnAllTransports();
+            // For regtest we use devMode
+            if (numAllConnections >= config.getNumConnectionsForRepublish() || DevMode.isDevMode()) {
+                networkService.removeDefaultNodeListener(this);
+
+                ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
+                int initialDelayInSeconds = DevMode.isDevMode() ? 1 : config.getInitialDelayInSeconds();
+                tmp.scheduleWithFixedDelay(this::maybePublish, initialDelayInSeconds, config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                executor = tmp;
+
+                republishAuthorizedBondedRoles();
+            }
         }
     }
 

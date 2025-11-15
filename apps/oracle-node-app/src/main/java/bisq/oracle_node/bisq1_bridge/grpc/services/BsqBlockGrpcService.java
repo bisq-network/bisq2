@@ -125,7 +125,8 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
                 bondedReputationDto.getBondedReputationHash(),
                 bondedReputationDto.getLockTime(),
                 blockDto.getHeight(),
-                txDto.getTxId(),
+                bondedReputationDto.getLockupTxId(),
+                bondedReputationDto.getUnlockTxId(),
                 staticPublicKeysProvided);
     }
 }

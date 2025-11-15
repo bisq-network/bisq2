@@ -215,7 +215,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                 .ifPresentOrElse(userProfile -> {
                     ByteArray hash = getUserProfileKey(userProfile);
                     if (!dataSetByHash.containsKey(hash)) {
-                        dataSetByHash.put(hash, new HashSet<>());
+                        dataSetByHash.put(hash, new CopyOnWriteArraySet<>());
                     }
                     Set<T> dataSet = dataSetByHash.get(hash);
                     addToDataSet(dataSet, data);

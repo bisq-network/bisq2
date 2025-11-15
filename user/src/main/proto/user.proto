@@ -127,7 +127,8 @@ message AuthorizedBondedReputationData {
   bool staticPublicKeysProvided = 5;
   sint32 version = 6;
   sint32 blockHeight = 7;
-  string txId = 8;
+  string lockupTxId = 8;
+  optional string unlockTxId = 9;
 }
 
 message AuthorizedAccountAgeData {
