@@ -125,22 +125,46 @@ def print_github_actions_yaml(batches: List[Dict], max_parallel: int):
     print("  fail-fast: false  # Don't cancel all jobs if one fails")
 
 
-def print_github_actions_json(batches: List[Dict]) -> None:
+def print_github_actions_json(batches: List[Dict], resources_map: Optional[Dict[str, str]] = None) -> None:
     """
     Print GitHub Actions matrix JSON format.
 
     Output is compact JSON suitable for direct use in GitHub Actions matrix strategy.
+
+    Args:
+        batches: List of batch configurations
+        resources_map: Optional mapping of locale -> resources (e.g., {"fr": "bisq2.chat,bisq2.user"})
     """
-    matrix = {
-        "include": [
-            {
-                "id": batch["id"],
-                "locales": batch["locales"],
-                "name": batch["name"]
-            }
-            for batch in batches
-        ]
-    }
+    matrix_items = []
+
+    for batch in batches:
+        item = {
+            "id": batch["id"],
+            "locales": batch["locales"],
+            "name": batch["name"]
+        }
+
+        # Add resources if mapping provided
+        if resources_map:
+            # Collect unique resources for all locales in this batch
+            batch_resource_set = set()
+            batch_locale_list = batch["locales"].split(",")
+
+            for tx_locale in batch_locale_list:
+                # Convert Transifex format (pt-BR) back to internal format (pt_BR)
+                internal_locale = tx_locale.replace("-", "_")
+
+                if internal_locale in resources_map:
+                    # Split comma-separated resources and add to set for deduplication
+                    locale_resources = resources_map[internal_locale].split(",")
+                    batch_resource_set.update(r.strip() for r in locale_resources if r.strip())
+
+            # Sort for consistency and join back to comma-separated string
+            item["resources"] = ",".join(sorted(batch_resource_set))
+
+        matrix_items.append(item)
+
+    matrix = {"include": matrix_items}
 
     # Compact JSON output (no extra whitespace)
     print(json.dumps(matrix, separators=(',', ':')))
@@ -273,6 +297,12 @@ Examples:
         help="Output GitHub Actions matrix JSON format instead of YAML (for dynamic workflow integration)"
     )
 
+    parser.add_argument(
+        "--resources-json",
+        type=str,
+        help="JSON string mapping locales to resources (e.g., '{\"fr\":\"bisq2.chat,bisq2.user\"}'). Used with --json to include resources in output."
+    )
+
     args = parser.parse_args()
 
     # Validate inputs
@@ -291,6 +321,16 @@ Examples:
         if invalid_locales:
             parser.error(f"Invalid locales: {', '.join(invalid_locales)}\nMust be one of: {', '.join(ALL_LOCALES)}")
 
+    # Parse resources mapping if provided
+    resources_map = None
+    if args.resources_json:
+        try:
+            resources_map = json.loads(args.resources_json)
+            if not isinstance(resources_map, dict):
+                parser.error("--resources-json must be a valid JSON object")
+        except json.JSONDecodeError as e:
+            parser.error(f"Invalid JSON in --resources-json: {e}")
+
     # Generate batches
     batches = generate_batches(args.batch_size, args.max_parallel, args.priority, target_locales)
 
@@ -300,7 +340,7 @@ Examples:
     # Print output
     if args.json:
         # JSON output only (no stats) for workflow integration
-        print_github_actions_json(batches)
+        print_github_actions_json(batches, resources_map)
     elif not args.stats_only:
         # YAML output with stats
         print_github_actions_yaml(batches, args.max_parallel)

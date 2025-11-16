@@ -81,6 +81,15 @@ jobs:
             exit 1
           fi
 
+      - name: Validate Python script exists
+        if: steps.check_commit.outputs.commit_in_main == 'true'
+        run: |
+          if [ ! -f scripts/generate_transifex_batches.py ]; then
+            echo "::error::Required script not found: scripts/generate_transifex_batches.py"
+            exit 1
+          fi
+          echo "::notice::Batch generation script validated"
+
       - name: Calculate push commands
         id: calculate-pushes
         if: steps.check_commit.outputs.commit_in_main == 'true'
@@ -135,8 +144,6 @@ jobs:
           CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|_pcm)\.properties$' -- || true)
 
           if [ -n "$CHANGED_TRANSLATION_FILES" ]; then
-            echo "has_translation_changes=true" >> $GITHUB_OUTPUT
-
             for file in $CHANGED_TRANSLATION_FILES; do
               lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(-[A-Z][a-z]+)?(([_-]([A-Z]{2}|[0-9]{3})))?|pcm)\.properties$/\1/')
               resource_slug_line=$(awk -v file="$file" -v lang="$lang" '
@@ -164,86 +171,46 @@ jobs:
               fi
             done
 
-            # Generate batched matrix configuration dynamically
-            # Uses Python script to create optimal batches based on changed locales only
+            # Build resources JSON for Python script
+            # Convert bash associative array to JSON format
+            resources_json="{"
+            first_item=true
+            for locale in "${!lang_resources[@]}"; do
+              if ! $first_item; then
+                resources_json+=","
+              fi
+              # Escape quotes in resource values
+              resources="${lang_resources[$locale]}"
+              resources_json+="\"$locale\":\"$resources\""
+              first_item=false
+            done
+            resources_json+="}"
 
-            # Collect changed locales into comma-separated list
+            # Collect changed locales for batch generation
             changed_locales_list=""
             for locale in "${!lang_resources[@]}"; do
               changed_locales_list="${changed_locales_list:+$changed_locales_list,}$locale"
             done
 
+            # Generate batched matrix configuration if we have locales
             if [ -n "$changed_locales_list" ]; then
+              echo "has_translation_changes=true" >> $GITHUB_OUTPUT
               echo "::notice::Changed locales: $changed_locales_list"
+              echo "::notice::Resources mapping: $resources_json"
 
-              # Generate batch configuration dynamically using Python script
-              # This creates batches only for locales that actually changed
+              # Call Python script with resources mapping for complete JSON generation
+              # This eliminates all bash JSON manipulation and deduplicates resources properly
               batch_matrix=$(python3 scripts/generate_transifex_batches.py \
                 --locales "$changed_locales_list" \
                 --batch-size 4 \
                 --max-parallel 2 \
-                --json)
+                --json \
+                --resources-json "$resources_json")
 
               echo "::notice::Generated batch configuration: $batch_matrix"
-
-              # Now enhance with resource information for each batch
-              # Parse the JSON and add resources field
-              json_output='{"include":['
-              first_batch=true
-
-              # Extract batches from JSON using jq-like parsing (pure bash)
-              # Read batch info from Python output
-              batch_count=$(echo "$batch_matrix" | grep -o '"id":[0-9]*' | wc -l)
-
-              for ((batch_idx=0; batch_idx<batch_count; batch_idx++)); do
-                # Extract locales for this batch
-                batch_locales=$(echo "$batch_matrix" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-print(data['include'][$batch_idx]['locales'])
-")
-
-                batch_id=$(echo "$batch_matrix" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-print(data['include'][$batch_idx]['id'])
-")
-
-                batch_name=$(echo "$batch_matrix" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-print(data['include'][$batch_idx]['name'])
-")
-
-                # Build resources list for this batch's locales
-                batch_resources=""
-                IFS=',' read -ra LOCALES <<< "$batch_locales"
-                for locale in "${LOCALES[@]}"; do
-                  # Convert Transifex format (pt-BR) to internal format (pt_BR)
-                  internal_locale=$(echo "$locale" | sed 's/-/_/g')
-
-                  if [[ -v lang_resources[$internal_locale] ]]; then
-                    if [ -z "$batch_resources" ]; then
-                      batch_resources="${lang_resources[$internal_locale]}"
-                    else
-                      # Merge resources (deduplicate by splitting and rejoining)
-                      batch_resources="$batch_resources,${lang_resources[$internal_locale]}"
-                    fi
-                  fi
-                done
-
-                # Add batch to output
-                if ! $first_batch; then
-                  json_output+=','
-                fi
-                json_output+="{\"id\":$batch_id,\"locales\":\"$batch_locales\",\"resources\":\"$batch_resources\",\"name\":\"$batch_name\"}"
-                first_batch=false
-              done
-
-              json_output+=']}'
-              printf 't_matrix=%s\n' "$json_output" >> "$GITHUB_OUTPUT"
+              printf 't_matrix=%s\n' "$batch_matrix" >> "$GITHUB_OUTPUT"
             else
-              # No changed locales
+              echo "has_translation_changes=false" >> $GITHUB_OUTPUT
               echo 't_matrix={"include":[]}' >> "$GITHUB_OUTPUT"
             fi
           else
@@ -345,6 +312,10 @@ print(data['include'][$batch_idx]['name'])
       - name: Verify upload succeeded
         if: steps.push_with_retry.outcome == 'success'
         run: |
+          # Wait for Transifex propagation (eventual consistency)
+          echo "::notice::Waiting 10 seconds for Transifex to process uploads..."
+          sleep 10
+
           echo "::group::Verifying uploads for batch: ${{ matrix.locales }}"
 
           IFS=',' read -ra LOCALES <<< "${{ matrix.locales }}"
@@ -354,11 +325,24 @@ print(data['include'][$batch_idx]['name'])
             echo "Verifying $locale..."
 
             # Pull back what we just pushed (dry-run to avoid downloading)
-            if ! tx pull -l $locale -r "${{ matrix.resources }}" --mode onlytranslated --dry-run 2>&1 | grep -q "Pulling"; then
-              echo "::warning::Verification FAILED for $locale - not found in Transifex"
+            # Retry verification up to 3 times with delay for Transifex propagation
+            VERIFIED=false
+            for attempt in {1..3}; do
+              if tx pull -l $locale -r "${{ matrix.resources }}" --mode onlytranslated --dry-run 2>&1 | grep -q "Pulling"; then
+                echo "✅ Verified: $locale exists in Transifex (attempt $attempt)"
+                VERIFIED=true
+                break
+              else
+                if [ $attempt -lt 3 ]; then
+                  echo "::notice::Verification attempt $attempt failed for $locale, retrying in 5s..."
+                  sleep 5
+                fi
+              fi
+            done
+
+            if ! $VERIFIED; then
+              echo "::warning::Verification FAILED for $locale after 3 attempts - not found in Transifex"
               VERIFICATION_FAILED=true
-            else
-              echo "✅ Verified: $locale exists in Transifex"
             fi
           done
 
