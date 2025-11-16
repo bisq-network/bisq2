@@ -310,6 +310,7 @@ jobs:
 
       # PHASE 1: Upload verification
       - name: Verify upload succeeded
+        id: verify
         if: steps.push_with_retry.outcome == 'success'
         run: |
           # Wait for Transifex propagation (eventual consistency)
