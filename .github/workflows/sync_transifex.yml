@@ -243,6 +243,27 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      # Install Transifex CLI for direct tx commands in retry/verification steps
+      - name: Install Transifex CLI
+        run: |
+          curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Verify installation
+          export PATH="$HOME/.local/bin:$PATH"
+          tx --version
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
+
+      # Validate matrix resources field
+      - name: Validate batch configuration
+        run: |
+          if [ -z "${{ matrix.resources }}" ]; then
+            echo "::error::No resources specified for batch ${{ matrix.id }} (locales: ${{ matrix.locales }})"
+            echo "::error::This indicates a bug in the batch generation script"
+            exit 1
+          fi
+          echo "::notice::Batch ${{ matrix.id }} validated: ${{ matrix.locales }} → ${{ matrix.resources }}"
+
       # PHASE 1: Stagger batch starts to prevent API overload
       - name: Stagger batch start
         run: |
@@ -280,7 +301,8 @@ jobs:
               fi
 
               # Capture full output for error diagnosis
-              OUTPUT=$(tx push -t -l $locale -r "${{ matrix.resources }}" 2>&1) || EXIT_CODE=$?
+              EXIT_CODE=0
+              OUTPUT=$(tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1) || EXIT_CODE=$?
 
               if [ ${EXIT_CODE:-0} -ne 0 ]; then
                 echo "$OUTPUT"
@@ -314,8 +336,9 @@ jobs:
         if: steps.push_with_retry.outcome == 'success'
         run: |
           # Wait for Transifex propagation (eventual consistency)
-          echo "::notice::Waiting 10 seconds for Transifex to process uploads..."
-          sleep 10
+          # Increased from 10s to 15s based on review feedback
+          echo "::notice::Waiting 15 seconds for Transifex to process uploads..."
+          sleep 15
 
           echo "::group::Verifying uploads for batch: ${{ matrix.locales }}"
 
@@ -329,13 +352,17 @@ jobs:
             # Retry verification up to 3 times with delay for Transifex propagation
             VERIFIED=false
             for attempt in {1..3}; do
-              if tx pull -l $locale -r "${{ matrix.resources }}" --mode onlytranslated --dry-run 2>&1 | grep -q "Pulling"; then
+              # Check exit code first, then verify output as secondary check
+              EXIT_CODE=0
+              OUTPUT=$(tx pull -l "$locale" -r "${{ matrix.resources }}" --mode onlytranslated --dry-run 2>&1) || EXIT_CODE=$?
+
+              if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "Pulling"; then
                 echo "✅ Verified: $locale exists in Transifex (attempt $attempt)"
                 VERIFIED=true
                 break
               else
                 if [ $attempt -lt 3 ]; then
-                  echo "::notice::Verification attempt $attempt failed for $locale, retrying in 5s..."
+                  echo "::notice::Verification attempt $attempt failed for $locale (exit: $EXIT_CODE), retrying in 5s..."
                   sleep 5
                 fi
               fi
