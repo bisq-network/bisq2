@@ -36,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
+// Data size: 107 bytes
 @Slf4j
 @EqualsAndHashCode
 @Getter
@@ -47,7 +47,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_50_000);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
