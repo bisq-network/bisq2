@@ -44,6 +44,7 @@ hs_err_pid*
 .DS_Store
 .gradle
 build
+bin
 out
 
 # Makefile tests / Temp created by some targets, needed by other targets
