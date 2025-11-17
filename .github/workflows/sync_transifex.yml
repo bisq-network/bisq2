@@ -247,10 +247,10 @@ jobs:
       - name: Install Transifex CLI
         run: |
           curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          # Verify installation
-          export PATH="$HOME/.local/bin:$PATH"
-          tx --version
+          # Add to PATH for subsequent steps (takes effect in next step, not current)
+          echo "$PWD" >> $GITHUB_PATH
+          # Verify installation using full path
+          ./tx --version
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
 
