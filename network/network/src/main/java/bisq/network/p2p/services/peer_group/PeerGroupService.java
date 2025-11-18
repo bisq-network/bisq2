@@ -127,6 +127,9 @@ public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStor
 
     private boolean doAddPeer(Peer peerToAdd, Map<Address, Peer> map) {
         Address address = peerToAdd.getAddress();
+        if (address == null) {
+            return false;
+        }
         if (map.containsKey(address)) {
             if (peerToAdd.getCreated() > map.get(address).getCreated()) {
                 map.put(address, peerToAdd);

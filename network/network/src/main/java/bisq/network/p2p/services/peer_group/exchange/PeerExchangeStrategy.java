@@ -241,6 +241,7 @@ public class PeerExchangeStrategy {
 
     private List<Address> getSeedAddresses() {
         return CollectionUtil.toShuffledList(peerGroupService.getSeedNodeAddresses()).stream()
+                .filter(address -> address != null)
                 .filter(node::notMyself)
                 .filter(peerGroupService::isNotBanned)
                 .limit(config.getNumSeedNodesAtBoostrap())
@@ -251,6 +252,7 @@ public class PeerExchangeStrategy {
         return getSortedReportedPeers()
                 .limit(config.getNumReportedPeersAtBoostrap())
                 .map(Peer::getAddress)
+                .filter(address -> address != null)
                 .collect(Collectors.toList());
     }
 
@@ -261,12 +263,14 @@ public class PeerExchangeStrategy {
                 .sorted()
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
+                .filter(address -> address != null)
                 .collect(Collectors.toList());
     }
 
     private List<Address> getAllConnectedPeerAddresses() {
         return getSortedAllConnectedPeers()
                 .map(Peer::getAddress)
+                .filter(address -> address != null)
                 .collect(Collectors.toList());
     }
 
@@ -305,7 +309,11 @@ public class PeerExchangeStrategy {
     }
 
     private boolean notSameAddress(Address address, Peer peer) {
-        return !peer.getAddress().equals(address);
+        Address peerAddress = peer.getAddress();
+        if (peerAddress == null || address == null) {
+            return false;
+        }
+        return !peerAddress.equals(address);
     }
 
     private Stream<Peer> getSortedAllConnectedPeers() {
