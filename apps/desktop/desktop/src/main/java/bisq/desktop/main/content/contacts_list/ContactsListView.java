@@ -65,8 +65,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     private Subscription userProfileIdOfScoreUpdatePin;
     private UIScheduler uiScheduler;
 
-    public ContactsListView(ContactsListModel model,
-                            ContactsListController controller) {
+    public ContactsListView(ContactsListModel model, ContactsListController controller) {
         super(new VBox(), model, controller);
 
         richTableView = new RichTableView<>(model.getSortedList(),
@@ -80,7 +79,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
         configTableView();
 
-        root.getChildren().addAll(richTableView);
+        root.getChildren().add(richTableView);
         root.setPadding(new Insets(SIDE_PADDING, SIDE_PADDING, 0 , SIDE_PADDING));
     }
 

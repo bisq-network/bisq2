@@ -30,23 +30,21 @@ import java.util.Comparator;
 
 @Slf4j
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
+    private static final double SIDE_PADDING = 40;
+
     private final RichTableView<WalletTransactionListItem> richTableView;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
-        super(new VBox(20), model, controller);
-
-        root.setPadding(new Insets(0, 40, 40, 40));
+        super(new VBox(), model, controller);
 
         richTableView = new RichTableView<>(
                 model.getSortedList(),
                 Res.get("wallet.txs"),
                 controller::applySearchPredicate);
-        richTableView.setMinHeight(300);
-        // Triggers to fill the available height
-        richTableView.setPrefHeight(2000);
         configTableView();
 
         root.getChildren().add(richTableView);
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
     }
 
     @Override
