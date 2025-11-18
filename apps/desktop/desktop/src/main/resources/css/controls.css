@@ -1345,3 +1345,53 @@
 .split-button.dropdown-menu-active .label {
     -fx-text-fill: -fx-mid-text-color;
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Toggle Button                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.toggle-button-hbox .toggle-button {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+    -fx-font-size: 0.96em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-alignment: baseline-center;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-mid-text-color;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.toggle-button-hbox .toggle-button:hover {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.toggle-button-hbox {
+    -fx-alignment: center-right;
+}
+
+.toggle-button-hbox .toggle-button:focused,
+.toggle-button-hbox .toggle-button:selected,
+.toggle-button-hbox .toggle-button:pressed {
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+}
+
+.toggle-button-hbox .toggle-button:selected {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-border-color: transparent;
+}
+
+.toggle-button-hbox .toggle-button:selected,
+.toggle-button-hbox .toggle-button:selected {
+    -fx-background-color: -bisq-mid-grey-10;
+}

@@ -18,11 +18,15 @@
 package bisq.desktop.main.content.wallet.txs;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,14 +37,25 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<WalletTransactionListItem> richTableView;
+    private final ToggleButton allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton;
+    private final ToggleGroup toggleGroup;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
         super(new VBox(), model, controller);
+
+        allTxToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.allTx"));
+        reservedFundsToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.reservedFunds"));
+        lockedFundsToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.lockedFunds"));
+        toggleGroup = new ToggleGroup();
+        toggleGroup.getToggles().addAll(allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton);
+        HBox toggleButtonHBox = new HBox(3, allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton);
+        toggleButtonHBox.getStyleClass().add("toggle-button-hbox");
 
         richTableView = new RichTableView<>(
                 model.getSortedList(),
                 Res.get("wallet.txs"),
                 controller::applySearchPredicate);
+        richTableView.getSubheaderBox().getChildren().setAll(toggleButtonHBox, richTableView.getSearchBox(), Spacer.fillHBox());
         configTableView();
 
         root.getChildren().add(richTableView);
