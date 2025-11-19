@@ -17,12 +17,17 @@
 
 package bisq.desktop.main.content.wallet;
 
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.wallet.txs.WalletTxsView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -77,6 +82,11 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         }
     }
 
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof WalletTxsView;
+    }
+
     private void setContentToTabs() {
         root.setPadding(new Insets(0));
         root.getChildren().setAll(topBox, lineAndMarker, scrollPane);
@@ -105,13 +115,5 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         VBox.setMargin(label, new Insets(0, 0, 20, 0));
         root.setPadding(new Insets(40, 40, 20, 40));
         root.getChildren().setAll(contentBox);
-    }
-
-    private WalletModel getModel() {
-        return (WalletModel) model;
-    }
-
-    private WalletController getController() {
-        return (WalletController) controller;
     }
 }

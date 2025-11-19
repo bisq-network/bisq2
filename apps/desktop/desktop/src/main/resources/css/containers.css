@@ -401,6 +401,22 @@
     -fx-background-color: transparent;
 }
 
+.rich-table-view-box .export-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-grey-button;
+}
+
+.rich-table-view-box .export-button:hover {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-effect: none;
+}
+
+.rich-table-view-box .export-button:pressed {
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-effect: none;
+}
+
 .rich-table-view {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-border-color: transparent;

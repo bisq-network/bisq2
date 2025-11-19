@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class WalletTransactionListItem implements DateTableItem {
+public class WalletTxListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final Transaction transaction;
 
@@ -38,8 +38,9 @@ public class WalletTransactionListItem implements DateTableItem {
             trade, type, destinationAddress;
     private final Coin amount;
     private final int numConfirmations;
+    private final TxUsage txUsage;
 
-    public WalletTransactionListItem(Transaction transaction) {
+    public WalletTxListItem(Transaction transaction) {
         this.transaction = transaction;
 
         date = transaction.getDate().getTime();
@@ -56,5 +57,6 @@ public class WalletTransactionListItem implements DateTableItem {
         trade = "TUBDU32TH";
         type = "Multisig payout";
         destinationAddress = transaction.getOutputs().isEmpty() ? "" : transaction.getOutputs().get(0).getAddress();
+        txUsage = TxUsage.RESERVED;
     }
 }

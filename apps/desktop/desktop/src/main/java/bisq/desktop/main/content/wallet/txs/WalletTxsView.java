@@ -18,106 +18,157 @@
 package bisq.desktop.main.content.wallet.txs;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
 @Slf4j
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
-    private final RichTableView<WalletTransactionListItem> richTableView;
+    private static final double SIDE_PADDING = 40;
+
+    private final RichTableView<WalletTxListItem> richTableView;
+    private final ToggleButton allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton;
+    private final ToggleGroup toggleGroup;
+    private final ChangeListener<Toggle> toggleChangeListener;
+    private Subscription selectedFilterPin;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        allTxToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.allTx"));
+        reservedFundsToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.reservedFunds"));
+        lockedFundsToggleButton = new ToggleButton(Res.get("wallet.txs.subheader.lockedFunds"));
+        toggleGroup = new ToggleGroup();
+        toggleGroup.getToggles().addAll(allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton);
+        HBox toggleButtonHBox = new HBox(3, allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton);
+        toggleButtonHBox.getStyleClass().add("toggle-button-hbox");
 
         richTableView = new RichTableView<>(
                 model.getSortedList(),
                 Res.get("wallet.txs"),
                 controller::applySearchPredicate);
-        richTableView.setMinHeight(300);
-        // Triggers to fill the available height
-        richTableView.setPrefHeight(2000);
+        richTableView.getSubheaderBox().getChildren().setAll(toggleButtonHBox, richTableView.getSearchBox(), Spacer.fillHBox());
         configTableView();
 
         root.getChildren().add(richTableView);
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+
+        toggleChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                updateSelectedFilter(model.getSelectedFilter().get());
+            }
+        };
     }
 
     @Override
     protected void onViewAttached() {
         richTableView.initialize();
+
+        selectedFilterPin = EasyBind.subscribe(model.getSelectedFilter(), this::updateSelectedFilter);
+
+        allTxToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.ALL));
+        reservedFundsToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.RESERVED_FUNDS));
+        lockedFundsToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.LOCKED_FUNDS));
+
+        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
+
+        selectedFilterPin.unsubscribe();
+
+        allTxToggleButton.setOnAction(null);
+        reservedFundsToggleButton.setOnAction(null);
+        lockedFundsToggleButton.setOnAction(null);
+
+        toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
     }
 
     private void configTableView() {
-        BisqTableColumn<WalletTransactionListItem> dateColumn = new BisqTableColumn.Builder<WalletTransactionListItem>()
+        BisqTableColumn<WalletTxListItem> dateColumn = new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.date"))
                 .left()
-                .minWidth(80)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getDateTimeString))
-                .valueSupplier(WalletTransactionListItem::getDateTimeString)
+                .minWidth(100)
+                .comparator(Comparator.comparing(WalletTxListItem::getDateTimeString))
+                .valueSupplier(WalletTxListItem::getDateTimeString)
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build();
         richTableView.getColumns().add(dateColumn);
         richTableView.getSortOrder().add(dateColumn);
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.trade"))
                 .minWidth(60)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getTrade)
+                .valueSupplier(WalletTxListItem::getTrade)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.type"))
                 .minWidth(70)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getType)
+                .valueSupplier(WalletTxListItem::getType)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.address"))
                 .minWidth(180)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getDestinationAddress)
+                .valueSupplier(WalletTxListItem::getDestinationAddress)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.txId"))
                 .minWidth(200)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getTxId)
+                .valueSupplier(WalletTxListItem::getTxId)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.amount"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getAmountAsString)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getAmount))
+                .valueSupplier(WalletTxListItem::getAmountAsString)
+                .comparator(Comparator.comparing(WalletTxListItem::getAmount))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getNumConfirmationsAsString)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getNumConfirmations))
+                .valueSupplier(WalletTxListItem::getNumConfirmationsAsString)
+                .comparator(Comparator.comparing(WalletTxListItem::getNumConfirmations))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .right()
                 .build());
+    }
+
+    private void updateSelectedFilter(TxsFilter filter) {
+        if (filter == TxsFilter.ALL) {
+            allTxToggleButton.setSelected(true);
+        } else if (filter == TxsFilter.RESERVED_FUNDS) {
+            reservedFundsToggleButton.setSelected(true);
+        } else if (filter == TxsFilter.LOCKED_FUNDS) {
+            lockedFundsToggleButton.setSelected(true);
+        }
     }
 }

@@ -783,7 +783,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         offerFiltersToggleGroup = new ToggleGroup();
         offerFiltersToggleGroup.getToggles().addAll(allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
         HBox toggleButtonHBox = new HBox(3, allOffersToggleButton, buyToggleButton, sellToggleButton, myOffersToggleButton);
-        toggleButtonHBox.getStyleClass().add("mu-sig-offerbook-offerlist-toggle-button-hbox");
+        toggleButtonHBox.getStyleClass().add("toggle-button-hbox");
 
         // Add payments filter menu to subheader
         paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
