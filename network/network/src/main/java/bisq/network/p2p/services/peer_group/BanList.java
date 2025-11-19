@@ -55,6 +55,9 @@ public class BanList {
     }
 
     public boolean isBanned(Address address) {
+        if (address == null) {
+            return false;
+        }
         return entryMap.containsKey(address);
     }
 
