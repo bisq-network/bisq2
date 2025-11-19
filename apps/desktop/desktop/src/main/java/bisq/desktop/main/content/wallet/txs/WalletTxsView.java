@@ -22,13 +22,17 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
@@ -39,6 +43,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     private final RichTableView<WalletTransactionListItem> richTableView;
     private final ToggleButton allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton;
     private final ToggleGroup toggleGroup;
+    private final ChangeListener<Toggle> toggleChangeListener;
+    private Subscription selectedFilterPin;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
         super(new VBox(), model, controller);
@@ -60,23 +66,45 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
 
         root.getChildren().add(richTableView);
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+
+        toggleChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                updateSelectedFilter(model.getSelectedFilter().get());
+            }
+        };
     }
 
     @Override
     protected void onViewAttached() {
         richTableView.initialize();
+
+        selectedFilterPin = EasyBind.subscribe(model.getSelectedFilter(), this::updateSelectedFilter);
+
+        allTxToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.ALL));
+        reservedFundsToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.RESERVED_FUNDS));
+        lockedFundsToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.LOCKED_FUNDS));
+
+        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
         richTableView.dispose();
+
+        selectedFilterPin.unsubscribe();
+
+        allTxToggleButton.setOnAction(null);
+        reservedFundsToggleButton.setOnAction(null);
+        lockedFundsToggleButton.setOnAction(null);
+
+        toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
     }
 
     private void configTableView() {
         BisqTableColumn<WalletTransactionListItem> dateColumn = new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.date"))
                 .left()
-                .minWidth(80)
+                .minWidth(100)
                 .comparator(Comparator.comparing(WalletTransactionListItem::getDateTimeString))
                 .valueSupplier(WalletTransactionListItem::getDateTimeString)
                 .sortType(TableColumn.SortType.DESCENDING)
@@ -132,5 +160,15 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .sortType(TableColumn.SortType.DESCENDING)
                 .right()
                 .build());
+    }
+
+    private void updateSelectedFilter(TxsFilter filter) {
+        if (filter == TxsFilter.ALL) {
+            allTxToggleButton.setSelected(true);
+        } else if (filter == TxsFilter.RESERVED_FUNDS) {
+            reservedFundsToggleButton.setSelected(true);
+        } else if (filter == TxsFilter.LOCKED_FUNDS) {
+            lockedFundsToggleButton.setSelected(true);
+        }
     }
 }

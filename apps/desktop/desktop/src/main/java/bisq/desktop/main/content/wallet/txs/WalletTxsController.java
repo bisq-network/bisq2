@@ -18,13 +18,20 @@
 package bisq.desktop.main.content.wallet.txs;
 
 import bisq.common.observable.Pin;
+import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
 import bisq.wallet.vo.Transaction;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import java.util.function.Predicate;
 
 @Slf4j
 public class WalletTxsController implements Controller {
@@ -32,10 +39,14 @@ public class WalletTxsController implements Controller {
     private final WalletTxsView view;
     private final WalletTxsModel model;
     private final WalletService walletService;
+    private final SettingsService settingsService;
     private Pin transactionsPin;
+    private Subscription selectedFilterPin;
 
     public WalletTxsController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
+        settingsService = serviceProvider.getSettingsService();
+
         model = new WalletTxsModel();
         view = new WalletTxsView(model, this);
     }
@@ -46,15 +57,40 @@ public class WalletTxsController implements Controller {
                 .map(WalletTransactionListItem::new)
                 .to(walletService.getTransactions());
 
+        TxsFilter persistedFilter = settingsService.getCookie().asString(CookieKey.WALLET_TXS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(TxsFilter.class, name, TxsFilter.ALL)).orElse(TxsFilter.ALL);
+        model.getSelectedFilter().set(persistedFilter);
+        selectedFilterPin = EasyBind.subscribe(model.getSelectedFilter(), filter -> {
+           if (filter != null) {
+               model.setFilterPredicate(getFilterPredicate(filter));
+               settingsService.setCookie(CookieKey.WALLET_TXS_FILTER, filter.name());
+               updateFilteredListItems();
+           }
+        });
+
         walletService.requestTransactions();
     }
 
     @Override
     public void onDeactivate() {
         transactionsPin.unbind();
+        selectedFilterPin.unsubscribe();
     }
 
     void applySearchPredicate(String searchText) {
         // TODO
+    }
+
+    private void updateFilteredListItems() {
+        model.getFilteredListItems().setPredicate(null);
+        model.getFilteredListItems().setPredicate(model.getListItemsPredicate());
+    }
+
+    private Predicate<WalletTransactionListItem> getFilterPredicate(TxsFilter filter) {
+        return switch (filter) {
+            case ALL -> item -> true;
+            case LOCKED_FUNDS ->  item -> true;
+            case RESERVED_FUNDS -> item -> true;
+        };
     }
 }

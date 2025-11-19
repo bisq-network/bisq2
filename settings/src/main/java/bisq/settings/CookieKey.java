@@ -53,7 +53,8 @@ public enum CookieKey {
     MU_SIG_MARKET_SORT_TYPE,
     MU_SIG_OFFERS_FILTER,
     MU_SIG_OFFER_PAYMENT_FILTERS(true),
-    SHOW_CONTACTS_LIST_LEARN_MORE_POPUP;
+    SHOW_CONTACTS_LIST_LEARN_MORE_POPUP,
+    WALLET_TXS_FILTER;
 
     @Getter
     private final boolean useSubKey;
