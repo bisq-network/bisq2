@@ -40,7 +40,7 @@ import java.util.Comparator;
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
     private static final double SIDE_PADDING = 40;
 
-    private final RichTableView<WalletTransactionListItem> richTableView;
+    private final RichTableView<WalletTxListItem> richTableView;
     private final ToggleButton allTxToggleButton, reservedFundsToggleButton, lockedFundsToggleButton;
     private final ToggleGroup toggleGroup;
     private final ChangeListener<Toggle> toggleChangeListener;
@@ -101,62 +101,62 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
-        BisqTableColumn<WalletTransactionListItem> dateColumn = new BisqTableColumn.Builder<WalletTransactionListItem>()
+        BisqTableColumn<WalletTxListItem> dateColumn = new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.date"))
                 .left()
                 .minWidth(100)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getDateTimeString))
-                .valueSupplier(WalletTransactionListItem::getDateTimeString)
+                .comparator(Comparator.comparing(WalletTxListItem::getDateTimeString))
+                .valueSupplier(WalletTxListItem::getDateTimeString)
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build();
         richTableView.getColumns().add(dateColumn);
         richTableView.getSortOrder().add(dateColumn);
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.trade"))
                 .minWidth(60)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getTrade)
+                .valueSupplier(WalletTxListItem::getTrade)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.type"))
                 .minWidth(70)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getType)
+                .valueSupplier(WalletTxListItem::getType)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.address"))
                 .minWidth(180)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getDestinationAddress)
+                .valueSupplier(WalletTxListItem::getDestinationAddress)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.txId"))
                 .minWidth(200)
                 .left()
-                .valueSupplier(WalletTransactionListItem::getTxId)
+                .valueSupplier(WalletTxListItem::getTxId)
                 .isSortable(true)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.amount"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getAmountAsString)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getAmount))
+                .valueSupplier(WalletTxListItem::getAmountAsString)
+                .comparator(Comparator.comparing(WalletTxListItem::getAmount))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build());
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getNumConfirmationsAsString)
-                .comparator(Comparator.comparing(WalletTransactionListItem::getNumConfirmations))
+                .valueSupplier(WalletTxListItem::getNumConfirmationsAsString)
+                .comparator(Comparator.comparing(WalletTxListItem::getNumConfirmations))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .right()
                 .build());

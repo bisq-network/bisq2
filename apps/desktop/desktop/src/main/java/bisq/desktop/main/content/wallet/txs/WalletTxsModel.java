@@ -33,15 +33,15 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public class WalletTxsModel implements Model {
-    private final ObservableList<WalletTransactionListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<WalletTransactionListItem> filteredListItems = new FilteredList<>(listItems);
-    private final SortedList<WalletTransactionListItem> sortedList = new SortedList<>(filteredListItems);
+    private final ObservableList<WalletTxListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
+    private final SortedList<WalletTxListItem> sortedList = new SortedList<>(filteredListItems);
     private final ObjectProperty<TxsFilter> selectedFilter = new SimpleObjectProperty<>();
 
-    private final Predicate<WalletTransactionListItem> listItemsPredicate = item ->
+    private final Predicate<WalletTxListItem> listItemsPredicate = item ->
             getFilterPredicate().test(item);
     @Setter
-    private Predicate<WalletTransactionListItem> filterPredicate = item -> true;
+    private Predicate<WalletTxListItem> filterPredicate = item -> true;
 
     public WalletTxsModel() {
     }

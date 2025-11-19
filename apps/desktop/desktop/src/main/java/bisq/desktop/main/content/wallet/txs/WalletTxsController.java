@@ -53,8 +53,8 @@ public class WalletTxsController implements Controller {
 
     @Override
     public void onActivate() {
-        transactionsPin = FxBindings.<Transaction, WalletTransactionListItem>bind(model.getListItems())
-                .map(WalletTransactionListItem::new)
+        transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getListItems())
+                .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
 
         TxsFilter persistedFilter = settingsService.getCookie().asString(CookieKey.WALLET_TXS_FILTER).map(name ->
@@ -86,7 +86,7 @@ public class WalletTxsController implements Controller {
         model.getFilteredListItems().setPredicate(model.getListItemsPredicate());
     }
 
-    private Predicate<WalletTransactionListItem> getFilterPredicate(TxsFilter filter) {
+    private Predicate<WalletTxListItem> getFilterPredicate(TxsFilter filter) {
         return switch (filter) {
             case ALL -> item -> true;
             case LOCKED_FUNDS ->  item -> item.getTxUsage() == TxUsage.LOCKED;
