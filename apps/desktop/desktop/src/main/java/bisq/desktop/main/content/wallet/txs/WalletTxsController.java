@@ -89,8 +89,8 @@ public class WalletTxsController implements Controller {
     private Predicate<WalletTransactionListItem> getFilterPredicate(TxsFilter filter) {
         return switch (filter) {
             case ALL -> item -> true;
-            case LOCKED_FUNDS ->  item -> true;
-            case RESERVED_FUNDS -> item -> true;
+            case LOCKED_FUNDS ->  item -> item.getTxUsage() == TxUsage.LOCKED;
+            case RESERVED_FUNDS -> item -> item.getTxUsage() == TxUsage.RESERVED;
         };
     }
 }

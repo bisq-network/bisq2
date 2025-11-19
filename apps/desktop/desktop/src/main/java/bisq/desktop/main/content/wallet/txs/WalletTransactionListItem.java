@@ -38,6 +38,7 @@ public class WalletTransactionListItem implements DateTableItem {
             trade, type, destinationAddress;
     private final Coin amount;
     private final int numConfirmations;
+    private final TxUsage txUsage;
 
     public WalletTransactionListItem(Transaction transaction) {
         this.transaction = transaction;
@@ -56,5 +57,6 @@ public class WalletTransactionListItem implements DateTableItem {
         trade = "TUBDU32TH";
         type = "Multisig payout";
         destinationAddress = transaction.getOutputs().isEmpty() ? "" : transaction.getOutputs().get(0).getAddress();
+        txUsage = TxUsage.RESERVED;
     }
 }
