@@ -92,21 +92,28 @@ cat > "$RELEASE_DIR/RELEASE_NOTES.md" <<EOF
 
 ## 📋 Requirements
 
-- Java 22 or higher
+- Java 22.0.2 or higher (tested with Java 22.0.2.fx-zulu)
 - 2-4 GB RAM
 - Internet connection (for Tor)
 
 ## 🚀 Quick Start
 
 1. Download and extract the archive
-2. Run: \`./bin/http-api-app\` (Linux/macOS) or \`bin\\http-api-app.bat\` (Windows)
-3. Find your Tor onion address in \`~/.local/share/bisq2_http_prod/webSocketServer_onionAddress.txt\`
-4. Connect your Bisq Connect mobile app
+2. Edit \`trusted-node.properties\` and set a strong password
+3. Run: \`./run-trusted-node.sh\` (Linux/macOS) or \`run-trusted-node.bat\` (Windows)
+4. Find your Tor onion address in the terminal output or data directory
+5. Connect your Bisq Connect mobile app using \`ws://your-onion.onion:8090\`
 
-## 🔐 Set a Password
+## 📖 Configuration
 
-\`\`\`bash
-JAVA_OPTS="-Dapplication.websocket.password=YOUR_PASSWORD" ./bin/http-api-app
+Edit \`trusted-node.properties\`:
+
+\`\`\`properties
+appName=bisq2_http_prod
+password=YOUR_STRONG_PASSWORD_HERE
+port=8090
+devMode=false
+transportTypes=TOR,CLEAR
 \`\`\`
 
 ## 📖 Full Documentation
@@ -157,7 +164,8 @@ echo "1. Test the distribution:"
 echo "   cd $RELEASE_DIR"
 echo "   unzip bisq-trusted-node-${VERSION}.zip"
 echo "   cd bisq-trusted-node-${VERSION}"
-echo "   ./bin/http-api-app"
+echo "   # Edit trusted-node.properties and set a password"
+echo "   ./run-trusted-node.sh"
 echo ""
 echo "2. Create GitHub release:"
 echo "   - Go to: https://github.com/bisq-network/bisq-mobile/releases/new"

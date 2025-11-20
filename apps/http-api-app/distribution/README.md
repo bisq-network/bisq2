@@ -22,9 +22,10 @@ outside your LAN.
 
 ### **Prerequisites**
 
-- **Java 22** installed
-  - Check: `java -version`
-  - Download: [Adoptium](https://adoptium.net/) or [Azul](https://www.azul.com/downloads/)
+- **Java 22.0.2 or higher** installed
+  - Check: `java -version` (should show version 22.0.2 or higher)
+  - Bisq2 is tested with Java 22.0.2.fx-zulu
+  - Download: [Adoptium](https://adoptium.net/) or [Azul Zulu FX](https://www.azul.com/downloads/?package=jdk-fx)
 
 ### **Step 1: Extract**
 
@@ -374,7 +375,7 @@ type %USERPROFILE%\.local\share\bisq2_http_prod\bisq_2.log
 ## 📊 **System Requirements**
 
 - **OS:** Linux, macOS, or Windows
-- **Java:** 22 or higher
+- **Java:** 22.0.2 or higher (tested with Java 22.0.2.fx-zulu)
 - **RAM:** 2 GB minimum, 4 GB recommended
 - **Disk:** 500 MB for application + data
 - **Network:** Internet connection (for Tor). Although possible, we don't recommend using CLEARNET outside your LAN.

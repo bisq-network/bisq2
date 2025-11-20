@@ -77,6 +77,13 @@ if [ -n "$TRANSPORT_TYPES" ]; then
     done
 fi
 
+# Determine data directory based on OS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    DATA_DIR="~/Library/Application Support/$APP_NAME"
+else
+    DATA_DIR="~/.local/share/$APP_NAME"
+fi
+
 # Display configuration
 echo "=========================================="
 echo "Starting Bisq Trusted Node"
@@ -84,7 +91,7 @@ echo "=========================================="
 echo "Instance Name: $APP_NAME"
 echo "Port: ${PORT:-8090}"
 echo "Transport Types: ${TRANSPORT_TYPES:-TOR,CLEAR}"
-echo "Data Directory: ~/.local/share/$APP_NAME"
+echo "Data Directory: $DATA_DIR"
 echo "=========================================="
 echo ""
 
