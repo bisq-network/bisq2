@@ -106,6 +106,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
+        richTableView.getColumns().add(richTableView.getTableView().getSelectionMarkerColumn());
+
         BisqTableColumn<WalletTxListItem> dateColumn = new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.date"))
                 .left()
