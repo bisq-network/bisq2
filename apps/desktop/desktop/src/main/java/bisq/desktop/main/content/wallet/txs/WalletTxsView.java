@@ -59,8 +59,9 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
 
         richTableView = new RichTableView<>(
                 model.getSortedList(),
-                Res.get("wallet.txs"),
-                controller::applySearchPredicate);
+                Res.get("wallet.txs"));
+        richTableView.getSearchBox().setManaged(true);
+        richTableView.getSearchBox().setVisible(true);
         richTableView.getSubheaderBox().getChildren().setAll(toggleButtonHBox, richTableView.getSearchBox(), Spacer.fillHBox());
         configTableView();
 
@@ -78,6 +79,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     protected void onViewAttached() {
         richTableView.initialize();
 
+        richTableView.getSearchBox().textProperty().bindBidirectional(model.getSearchText());
+
         selectedFilterPin = EasyBind.subscribe(model.getSelectedFilter(), this::updateSelectedFilter);
 
         allTxToggleButton.setOnAction(e -> model.getSelectedFilter().set(TxsFilter.ALL));
@@ -91,6 +94,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     protected void onViewDetached() {
         richTableView.dispose();
 
+        richTableView.getSearchBox().textProperty().unbindBidirectional(model.getSearchText());
+
         selectedFilterPin.unsubscribe();
 
         allTxToggleButton.setOnAction(null);
@@ -101,6 +106,8 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
+        richTableView.getColumns().add(richTableView.getTableView().getSelectionMarkerColumn());
+
         BisqTableColumn<WalletTxListItem> dateColumn = new BisqTableColumn.Builder<WalletTxListItem>()
                 .title(Res.get("wallet.txs.date"))
                 .left()

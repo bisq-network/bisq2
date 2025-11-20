@@ -20,6 +20,8 @@ package bisq.desktop.main.content.wallet.txs;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -37,11 +39,15 @@ public class WalletTxsModel implements Model {
     private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
     private final SortedList<WalletTxListItem> sortedList = new SortedList<>(filteredListItems);
     private final ObjectProperty<TxsFilter> selectedFilter = new SimpleObjectProperty<>();
+    private final StringProperty searchText = new SimpleStringProperty();
 
     private final Predicate<WalletTxListItem> listItemsPredicate = item ->
-            getFilterPredicate().test(item);
+            getFilterPredicate().test(item)
+            && getSearchTextPredicate().test(item);
     @Setter
     private Predicate<WalletTxListItem> filterPredicate = item -> true;
+    @Setter
+    private Predicate<WalletTxListItem> searchTextPredicate = item -> true;
 
     public WalletTxsModel() {
     }
