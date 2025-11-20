@@ -57,6 +57,21 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
 
+## Bisq Trusted Node (for Bisq Connect Mobile)
+
+If you want to run a trusted node for the [Bisq Connect mobile app](https://github.com/bisq-network/bisq-mobile), you can build a standalone distribution package:
+
+```bash
+./build-trusted-node-release.sh
+```
+
+This creates a ready-to-deploy package in `releases/trusted-node-v{VERSION}/` with:
+- Standalone ZIP and TAR.GZ archives
+- Complete user documentation
+- SHA256 checksums
+
+For detailed release instructions, see [docs/trusted-node-release.md](./docs/trusted-node-release.md).
+
 ## Community and Contributions
 
 Bisq is an open source project and a [Decentralized Autonomous Organization (DAO)](https://bisq.network/dao/).

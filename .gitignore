@@ -45,6 +45,7 @@ hs_err_pid*
 .gradle
 build
 out
+releases
 
 # Makefile tests / Temp created by some targets, needed by other targets
 # can be removed with `make clean`

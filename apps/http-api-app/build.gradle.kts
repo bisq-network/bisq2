@@ -1,7 +1,21 @@
+import java.util.Properties
+
+// Function to read properties from a file
+fun readPropertiesFile(filePath: String): Properties {
+    val properties = Properties()
+    file(filePath).inputStream().use { properties.load(it) }
+    return properties
+}
+
 plugins {
     id("bisq.java-library")
     application
 }
+
+// Read version from root gradle.properties
+val properties = readPropertiesFile("../../gradle.properties")
+val rootVersion = properties.getProperty("version", "unspecified")
+version = rootVersion
 
 java {
     toolchain {
@@ -43,12 +57,30 @@ dependencies {
     implementation(libs.bundles.rest.api.libs)
 }
 
+distributions {
+    main {
+        distributionBaseName.set("bisq-trusted-node")
+        contents {
+            // Include README and documentation
+            from("${projectDir}/distribution") {
+                include("README.md", "LICENSE", "CHANGELOG.md", "trusted-node.properties", "run-trusted-node.sh", "run-trusted-node.bat")
+            }
+            // Make shell script executable (493 decimal = 0755 octal)
+            filesMatching("run-trusted-node.sh") {
+                mode = 493
+            }
+        }
+    }
+}
+
 tasks {
     distZip {
-        enabled = false
+        enabled = true
     }
 
     distTar {
-        enabled = false
+        enabled = true
+        compression = Compression.GZIP
+        archiveExtension.set("tar.gz")
     }
 }
