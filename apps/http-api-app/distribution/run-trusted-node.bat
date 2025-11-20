@@ -14,9 +14,28 @@ if not exist "%PROPERTIES_FILE%" (
     exit /b 1
 )
 
-REM Read properties
-for /f "tokens=1,* delims==" %%a in ('type "%PROPERTIES_FILE%" ^| findstr /v "^#" ^| findstr /v "^$"') do (
-    set %%a=%%b
+REM Read properties with robust parsing
+for /f "usebackq tokens=1* delims==" %%a in ("%PROPERTIES_FILE%") do (
+    set "line=%%a"
+    set "value=%%b"
+
+    REM Skip empty lines and comments
+    if not "!line!"=="" (
+        if not "!line:~0,1!"=="#" (
+            REM Trim whitespace from key
+            for /f "tokens=* delims= " %%k in ("%%a") do set "key=%%k"
+
+            REM Trim leading whitespace from value
+            if not "!value!"=="" (
+                for /f "tokens=* delims= " %%v in ("!value!") do set "value=%%v"
+            )
+
+            REM Assign using delayed expansion to preserve spaces in values
+            if not "!key!"=="" (
+                set "!key!=!value!"
+            )
+        )
+    )
 )
 
 REM Validate required fields

@@ -24,7 +24,7 @@ outside your LAN.
 
 - **Java 22** installed
   - Check: `java -version`
-  - Download: https://adoptium.net/ or https://www.azul.com/downloads/
+  - Download: [Adoptium](https://adoptium.net/) or [Azul](https://www.azul.com/downloads/)
 
 ### **Step 1: Extract**
 
@@ -87,7 +87,7 @@ run-trusted-node.bat
 
 ## 📱 **Connect Your Mobile App**
 
-### **Option 1: Tor Connection (Recommended)**
+## **Option 1: Tor Connection (Recommended)**
 
 1. **Find your Tor onion address:**
 
@@ -113,7 +113,7 @@ run-trusted-node.bat
    - Tap on "advanced options" and enter your password in the password input
    - Tap "Test & Save"
 
-### **Option 2: Local Network (LAN)**
+## **Option 2: Local Network (LAN)**
 
 1. **Find your local IP address:**
 
@@ -313,7 +313,7 @@ netsh advfirewall firewall add rule name="Bisq Trusted Node" dir=in action=allow
 ### **For Tor Access:**
 
 No firewall configuration needed! Tor handles everything.
-Note that if you have a systen level tor instance runnning it could conflict with the tor instance of the bisq trusted node.
+Note that if you have a system level tor instance running it could conflict with the tor instance of the bisq trusted node.
 
 ---
 
@@ -396,10 +396,10 @@ Your data is preserved in `~/.local/share/bisq2_http_prod/`
 
 ## 📞 **Support**
 
-- **Bisq Mobile GitHub:** https://github.com/bisq-network/bisq-mobile
-- **Bisq2 GitHub:** https://github.com/bisq-network/bisq2
-- **Matrix Chat:** https://matrix.to/#/#bisq:bitcoin.kyoto
-- **Forum:** https://bisq.community/
+- **Bisq Mobile GitHub:** [bisq-network/bisq-mobile](https://github.com/bisq-network/bisq-mobile)
+- **Bisq2 GitHub:** [bisq-network/bisq2](https://github.com/bisq-network/bisq2)
+- **Matrix Chat:** [#bisq:bitcoin.kyoto](https://matrix.to/#/#bisq:bitcoin.kyoto)
+- **Forum:** [bisq.community](https://bisq.community/)
 
 ---
 

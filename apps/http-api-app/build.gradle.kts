@@ -61,9 +61,11 @@ distributions {
     main {
         distributionBaseName.set("bisq-trusted-node")
         contents {
-            // Include README and documentation
+            // Default application plugin includes bin/ and lib/ automatically
+            // Add our custom distribution files to the root
             from("${projectDir}/distribution") {
                 include("README.md", "LICENSE", "CHANGELOG.md", "trusted-node.properties", "run-trusted-node.sh", "run-trusted-node.bat")
+                into("/")  // Place in root of distribution
             }
             // Make shell script executable (493 decimal = 0755 octal)
             filesMatching("run-trusted-node.sh") {
