@@ -1,6 +1,8 @@
 # Bisq HTTP API
 
-REST API for testing and interacting with Bisq2.
+REST API and WebSocket server for testing and interacting with Bisq2.
+
+**Note:** If you want to run a standalone trusted node for the Bisq Connect mobile app, see the [Trusted Node Release Guide](../docs/trusted-node-release.md) for building distribution packages.
 
 ## API Documentation
 
