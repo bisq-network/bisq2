@@ -41,7 +41,7 @@ public class WalletTxsController implements Controller {
     private final WalletService walletService;
     private final SettingsService settingsService;
     private Pin transactionsPin;
-    private Subscription selectedFilterPin;
+    private Subscription selectedFilterPin, searchTextPin;
 
     public WalletTxsController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
@@ -53,6 +53,8 @@ public class WalletTxsController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getSearchText().set("");
+
         transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getListItems())
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
@@ -68,6 +70,22 @@ public class WalletTxsController implements Controller {
            }
         });
 
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            if (searchText == null || searchText.trim().isEmpty()) {
+                model.setSearchTextPredicate(item -> true);
+            } else {
+                String search = searchText.trim().toLowerCase();
+                model.setSearchTextPredicate(item ->
+                        item != null &&
+                                (item.getTrade().toLowerCase().contains(search)
+                                        || item.getDestinationAddress().toLowerCase().contains(search)
+                                        || item.getTxId().toLowerCase().contains(search)
+                                        || item.getAmountAsString().toLowerCase().contains(search))
+                );
+            }
+            updateFilteredListItems();
+        });
+
         walletService.requestTransactions();
     }
 
@@ -75,10 +93,7 @@ public class WalletTxsController implements Controller {
     public void onDeactivate() {
         transactionsPin.unbind();
         selectedFilterPin.unsubscribe();
-    }
-
-    void applySearchPredicate(String searchText) {
-        // TODO
+        searchTextPin.unsubscribe();
     }
 
     private void updateFilteredListItems() {
