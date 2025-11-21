@@ -932,7 +932,7 @@ public class ChatMessagesListController implements Controller {
                 new HashSet<>());
     }
 
-    public CommonPublicChatMessage createDeletedChatsIndicator(CommonPublicChatChannel channel) {
+    private CommonPublicChatMessage createDeletedChatsIndicator(CommonPublicChatChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         return new CommonPublicChatMessage(
                 StringUtils.createUid(),
