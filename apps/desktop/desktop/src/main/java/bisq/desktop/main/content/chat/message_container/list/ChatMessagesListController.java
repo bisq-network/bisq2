@@ -94,6 +94,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -940,7 +941,7 @@ public class ChatMessagesListController implements Controller {
                 senderUserProfile.getId(),
                 Optional.of(Res.get("chat.public.deletedChatsIndicator.text")),
                 Optional.empty(),
-                0L,
+                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(365), // Initialize date as 1y ago to always show as 1st message
                 false,
                 ChatMessageType.DELETED_CHATS_INDICATOR
         );
