@@ -922,7 +922,7 @@ public class ChatMessagesListController implements Controller {
 
     private CommonPublicChatMessage createDeletedChatsIndicator(CommonPublicChatChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        long ttl_days = CommonPublicChatMessage.COMMON_PUBLIC_CHAT_MESSAGE_TTL / TimeUnit.DAYS.toMillis(1);
+        long ttl_days = TimeUnit.MILLISECONDS.toDays(CommonPublicChatMessage.COMMON_PUBLIC_CHAT_MESSAGE_TTL);
         return new CommonPublicChatMessage(
                 StringUtils.createUid(),
                 channel.getChatChannelDomain(),
