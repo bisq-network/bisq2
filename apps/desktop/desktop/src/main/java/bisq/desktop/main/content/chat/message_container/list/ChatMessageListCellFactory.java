@@ -137,6 +137,10 @@ final class ChatMessageListCellFactory
             return new ChatRulesWarningMessageBox(item, controller);
         }
 
+        if (item.isDeletedChatsIndicator()) {
+            return new DeletedChatsIndicatorMessageBox(item);
+        }
+
         if (item.isMyMessage()) {
             if (item.isProtocolLogMessage()) {
                 return new MyProtocolLogMessageBox(item, controller);
