@@ -922,12 +922,13 @@ public class ChatMessagesListController implements Controller {
 
     private CommonPublicChatMessage createDeletedChatsIndicator(CommonPublicChatChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        long ttl_days = CommonPublicChatMessage.COMMON_PUBLIC_CHAT_MESSAGE_TTL / TimeUnit.DAYS.toMillis(1);
         return new CommonPublicChatMessage(
                 StringUtils.createUid(),
                 channel.getChatChannelDomain(),
                 channel.getId(),
                 senderUserProfile.getId(),
-                Optional.of(Res.get("chat.public.deletedChatsIndicator.text")),
+                Optional.of(Res.get("chat.public.deletedChatsIndicator.text", ttl_days)),
                 Optional.empty(),
                 System.currentTimeMillis() - TimeUnit.DAYS.toMillis(365), // Initialize date as 1y ago to always show as 1st message
                 false,
