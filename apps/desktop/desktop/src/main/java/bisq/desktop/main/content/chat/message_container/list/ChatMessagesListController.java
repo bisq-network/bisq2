@@ -131,7 +131,6 @@ public class ChatMessagesListController implements Controller {
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
-    private static  final String DONT_SHOW_DELETED_CHATS_INDICATOR_KEY = "deletedChatsIndicator";
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -619,16 +618,6 @@ public class ChatMessagesListController implements Controller {
                 .show();
     }
 
-    public void onDismissChatDeletedMessagesWarning() {
-        new Popup().information(Res.get("chat.public.deletedChatsIndicator"))
-                .hideCloseButton()
-                .secondaryActionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.secondaryActionButtonText"))
-                .onSecondaryAction(this::dismissChatDeletedMessagesIndicatorWarningJustOnce)
-                .actionButtonText(Res.get("chat.private.chatRulesWarningMessage.onDismissChatRulesPopup.actionButtonText"))
-                .onAction(this::permanentlyDismissChatDeletedMessagesIndicatorWarning)
-                .show();
-    }
-
     public void onClickQuoteMessage(Optional<String> chatMessageId) {
         chatMessageId.ifPresent(messageId -> {
             model.getChatMessages().forEach(item -> {
@@ -731,8 +720,7 @@ public class ChatMessagesListController implements Controller {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
-        boolean shouldShowDeletedMessagesIndicator = dontShowAgainService.showAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY)
-                && channel instanceof CommonPublicChatChannel;
+        boolean shouldShowDeletedMessagesIndicator = channel instanceof CommonPublicChatChannel || channel instanceof BisqEasyOfferbookChannel;
 
         if (shouldShowDeletedMessagesIndicator) {
             addDeletedChatsIndicator(channel);
@@ -1003,27 +991,6 @@ public class ChatMessagesListController implements Controller {
     private void deleteChatRulesWarning() {
         model.getSortedChatMessages().stream()
                 .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.CHAT_RULES_WARNING)
-                .findFirst()
-                .ifPresent(itemToRemove -> {
-                    UIThread.run(() -> {
-                        itemToRemove.dispose();
-                        model.getChatMessages().remove(itemToRemove);
-                    });
-                });
-    }
-
-    private void dismissChatDeletedMessagesIndicatorWarningJustOnce() {
-        deleteChatDeletedMessagesIndicatorWarning();
-    }
-
-    private void permanentlyDismissChatDeletedMessagesIndicatorWarning() {
-        dontShowAgainService.putDontShowAgain(DONT_SHOW_DELETED_CHATS_INDICATOR_KEY, true);
-        deleteChatDeletedMessagesIndicatorWarning();
-    }
-
-    private void deleteChatDeletedMessagesIndicatorWarning() {
-        model.getSortedChatMessages().stream()
-                .filter(item -> item.getChatMessage().getChatMessageType() == ChatMessageType.DELETED_CHATS_INDICATOR)
                 .findFirst()
                 .ifPresent(itemToRemove -> {
                     UIThread.run(() -> {
