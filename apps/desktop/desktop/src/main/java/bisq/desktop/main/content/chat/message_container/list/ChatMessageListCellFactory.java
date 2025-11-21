@@ -138,7 +138,7 @@ final class ChatMessageListCellFactory
         }
 
         if (item.isDeletedChatsIndicator()) {
-            return new DeletedChatsIndicatorMessageBox(item, controller);
+            return new DeletedChatsIndicatorMessageBox(item);
         }
 
         if (item.isMyMessage()) {

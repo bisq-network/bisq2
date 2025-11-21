@@ -20,7 +20,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,24 +29,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class DeletedChatsIndicatorMessageBox extends MessageBox {
-    public DeletedChatsIndicatorMessageBox(
-            ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-            ChatMessagesListController controller) {
-
+    public DeletedChatsIndicatorMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         String decoded = Res.decode(item.getMessage());
         Label message = new Label(decoded);
-        message.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
+        message.getStyleClass().addAll("text-fill-green", "font-light", "medium-text");
         message.setWrapText(true);
 
         VBox messageContentVBox = new VBox();
         messageContentVBox.getChildren().add(message);
         messageContentVBox.setFillWidth(true);
+        messageContentVBox.setAlignment(Pos.CENTER);
 
         StackPane messageBgStackPane = new StackPane();
-        messageBgStackPane.getStyleClass().add("system-message-background");
+        messageBgStackPane.setPadding(new Insets(15, 25, 25, 25));
+        messageBgStackPane.getChildren().add(messageContentVBox);
         HBox.setHgrow(messageBgStackPane, Priority.ALWAYS);
-
-        messageBgStackPane.getChildren().addAll(messageContentVBox);
 
         StackPane.setAlignment(messageContentVBox, Pos.CENTER);
 
