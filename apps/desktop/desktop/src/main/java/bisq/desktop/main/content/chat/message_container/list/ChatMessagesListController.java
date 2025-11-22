@@ -715,13 +715,11 @@ public class ChatMessagesListController implements Controller {
         boolean shouldShowWarningMessageForNoneMediator = dontShowAgainService.showAgain(DONT_SHOW_CHAT_RULES_WARNING_KEY)
                 && !(channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel
                 && bisqEasyOpenTradeChannel.isMediator());
-
         if (shouldShowWarningMessageForNoneMediator) {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
         boolean shouldShowDeletedMessagesIndicator = channel instanceof CommonPublicChatChannel || channel instanceof BisqEasyOfferbookChannel;
-
         if (shouldShowDeletedMessagesIndicator) {
             addDeletedChatsIndicator(channel);
         }
@@ -859,6 +857,9 @@ public class ChatMessagesListController implements Controller {
         if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
             CommonPublicChatMessage commonPublicChatMessage = createDeletedChatsIndicator(commonPublicChatChannel);
             model.getChatMessages().add(createChatMessageListItem(commonPublicChatMessage, commonPublicChatChannel));
+        } else if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = createDeletedChatsIndicator(bisqEasyOfferbookChannel);
+            model.getChatMessages().add(createChatMessageListItem(bisqEasyOfferbookMessage, bisqEasyOfferbookChannel));
         }
     }
 
@@ -936,6 +937,23 @@ public class ChatMessagesListController implements Controller {
         );
     }
 
+    private BisqEasyOfferbookMessage createDeletedChatsIndicator(BisqEasyOfferbookChannel channel) {
+        UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        long ttl_days = TimeUnit.MILLISECONDS.toDays(BisqEasyOfferbookMessage.BISQ_EASY_OFFERBOOK_MESSAGE_TTL);
+        return new BisqEasyOfferbookMessage(
+                StringUtils.createUid(),
+                channel.getChatChannelDomain(),
+                channel.getId(),
+                senderUserProfile.getId(),
+                Optional.empty(),
+                Optional.of(Res.get("chat.public.deletedChatsIndicator.text", ttl_days)),
+                Optional.empty(),
+                0L,
+                false,
+                ChatMessageType.DELETED_CHATS_INDICATOR
+        );
+    }
+
     private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message,
                                                                                                                   C channel) {
         return new ChatMessageListItem<>(message,
@@ -961,7 +979,8 @@ public class ChatMessagesListController implements Controller {
             boolean isCorrectMessageType;
             if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
                 switch (settingsService.getBisqEasyOfferbookMessageTypeFilter().get()) {
-                    case OFFER -> isCorrectMessageType = bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                    case OFFER -> isCorrectMessageType = bisqEasyOfferbookMessage.hasBisqEasyOffer()
+                            || bisqEasyOfferbookMessage.getChatMessageType() == ChatMessageType.DELETED_CHATS_INDICATOR;
                     case TEXT -> isCorrectMessageType = !bisqEasyOfferbookMessage.hasBisqEasyOffer();
                     case ALL -> isCorrectMessageType = true;
                     default ->

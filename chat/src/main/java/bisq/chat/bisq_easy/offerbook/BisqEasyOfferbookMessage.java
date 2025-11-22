@@ -39,9 +39,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOfferbookMessage extends PublicChatMessage implements BisqEasyOfferMessage {
-    // Metadata needs to be symmetric with BisqEasyOfferbookMessageReaction.
+    public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
+
+    // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    private transient final MetaData metaData = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
