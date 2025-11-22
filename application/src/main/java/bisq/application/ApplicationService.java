@@ -159,11 +159,6 @@ public abstract class ApplicationService implements Service {
             throw new RuntimeException(e);
         }
 
-        log.info(AsciiLogo.getAsciiLogo());
-        log.info("Data directory: {}", appDataDirPath);
-        log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
-        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
-
         customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
 
         // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
@@ -236,6 +231,11 @@ public abstract class ApplicationService implements Service {
         String maxFileSize = loggingConfig.getString("maxFileSize");
         Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
         LogSetup.setup(appDataDirPath.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
+
+        log.info(AsciiLogo.getAsciiLogo());
+        log.info("Data directory: {}", appDataDirPath);
+        log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
+        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
     }
 
     protected void checkInstanceLock() {
