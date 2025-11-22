@@ -234,8 +234,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatMessage.getChatMessageType() == CHAT_RULES_WARNING;
     }
 
-    public boolean isDeletedChatsIndicator() {
-        return chatMessage.getChatMessageType() == DELETED_CHATS_INDICATOR;
+    public boolean isExpiredMessagesIndicator() {
+        return chatMessage.getChatMessageType() == EXPIRED_MESSAGES_INDICATOR;
     }
 
     public String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {

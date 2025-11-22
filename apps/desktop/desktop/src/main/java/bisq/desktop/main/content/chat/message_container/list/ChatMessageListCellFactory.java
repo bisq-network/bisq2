@@ -137,8 +137,8 @@ final class ChatMessageListCellFactory
             return new ChatRulesWarningMessageBox(item, controller);
         }
 
-        if (item.isDeletedChatsIndicator()) {
-            return new DeletedChatsIndicatorMessageBox(item);
+        if (item.isExpiredMessagesIndicator()) {
+            return new ExpiredMessagesIndicatorMessageBox(item);
         }
 
         if (item.isMyMessage()) {
