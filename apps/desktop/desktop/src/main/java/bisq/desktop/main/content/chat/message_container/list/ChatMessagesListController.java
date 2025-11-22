@@ -946,7 +946,7 @@ public class ChatMessagesListController implements Controller {
                 channel.getId(),
                 senderUserProfile.getId(),
                 Optional.empty(),
-                Optional.of(Res.get("chat.public.deletedChatsIndicator.text", ttl_days)),
+                Optional.of(Res.get("bisqEasy.offerbook.expiredMessagesIndicator.text", ttl_days)),
                 Optional.empty(),
                 0L,
                 false,
