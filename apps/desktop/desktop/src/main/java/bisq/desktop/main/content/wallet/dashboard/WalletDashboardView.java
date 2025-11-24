@@ -18,48 +18,94 @@
 package bisq.desktop.main.content.wallet.dashboard;
 
 import bisq.common.data.Triple;
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
     private final Button send, receive;
-    private final Label balanceLabel;
+    private final Label balanceLabel, availableBalanceValueLabel, reservedFundsValueLabel, lockedFundsValueLabel;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
 
-        root.setSpacing(20);
-        root.setPadding(new Insets(0, 40, 40, 40));
-
-        Triple<VBox, Label, Label> balanceTriple = createBalanceBox();
-        VBox balanceBox = balanceTriple.getFirst();
+        Triple<HBox, Label, Label> balanceTriple = createBalanceHBox();
+        HBox balanceHBox = balanceTriple.getFirst();
         balanceLabel = balanceTriple.getSecond();
 
-        send = getCardButton(Res.get("wallet.sendBtc"), "card-button");
+        Label headlineLabel = new Label(Res.get("wallet.dashboard.headline"));
+        headlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-text-green");
+        VBox balanceVBox = new VBox(20, headlineLabel, balanceHBox);
+
+        Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "interchangeable-grey");
+        HBox availableBalanceHBox = availableBalanceTriple.getFirst();
+        availableBalanceValueLabel = availableBalanceTriple.getThird();
+
+        Triple<HBox, Label, Label> reservedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.reservedFunds"), "interchangeable-grey");
+        HBox reservedFundsHBox = reservedFundsTriple.getFirst();
+        reservedFundsValueLabel = reservedFundsTriple.getThird();
+
+        Triple<HBox, Label, Label> lockedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.lockedFunds"), "lock-icon-grey");
+        HBox lockedFundsHBox = lockedFundsTriple.getFirst();
+        lockedFundsValueLabel = lockedFundsTriple.getThird();
+
+        double buttonsWidth = 220;
+        send = new Button(Res.get("wallet.dashboard.sendBtc"));
         send.setDefaultButton(true);
-        receive = getCardButton(Res.get("wallet.receiveBtc"), "card-button");
+        send.setMinWidth(buttonsWidth);
+        send.setMaxWidth(buttonsWidth);
+        receive = new Button(Res.get("wallet.dashboard.receiveBtc"));
+        receive.getStyleClass().add("outlined-button");
+        receive.setMinWidth(buttonsWidth);
+        receive.setMaxWidth(buttonsWidth);
 
-        HBox boxes = new HBox(25, send, receive);
-        boxes.setAlignment(Pos.CENTER);
-        HBox.setHgrow(send, Priority.ALWAYS);
-        HBox.setHgrow(receive, Priority.ALWAYS);
+        double summaryAndButtonsBoxWidth = 500;
+        HBox buttonsHBox = new HBox(receive, Spacer.fillHBox(), send);
+        buttonsHBox.setMaxWidth(summaryAndButtonsBoxWidth);
+        buttonsHBox.setMinWidth(summaryAndButtonsBoxWidth);
 
-        root.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(balanceBox, boxes);
+        VBox summaryAndButtonsVBox = new VBox(10, availableBalanceHBox, reservedFundsHBox, lockedFundsHBox, buttonsHBox);
+        summaryAndButtonsVBox.setMaxWidth(summaryAndButtonsBoxWidth);
+        summaryAndButtonsVBox.setMinWidth(summaryAndButtonsBoxWidth);
+        VBox.setMargin(buttonsHBox, new Insets(30, 0, 0, 0));
+
+        HBox headerHBox = new HBox(balanceVBox, Spacer.fillHBox(), summaryAndButtonsVBox);
+        headerHBox.setPadding(new Insets(0, 50, 0, 50));
+
+        Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
+        latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        VBox latestTxsVBox = new VBox(20, latestTxsHeadline);
+        latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
+
+        VBox contentBox = new VBox(20);
+        VBox.setMargin(headerHBox, new Insets(0, 0, 15, 0));
+        contentBox.getChildren().addAll(headerHBox, getHLine(), latestTxsVBox);
+        contentBox.getStyleClass().add("dashboard-bg");
+        contentBox.setPadding(new Insets(50, 0, 50, 0));
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
+        root.getStyleClass().add("wallet-dashboard");
+        root.setMinWidth(1050);
     }
 
     @Override
     protected void onViewAttached() {
         balanceLabel.textProperty().bind(model.getFormattedBalanceProperty());
+        availableBalanceValueLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
+        reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
+        lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
+
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
     }
@@ -67,38 +113,47 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         balanceLabel.textProperty().unbind();
+        availableBalanceValueLabel.textProperty().unbind();
+        reservedFundsValueLabel.textProperty().unbind();
+        lockedFundsValueLabel.textProperty().unbind();
+
         send.setOnAction(null);
         receive.setOnAction(null);
     }
 
-    private Triple<VBox, Label, Label> createBalanceBox() {
-        Label titleLabel = new Label(Res.get("wallet.yourBalance"));
-        titleLabel.getStyleClass().add("bisq-text-headline-2");
-
+    private Triple<HBox, Label, Label> createBalanceHBox() {
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
         Label codeLabel = new Label("BTC");
         codeLabel.getStyleClass().addAll("bisq-text-12");
 
-        HBox hBox = new HBox(9, valueLabel, codeLabel);
+        HBox hBox = new HBox(10, valueLabel, codeLabel);
         hBox.setAlignment(Pos.BASELINE_CENTER);
-
-        VBox vBox = new VBox(0, titleLabel, hBox);
-        vBox.setAlignment(Pos.CENTER);
-        vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(30, 0, 30, 0));
-        return new Triple<>(vBox, valueLabel, codeLabel);
+        return new Triple<>(hBox, valueLabel, codeLabel);
     }
 
-    private Button getCardButton(String title, String styleClass) {
-        Button button = new Button(title);
-        button.getStyleClass().add("bisq-text-headline-2");
-        button.getStyleClass().setAll(styleClass);
-        button.setAlignment(Pos.CENTER);
-        int width = 235;
-        button.setPrefWidth(width);
-        button.setMinHeight(112);
-        return button;
+    private Triple<HBox, Label, Label> createSummaryRow(String title, String imageId) {
+        Label titleLabel = new Label(title);
+        titleLabel.setGraphic(ImageUtil.getImageViewById(imageId));
+        titleLabel.getStyleClass().add("summary-title");
+        titleLabel.setGraphicTextGap(15);
+
+        Label valueLabel = new Label();
+        valueLabel.getStyleClass().add("summary-value");
+
+        Label codeLabel = new Label("BTC");
+        codeLabel.getStyleClass().addAll("summary-code");
+
+        HBox hBox = new HBox(titleLabel, Spacer.fillHBox(), valueLabel, codeLabel);
+        hBox.setAlignment(Pos.BASELINE_CENTER);
+        HBox.setMargin(valueLabel, new Insets(0, 10, 0, 0));
+        return new Triple<>(hBox, titleLabel, valueLabel);
+    }
+
+    private Region getHLine() {
+        Region line = Layout.hLine();
+        line.setPrefWidth(30);
+        return line;
     }
 }

@@ -35,6 +35,21 @@ public class WalletDashboardModel implements Model {
             () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
             balanceAsCoinProperty
     );
+    private final ObjectProperty<Coin> availableBalanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
+    private final ObservableValue<String> formattedAvailableBalanceProperty = Bindings.createStringBinding(
+            () -> AmountFormatter.formatBaseAmount(availableBalanceAsCoinProperty.get()),
+            availableBalanceAsCoinProperty
+    );
+    private final ObjectProperty<Coin> reservedFundsAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
+    private final ObservableValue<String> formattedReservedFundsProperty = Bindings.createStringBinding(
+            () -> AmountFormatter.formatBaseAmount(reservedFundsAsCoinProperty.get()),
+            reservedFundsAsCoinProperty
+    );
+    private final ObjectProperty<Coin> lockedFundsAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
+    private final ObservableValue<String> formattedLockedFundsProperty = Bindings.createStringBinding(
+            () -> AmountFormatter.formatBaseAmount(lockedFundsAsCoinProperty.get()),
+            lockedFundsAsCoinProperty
+    );
 
     public WalletDashboardModel() {
     }

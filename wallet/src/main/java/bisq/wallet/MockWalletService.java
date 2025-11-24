@@ -94,7 +94,7 @@ public class MockWalletService extends WalletService {
     }
 
     public CompletableFuture<Coin> requestBalance() {
-        return CompletableFuture.completedFuture(balance.get());
+        return CompletableFuture.completedFuture(Coin.asBtcFromValue(2501234));
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
