@@ -1173,6 +1173,18 @@
     -fx-image: url("/images/icons/info-green.png");
 }
 
+#btcoins-grey {
+    -fx-image: url("/images/icons/btcoins-grey.png");
+}
+
+#btcoins-white {
+    -fx-image: url("/images/icons/btcoins-white.png");
+}
+
+#btcoins-green {
+    -fx-image: url("/images/icons/btcoins-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
