@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -65,7 +66,16 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
         return new DataStore<>(proto.getMapEntriesList().stream()
-                .collect(Collectors.toMap(e -> ByteArray.fromProto(e.getKey()), e -> DataRequest.fromProto(e.getValue()))));
+                .map(e -> {
+                    try {
+                        return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
+                    } catch (Exception ex) {
+                        log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     @Override
