@@ -48,7 +48,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         headlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-text-green");
         VBox balanceVBox = new VBox(20, headlineLabel, balanceHBox);
 
-        Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "interchangeable-grey");
+        Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
         HBox availableBalanceHBox = availableBalanceTriple.getFirst();
         availableBalanceValueLabel = availableBalanceTriple.getThird();
 
