@@ -454,11 +454,36 @@
 
 
 /*******************************************************************************
- * Wallet                                                                  *
+ * Wallet                                                                      *
  ******************************************************************************/
 
 .vertical-card-step {
     -fx-font-size: 2.7em;
     -fx-font-family: "IBM Plex Sans Thin";
     -fx-text-fill: -fx-light-text-color;
+}
+
+.wallet-dashboard .dashboard-bg {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 8 8 8;
+}
+
+.wallet-dashboard .dashboard-headline {
+    -fx-font-size: 2.5em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.wallet-dashboard .summary-title,
+.wallet-dashboard .summary-code {
+    -fx-font-size: 1.5em;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.wallet-dashboard .summary-value {
+    -fx-font-size: 1.7em;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Thin";
 }
