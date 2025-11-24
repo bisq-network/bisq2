@@ -18,7 +18,6 @@
 package bisq.desktop_app_launcher;
 
 import bisq.common.application.BuildVersion;
-import bisq.common.logging.LogSetup;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop_app.DesktopApp;
@@ -85,7 +84,6 @@ public class DesktopAppLauncher {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
         Path appDataDirPath = PlatformUtils.getUserDataDirPath().resolve(appName);
-        LogSetup.setup(appDataDirPath.resolve("bisq").toString());
         String version = UpdaterUtils.readVersionFromVersionFile(appDataDirPath)
                 .or(options::getVersion)
                 .orElse(BuildVersion.VERSION);
