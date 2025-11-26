@@ -47,6 +47,7 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         super(model, controller);
 
         addTab(Res.get("wallet.dashboard"), NavigationTarget.WALLET_DASHBOARD);
+        addTab(Res.get("wallet.coinManagement"), NavigationTarget.WALLET_COIN_MANAGEMENT);
         addTab(Res.get("wallet.send"), NavigationTarget.WALLET_SEND);
         addTab(Res.get("wallet.receive"), NavigationTarget.WALLET_RECEIVE);
         addTab(Res.get("wallet.txs"), NavigationTarget.WALLET_TXS);
