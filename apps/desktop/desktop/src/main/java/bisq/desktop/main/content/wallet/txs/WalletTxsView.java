@@ -113,7 +113,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .title(Res.get("wallet.txs.date"))
                 .left()
                 .minWidth(100)
-                .comparator(Comparator.comparing(WalletTxListItem::getDateTimeString))
+                .comparator(Comparator.comparing(WalletTxListItem::getDate))
                 .valueSupplier(WalletTxListItem::getDateTimeString)
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build();
