@@ -21,6 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -112,7 +113,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .title(Res.get("wallet.txs.date"))
                 .left()
                 .minWidth(100)
-                .comparator(Comparator.comparing(WalletTxListItem::getDateTimeString))
+                .comparator(Comparator.comparing(WalletTxListItem::getDate))
                 .valueSupplier(WalletTxListItem::getDateTimeString)
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build();

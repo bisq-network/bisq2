@@ -487,3 +487,7 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Thin";
 }
+
+.wallet-dashboard .latest-txs-table.table-view .column-header {
+    -fx-background-color: -bisq-dark-grey-40;
+}

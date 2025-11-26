@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.wallet.dashboard;
 
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -25,6 +26,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.wallet.WalletService;
+import bisq.wallet.vo.Transaction;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +36,7 @@ public class WalletDashboardController implements Controller {
     private final WalletDashboardView view;
     private final WalletDashboardModel model;
     private final WalletService walletService;
-    private Pin balancePin;
+    private Pin balancePin, transactionsPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
@@ -47,16 +49,22 @@ public class WalletDashboardController implements Controller {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(walletService.getBalance());
 
+        transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getListItems())
+                .map(WalletTxListItem::new)
+                .to(walletService.getTransactions());
+
         walletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
                 UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
             }
         });
+        walletService.requestTransactions();
     }
 
     @Override
     public void onDeactivate() {
         balancePin.unbind();
+        transactionsPin.unbind();
     }
 
     void onSend() {
