@@ -250,7 +250,11 @@ jobs:
           # Add to PATH for subsequent steps (takes effect in next step, not current)
           echo "$PWD" >> $GITHUB_PATH
           # Verify installation using full path
+          echo "::group::Transifex CLI Installation"
+          echo "Installed Transifex CLI version:"
           ./tx --version
+          echo "CLI installed at: $(which ./tx || echo 'not in PATH yet')"
+          echo "::endgroup::"
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
 
@@ -277,10 +281,10 @@ jobs:
         uses: nick-fields/retry@v3
         id: push_with_retry
         with:
-          timeout_minutes: 10
+          timeout_minutes: 30  # Increased from 10 to 30 due to CLI performance issues (transifex/cli#212)
           max_attempts: 3
-          retry_wait_seconds: 15
-          exponential_backoff: true
+          retry_wait_seconds: 60  # Increased from 15 to allow API recovery time
+          # exponential_backoff: true  # Removed - not supported by retry action v3
           retry_on: error
           command: |
             set -euo pipefail
@@ -292,38 +296,56 @@ jobs:
             UPLOADED_COUNT=0
 
             for locale in "${LOCALES[@]}"; do
-              echo "::notice::Uploading locale: $locale"
+              echo "::group::Uploading locale: $locale"
+              echo "Batch: ${{ matrix.name }} | Locale: $locale | Resource: ${{ matrix.resources }}"
+              echo "Start time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
 
               # Rate limiting: 5s delay between locales within batch
               if [ $UPLOADED_COUNT -gt 0 ]; then
-                echo "::notice::Rate limiting: sleeping 5s between locales"
+                echo "Rate limiting: sleeping 5s between locales"
                 sleep 5
               fi
 
-              # Capture full output for error diagnosis
+              # Capture full output for error diagnosis with timing
+              START_TIME=$(date +%s)
               EXIT_CODE=0
+              echo "Executing: tx push -t -l \"$locale\" -r \"${{ matrix.resources }}\""
               OUTPUT=$(tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1) || EXIT_CODE=$?
+              END_TIME=$(date +%s)
+              DURATION=$((END_TIME - START_TIME))
+
+              echo "End time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+              echo "Duration: ${DURATION}s"
+              echo "Exit code: $EXIT_CODE"
 
               if [ ${EXIT_CODE:-0} -ne 0 ]; then
+                echo "::error::Upload failed for $locale after ${DURATION}s"
+                echo "Full output:"
                 echo "$OUTPUT"
 
                 # Distinguish permanent vs transient errors
                 if echo "$OUTPUT" | grep -qi "unauthorized\|forbidden\|not found\|invalid"; then
-                  echo "::error::Permanent error for $locale - no retry"
-                  echo "::error::$OUTPUT"
+                  echo "::error::Permanent error detected - no retry"
+                  echo "::endgroup::"
                   exit 1  # Don't retry permanent errors
                 elif echo "$OUTPUT" | grep -qi "timeout\|rate limit\|too many requests\|connection\|network"; then
-                  echo "::warning::Transient error for $locale - will retry"
-                  echo "::warning::$OUTPUT"
+                  echo "::warning::Transient error detected - will retry"
+                  echo "::endgroup::"
                   exit 2  # Retry transient errors
                 else
-                  echo "::warning::Unknown error for $locale - will retry once"
-                  echo "::warning::$OUTPUT"
+                  echo "::warning::Unknown error type - will retry once"
+                  echo "::endgroup::"
                   exit 2
                 fi
               fi
 
-              echo "✅ Upload successful: $locale"
+              # Success - show abbreviated output
+              echo "✅ Upload successful (${DURATION}s)"
+              if [ "$EXIT_CODE" -eq 0 ]; then
+                echo "TX CLI output:"
+                echo "$OUTPUT" | tail -5
+              fi
+              echo "::endgroup::"
               ((UPLOADED_COUNT++))
             done
 
