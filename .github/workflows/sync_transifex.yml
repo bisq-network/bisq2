@@ -253,7 +253,7 @@ jobs:
           echo "::group::Transifex CLI Installation"
           echo "Installed Transifex CLI version:"
           ./tx --version
-          echo "CLI installed at: $(which ./tx || echo 'not in PATH yet')"
+          if [ -f ./tx ]; then echo "CLI installed at: $(pwd)/tx"; else echo "CLI not found in current directory"; fi
           echo "::endgroup::"
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
@@ -341,10 +341,8 @@ jobs:
 
               # Success - show abbreviated output
               echo "✅ Upload successful (${DURATION}s)"
-              if [ "$EXIT_CODE" -eq 0 ]; then
-                echo "TX CLI output:"
-                echo "$OUTPUT" | tail -5
-              fi
+              echo "TX CLI output:"
+              echo "$OUTPUT" | tail -5
               echo "::endgroup::"
               ((UPLOADED_COUNT++))
             done
