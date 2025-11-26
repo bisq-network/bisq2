@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.txs;
+package bisq.desktop.main.content.wallet;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.main.content.wallet.txs.TxUsage;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.wallet.vo.Transaction;

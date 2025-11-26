@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.wallet.txs;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

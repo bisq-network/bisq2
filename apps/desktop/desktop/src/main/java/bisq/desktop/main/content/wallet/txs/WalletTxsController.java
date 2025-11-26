@@ -22,6 +22,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
