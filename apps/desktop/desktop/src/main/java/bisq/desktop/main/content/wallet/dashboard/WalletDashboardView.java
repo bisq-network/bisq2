@@ -22,12 +22,16 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
     private final Button send, receive;
     private final Label balanceLabel, availableBalanceValueLabel, reservedFundsValueLabel, lockedFundsValueLabel;
+    private final BisqTableView<WalletTxListItem> latestTxsTableView;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
 
+        // Header
         Triple<HBox, Label, Label> balanceTriple = createBalanceHBox();
         HBox balanceHBox = balanceTriple.getFirst();
         balanceLabel = balanceTriple.getSecond();
@@ -83,9 +89,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         HBox headerHBox = new HBox(balanceVBox, Spacer.fillHBox(), summaryAndButtonsVBox);
         headerHBox.setPadding(new Insets(0, 50, 0, 50));
 
+        // Latest txs
         Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
         latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
-        VBox latestTxsVBox = new VBox(20, latestTxsHeadline);
+
+        latestTxsTableView = new BisqTableView<>(model.getSortedList(), false);
+        latestTxsTableView.getStyleClass().add("latest-txs-table");
+        configLatestTxsTable();
+
+        VBox latestTxsVBox = new VBox(20, latestTxsHeadline, latestTxsTableView);
         latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
 
         VBox contentBox = new VBox(20);
@@ -97,6 +109,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         root.setPadding(new Insets(0, 40, 20, 40));
         root.getStyleClass().add("wallet-dashboard");
         root.setMinWidth(1050);
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
     }
 
     @Override
@@ -155,5 +168,48 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         Region line = Layout.hLine();
         line.setPrefWidth(30);
         return line;
+    }
+
+    private void configLatestTxsTable() {
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.date"))
+                .left()
+                .minWidth(100)
+                .valueSupplier(WalletTxListItem::getDateTimeString)
+                .build());
+
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.type"))
+                .minWidth(70)
+                .left()
+                .valueSupplier(WalletTxListItem::getType)
+                .build());
+
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.address"))
+                .minWidth(180)
+                .left()
+                .valueSupplier(WalletTxListItem::getDestinationAddress)
+                .build());
+
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.txId"))
+                .minWidth(280)
+                .left()
+                .valueSupplier(WalletTxListItem::getTxId)
+                .build());
+
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.amount"))
+                .minWidth(70)
+                .valueSupplier(WalletTxListItem::getAmountAsString)
+                .build());
+
+        latestTxsTableView.getColumns().add(new BisqTableColumn.Builder<WalletTxListItem>()
+                .title(Res.get("wallet.txs.confirmations"))
+                .minWidth(70)
+                .valueSupplier(WalletTxListItem::getNumConfirmationsAsString)
+                .right()
+                .build());
     }
 }

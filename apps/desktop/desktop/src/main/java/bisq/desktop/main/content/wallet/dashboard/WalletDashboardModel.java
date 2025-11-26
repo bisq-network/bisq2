@@ -19,13 +19,20 @@ package bisq.desktop.main.content.wallet.dashboard;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Comparator;
 
 @Slf4j
 @Getter
@@ -50,6 +57,9 @@ public class WalletDashboardModel implements Model {
             () -> AmountFormatter.formatBaseAmount(lockedFundsAsCoinProperty.get()),
             lockedFundsAsCoinProperty
     );
+    private final ObservableList<WalletTxListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
+    private final SortedList<WalletTxListItem> sortedList = new SortedList<>(filteredListItems, Comparator.comparingLong(WalletTxListItem::getDate).reversed());
 
     public WalletDashboardModel() {
     }

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.wallet.dashboard.WalletDashboardView;
 import bisq.desktop.main.content.wallet.txs.WalletTxsView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -85,7 +86,8 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
     @Override
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
-        return childView instanceof WalletTxsView;
+        return childView instanceof WalletTxsView
+                || childView instanceof WalletDashboardView;
     }
 
     private void setContentToTabs() {
