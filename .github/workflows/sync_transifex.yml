@@ -322,10 +322,26 @@ jobs:
               echo "::group::DEBUG Diagnostics"
               echo "TX CLI version:"
               ./tx --version || tx --version
-              echo "Translation file status:"
-              ls -lh "i18n/src/main/resources/wallet_${locale}.properties" 2>&1 || echo "File not found"
-              echo "TX config check for resource:"
-              grep -A 3 "bisq-2.walletproperties" .tx/config || echo "Resource not found in config"
+
+              # Derive resource base name from matrix.resources (e.g., "bisq-2.walletproperties" -> "wallet")
+              # This handles any resource type dynamically instead of hardcoded "wallet"
+              RESOURCE_BASE=$(echo "${{ matrix.resources }}" | sed 's/^bisq-2\.//' | sed 's/properties$//')
+              echo "Resource from matrix: ${{ matrix.resources }}"
+              echo "Derived resource base: ${RESOURCE_BASE}"
+
+              echo "Translation file check:"
+              if ls -lh "i18n/src/main/resources/${RESOURCE_BASE}_${locale}.properties" 2>/dev/null; then
+                echo "✓ Translation file exists"
+              else
+                echo "⚠ Translation file not found (may be expected for some locales)"
+              fi
+
+              echo "TX config check:"
+              if grep -q "${{ matrix.resources }}" .tx/config; then
+                echo "✓ Resource '${{ matrix.resources }}' found in .tx/config"
+              else
+                echo "⚠ Resource '${{ matrix.resources }}' not found in .tx/config"
+              fi
               echo "::endgroup::"
 
               # Real-time output instead of buffering (to see where it hangs)
@@ -339,6 +355,7 @@ jobs:
               ./tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1 | tee "$TX_LOG"
               EXIT_CODE=${PIPESTATUS[0]}
               OUTPUT=$(cat "$TX_LOG" 2>/dev/null || echo "No output captured")
+              rm -f "$TX_LOG"  # Clean up temp file
 
               END_TIME=$(date +%s)
               DURATION=$((END_TIME - START_TIME))
