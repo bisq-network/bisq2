@@ -81,14 +81,18 @@ jobs:
             exit 1
           fi
 
-      - name: Validate Python script exists
+      - name: Check if batch script is available
         if: steps.check_commit.outputs.commit_in_main == 'true'
+        id: check_batch_script
         run: |
-          if [ ! -f scripts/generate_transifex_batches.py ]; then
-            echo "::error::Required script not found: scripts/generate_transifex_batches.py"
-            exit 1
+          if [ -f scripts/generate_transifex_batches.py ]; then
+            echo "batch_script_available=true" >> $GITHUB_OUTPUT
+            echo "::notice::Batch generation script found - will use dynamic batching"
+          else
+            echo "batch_script_available=false" >> $GITHUB_OUTPUT
+            echo "::warning::Batch generation script not found in this commit - skipping translation batching"
+            echo "::warning::This is expected for commits before 2025-11-16"
           fi
-          echo "::notice::Batch generation script validated"
 
       - name: Calculate push commands
         id: calculate-pushes
@@ -198,17 +202,25 @@ jobs:
               echo "::notice::Changed locales: $changed_locales_list"
               echo "::notice::Resources mapping: $resources_json"
 
-              # Call Python script with resources mapping for complete JSON generation
-              # This eliminates all bash JSON manipulation and deduplicates resources properly
-              batch_matrix=$(python3 scripts/generate_transifex_batches.py \
-                --locales "$changed_locales_list" \
-                --batch-size 4 \
-                --max-parallel 2 \
-                --json \
-                --resources-json "$resources_json")
+              # Check if batch script is available before using it
+              if [ "${{ steps.check_batch_script.outputs.batch_script_available }}" == "true" ]; then
+                # Call Python script with resources mapping for complete JSON generation
+                # This eliminates all bash JSON manipulation and deduplicates resources properly
+                batch_matrix=$(python3 scripts/generate_transifex_batches.py \
+                  --locales "$changed_locales_list" \
+                  --batch-size 4 \
+                  --max-parallel 2 \
+                  --json \
+                  --resources-json "$resources_json")
 
-              echo "::notice::Generated batch configuration: $batch_matrix"
-              printf 't_matrix=%s\n' "$batch_matrix" >> "$GITHUB_OUTPUT"
+                echo "::notice::Generated batch configuration: $batch_matrix"
+                printf 't_matrix=%s\n' "$batch_matrix" >> "$GITHUB_OUTPUT"
+              else
+                # Skip batching for commits without the script (backward compatibility)
+                echo "::warning::Skipping translation batch push - batch script not available in this commit"
+                echo "::notice::Translation changes detected but batching is unavailable"
+                echo 't_matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              fi
             else
               echo "has_translation_changes=false" >> $GITHUB_OUTPUT
               echo 't_matrix={"include":[]}' >> "$GITHUB_OUTPUT"
@@ -250,7 +262,11 @@ jobs:
           # Add to PATH for subsequent steps (takes effect in next step, not current)
           echo "$PWD" >> $GITHUB_PATH
           # Verify installation using full path
+          echo "::group::Transifex CLI Installation"
+          echo "Installed Transifex CLI version:"
           ./tx --version
+          if [ -f ./tx ]; then echo "CLI installed at: $(pwd)/tx"; else echo "CLI not found in current directory"; fi
+          echo "::endgroup::"
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
 
@@ -277,10 +293,10 @@ jobs:
         uses: nick-fields/retry@v3
         id: push_with_retry
         with:
-          timeout_minutes: 10
+          timeout_minutes: 30  # Increased from 10 to 30 due to CLI performance issues (transifex/cli#212)
           max_attempts: 3
-          retry_wait_seconds: 15
-          exponential_backoff: true
+          retry_wait_seconds: 60  # Increased from 15 to allow API recovery time
+          # exponential_backoff: true  # Removed - not supported by retry action v3
           retry_on: error
           command: |
             set -euo pipefail
@@ -292,38 +308,54 @@ jobs:
             UPLOADED_COUNT=0
 
             for locale in "${LOCALES[@]}"; do
-              echo "::notice::Uploading locale: $locale"
+              echo "::group::Uploading locale: $locale"
+              echo "Batch: ${{ matrix.name }} | Locale: $locale | Resource: ${{ matrix.resources }}"
+              echo "Start time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
 
               # Rate limiting: 5s delay between locales within batch
               if [ $UPLOADED_COUNT -gt 0 ]; then
-                echo "::notice::Rate limiting: sleeping 5s between locales"
+                echo "Rate limiting: sleeping 5s between locales"
                 sleep 5
               fi
 
-              # Capture full output for error diagnosis
+              # Capture full output for error diagnosis with timing
+              START_TIME=$(date +%s)
               EXIT_CODE=0
+              echo "Executing: tx push -t -l \"$locale\" -r \"${{ matrix.resources }}\""
               OUTPUT=$(tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1) || EXIT_CODE=$?
+              END_TIME=$(date +%s)
+              DURATION=$((END_TIME - START_TIME))
+
+              echo "End time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+              echo "Duration: ${DURATION}s"
+              echo "Exit code: $EXIT_CODE"
 
               if [ ${EXIT_CODE:-0} -ne 0 ]; then
+                echo "::error::Upload failed for $locale after ${DURATION}s"
+                echo "Full output:"
                 echo "$OUTPUT"
 
                 # Distinguish permanent vs transient errors
                 if echo "$OUTPUT" | grep -qi "unauthorized\|forbidden\|not found\|invalid"; then
-                  echo "::error::Permanent error for $locale - no retry"
-                  echo "::error::$OUTPUT"
+                  echo "::error::Permanent error detected - no retry"
+                  echo "::endgroup::"
                   exit 1  # Don't retry permanent errors
                 elif echo "$OUTPUT" | grep -qi "timeout\|rate limit\|too many requests\|connection\|network"; then
-                  echo "::warning::Transient error for $locale - will retry"
-                  echo "::warning::$OUTPUT"
+                  echo "::warning::Transient error detected - will retry"
+                  echo "::endgroup::"
                   exit 2  # Retry transient errors
                 else
-                  echo "::warning::Unknown error for $locale - will retry once"
-                  echo "::warning::$OUTPUT"
+                  echo "::warning::Unknown error type - will retry once"
+                  echo "::endgroup::"
                   exit 2
                 fi
               fi
 
-              echo "✅ Upload successful: $locale"
+              # Success - show abbreviated output
+              echo "✅ Upload successful (${DURATION}s)"
+              echo "TX CLI output:"
+              echo "$OUTPUT" | tail -5
+              echo "::endgroup::"
               ((UPLOADED_COUNT++))
             done
 
