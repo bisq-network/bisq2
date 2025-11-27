@@ -81,14 +81,18 @@ jobs:
             exit 1
           fi
 
-      - name: Validate Python script exists
+      - name: Check if batch script is available
         if: steps.check_commit.outputs.commit_in_main == 'true'
+        id: check_batch_script
         run: |
-          if [ ! -f scripts/generate_transifex_batches.py ]; then
-            echo "::error::Required script not found: scripts/generate_transifex_batches.py"
-            exit 1
+          if [ -f scripts/generate_transifex_batches.py ]; then
+            echo "batch_script_available=true" >> $GITHUB_OUTPUT
+            echo "::notice::Batch generation script found - will use dynamic batching"
+          else
+            echo "batch_script_available=false" >> $GITHUB_OUTPUT
+            echo "::warning::Batch generation script not found in this commit - skipping translation batching"
+            echo "::warning::This is expected for commits before 2025-11-16"
           fi
-          echo "::notice::Batch generation script validated"
 
       - name: Calculate push commands
         id: calculate-pushes
@@ -198,17 +202,25 @@ jobs:
               echo "::notice::Changed locales: $changed_locales_list"
               echo "::notice::Resources mapping: $resources_json"
 
-              # Call Python script with resources mapping for complete JSON generation
-              # This eliminates all bash JSON manipulation and deduplicates resources properly
-              batch_matrix=$(python3 scripts/generate_transifex_batches.py \
-                --locales "$changed_locales_list" \
-                --batch-size 4 \
-                --max-parallel 2 \
-                --json \
-                --resources-json "$resources_json")
+              # Check if batch script is available before using it
+              if [ "${{ steps.check_batch_script.outputs.batch_script_available }}" == "true" ]; then
+                # Call Python script with resources mapping for complete JSON generation
+                # This eliminates all bash JSON manipulation and deduplicates resources properly
+                batch_matrix=$(python3 scripts/generate_transifex_batches.py \
+                  --locales "$changed_locales_list" \
+                  --batch-size 4 \
+                  --max-parallel 2 \
+                  --json \
+                  --resources-json "$resources_json")
 
-              echo "::notice::Generated batch configuration: $batch_matrix"
-              printf 't_matrix=%s\n' "$batch_matrix" >> "$GITHUB_OUTPUT"
+                echo "::notice::Generated batch configuration: $batch_matrix"
+                printf 't_matrix=%s\n' "$batch_matrix" >> "$GITHUB_OUTPUT"
+              else
+                # Skip batching for commits without the script (backward compatibility)
+                echo "::warning::Skipping translation batch push - batch script not available in this commit"
+                echo "::notice::Translation changes detected but batching is unavailable"
+                echo 't_matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              fi
             else
               echo "has_translation_changes=false" >> $GITHUB_OUTPUT
               echo 't_matrix={"include":[]}' >> "$GITHUB_OUTPUT"
