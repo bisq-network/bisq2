@@ -323,10 +323,14 @@ jobs:
               echo "TX CLI version:"
               ./tx --version || tx --version
 
-              # Derive resource base name from matrix.resources (e.g., "bisq-2.walletproperties" -> "wallet")
-              # This handles any resource type dynamically instead of hardcoded "wallet"
-              RESOURCE_BASE=$(echo "${{ matrix.resources }}" | sed 's/^bisq-2\.//' | sed 's/properties$//')
-              echo "Resource from matrix: ${{ matrix.resources }}"
+              # Extract first resource from comma-separated list for diagnostic check
+              # Example: "bisq-2.walletproperties,bisq-2.accountproperties" -> "bisq-2.walletproperties"
+              FIRST_RESOURCE=$(echo "${{ matrix.resources }}" | cut -d',' -f1)
+              # Derive base name: "bisq-2.walletproperties" -> "wallet"
+              RESOURCE_BASE=$(echo "$FIRST_RESOURCE" | sed 's/^bisq-2\.//' | sed 's/properties$//')
+
+              echo "Resources from matrix: ${{ matrix.resources }}"
+              echo "Using first resource for diagnostics: ${FIRST_RESOURCE}"
               echo "Derived resource base: ${RESOURCE_BASE}"
 
               echo "Translation file check:"
@@ -337,10 +341,10 @@ jobs:
               fi
 
               echo "TX config check:"
-              if grep -q "${{ matrix.resources }}" .tx/config; then
-                echo "✓ Resource '${{ matrix.resources }}' found in .tx/config"
+              if grep -q "${FIRST_RESOURCE}" .tx/config; then
+                echo "✓ Resource '${FIRST_RESOURCE}' found in .tx/config"
               else
-                echo "⚠ Resource '${{ matrix.resources }}' not found in .tx/config"
+                echo "⚠ Resource '${FIRST_RESOURCE}' not found in .tx/config"
               fi
               echo "::endgroup::"
 
