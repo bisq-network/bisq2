@@ -247,7 +247,7 @@ jobs:
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
     strategy:
       matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
-      max-parallel: 2  # Only 2 batches at a time (136 max concurrent API calls)
+      max-parallel: 1  # DEBUG: Serialize batches to test for concurrent batch conflicts
       fail-fast: false  # Don't cancel all jobs if one fails
     steps:
       - name: Checkout the repository
@@ -318,11 +318,49 @@ jobs:
                 sleep 5
               fi
 
-              # Capture full output for error diagnosis with timing
+              # DEBUG: Show diagnostics before tx push
+              echo "::group::DEBUG Diagnostics"
+              echo "TX CLI version:"
+              ./tx --version || tx --version
+
+              # Extract first resource from comma-separated list for diagnostic check
+              # Example: "bisq-2.walletproperties,bisq-2.accountproperties" -> "bisq-2.walletproperties"
+              FIRST_RESOURCE=$(echo "${{ matrix.resources }}" | cut -d',' -f1)
+              # Derive base name: "bisq-2.walletproperties" -> "wallet"
+              RESOURCE_BASE=$(echo "$FIRST_RESOURCE" | sed 's/^bisq-2\.//' | sed 's/properties$//')
+
+              echo "Resources from matrix: ${{ matrix.resources }}"
+              echo "Using first resource for diagnostics: ${FIRST_RESOURCE}"
+              echo "Derived resource base: ${RESOURCE_BASE}"
+
+              echo "Translation file check:"
+              if ls -lh "i18n/src/main/resources/${RESOURCE_BASE}_${locale}.properties" 2>/dev/null; then
+                echo "✓ Translation file exists"
+              else
+                echo "⚠ Translation file not found (may be expected for some locales)"
+              fi
+
+              echo "TX config check:"
+              if grep -q "${FIRST_RESOURCE}" .tx/config; then
+                echo "✓ Resource '${FIRST_RESOURCE}' found in .tx/config"
+              else
+                echo "⚠ Resource '${FIRST_RESOURCE}' not found in .tx/config"
+              fi
+              echo "::endgroup::"
+
+              # Real-time output instead of buffering (to see where it hangs)
               START_TIME=$(date +%s)
               EXIT_CODE=0
               echo "Executing: tx push -t -l \"$locale\" -r \"${{ matrix.resources }}\""
-              OUTPUT=$(tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1) || EXIT_CODE=$?
+              echo "::notice::Watching TX CLI output in real-time (buffering disabled for debugging)"
+
+              # Run tx push with real-time output and capture to temp file
+              TX_LOG="/tmp/tx_${locale}_$$.log"
+              ./tx push -t -l "$locale" -r "${{ matrix.resources }}" 2>&1 | tee "$TX_LOG"
+              EXIT_CODE=${PIPESTATUS[0]}
+              OUTPUT=$(cat "$TX_LOG" 2>/dev/null || echo "No output captured")
+              rm -f "$TX_LOG"  # Clean up temp file
+
               END_TIME=$(date +%s)
               DURATION=$((END_TIME - START_TIME))
 
