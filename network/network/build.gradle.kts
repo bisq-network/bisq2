@@ -23,5 +23,7 @@ dependencies {
     implementation(libs.jsocks)
     implementation(libs.bundles.i2p)
 
+    implementation(libs.bundles.nonblockingio)
+
     integrationTestImplementation(libs.mockito)
 }

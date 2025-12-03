@@ -21,10 +21,10 @@ import bisq.common.network.Address;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import io.netty.channel.ChannelHandlerContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.Socket;
 import java.util.function.BiConsumer;
 
 @Slf4j
@@ -34,8 +34,8 @@ public class OutboundConnection extends Connection {
     private final Address address;
 
     OutboundConnection(AuthorizationService authorizationService,
+                       ChannelHandlerContext context,
                        String connectionId,
-                       Socket socket,
                        Address address,
                        Capability peersCapability,
                        NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -44,8 +44,8 @@ public class OutboundConnection extends Connection {
                        Handler handler,
                        BiConsumer<Connection, Exception> errorHandler) {
         super(authorizationService,
+                context,
                 connectionId,
-                socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
                 connectionMetrics,
