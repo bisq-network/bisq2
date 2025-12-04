@@ -41,6 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public abstract class CatHashService<T> {
     // Largest size in offerbook is 60px, in reputationListView it is 40px and in chats 30px.
@@ -69,6 +71,7 @@ public abstract class CatHashService<T> {
     protected abstract T readRawImage(Path iconPath) throws IOException;
 
     public T getImage(UserProfile userProfile, double size) {
+        checkArgument(size > 0, "Size must be > 0 at getImage");
         return getImage(userProfile.getPubKeyHash(),
                 userProfile.getProofOfWork().getSolution(),
                 userProfile.getAvatarVersion(),
