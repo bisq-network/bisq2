@@ -36,6 +36,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
 
@@ -72,6 +74,7 @@ public class CatHashImageUtil {
 
     public static Image readRawImage(Path filePath) throws IOException {
         byte[] rawData = Files.readAllBytes(filePath);
+        checkArgument(rawData.length > 0, "rawData must not be empty at readRawImage");
         return byteArrayToImage(rawData);
     }
 
@@ -85,6 +88,8 @@ public class CatHashImageUtil {
 
         int width = byteArrayInputStream.read();
         int height = byteArrayInputStream.read();
+        checkArgument(width > 0, "width must be > 0 at byteArrayToImage");
+        checkArgument(height > 0, "height must be > 0 at byteArrayToImage");
 
         byte[] pixels = new byte[width * height * 4];
         byteArrayInputStream.read(pixels, 0, pixels.length);
