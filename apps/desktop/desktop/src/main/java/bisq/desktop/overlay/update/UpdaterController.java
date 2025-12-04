@@ -113,33 +113,39 @@ public class UpdaterController implements Controller {
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                        authorizedAlertData.isRequireVersionForTrading() &&
-                        authorizedAlertData.getAppType() == AppType.DESKTOP) {
-                    model.setRequireVersionForTrading(true);
-                    model.setMinRequiredVersionForTrading(authorizedAlertData.getMinVersion());
-                    updateIgnoreVersionState();
-                }
+                UIThread.run(() -> {
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                            authorizedAlertData.isRequireVersionForTrading() &&
+                            authorizedAlertData.getAppType() == AppType.DESKTOP) {
+                        model.setRequireVersionForTrading(true);
+                        model.setMinRequiredVersionForTrading(authorizedAlertData.getMinVersion());
+                        updateIgnoreVersionState();
+                    }
+                });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                            authorizedAlertData.isRequireVersionForTrading() &&
-                            authorizedAlertData.getAppType() == AppType.DESKTOP) {
-                        model.setRequireVersionForTrading(false);
-                        model.setMinRequiredVersionForTrading(Optional.empty());
-                        updateIgnoreVersionState();
+                UIThread.run(() -> {
+                    if (element instanceof AuthorizedAlertData authorizedAlertData) {
+                        if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
+                                authorizedAlertData.isRequireVersionForTrading() &&
+                                authorizedAlertData.getAppType() == AppType.DESKTOP) {
+                            model.setRequireVersionForTrading(false);
+                            model.setMinRequiredVersionForTrading(Optional.empty());
+                            updateIgnoreVersionState();
+                        }
                     }
-                }
+                });
             }
 
             @Override
             public void clear() {
-                model.setRequireVersionForTrading(false);
-                model.setMinRequiredVersionForTrading(Optional.empty());
-                updateIgnoreVersionState();
+                UIThread.run(() -> {
+                    model.setRequireVersionForTrading(false);
+                    model.setMinRequiredVersionForTrading(Optional.empty());
+                    updateIgnoreVersionState();
+                });
             }
         });
 
