@@ -107,13 +107,13 @@ public class AddToContactsListWindow {
 
         void onAddToContacts() {
             UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+            Optional<Double> trustScore = getTrustScore(model.getTrustScore().get());
             Optional<String> tag = model.getTag().get().isBlank()
                     ? Optional.empty()
                     : Optional.of(model.getTag().get().trim());
             Optional<String> notes = model.getNotes().get().isBlank()
                     ? Optional.empty()
-                    : Optional.of(model.getNotes().get());
-            Optional<Double> trustScore = getTrustScore(model.getTrustScore().get());
+                    : Optional.of(model.getNotes().get().trim());
             contactListService.addContactListEntry(new ContactListEntry(model.getUserProfile(),
                     myUserProfile,
                     System.currentTimeMillis(),
@@ -131,14 +131,14 @@ public class AddToContactsListWindow {
         }
 
         private Optional<Double> getTrustScore(String trustScoreText) {
-            String trimmed = trustScoreText.trim().replace("%", "");
+            String trimmed = trustScoreText.replace("%", "").trim();
             try {
                 double percent = Double.parseDouble(trimmed);
                 double trustScore = percent / 100.0;
                 return Optional.of(trustScore);
             } catch (NumberFormatException ignored) {
+                return Optional.empty();
             }
-            return Optional.empty();
         }
     }
 
