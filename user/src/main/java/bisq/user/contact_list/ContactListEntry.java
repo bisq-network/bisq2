@@ -93,14 +93,14 @@ public final class ContactListEntry implements PersistableProto {
     }
 
     void setTrustScore(Double newTrustScore) {
-        trustScore = newTrustScore != null ? Optional.of(newTrustScore) : Optional.empty();
+        trustScore = Optional.ofNullable(newTrustScore);
     }
 
     void setTag(String newTag) {
-        tag = newTag != null ? Optional.of(newTag) : Optional.empty();
+        tag = Optional.ofNullable(newTag);
     }
 
     void setNotes(String newNotes) {
-        notes = newNotes != null ? Optional.of(newNotes) : Optional.empty();
+        notes = Optional.ofNullable(newNotes);
     }
 }
