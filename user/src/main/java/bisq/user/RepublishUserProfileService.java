@@ -17,6 +17,7 @@
 
 package bisq.user;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.network.NetworkService;
@@ -120,7 +121,7 @@ public class RepublishUserProfileService implements Service, Node.Listener {
         if (selectedUserIdentity == null) {
             return;
         }
-        if (numAllConnections < 4) {
+        if (!DevMode.isDevMode() && numAllConnections < 4) {
             return;
         }
         long now = System.currentTimeMillis();
