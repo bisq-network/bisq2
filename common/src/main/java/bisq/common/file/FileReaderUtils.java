@@ -114,6 +114,20 @@ public class FileReaderUtils {
         return resource;
     }
 
+    public static Set<Path> listRegularFilesAsPath(Path dirPath) {
+        if (Files.notExists(dirPath)) {
+            return new HashSet<>();
+        }
+        try (Stream<Path> stream = Files.list(dirPath)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            log.error(e.toString(), e);
+            return new HashSet<>();
+        }
+    }
+
     public static Set<String> listRegularFiles(Path dirPath) {
         if (Files.notExists(dirPath)) {
             return new HashSet<>();

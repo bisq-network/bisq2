@@ -49,6 +49,7 @@ import bisq.desktop.main.content.wallet.setup_wallet_wizard.SetupWalletWizardCon
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
+import bisq.desktop.overlay.restore.RestoreFromBackupController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.overlay.update.UpdaterController;
@@ -141,6 +142,8 @@ public class OverlayController extends NavigationController {
             case TAC -> Optional.of(new TacController(serviceProvider));
             case UPDATER -> Optional.of(new UpdaterController(serviceProvider));
             case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
+
+            case RESTORE_FROM_BACKUP -> Optional.of(new RestoreFromBackupController(serviceProvider));
 
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
