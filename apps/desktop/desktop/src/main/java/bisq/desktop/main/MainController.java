@@ -18,12 +18,12 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;
 import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -34,6 +34,7 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.evolution.updater.UpdaterService;
 import bisq.evolution.updater.UpdaterUtils;
 import lombok.Getter;
@@ -93,7 +94,7 @@ public class MainController extends NavigationController {
         }
 
         updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
-        updaterService.getIgnoreNewRelease().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
+        updaterService.getIgnoreNewRelease().addObserver(ignoreNewRelease -> UIThread.run(this::maybeShowUpdatePopup));
     }
 
     @Override
@@ -125,6 +126,9 @@ public class MainController extends NavigationController {
                 ignoreNewRelease.get()) {
             return;
         }
-        Navigation.navigateTo(NavigationTarget.UPDATER);
+
+        // At frist start after user profile creation, when entering dashboard and an update is available
+        // calling Navigation.navigateTo without delay lead to a darkened screen not displaying the popup.
+        UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.UPDATER)).after(500);
     }
 }
