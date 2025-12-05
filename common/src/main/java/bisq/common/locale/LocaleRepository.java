@@ -84,14 +84,14 @@ public class LocaleRepository {
         // but are still valid BCP 47 language tags. Only require country for
         // locales that don't have a script subtag.
         if (locale.getCountry().isEmpty() && locale.getScript().isEmpty()) {
-            log.warn("Locale has no country defined. locale={}", locale);
+            log.info("Locale has no country defined. locale={}", locale);
             Locale currentLocale = LocaleRepository.getDefaultLocale();
 
             if (!locale.getLanguage().isEmpty() && !currentLocale.getCountry().isEmpty()) {
-                log.warn("Locale has no country defined. We apply the country from the current locale.");
+                log.info("Locale has no country defined. We apply the country from the current locale.");
                 return Locale.of(locale.getLanguage(), currentLocale.getCountry());
             } else {
-                log.warn("Could not set the new locale, we fall back to Locale.US");
+                log.info("Could not set the new locale, we fall back to Locale.US");
                 return Locale.US;
             }
         } else {

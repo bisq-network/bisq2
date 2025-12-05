@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
@@ -86,26 +87,33 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
             }
             RequestFuture<T, R> requestFuture = new RequestFuture<>(node, connection, request, timeout);
 
-            Runnable removeFromMapTask = () -> {
-                try {
-                    requestFuturesByConnectionId.remove(connectionId, requestFuture);
-                } catch (Exception e) {
-                    log.error("requestFuturesByConnectionId.remove failed. This might be a rare case that we get called synchronously. " +
-                            "Mutating the map from the constructing code is not permitted. " +
-                            "We wrap the remove code into a async call to try again to remove the entry.", e);
-                    CompletableFuture.runAsync(() -> requestFuturesByConnectionId.remove(connectionId, requestFuture), commonForkJoinPool());
+            BiConsumer<R, Throwable> removeFromMapTask = (result, throwable) -> {
+                if (result != null && throwable == null) {
+                    try {
+                        // In success case we assume we get called back asynchronously thus we can safely call the
+                        // remove without risking a IllegalStateException (Recursive update)
+                        requestFuturesByConnectionId.remove(connectionId, requestFuture);
+                        return;
+                    } catch (Exception e) {
+                        log.warn("requestFuturesByConnectionId.remove failed. This might be a rare case that we get called synchronously. " +
+                                "Mutating the map from the constructing code is not permitted and throws an IllegalStateException (Recursive update). " +
+                                "We wrap the remove code into a async call to try again to remove the entry.", e);
+                    }
                 }
+                // At failure cases we remove asynchronously as we cannot be sure that we did not get called back on
+                // same thread synchronously.
+                CompletableFuture.runAsync(() -> requestFuturesByConnectionId.remove(connectionId, requestFuture), commonForkJoinPool());
             };
             // We get returned a priority future which gets completed before the actual requestFuture gets completed.
             // This ensures that cleanup code is executed before any client code is called on completion of the requestFuture.
             // The timeout is not strictly needed here but adds guarantees to clean up the map.
-            CompletableFuture<Void> priorityFuture = requestFuture.sendRequest();
-            priorityFuture.whenComplete((nil, throwable) -> removeFromMapTask.run());
+            CompletableFuture<R> priorityFuture = requestFuture.sendRequest();
+            priorityFuture.whenComplete(removeFromMapTask);
 
             requestFuture.whenComplete((response, throwable) -> {
                 if (throwable != null) {
                     if (throwable instanceof TimeoutException) {
-                        log.warn("[{}] Request to {} timed out after {} ms", request.getClass().getSimpleName(), connection.getPeerAddress(), timeout);
+                        log.warn("[{}] Request to {} timed out after {} sec", request.getClass().getSimpleName(), connection.getPeerAddress(), timeout / 1000);
                     } else {
                         log.warn("[{}] Request to {} failed: {}", request.getClass().getSimpleName(), connection.getPeerAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                     }

@@ -38,7 +38,7 @@ public class RequestFuture<T extends Request, R extends Response> extends Comple
     private final T request;
     // We use that to execute code in the caller prior to the main future gets completed, to ensure that
     // cleanup code is executed before any client can react to completion.
-    private final CompletableFuture<Void> priorityFuture = new CompletableFuture<>();
+    private final CompletableFuture<R> priorityFuture = new CompletableFuture<>();
     private long requestTs;
 
     public RequestFuture(Node node,
@@ -59,7 +59,7 @@ public class RequestFuture<T extends Request, R extends Response> extends Comple
         return super.completeExceptionally(throwable);
     }
 
-    CompletableFuture<Void> sendRequest() {
+    CompletableFuture<R> sendRequest() {
         log.info("Send {} to {}", StringUtils.truncate(request), connection.getPeerAddress());
         requestTs = System.currentTimeMillis();
         node.sendAsync(request, connection)
@@ -101,7 +101,7 @@ public class RequestFuture<T extends Request, R extends Response> extends Comple
                 passed,
                 connection.getPeerAddress());
         if (!priorityFuture.isDone()) {
-            priorityFuture.complete(null);
+            priorityFuture.complete(response);
         }
         if (isDone()) {
             log.info("Discarded response for requestId {} (already completed by error or timeout)", request.getRequestId());
