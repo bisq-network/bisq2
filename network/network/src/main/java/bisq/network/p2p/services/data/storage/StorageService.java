@@ -285,7 +285,7 @@ public class StorageService {
                         return Optional.of(mailboxData);
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
+                            log.info("AddMailboxRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -317,7 +317,7 @@ public class StorageService {
                         return Optional.of(appendOnlyData);
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
+                            log.info("AddAppendOnlyDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -349,7 +349,7 @@ public class StorageService {
                         return Optional.ofNullable(dataStorageResult.getRemovedData());
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
+                            log.info("RemoveMailboxRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
