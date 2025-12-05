@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
@@ -87,6 +89,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     private PersistableStore<?> readStoreFromFile() throws IOException {
         try (InputStream fileInputStream = Files.newInputStream(storeFilePath)) {
             Any any = Any.parseDelimitedFrom(fileInputStream);
+            checkNotNull(any, "Any.parseDelimitedFrom for " + storeFilePath + " resulted in a null value.");
             return PersistableStore.fromAny(any);
         }
     }
