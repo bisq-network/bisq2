@@ -56,7 +56,7 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
 
     @Override
     public void verify() {
-        checkArgument(peers.size() <= maxNumPeers);
+        checkArgument(peers.size() <= maxNumPeers, "Size of peers (" + peers.size() + ") exceed limit of " + maxNumPeers);
     }
 
     @Override
