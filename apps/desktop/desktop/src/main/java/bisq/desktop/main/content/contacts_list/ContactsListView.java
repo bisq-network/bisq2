@@ -61,7 +61,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<ListItem> richTableView;
-    private Hyperlink learnMoreLink;
+    private final Hyperlink learnMoreLink;
     private Subscription userProfileIdOfScoreUpdatePin;
     private UIScheduler uiScheduler;
 
@@ -71,6 +71,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView = new RichTableView<>(model.getSortedList(),
                 Res.get("contactsList.table.headline"),
                 controller::applySearchPredicate);
+        learnMoreLink = new Hyperlink(Res.get("contactsList.table.placeholder.hyperlink"));
         richTableView.getExportButton().setVisible(false);
         richTableView.getExportButton().setManaged(false);
         richTableView.getHeadlineLabel().setGraphic(ImageUtil.getImageViewById("contacts-green"));
@@ -95,6 +96,8 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             }
         });
 
+        learnMoreLink.setOnAction(e -> richTableView.openLearnMorePopup());
+
         maybeShowLearnMorePopup();
     }
 
@@ -103,9 +106,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.dispose();
         userProfileIdOfScoreUpdatePin.unsubscribe();
 
-        if (learnMoreLink != null) {
-            learnMoreLink.setOnAction(null);
-        }
+        learnMoreLink.setOnAction(null);
 
         if (uiScheduler != null) {
             uiScheduler.stop();
@@ -192,10 +193,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     private VBox createAndGetPlaceholderContent() {
         Label label = new Label(Res.get("contactsList.table.placeholder.title"));
         label.getStyleClass().addAll("thin-text", "very-large-text");
-
-        learnMoreLink = new Hyperlink(Res.get("contactsList.table.placeholder.hyperlink"));
-        learnMoreLink.setOnAction(e -> richTableView.openLearnMorePopup());
-
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(label, learnMoreLink);
         contentBox.setAlignment(Pos.CENTER);
