@@ -9,7 +9,27 @@
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21.
+   Bisq requires JDK 21 and Tor. Installing tor browser for your OS is the easiest way to set up a working Tor client executable.
+
+   https://www.torproject.org/download/
+
+   On Debian based distributions:
+   ```bash
+   sudo apt install torbrowser-launcher
+   ```
+
+   If tor browser is not available for your Linux distribution you can also download, extract and symlink the required binary. You may need to replace the version below as needed.
+
+   ```bash
+    cd /usr/local/src
+    https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz
+    https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz.asc
+    gpg --keyserver hkps://keys.openpgp.org --recv-keys CAAE408AEBE2288E96FC5D5E157432CF78A65729
+    gpg --verify tor-browser-linux-x86_64-15.0.2.tar.xz.asc tor-browser-linux-x86_64-15.0.2.tar.xz
+    tar -xf tor-browser-linux-x86_64-15.0.2.tar.xz
+    ln -s /usr/local/src/tor-browser/Browser/TorBrowser/Tor/tor /usr/local/bin/tor
+    which tor
+   ```
 
 3. **Update to latest GitHub version:**
    ```bash
