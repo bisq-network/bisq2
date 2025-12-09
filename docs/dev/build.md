@@ -9,7 +9,7 @@
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21 and Tor. Installing tor browser for your OS is the easiest way to set up a working Tor client executable.
+   Bisq requires JDK 21. On Linux, you will also need to install Tor Browser if you don't already have it.
 
    https://www.torproject.org/download/
 
@@ -18,17 +18,22 @@
    sudo apt install torbrowser-launcher
    ```
 
-   If tor browser is not available for your Linux distribution you can also download, extract and symlink the required binary. You may need to replace the version below as needed.
+   If tor browser is not available for your Linux distribution you can also download, extract and symlink the required binary. The version of Tor which Bisq was tested against is defined in gradle.properties.
 
    ```bash
+    awk -F= '/^tor\.version=/{print $2}' gradle.properties
+   ```
+	On Linux you should currently use version 15.0.2 as 13.5.x may be poorly supported [See release notes for 13.5.22](https://blog.torproject.org/new-release-tor-browser-13522/)
+   ```bash
     cd /usr/local/src
-    https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz
-    https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz.asc
+    wget https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz
+    wget https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz.asc
     gpg --keyserver hkps://keys.openpgp.org --recv-keys CAAE408AEBE2288E96FC5D5E157432CF78A65729
     gpg --verify tor-browser-linux-x86_64-15.0.2.tar.xz.asc tor-browser-linux-x86_64-15.0.2.tar.xz
     tar -xf tor-browser-linux-x86_64-15.0.2.tar.xz
     ln -s /usr/local/src/tor-browser/Browser/TorBrowser/Tor/tor /usr/local/bin/tor
     which tor
+    cd -
    ```
 
 3. **Update to latest GitHub version:**
