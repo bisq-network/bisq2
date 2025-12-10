@@ -496,6 +496,10 @@
     -fx-text-fill: -fx-mid-text-color !important;
 }
 
+.expired-messages-indicator {
+    -fx-text-fill: -bisq-light-grey-20 !important;
+}
+
 
 /*******************************************************************************
  * Chat guide                                                                  *

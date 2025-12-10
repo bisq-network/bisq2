@@ -244,6 +244,7 @@ public class ChatMessagesListController implements Controller {
             model.getChatMessages().clear();
             model.getChatMessageIds().clear();
             model.setAutoScrollToBottom(true);
+            model.setHasExpiredMessagesIndicator(false);
 
             if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
@@ -719,13 +720,8 @@ public class ChatMessagesListController implements Controller {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
-        boolean shouldShowExpiredMessagesIndicator = channel instanceof CommonPublicChatChannel
-                || channel instanceof BisqEasyOfferbookChannel;
-        if (shouldShowExpiredMessagesIndicator) {
-            addExpiredMessagesIndicator(channel);
-        }
-
         maybeScrollDownOnNewItemAdded();
+        maybeAddExpiredMessagesIndicator();
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
@@ -756,6 +752,7 @@ public class ChatMessagesListController implements Controller {
                     model.getChatMessages().add(item);
                     model.getChatMessageIds().add(chatMessage.getId());
                     maybeScrollDownOnNewItemAdded();
+                    maybeAddExpiredMessagesIndicator();
                     updateHasBisqEasyOfferMessages();
                 });
             }
@@ -1048,6 +1045,20 @@ public class ChatMessagesListController implements Controller {
         } else {
             model.getPlaceholderTitle().set("");
             model.getPlaceholderDescription().set("");
+        }
+    }
+
+    private void maybeAddExpiredMessagesIndicator() {
+        if (model.isHasExpiredMessagesIndicator()) {
+            return;
+        }
+
+        ChatChannel<?> channel = model.getSelectedChannel().get();
+        boolean shouldShowExpiredMessagesIndicator = !model.getChatMessageIds().isEmpty()
+                && (channel instanceof CommonPublicChatChannel || channel instanceof BisqEasyOfferbookChannel);
+        if (shouldShowExpiredMessagesIndicator) {
+            addExpiredMessagesIndicator(channel);
+            model.setHasExpiredMessagesIndicator(true);
         }
     }
 }

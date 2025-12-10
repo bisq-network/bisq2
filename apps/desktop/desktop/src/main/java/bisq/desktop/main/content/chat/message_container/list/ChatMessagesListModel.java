@@ -59,6 +59,8 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private boolean autoScrollToBottom;
     @Setter
     private int numReadMessages;
+    @Setter
+    private boolean hasExpiredMessagesIndicator;
     private final BooleanProperty hasUnreadMessages = new SimpleBooleanProperty();
     private final StringProperty numUnReadMessages = new SimpleStringProperty();
     private final BooleanProperty showScrolledDownButton = new SimpleBooleanProperty();
