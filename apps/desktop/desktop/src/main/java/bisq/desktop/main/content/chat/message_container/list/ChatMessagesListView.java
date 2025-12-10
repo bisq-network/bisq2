@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.ManagedDuration;
+import bisq.desktop.common.utils.PageScrollHandler;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.list_view.ListViewUtil;
@@ -46,6 +47,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -74,6 +76,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     private final Label placeholderTitle = new Label("");
     private final Label placeholderDescription = new Label("");
     private final Pane scrollDownBackground;
+    @Getter(AccessLevel.PACKAGE)
+    private final PageScrollHandler pageScrollHandler;
     private Optional<ScrollBar> scrollBar = Optional.empty();
     private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
     private Timeline fadeInScrollDownBadgeTimeline;
@@ -92,6 +96,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
         listView.setSelectionModel(new NoSelectionModel<>());
         VBox.setVgrow(listView, Priority.ALWAYS);
+
+        pageScrollHandler = new PageScrollHandler(listView);
 
         scrollDownBackground = new Pane();
         scrollDownBackground.getStyleClass().add("scroll-down-bg");
@@ -171,6 +177,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         model.getLayoutChildrenDone().bind(root.getLayoutChildrenDone());
 
         scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
+        pageScrollHandler.subscribe();
     }
 
     @Override
@@ -185,6 +192,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         model.getLayoutChildrenDone().unbind();
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
+        pageScrollHandler.unsubscribe();
 
         Tooltip.uninstall(scrollDownBadge, scrollDownTooltip);
 
