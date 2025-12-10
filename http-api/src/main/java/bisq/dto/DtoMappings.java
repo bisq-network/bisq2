@@ -17,9 +17,12 @@
 
 package bisq.dto;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -41,12 +44,14 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
+import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.dto.account.UserDefinedFiatAccountDto;
-import bisq.dto.account.UserDefinedFiatAccountPayloadDto;
+import bisq.dto.account.fiat.FiatAccountDto;
+import bisq.dto.account.fiat.UserDefinedFiatAccountDto;
+import bisq.dto.account.fiat.UserDefinedFiatAccountPayloadDto;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
 import bisq.dto.chat.ChatChannelDomainDto;
 import bisq.dto.chat.ChatMessageTypeDto;
@@ -1127,15 +1132,69 @@ public class DtoMappings {
 
     // paymentaccount
     public static class UserDefinedFiatAccountMapping {
-        // toBisq2Model method not implemented, as we get accountName, accountData props for account creation calls
+        public static UserDefinedFiatAccount toBisq2Model(UserDefinedFiatAccountDto dto) {
+            String accountData = dto.accountPayload().accountData();
+            if (accountData == null || accountData.isEmpty()) {
+                throw new IllegalArgumentException("Account data cannot be empty");
+            }
+            if (accountData.length() > UserDefinedFiatAccountPayload.MAX_DATA_LENGTH) {
+                throw new IllegalArgumentException(
+                        "Account data must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH + " characters");
+            }
+
+            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(
+                    StringUtils.createUid(),
+                    accountData
+            );
+            return new UserDefinedFiatAccount(
+                    StringUtils.createUid(),
+                    System.currentTimeMillis(),
+                    dto.accountName(),
+                    accountPayload
+            );
+        }
 
         public static UserDefinedFiatAccountDto fromBisq2Model(UserDefinedFiatAccount account) {
+            FiatPaymentMethod paymentMethod = (FiatPaymentMethod) account.getPaymentMethod();
             return new UserDefinedFiatAccountDto(
                     account.getAccountName(),
+                    paymentMethod.getPaymentRail(),
                     new UserDefinedFiatAccountPayloadDto(
                             account.getAccountPayload().getAccountData()
                     )
             );
+        }
+    }
+
+    public static class FiatAccountMapping {
+        /**
+         * Generic dispatcher that converts FiatAccountDto to the appropriate Account domain object.
+         * Routes to the specific mapper based on the DTO's runtime type.
+         *
+         * @param dto The fiat account DTO to convert
+         * @return The corresponding domain Account object
+         * @throws IllegalArgumentException if the payment rail type is not supported or validation fails
+         */
+        public static Account<? extends PaymentMethod<?>, ?> toBisq2Model(FiatAccountDto dto) {
+            // Currently only UserDefinedFiatAccount (CUSTOM payment rail) is supported
+            if (dto instanceof UserDefinedFiatAccountDto customAccount) {
+                return UserDefinedFiatAccountMapping.toBisq2Model(customAccount);
+            }
+
+            // TODO: Add support for other account types when implemented:
+            // if (dto instanceof SepaAccountDto sepaAccount) {
+            //     return SepaAccountMapping.toBisq2Model(sepaAccount);
+            // }
+            // if (dto instanceof RevolutAccountDto revolutAccount) {
+            //     return RevolutAccountMapping.toBisq2Model(revolutAccount);
+            // }
+            // if (dto instanceof ZelleAccountDto zelleAccount) {
+            //     return ZelleAccountMapping.toBisq2Model(zelleAccount);
+            // }
+            // ... etc
+
+            throw new IllegalArgumentException(
+                    "Payment rail " + dto.paymentRail() + " is not yet supported. Only CUSTOM is currently available.");
         }
     }
 

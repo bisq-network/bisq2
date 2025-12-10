@@ -24,6 +24,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -31,6 +32,7 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -49,12 +51,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
-    @Override
-    public void onPersistedApplied(AccountStore persisted) {
-        accounts.setAll(persisted.getAccountByName().values());
-    }
-
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
@@ -69,7 +65,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     // API
     /* --------------------------------------------------------------------- */
 
-    public Map<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
+    public Collection<Account<? extends PaymentMethod<?>, ?>> getAccounts() {
+        return getAccountByNameMap().values();
+    }
+
+    public ObservableHashMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 
@@ -79,18 +79,54 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     public void addPaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().put(account.getAccountName(), account);
-        accounts.add(account);
         persist();
     }
 
     public void removePaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().remove(account.getAccountName());
-        accounts.remove(account);
-        getSelectedAccount().ifPresent(s -> {
-            if (s.equals(account)) {
+        getSelectedAccount().ifPresent(selected -> {
+            String selectedAccountName = selected.getAccountName();
+            String accountName = account.getAccountName();
+            if (selectedAccountName.equals(accountName)) {
                 setSelectedAccount(null);
             }
         });
+        persist();
+    }
+
+    /**
+     * Updates an existing payment account by first removing the old account and then adding the updated one.
+     * This allows for updating account details including renaming the account.
+     *
+     * @param existingAccountName The current name of the account to be updated. This name is used to identify
+     *                            and remove the account before adding the updated version.
+     * @param updatedAccount      The updated account object containing new account data, which may include a new account name.
+     * @throws IllegalArgumentException if the new account name already exists (when renaming) or if the existing account is not found.
+     */
+    public void updatePaymentAccount(String existingAccountName,
+                                     Account<? extends PaymentMethod<?>, ?> updatedAccount) {
+        Map<String, Account<? extends PaymentMethod<?>, ?>> accountByNameMap = getAccountByNameMap();
+        String updatedAccountName = updatedAccount.getAccountName();
+
+        if (!existingAccountName.equals(updatedAccountName) && accountByNameMap.containsKey(updatedAccountName)) {
+            throw new IllegalArgumentException("The account name '" + updatedAccountName + "' already exists. Please choose a different name.");
+        }
+
+        if (accountByNameMap.remove(existingAccountName) == null) {
+            throw new IllegalArgumentException("Account not found: " + existingAccountName);
+        }
+
+        // Update in-memory state atomically
+        accountByNameMap.put(updatedAccountName, updatedAccount);
+
+        // Update selected account reference if needed
+        getSelectedAccount().ifPresent(selected -> {
+            String selectedAccountName = selected.getAccountName();
+            if (selectedAccountName.equals(existingAccountName)) {
+                selectedAccountAsObservable().set(updatedAccount);
+            }
+        });
+
         persist();
     }
 
