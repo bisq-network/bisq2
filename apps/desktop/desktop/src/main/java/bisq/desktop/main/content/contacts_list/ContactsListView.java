@@ -117,7 +117,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
     private void configTableView() {
         richTableView.getColumns().add(richTableView.getTableView().getSelectionMarkerColumn());
 
-        richTableView.getColumns().add(IndexColumnUtil.getIndexColumn(model.getSortedList()));
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.userProfile"))
                 .left()
