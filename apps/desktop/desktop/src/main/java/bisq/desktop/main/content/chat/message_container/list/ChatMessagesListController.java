@@ -244,6 +244,7 @@ public class ChatMessagesListController implements Controller {
             model.getChatMessages().clear();
             model.getChatMessageIds().clear();
             model.setAutoScrollToBottom(true);
+            model.setHasExpiredMessagesIndicator(false);
 
             if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
@@ -1048,11 +1049,16 @@ public class ChatMessagesListController implements Controller {
     }
 
     private void maybeAddExpiredMessagesIndicator() {
+        if (model.isHasExpiredMessagesIndicator()) {
+            return;
+        }
+
         ChatChannel<?> channel = model.getSelectedChannel().get();
         boolean shouldShowExpiredMessagesIndicator = !model.getChatMessageIds().isEmpty()
                 && (channel instanceof CommonPublicChatChannel || channel instanceof BisqEasyOfferbookChannel);
         if (shouldShowExpiredMessagesIndicator) {
             addExpiredMessagesIndicator(channel);
+            model.setHasExpiredMessagesIndicator(true);
         }
     }
 }
