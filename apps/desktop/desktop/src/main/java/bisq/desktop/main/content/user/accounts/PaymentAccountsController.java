@@ -62,7 +62,7 @@ public class PaymentAccountsController implements Controller {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
         accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
-            model.setAllAccounts(accountService.getAccounts());
+            model.setAllAccounts(accountService.getAccounts().values());
             maybeSelectFirstAccount();
             model.getNoAccountsSetup().set(!accountService.hasAccounts());
             model.getHeadline().set(accountService.hasAccounts() ?
@@ -113,9 +113,7 @@ public class PaymentAccountsController implements Controller {
         model.getAccountData().ifPresent(accountData -> {
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
             UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
-            accountService.removePaymentAccount(selectedAccount);
-            accountService.addPaymentAccount(newAccount);
-            accountService.setSelectedAccount(newAccount);
+            accountService.updatePaymentAccount(accountName, newAccount);
         });
     }
 

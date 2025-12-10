@@ -25,7 +25,7 @@ import bisq.account.payment_method.PaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -43,7 +43,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
-    private final transient ObservableSet<Account<?, ? extends PaymentMethod<?>>> accounts = new ObservableSet<>();
 
     public AccountService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -51,7 +50,8 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     @Override
     public void onPersistedApplied(AccountStore persisted) {
-        accounts.setAll(persisted.getAccountByName().values());
+        persistableStore.getAccountByName().clear();
+        persistableStore.getAccountByName().putAll(persisted.getAccountByName());
     }
 
 
@@ -72,6 +72,10 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     // API
     /* --------------------------------------------------------------------- */
 
+    public ObservableHashMap<String, Account<?, ? extends PaymentMethod<?>>> getAccounts() {
+        return persistableStore.getAccountByName();
+    }
+
     public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
@@ -82,18 +86,45 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     public void addPaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
         getAccountByNameMap().put(account.getAccountName(), account);
-        accounts.add(account);
         persist();
     }
 
     public void removePaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
         getAccountByNameMap().remove(account.getAccountName());
-        accounts.remove(account);
-        getSelectedAccount().ifPresent(s -> {
-            if (s.equals(account)) {
+        getSelectedAccount().ifPresent(selected -> {
+            String selectedAccountName = selected.getAccountName();
+            String accountName = account.getAccountName();
+            if (selectedAccountName.equals(accountName)) {
                 setSelectedAccount(null);
             }
         });
+        persist();
+    }
+
+    public void updatePaymentAccount(String accountName,
+                                     Account<?, ? extends PaymentMethod<?>> updatedAccount) {
+        Map<String, Account<?, ? extends PaymentMethod<?>>> accountByNameMap = getAccountByNameMap();
+        String updatedAccountName = updatedAccount.getAccountName();
+
+        if (!accountName.equals(updatedAccountName) && accountByNameMap.containsKey(updatedAccountName)) {
+            throw new IllegalArgumentException("Account name already exists: " + updatedAccountName);
+        }
+
+        if (accountByNameMap.remove(accountName) == null) {
+            throw new IllegalArgumentException("Account not found: " + accountName);
+        }
+
+        // Update in-memory state atomically
+        accountByNameMap.put(updatedAccount.getAccountName(), updatedAccount);
+
+        // Update selected account reference if needed
+        getSelectedAccount().ifPresent(selected -> {
+            String selectedAccountName = selected.getAccountName();
+            if (selectedAccountName.equals(accountName)) {
+                selectedAccountAsObservable().set(updatedAccount);
+            }
+        });
+
         persist();
     }
 

@@ -20,6 +20,7 @@ package bisq.http_api.rest_api.domain.payment_accounts;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.*;
 import bisq.dto.DtoMappings;
 import bisq.dto.account.UserDefinedFiatAccountDto;
@@ -41,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Path("/payment-accounts")
@@ -165,6 +168,65 @@ public class PaymentAccountsRestApi extends RestApiBase {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found"));
             }
         } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PUT
+    @Operation(
+            summary = "Save payment account",
+            description = "Update an existing payment account by replacing it with new data (only UserDefinedFiatAccount)",
+            requestBody = @RequestBody(
+                    description = "Account name and new account data",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = SaveAccountRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Payment account saved successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input data or account not found"),
+                    @ApiResponse(responseCode = "404", description = "Payment account not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Request timed out")
+            }
+    )
+    @Path("/{accountName}")
+    public void saveAccount(@PathParam("accountName") String accountName,
+                            @Valid SaveAccountRequest request,
+                            @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(accountName);
+            if (result.isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found"));
+                return;
+            }
+
+            Account<?, ? extends PaymentMethod<?>> selectedAccount = result.get();
+            if (!(selectedAccount instanceof UserDefinedFiatAccount)) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account is not a UserDefinedFiatAccount"));
+                return;
+            }
+
+            String accountData = request.accountData();
+            if (accountData == null || accountData.isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data cannot be empty"));
+                return;
+            }
+
+            checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
+                    "Account data must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH + " characters");
+
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(request.accountName(), request.accountData());
+            accountService.updatePaymentAccount(accountName, newAccount);
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid account data", e);
+            asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to save payment account", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }

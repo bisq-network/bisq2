@@ -87,7 +87,7 @@ public class SellerState1 extends BaseState {
 
             accountsPin = accountService.getAccounts().addObserver(() ->
                     UIThread.run(() -> {
-                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
+                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().values().stream()
                                 .filter(account -> account instanceof UserDefinedFiatAccount)
                                 .map(account -> (UserDefinedFiatAccount) account)
                                 .collect(Collectors.toList());
