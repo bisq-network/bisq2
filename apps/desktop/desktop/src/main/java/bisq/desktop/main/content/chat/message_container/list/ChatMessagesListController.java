@@ -719,13 +719,8 @@ public class ChatMessagesListController implements Controller {
             addChatRulesWarningMessageListItemInPrivateChats(channel);
         }
 
-        boolean shouldShowExpiredMessagesIndicator = channel instanceof CommonPublicChatChannel
-                || channel instanceof BisqEasyOfferbookChannel;
-        if (shouldShowExpiredMessagesIndicator) {
-            addExpiredMessagesIndicator(channel);
-        }
-
         maybeScrollDownOnNewItemAdded();
+        maybeAddExpiredMessagesIndicator();
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
@@ -756,6 +751,7 @@ public class ChatMessagesListController implements Controller {
                     model.getChatMessages().add(item);
                     model.getChatMessageIds().add(chatMessage.getId());
                     maybeScrollDownOnNewItemAdded();
+                    maybeAddExpiredMessagesIndicator();
                     updateHasBisqEasyOfferMessages();
                 });
             }
@@ -1048,6 +1044,15 @@ public class ChatMessagesListController implements Controller {
         } else {
             model.getPlaceholderTitle().set("");
             model.getPlaceholderDescription().set("");
+        }
+    }
+
+    private void maybeAddExpiredMessagesIndicator() {
+        ChatChannel<?> channel = model.getSelectedChannel().get();
+        boolean shouldShowExpiredMessagesIndicator = !model.getChatMessageIds().isEmpty()
+                && (channel instanceof CommonPublicChatChannel || channel instanceof BisqEasyOfferbookChannel);
+        if (shouldShowExpiredMessagesIndicator) {
+            addExpiredMessagesIndicator(channel);
         }
     }
 }
