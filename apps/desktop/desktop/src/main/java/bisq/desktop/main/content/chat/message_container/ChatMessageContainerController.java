@@ -217,6 +217,14 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         chatMessagesListController.editMyLastMessage();
     }
 
+    boolean onPageUpKeyPressed() {
+        return chatMessagesListController.scrollPageUp();
+    }
+
+    boolean onPageDownKeyPressed() {
+        return chatMessagesListController.scrollPageDown();
+    }
+
     void onUserProfileSelected(UserProfile user) {
         String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
         model.getTextInput().set(content);

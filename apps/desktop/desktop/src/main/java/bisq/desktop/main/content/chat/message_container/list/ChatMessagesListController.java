@@ -669,6 +669,13 @@ public class ChatMessagesListController implements Controller {
         applyScrollValue(1);
     }
 
+    public boolean scrollPageUp() {
+       return view.getPageScrollHandler().scrollPageUp();
+    }
+
+    public boolean scrollPageDown() {
+        return view.getPageScrollHandler().scrollPageDown();
+    }
 
     /* --------------------------------------------------------------------- */
     // Private
