@@ -32,7 +32,7 @@ public final class ExpiredMessagesIndicatorMessageBox extends MessageBox {
     public ExpiredMessagesIndicatorMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         String decoded = Res.decode(item.getMessage());
         Label message = new Label(decoded);
-        message.getStyleClass().addAll("text-fill-green", "font-light", "medium-text");
+        message.getStyleClass().addAll("expired-messages-indicator", "font-light", "medium-text");
         message.setWrapText(true);
 
         VBox messageContentVBox = new VBox();
