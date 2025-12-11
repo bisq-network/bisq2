@@ -65,11 +65,6 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         return resolveProto(serializeForHash);
     }
 
-    @Override
-    public bisq.account.protobuf.AccountPayload completeProto() {
-        return toProto(false);
-    }
-
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id);
