@@ -17,37 +17,38 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
+public class BisqEasyReportErrorMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyReportErrorMessage> {
+    private String stackTrace;
+    private String errorMessage;
+    private TradeProtocolFailure tradeProtocolFailure;
 
     public BisqEasyReportErrorMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyReportErrorMessage message = (BisqEasyReportErrorMessage) event;
-        verifyMessage(message);
-        log.warn("We received an error report from our peer.\n" +
-                        "errorMessage={}\nstackTrace={}\ntradeId={}",
-                message.getErrorMessage(), message.getStackTrace(), trade.getId());
-        commitToModel(message);
+    protected void verify(BisqEasyReportErrorMessage message) {
     }
 
     @Override
-    protected void verifyMessage(BisqEasyReportErrorMessage message) {
-        super.verifyMessage(message);
+    protected void process(BisqEasyReportErrorMessage message) {
+        log.warn("We received an error report from our peer.\n" +
+                        "errorMessage={}\nstackTrace={}\ntradeId={}",
+                message.getErrorMessage(), message.getStackTrace(), trade.getId());
+        stackTrace = message.getStackTrace();
+        errorMessage = message.getErrorMessage();
+        tradeProtocolFailure = message.getTradeProtocolFailure();
     }
 
-    private void commitToModel(BisqEasyReportErrorMessage message) {
-        // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
-        trade.setPeersErrorStackTrace(message.getStackTrace());
-        trade.setPeersErrorMessage(message.getErrorMessage());
+    @Override
+    protected void commit() {
+        trade.setPeersErrorData(tradeProtocolFailure, stackTrace, errorMessage);
     }
 }

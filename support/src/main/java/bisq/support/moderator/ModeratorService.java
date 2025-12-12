@@ -28,7 +28,6 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
@@ -40,7 +39,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserProfileData;
@@ -52,13 +51,14 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.Listener {
+public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;
@@ -85,9 +85,8 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final ModeratorStore persistableStore = new ModeratorStore();
     @Getter
     private final Persistence<ModeratorStore> persistence;
-
-    private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private Pin rateLimitExceedingUserProfileIdMapPin;
+    @Nullable
+    private Pin rateLimitExceedingUserProfileIdMapPin, bondedRolesPin;
 
     public ModeratorService(ModeratorService.Config config,
                             PersistenceService persistenceService,
@@ -130,13 +129,19 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
             rateLimitExceedingUserProfileIdMapPin.unbind();
             rateLimitExceedingUserProfileIdMapPin = null;
         }
+
+        if (bondedRolesPin != null) {
+            bondedRolesPin.unbind();
+            bondedRolesPin = null;
+        }
+
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
@@ -156,26 +161,29 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         persist();
     }
 
-    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
+    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message, String banReason) {
+        UserProfile accusedUserProfile = message.getAccusedUserProfile();
+        String accusedUserId = accusedUserProfile.getId();
+        BannedUserModeratorData moderatorData = new BannedUserModeratorData(
+                message.getReporterUserProfileId(),
+                accusedUserId,
+                message.getMessage(),
+                banReason);
+        persistableStore.getBannedUserModeratorDataMap().put(accusedUserId, moderatorData);
+        persist();
+
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
 
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        BannedUserProfileData oldVersion = new BannedUserProfileData(0, data.getUserProfile(), data.staticPublicKeysProvided());
-        networkService.publishAuthorizedData(oldVersion, keyPair);
-
-        return networkService.publishAuthorizedData(data, keyPair);
+        BannedUserProfileData publicData = new BannedUserProfileData(
+                accusedUserProfile,
+                staticPublicKeysProvided);
+        return networkService.publishAuthorizedData(publicData, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        BannedUserProfileData oldVersion = new BannedUserProfileData(0, data.getUserProfile(), data.staticPublicKeysProvided());
-        networkService.removeAuthorizedData(oldVersion, keyPair);
-
         return networkService.removeAuthorizedData(data, keyPair);
     }
 
@@ -190,17 +198,21 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
                     if (channel.getChatMessages().isEmpty() && isReportingUser) {
                         return twoPartyPrivateChatChannelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
-                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg)),
+                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg, Optional.empty())),
                                 channel);
                     } else {
                         return CompletableFuture.completedFuture(new SendMessageResult());
                     }
                 })
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("No channel found")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("No channel found")));
     }
 
     public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
         return persistableStore.getReportToModeratorMessages();
+    }
+
+    public Optional<BannedUserModeratorData> findBannedUserModeratorData(String accusedUserProfileId) {
+        return Optional.ofNullable(persistableStore.getBannedUserModeratorDataMap().get(accusedUserProfileId));
     }
 
     private void processReportToModeratorMessage(ReportToModeratorMessage message) {
@@ -214,7 +226,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     private void addObserverIfModerator() {
         Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
-        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BondedRole bondedRole) {
                 AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();

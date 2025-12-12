@@ -17,15 +17,19 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
 import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +39,13 @@ import java.util.Optional;
 public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
+    private final Optional<WalletService> walletService;
+    private Pin isWalletInitializedPin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
+
+        walletService = serviceProvider.getWalletService();
 
         view = new WalletView(model, this);
     }
@@ -51,5 +59,31 @@ public class WalletController extends ContentTabController<WalletModel> {
             case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
             default -> Optional.empty();
         };
+    }
+
+    @Override
+    public void onActivate() {
+        super.onActivate();
+
+        walletService.ifPresent(service ->
+                isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized()).to(service.getWalletInitialized()));
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+
+        if (isWalletInitializedPin != null) {
+            isWalletInitializedPin.unbind();
+            isWalletInitializedPin = null;
+        }
+    }
+
+    void onSetupWalletButtonClicked() {
+        Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
+    }
+
+    void onRestoreWalletLinkClicked() {
+        //todo
     }
 }

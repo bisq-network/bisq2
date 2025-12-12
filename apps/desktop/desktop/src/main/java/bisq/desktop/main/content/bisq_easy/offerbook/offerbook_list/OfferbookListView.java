@@ -17,34 +17,35 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.Transitions;
+import bisq.desktop.common.ManagedDuration;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.SplitButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookView;
 import bisq.desktop.main.content.chat.BaseChatView;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
-import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.effect.ColorAdjust;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -61,44 +62,69 @@ import java.util.Optional;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
-    private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH;
+    private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH + 2; // +2 for the margin
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
     private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
-    private final Label title, showMyOffersOnlyLabel;
+    private final Label showMyOffersOnlyLabel, expandOfferListLabel, collapseOfferListLabel, offerListCollapsedIconLabel, headline;
     private final BisqTableView<OfferbookListItem> tableView;
-    private final BisqTooltip titleTooltip;
-    private final HBox header, showOnlyMyMessagesHBox;
-    private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
-    private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
+    private final HBox showOnlyMyMessagesHBox, titleAndCollapseOfferListHBox, expandOfferListLabelBox;
+    private final ImageView expandOfferListWhiteIcon, expandOfferListGreyIcon, collapseOfferListWhiteIcon, collapseOfferListGreyIcon,
+            offerListGreyIcon, offerListCollapsedWhiteIcon, offerListGreenIcon, offerListExpandedWhiteIcon;
+    private final DropdownMenu paymentsFilterMenu;
+    private final SplitButton offerDirectionFilterMenu;
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private final CheckBox showOnlyMyMessages;
+    private final VBox content;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
-    private Label offerDirectionFilterLabel, paymentsFilterLabel;
+    private Label paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
-            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin,
+            widthPropertyPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
 
-        root.setFillWidth(true);
-
         offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
         offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
-        offerListWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+        offerListCollapsedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+        offerListExpandedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+        expandOfferListWhiteIcon = ImageUtil.getImageViewById("arrows-left-white");
+        expandOfferListGreyIcon = ImageUtil.getImageViewById("arrows-left-grey");
+        collapseOfferListWhiteIcon = ImageUtil.getImageViewById("arrows-right-white");
+        collapseOfferListGreyIcon = ImageUtil.getImageViewById("arrows-right-grey");
 
-        title = new Label("", offerListGreenIcon);
-        title.setCursor(Cursor.HAND);
+        // expanded header title
+        headline = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);
+        headline.setCursor(Cursor.HAND);
+        headline.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip")));
 
-        titleTooltip = new BisqTooltip();
+        collapseOfferListLabel = new Label("", collapseOfferListGreyIcon);
+        collapseOfferListLabel.setCursor(Cursor.HAND);
+        collapseOfferListLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip")));
+        titleAndCollapseOfferListHBox = new HBox(headline, Spacer.fillHBox(), collapseOfferListLabel);
+        HBox.setHgrow(titleAndCollapseOfferListHBox, Priority.ALWAYS);
+        titleAndCollapseOfferListHBox.setFillHeight(true);
+        titleAndCollapseOfferListHBox.setAlignment(Pos.CENTER);
+        titleAndCollapseOfferListHBox.setPadding(new Insets(0, 12, 0, 12));
 
-        header = new HBox(title);
+        // collapsed header title
+        offerListCollapsedIconLabel = new Label("", offerListGreyIcon);
+        offerListCollapsedIconLabel.setCursor(Cursor.HAND);
+        offerListCollapsedIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip")));
+
+        expandOfferListLabel = new Label("", expandOfferListGreyIcon);
+        expandOfferListLabel.setCursor(Cursor.HAND);
+        expandOfferListLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip")));
+
+        HBox header = new HBox(titleAndCollapseOfferListHBox, offerListCollapsedIconLabel);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.getStyleClass().add("chat-header-title");
+        header.setPadding(new Insets(4, 0, 0, 0));
+        header.setAlignment(Pos.CENTER);
 
         availablePaymentsChangeListener = change -> updateMarketPaymentFilters();
         selectedPaymentsChangeListener = change -> updatePaymentsSelection();
@@ -115,16 +141,23 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
 
-        tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
+        tableView = new BisqTableView<>(model.getFilteredOfferbookListItems());
         tableView.getStyleClass().add("offers-list");
         tableView.allowVerticalScrollbar();
         tableView.hideHorizontalScrollbar();
         tableView.setFixedCellSize(LIST_CELL_HEIGHT);
         tableView.setPlaceholder(new Label());
-        configOffersTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
+        configOffersTableView();
 
-        root.getChildren().addAll(header, Layout.hLine(), subheader, tableView);
+        expandOfferListLabelBox = new HBox(expandOfferListLabel);
+        VBox.setVgrow(expandOfferListLabelBox, Priority.ALWAYS);
+        expandOfferListLabelBox.setAlignment(Pos.CENTER);
+        expandOfferListLabelBox.setPadding(new Insets(0, 0, 60, 0));
+
+        content = new VBox(header, Layout.hLine(), subheader, tableView, expandOfferListLabelBox);
+        VBox.setVgrow(content, Priority.ALWAYS);
+        root.getChildren().add(content);
     }
 
     @Override
@@ -138,44 +171,20 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 tableView.setManaged(showOfferListExpanded);
                 offerDirectionFilterMenu.setVisible(showOfferListExpanded);
                 offerDirectionFilterMenu.setManaged(showOfferListExpanded);
-                title.setGraphic(offerListGreyIcon);
+                paymentsFilterMenu.setVisible(showOfferListExpanded);
+                paymentsFilterMenu.setManaged(showOfferListExpanded);
+                showOnlyMyMessagesHBox.setVisible(showOfferListExpanded);
+                showOnlyMyMessagesHBox.setManaged(showOfferListExpanded);
+                titleAndCollapseOfferListHBox.setVisible(showOfferListExpanded);
+                titleAndCollapseOfferListHBox.setManaged(showOfferListExpanded);
+                expandOfferListLabelBox.setVisible(!showOfferListExpanded);
+                expandOfferListLabelBox.setManaged(!showOfferListExpanded);
+                offerListCollapsedIconLabel.setVisible(!showOfferListExpanded);
+                offerListCollapsedIconLabel.setManaged(!showOfferListExpanded);
                 if (showOfferListExpanded) {
-                    header.setAlignment(Pos.CENTER_LEFT);
-                    header.setPadding(new Insets(4, 0, 0, 15));
-                    root.setMaxWidth(EXPANDED_OFFER_LIST_WIDTH);
-                    root.setPrefWidth(EXPANDED_OFFER_LIST_WIDTH);
-                    root.setMinWidth(EXPANDED_OFFER_LIST_WIDTH);
-                    HBox.setMargin(root, new Insets(0, 0, 0, 0));
-                    root.getStyleClass().remove("collapsed-offer-list-container");
-                    root.getStyleClass().add("chat-container");
-                    title.setText(Res.get("bisqEasy.offerbook.offerList"));
-                    titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip"));
-                    Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH, () -> {
-                        paymentsFilterMenu.setVisible(true);
-                        paymentsFilterMenu.setManaged(true);
-                        showOnlyMyMessagesHBox.setVisible(true);
-                        showOnlyMyMessagesHBox.setManaged(true);
-                    });
-                    title.setOnMouseExited(e -> title.setGraphic(offerListGreenIcon));
+                    expandListView();
                 } else {
-                    Transitions.expansionAnimation(root, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20, () -> {
-                        header.setAlignment(Pos.CENTER);
-                        header.setPadding(new Insets(4, 0, 0, 0));
-                        root.setMaxWidth(COLLAPSED_LIST_WIDTH);
-                        root.setPrefWidth(COLLAPSED_LIST_WIDTH);
-                        root.setMinWidth(COLLAPSED_LIST_WIDTH);
-                        HBox.setMargin(root, new Insets(0, 0, 0, -9));
-                        root.getStyleClass().remove("chat-container");
-                        root.getStyleClass().add("collapsed-offer-list-container");
-                        title.setText("");
-                        titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
-                        title.setGraphic(offerListGreyIcon);
-                        title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
-                        paymentsFilterMenu.setVisible(false);
-                        paymentsFilterMenu.setManaged(false);
-                        showOnlyMyMessagesHBox.setVisible(false);
-                        showOnlyMyMessagesHBox.setManaged(false);
-                    });
+                    collapseListView();
                 }
             }
         });
@@ -185,13 +194,15 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         showBuyFromOffersPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyFromOffers -> {
             if (showBuyFromOffers != null) {
-                offerDirectionFilterLabel.getStyleClass().clear();
+                String sellToLabelStyleClass = "sell-to-offers";
+                String buyFromLabelStyleClass = "buy-from-offers";
+                offerDirectionFilterMenu.getStyleClass().removeAll(sellToLabelStyleClass, buyFromLabelStyleClass);
                 if (showBuyFromOffers) {
-                    offerDirectionFilterLabel.setText(sellToOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("sell-to-offers");
+                    offerDirectionFilterMenu.getLabel().setText(sellToOffers.getLabelText());
+                    offerDirectionFilterMenu.getStyleClass().add(sellToLabelStyleClass);
                 } else {
-                    offerDirectionFilterLabel.setText(buyFromOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("buy-from-offers");
+                    offerDirectionFilterMenu.getLabel().setText(buyFromOffers.getLabelText());
+                    offerDirectionFilterMenu.getStyleClass().add(buyFromLabelStyleClass);
                 }
             }
         });
@@ -219,17 +230,34 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             }
         });
 
+        widthPropertyPin = EasyBind.subscribe(root.widthProperty(), widthProperty -> {
+            if (widthProperty != null && model.getShowOfferListExpanded() != null) {
+                if (widthProperty.intValue() == COLLAPSED_LIST_WIDTH && model.getShowOfferListExpanded().get()) {
+                    controller.onToggleOfferList();
+                }
+            }
+        });
+
         model.getAvailableMarketPayments().addListener(availablePaymentsChangeListener);
         updateMarketPaymentFilters();
         model.getSelectedMarketPayments().addListener(selectedPaymentsChangeListener);
         updatePaymentsSelection();
 
-        title.setOnMouseEntered(e -> title.setGraphic(offerListWhiteIcon));
-        title.setOnMouseClicked(e -> controller.toggleOfferList());
+        headline.setOnMouseEntered(e -> headline.setGraphic(offerListExpandedWhiteIcon));
+        headline.setOnMouseExited(e -> headline.setGraphic(offerListGreenIcon));
+        headline.setOnMouseClicked(e -> controller.onToggleOfferList());
+        collapseOfferListLabel.setOnMouseEntered(e -> collapseOfferListLabel.setGraphic(collapseOfferListWhiteIcon));
+        collapseOfferListLabel.setOnMouseExited(e -> collapseOfferListLabel.setGraphic(collapseOfferListGreyIcon));
+        collapseOfferListLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
+        expandOfferListLabel.setOnMouseEntered(e -> expandOfferListLabel.setGraphic(expandOfferListWhiteIcon));
+        expandOfferListLabel.setOnMouseExited(e -> expandOfferListLabel.setGraphic(expandOfferListGreyIcon));
+        expandOfferListLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
+        offerListCollapsedIconLabel.setOnMouseEntered(e -> offerListCollapsedIconLabel.setGraphic(offerListCollapsedWhiteIcon));
+        offerListCollapsedIconLabel.setOnMouseExited(e -> offerListCollapsedIconLabel.setGraphic(offerListGreyIcon));
+        offerListCollapsedIconLabel.setOnMouseClicked(e -> controller.onToggleOfferList());
+
         buyFromOffers.setOnAction(e -> controller.onSelectBuyFromFilter());
         sellToOffers.setOnAction(e -> controller.onSelectSellToFilter());
-
-        title.setTooltip(titleTooltip);
     }
 
     @Override
@@ -243,30 +271,63 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         activeMarketPaymentsCountPin.unsubscribe();
         isCustomPaymentsSelectedPin.unsubscribe();
         showMyOffersOnlyPin.unsubscribe();
+        widthPropertyPin.unsubscribe();
 
         model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
         model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
 
-        title.setOnMouseEntered(null);
-        title.setOnMouseExited(null);
-        title.setOnMouseClicked(null);
+        headline.setOnMouseEntered(null);
+        headline.setOnMouseExited(null);
+        headline.setOnMouseClicked(null);
+        collapseOfferListLabel.setOnMouseEntered(null);
+        collapseOfferListLabel.setOnMouseExited(null);
+        collapseOfferListLabel.setOnMouseClicked(null);
+        expandOfferListLabel.setOnMouseEntered(null);
+        expandOfferListLabel.setOnMouseExited(null);
+        expandOfferListLabel.setOnMouseClicked(null);
+        offerListCollapsedIconLabel.setOnMouseEntered(null);
+        offerListCollapsedIconLabel.setOnMouseExited(null);
+        offerListCollapsedIconLabel.setOnMouseClicked(null);
+
         buyFromOffers.setOnAction(null);
         sellToOffers.setOnAction(null);
 
-        title.setTooltip(null);
+        headline.setTooltip(null);
+        collapseOfferListLabel.setTooltip(null);
+        expandOfferListLabel.setTooltip(null);
+        offerListCollapsedIconLabel.setTooltip(null);
 
         cleanUpPaymentsFilterMenu();
     }
 
-    private DropdownMenu createAndGetOffersDirectionFilterMenu() {
-        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+    private void collapseListView() {
+        UIScheduler.run(this::applyCollapsedViewChanges).after(ManagedDuration.getSplitPaneAnimationDurationMillis());
+    }
+
+    private void applyCollapsedViewChanges() {
+        root.setMaxWidth(COLLAPSED_LIST_WIDTH);
+        root.setPrefWidth(COLLAPSED_LIST_WIDTH);
+        root.setMinWidth(COLLAPSED_LIST_WIDTH);
+        VBox.setMargin(content, new Insets(0, 0, 0, 2));
+        content.getStyleClass().remove("chat-container");
+        content.getStyleClass().add("collapsed-offer-list-container");
+    }
+
+    private void expandListView() {
+        root.setMaxWidth(Double.MAX_VALUE);
+        root.setMinWidth(COLLAPSED_LIST_WIDTH);
+        content.getStyleClass().remove("collapsed-offer-list-container");
+        content.getStyleClass().add("chat-container");
+        VBox.setMargin(content, new Insets(0, 0, 0, 4.5));
+    }
+
+    private SplitButton createAndGetOffersDirectionFilterMenu() {
+        SplitButton menu = new SplitButton("chevron-drop-menu-white", "chevron-drop-menu-white");
         menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
-        menu.setOpenToTheRight(true);
-        offerDirectionFilterLabel = new Label();
-        menu.setContent(offerDirectionFilterLabel);
         buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
         sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         menu.addMenuItems(buyFromOffers, sellToOffers);
+        HBox.setMargin(menu, new Insets(0, 0, 0, 6));
         return menu;
     }
 
@@ -283,12 +344,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         cleanUpPaymentsFilterMenu();
 
         model.getAvailableMarketPayments().forEach(payment -> {
-            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
+            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getPaymentRailName());
             Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
             paymentLabel.setGraphicTextGap(10);
             PaymentMenuItem paymentItem = new PaymentMenuItem(payment, paymentLabel);
             paymentItem.setHideOnClick(false);
-            paymentItem.setOnAction(e -> controller.togglePaymentFilter(payment, paymentItem.isSelected()));
+            paymentItem.setOnAction(e -> controller.onTogglePaymentFilter(payment, paymentItem.isSelected()));
             paymentsFilterMenu.addMenuItems(paymentItem);
         });
 
@@ -298,14 +359,14 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         customPaymentLabel.setGraphicTextGap(10);
         PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
         customItem.setHideOnClick(false);
-        customItem.setOnAction(e -> controller.toggleCustomPaymentFilter(customItem.isSelected()));
+        customItem.setOnAction(e -> controller.onToggleCustomPaymentFilter(customItem.isSelected()));
         paymentsFilterMenu.addMenuItems(customItem);
 
         SeparatorMenuItem separator = new SeparatorMenuItem();
         DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
                 Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.clearFilters"));
         clearFilters.setHideOnClick(false);
-        clearFilters.setOnAction(e -> controller.clearPaymentFilters());
+        clearFilters.setOnAction(e -> controller.onClearPaymentFilters());
         paymentsFilterMenu.addMenuItems(separator, clearFilters);
     }
 
@@ -335,7 +396,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         BisqTableColumn<OfferbookListItem> userProfileColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
-                .fixWidth(150)
+                .minWidth(150)
                 .setCellFactory(getUserProfileCellFactory())
                 .comparator(Comparator.comparingLong(OfferbookListItem::getTotalScore).reversed())
                 .build();
@@ -345,7 +406,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         BisqTableColumn<OfferbookListItem> priceColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                 .right()
-                .fixWidth(75)
+                .minWidth(75)
                 .setCellFactory(getPriceCellFactory())
                 .comparator((o1, o2) -> {
                     if (o1.getBisqEasyOffer().getDirection().isSell()) {
@@ -361,7 +422,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .titleProperty(model.getFiatAmountTitle())
                 .right()
-                .fixWidth(120)
+                .minWidth(120)
                 .setCellFactory(getFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferbookListItem::getQuoteSideMinAmount))
                 .build());
@@ -369,7 +430,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.paymentMethod"))
                 .right()
-                .fixWidth(105)
+                .minWidth(105)
                 .setCellFactory(getPaymentCellFactory())
                 .comparator(Comparator.comparing(OfferbookListItem::getFiatPaymentMethodsAsString))
                 .build());
@@ -377,7 +438,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.settlementMethod"))
                 .left()
-                .fixWidth(95)
+                .minWidth(95)
                 .setCellFactory(getSettlementCellFactory())
                 .comparator(Comparator.comparing(OfferbookListItem::getBitcoinPaymentMethodsAsString))
                 .build());
@@ -386,32 +447,21 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
-            private final Label userNameLabel = new Label();
-            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-            private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
-            private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
-
-            {
-                userNameLabel.setId("chat-user-name");
-                HBox.setMargin(userProfileIcon, new Insets(0, 0, 0, -1));
-                nameAndReputationBox.setAlignment(Pos.CENTER_LEFT);
-                userProfileBox.setAlignment(Pos.CENTER_LEFT);
-            }
+            private UserProfileDisplay userProfileDisplay;
 
             @Override
             protected void updateItem(OfferbookListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userNameLabel.setText(item.getUserNickname());
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    userProfileIcon.setUserProfile(item.getSenderUserProfile(), false);
-                    setGraphic(userProfileBox);
+                    userProfileDisplay = new UserProfileDisplay(item.getSenderUserProfile(), false, true);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    setGraphic(userProfileDisplay);
                 } else {
-                    userNameLabel.setText("");
-                    reputationScoreDisplay.setReputationScore(null);
-                    userProfileIcon.dispose();
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }
@@ -470,8 +520,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getPaymentCellFactory() {
         return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
+            private final HBox hbox = new HBox(8);
 
             {
                 hbox.setAlignment(Pos.CENTER_RIGHT);
@@ -483,19 +532,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
-                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
-                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
-                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(Joiner.on("\n").join(item.getFiatPaymentMethods().stream()
-                            .map(PaymentMethod::getDisplayString)
-                            .toList()));
-                    Tooltip.install(hbox, tooltip);
+                    BisqEasyViewUtils.addPaymentMethodsToHBox(item.getFiatPaymentMethods(), hbox);
                     setGraphic(hbox);
                 } else {
-                    Tooltip.uninstall(hbox, tooltip);
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
@@ -506,8 +545,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getSettlementCellFactory() {
         return column -> new TableCell<>() {
-            private final HBox hbox = new HBox(5);
-            private final BisqTooltip tooltip = new BisqTooltip();
+            private final HBox hbox = new HBox(8);
 
             {
                 hbox.setAlignment(Pos.CENTER_LEFT);
@@ -519,20 +557,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
-                    for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
-                        ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
-                        ColorAdjust colorAdjust = new ColorAdjust();
-                        colorAdjust.setBrightness(-0.2);
-                        icon.setEffect(colorAdjust);
-                        hbox.getChildren().add(icon);
-                    }
-                    tooltip.setText(Joiner.on("\n").join(item.getBitcoinPaymentMethods().stream()
-                            .map(PaymentMethod::getDisplayString)
-                            .toList()));
-                    Tooltip.install(hbox, tooltip);
+                    BisqEasyViewUtils.addSettlementMethodsToHBox(item.getBitcoinPaymentMethods(), hbox);
                     setGraphic(hbox);
                 } else {
-                    Tooltip.uninstall(hbox, tooltip);
                     hbox.getChildren().clear();
                     setGraphic(null);
                 }
@@ -552,10 +579,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             this.paymentMethod = Optional.ofNullable(paymentMethod);
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
-            initialize();
-        }
-
-        public void initialize() {
         }
 
         public void dispose() {

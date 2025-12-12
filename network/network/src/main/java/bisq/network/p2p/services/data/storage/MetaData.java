@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public final class MetaData implements NetworkProto {
     public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
+    public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
     public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);
     public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);

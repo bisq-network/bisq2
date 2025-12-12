@@ -17,13 +17,12 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.market.Market;
+import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,9 +44,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @Slf4j
 public final class PriceQuote implements Comparable<PriceQuote>, PersistableProto {
-    @Setter
-    private static String QUOTE_SEPARATOR = "/";
-
     private final long value;
     private final Monetary baseSideMonetary;
     private final Monetary quoteSideMonetary;
@@ -109,10 +105,10 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      * @return A PriceQuote object using 1 unit of the base asset.
      */
     public static PriceQuote fromPrice(double priceValue, String baseCurrencyCode, String quoteCurrencyCode) {
-        Monetary baseSideMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
+        Monetary baseSideMonetary = Asset.isFiat(baseCurrencyCode) ?
                 Fiat.fromFaceValue(1d, baseCurrencyCode) :
                 Coin.fromFaceValue(1d, baseCurrencyCode);
-        Monetary quoteSideMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
+        Monetary quoteSideMonetary = Asset.isFiat(quoteCurrencyCode) ?
                 Fiat.fromFaceValue(priceValue, quoteCurrencyCode) :
                 Coin.fromFaceValue(priceValue, quoteCurrencyCode);
 
@@ -124,10 +120,10 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
     }
 
     public static PriceQuote fromPrice(long priceValue, String baseCurrencyCode, String quoteCurrencyCode) {
-        Monetary baseSideMonetary = TradeCurrency.isFiat(baseCurrencyCode) ?
+        Monetary baseSideMonetary = Asset.isFiat(baseCurrencyCode) ?
                 Fiat.fromFaceValue(1d, baseCurrencyCode) :
                 Coin.fromFaceValue(1d, baseCurrencyCode);
-        Monetary quoteSideMonetary = TradeCurrency.isFiat(quoteCurrencyCode) ?
+        Monetary quoteSideMonetary = Asset.isFiat(quoteCurrencyCode) ?
                 Fiat.fromValue(priceValue, quoteCurrencyCode) :
                 Coin.fromValue(priceValue, quoteCurrencyCode);
 
@@ -138,7 +134,7 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      * Calculates the quote from the given monetary objects
      *
      * @param baseSideMonetary  The base side monetary
-     * @param quoteSideMonetary The quoteside  monetary
+     * @param quoteSideMonetary The quote side monetary
      * @return The PriceQuote
      */
     public static PriceQuote from(Monetary baseSideMonetary, Monetary quoteSideMonetary) {

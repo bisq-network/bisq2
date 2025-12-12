@@ -30,12 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.settings.DontShowAgainKey.HYPERLINKS_OPEN_IN_BROWSER;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class Browser {
-    public static final String HYPERLINKS_OPEN_IN_BROWSER = "hyperlinks.openInBrowser";
-
     @Nullable
     private static HostServices hostServices;
     private static SettingsService settingsService;
@@ -50,8 +49,7 @@ public class Browser {
     }
 
     public static void open(String url) {
-        String id = HYPERLINKS_OPEN_IN_BROWSER;
-        if (dontShowAgainService.showAgain(id)) {
+        if (dontShowAgainService.showAgain(HYPERLINKS_OPEN_IN_BROWSER)) {
             new Popup().headline(Res.get("hyperlinks.openInBrowser.attention.headline"))
                     .feedback(Res.get("hyperlinks.openInBrowser.attention", url))
                     .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
@@ -64,7 +62,7 @@ public class Browser {
                         settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, true);
                         doOpen(url);
                     })
-                    .dontShowAgainId(id)
+                    .dontShowAgainId(HYPERLINKS_OPEN_IN_BROWSER)
                     .show();
         } else if (settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false)) {
             doOpen(url);
@@ -80,7 +78,7 @@ public class Browser {
     }
 
     public static boolean hyperLinksGetCopiedWithoutPopup() {
-        return !dontShowAgainService.showAgain(Browser.HYPERLINKS_OPEN_IN_BROWSER) &&
+        return !dontShowAgainService.showAgain(HYPERLINKS_OPEN_IN_BROWSER) &&
                 !settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false);
     }
 

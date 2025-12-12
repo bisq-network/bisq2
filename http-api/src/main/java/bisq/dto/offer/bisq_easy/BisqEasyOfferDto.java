@@ -40,5 +40,8 @@ public record BisqEasyOfferDto(String id,
                                List<BitcoinPaymentMethodSpecDto> baseSidePaymentMethodSpecs,
                                List<FiatPaymentMethodSpecDto> quoteSidePaymentMethodSpecs,
                                List<OfferOptionDto> offerOptions,
-                               List<String> supportedLanguageCodes) {
+                               List<String> supportedLanguageCodes,
+                               int version,
+                               String tradeProtocolVersion,
+                               String appVersion) {
 }

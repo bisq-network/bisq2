@@ -27,13 +27,13 @@ public class Main {
     private static final String PASSPHRASE = "my_passphrase";
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Pair<Path, Boolean> dataDirAndStartArg = parseArgs(args);
-        if (!dataDirAndStartArg.getSecond()) {
+        Pair<Path, Boolean> dataDirPathAndStartArg = parseArgs(args);
+        if (!dataDirPathAndStartArg.getSecond()) {
             System.out.println("--start argument is missing.");
         }
 
-        Path dataDir = dataDirAndStartArg.getFirst();
-        new TorNetwork(dataDir)
+        Path dataDirPath = dataDirPathAndStartArg.getFirst();
+        new TorNetwork(dataDirPath)
                 .addDirAuth(PASSPHRASE)
                 .addDirAuth(PASSPHRASE)
                 .addDirAuth(PASSPHRASE)

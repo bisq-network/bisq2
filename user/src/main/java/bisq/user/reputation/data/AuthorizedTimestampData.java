@@ -36,6 +36,7 @@ import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
+// Data size: 49 bytes
 @Slf4j
 @EqualsAndHashCode
 @Getter

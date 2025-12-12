@@ -17,43 +17,46 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
-import bisq.trade.protocol.events.SendTradeMessageHandler;
 
 import java.security.GeneralSecurityException;
 
-public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+public class BisqEasyTakeOfferEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyTakeOfferEvent> {
+
+    private ContractSignatureData contractSignatureData;
 
     public BisqEasyTakeOfferEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyContract bisqEasyContract = trade.getContract();
+    public void process(BisqEasyTakeOfferEvent event) {
         try {
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract,
+            contractSignatureData = serviceProvider.getContractService().signContract(trade.getContract(),
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
-            commitToModel(contractSignatureData);
-            sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
-                    trade.getId(),
-                    trade.getProtocolVersion(),
-                    trade.getMyIdentity().getNetworkId(),
-                    trade.getPeer().getNetworkId(),
-                    bisqEasyContract,
-                    contractSignatureData));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void commitToModel(ContractSignatureData contractSignatureData) {
+    @Override
+    protected void commit() {
         trade.getTaker().getContractSignatureData().set(contractSignatureData);
+    }
+
+    @Override
+    protected void sendMessage() {
+        send(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
+                trade.getId(),
+                trade.getProtocolVersion(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                trade.getContract(),
+                contractSignatureData));
     }
 }

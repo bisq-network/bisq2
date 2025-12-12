@@ -25,7 +25,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.CompletableFutureUtils;
@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -80,6 +81,8 @@ public class BisqEasyService implements Service {
 
     private final Set<String> bannedAccountDataSet = new HashSet<>();
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
 
@@ -118,11 +121,14 @@ public class BisqEasyService implements Service {
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
                 supportService.getMediatorService(),
                 chatService.getBisqEasyOfferbookChannelService(),
-                settingsService);
+                settingsService,
+                tradeService.getBisqEasyTradeService(),
+                chatService.getBisqEasyOpenTradeChannelService());
 
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
+        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService, userService, bisqEasySellersReputationBasedTradeAmountService);
     }
 
 
@@ -140,7 +146,7 @@ public class BisqEasyService implements Service {
         settingsService.getCookie().asString(CookieKey.SELECTED_MARKET_CODES)
                 .flatMap(MarketRepository::findAnyFiatMarketByMarketCodes)
                 .ifPresentOrElse(marketPriceService::setSelectedMarket,
-                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefault()));
+                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket()));
 
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(market -> {
             if (market != null) {
@@ -171,6 +177,7 @@ public class BisqEasyService implements Service {
             }
         });
         return bisqEasySellersReputationBasedTradeAmountService.initialize()
+                .thenCompose(result -> bisqEasyOfferbookMessageService.initialize())
                 .thenCompose(result -> bisqEasyNotificationsService.initialize());
     }
 
@@ -183,9 +190,12 @@ public class BisqEasyService implements Service {
             selectedMarketPin.unbind();
             authorizedAlertDataSetPin.unbind();
         }
-
-        return getStorePendingMessagesInMailboxFuture()
-                .thenCompose(e -> bisqEasyNotificationsService.shutdown());
+        return getStorePendingMessagesInMailboxFuture().exceptionally(e -> false) // continue even if flush fails
+                .thenCompose(v -> CompletableFutureUtils.allOf( // shut down in parallel
+                        bisqEasyNotificationsService.shutdown().exceptionally(e -> false),
+                        bisqEasyOfferbookMessageService.shutdown().exceptionally(e -> false),
+                        bisqEasySellersReputationBasedTradeAmountService.shutdown().exceptionally(e -> false)))
+                .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
@@ -205,17 +215,23 @@ public class BisqEasyService implements Service {
     // We wait until all broadcast futures are completed or timeout if it takes longer as expected.
     private CompletableFuture<Boolean> getStorePendingMessagesInMailboxFuture() {
         return CompletableFutureUtils.allOf(getStorePendingMessagesInMailboxFutures())
-                .orTimeout(20, TimeUnit.SECONDS)
+                .orTimeout(5, TimeUnit.SECONDS)
                 .handle((broadcastResultList, throwable) -> {
                     if (throwable != null) {
                         log.warn("flushPendingMessagesToMailboxAtShutdown failed", throwable);
                         return false;
                     } else {
-                        log.info("All broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", broadcastResultList);
-                        try {
-                            // We delay a bit before continuing shutdown process. Usually we only have 1 pending message...
-                            Thread.sleep(100 + broadcastResultList.size() * 500L);
-                        } catch (InterruptedException ignore) {
+                        int size = broadcastResultList.size();
+                        if (size > 0) {
+                            log.info("All {} broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", size, broadcastResultList);
+                            try {
+                                // We delay up to 2 seconds before continuing shutdown process. Usually we only have 1 pending message...
+                                long delay = Math.min(2000, size * 300L);
+                                Thread.sleep(delay);
+                            } catch (InterruptedException e) {
+                                log.warn("Thread got interrupted at getStorePendingMessagesInMailboxFuture method", e);
+                                Thread.currentThread().interrupt(); // Restore interrupted state
+                            }
                         }
                         return true;
                     }
@@ -253,13 +269,13 @@ public class BisqEasyService implements Service {
 
     @VisibleForTesting
     static boolean isAccountDataBanned(Set<String> bannedAccountDataSet, String sellersAccountData) {
+        String sellersLowerCaseAccountData = sellersAccountData.toLowerCase(Locale.ROOT);
         // Format is account data of a user separated with |, and then comma separated attributes like name and account number
         return bannedAccountDataSet.stream()
                 .flatMap(data -> Stream.of(data.split("\\|")))
                 .flatMap(account -> Stream.of(account.split(",")))
-                .anyMatch(attribute -> {
-                    String trimmed = attribute.trim();
-                    return !trimmed.isEmpty() && sellersAccountData.contains(trimmed);
-                });
+                .map(attribute -> attribute.trim().toLowerCase(Locale.ROOT))
+                .filter(attribute -> !attribute.isEmpty())
+                .anyMatch(sellersLowerCaseAccountData::contains);
     }
 }

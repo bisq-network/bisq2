@@ -36,7 +36,7 @@ public class BitcoinAddressValidator extends ValidatorBase {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String address = textField.getText();
         if (address != null && !address.isEmpty()) {
-            hasErrors.set(!BitcoinAddressValidation.validateAddress(address));
+            hasErrors.set(!BitcoinAddressValidation.isValid(address));
         } else {
             hasErrors.set(false);
         }

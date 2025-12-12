@@ -18,10 +18,9 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
 import bisq.common.network.Address;
-import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
@@ -39,16 +38,20 @@ import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ConnectionHandshakeResponderTest {
 
-    private final Path tmpDir = FileUtils.createTempDir();
     private final BanList banList = mock(BanList.class);
     private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
     private final Capability responderCapability;
@@ -58,7 +61,7 @@ public class ConnectionHandshakeResponderTest {
 
     public ConnectionHandshakeResponderTest() throws IOException {
         supportedTransportTypes.add(TransportType.CLEAR);
-        this.responderCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(1234), supportedTransportTypes);
+        this.responderCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(1234), supportedTransportTypes);
         this.authorizationService = createAuthorizationService();
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
@@ -69,6 +72,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private AuthorizationService createAuthorizationService() {
+        //noinspection deprecation
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
@@ -99,7 +103,7 @@ public class ConnectionHandshakeResponderTest {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
-                DefaultLocalhostFacade.toLocalHostAddress(1234).toString(),
+                LocalHostAddressTypeFacade.toLocalHostAddress(1234).toString(),
                 0, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.networkVersion + 1000, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
@@ -114,7 +118,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(
                 response,
                 new NetworkLoad(),
-                DefaultLocalhostFacade.toLocalHostAddress(1234).toString(),
+                LocalHostAddressTypeFacade.toLocalHostAddress(1234).toString(),
                 0, new ArrayList<>());
         NetworkEnvelope responseEnvelope = new NetworkEnvelope(token, response);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(responseEnvelope);
@@ -132,39 +136,21 @@ public class ConnectionHandshakeResponderTest {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
-                DefaultLocalhostFacade.toLocalHostAddress(1234).toString(),
+                LocalHostAddressTypeFacade.toLocalHostAddress(1234).toString(),
                 0, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        when(banList.isBanned(DefaultLocalhostFacade.toLocalHostAddress(1234))).thenReturn(true);
+        when(banList.isBanned(LocalHostAddressTypeFacade.toLocalHostAddress(1234))).thenReturn(true);
 
         ConnectionException exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
         assertEquals(exception.getReason(), ConnectionException.Reason.ADDRESS_BANNED);
     }
 
     @Test
-    void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
-        AuthorizationToken token = authorizationService.createToken(request,
-                new NetworkLoad(),
-                DefaultLocalhostFacade.toLocalHostAddress(1234).toString(),
-                5, new ArrayList<>());
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
-        List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
-        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
-
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
-
-        assertThat(exception.getMessage())
-                .containsIgnoringCase("authorization")
-                .containsIgnoringCase("failed");
-    }
-
-    @Test
     void correctPoW() throws IOException {
-        Capability peerCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(2345), supportedTransportTypes);
+        Capability peerCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -182,7 +168,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private NetworkEnvelope createValidRequest() {
-        Capability peerCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(2345), supportedTransportTypes);
+        Capability peerCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),

@@ -21,12 +21,10 @@ import bisq.common.monetary.Coin;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallet.vo.Transaction;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Date;
 
 @Slf4j
 @Getter
@@ -36,23 +34,27 @@ public class WalletTransactionListItem implements DateTableItem {
     private final Transaction transaction;
 
     private final long date;
-    private final String dateString, timeString;
-    private final String txId;
-    private final String amountAsString;
-    private final String confirmationsAsString;
+    private final String dateTimeString, dateString, timeString, txId, amountAsString, numConfirmationsAsString,
+            trade, type, destinationAddress;
     private final Coin amount;
-    private final int confirmations;
+    private final int numConfirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
         this.transaction = transaction;
 
-        date = transaction.getDate().orElseGet(Date::new).getTime();
+        date = transaction.getDate().getTime();
+        dateTimeString = DateFormatter.formatDateTimeNoSeconds(date);
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         txId = transaction.getTxId();
         amount = Coin.asBtcFromValue(transaction.getAmount());
         amountAsString = AmountFormatter.formatBaseAmount(amount);
-        confirmations = transaction.getConfirmations();
-        confirmationsAsString = String.valueOf(confirmations);
+        numConfirmations = transaction.getNumConfirmations();
+        numConfirmationsAsString = String.valueOf(numConfirmations);
+
+        // TODO: Dummy for now
+        trade = "TUBDU32TH";
+        type = "Multisig payout";
+        destinationAddress = transaction.getOutputs().isEmpty() ? "" : transaction.getOutputs().get(0).getAddress();
     }
 }

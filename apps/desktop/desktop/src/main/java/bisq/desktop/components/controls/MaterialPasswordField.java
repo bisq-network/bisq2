@@ -106,18 +106,25 @@ public class MaterialPasswordField extends MaterialTextField {
 
             this.textField = textField;
             this.materialPasswordField = passwordField;
+            textField.getStyleClass().add("password-smaller-dots");
 
             // We get called from the constructor of passwordField, some fields might not be initiated yet,
             // so we need to take care of which fields we access.
             passwordField.isMaskedProperty().addListener(new WeakChangeListener<>(passwordFieldIsMaskedListener));
             iconButton = passwordField.getIconButton();
+            iconButton.getStyleClass().add("password-eye-icon");
             iconButton.setOnAction(e -> {
                 boolean isMasked = !passwordField.isMasked();
                 passwordField.setIsMasked(isMasked);
                 handleIsMaskedChange(isMasked);
-            });
 
-            UIThread.runOnNextRenderFrame(() -> passwordField.setIcon(AwesomeIcon.EYE_OPEN));
+                if (isMasked) {
+                    textField.getStyleClass().add("password-smaller-dots");
+                } else {
+                    textField.getStyleClass().remove("password-smaller-dots");
+                }
+            });
+            UIThread.runOnNextRenderFrame(() -> passwordField.setIcon(AwesomeIcon.EYE_CLOSE));
         }
 
         private void handleIsMaskedChange(boolean isMasked) {

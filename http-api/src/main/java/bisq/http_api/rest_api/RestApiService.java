@@ -18,38 +18,34 @@
 package bisq.http_api.rest_api;
 
 import bisq.common.application.Service;
+import bisq.http_api.ApiTorOnionService;
+import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.util.StaticFileHandler;
+import bisq.network.NetworkService;
+import bisq.security.SecurityService;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case RestAPI
+ * is used without websockets
  */
 @Slf4j
 public class RestApiService implements Service {
     @Getter
-    public static class Config {
-        private final boolean enabled;
-        private final String protocol;
-        private final String host;
-        private final int port;
-        private final boolean localhostOnly;
-        private final List<String> whiteListEndPoints;
-        private final List<String> blackListEndPoints;
-        private final List<String> supportedAuth;
-        private final String restApiBaseAddress;
-        private final String restApiBaseUrl;
-
+    public static class Config extends CommonApiConfig {
         public Config(boolean enabled,
                       String protocol,
                       String host,
@@ -57,18 +53,9 @@ public class RestApiService implements Service {
                       boolean localhostOnly,
                       List<String> whiteListEndPoints,
                       List<String> blackListEndPoints,
-                      List<String> supportedAuth) {
-            this.enabled = enabled;
-            this.protocol = protocol;
-            this.host = host;
-            this.port = port;
-            this.localhostOnly = localhostOnly;
-            this.whiteListEndPoints = whiteListEndPoints;
-            this.blackListEndPoints = blackListEndPoints;
-            this.supportedAuth = supportedAuth;
-
-            restApiBaseAddress = protocol + host + ":" + port;
-            restApiBaseUrl = restApiBaseAddress + REST_API_BASE_PATH;
+                      List<String> supportedAuth,
+                      String password) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password);
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -81,20 +68,26 @@ public class RestApiService implements Service {
                     config.getBoolean("localhostOnly"),
                     config.getStringList("whiteListEndPoints"),
                     config.getStringList("blackListEndPoints"),
-                    config.getStringList("supportedAuth")
+                    config.getStringList("supportedAuth"),
+                    config.getString("password")
             );
         }
     }
 
-    public static final String REST_API_BASE_PATH = "/api/v1";
     private final RestApiService.Config config;
     private final BaseRestApiResourceConfig restApiResourceConfig;
+    private final ApiTorOnionService apiTorOnionService;
     private Optional<HttpServer> httpServer = Optional.empty();
 
     public RestApiService(Config config,
-                          BaseRestApiResourceConfig restApiResourceConfig) {
+                          BaseRestApiResourceConfig restApiResourceConfig,
+                          Path appDataDirPath,
+                          SecurityService securityService,
+                          NetworkService networkService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
+
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "restApiServer");
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
             String host = config.getHost();
@@ -107,12 +100,13 @@ public class RestApiService implements Service {
     public CompletableFuture<Boolean> initialize() {
         if (config.isEnabled()) {
             return CompletableFuture.supplyAsync(() -> {
-                HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBaseUrl()), restApiResourceConfig);
-                httpServer = Optional.of(server);
-                addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
-                log.info("Server started at {}.", config.getRestApiBaseUrl());
-                return true;
-            });
+                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBaseUrl()), restApiResourceConfig);
+                        httpServer = Optional.of(server);
+                        addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
+                        log.info("Server started at {}.", config.getRestApiBaseUrl());
+                        return true;
+                    }, commonForkJoinPool())
+                    .thenCompose(result -> apiTorOnionService.initialize());
         } else {
             return CompletableFuture.completedFuture(true);
         }
@@ -123,7 +117,7 @@ public class RestApiService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             httpServer.ifPresent(httpServer -> httpServer.stop(1));
             return true;
-        });
+        }, commonForkJoinPool());
     }
 
     public void addStaticFileHandler(String path, StaticFileHandler handler) {

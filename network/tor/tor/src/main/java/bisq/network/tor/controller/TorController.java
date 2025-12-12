@@ -1,7 +1,7 @@
 package bisq.network.tor.controller;
 
 import bisq.common.observable.Observable;
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.security.keys.TorKeyPair;
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +18,14 @@ public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
-    private final Observable<BootstrapEvent> bootstrapEvent;
+    private final Observable<TorBootstrapEvent> bootstrapEvent;
     private final long isOnlineTimeout = TimeUnit.SECONDS.toMillis(30); // in ms
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new ConcurrentHashMap<>();
     private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
     private volatile boolean isShutdownInProgress;
 
-    public TorController(int bootstrapTimeout, int hsUploadTimeout, Observable<BootstrapEvent> bootstrapEvent) {
+    public TorController(int bootstrapTimeout, int hsUploadTimeout, Observable<TorBootstrapEvent> bootstrapEvent) {
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;
         this.bootstrapEvent = bootstrapEvent;
@@ -50,10 +50,16 @@ public class TorController {
     }
 
     public void shutdown() {
+        if (isShutdownInProgress) {
+            return;
+        }
         isShutdownInProgress = true;
         bootstrapService.ifPresent(BootstrapService::shutdown);
+        bootstrapService = Optional.empty();
         publishOnionAddressServiceMap.values().forEach(PublishOnionAddressService::shutdown);
+        publishOnionAddressServiceMap.clear();
         onionServiceOnlineStateServiceMap.values().forEach(OnionServiceOnlineStateService::shutdown);
+        onionServiceOnlineStateServiceMap.clear();
         torControlProtocol.close();
     }
 
@@ -107,7 +113,7 @@ public class TorController {
         return future;
     }
 
-    public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
+    public CompletableFuture<Boolean> isOnionServiceOnlineAsync(String onionAddress) {
         if (isShutdownInProgress) {
             return CompletableFuture.completedFuture(false);
         }
@@ -116,7 +122,7 @@ public class TorController {
         }
 
         OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
-        CompletableFuture<Boolean> future = onionServiceOnlineStateService.isOnionServiceOnline();
+        CompletableFuture<Boolean> future = onionServiceOnlineStateService.isOnionServiceOnlineAsync();
         future.whenComplete((r, t) -> onionServiceOnlineStateServiceMap.remove(onionAddress));
         onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
         return future;

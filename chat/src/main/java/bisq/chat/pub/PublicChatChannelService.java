@@ -17,7 +17,11 @@
 
 package bisq.chat.pub;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelService;
+import bisq.chat.ChatMessage;
+import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.observable.Pin;
@@ -26,7 +30,6 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
@@ -47,9 +50,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
         S extends PersistableStore<S>, R extends ChatMessageReaction> extends ChatChannelService<M, C, S> implements DataService.Listener {
 
-    private boolean initialized = false;
-    private boolean allInventoryDataReceived = false;
-    private final Set<Pin> allInventoryDataReceivedPins = new HashSet<>();
+    private final Set<Pin> initialInventoryRequestsCompletedPins = new HashSet<>();
+    private volatile boolean initialized = false;
+    private volatile boolean initialInventoryRequestsCompleted = false;
 
     public PublicChatChannelService(NetworkService networkService,
                                     UserService userService,
@@ -64,6 +67,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        if (initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         maybeAddDefaultChannels();
 
         networkService.addDataServiceListener(this);
@@ -72,24 +79,28 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type)
-                        .flatMap(ServiceNode::getInventoryService).stream()
-                        .map(InventoryService::getInventoryRequestService)
-                        .forEach(inventoryRequestService -> {
-                            Pin pin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
-                                if (allDataReceived) {
-                                    allInventoryDataReceived = true;
+                        .flatMap(ServiceNode::getInventoryService)
+                        .ifPresent(inventoryService -> {
+                            Pin pin = inventoryService.getInitialInventoryRequestsCompleted().addObserver(initialInventoryRequestsCompleted -> {
+                                if (initialInventoryRequestsCompleted) {
+                                    this.initialInventoryRequestsCompleted = true;
                                 }
                             });
-                            allInventoryDataReceivedPins.add(pin);
+                            initialInventoryRequestsCompletedPins.add(pin);
                         }));
-        initialized= true;
+        initialized = true;
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        allInventoryDataReceivedPins.forEach(Pin::unbind);
-        allInventoryDataReceivedPins.clear();
+        if (!initialized) {
+            return CompletableFuture.completedFuture(true);
+        }
+        initialized = false;
+        initialInventoryRequestsCompleted = false;
+        initialInventoryRequestsCompletedPins.forEach(Pin::unbind);
+        initialInventoryRequestsCompletedPins.clear();
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -112,17 +123,13 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         String authorUserProfileId = message.getAuthorUserProfileId();
 
         // For rate limit violation we let the user know that his message was not sent, by not inserting the message.
-        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
+        checkArgument(!bannedUserService.isRateLimitExceeding(authorUserProfileId), "Rate limit was exceeding");
 
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
 
         // For banned users we hide that their message is not published by inserting it to their local message list.
-        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
+        checkArgument(!bannedUserService.isUserProfileBanned(authorUserProfileId), "User profile is banned");
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.publishAuthenticatedData(message, keyPair);
@@ -230,7 +237,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         // If we receive the message from the network after inventory requests are completed, we use our local receive time.
         // Otherwise, at batch processing inventory data we use the senders date.
         // Using the senders date for all cases would add risk for abuse by manipulating the date.
-        long timestamp = allInventoryDataReceived && initialized ? System.currentTimeMillis() : messageDate;
+        long timestamp = initialInventoryRequestsCompleted && initialized ? System.currentTimeMillis() : messageDate;
         bannedUserService.checkRateLimit(authorUserProfileId, timestamp);
     }
 }

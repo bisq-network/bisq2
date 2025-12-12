@@ -17,25 +17,32 @@
 
 package bisq.desktop.common.standby;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.sound.sampled.*;
-import java.io.File;
+import javax.annotation.Nullable;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
 class SoundPlayer implements PreventStandbyMode {
-    private final String baseDir;
+    private final Path appDataDirPath;
     private volatile boolean isPlaying;
+    @Nullable
     private ExecutorService executor;
 
     SoundPlayer(ServiceProvider serviceProvider) {
-        baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
+        appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
     }
 
     public void initialize() {
@@ -48,24 +55,28 @@ class SoundPlayer implements PreventStandbyMode {
     }
 
     public void shutdown() {
+        if (!isPlaying) {
+            return;
+        }
         isPlaying = false;
         if (executor != null) {
             ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+            executor = null;
         }
     }
 
     private void playSound() {
         try {
             String fileName = "prevent-app-nap-silent-sound.aiff";
-            File soundFile = Path.of(baseDir, fileName).toFile();
-            if (!soundFile.exists()) {
-                FileUtils.resourceToFile(fileName, soundFile);
+            Path soundFilePath = appDataDirPath.resolve(fileName);
+            if (!Files.exists(soundFilePath)) {
+                FileMutatorUtils.resourceToFile(fileName, soundFilePath);
             }
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;
             while (isPlaying) {
                 try {
-                    audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                    audioInputStream = AudioSystem.getAudioInputStream(soundFilePath.toFile());
                     sourceDataLine = getSourceDataLine(audioInputStream.getFormat());
                     byte[] tempBuffer = new byte[8192];
                     sourceDataLine.open(audioInputStream.getFormat());
@@ -91,7 +102,8 @@ class SoundPlayer implements PreventStandbyMode {
                 }
             }
         } catch (Exception e) {
-            log.error("playSound failed", e);
+            log.error("playSound failed; disabling standby prevention until reinitialized", e);
+            shutdown();
         }
     }
 

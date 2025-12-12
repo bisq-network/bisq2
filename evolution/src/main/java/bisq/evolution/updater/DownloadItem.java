@@ -23,12 +23,15 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static bisq.evolution.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.ASC_EXTENSION;
+import static bisq.evolution.updater.UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX;
+import static bisq.evolution.updater.UpdaterUtils.GITHUB_DOWNLOAD_URL;
+import static bisq.evolution.updater.UpdaterUtils.PUB_KEYS_URL;
+import static bisq.evolution.updater.UpdaterUtils.SIGNING_KEY_FILE;
 
 @Slf4j
 @ToString
@@ -37,41 +40,41 @@ import static bisq.evolution.updater.UpdaterUtils.*;
 public class DownloadItem {
 
     static List<DownloadItem> createDescriptorList(String version,
-                                                   String destinationDirectory,
+                                                   Path destinationDirPath,
                                                    String fileName,
                                                    List<String> keys) {
         String baseUrl = GITHUB_DOWNLOAD_URL + version + "/";
         List<DownloadItem> downloadItems = new ArrayList<>();
-        downloadItems.add(create(SIGNING_KEY_FILE, baseUrl, destinationDirectory));
+        downloadItems.add(create(SIGNING_KEY_FILE, baseUrl, destinationDirPath));
         for (String key : keys) {
-            String keyFileName = key + EXTENSION;
-            downloadItems.add(create(keyFileName, baseUrl, destinationDirectory));
-            downloadItems.add(create(keyFileName, FROM_BISQ_WEBPAGE_PREFIX + keyFileName, PUB_KEYS_URL, destinationDirectory));
+            String keyFileName = key + ASC_EXTENSION;
+            downloadItems.add(create(keyFileName, baseUrl, destinationDirPath));
+            downloadItems.add(create(keyFileName, FROM_BISQ_WEBPAGE_PREFIX + keyFileName, PUB_KEYS_URL, destinationDirPath));
         }
-        downloadItems.add(create(fileName + EXTENSION, baseUrl, destinationDirectory));
-        downloadItems.add(create(fileName, baseUrl, destinationDirectory));
+        downloadItems.add(create(fileName + ASC_EXTENSION, baseUrl, destinationDirPath));
+        downloadItems.add(create(fileName, baseUrl, destinationDirPath));
         return downloadItems;
     }
 
-    public static DownloadItem create(String fileName, String baseUrl, String destinationDirectory) {
-        return create(fileName, fileName, baseUrl, destinationDirectory);
+    public static DownloadItem create(String fileName, String baseUrl, Path destinationDirPath) {
+        return create(fileName, fileName, baseUrl, destinationDirPath);
     }
 
-    private static DownloadItem create(String sourceFileName, String destinationFileName, String baseUrl, String destinationDirectory) {
-        File destination = Path.of(destinationDirectory, destinationFileName).toFile();
+    private static DownloadItem create(String sourceFileName, String destinationFileName, String baseUrl, Path destinationDirPath) {
+        Path destinationFilePath = destinationDirPath.resolve(destinationFileName);
         String urlPath = baseUrl + sourceFileName;
-        return new DownloadItem(urlPath, destination, sourceFileName);
+        return new DownloadItem(urlPath, destinationFilePath, sourceFileName);
     }
 
     private final String urlPath;
-    private final File destinationFile;
+    private final Path destinationFilePath;
     private final String sourceFileName;
     @ToString.Exclude
     private final Observable<Double> progress = new Observable<>(-1d);
 
-    private DownloadItem(String urlPath, File destinationFile, String sourceFileName) {
+    private DownloadItem(String urlPath, Path destinationFilePath, String sourceFileName) {
         this.urlPath = urlPath;
-        this.destinationFile = destinationFile;
+        this.destinationFilePath = destinationFilePath;
         this.sourceFileName = sourceFileName;
     }
 }

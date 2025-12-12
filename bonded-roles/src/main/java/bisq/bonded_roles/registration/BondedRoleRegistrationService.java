@@ -22,16 +22,15 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
-import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -43,22 +42,6 @@ public class BondedRoleRegistrationService implements Service {
     public BondedRoleRegistrationService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
     }
 
 

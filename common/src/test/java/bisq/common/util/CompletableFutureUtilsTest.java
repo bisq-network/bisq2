@@ -8,7 +8,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
 public class CompletableFutureUtilsTest {
@@ -66,9 +70,10 @@ public class CompletableFutureUtilsTest {
                 return val;
             } catch (InterruptedException e) {
                 log.error("Interrupted: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 return false;
             }
-        });
+        }, commonForkJoinPool());
     }
 
     private CompletableFuture<Void> createCompletableFuture(long sleepMs, String msg) {
@@ -78,8 +83,9 @@ public class CompletableFutureUtilsTest {
                 log.info("{} (waited {} ms)", msg, sleepMs);
             } catch (InterruptedException e) {
                 log.error("Interrupted: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
-        });
+        }, commonForkJoinPool());
     }
 
     @Test
@@ -129,7 +135,7 @@ public class CompletableFutureUtilsTest {
 
         Exception exception = assertThrows(ExecutionException.class, () ->
                 CompletableFutureUtils.allOf(future_1, future_2, future_3).whenComplete((r, t) -> {
-        }).get());
+                }).get());
         assertEquals(exception.getCause().getClass(), RuntimeException.class);
     }
 
@@ -198,9 +204,10 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 return value;
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     private CompletableFuture<Integer> createFailingIntegerFuture(long sleepMs, int value) {
@@ -209,8 +216,9 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 throw new RuntimeException("forced failure");
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 }

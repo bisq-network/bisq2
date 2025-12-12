@@ -5,7 +5,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -25,6 +25,7 @@ dependencies {
     implementation("bisq:trade")
     implementation("bisq:bonded-roles")
     implementation("bisq:settings")
+    implementation("bisq:burningman")
     implementation("bisq:user")
     implementation("bisq:chat")
     implementation("bisq:support")
@@ -34,10 +35,9 @@ dependencies {
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
     implementation("bisq:http-api")
+    implementation("bisq:wallet")
 
     implementation("network:network")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)

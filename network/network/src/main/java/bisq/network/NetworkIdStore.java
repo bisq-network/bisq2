@@ -22,22 +22,23 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
+final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, NetworkId> networkIdByTag = new ConcurrentHashMap<>();
 
-    public NetworkIdStore() {
-    }
-
-    public NetworkIdStore(Map<String, NetworkId> networkIdByTag) {
+    NetworkIdStore(Map<String, NetworkId> networkIdByTag) {
         this.networkIdByTag.putAll(networkIdByTag);
     }
 
@@ -80,11 +81,7 @@ public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
 
     @Override
     public NetworkIdStore getClone() {
-        return new NetworkIdStore(new HashMap<>(networkIdByTag));
-    }
-
-    Map<String, NetworkId> getNetworkIdByTag() {
-        return networkIdByTag;
+        return new NetworkIdStore(Map.copyOf(networkIdByTag));
     }
 
     Optional<NetworkId> findNetworkId(String tag) {

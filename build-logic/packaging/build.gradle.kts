@@ -17,6 +17,5 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation("bitcoind-build-logic:gradle-tasks")
     implementation(libs.commons.codec)
 }

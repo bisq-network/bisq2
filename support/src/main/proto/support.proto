@@ -7,6 +7,7 @@ import "chat.proto";
 import "offer.proto";
 import "contract.proto";
 import "network.proto";
+import "network_identity.proto";
 
 message MediationRequest {
   string tradeId = 1;
@@ -14,7 +15,9 @@ message MediationRequest {
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
+  optional network.identity.NetworkId mediatorNetworkId = 6;
 }
+
 message MediatorsResponse {
   string tradeId = 1;
 }
@@ -36,6 +39,15 @@ message ReportToModeratorMessage {
   string message = 4;
   chat.ChatChannelDomain chatChannelDomain = 5;
 }
+
+message BannedUserModeratorData {
+  string reporterUserProfileId = 1;
+  string accusedUserProfileId = 2;
+  string reportersMessage = 3;
+  string banReason = 4;
+}
+
 message ModeratorStore {
   repeated ReportToModeratorMessage reportToModeratorMessages = 1;
+  repeated BannedUserModeratorData bannedUserModeratorData = 2;
 }

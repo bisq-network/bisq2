@@ -1,0 +1,507 @@
+{
+  "bitstampTs": 1756866648000,
+  "bitstampCount": 7,
+  "btcmarketsTs": 1756866648000,
+  "btcmarketsCount": 3,
+  "coingeckoTs": 1756866647749,
+  "coingeckoCount": 60,
+  "btcAverageTs": 0,
+  "btcAverageCount": 1,
+  "binanceTs": 1756866601855,
+  "binanceCount": 22,
+  "poloniexTs": 1756866647896,
+  "poloniexCount": 8,
+  "independentreserveTs": 1756868639233,
+  "independentreserveCount": 3,
+  "krakenTs": 1756866648751,
+  "krakenCount": 15,
+  "bitflyerTs": 1756866647727,
+  "bitflyerCount": 2,
+  "coinmarketcapTs": 0,
+  "coinmarketcapCount": 1,
+  "cryptoyaTs": 1756866647786,
+  "cryptoyaCount": 11,
+  "coinbaseproTs": 0,
+  "coinbaseproCount": 0,
+  "paribuTs": 1756866648433,
+  "paribuCount": 1,
+  "bitfinexTs": 1756866648225,
+  "bitfinexCount": 11,
+  "lunoTs": 1756866644907,
+  "lunoCount": 4,
+  "yadioTs": 1756866603467,
+  "yadioCount": 6,
+  "coinoneTs": 1756866648000,
+  "coinoneCount": 1,
+  "mercadobitcoinTs": 1756866645000,
+  "mercadobitcoinCount": 1,
+  "data": [
+    {
+      "currencyCode": "AED",
+      "price": 409018.425,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "AMD",
+      "price": 42609142.299,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "ARS",
+      "price": 153237297.1884155,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "AUD",
+      "price": 170733.412,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "BAM",
+      "price": 187236.106,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "BDT",
+      "price": 13546326.855,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "BHD",
+      "price": 41976.149,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "BMD",
+      "price": 111373.295,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "BOB",
+      "price": 1233064.3850999998,
+      "timestampSec": 1756866603467,
+      "provider": "YADIO"
+    },
+    {
+      "currencyCode": "BRL",
+      "price": 610365,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "CAD",
+      "price": 153500.83250000002,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "CHF",
+      "price": 89667.82949999999,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "CLP",
+      "price": 108437494.955,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "CNY",
+      "price": 794180.692,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "COP",
+      "price": 447414427.921,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "CRC",
+      "price": 56302221.623,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "CZK",
+      "price": 2343561.422,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "DAI",
+      "price": 0.00000899,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "DASH",
+      "price": 0.00021045,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "DCR",
+      "price": 0.000129,
+      "timestampSec": 1756866647896,
+      "provider": "POLO"
+    },
+    {
+      "currencyCode": "DKK",
+      "price": 714467.483,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "DOGE",
+      "price": 0.0000019274999999999998,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "DOP",
+      "price": 6995316.1513,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "EGP",
+      "price": 5482513.9146,
+      "timestampSec": 1756866603467,
+      "provider": "YADIO"
+    },
+    {
+      "currencyCode": "ETC",
+      "price": 0.00018715,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "ETH",
+      "price": 0.03904774,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "EUR",
+      "price": 95687.865,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "GBP",
+      "price": 83266.439,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "GEL",
+      "price": 300151.03,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "GTQ",
+      "price": 853562.149,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "HKD",
+      "price": 869868.312,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "HNL",
+      "price": 2935375.613,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "HUF",
+      "price": 37867273.023,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "IDR",
+      "price": 1831680695.839,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "ILS",
+      "price": 377449.665,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "INR",
+      "price": 9807543.496,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "JPY",
+      "price": 16570880.3915,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "KES",
+      "price": 14422841.703,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "KRW",
+      "price": 155036684.3815,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "KWD",
+      "price": 34077.555,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "LBP",
+      "price": 9974575300.15,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "LKR",
+      "price": 33653047.313,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "LTC",
+      "price": 0.00100343,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "MMK",
+      "price": 233772546.23,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "MXN",
+      "price": 2089790.8385,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "MYR",
+      "price": 471331.36199999996,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "NGN",
+      "price": 170607069.10549998,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "NOK",
+      "price": 1117286.315,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "NON_EXISTING_SYMBOL",
+      "price": 0,
+      "timestampSec": 0,
+      "provider": "CMC"
+    },
+    {
+      "currencyCode": "NON_EXISTING_SYMBOL_BA",
+      "price": 0,
+      "timestampSec": 0,
+      "provider": "BA"
+    },
+    {
+      "currencyCode": "NZD",
+      "price": 189440.5135,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "PEN",
+      "price": 393647.575,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "PHP",
+      "price": 6401737.22,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "PIVX",
+      "price": 0.00000121,
+      "timestampSec": 1756866601855,
+      "provider": "BINANCE"
+    },
+    {
+      "currencyCode": "PKR",
+      "price": 31515040.119,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "PLN",
+      "price": 407496.148,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "PYG",
+      "price": 798702696.5478,
+      "timestampSec": 1756866603467,
+      "provider": "YADIO"
+    },
+    {
+      "currencyCode": "RON",
+      "price": 484502.315,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "RUB",
+      "price": 8970970.229,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "SAR",
+      "price": 417913.811,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "SEK",
+      "price": 1054064.707,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "SGD",
+      "price": 143583.231,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "SVC",
+      "price": 974378.117,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "THB",
+      "price": 3608890.801,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "TRY",
+      "price": 4575548.721333333,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "TUSD",
+      "price": 0.00000895,
+      "timestampSec": 1756866643851,
+      "provider": "BINANCE"
+    },
+    {
+      "currencyCode": "TWD",
+      "price": 3424060.359,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "UAH",
+      "price": 4687125.449,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "USD",
+      "price": 111393.92375,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "USDC",
+      "price": 0.00000898,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "USDT-E",
+      "price": 0.00000898,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "VND",
+      "price": 2937060284.669,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    },
+    {
+      "currencyCode": "XMR",
+      "price": 0.002406,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "ZAR",
+      "price": 1975138.941,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "ZEC",
+      "price": 0.00036503,
+      "timestampSec": 1756866655161,
+      "provider": "Bisq-Aggregate"
+    },
+    {
+      "currencyCode": "ZEN",
+      "price": 0.00006329,
+      "timestampSec": 1756866644766,
+      "provider": "BINANCE"
+    },
+    {
+      "currencyCode": "ZMW",
+      "price": 2638670.361,
+      "timestampSec": 1756866647749,
+      "provider": "COINGECKO"
+    }
+  ],
+  "bitcoinFeesTs": 1756866655,
+  "bitcoinFeeInfo": {
+    "btcTxFee": 10,
+    "btcMinTxFee": 1
+  }
+}

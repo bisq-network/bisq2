@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab2;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;

@@ -23,9 +23,9 @@ import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -131,19 +131,19 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
 
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.BisqEasyContract bisqEasyContractProto = twoPartyContractProto.getBisqEasyContract();
+        bisq.contract.protobuf.BisqEasyContract bisqEasyContract = twoPartyContractProto.getBisqEasyContract();
         return new BisqEasyContract(proto.getTakeOfferDate(),
                 BisqEasyOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()),
-                bisqEasyContractProto.getBaseSideAmount(),
-                bisqEasyContractProto.getQuoteSideAmount(),
-                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContractProto.getBaseSidePaymentMethodSpec()),
-                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContractProto.getQuoteSidePaymentMethodSpec()),
-                bisqEasyContractProto.hasMediator() ?
-                        Optional.of(UserProfile.fromProto(bisqEasyContractProto.getMediator())) :
+                bisqEasyContract.getBaseSideAmount(),
+                bisqEasyContract.getQuoteSideAmount(),
+                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContract.getBaseSidePaymentMethodSpec()),
+                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContract.getQuoteSidePaymentMethodSpec()),
+                bisqEasyContract.hasMediator() ?
+                        Optional.of(UserProfile.fromProto(bisqEasyContract.getMediator())) :
                         Optional.empty(),
-                PriceSpec.fromProto(bisqEasyContractProto.getPriceSpec()),
-                bisqEasyContractProto.getMarketPrice());
+                PriceSpec.fromProto(bisqEasyContract.getPriceSpec()),
+                bisqEasyContract.getMarketPrice());
     }
 }

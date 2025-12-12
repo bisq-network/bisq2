@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.identity.Identity;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -28,12 +29,11 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
@@ -42,26 +42,27 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TimestampService implements Service, PersistenceClient<TimestampStore>,
-        ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
+public class TimestampService extends RateLimitedPersistenceClient<TimestampStore>
+        implements Service, ConfidentialMessageService.Listener, AuthorizedBondedRolesService.Listener {
     @Getter
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter
     private final Persistence<TimestampStore> persistence;
     private final boolean staticPublicKeysProvided;
+    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    @Setter
-    private Identity identity;
 
     public TimestampService(PersistenceService persistenceService,
+                            IdentityService identityService,
                             NetworkService networkService,
                             AuthorizedBondedRolesService authorizedBondedRolesService,
                             PrivateKey authorizedPrivateKey,
                             PublicKey authorizedPublicKey,
                             boolean staticPublicKeysProvided) {
+        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
@@ -101,7 +102,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
@@ -144,7 +145,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         String profileId = request.getProfileId();
         long date;
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
-            date = new Date().getTime();
+            date = System.currentTimeMillis();
             persistableStore.getTimestampsByProfileId().put(profileId, date);
             persist();
         } else {
@@ -157,6 +158,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        Identity identity = identityService.getOrCreateDefaultIdentity();
         return networkService.publishAuthorizedData(data,
                         identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,

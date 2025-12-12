@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.util.ByteArrayUtils;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.Scanner;
 
 /**
  * Generates a combination of and adverb + adjective + noun + a number from a given hash as input (hash of pubKey).
- * Number of combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
+ * Number of combinations: 4832 * 450 * 12591 * 1000 = 27377870400000 (2 ^ 44.6)
  * Algorithm and word lists borrowed from: <a href="https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/">Reckless-Satoshi</a>
  */
 @Slf4j
@@ -84,7 +84,7 @@ public class NymIdGenerator {
     @VisibleForTesting
     static List<String> read(String resource) {
         List<String> list = new ArrayList<>();
-        try (Scanner scanner = new Scanner(FileUtils.getResourceAsStream(resource))) {
+        try (Scanner scanner = new Scanner(FileReaderUtils.getResourceAsStream(resource))) {
             while (scanner.hasNextLine()) {
                 list.add(scanner.nextLine());
             }

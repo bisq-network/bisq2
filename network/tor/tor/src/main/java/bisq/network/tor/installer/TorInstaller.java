@@ -17,20 +17,22 @@
 
 package bisq.network.tor.installer;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Slf4j
 public class TorInstaller {
     private static final String VERSION = "0.1.0";
-    private final TorInstallationFiles torInstallationFiles;
+    private final Path torDirPath;
+    private final Path versionFilePath;
 
-    public TorInstaller(Path torDataDirPath) {
-        this.torInstallationFiles = new TorInstallationFiles(torDataDirPath);
+    public TorInstaller(Path torDirPath) {
+        this.torDirPath = torDirPath;
+        this.versionFilePath = this.torDirPath.resolve("version");
     }
 
     public void installIfNotUpToDate() {
@@ -44,28 +46,26 @@ public class TorInstaller {
     }
 
     public void deleteVersionFile() {
-        File versionFile = torInstallationFiles.getVersionFile();
-        boolean isSuccess = versionFile.delete();
-        if (isSuccess) {
-            log.debug("Deleted {}", versionFile.getAbsolutePath());
+        try {
+            Files.deleteIfExists(versionFilePath);
+            log.debug("Deleted {}", versionFilePath.toAbsolutePath());
+        } catch (IOException e) {
+            log.warn("Couldn't delete version file {}", versionFilePath.toAbsolutePath(), e);
         }
     }
 
     private boolean isTorUpToDate() throws IOException {
-        File versionFile = torInstallationFiles.getVersionFile();
-        return versionFile.exists() && VERSION.equals(FileUtils.readStringFromFile(versionFile));
+        return Files.exists(versionFilePath) && VERSION.equals(Files.readString(versionFilePath));
     }
 
     private void install() throws IOException {
         try {
-            File destDir = torInstallationFiles.getTorDir();
-            new TorBinaryZipExtractor(destDir).extractBinary();
-            log.info("Tor files installed to {}", destDir.getAbsolutePath());
+            new TorBinaryZipExtractor(torDirPath).extractBinary();
+            log.info("Tor files installed to {}", torDirPath.toAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            File versionFile = torInstallationFiles.getVersionFile();
-            FileUtils.writeToFile(VERSION, versionFile);
-        } catch (Throwable e) {
+            FileMutatorUtils.writeToPath(VERSION, versionFilePath);
+        } catch (IOException e) {
             deleteVersionFile();
             throw e;
         }

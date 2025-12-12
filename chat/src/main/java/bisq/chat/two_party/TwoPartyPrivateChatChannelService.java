@@ -31,7 +31,10 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import bisq.settings.SettingsService;
 import bisq.user.UserService;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.contact_list.ContactReason;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -39,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -49,13 +53,21 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     private final TwoPartyPrivateChatChannelStore persistableStore = new TwoPartyPrivateChatChannelStore();
     @Getter
     private final Persistence<TwoPartyPrivateChatChannelStore> persistence;
+    private final ContactListService contactListService;
+    private final SettingsService settingsService;
 
     public TwoPartyPrivateChatChannelService(PersistenceService persistenceService,
                                              NetworkService networkService,
                                              UserService userService,
+                                             SettingsService settingsService,
                                              ChatChannelDomain chatChannelDomain) {
         super(networkService, userService, chatChannelDomain);
-        String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
+        contactListService = userService.getContactListService();
+        this.settingsService = settingsService;
+
+        String name = StringUtils.capitalize(
+                StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase(Locale.ROOT), Locale.ROOT),
+                Locale.ROOT);
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.PRIVATE,
                 "Private" + name + "ChatChannelStore",
@@ -64,7 +76,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
@@ -98,7 +110,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
         if (!channel.getChatMessages().isEmpty()) {
-            sendLeaveMessage(channel, channel.getPeer(), new Date().getTime());
+            sendLeaveMessage(channel, channel.getPeer(), System.currentTimeMillis());
         }
 
         super.leaveChannel(channel);
@@ -113,7 +125,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 channel,
                 channel.getPeer(),
                 ChatMessageType.TEXT,
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 
     public CompletableFuture<SendMessageResult> sendTextMessageReaction(TwoPartyPrivateChatMessage message,
@@ -146,7 +158,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 receiverUserProfile.getNetworkId(),
                 text,
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 wasEdited,
                 chatMessageType,
                 new HashSet<>());
@@ -155,6 +167,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer,
                                                                            UserIdentity myUserIdentity) {
+        if (settingsService.getDoAutoAddToContactList()) {
+            contactListService.addContactListEntry(peer, myUserIdentity.getUserProfile(), ContactReason.PRIVATE_CHAT);
+        }
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 
@@ -174,7 +189,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isRemoved
         );
     }

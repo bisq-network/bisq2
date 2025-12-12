@@ -20,12 +20,15 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -39,14 +42,15 @@ import org.fxmisc.easybind.Subscription;
 
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+    private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
-    private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
-    private final BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
-    private final HBox deliveryStateHBox = new HBox();
+    private final Subscription setAsEditingPin;
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
-    private HBox messageStatusHbox, editButtonsHBox;
+    private HBox editButtonsHBox;
+
+    private final javafx.event.EventHandler<KeyEvent> editInputFieldKeyPressedFilter;
 
     public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -63,47 +67,36 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copyAction, deleteAction);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copy, deleteAction);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
-        // Message delivery status
-        messageStatusHbox.getChildren().addAll(tryAgainMenuItem, deliveryStateHBox);
-        messageStatusHbox.setAlignment(Pos.CENTER);
-        deliveryStateHBox.setAlignment(Pos.CENTER);
-
-        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
-            messageStatusHbox.setManaged(node != null);
-            messageStatusHbox.setVisible(node != null);
-            if (node != null) {
-                deliveryStateHBox.getChildren().setAll(node);
-            }
-        });
-
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
-            tryAgainMenuItem.setVisible(showTryAgain);
-            tryAgainMenuItem.setManaged(showTryAgain);
-            if (showTryAgain) {
-                tryAgainMenuItem.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
-            } else {
-                tryAgainMenuItem.setOnMouseClicked(null);
-            }
-        });
-
         activeReactionsDisplayHBox.getStyleClass().add("my-text-message-box-active-reactions");
         editInputField.maxWidthProperty().bind(message.widthProperty());
         messageHBox.getChildren().setAll(Spacer.fillHBox(), activeReactionsDisplayHBox, messageBgHBox);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
+
+        editInputFieldKeyPressedFilter = createEditInputFieldKeyPressedFilter(item, controller);
+
+        setAsEditingPin = EasyBind.subscribe(item.getSetAsEditing(), setAsEditing -> {
+            if (setAsEditing) {
+                UIThread.runOnNextRenderFrame(() -> {
+                    onEditMessage();
+                    item.getSetAsEditing().set(false);
+                });
+            }
+        });
     }
 
     @Override
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        messageStatusHbox = new HBox(5);
-        userNameAndDateHBox = new HBox(10, dateTime, messageStatusHbox, userName);
+        messageDeliveryStatusBox = new MessageDeliveryStatusBox(item, controller);
+
+        userNameAndDateHBox = new HBox(10, dateTime, messageDeliveryStatusBox, item.getBondedRoleBadge(), userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
@@ -124,9 +117,40 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
     }
 
+    private EventHandler<KeyEvent> createEditInputFieldKeyPressedFilter(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                                                        ChatMessagesListController controller) {
+        return keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume(); // Good practice
+                if (keyEvent.isShiftDown()) {
+                    int caretPos = editInputField.getCaretPosition();
+                    String currentText = editInputField.getText();
+                    String newText = currentText.substring(0, caretPos) + System.lineSeparator() + currentText.substring(caretPos);
+                    editInputField.setText(newText);
+                    editInputField.positionCaret(caretPos + 1);
+                } else if (!editInputField.getText().trim().isEmpty()) { // trim() here is good
+                    controller.onSaveEditedMessageUsingEnterKeyShortcut(item.getChatMessage(), editInputField.getText().trim());
+                    onCloseEditMessage(); // This will remove the filter
+                }
+            } else if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                keyEvent.consume();
+                onCloseEditMessage();
+            } else if (keyEvent.getCode() == KeyCode.UP) {
+                String normalizedText = StringUtils.normalizeLineBreaks(editInputField.getText());
+                // If no line break is found from the start to the caret position, it means we are in the first line, so we should move to the start
+                if (normalizedText.indexOf(System.lineSeparator(), 0, editInputField.getCaretPosition()) == -1) {
+                    // Only consume event in this case, otherwise allow falling back to default behavior
+                    keyEvent.consume();
+                    editInputField.positionCaret(0);
+                }
+            }
+        };
+    }
+
     private void setUpEditFunctionality() {
         // edit
         editInputField = new BisqTextArea();
+        editInputField.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
         editInputField.setId("chat-messages-edit-text-area");
         editInputField.setMinWidth(150);
         editInputField.setVisible(false);
@@ -152,7 +176,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
+        copy.setOnAction(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
             editAction.setOnAction(e -> onEditMessage());
         }
@@ -191,18 +215,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(true);
         message.setVisible(false);
         message.setManaged(false);
-
-        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER) {
-                keyEvent.consume();
-                if (keyEvent.isShiftDown()) {
-                    editInputField.appendText(System.lineSeparator());
-                } else if (!editInputField.getText().isEmpty()) {
-                    controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
-                    onCloseEditMessage();
-                }
-            }
-        });
+        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     private void onCloseEditMessage() {
@@ -212,7 +225,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editButtonsHBox.setManaged(false);
         message.setVisible(true);
         message.setManaged(true);
-        editInputField.setOnKeyPressed(null);
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
     @Override
@@ -224,22 +237,17 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         saveEditButton.setOnAction(null);
         cancelEditButton.setOnAction(null);
-        copyAction.setOnAction(null);
+        copy.setOnAction(null);
         editAction.setOnAction(null);
         deleteAction.setOnAction(null);
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
-
-        editInputField.setOnKeyPressed(null);
         userProfileIcon.dispose();
 
-        if (shouldShowTryAgainPin != null) {
-            shouldShowTryAgainPin.unsubscribe();
-        }
+        messageDeliveryStatusBox.dispose();
+        editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
 
-        if (messageDeliveryStatusNodePin != null) {
-            messageDeliveryStatusNodePin.unsubscribe();
-        }
+        setAsEditingPin.unsubscribe();
     }
 }

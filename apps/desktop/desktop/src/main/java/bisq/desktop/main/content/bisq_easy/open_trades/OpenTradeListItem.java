@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;

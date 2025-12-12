@@ -25,6 +25,7 @@ import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.timer.Scheduler;
@@ -95,23 +96,26 @@ public class OracleNodeService implements Service {
         }
     }
 
+    private final OracleNodeService.Config config;
     private final IdentityService identityService;
     private final NetworkService networkService;
+    private final PersistenceService persistenceService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final MarketPricePropagationService marketPricePropagationService;
 
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    @Getter
-    private final Bisq1BridgeService bisq1BridgeService;
-    @Getter
     private final TimestampService timestampService;
     private final String bondUserName;
     private final String signatureBase64;
     private final String profileId;
     private final boolean staticPublicKeysProvided;
+
+    private Bisq1BridgeService bisq1BridgeService;
     @Nullable
     private Scheduler startupScheduler, scheduler;
+    @Nullable
+    private Pin bondedRolesPin;
 
     public OracleNodeService(Config config,
                              IdentityService identityService,
@@ -120,8 +124,10 @@ public class OracleNodeService implements Service {
                              AuthorizedBondedRolesService authorizedBondedRolesService,
                              MarketPriceRequestService marketPriceRequestService,
                              MemoryReportService memoryReportService) {
+        this.config = config;
         this.identityService = identityService;
         this.networkService = networkService;
+        this.persistenceService = persistenceService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
 
         bondUserName = config.getBondUserName();
@@ -142,25 +148,16 @@ public class OracleNodeService implements Service {
         authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
         authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(publicKey);
 
-        Bisq1BridgeService.Config bisq1BridgeConfig = Bisq1BridgeService.Config.from(config.getBisq1Bridge());
-        bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
-                networkService,
-                persistenceService,
-                authorizedBondedRolesService,
-                memoryReportService,
-                authorizedPrivateKey,
-                authorizedPublicKey,
-                ignoreSecurityManager,
-                staticPublicKeysProvided);
-
         timestampService = new TimestampService(persistenceService,
+                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided);
 
-        marketPricePropagationService = new MarketPricePropagationService(networkService,
+        marketPricePropagationService = new MarketPricePropagationService(identityService,
+                networkService,
                 marketPriceRequestService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
@@ -179,32 +176,27 @@ public class OracleNodeService implements Service {
         ReputationDataUtil.cleanupMap(networkService);
 
         Identity identity = identityService.getOrCreateDefaultIdentity();
-
-        bisq1BridgeService.setIdentity(identity);
-        timestampService.setIdentity(identity);
-        marketPricePropagationService.setIdentity(identity);
-
         NetworkId networkId = identity.getNetworkId();
         KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
         byte[] authorizedPublicKeyEncoded = authorizedPublicKey.getEncoded();
         String authorizedPublicKeyAsHex = Hex.encode(authorizedPublicKeyEncoded);
-        AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(networkId,
+        AuthorizedOracleNode myAuthorizedOracleNode = new AuthorizedOracleNode(networkId,
                 profileId,
                 authorizedPublicKeyAsHex,
                 bondUserName,
                 signatureBase64,
                 staticPublicKeysProvided);
-        bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
 
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        AuthorizedOracleNode oldVersion = new AuthorizedOracleNode(0,
-                networkId,
-                profileId,
-                authorizedPublicKeyAsHex,
-                bondUserName,
-                signatureBase64,
-                staticPublicKeysProvided);
-        bisq1BridgeService.setAuthorizedOracleNodeOldVersion(oldVersion);
+        Bisq1BridgeService.Config bisq1BridgeConfig = Bisq1BridgeService.Config.from(config.getBisq1Bridge());
+        bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
+                persistenceService,
+                identityService,
+                networkService,
+                authorizedBondedRolesService,
+                authorizedPrivateKey,
+                authorizedPublicKey,
+                staticPublicKeysProvided,
+                myAuthorizedOracleNode);
 
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
@@ -215,23 +207,26 @@ public class OracleNodeService implements Service {
                     signatureBase64,
                     Optional.of(identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap()),
                     networkId,
-                    Optional.of(authorizedOracleNode),
+                    Optional.of(myAuthorizedOracleNode),
                     true);
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
-            startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+            startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(myAuthorizedOracleNode, authorizedBondedRole, keyPair))
                     .host(this)
                     .runnableName("publishMyAuthorizedDataAsStartup")
                     .repeated(10, 60, TimeUnit.SECONDS, 3);
 
             // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
-            scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+            scheduler = Scheduler.run(() -> {
+                        bisq1BridgeService.republishAuthorizedBondedRoles();
+                        publishMyAuthorizedData(myAuthorizedOracleNode, authorizedBondedRole, keyPair);
+                    })
                     .host(this)
                     .runnableName("publishMyAuthorizedDataAfter50Days")
                     .periodically(50, TimeUnit.DAYS);
         }
 
-        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+        bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BondedRole element) {
             }
@@ -266,13 +261,26 @@ public class OracleNodeService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         if (scheduler != null) {
             scheduler.stop();
+            scheduler = null;
         }
         if (startupScheduler != null) {
             startupScheduler.stop();
+            startupScheduler = null;
         }
-        return bisq1BridgeService.shutdown()
-                .thenCompose(result -> timestampService.shutdown())
-                .thenCompose(result -> marketPricePropagationService.shutdown());
+
+        if (bondedRolesPin != null) {
+            bondedRolesPin.unbind();
+            bondedRolesPin = null;
+        }
+
+        if (bisq1BridgeService != null) {
+            return bisq1BridgeService.shutdown()
+                    .thenCompose(result -> timestampService.shutdown())
+                    .thenCompose(result -> marketPricePropagationService.shutdown());
+        } else {
+            return timestampService.shutdown()
+                    .thenCompose(result -> marketPricePropagationService.shutdown());
+        }
     }
 
 

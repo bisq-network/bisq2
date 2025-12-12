@@ -23,6 +23,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
@@ -44,16 +45,35 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
 
     private Button takeOfferButton;
     private Label peerNickName;
+    private BisqMenuItem showOfferDetails;
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                                ChatMessagesListController controller) {
         super(item, list, controller);
 
-        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, showOfferDetails, moreActionsMenu, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
+    }
+
+    @Override
+    protected void setUpActions() {
+        super.setUpActions();
+
+        showOfferDetails = new BisqMenuItem("offer-details-grey", "offer-details-white");
+        showOfferDetails.useIconOnly();
+        showOfferDetails.setTooltip(Res.get("chat.message.contextMenu.showOfferDetails"));
+        HBox.setMargin(showOfferDetails, ACTION_ITEMS_MARGIN);
+    }
+
+    @Override
+    protected void addActionsHandlers() {
+        super.addActionsHandlers();
+        ChatMessage chatMessage = item.getChatMessage();
+
+        showOfferDetails.setOnAction(e -> controller.onShowOfferDetails(chatMessage));
     }
 
     @Override
@@ -115,8 +135,10 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         Button button = new Button(isBuy ? Res.get("offer.takeOffer.sell.button") : Res.get("offer.takeOffer.buy.button"));
         button.getStyleClass().addAll("take-offer-button", "medium-text", "font-default");
         button.getStyleClass().add(isBuy ? "sell-btc-button" : "buy-btc-button");
+        button.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+
         button.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
-        button.setDefaultButton(!item.isOfferAlreadyTaken());
+        button.setOpacity(item.isWasOfferAlreadyTaken() ? 0.5 : 1);
 
         return new Pair<>(messageTitleBox, button);
     }
@@ -125,6 +147,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     public void dispose() {
         super.dispose();
 
+        showOfferDetails.setOnAction(null);
         takeOfferButton.setOnAction(null);
         peerNickName.setOnMouseClicked(null);
     }

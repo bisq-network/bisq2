@@ -20,18 +20,23 @@ package bisq.chat.bisq_easy.offerbook;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
     static String createId(Market market) {
-        return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase() + "." +
+        return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase(Locale.ROOT) + "." +
                 market.getBaseCurrencyCode() + "-" +
                 market.getQuoteCurrencyCode();
     }
@@ -69,11 +74,26 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
         return market.getMarketCodes();
     }
 
+    public String getQuoteCurrencyDisplayString() {
+        return market.getQuoteCurrencyDisplayName();
+    }
+
     public String getDescription() {
         return Res.get("bisqEasy.offerBookChannel.description", market.toString());
     }
 
     public String getShortDescription() {
-        return Res.get("bisqEasy.offerBookChannel.description", market.getFiatCurrencyName());
+        return Res.get("bisqEasy.offerBookChannel.description", market.getQuoteCurrencyDisplayName());
+    }
+
+    public Stream<BisqEasyOffer> getBisqEasyOffers() {
+        return getBisqEasyOfferbookMessagesWithOffer()
+                .map(BisqEasyOfferbookMessage::getBisqEasyOffer)
+                .filter(Optional::isPresent)
+                .map(Optional::get);
+    }
+
+    public Stream<BisqEasyOfferbookMessage> getBisqEasyOfferbookMessagesWithOffer() {
+        return getChatMessages().stream().filter(BisqEasyOfferbookMessage::hasBisqEasyOffer);
     }
 }

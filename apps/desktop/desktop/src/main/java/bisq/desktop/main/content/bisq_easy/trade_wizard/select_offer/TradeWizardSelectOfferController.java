@@ -18,32 +18,28 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.settings.SettingsService;
-import bisq.trade.Trade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -76,7 +72,6 @@ public class TradeWizardSelectOfferController implements Controller {
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
-    private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
 
     public TradeWizardSelectOfferController(ServiceProvider serviceProvider,
@@ -89,13 +84,11 @@ public class TradeWizardSelectOfferController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        SettingsService settingsService = serviceProvider.getSettingsService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
-        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
         model = new TradeWizardSelectOfferModel();
         view = new TradeWizardSelectOfferView(model, this);
@@ -266,15 +259,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 }
 
                 if (bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile()) ||
-                        bannedUserService.isNetworkIdBanned(makerUserProfile.getNetworkId()) ||
                         bannedUserService.isUserProfileBanned(makerUserProfile)) {
-                    return false;
-                }
-
-                UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-                NetworkId myNetworkId = myUserProfile.getNetworkId();
-                String tradeId = Trade.createId(peersOffer.getId(), myNetworkId.getId());
-                if (bisqEasyTradeService.tradeExists(tradeId)) {
                     return false;
                 }
 

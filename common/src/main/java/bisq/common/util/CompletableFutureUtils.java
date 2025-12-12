@@ -15,10 +15,16 @@ package bisq.common.util;/*
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -56,6 +62,31 @@ public class CompletableFutureUtils {
                 );
     }
 
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(Collection<CompletableFuture<T>> collection) {
+        //noinspection unchecked
+        return failureTolerantAllOf(collection.toArray(new CompletableFuture[0]));
+    }
+
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(Stream<CompletableFuture<T>> stream) {
+        return failureTolerantAllOf(stream.collect(Collectors.toList()));
+    }
+
+    /**
+     * Variation of allOf which does not fail if one future fails
+     */
+    @SafeVarargs
+    public static <T> CompletableFuture<List<T>> failureTolerantAllOf(CompletableFuture<T>... list) {
+        List<CompletableFuture<T>> nonFailing = Stream.of(list)
+                .map(future -> future.handle((result, throwable) -> throwable == null ? result : null))
+                .toList();
+        return allOf(nonFailing)
+                .thenApply(v -> nonFailing.stream()
+                        .map(CompletableFuture::join)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())
+                );
+    }
+
     /**
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
@@ -69,8 +100,8 @@ public class CompletableFutureUtils {
         return anyOf(collection.toArray(new CompletableFuture[0]));
     }
 
-    public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> collection) {
-        return anyOf(collection.collect(Collectors.toList()));
+    public static <T> CompletableFuture<T> anyOf(Stream<CompletableFuture<T>> stream) {
+        return anyOf(stream.collect(Collectors.toList()));
     }
 
     @SafeVarargs
@@ -91,7 +122,47 @@ public class CompletableFutureUtils {
         return resultFuture;
     }
 
-    /*public static <T> boolean isCompleted(CompletableFuture<T> future) {
-        return future.state() == Future.State.SUCCESS;
-    }*/
+    public static <T> CompletableFuture<T> logOnFailure(CompletableFuture<T> future) {
+        return logOnFailure(future, null);
+    }
+
+    public static <T> CompletableFuture<T> logOnFailure(CompletableFuture<T> future, @Nullable String errorMessage) {
+        future.whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                if (errorMessage == null) {
+                    log.error("Executing future failed", throwable);
+                } else {
+                    log.error(errorMessage, throwable);
+                }
+            }
+        });
+
+        return future;
+    }
+
+    public static <T> CompletableFuture<T> toCompletableFuture(ListenableFuture<T> future) {
+        var completableFuture = new CompletableFuture<T>();
+        // Propagate cancellation from returned future to source future.
+        completableFuture.whenComplete((result, throwable) -> {
+            if (completableFuture.isCancelled()) {
+                future.cancel(true);
+            }
+        });
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(T result) {
+                completableFuture.complete(result);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                if (t instanceof java.util.concurrent.CancellationException) {
+                    completableFuture.cancel(false);
+                } else {
+                    completableFuture.completeExceptionally(t);
+                }
+            }
+        }, MoreExecutors.directExecutor());
+        return completableFuture;
+    }
 }

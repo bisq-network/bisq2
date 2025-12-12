@@ -17,7 +17,7 @@
 
 package bisq.os_specific.notifications.linux;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.settings.CookieKey;
@@ -25,8 +25,8 @@ import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,14 +36,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class LinuxNotificationService implements OsSpecificNotificationService {
-    private final Path baseDir;
+    private final Path baseDirPath;
     private final SettingsService settingsService;
     private boolean isSupported;
     @Nullable
     private String iconPath;
 
-    public LinuxNotificationService(Path baseDir, SettingsService settingsService) {
-        this.baseDir = baseDir;
+    public LinuxNotificationService(Path baseDirPath, SettingsService settingsService) {
+        this.baseDirPath = baseDirPath;
         this.settingsService = settingsService;
     }
 
@@ -65,16 +65,16 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
 
                     // We are running from source code and use icon from resources as Bisq2.png is not available
                     String fileName = "linux-notification-icon.png";
-                    File destination = Path.of(baseDir.toAbsolutePath().toString(), fileName).toFile();
-                    if (!destination.exists()) {
+                    Path destinationPath = baseDirPath.resolve(fileName);
+                    if (!Files.exists(destinationPath)) {
                         try {
-                            FileUtils.resourceToFile(fileName, destination);
-                            iconPath = destination.getAbsolutePath();
+                            FileMutatorUtils.resourceToFile(fileName, destinationPath);
+                            iconPath = destinationPath.toAbsolutePath().toString();
                         } catch (IOException e) {
                             log.error("Copying notificationIcon from resources failed", e);
                         }
                     } else {
-                        iconPath = destination.getAbsolutePath();
+                        iconPath = destinationPath.toAbsolutePath().toString();
                     }
                 }
 
@@ -84,11 +84,6 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
                 isSupported = false;
             }
         }, ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService"));
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
     }
 

@@ -69,24 +69,7 @@ public class SecurityManagerService implements Service {
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
-
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> publishAlert(AlertType alertType,
@@ -102,7 +85,7 @@ public class SecurityManagerService implements Service {
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 alertType,
                 headline,
                 message,
@@ -113,23 +96,6 @@ public class SecurityManagerService implements Service {
                 securityManagerProfileId,
                 staticPublicKeysProvided,
                 bannedAccountData);
-
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        AuthorizedAlertData oldVersion = new AuthorizedAlertData(0,
-                authorizedAlertData.getId(),
-                authorizedAlertData.getDate(),
-                authorizedAlertData.getAlertType(),
-                authorizedAlertData.getHeadline(),
-                authorizedAlertData.getMessage(),
-                authorizedAlertData.isHaltTrading(),
-                authorizedAlertData.isRequireVersionForTrading(),
-                authorizedAlertData.getMinVersion(),
-                authorizedAlertData.getBannedRole(),
-                authorizedAlertData.getSecurityManagerProfileId(),
-                authorizedAlertData.isStaticPublicKeysProvided(),
-                authorizedAlertData.getBannedAccountData());
-        networkService.publishAuthorizedData(oldVersion, keyPair);
-
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
@@ -148,19 +114,10 @@ public class SecurityManagerService implements Service {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
+        AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(System.currentTimeMillis(),
                 difficultyAdjustmentFactor,
                 securityManagerProfileId,
                 staticPublicKeysProvided);
-
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        AuthorizedDifficultyAdjustmentData oldVersion = new AuthorizedDifficultyAdjustmentData(0,
-                data.getDate(),
-                data.getDifficultyAdjustmentFactor(),
-                data.getSecurityManagerProfileId(),
-                data.isStaticPublicKeysProvided());
-        networkService.publishAuthorizedData(oldVersion, keyPair);
-
         return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

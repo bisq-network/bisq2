@@ -25,14 +25,22 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -42,7 +50,7 @@ import java.util.stream.Stream;
  * Maintains different collections of peers and connections
  */
 @Slf4j
-public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
+public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStore> {
     private static final long MIN_PRINT_INTERVAL = TimeUnit.MINUTES.toMillis(10);
 
     @Getter
@@ -66,12 +74,29 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
             this.minNumReportedPeers = minNumReportedPeers;
         }
 
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
+        public static Config from(com.typesafe.config.Config typesafeConfig,
+                                  TransportType transportType,
+                                  Set<TransportType> supportedTransportTypes) {
+            com.typesafe.config.Config config;
+            if (supportedTransportTypes.size() > 1 && typesafeConfig.hasPath("multipleTransports")) {
+                String transportTypeName = transportType.name().toLowerCase(Locale.ROOT);
+                com.typesafe.config.Config multipleTransports = typesafeConfig.getConfig("multipleTransports");
+                // If a transport specific node and field is available we override the base field
+                config = multipleTransports.hasPath(transportTypeName)
+                        ? multipleTransports.getConfig(transportTypeName).withFallback(typesafeConfig)
+                        : typesafeConfig;
+            } else {
+                config = typesafeConfig;
+            }
+            int maxNumConnectedPeers = config.getInt("maxNumConnectedPeers");
+            int minNumConnectedPeers = config.getInt("minNumConnectedPeers");
+            int minNumOutboundConnectedPeers = config.getInt("minNumOutboundConnectedPeers");
+            int minNumReportedPeers = config.getInt("minNumReportedPeers");
             return new PeerGroupService.Config(
-                    typesafeConfig.getInt("minNumConnectedPeers"),
-                    typesafeConfig.getInt("minNumOutboundConnectedPeers"),
-                    typesafeConfig.getInt("maxNumConnectedPeers"),
-                    typesafeConfig.getInt("minNumReportedPeers"));
+                    minNumConnectedPeers,
+                    minNumOutboundConnectedPeers,
+                    maxNumConnectedPeers,
+                    minNumReportedPeers);
         }
     }
 
@@ -92,12 +117,14 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                             Set<Address> seedNodeAddresses,
                             BanList banList) {
         this.config = config;
-        this.seedNodeAddresses = seedNodeAddresses;
+        this.seedNodeAddresses = seedNodeAddresses.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(CopyOnWriteArraySet::new));
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
-                transportType.name().toLowerCase() + persistableStore.getClass().getSimpleName(),
+                transportType.name().toLowerCase(Locale.ROOT) + persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }
 
@@ -299,6 +326,8 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         if (System.currentTimeMillis() - lastReportTs < MIN_PRINT_INTERVAL) {
             return;
         }
+        String transportType = map.keySet().stream().map(e -> e.getTransportType().name()).findAny().orElse("N/A");
+        String headerInfo = transportType + "-" + info;
         lastReportTs = System.currentTimeMillis();
         List<Peer> sortedList = map.values().stream()
                 .sorted()
@@ -310,11 +339,28 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         String range = StringUtils.formatTime(sortedList.get(0).getAge()) +
                 " to " +
                 StringUtils.formatTime(sortedList.get(sortedList.size() - 1).getAge());
-        log.info("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range);
+        log.info("\n##########################################################################################\n" +
+                        "{} peers\n" +
+                        "##########################################################################################\n" +
+                        "Number of peers: {}\n" +
+                        "Number of peers with age < 10 min: {}\n" +
+                        "Number of peers with age >= 10 min {}\n" +
+                        "Age range from {}\n" +
+                        "##########################################################################################",
+                headerInfo, numPeers, numLivePeers, numNonLivePeers, range);
 
         String peerAddressesByAge = Joiner.on("\n").join(sortedList.stream()
-                .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress().getFullAddress())
+                .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress())
                 .collect(Collectors.toList()));
-        log.debug("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\nPeer addressesByAge:\n{}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
+        log.debug("\n##########################################################################################\n{} peers\n" +
+                        "##########################################################################################\n" +
+                        "Number of peers: {}\n" +
+                        "Number of peers with age < 10 min: {}\n" +
+                        "Number of peers with age >= 10 min {}\n" +
+                        "Age range from {}\n" +
+                        "Peer addressesByAge:\n" +
+                        "{}\n" +
+                        "##########################################################################################",
+                headerInfo, numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
     }
 }

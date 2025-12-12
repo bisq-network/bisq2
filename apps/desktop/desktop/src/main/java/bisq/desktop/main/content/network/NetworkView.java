@@ -17,17 +17,27 @@
 
 package bisq.desktop.main.content.network;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
+import bisq.desktop.main.content.network.peers.NetworkPeersView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
+import javafx.scene.Parent;
 
 public class NetworkView extends ContentTabView<NetworkModel, NetworkController> {
     public NetworkView(NetworkModel model, NetworkController controller) {
         super(model, controller);
 
-        addTab(Res.get("network.myNetworkNode"), NavigationTarget.MY_NETWORK_NODE);
-        addTab(Res.get("network.p2pNetwork"), NavigationTarget.P2P_NETWORK);
+        addTab(Res.get("network.p2pNetwork"), NavigationTarget.NETWORK_P2P);
+        addTab(Res.get("network.peers"), NavigationTarget.NETWORK_PEERS);
         addTab(Res.get("network.roles"), NavigationTarget.ROLES);
         addTab(Res.get("network.nodes"), NavigationTarget.NODES);
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof NetworkPeersView;
     }
 }

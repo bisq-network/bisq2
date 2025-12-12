@@ -1,19 +1,63 @@
 name: Transifex
 
 on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - '.tx/config'
+      - 'i18n/src/main/resources/**.properties'
   workflow_run:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
 
 jobs:
-  if_merged:
-    name: Push translation source files to Transifex
+  verify:
+    name: Verify Transifex configuration
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          # Fetch all history so we can check commits properly
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+
+      - name: Verify that .tx/config is in sync with the i18n folder
+        run: |
+          set -euo pipefail
+
+          # Extract source files from .tx/config, trimming whitespace and de-duplicating
+          config_files=$(grep -E '^[[:space:]]*source_file' .tx/config \
+            | sed 's/.*= *//' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
+          
+          # Get actual source files from i18n directory (excluding locale-specific files)
+          i18n_files=$(find i18n/src/main/resources -maxdepth 1 -name "*.properties" \
+            | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' \
+            | sed 's|i18n/src/main/resources/||' \
+            | sort -u)
+          
+          if [ "$config_files" != "$i18n_files" ]; then
+            echo "::error::.tx/config is out of sync with i18n/src/main/resources/"
+            echo "Please run the following command and commit the changes:"
+            echo "./gradlew apps:desktop:i18n:updateTxConfig"
+            diff -u <(echo "$config_files") <(echo "$i18n_files")
+            exit 1
+          fi
+          echo ".tx/config is in sync with i18n/src/main/resources/"
+
+  calculate_and_push_sources:
+    name: Calculate pushes and push source files
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Check if the commit is in the main branch
@@ -27,7 +71,7 @@ jobs:
           fi
 
       - name: "Check if TX_TOKEN secret exists"
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        if: steps.check_commit.outputs.commit_in_main == 'true'
         env:
           transifex_secret: ${{ secrets.TX_TOKEN }}
         run: |
@@ -36,15 +80,121 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout at the specific commit
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Calculate push commands
+        id: calculate-pushes
+        if: steps.check_commit.outputs.commit_in_main == 'true'
+        run: |
+          set -euo pipefail
+          
+          echo "Finding changed files..."
+          # We compare the merge commit with its first parent to get the list of files.
+          # Note: This is reliable for standard PR merges but may not handle octopus merges.
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.workflow_run.head_sha }}~1 ${{ github.event.workflow_run.head_sha }})
+          echo "Files changed in the merge:"
+          echo "$CHANGED_FILES"
 
-      - name: Push source files using Transifex client
-        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+          # --- Handle SOURCE file pushes (-s) ---
+          s_args=""
+          if echo "${CHANGED_FILES}" | grep -q -x ".tx/config"; then
+            echo "::notice:: .tx/config changed. Pushing all source files."
+            s_args="push -s"
+          else
+            s_resources="" # This will be the comma-separated list
+            CHANGED_SOURCE_FILES=$(echo "${CHANGED_FILES}" | grep -E '\.properties$' | grep -v -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
+            if [ -n "$CHANGED_SOURCE_FILES" ]; then
+              for file in $CHANGED_SOURCE_FILES; do
+                resource_slug_line=$(awk -v file="$file" '
+                  $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}
+                  $0 ~ ("source_file[[:space:]]*=[[:space:]]*" file "$") {print resource}
+                ' .tx/config)
+                if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
+                  project_slug="${BASH_REMATCH[1]}"
+                  resource_slug="${BASH_REMATCH[2]}"
+                  full_resource_id="${project_slug}.${resource_slug}"
+                  if [[ -z "$s_resources" ]]; then
+                      s_resources="$full_resource_id"
+                  else
+                      s_resources+=",$full_resource_id"
+                  fi
+                else
+                  echo "::warning::Could not find resource slug for changed source file: $file"
+                fi
+              done
+            fi
+            # If we found any resources, construct the final args string
+            if [[ -n "$s_resources" ]]; then
+              s_args="push -s -r $s_resources"
+            fi
+          fi
+          echo "s_args=$s_args" >> $GITHUB_OUTPUT
+
+          # --- Handle TRANSLATION file pushes (-t) ---
+          declare -A lang_resources
+          CHANGED_TRANSLATION_FILES=$(echo "${CHANGED_FILES}" | grep -E 'i18n/src/main/resources/.*\.properties$' | grep -E '(_[a-z]{2}(_[A-Z]{2})?|_pcm)\.properties$' -- || true)
+          if [ -n "$CHANGED_TRANSLATION_FILES" ]; then
+            for file in $CHANGED_TRANSLATION_FILES; do
+              lang=$(echo "$file" | sed -E 's/.*_([a-z]{2}(_[A-Z]{2})?|pcm)\.properties$/\1/')
+              resource_slug_line=$(awk -v file="$file" -v lang="$lang" '
+                BEGIN{FS="="}
+                $0 ~ /^\[o:.*:p:.*:r:.*\]$/ {resource=$0}
+                $1 ~ /^[[:space:]]*file_filter/ {
+                    filter_path=$2;
+                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", filter_path);
+                    gsub(/<lang>/, lang, filter_path);
+                    if (filter_path == file) {
+                        print resource;
+                        exit;
+                    }
+                }
+              ' .tx/config)
+              if [[ -n "$resource_slug_line" ]] && [[ "$resource_slug_line" =~ ^\[o:.*:p:(.*):r:(.*)\]$ ]]; then
+                project_slug="${BASH_REMATCH[1]}"
+                resource_slug="${BASH_REMATCH[2]}"
+                full_resource_id="${project_slug}.${resource_slug}"
+                if [[ ! -v lang_resources[$lang] ]]; then
+                    lang_resources[$lang]="$full_resource_id"
+                else
+                    lang_resources[$lang]+=",$full_resource_id"
+                fi
+              fi
+            done
+          fi
+
+          json_output='{"include":['
+          first_lang=true
+          for lang in "${!lang_resources[@]}"; do
+            if ! $first_lang; then
+              json_output+=','
+            fi
+            json_output+="{\"lang\":\"$lang\",\"resources\":\"${lang_resources[$lang]}\"}"
+            first_lang=false
+          done
+          json_output+=']}'
+          printf 't_matrix=%s\n' "$json_output" >> "$GITHUB_OUTPUT"
+
+      - name: Push source files to Transifex
+        if: steps.calculate-pushes.outputs.s_args != ''
         uses: transifex/cli-action@v2
         with:
           token: ${{ secrets.TX_TOKEN }}
-          args: push -s
+          args: ${{ steps.calculate-pushes.outputs.s_args }}
+
+  push_translations:
+    name: Push translation files to Transifex
+    if: needs.calculate_and_push_sources.outputs.t_matrix != '{"include":[]}'
+    needs: calculate_and_push_sources
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v5
+        with:
+          # Re-use the same commit as the triggering workflow_run
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Push ${{ matrix.lang }} translations
+        uses: transifex/cli-action@v2
+        with:
+          token: ${{ secrets.TX_TOKEN }}
+          args: push -t -l ${{ matrix.lang }} -r ${{ matrix.resources }}

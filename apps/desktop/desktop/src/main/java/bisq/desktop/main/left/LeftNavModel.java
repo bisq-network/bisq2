@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -36,8 +36,6 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class LeftNavModel implements Model {
-    private final boolean isWalletEnabled;
-
     @Setter
     private String version;
 
@@ -47,9 +45,9 @@ public class LeftNavModel implements Model {
     private final ObjectProperty<LeftNavButton> selectedNavigationButton = new SimpleObjectProperty<>();
     private final BooleanProperty menuHorizontalExpanded = new SimpleBooleanProperty();
     private final BooleanProperty authorizedRoleVisible = new SimpleBooleanProperty(false);
-    private final BooleanProperty newVersionAvailable = new SimpleBooleanProperty(false);
+    private final BooleanProperty isNewReleaseAvailable = new SimpleBooleanProperty(false);
+    private final BooleanProperty isMuSigActivated= new SimpleBooleanProperty();
 
-    public LeftNavModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
+    public LeftNavModel( ) {
     }
 }

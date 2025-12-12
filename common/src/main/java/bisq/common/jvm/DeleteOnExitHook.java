@@ -43,11 +43,12 @@
 
 package bisq.common.jvm;
 
-import bisq.common.threading.ThreadName;
+import bisq.common.file.FileMutatorUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -69,7 +70,7 @@ public class DeleteOnExitHook {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ThreadName.set(DeleteOnExitHook.class, "runHooks");
+            Thread.currentThread().setName("DeleteOnExitHook.runHooks");
             runHooks();
         }));
     }
@@ -110,8 +111,12 @@ public class DeleteOnExitHook {
         // Last in first deleted.
         Collections.reverse(toBeDeleted);
         for (String filename : toBeDeleted) {
-            if (!(new File(filename)).delete()) {
+            Path path = Path.of(filename);
+            try {
+                FileMutatorUtils.deleteFileOrDirectory(path);
+            } catch (IOException e) {
                 log.warn("Deleting {} failed", filename);
+                throw new RuntimeException(e);
             }
         }
     }

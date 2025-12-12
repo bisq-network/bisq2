@@ -1,5 +1,6 @@
 import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 import java.util.Properties
 
@@ -12,18 +13,10 @@ fun readPropertiesFile(filePath: String): Properties {
 
 plugins {
     id("bisq.java-library")
-    id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
+   // id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     alias(libs.plugins.openjfx)
     alias(libs.plugins.shadow)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
-    }
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
 }
 
 application {
@@ -36,7 +29,7 @@ version = rootVersion
 // println("version is ${version}")
 
 javafx {
-    version = "22.0.1"
+    version = "21.0.6"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
@@ -52,24 +45,23 @@ dependencies {
     implementation("bisq:trade")
     implementation("bisq:bonded-roles")
     implementation("bisq:settings")
+    implementation("bisq:burningman")
     implementation("bisq:user")
     implementation("bisq:chat")
     implementation("bisq:support")
     implementation("bisq:settings")
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
+    implementation("bisq:mu-sig")
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
     implementation("bisq:http-api")
+    implementation("bisq:wallet")
 
     implementation(project(":desktop"))
 
     implementation("network:network")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)
@@ -94,6 +86,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         val platformName = getPlatform().platformName
         archiveClassifier.set("$platformName-all")
+        mergeServiceFiles()
     }
 
     distZip {

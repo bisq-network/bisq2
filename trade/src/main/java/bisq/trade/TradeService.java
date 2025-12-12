@@ -17,7 +17,9 @@
 
 package bisq.trade;
 
+import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.contract.ContractService;
@@ -28,6 +30,8 @@ import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.DelayedPayoutTxReceiverService;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class TradeService implements Service, ServiceProvider {
+    @Getter
+    public static class Config {
+        private final com.typesafe.config.Config muSigConfig;
+
+        public Config(com.typesafe.config.Config muSigConfig) {
+            this.muSigConfig = muSigConfig;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getConfig("muSig"));
+        }
+    }
+
     private final BisqEasyTradeService bisqEasyTradeService;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -48,8 +65,13 @@ public class TradeService implements Service, ServiceProvider {
     private final BondedRolesService bondedRolesService;
     private final UserService userService;
     private final SettingsService settingsService;
+    private final AccountService accountService;
+    private final MuSigTradeService muSigTradeService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+    private final BurningmanService burningmanService;
 
-    public TradeService(NetworkService networkService,
+    public TradeService(Config config,
+                        NetworkService networkService,
                         IdentityService identityService,
                         PersistenceService persistenceService,
                         OfferService offerService,
@@ -58,7 +80,9 @@ public class TradeService implements Service, ServiceProvider {
                         ChatService chatService,
                         BondedRolesService bondedRolesService,
                         UserService userService,
-                        SettingsService settingsService) {
+                        SettingsService settingsService,
+                        AccountService accountService,
+                        BurningmanService burningmanService) {
         this.networkService = networkService;
         this.identityService = identityService;
         this.persistenceService = persistenceService;
@@ -69,8 +93,14 @@ public class TradeService implements Service, ServiceProvider {
         this.bondedRolesService = bondedRolesService;
         this.userService = userService;
         this.settingsService = settingsService;
+        this.accountService = accountService;
+        this.burningmanService = burningmanService;
+
+        delayedPayoutTxReceiverService = new DelayedPayoutTxReceiverService(burningmanService);
 
         bisqEasyTradeService = new BisqEasyTradeService(this);
+        muSigTradeService = new MuSigTradeService(MuSigTradeService.Config.from(config.getMuSigConfig()),
+                this);
     }
 
 
@@ -80,11 +110,24 @@ public class TradeService implements Service, ServiceProvider {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return bisqEasyTradeService.initialize();
+        return delayedPayoutTxReceiverService.initialize()
+                .thenCompose(result -> bisqEasyTradeService.initialize());
 
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return bisqEasyTradeService.shutdown();
+        log.info("shutdown");
+        return delayedPayoutTxReceiverService.shutdown()
+                .thenCompose(result -> bisqEasyTradeService.shutdown());
+    }
+
+    public CompletableFuture<Boolean> initializeMuSigTradeService() {
+        log.info("initialize MuSigTradeService");
+        return muSigTradeService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdownMuSigTradeService() {
+        log.info("shutdown MuSigTradeService");
+        return muSigTradeService.shutdown();
     }
 }

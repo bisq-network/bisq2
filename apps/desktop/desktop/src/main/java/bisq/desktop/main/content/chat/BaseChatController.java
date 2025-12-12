@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.notifications.ChatChannelNotificationType;

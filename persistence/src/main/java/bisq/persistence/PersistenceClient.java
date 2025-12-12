@@ -20,16 +20,21 @@ package bisq.persistence;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Interface for the outside envelope object persisted to disk.
- */
 public interface PersistenceClient<T extends PersistableStore<T>> {
-    default CompletableFuture<Optional<T>> readPersisted() {
-        return getPersistence().readAsync(persisted -> {
-            persisted = prunePersisted(persisted);
-            getPersistableStore().applyPersisted(persisted);
-            onPersistedApplied(persisted);
-        });
+    default Optional<T> readPersisted() {
+        return getPersistence().read()
+                .map(persisted -> {
+                    persisted = preProcessPersisted(persisted);
+                    persisted = prunePersisted(persisted);
+                    getPersistableStore().applyPersisted(persisted);
+                    onPersistedApplied(persisted);
+                    return persisted;
+                });
+    }
+
+    // In case we want to apply changes to persisted data
+    default T preProcessPersisted(T persisted) {
+        return persisted;
     }
 
     default T prunePersisted(T persisted) {

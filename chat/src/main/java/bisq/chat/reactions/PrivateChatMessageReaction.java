@@ -76,4 +76,9 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
     public NetworkId getReceiver() {
         return receiverNetworkId;
     }
+
+    @Override
+    public String getAckRequestingMessageId() {
+        return id;
+    }
 }

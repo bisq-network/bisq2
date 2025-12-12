@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
@@ -87,19 +87,30 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         }
     }
 
+    private void updateTooltipText() {
+        tooltipText = userProfileInfo + livenessState + versionInfo;
+        tooltip.setText(tooltipText);
+    }
+
     public void setUserProfile(@Nullable UserProfile userProfile) {
         setUserProfile(userProfile, true);
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
+        setUserProfile(userProfile, openProfileCardOnClick, true);
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick, boolean showTooltip) {
         this.userProfile = userProfile;
 
         if (userProfile == null) {
             dispose();
+            catHashImageView.setId("no-available-cat-hash");
             return;
         }
 
         // Is cached in CatHash
+        catHashImageView.setId(null);
         catHashImageView.setImage(CatHash.getImage(userProfile, size));
 
         userProfileInfo = userProfile.getTooltipString();
@@ -110,7 +121,9 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         versionInfo = Res.get("user.userProfile.version", version);
         updateTooltipText();
 
-        Tooltip.install(this, tooltip);
+        if (showTooltip) {
+            Tooltip.install(this, tooltip);
+        }
 
         if (getScene() == null) {
             sceneProperty().addListener(sceneChangeListener);
@@ -127,6 +140,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     public void dispose() {
         livenessScheduler.dispose();
+        catHashImageView.setId(null);
         catHashImageView.setImage(null);
         setOnMouseClicked(null);
         userProfile = null;
@@ -166,10 +180,5 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     public void hideLivenessIndicator() {
         livenessIndicator.hide();
         livenessScheduler.disable();
-    }
-
-    private void updateTooltipText() {
-        tooltipText = userProfileInfo + livenessState + versionInfo;
-        tooltip.setText(tooltipText);
     }
 }

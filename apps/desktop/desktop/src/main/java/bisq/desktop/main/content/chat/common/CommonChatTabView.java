@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.chat.common;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;

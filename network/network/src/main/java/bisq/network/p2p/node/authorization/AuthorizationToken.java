@@ -43,6 +43,7 @@ public abstract class AuthorizationToken implements NetworkProto {
     public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
         switch (proto.getMessageCase()) {
             case HASHCASHTOKEN: {
+                //noinspection deprecation
                 return HashCashToken.fromProto(proto);
             }
             case EQUIHASHTOKEN: {

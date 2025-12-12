@@ -17,7 +17,7 @@
 
 package bisq.network.tor.controller.events;
 
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.events.HsDescUploadedEvent;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescUploadedEventListener;
@@ -98,11 +98,11 @@ public class ControllerEventHandler implements EventHandler {
 
     @Override
     public void unrecognized(String type, String msg) {
-        if (BootstrapEvent.isBootstrapMessage(type, msg)) {
-            BootstrapEvent bootstrapEvent = BootstrapEvent.fromEventMessage(msg);
+        if (TorBootstrapEvent.isBootstrapMessage(type, msg)) {
+            TorBootstrapEvent torBootstrapEvent = TorBootstrapEvent.fromEventMessage(msg);
             bootstrapListeners.forEach(listener -> {
                 try {
-                    listener.onBootstrapStatusEvent(bootstrapEvent);
+                    listener.onBootstrapStatusEvent(torBootstrapEvent);
                 } catch (Exception e) {
                     log.error("Calling onBootstrapStatusEvent at listener {} failed", listener, e);
                 }

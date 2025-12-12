@@ -36,7 +36,7 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     public WalletSendView(WalletSendModel model, WalletSendController controller) {
         super(new VBox(20), model, controller);
 
-        root.setPadding(new Insets(40, 0, 0, 0));
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         address = new MaterialTextField(Res.get("wallet.send.address"), null, null);
         amount = new MaterialTextField(Res.get("wallet.send.amount"), null, null);

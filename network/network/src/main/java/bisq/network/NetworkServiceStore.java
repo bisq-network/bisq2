@@ -23,6 +23,9 @@ import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -33,16 +36,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
+    @Getter(AccessLevel.PACKAGE)
     private final Set<AddressByTransportTypeMap> seedNodes = new CopyOnWriteArraySet<>();
     @Deprecated(since = "2.1.0") // Moved to NetworkIdStore
+    @Getter(AccessLevel.PACKAGE)
     private final Map<String, NetworkId> networkIdByTag = new ConcurrentHashMap<>();
 
-    public NetworkServiceStore() {
-    }
-
-    public NetworkServiceStore(Set<AddressByTransportTypeMap> seedNodes, Map<String, NetworkId> networkIdByTag) {
+    NetworkServiceStore(Set<AddressByTransportTypeMap> seedNodes, Map<String, NetworkId> networkIdByTag) {
         this.seedNodes.addAll(seedNodes);
         this.networkIdByTag.putAll(networkIdByTag);
     }
@@ -54,6 +57,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public bisq.network.protobuf.NetworkServiceStore.Builder getBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.network.protobuf.NetworkServiceStore.newBuilder()
                 .addAllSeedNodes(seedNodes.stream()
                         .map(e -> e.toProto(serializeForHash))
@@ -67,6 +71,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
         Set<AddressByTransportTypeMap> seeds = proto.getSeedNodesList().stream()
                 .map(AddressByTransportTypeMap::fromProto)
                 .collect(Collectors.toSet());
+        @SuppressWarnings("deprecation")
         var networkIdByTag = proto.getNetworkIdByTagMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> NetworkId.fromProto(e.getValue())));
@@ -95,15 +100,6 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public NetworkServiceStore getClone() {
-        return new NetworkServiceStore(new HashSet<>(seedNodes), new HashMap<>(networkIdByTag));
-    }
-
-    Set<AddressByTransportTypeMap> getSeedNodes() {
-        return seedNodes;
-    }
-
-    @Deprecated(since = "2.1.0")
-    Map<String, NetworkId> getNetworkIdByTag() {
-        return networkIdByTag;
+        return new NetworkServiceStore(Set.copyOf(seedNodes), Map.copyOf(networkIdByTag));
     }
 }

@@ -17,14 +17,14 @@
 
 package bisq.desktop.main.content.network;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.network.bonded_roles.nodes.NodesController;
 import bisq.desktop.main.content.network.bonded_roles.roles.RolesController;
-import bisq.desktop.main.content.network.my_node.MyNetworkNodeController;
-import bisq.desktop.main.content.network.p2p.P2PNetworkController;
+import bisq.desktop.main.content.network.p2p_network.P2PNetworkController;
+import bisq.desktop.main.content.network.peers.NetworkPeersController;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,8 +43,8 @@ public class NetworkController extends ContentTabController<NetworkModel> {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case MY_NETWORK_NODE -> Optional.of(new MyNetworkNodeController(serviceProvider));
-            case P2P_NETWORK -> Optional.of(new P2PNetworkController(serviceProvider));
+            case NETWORK_P2P -> Optional.of(new P2PNetworkController(serviceProvider));
+            case NETWORK_PEERS -> Optional.of(new NetworkPeersController(serviceProvider));
             case ROLES -> Optional.of(new RolesController(serviceProvider));
             case NODES -> Optional.of(new NodesController(serviceProvider));
             default -> Optional.empty();

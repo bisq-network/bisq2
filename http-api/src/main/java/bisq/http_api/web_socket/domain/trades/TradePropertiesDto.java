@@ -18,6 +18,7 @@
 package bisq.http_api.web_socket.domain.trades;
 
 import bisq.dto.contract.RoleDto;
+import bisq.dto.trade.TradeProtocolFailureDto;
 import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.EqualsAndHashCode;
@@ -41,6 +42,8 @@ public class TradePropertiesDto {
     public Optional<String> paymentProof = Optional.empty();
     public Optional<String> errorMessage = Optional.empty();
     public Optional<String> errorStackTrace = Optional.empty();
+    public Optional<TradeProtocolFailureDto> tradeProtocolFailure = Optional.empty();
     public Optional<String> peersErrorMessage = Optional.empty();
     public Optional<String> peersErrorStackTrace = Optional.empty();
+    public Optional<TradeProtocolFailureDto> peersTradeProtocolFailure = Optional.empty();
 }

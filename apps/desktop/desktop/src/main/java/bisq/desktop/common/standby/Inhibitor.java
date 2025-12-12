@@ -20,6 +20,7 @@ package bisq.desktop.common.standby;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,7 @@ class Inhibitor implements PreventStandbyMode {
             "/bin/gnome-session-inhibit",
             "/usr/bin/systemd-inhibit",
             "/bin/systemd-inhibit");
+    @Nullable
     private ExecutorService executor;
 
     static Optional<PreventStandbyMode> findExecutableInhibitor() {
@@ -48,8 +50,8 @@ class Inhibitor implements PreventStandbyMode {
     }
 
     private final String inhibitExecutablePath;
-    private volatile boolean isPlaying;
-    private Optional<Process> process = Optional.empty();
+    private volatile boolean hasStarted;
+    private volatile Optional<Process> process = Optional.empty();
 
     Inhibitor(String inhibitExecutablePath) {
         this.inhibitExecutablePath = inhibitExecutablePath;
@@ -57,14 +59,19 @@ class Inhibitor implements PreventStandbyMode {
 
     @Override
     public void initialize() {
-        if (isPlaying) {
+        if (hasStarted) {
             return;
         }
-        isPlaying = true;
+        hasStarted = true;
+
+        // Add shutdown hook to ensure shutdown is called
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
 
         executor = ExecutorFactory.newSingleThreadExecutor("PreventStandbyMode");
         executor.submit(() -> {
             try {
+                // With gnome-session-inhibit: --inhibit-only means it just runs and exits immediately after registering the inhibition.
+                // With systemd-inhibit: That process blocks forever until killed. -> we need to destroy the process at shutdown
                 String[] commands = inhibitExecutablePath.contains("gnome-session-inhibit")
                         ? new String[]{inhibitExecutablePath, "--app-id", "Bisq", "--inhibit", "suspend", "--reason", "Avoid Standby", "--inhibit-only"}
                         : new String[]{inhibitExecutablePath, "--who", "Bisq", "--what", "sleep", "--why", "Avoid Standby", "--mode", "block", "tail", "-f", "/dev/null"};
@@ -72,14 +79,17 @@ class Inhibitor implements PreventStandbyMode {
                 process = Optional.of(processBuilder.start());
                 log.info("Started -- disabled power management via {}", String.join(" ", commands));
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to launch inhibitor", e);
             }
         });
     }
 
     @Override
     public void shutdown() {
-        isPlaying = false;
+        if (!hasStarted) {
+            return;
+        }
+        hasStarted = false;
         process.ifPresent(process -> {
             log.info("Stopping process {} isAlive={}", process.toHandle().info(), process.isAlive());
             if (process.isAlive()) {
@@ -88,7 +98,8 @@ class Inhibitor implements PreventStandbyMode {
         });
         process = Optional.empty();
         if (executor != null) {
-            ExecutorFactory.shutdownAndAwaitTermination(executor, 10);
+            ExecutorFactory.shutdownAndAwaitTermination(executor, 200);
+            executor = null;
         }
     }
 }

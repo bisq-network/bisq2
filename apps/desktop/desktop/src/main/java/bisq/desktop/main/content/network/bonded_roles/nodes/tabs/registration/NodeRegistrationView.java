@@ -37,18 +37,18 @@ public class NodeRegistrationView extends BondedRolesRegistrationView<NodeRegist
                                 NodeRegistrationController controller,
                                 UserProfileSelection userProfileSelection) {
         super(model, controller, userProfileSelection);
+
         addressInfoJson = new MaterialTextArea(Res.get("user.bondedRoles.registration.node.addressInfo"), Res.get("user.bondedRoles.registration.node.addressInfo.prompt"));
 
         pubKey = new MaterialTextField(Res.get("user.bondedRoles.registration.node.pubKey"));
         privKey = new MaterialPasswordField(Res.get("user.bondedRoles.registration.node.privKey"));
 
         importNodeAddressButton = new Button(Res.get("user.bondedRoles.registration.node.importAddress"));
-        importNodeAddressButton.getStyleClass().addAll("outlined-button", "button-reduced-padding");
-        importNodeAddressButton.setPrefWidth(180);
+        importNodeAddressButton.getStyleClass().addAll("outlined-button");
+        importNodeAddressButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         showKeyPairButton = new Button(Res.get("user.bondedRoles.registration.node.showKeyPair"));
-        showKeyPairButton.getStyleClass().add("button-reduced-padding");
-        showKeyPairButton.setPrefWidth(150);
+        showKeyPairButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         buttons.getChildren().add(0, importNodeAddressButton);
         buttons.getChildren().add(2, showKeyPairButton);

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Getter
@@ -98,11 +99,11 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     @Override
     public String getDisplayString() {
-        return Res.get(chatChannelDomain.name().toLowerCase() + "." + getChannelTitle() + ".title");
+        return Res.get(chatChannelDomain.name().toLowerCase(Locale.ROOT) + "." + getChannelTitle() + ".title");
     }
 
     public String getDescription() {
-        return Res.get(chatChannelDomain.name().toLowerCase() + "." + getChannelTitle() + ".description");
+        return Res.get(chatChannelDomain.name().toLowerCase(Locale.ROOT) + "." + getChannelTitle() + ".description");
     }
 
 

@@ -18,20 +18,21 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.data.Pair;
+import bisq.common.file.FileReaderUtils;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.google.gson.Gson;
@@ -41,7 +42,16 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
@@ -56,7 +66,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPrice", 3);
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequestService");
 
     @Getter
     @ToString
@@ -121,6 +131,11 @@ public class MarketPriceRequestService {
             this.operator = operator;
             this.transportType = transportType;
         }
+
+        public boolean isClearnetProvider() {
+            String fullAddress = baseUrl.replaceFirst("^https?://", "");
+            return Address.fromFullAddress(fullAddress).isClearNetAddress();
+        }
     }
 
     private final Config conf;
@@ -183,9 +198,31 @@ public class MarketPriceRequestService {
         if (scheduler != null) {
             scheduler.stop();
         }
+
+        ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
+
         return httpClient.map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
+
+    Map<Market, MarketPrice> loadStaticDevMarketPrice() {
+        String resourceName = "dev_market_price.json";
+        try {
+            String json = FileReaderUtils.readStringFromResource(resourceName);
+            Map<Market, MarketPrice> map = parseResponse(json);
+            log.warn("We applied developer market price data from resources. " +
+                    "This data is outdated and serves only for the case that the clearnet provider is offline.");
+            return map.entrySet().stream()
+                    .filter(e -> e.getValue().isValidDate())
+                    .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
+                    .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
+                            Map.Entry::getValue));
+        } catch (IOException e) {
+            log.error("Could not read string from resources: {}", resourceName, e);
+            return new HashMap<>();
+        }
+    }
+
 
     private void startRequesting() {
         if (scheduler != null) {
@@ -199,7 +236,7 @@ public class MarketPriceRequestService {
     }
 
     private void periodicRequest() {
-        request().whenComplete((result, throwable) -> {
+        requestMarketPrice().whenComplete((result, throwable) -> {
             if (throwable != null) {
                 if (scheduler != null) {
                     scheduler.stop();
@@ -213,15 +250,15 @@ public class MarketPriceRequestService {
         });
     }
 
-    private CompletableFuture<Void> request() {
+    private CompletableFuture<Void> requestMarketPrice() {
         try {
-            return request(new AtomicInteger(0));
+            return requestMarketPrice(new AtomicInteger(0));
         } catch (RejectedExecutionException e) {
             return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
         }
     }
 
-    private CompletableFuture<Void> request(AtomicInteger recursionDepth) {
+    private CompletableFuture<Void> requestMarketPrice(AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             throw new RuntimeException("No market price provider available");
         }
@@ -230,7 +267,6 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
-                    ThreadName.set(this, "request");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);
@@ -239,7 +275,7 @@ public class MarketPriceRequestService {
                         int numRecursions = recursionDepth.incrementAndGet();
                         if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
                             log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            request(recursionDepth).join();
+                            requestMarketPrice(recursionDepth).join();
                         } else {
                             log.warn("We exhausted all possible providers and give up");
                             throw new RuntimeException("We failed at all possible providers and give up");
@@ -250,10 +286,17 @@ public class MarketPriceRequestService {
                     long ts = System.currentTimeMillis();
                     String param = "getAllMarketPrices";
                     log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
+                    String json = "";
                     try {
-                        String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                        json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
                         log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
+
+                        if (map.isEmpty()) {
+                            log.warn("Provider {} returned an empty or invalid response, switching provider.", client.getBaseUrl());
+                            throw new IllegalStateException("Provider is responsive but not returning any market prices");
+                        }
+
                         long now = System.currentTimeMillis();
                         String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (now - timeSinceLastResponse) / 1000 + " sec";
                         log.info("Market price request from {} resulted in {} items took {} ms. {}",
@@ -278,7 +321,8 @@ public class MarketPriceRequestService {
                         }
 
                         Throwable rootCause = ExceptionUtil.getRootCause(e);
-                        log.warn("{} at request: {}", rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Failed to request market price data from {}. {} at request: {}", client.getBaseUrl(), rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Json: {}", json);
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
 
@@ -292,13 +336,13 @@ public class MarketPriceRequestService {
                         int numRecursions = recursionDepth.incrementAndGet();
                         if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
                             log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            request(recursionDepth).join();
+                            requestMarketPrice(recursionDepth).join();
                         } else {
                             log.warn("We exhausted all possible providers and give up");
                             throw new RuntimeException("We failed at all possible providers and give up");
                         }
                     }
-                }, POOL)
+                }, EXECUTOR)
                 .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
@@ -314,14 +358,14 @@ public class MarketPriceRequestService {
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
                     String provider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
                     // Convert Bisq-Aggregate to BISQAGGREGATE
-                    provider = provider.replace("-", "").toUpperCase();
+                    provider = provider.replace("-", "").toUpperCase(Locale.ROOT);
 
                     double price = (Double) treeMap.get("price");
                     // json uses double for our timestamp long value...
                     // We get milliseconds not seconds
                     long timestamp = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
                     // We only get BTC based prices not fiat-fiat or altcoin-altcoin
-                    boolean isFiat = TradeCurrency.isFiat(currencyCode);
+                    boolean isFiat = Asset.isFiat(currencyCode);
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
@@ -333,9 +377,13 @@ public class MarketPriceRequestService {
                     if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);
-                    } else if (!marketPrice.getMarket().getBaseCurrencyCode().equals("DCR")) {
-                        // We get an old DCR price from the price servers. Need to be fixed in price server
-                        log.warn("We got an outdated market price. {}", marketPrice);
+                    } else {
+                        if (marketPrice.getMarket().getBaseCurrencyCode().equals("DCR")) {
+                            log.warn("We got an outdated market price for DCR and ignore that");
+                            // We get an old DCR price from the price servers. Need to be fixed in price server
+                        } else {
+                            log.warn("We got an outdated market price. timestamp={}\n{}", new Date(marketPrice.getTimestamp()), marketPrice);
+                        }
                     }
                 }
             } catch (Exception e) {

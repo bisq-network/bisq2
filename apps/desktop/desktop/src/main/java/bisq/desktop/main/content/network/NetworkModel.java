@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.network;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
 
 public class NetworkModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MY_NETWORK_NODE;
+        return NavigationTarget.NETWORK_P2P;
     }
 }

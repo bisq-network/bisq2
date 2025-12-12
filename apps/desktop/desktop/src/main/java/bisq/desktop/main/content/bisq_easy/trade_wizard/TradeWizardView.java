@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.Controller;
@@ -73,12 +74,14 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         Triple<HBox, Button, List<Label>> triple = getProgressItems();
         HBox progressItemsBox = triple.getFirst();
         closeButton = triple.getSecond();
+        closeButton.setFocusTraversable(false);
         progressLabelList = triple.getThird();
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("action.back"));
+        backButton.setFocusTraversable(false);
         HBox buttons = new HBox(10, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
@@ -131,10 +134,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
         backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
-        backButton.setFocusTraversable(false);
 
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-        closeButton.setFocusTraversable(false);
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
@@ -191,7 +192,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
         HBox hBox = new HBox(10);
         hBox.setAlignment(Pos.CENTER);
-        hBox.setId("onboarding-top-panel");
+        hBox.setId("wizard-progress-box");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
@@ -241,8 +242,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 if (progressLabelAnimationScheduler != null) {
                     progressLabelAnimationScheduler.stop();
                 }
-                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
-                        .after(Transitions.DEFAULT_DURATION / 2);
+                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, ManagedDuration.getHalfOfDefaultDurationMillis()))
+                        .after(ManagedDuration.getHalfOfDefaultDurationMillis());
             } else {
                 label.setOpacity(1);
             }

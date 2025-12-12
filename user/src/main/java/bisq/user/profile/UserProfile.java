@@ -44,10 +44,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 
 /**
  * Publicly shared user profile (from other peers or mine).
+ * Data size about 300 bytes
  */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -76,12 +79,6 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 networkId,
                 terms,
                 statement);
-    }
-
-    public static UserProfile withVersion(UserProfile userProfile, int version) {
-        return new UserProfile(version, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(),
-                ApplicationVersion.getVersion().getVersionAsString());
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
@@ -268,7 +265,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     public String getUserName() {
-        return UserNameLookup.getUserName(getNym(), nickName);
+        return UserProfileService.getInstance().evaluateUserName(nickName, getNym());
     }
 
     public String getAddressByTransportDisplayString() {
@@ -292,9 +289,9 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    terms='" + terms + '\'' +
                 ",\r\n                    statement='" + statement + '\'' +
-                ",\r\n                    nym='" + nym + '\'' +
-                ",\r\n                    proofOfBurnHash=" + proofOfBurnHash +
-                ",\r\n                    bondedReputationHash=" + bondedReputationHash +
+                ",\r\n                    nym='" + getNym() + '\'' +
+                ",\r\n                    proofOfBurnHash=" + getProofOfBurnKey() +
+                ",\r\n                    bondedReputationHash=" + getBondedReputationKey() +
                 ",\r\n                    applicationVersion=" + applicationVersion +
                 "\r\n}";
     }

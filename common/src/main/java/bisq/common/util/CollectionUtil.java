@@ -26,15 +26,16 @@ import java.util.stream.Stream;
 public class CollectionUtil {
     @Nullable
     public static <T> T getRandomElement(Collection<T> collection) {
-        // Got a weird exception with size = -1 (Hashset), so we use the size check instead of isEmpty.
         return collection.isEmpty() ?
                 null :
                 new ArrayList<>(collection).get(new Random().nextInt(collection.size()));
     }
 
     public static <T> List<T> toShuffledList(List<T> list) {
-        Collections.shuffle(list);
-        return list;
+        // List might be an unmodifiable list thus we create an ArrayList.
+        ArrayList<T> arrayList = new ArrayList<>(list);
+        Collections.shuffle(arrayList);
+        return arrayList;
     }
 
     public static <T> List<T> toShuffledList(Stream<T> stream) {
@@ -43,9 +44,5 @@ public class CollectionUtil {
 
     public static <T> List<T> toShuffledList(Set<T> set) {
         return toShuffledList(set.stream());
-    }
-
-    public static Stream<String> streamFromCsv(String addresses) {
-        return Stream.of(addresses.split(",")).filter(Objects::nonNull).map(String::trim);
     }
 }

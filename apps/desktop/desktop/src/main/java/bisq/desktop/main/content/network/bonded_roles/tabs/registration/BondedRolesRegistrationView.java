@@ -20,6 +20,7 @@ package bisq.desktop.main.content.network.bonded_roles.tabs.registration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.OrderedList;
@@ -105,14 +106,12 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
 
         requestRegistrationButton = new Button(Res.get("user.bondedRoles.registration.requestRegistration"));
         requestRegistrationButton.setDefaultButton(true);
-        requestRegistrationButton.getStyleClass().add("button-reduced-padding");
-        requestRegistrationButton.setPrefWidth(180);
+        requestRegistrationButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         requestCancellationButton = new Button(Res.get("user.bondedRoles.cancellation.requestCancellation"));
-        requestCancellationButton.getStyleClass().add("button-reduced-padding");
-        requestCancellationButton.setPrefWidth(180);
+        requestCancellationButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Bisq_2_Roles");
 
         buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

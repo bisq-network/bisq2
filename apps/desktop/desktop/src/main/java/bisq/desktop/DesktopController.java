@@ -18,13 +18,13 @@
 package bisq.desktop;
 
 import bisq.application.State;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.standby.PreventStandbyModeService;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -34,6 +34,7 @@ import bisq.desktop.components.cathash.JavaFxCatHashService;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
@@ -45,6 +46,7 @@ import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.user.RepublishUserProfileService;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -55,6 +57,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
@@ -118,11 +121,12 @@ public class DesktopController extends NavigationController {
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
 
-        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getBaseDir()));
+        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getAppDataDirPath()));
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);
         serviceProvider.getShutDownHandler().addShutDownHook(this::onShutdown);
+        UIClock.initialize();
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
@@ -136,19 +140,23 @@ public class DesktopController extends NavigationController {
         });
 
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
+
+        // Prune user profile icons
+        Map<String, UserProfile> userProfileById = serviceProvider.getUserService().getUserProfileService().getUserProfileById().getUnmodifiableMap();
+        CatHash.pruneOutdatedProfileIcons(userProfileById.values());
     }
 
     private void setInitialScreenSize() {
         Cookie cookie = serviceProvider.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
-                .orElse(Math.max(DesktopModel.MIN_WIDTH, Math.min(DesktopModel.PREF_WIDTH, screenBounds.getWidth()))));
+                .orElseGet(() -> Math.max(DesktopModel.MIN_WIDTH, Math.min(DesktopModel.PREF_WIDTH, screenBounds.getWidth()))));
         model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
-                .orElse(Math.max(DesktopModel.MIN_HEIGHT, Math.min(DesktopModel.PREF_HEIGHT, screenBounds.getHeight()))));
+                .orElseGet(() -> Math.max(DesktopModel.MIN_HEIGHT, Math.min(DesktopModel.PREF_HEIGHT, screenBounds.getHeight()))));
         model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
-                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+                .orElseGet(() -> (screenBounds.getWidth() - model.getStageWidth()) / 2));
         model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
-                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
+                .orElseGet(() -> (screenBounds.getHeight() - model.getStageHeight()) / 2));
     }
 
     @Override
@@ -182,6 +190,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        UIClock.shutdown();
     }
 
     public void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
@@ -214,6 +223,7 @@ public class DesktopController extends NavigationController {
             // by a try/catch. It is unclear from where it gets called as the stacktrace does not expose the path to a
             // Bisq source code caller.
             // See https://github.com/bisq-network/bisq2/issues/2832
+            log.error("System tray not supported", throwable);
             return;
         }
         UIThread.run(() -> new Popup().error(throwable).show());

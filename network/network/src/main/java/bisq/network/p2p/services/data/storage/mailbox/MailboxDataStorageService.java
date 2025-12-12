@@ -19,7 +19,12 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
-import bisq.network.p2p.services.data.storage.*;
+import bisq.common.formatter.DataSizeFormatter;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -27,22 +32,28 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
+    // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
     public interface Listener {
         void onAdded(MailboxData mailboxData);
 
         void onRemoved(MailboxData mailboxData);
     }
 
+    // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
-    public MailboxDataStorageService(PersistenceService persistenceService, PruneExpiredEntriesService pruneExpiredEntriesService, String storeName, String storeKey) {
+    public MailboxDataStorageService(PersistenceService persistenceService,
+                                     PruneExpiredEntriesService pruneExpiredEntriesService,
+                                     String storeName,
+                                     String storeKey) {
         super(persistenceService, storeName, storeKey);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
@@ -56,6 +67,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
+        listeners.clear();
     }
 
     public DataStorageResult add(AddMailboxRequest request) {
@@ -240,22 +252,61 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     // Useful for debugging state of the store
-    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
+    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
-            var added = persisted.getMap().values().stream()
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
+            var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
                     .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
                     .map(e -> e.getMailboxSequentialData().getMailboxData().getClassName())
                     .toList();
-            var removed = persisted.getMap().values().stream()
+            var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveMailboxRequest)
                     .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
                     .map(RemoveMailboxRequest::getClassName)
                     .toList();
-            var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElse(persistence.getFileName().replace("Store", ""));
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}, Max size: {}",
+                    methodName,
+                    storeKey,
+                    added.size(),
+                    removed.size(),
+                    dataStore.getMap().size(),
+                    DataSizeFormatter.format(dataSize),
+                    getMaxMapSize());
+
+            boolean showDetails = false;
+            if (showDetails) {
+                long now = System.currentTimeMillis();
+                String summaryAdded = dataStore.getMap().values().stream()
+                        .filter(AddMailboxRequest.class::isInstance)
+                        .map(AddMailboxRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+                String summaryRemoved = dataStore.getMap().values().stream()
+                        .filter(RemoveMailboxRequest.class::isInstance)
+                        .map(RemoveMailboxRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+
+                log.info("AddMailboxRequest: {}\n{}", storeKey, summaryAdded);
+                log.info("RemoveMailboxRequest: {}\n{}", storeKey, summaryRemoved);
+            }
         }
     }
 }

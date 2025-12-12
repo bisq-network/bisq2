@@ -27,19 +27,25 @@ import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class StringUtils {
+    public static final String DOT_ELLIPSIS = "...";
+    public static final String UNICODE_ELLIPSIS = "…";
+
     public static String truncate(Object value) {
         return truncate(value.toString());
     }
 
     public static String truncate(String value) {
-        return truncate(value, 32);
+        return truncate(value, 50);
     }
 
     public static String truncate(Object value, int maxLength) {
@@ -47,12 +53,15 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
-        if (value == null) {
-            log.warn("value at truncate is null");
-            return "";
-        }
-        if (maxLength > 3 && value.length() > maxLength) {
-            return value.substring(0, maxLength - 3) + "...";
+        return truncate(value, maxLength, UNICODE_ELLIPSIS);
+    }
+
+    public static String truncate(String value, int maxLength, String ellipsis) {
+        checkNotNull(value, "value at truncate must not be null");
+        checkNotNull(ellipsis, "ellipsis at truncate must not be null");
+        int ellipsisLength = ellipsis.length();
+        if (maxLength > ellipsisLength && value.length() > maxLength) {
+            return value.substring(0, maxLength - ellipsisLength) + ellipsis;
         } else {
             return value;
         }
@@ -102,22 +111,44 @@ public class StringUtils {
         return null;
     }
 
-    public static String capitalize(String value) {
+    public static String capitalize(String value, Locale locale) {
         if (value == null || value.isEmpty()) {
             return value;
         } else if (value.length() == 1) {
-            return value.toUpperCase();
+            return value.toUpperCase(locale);
         } else {
-            return value.substring(0, 1).toUpperCase() + value.substring(1);
+            return value.substring(0, 1).toUpperCase(locale) + value.substring(1);
+        }
+    }
+
+    public static String capitalize(String value) {
+        return capitalize(value, Locale.getDefault());
+    }
+
+    public static String unCapitalize(String value, Locale locale) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else if (value.length() == 1) {
+            return value.toLowerCase(locale);
+        } else {
+            return value.substring(0, 1).toLowerCase(locale) + value.substring(1);
+        }
+    }
+
+    public static String unCapitalize(String value) {
+        return unCapitalize(value, Locale.getDefault());
+    }
+
+    public static String capitalizeAll(String value, Locale locale) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else {
+            return value.toUpperCase(locale);
         }
     }
 
     public static String capitalizeAll(String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        } else {
-            return value.toUpperCase();
-        }
+        return capitalizeAll(value, Locale.getDefault());
     }
 
     // Replaces the content inside the brackets marked with HYPERLINK with the hyperlink and the number of the hyperlink
@@ -151,12 +182,20 @@ public class StringUtils {
         return Optional.ofNullable(toNullIfEmpty(value));
     }
 
+    public static String snakeCaseToCamelCase(String value, Locale locale) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(locale));
+    }
+
     public static String snakeCaseToCamelCase(String value) {
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+        return snakeCaseToCamelCase(value, Locale.getDefault());
+    }
+
+    public static String kebapCaseToCamelCase(String value, Locale locale) {
+        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(locale));
     }
 
     public static String kebapCaseToCamelCase(String value) {
-        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, value.toLowerCase());
+        return kebapCaseToCamelCase(value, Locale.getDefault());
     }
 
     public static String camelCaseToSnakeCase(String value) {
@@ -167,8 +206,12 @@ public class StringUtils {
         return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, value);
     }
 
+    public static String snakeCaseToKebapCase(String value, Locale locale) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase(locale));
+    }
+
     public static String snakeCaseToKebapCase(String value) {
-        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, value.toLowerCase());
+        return snakeCaseToKebapCase(value, Locale.getDefault());
     }
 
     public static List<Pair<String, List<String>>> getTextStylePairs(String input) {
@@ -246,6 +289,57 @@ public class StringUtils {
         if (OS.isAndroid()) {
             return string;
         }
-        return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
+        return string.replace(PlatformUtils.getHomeDirectoryPath().toAbsolutePath().toString(), "<HOME_DIR>");
+    }
+
+    /**
+     * Normalizes line breaks in the provided text to use the system's default line separator.
+     * This ensures consistent text handling across different operating systems (Windows, Unix/Linux, Mac).
+     *
+     * @param text The text to normalize, may be null
+     * @return The normalized text with consistent line separators, or null if input was null
+     */
+    public static String normalizeLineBreaks(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("\r\n|\n|\r", Matcher.quoteReplacement(System.lineSeparator()));
+    }
+
+    public static boolean isAlphaNumeric(String value) {
+        return value != null && value.chars().allMatch(e -> Character.isLetter(e) || Character.isDigit(e));
+    }
+
+    public static boolean isDigit(String value) {
+        return value != null && value.chars().allMatch(Character::isDigit);
+    }
+
+    public static boolean isNumber(String value) {
+        if (isEmpty(value)) {
+            return false;
+        }
+        try {
+            MathUtils.parseToDouble(value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isLetter(String value) {
+        return value != null && value.chars().allMatch(Character::isLetter);
+    }
+
+
+    public static String cleanUserInput(String input) {
+        if (input == null) {
+            return "";
+        }
+
+        // Remove common invisible/formatting characters (BiDi, ZW*, etc.)
+        // E.g. contact app on OSX surrounds use invisible directional formatting chars
+        String cleaned = input.replaceAll("[\\p{Cf}]", "");
+        cleaned = cleaned.trim();
+        return cleaned;
     }
 }

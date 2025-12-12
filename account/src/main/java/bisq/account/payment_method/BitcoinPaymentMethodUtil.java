@@ -17,8 +17,6 @@
 
 package bisq.account.payment_method;
 
-import bisq.account.protocol_type.TradeProtocolType;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,16 +41,5 @@ public class BitcoinPaymentMethodUtil {
 
     public static List<BitcoinPaymentRail> getAllPaymentRails() {
         return List.of(BitcoinPaymentRail.values());
-    }
-
-    public static List<BitcoinPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
-        return switch (protocolType) {
-            case BISQ_EASY -> getAllPaymentRails();               // Support any BTC rail
-            case BISQ_MU_SIG, MONERO_SWAP, BSQ_SWAP ->
-                    List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain
-            case LIGHTNING_ESCROW -> List.of(BitcoinPaymentRail.LN);
-            case LIQUID_SWAP -> throw new IllegalArgumentException("No paymentMethods for that protocolType");
-            default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);
-        };
     }
 }

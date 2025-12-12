@@ -35,14 +35,14 @@ import java.util.Date;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
-    public static final long TTL = TTL_100_DAYS;
+    public static final long TTL = TTL_30_DAYS;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());

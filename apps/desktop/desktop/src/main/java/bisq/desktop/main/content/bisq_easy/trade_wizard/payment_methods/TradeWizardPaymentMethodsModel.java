@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.common.currency.Market;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.*;
@@ -49,6 +49,8 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShowOverlay = new SimpleBooleanProperty();
+    private final StringProperty overlayText = new SimpleStringProperty("");
 
     void reset() {
         direction = null;
@@ -63,5 +65,7 @@ public class TradeWizardPaymentMethodsModel implements Model {
         isPaymentMethodsEmpty.set(false);
         canAddCustomFiatPaymentMethod.set(false);
         market.set(null);
+        shouldShowOverlay.set(false);
+        overlayText.set("");
     }
 }

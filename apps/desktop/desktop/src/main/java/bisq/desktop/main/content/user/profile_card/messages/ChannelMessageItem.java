@@ -42,14 +42,17 @@ public class ChannelMessageItem implements Comparable<ChannelMessageItem> {
     private final String message;
     private final String dateTime;
     private final Optional<Citation> citation;
+    private final Optional<String> citationAuthorName;
 
     public ChannelMessageItem(PublicChatMessage publicChatMessage,
-                              UserProfile senderUserProfile) {
+                              UserProfile senderUserProfile,
+                              Optional<String> citationAuthorName) {
         this.publicChatMessage = publicChatMessage;
         this.senderUserProfile = senderUserProfile;
+        this.citationAuthorName = citationAuthorName;
 
         String editPostFix = publicChatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-        message = publicChatMessage.getText().orElse(Res.get("data.na")) + editPostFix;
+        message = publicChatMessage.getText().orElseGet(() -> Res.get("data.na")) + editPostFix;
         dateTime = DateFormatter.formatDateTime(new Date(publicChatMessage.getDate()),
                 DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("temporal.at") + " ");
         citation = publicChatMessage.getCitation();

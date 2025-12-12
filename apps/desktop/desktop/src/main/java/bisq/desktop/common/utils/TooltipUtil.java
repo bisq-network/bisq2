@@ -17,33 +17,27 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.desktop.components.controls.BisqTooltip;
-import javafx.scene.control.Control;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.SkinBase;
 import javafx.scene.control.Tooltip;
 import javafx.scene.text.Text;
+import lombok.extern.slf4j.Slf4j;
 
-// Not used but keep as potentially useful
+@Slf4j
 public class TooltipUtil {
-    public static void showTooltipIfTruncated(SkinBase<? extends Control> skinBase, Labeled labeled) {
-        for (Object node : skinBase.getChildren()) {
-            if (node instanceof Text) {
-                String displayedText = ((Text) node).getText();
-                String unTruncatedText = labeled.getText();
-                if (displayedText.equals(unTruncatedText)) {
-                    if (labeled.getTooltip() != null) {
-                        labeled.setTooltip(null);
-                    }
-                } else if (unTruncatedText != null && !unTruncatedText.trim().isEmpty()) {
-                    Tooltip tooltip = new BisqTooltip(unTruncatedText);
 
-                    // Force tooltip to use color, as it takes in some cases the color of the parent label
-                    // and can't be overridden by class or nodeId
-                    tooltip.setStyle("-fx-text-fill: red !important;");
-                    labeled.setTooltip(tooltip);
-                }
+    // Only works if label has not set preferredWidth, minWidth or maxWidth and if label layout is already done.
+    public static void showTooltipIfTruncated(Labeled label) {
+        Text text = new Text(label.getText());
+        text.setFont(label.getFont());
+        text.getStyleClass().addAll(label.getStyleClass());
+        double textWidth = text.getLayoutBounds().getWidth();
+        double labelWidth = label.getWidth();
+        if (textWidth > labelWidth) {
+            if (label.getTooltip() == null) {
+                label.setTooltip(new Tooltip(label.getText()));
             }
+        } else {
+            label.setTooltip(null);
         }
     }
 }

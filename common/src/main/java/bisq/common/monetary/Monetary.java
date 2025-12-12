@@ -17,7 +17,7 @@
 
 package bisq.common.monetary;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.MathUtils;
@@ -60,7 +60,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
     }
 
     public static Monetary from(long amount, String code) {
-        if (TradeCurrency.isFiat(code)) {
+        if (Asset.isFiat(code)) {
             return Fiat.fromValue(amount, code);
         } else {
             return Coin.fromValue(amount, code);

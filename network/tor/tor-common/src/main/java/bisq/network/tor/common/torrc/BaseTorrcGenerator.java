@@ -30,14 +30,14 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
     public static final String CONTROL_DIR_NAME = "control";
 
     private final Path dataDirPath;
-    private final Path controlPortWriteFile;
+    private final Path controlPortWriteFilePath;
     private final String hashedControlPassword;
     private final boolean isTestNetwork;
 
     @Builder
     public BaseTorrcGenerator(Path dataDirPath, String hashedControlPassword, boolean isTestNetwork) {
         this.dataDirPath = dataDirPath;
-        this.controlPortWriteFile = dataDirPath.resolve(CONTROL_DIR_NAME).resolve("control");
+        this.controlPortWriteFilePath = dataDirPath.resolve(CONTROL_DIR_NAME).resolve("control");
         this.hashedControlPassword = hashedControlPassword;
         this.isTestNetwork = isTestNetwork;
     }
@@ -48,7 +48,7 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
         torConfigMap.put(DATA_DIRECTORY, dataDirPath.toAbsolutePath().toString());
 
         torConfigMap.put(CONTROL_PORT, CONTROL_PORT_AUTO);
-        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE, controlPortWriteFile.toAbsolutePath().toString());
+        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE, controlPortWriteFilePath.toAbsolutePath().toString());
         torConfigMap.put(HASHED_CONTROL_PASSWORD, hashedControlPassword);
 
         String logLevel = isTestNetwork ? "debug" : "notice";

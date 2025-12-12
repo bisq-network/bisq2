@@ -22,18 +22,17 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
     private final ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
-
-    public BisqEasyOfferbookChannelStore() {
-    }
 
     private BisqEasyOfferbookChannelStore(List<BisqEasyOfferbookChannel> channels) {
         this.channels.setAll(channels);
@@ -76,6 +75,6 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public BisqEasyOfferbookChannelStore getClone() {
-        return new BisqEasyOfferbookChannelStore(new ArrayList<>(channels));
+        return new BisqEasyOfferbookChannelStore(List.copyOf(channels));
     }
 }

@@ -18,7 +18,6 @@
 package bisq.desktop_app;
 
 import bisq.application.Executable;
-import bisq.common.threading.ThreadName;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -29,6 +28,7 @@ import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -51,7 +51,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void launchApplication(String[] args) {
         new Thread(() -> {
-            ThreadName.setName("DesktopExecutable.JavaFXApplication.launch");
+            Thread.currentThread().setName("JavaFXApplication.launch");
             Application.launch(JavaFXApplication.class, args); //blocks until app is closed
         }).start();
 
@@ -80,25 +80,31 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 });
     }
 
+    @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         if (desktopController == null) {
             UIThread.run(() -> new Popup().error(throwable).show());
             return;
         }
-        Platform.runLater(() -> desktopController.onApplicationServiceInitialized(result, throwable));
+        UIThread.run(() -> desktopController.onApplicationServiceInitialized(result, throwable));
     }
 
     @Override
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception:", throwable);
-            UIThread.run(() -> {
-                if (desktopController != null) {
-                    desktopController.onUncaughtException(thread, throwable);
-                } else {
-                    log.error("primaryStageController not set yet");
-                }
-            });
+            if (throwable instanceof NullPointerException &&
+                    Arrays.stream(throwable.getStackTrace()).anyMatch(e -> e.getClassName().contains("GraphicsPipeline"))) {
+                // Ignore known JavaFX shutdown issue when runLater tasks are executed after the rendering subsystem
+                // is already torn down
+                return;
+            }
+
+            if (desktopController != null) {
+                UIThread.run(() -> desktopController.onUncaughtException(thread, throwable));
+            } else {
+                log.error("UncaughtExceptionHandler not applied as desktopController is null");
+            }
         });
     }
 
@@ -120,19 +126,28 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected void exitJvm() {
-        if (applicationService != null && applicationService.getShutDownErrorMessage().get() == null) {
-            exitJavaFXPlatform();
+        if (applicationService == null) {
+            log.warn("Shutdown before applicationService have been created");
+            super.exitJvm();
+        } else if (applicationService.getShutDownErrorMessage().get() == null) {
+            // If shutDownErrorMessage is set we display an error popup we leave it to the user to close it and
+            // shutdown the app by clicking the shutdown button
+            try {
+                // We might get called from a non UI thread
+                UIThread.run(this::exitJavaFXPlatform);
+            } catch (Exception e) {
+                log.error("Could not map shutdown handler to UI thread", e);
+                super.exitJvm();
+            }
         }
-        // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
     }
 
     private void exitJavaFXPlatform() {
-        if (Platform.isFxApplicationThread()) {
-            // See https://openjfx.io/javadoc/19/javafx.graphics/javafx/application/Application.html
-            // Calling System.exit after Platform.exit causes exception
-            log.info("Exiting JavaFX Platform");
+        log.info("Exiting JavaFX Platform");
+        try {
             Platform.exit();
-        } else {
+        } catch (Exception e) {
+            log.error("Platform.exit failed", e);
             super.exitJvm();
         }
     }

@@ -24,11 +24,13 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
+
 @ToString
 @Getter
 @Slf4j
 public class WebcamAppModel {
-    private final String baseDir;
+    private final Path appDataDirPath;
     @Setter
     private int port;
     private final Observable<Boolean> imageRecognized = new Observable<>();
@@ -42,7 +44,7 @@ public class WebcamAppModel {
     private final Observable<Throwable> localException = new Observable<>();
 
     public WebcamAppModel(ApplicationService.Config config) {
-        baseDir = config.getBaseDir().toAbsolutePath().toString();
+        appDataDirPath = config.getAppDataDirPath();
     }
 
     public void reset() {

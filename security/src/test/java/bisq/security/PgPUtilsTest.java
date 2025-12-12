@@ -17,7 +17,8 @@
 
 package bisq.security;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -26,29 +27,35 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SignatureException;
+import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 public class PgPUtilsTest {
     @BeforeEach
     void setUp() throws IOException {
-        FileUtils.makeDirs(Path.of("temp").toFile());
+        Files.createDirectories(Path.of("temp"));
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        FileUtils.deleteFileOrDirectory(Path.of("temp").toFile());
+        FileMutatorUtils.deleteFileOrDirectory(Path.of("temp"));
     }
 
     @Test
     public void testReadPgpPublicKeyRing() {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");
-            String keyId = Integer.toHexString((int) pgpPublicKeyRing.getPublicKey().getKeyID()).toUpperCase();
+            String keyId = Integer.toHexString((int) pgpPublicKeyRing.getPublicKey().getKeyID()).toUpperCase(Locale.ROOT);
             assertEquals("387C8307", keyId);
         } catch (Exception e) {
             log.error(e.toString());
@@ -62,7 +69,7 @@ public class PgPUtilsTest {
         // gpg --digest-algo SHA256 -u [KEY ID] --output testData.txt.asc --detach-sig --armor testData.txt
         try {
             PGPSignature signature = getPGPSignature("testData.txt.asc");
-            String keyId = Integer.toHexString((int) signature.getKeyID()).toUpperCase();
+            String keyId = Integer.toHexString((int) signature.getKeyID()).toUpperCase(Locale.ROOT);
             assertEquals("387C8307", keyId);
         } catch (Exception e) {
             log.error(e.toString());
@@ -75,8 +82,8 @@ public class PgPUtilsTest {
         try {
             PGPSignature signature = getPGPSignature("testData.txt.asc");
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");
-            File data = getDataAsFile("testData.txt");
-            boolean isValid = PgPUtils.isSignatureValid(signature, pgpPublicKeyRing.getPublicKey(), data);
+            Path dataPath = getDataAsFilePath("testData.txt");
+            boolean isValid = PgPUtils.isSignatureValid(signature, pgpPublicKeyRing.getPublicKey(), dataPath);
             assertTrue(isValid);
         } catch (Exception e) {
             log.error(e.toString());
@@ -85,41 +92,41 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        File file = Path.of("temp", fileName).toFile();
+        Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
-                FileUtils.copy(resource, out);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
+                 OutputStream out = Files.newOutputStream(filePath)) {
+                FileMutatorUtils.copy(resource, out);
             }
-            return PgPUtils.readPgpPublicKeyRing(file);
+            return PgPUtils.readPgpPublicKeyRing(filePath);
         } finally {
-            file.deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        File file = Path.of("temp", fileName).toFile();
+        Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
-                FileUtils.copy(resource, out);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
+                 OutputStream out = Files.newOutputStream(filePath)) {
+                FileMutatorUtils.copy(resource, out);
             }
-            return PgPUtils.readPgpSignature(file);
+            return PgPUtils.readPgpSignature(filePath);
         } finally {
-            file.deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 
-    private File getDataAsFile(String fileName) throws IOException {
-        File file = Path.of("temp", fileName).toFile();
+    private Path getDataAsFilePath(String fileName) throws IOException {
+        Path filePath = Path.of("temp", fileName);
         try {
-            try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
-                OutputStream out = new FileOutputStream(file);
-                FileUtils.copy(resource, out);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName)) {
+                OutputStream out = Files.newOutputStream(filePath);
+                FileMutatorUtils.copy(resource, out);
             }
-            return file;
+            return filePath;
         } finally {
-            file.deleteOnExit();
+            filePath.toFile().deleteOnExit();
         }
     }
 }

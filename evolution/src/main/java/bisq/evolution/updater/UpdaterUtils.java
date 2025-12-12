@@ -17,12 +17,12 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Platform;
 import bisq.common.platform.PlatformUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -31,17 +31,18 @@ public class UpdaterUtils {
     public static final String GITHUB_DOWNLOAD_URL = "https://github.com/bisq-network/bisq2/releases/download/v";
     public static final String PUB_KEYS_URL = "https://bisq.network/pubkey/";
     public static final String FROM_BISQ_WEBPAGE_PREFIX = "from_bisq_webpage_";
+    public static final String FROM_RESOURCES_PREFIX = "from_resources_";
     public static final String SIGNING_KEY_FILE = "signingkey.asc";
     public static final String VERSION_FILE_NAME = "version.txt";
     public static final String UPDATES_DIR = "updates";
-    public static final String EXTENSION = ".asc";
+    public static final String ASC_EXTENSION = ".asc";
 
-    public static String getSigningKeyId(String directory) throws IOException {
-        return FileUtils.readStringFromFile(Path.of(directory, SIGNING_KEY_FILE).toFile());
+    public static String getSigningKeyId(Path dirPath) throws IOException {
+        return Files.readString(dirPath.resolve(SIGNING_KEY_FILE));
     }
 
-    public static String getSigningKey(String directory, String signingKeyId) throws IOException {
-        return FileUtils.readStringFromFile(Path.of(directory, signingKeyId + EXTENSION).toFile());
+    public static String getSigningKey(Path dirPath, String signingKeyId) throws IOException {
+        return Files.readString(dirPath.resolve(signingKeyId + ASC_EXTENSION));
     }
 
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {
@@ -57,9 +58,9 @@ public class UpdaterUtils {
         return "desktop-app-" + version + "-" + platformName + "-all.jar";
     }
 
-    public static Optional<String> readVersionFromVersionFile(String userDataDir) {
-        String versionFilePath = userDataDir + File.separator + VERSION_FILE_NAME;
-        return FileUtils.readFromFileIfPresent(new File(versionFilePath));
+    public static Optional<String> readVersionFromVersionFile(Path userDataDirPath) {
+        Path versionFilePath = userDataDirPath.resolve(VERSION_FILE_NAME);
+        return FileReaderUtils.readFromFileIfPresent(versionFilePath);
     }
 
     public static boolean isDownloadedFile(String fileName) {

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
 import bisq.desktop.common.Layout;
@@ -71,8 +71,9 @@ public class BisqEasyViewUtils {
         Label initialLabel = new Label(String.valueOf(initial).toUpperCase());
         initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
 
-        int deterministicInt = Math.abs(new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue());
-        int iconIndex = deterministicInt % customPaymentIconIds.length;
+        int deterministicInt = new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue();
+        int iconIndex = Math.floorMod(deterministicInt, customPaymentIconIds.length);
+
         ImageView customPaymentIcon = ImageUtil.getImageViewById(customPaymentIconIds[iconIndex]);
 
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
@@ -83,9 +84,7 @@ public class BisqEasyViewUtils {
     public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,
                                                          List<BitcoinPaymentMethod> settlementMethods) {
         HBox hBox = new HBox(8);
-        for (FiatPaymentMethod paymentMethod : paymentMethods) {
-            hBox.getChildren().add(createMethodLabel(paymentMethod));
-        }
+        addPaymentMethodsToHBox(paymentMethods, hBox);
 
         ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
         Label interchangeableIcon = new Label();
@@ -93,6 +92,17 @@ public class BisqEasyViewUtils {
         interchangeableIcon.setPadding(new Insets(0, 0, 1, 0));
         hBox.getChildren().add(interchangeableIcon);
 
+        addSettlementMethodsToHBox(settlementMethods, hBox);
+        return hBox;
+    }
+
+    public static void addPaymentMethodsToHBox(List<FiatPaymentMethod> paymentMethods, HBox hBox) {
+        for (FiatPaymentMethod paymentMethod : paymentMethods) {
+            hBox.getChildren().add(createMethodLabel(paymentMethod));
+        }
+    }
+
+    public static void addSettlementMethodsToHBox(List<BitcoinPaymentMethod> settlementMethods, HBox hBox) {
         for (BitcoinPaymentMethod settlementMethod : settlementMethods) {
             Label label = createMethodLabel(settlementMethod);
             ColorAdjust colorAdjust = new ColorAdjust();
@@ -100,12 +110,11 @@ public class BisqEasyViewUtils {
             label.setEffect(colorAdjust);
             hBox.getChildren().add(label);
         }
-        return hBox;
     }
 
     private static Label createMethodLabel(PaymentMethod<?> paymentMethod) {
         Node icon = !paymentMethod.isCustomPaymentMethod()
-                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                ? ImageUtil.getImageViewById(paymentMethod.getPaymentRailName())
                 : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
         Label label = new Label();
         label.setGraphic(icon);

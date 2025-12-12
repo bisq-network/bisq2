@@ -39,6 +39,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public class WebcamService implements Service {
     public final FrameToImageConverter frameToImageConverter;
@@ -99,18 +101,21 @@ public class WebcamService implements Service {
         isRunning = false;
         executor.ifPresent(executor -> ExecutorFactory.shutdownAndAwaitTermination(executor, 1000));
         return CompletableFuture.supplyAsync(() -> {
-                    while (!isStopped) {
+                    while (!isStopped && !Thread.currentThread().isInterrupted()) {
                         try {
                             //noinspection BusyWait
                             Thread.sleep(100);
-                        } catch (InterruptedException ignore) {
+                        } catch (InterruptedException e) {
+                            log.warn("Thread got interrupted at shutdown", e);
+                            Thread.currentThread().interrupt(); // Restore interrupted state
                         }
                     }
                     return true;
-                }).orTimeout(1, TimeUnit.SECONDS)
+                }, commonForkJoinPool()).orTimeout(1, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> {
                     qrCode.set(null);
                     capturedImage.set(null);
+                    exception.set(null);
                 });
     }
 
@@ -146,7 +151,13 @@ public class WebcamService implements Service {
                     }
                     qrCodeProcessor.process(capturedFrame).ifPresent(qrCode::set);
                     capturedImage.set(frameToImageConverter.convert(capturedFrame));
-                } catch (FrameGrabber.Exception | InterruptedException e) {
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted at startFrameCapture method", e);
+                    Thread.currentThread().interrupt(); // Restore interrupted state
+
+                    exception.set(e);
+                    throw new FrameCaptureException(e);
+                } catch (FrameGrabber.Exception e) {
                     exception.set(e);
                     throw new FrameCaptureException(e);
                 }

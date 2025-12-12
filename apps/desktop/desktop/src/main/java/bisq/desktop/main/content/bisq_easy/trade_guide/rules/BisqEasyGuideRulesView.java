@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_guide.rules;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -50,7 +51,7 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
 
         UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.rules.content"), "bisq-easy-trade-guide-content");
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Bisq_Easy");
 
         backButton = new Button(Res.get("action.back"));
         closeButton = new Button(Res.get("action.close"));

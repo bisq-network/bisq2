@@ -21,57 +21,42 @@ import bisq.network.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGen
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DirectoryAuthorityKeyGenerationTests {
     @Test
-    public void generateKeys(@TempDir Path dataDir) throws IOException, InterruptedException {
-        Path keysPath = dataDir.resolve("keys");
-        assertThat(keysPath.toFile().mkdirs())
-                .isTrue();
+    public void generateKeys(@TempDir Path dataDirPath) throws IOException, InterruptedException {
+        Path keysPath = dataDirPath.resolve("keys");
+        Files.createDirectories(keysPath);
 
         var directoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("Nick")
-                .dataDir(dataDir)
+                .dataDirPath(dataDirPath)
                 .orPort(2)
                 .dirPort(3)
                 .build();
 
         DirectoryAuthorityKeyGenerator.generate(directoryAuthority, "my_passphrase");
 
-        File dataDirFile = dataDir.toFile();
-        assertThat(new File(dataDirFile, "fingerprint"))
-                .exists();
-        assertThat(new File(dataDirFile, "fingerprint-ed25519"))
-                .exists();
-        assertThat(new File(dataDirFile, "lock"))
-                .exists();
+        assertThat(dataDirPath.resolve("fingerprint")).exists();
+        assertThat(dataDirPath.resolve("fingerprint-ed25519")).exists();
+        assertThat(dataDirPath.resolve("lock")).exists();
 
-        File keysDirFile = keysPath.toFile();
-        assertThat(new File(keysDirFile, "authority_certificate"))
-                .exists();
-        assertThat(new File(keysDirFile, "authority_identity_key"))
-                .exists();
-        assertThat(new File(keysDirFile, "authority_signing_key"))
-                .exists();
+        assertThat(keysPath.resolve("authority_certificate")).exists();
+        assertThat(keysPath.resolve("authority_identity_key")).exists();
+        assertThat(keysPath.resolve("authority_signing_key")).exists();
 
-        assertThat(new File(keysDirFile, "ed25519_master_id_public_key"))
-                .exists();
-        assertThat(new File(keysDirFile, "ed25519_master_id_secret_key"))
-                .exists();
-        assertThat(new File(keysDirFile, "ed25519_signing_secret_key"))
-                .exists();
+        assertThat(keysPath.resolve("ed25519_master_id_public_key")).exists();
+        assertThat(keysPath.resolve("ed25519_master_id_secret_key")).exists();
+        assertThat(keysPath.resolve("ed25519_signing_secret_key")).exists();
 
-        assertThat(new File(keysDirFile, "secret_id_key"))
-                .exists();
-        assertThat(new File(keysDirFile, "secret_onion_key"))
-                .exists();
-        assertThat(new File(keysDirFile, "secret_onion_key_ntor"))
-                .exists();
+        assertThat(keysPath.resolve("secret_id_key")).exists();
+        assertThat(keysPath.resolve("secret_onion_key")).exists();
+        assertThat(keysPath.resolve("secret_onion_key_ntor")).exists();
     }
 }

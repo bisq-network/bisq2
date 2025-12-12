@@ -23,7 +23,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
-        implements Service, PersistenceClient<S> {
+        extends RateLimitedPersistenceClient<S> implements Service {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
@@ -55,10 +55,13 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage> chatChannel,
                                                ChatChannelNotificationType chatChannelNotificationType) {
+        boolean valueChanged;
         synchronized (this) {
-            chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
+            valueChanged = chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
         }
-        persist();
+        if (valueChanged) {
+            persist();
+        }
     }
 
     public void addMessage(M message, C channel) {
@@ -83,7 +86,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     protected boolean isValid(M message) {
         String authorUserProfileId = message.getAuthorUserProfileId();
         if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
-            log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
+            //log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
             return false;
         }
         if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {

@@ -10,6 +10,15 @@ resource_name          = academy.properties
 replace_edited_strings = false
 keep_translations      = false
 
+[o:bisq:p:bisq-2:r:accountproperties]
+file_filter            = i18n/src/main/resources/account_<lang>.properties
+source_file            = i18n/src/main/resources/account.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = account.properties
+replace_edited_strings = false
+keep_translations      = false
+
 [o:bisq:p:bisq-2:r:applicationproperties]
 file_filter            = i18n/src/main/resources/application_<lang>.properties
 source_file            = i18n/src/main/resources/application.properties
@@ -52,15 +61,6 @@ source_file            = i18n/src/main/resources/default.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = default.properties
-replace_edited_strings = false
-keep_translations      = false
-
-[o:bisq:p:bisq-2:r:payment_methodproperties]
-file_filter            = i18n/src/main/resources/payment_method_<lang>.properties
-source_file            = i18n/src/main/resources/payment_method.properties
-type                   = UNICODEPROPERTIES
-minimum_perc           = 0
-resource_name          = payment_method.properties
 replace_edited_strings = false
 keep_translations      = false
 
@@ -126,3 +126,32 @@ minimum_perc           = 0
 resource_name          = support.properties
 replace_edited_strings = false
 keep_translations      = false
+
+[o:bisq:p:bisq-2:r:mu_sigproperties]
+file_filter            = i18n/src/main/resources/mu_sig_<lang>.properties
+source_file            = i18n/src/main/resources/mu_sig.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = mu_sig.properties
+replace_edited_strings = false
+keep_translations      = false
+
+[o:bisq:p:bisq-2:r:webcamproperties]
+file_filter            = i18n/src/main/resources/webcam_<lang>.properties
+source_file            = i18n/src/main/resources/webcam.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = webcam.properties
+replace_edited_strings = false
+keep_translations      = false
+
+[o:bisq:p:bisq-2:r:bi2pproperties]
+file_filter            = i18n/src/main/resources/bi2p_<lang>.properties
+source_file            = i18n/src/main/resources/bi2p.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = bi2p.properties
+replace_edited_strings = false
+keep_translations      = false
+
+

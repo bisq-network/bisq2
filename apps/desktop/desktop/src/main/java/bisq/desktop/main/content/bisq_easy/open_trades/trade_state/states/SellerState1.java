@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -124,7 +124,7 @@ public class SellerState1 extends BaseState {
             }
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getPaymentAccountData().get()));
-            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
+            bisqEasyTradeService.sellerSendsPaymentAccount(model.getTrade(), paymentAccountData);
         }
 
         private void onSelectAccount(UserDefinedFiatAccount account) {
@@ -135,7 +135,7 @@ public class SellerState1 extends BaseState {
 
         private void maybeSelectFirstAccount() {
             if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount().isEmpty()) {
-                accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
+                accountService.setSelectedAccount(model.getSortedAccounts().get(0));
             }
         }
     }
@@ -176,7 +176,7 @@ public class SellerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("user.paymentAccounts.selectAccount"));
+            accountSelection = new AutoCompleteComboBox<>(model.getSortedAccounts(), Res.get("paymentAccounts.selectAccount"));
             accountSelection.setPrefWidth(300);
             accountSelection.setConverter(new StringConverter<>() {
                 @Override

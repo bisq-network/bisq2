@@ -28,65 +28,57 @@ import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
-import bisq.network.p2p.services.peer_group.PeerGroupService;
-import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
-import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
 @Getter
 public final class NetworkServiceConfig {
-    public static NetworkServiceConfig from(Path baseDir, Config config) {
-        ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(config.getConfig("serviceNode"));
-        InventoryService.Config inventoryServiceConfig = InventoryService.Config.from(config.getConfig("inventory"));
-        AuthorizationService.Config authorizationServiceConfig = AuthorizationService.Config.from(config.getConfig("authorization"));
-        Config seedConfig = config.getConfig("seedAddressByTransportType");
+    public static NetworkServiceConfig from(Path appDataDirPath, Config networkConfig) {
+        ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(networkConfig.getConfig("serviceNode"));
+        InventoryService.Config inventoryServiceConfig = InventoryService.Config.from(networkConfig.getConfig("inventory"));
+        AuthorizationService.Config authorizationServiceConfig = AuthorizationService.Config.from(networkConfig.getConfig("authorization"));
+        Config seedConfig = networkConfig.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
-        Set<TransportType> supportedTransportTypes = new HashSet<>(config.getEnumList(TransportType.class, "supportedTransportTypes"));
+        Set<TransportType> supportedTransportTypes = new HashSet<>(networkConfig.getEnumList(TransportType.class, "supportedTransportTypes"));
         Map<TransportType, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
-        Set<Feature> features = new HashSet<>(config.getEnumList(Feature.class, "features"));
+        Set<Feature> features = new HashSet<>(networkConfig.getEnumList(Feature.class, "features"));
 
-        PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(config.getConfig("peerGroup"));
-        PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(config.getConfig("peerExchangeStrategy"));
-        KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
+        Config peerGroupManagerConfig = networkConfig.getConfig("peerGroupManager");
+        Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransportType = supportedTransportTypes.stream()
+                .collect(toMap(
+                        transportType -> transportType,
+                        transportType -> PeerGroupManager.Config.from(peerGroupManagerConfig, transportType, supportedTransportTypes)
+                ));
 
-        PeerGroupManager.Config defaultConf = PeerGroupManager.Config.from(peerGroupConfig,
-                peerExchangeStrategyConfig,
-                keepAliveServiceConfig,
-                config.getConfig("defaultPeerGroup"));
-        PeerGroupManager.Config clearNetConf = PeerGroupManager.Config.from(peerGroupConfig,
-                peerExchangeStrategyConfig,
-                keepAliveServiceConfig,
-                config.getConfig("clearNetPeerGroup"));
+        Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(networkConfig);
+        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(networkConfig, appDataDirPath);
 
-        Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport = Map.of(
-                TransportType.TOR, defaultConf,
-                TransportType.I2P, defaultConf,
-                TransportType.CLEAR, clearNetConf
-        );
-
-        Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(config);
-        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
-
-        return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
-                config.getInt("version"),
+        return new NetworkServiceConfig(appDataDirPath,
+                networkConfig.getInt("version"),
+                networkConfig.getInt("notifyExecutorMaxPoolSize"),
+                networkConfig.getInt("connectionExecutorMaxPoolSize"),
                 supportedTransportTypes,
                 features,
                 configByTransportType,
                 serviceNodeConfig,
                 inventoryServiceConfig,
                 authorizationServiceConfig,
-                peerGroupServiceConfigByTransport,
+                peerGroupManagerConfigByTransportType,
                 defaultPortByTransportType,
                 seedAddressesByTransport,
                 Optional.empty());
@@ -124,29 +116,29 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path baseDir) {
+    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path appDataDirPath) {
         Map<TransportType, TransportConfig> map = new HashMap<>();
-        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, baseDir));
-        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, baseDir));
-        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, baseDir));
+        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, appDataDirPath));
+        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, appDataDirPath));
+        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, appDataDirPath));
         return map;
     }
 
-    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
-        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
-        Path dataDir;
+    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path appDataDirPath) {
+        Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase(Locale.ROOT));
+        Path transportDirPath;
         return switch (transportType) {
             case TOR -> {
-                dataDir = baseDir.resolve("tor");
-                yield TorTransportConfig.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath.resolve("tor");
+                yield TorTransportConfig.from(transportDirPath, transportConfig);
             }
             case I2P -> {
-                dataDir = baseDir.resolve("i2p");
-                yield I2PTransportService.Config.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath.resolve("i2p");
+                yield I2PTransportService.Config.from(transportDirPath, transportConfig);
             }
             case CLEAR -> {
-                dataDir = baseDir;
-                yield ClearNetTransportService.Config.from(dataDir, transportConfig);
+                transportDirPath = appDataDirPath;
+                yield ClearNetTransportService.Config.from(transportDirPath, transportConfig);
             }
         };
     }
@@ -165,40 +157,46 @@ public final class NetworkServiceConfig {
         };
     }
 
-    private final String baseDir;
+    private final Path appDataDirPath;
     private final int version;
+    private final int notifyExecutorMaxPoolSize;
+    private final int connectionExecutorMaxPoolSize;
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
     private final InventoryService.Config inventoryServiceConfig;
     private final AuthorizationService.Config authorizationServiceConfig;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
-    private final Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport;
+    private final Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport;
     private final Map<TransportType, Integer> defaultPortByTransportType;
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
 
-    public NetworkServiceConfig(String baseDir,
+    public NetworkServiceConfig(Path appDataDirPath,
                                 int version,
+                                int notifyExecutorMaxPoolSize,
+                                int connectionExecutorMaxPoolSize,
                                 Set<TransportType> supportedTransportTypes,
                                 Set<Feature> features,
                                 Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
                                 InventoryService.Config inventoryServiceConfig,
                                 AuthorizationService.Config authorizationServiceConfig,
-                                Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
+                                Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport,
                                 Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
-        this.baseDir = baseDir;
+        this.appDataDirPath = appDataDirPath;
         this.version = version;
+        this.notifyExecutorMaxPoolSize = notifyExecutorMaxPoolSize;
+        this.connectionExecutorMaxPoolSize = connectionExecutorMaxPoolSize;
         this.supportedTransportTypes = supportedTransportTypes;
         this.features = features;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.authorizationServiceConfig = authorizationServiceConfig;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
-        this.peerGroupServiceConfigByTransport = filterMap(supportedTransportTypes, peerGroupServiceConfigByTransport);
+        this.peerGroupManagerConfigByTransport = filterMap(supportedTransportTypes, peerGroupManagerConfigByTransport);
         this.defaultPortByTransportType = filterMap(supportedTransportTypes, defaultPortByTransportType);
         this.seedAddressesByTransport = filterMap(supportedTransportTypes, seedAddressesByTransport);
         this.socks5ProxyAddress = socks5ProxyAddress;

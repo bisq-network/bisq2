@@ -17,23 +17,21 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
-import bisq.common.currency.FiatCurrency;
-import bisq.common.currency.Market;
-import bisq.desktop.common.Icons;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.market.Market;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,7 +47,6 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.PopupWindow;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -63,15 +60,15 @@ import java.util.Comparator;
 @Slf4j
 public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWizardDirectionAndMarketModel,
         TradeWizardDirectionAndMarketController> {
-    private final Button buyButton, sellButton;
-    private final VBox reputationInfo, content;
+    private final Button buyButton, sellButton, backToBuyButton, gainReputationButton;
+    private final VBox content;
+    private final WizardOverlay reputationInfoOverlay;
     private final BisqTableView<TradeWizardDirectionAndMarketView.ListItem> tableView;
     private final SearchBox searchBox;
     private final Label currencyLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox currencyLabelBox;
     private Subscription directionSubscription, showReputationInfoPin, marketPin, marketSelectionPin;
-    private Button backToBuyButton, gainReputationButton;
 
     public TradeWizardDirectionAndMarketView(TradeWizardDirectionAndMarketModel model,
                                              TradeWizardDirectionAndMarketController controller) {
@@ -125,11 +122,19 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         content.setAlignment(Pos.CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineHBox, directionBox, Spacer.fillVBox());
 
-        reputationInfo = new VBox(20);
-        setupReputationInfo();
+        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
+        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
+        gainReputationButton.setDefaultButton(true);
+        reputationInfoOverlay = new WizardOverlay(root)
+                .warning()
+                .headline("bisqEasy.tradeWizard.directionAndMarket.feedback.headline")
+                .description("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1",
+                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2",
+                        "bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3")
+                .buttons(backToBuyButton, gainReputationButton)
+                .build();
 
-        StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, reputationInfo);
+        root.getChildren().addAll(content, reputationInfoOverlay);
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-direction-step");
     }
@@ -167,21 +172,10 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
             }
         });
 
-        showReputationInfoPin = EasyBind.subscribe(model.getShowReputationInfo(),
-                showReputationInfo -> {
-                    if (showReputationInfo) {
-                        reputationInfo.setVisible(true);
-                        reputationInfo.setOpacity(1);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(reputationInfo, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                        if (reputationInfo.isVisible()) {
-                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2,
-                                    () -> reputationInfo.setVisible(false));
-                        }
-                    }
-                });
+        showReputationInfoPin = EasyBind.subscribe(model.getShowReputationInfo(), shouldShow ->
+                reputationInfoOverlay.updateOverlayVisibility(content,
+                        shouldShow,
+                        controller::onKeyPressedWhileShowingOverlay));
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
@@ -219,6 +213,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         showReputationInfoPin.unsubscribe();
         marketPin.unsubscribe();
         marketSelectionPin.unsubscribe();
+
+        root.setOnKeyPressed(null);
     }
 
     private Button createAndGetDirectionButton(String title) {
@@ -229,59 +225,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         button.setMinWidth(width);
         button.setMinHeight(112);
         return button;
-    }
-
-    private void setupReputationInfo() {
-        double width = 700;
-        VBox contentBox = new VBox(20);
-        contentBox.setAlignment(Pos.TOP_CENTER);
-        contentBox.getStyleClass().setAll("trade-wizard-feedback-bg");
-        contentBox.setPadding(new Insets(30));
-        contentBox.setMaxWidth(width);
-
-        // We don't use setManaged as the transition would not work as expected if set to false
-        reputationInfo.setVisible(false);
-        reputationInfo.setAlignment(Pos.TOP_CENTER);
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.setTextAlignment(TextAlignment.CENTER);
-        headlineLabel.setAlignment(Pos.CENTER);
-        headlineLabel.setMaxWidth(width - 60);
-
-        Label warningIcon = new Label();
-        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
-        warningIcon.getStyleClass().add("text-fill-light-dimmed");
-
-        HBox headlineBox = new HBox(15, warningIcon, headlineLabel);
-        headlineBox.setAlignment(Pos.CENTER);
-
-        Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1"));
-        subtitleLabel1.setMaxWidth(width - 60);
-        subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        Label subtitleLabel2 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2"));
-        subtitleLabel2.setMaxWidth(width - 60);
-        subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        Label subtitleLabel3 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3"));
-        subtitleLabel3.setMaxWidth(width - 60);
-        subtitleLabel3.getStyleClass().addAll("bisq-text-21", "wrap-text");
-
-        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
-        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
-        gainReputationButton.setDefaultButton(true);
-
-        HBox buttons = new HBox(7, backToBuyButton, gainReputationButton);
-        buttons.setAlignment(Pos.CENTER);
-
-        VBox.setMargin(headlineBox, new Insets(20, 0, 20, 0));
-        VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headlineBox,
-                subtitleLabel1,
-                subtitleLabel2,
-                subtitleLabel3,
-                buttons);
-        reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
     private void configTableView() {

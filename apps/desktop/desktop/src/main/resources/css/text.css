@@ -32,10 +32,27 @@
     -fx-font-size: 2em;
 }
 
+.very-large-text-2 {
+    -fx-font-size: 2.4em;
+}
+
 .super-large-text {
     -fx-font-size: 4.1em !important;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Font weight                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.thin-text {
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.light-text {
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * Text based                                                                  *
@@ -279,6 +296,13 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.popup-text {
+    -fx-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 
 /* Generic Label properties */
 
@@ -316,6 +340,10 @@
 
 .font-size-28 {
     -fx-font-size: 2.8em !Important;
+}
+
+.font-size-25 {
+    -fx-font-size: 2.5em !Important;
 }
 
 .font-size-24 {
@@ -608,7 +636,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-mid-grey-10;
+    -fx-prompt-text-fill: #575757;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -684,6 +712,15 @@
     -fx-background-color: transparent;
 }
 
+/* To center password eye icon in MaterialPasswordField */
+.password-eye-icon {
+    -fx-translate-y: 10px;
+}
+
+.password-smaller-dots {
+    -fx-font-size: 1.0em;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -718,7 +755,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * SelectableLabel                                                      *
+ * SelectableLabel                                                             *
  *                                                                             *
  ******************************************************************************/
 
@@ -743,4 +780,41 @@
     -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * TransparentTextField                                                        *
+ *                                                                             *
+ ******************************************************************************/
+
+.transparent-text-field .material-text-field-bg,
+.transparent-text-field .material-text-field-bg-hover {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.transparent-text-field .material-text-field-description-small,
+.transparent-text-field .material-text-field-description-big {
+    -fx-font-size: 0.9em;
+}
+
+.transparent-text-field .material-text-field {
+    -fx-font-size: 1.1em;
+}
+
+.transparent-text-field .material-text-field-line {
+    -fx-opacity: 0.25;
+}
+
+.transparent-text-field .active-bg {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 8 8 0 0;
+}
+
+.transparent-text-field .button.icon-buttons {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
 }

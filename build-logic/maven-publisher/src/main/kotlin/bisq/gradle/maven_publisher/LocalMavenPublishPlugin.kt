@@ -19,7 +19,7 @@ import java.util.*
 class LocalMavenPublishPlugin : Plugin<Project> {
     companion object {
         const val DEFAULT_GROUP = "bisq"
-        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "network", "wallets", "bitcoind")
+        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "network")
     }
 
     private var rootVersion = "unspecified"
@@ -64,9 +64,14 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         project.afterEvaluate {
             val javaComponent = project.components.findByName("java")
             if (javaComponent != null) {
+                val generateProtoTask = project.tasks.findByName("generateProto")
                 val protoSourcesJar = project.tasks.findByName("protoSourcesJar") ?: project.tasks.register("protoSourcesJar", Jar::class.java) {
                     archiveClassifier.set("proto-sources")
-                    from(project.fileTree("${project.layout.buildDirectory}/generated/source/proto/main"))  // Adjust path if needed
+                    val protoDir = project.layout.buildDirectory.dir("generated/source/proto/main").get().asFile
+                    from(project.fileTree(protoDir))
+                    if (generateProtoTask != null) {
+                        dependsOn(generateProtoTask)
+                    }
                 }
 
                 if (rootVersion == "unspecified") {
@@ -164,7 +169,7 @@ class LocalMavenPublishPlugin : Plugin<Project> {
     private fun getRootGradlePropertiesFile(project: Project): File {
         if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name) && project.childProjects.isNotEmpty()) {
             return when (project.name) {
-                "tor", "bitcoind" -> project.projectDir.parentFile.parentFile
+                "tor" -> project.projectDir.parentFile.parentFile
                 else -> project.projectDir.parentFile
             }
         }

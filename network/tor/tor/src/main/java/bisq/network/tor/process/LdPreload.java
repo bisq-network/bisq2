@@ -17,20 +17,22 @@
 
 package bisq.network.tor.process;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LdPreload {
     public static String computeLdPreloadVariable(Path dirPath) {
-        File[] sharedLibraries = dirPath.toFile()
-                .listFiles((file, fileName) -> fileName.contains(".so."));
-        Objects.requireNonNull(sharedLibraries);
-
-        return Arrays.stream(sharedLibraries)
-                .map(File::getAbsolutePath)
-                .collect(Collectors.joining(":"));
+        try (Stream<Path> stream = Files.list(dirPath)) {
+            return stream
+                    .filter(path -> path.getFileName().toString().contains(".so."))
+                    .map(Path::toAbsolutePath)
+                    .map(Path::toString)
+                    .collect(Collectors.joining(":"));
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to list directory: " + dirPath.toAbsolutePath(), e);
+        }
     }
 }

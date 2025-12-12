@@ -19,7 +19,7 @@ package bisq.desktop.main.content.wallet.settings;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

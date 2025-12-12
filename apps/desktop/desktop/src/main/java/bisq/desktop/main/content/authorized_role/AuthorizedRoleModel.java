@@ -17,19 +17,22 @@
 
 package bisq.desktop.main.content.authorized_role;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.main.content.ContentTabModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 public class AuthorizedRoleModel extends ContentTabModel {
     private final List<BondedRoleType> bondedRoleTypes;
     private final ObservableList<BondedRoleType> authorizedBondedRoles = FXCollections.observableArrayList();
+    private final Set<BondedRoleType> bannedAuthorizedBondedRoles = new HashSet<>();
 
     public AuthorizedRoleModel(List<BondedRoleType> bondedRoleTypes) {
         this.bondedRoleTypes = bondedRoleTypes;

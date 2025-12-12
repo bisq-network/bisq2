@@ -17,7 +17,6 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.network.tor.local_network.TorNetwork;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,8 +27,8 @@ public class PrivateTorNetworkTests {
     private static final String PASSPHRASE = "my_passphrase";
 
     @Test
-    public void createTestNetwork(@TempDir Path tempDir) throws IOException, InterruptedException {
-        new TorNetwork(tempDir)
+    public void createTestNetwork(@TempDir Path tempDirPath) throws IOException, InterruptedException {
+        new TorNetwork(tempDirPath)
                 .addDirAuth(PASSPHRASE)
                 .addDirAuth(PASSPHRASE)
                 .addDirAuth(PASSPHRASE)

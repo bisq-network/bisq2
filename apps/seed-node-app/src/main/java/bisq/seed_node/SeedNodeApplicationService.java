@@ -18,6 +18,7 @@
 package bisq.seed_node;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.common.observable.Pin;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -26,10 +27,13 @@ import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -47,13 +51,15 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
     protected final SecurityService securityService;
     private final SeedNodeService seedNodeService;
     private final BondedRolesService bondedRolesService;
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
-        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
@@ -76,7 +82,8 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -85,18 +92,27 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                        // todo move to a service class
+                        difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault ->
+                                networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                        networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
                         log.info("SeedNodeApplicationService initialized");
                     } else {
                         log.error("Initializing SeedNodeApplicationService failed", throwable);
                     }
-                });
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
+        // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -114,7 +130,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                         return false;
                     }
                     return true;
-                })
-                .join());
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 }

@@ -21,7 +21,7 @@ package bisq.dto.presentation.offerbook;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.dto.DtoMappings;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.user.profile.UserProfileDto;
@@ -32,7 +32,7 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
@@ -95,11 +95,11 @@ public class OfferItemPresentationDtoFactory {
         String formattedPriceSpec = PriceSpecFormatter.getFormattedPriceSpec(priceSpec, true);
         List<String> quoteSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs())
                 .stream()
-                .map(PaymentMethod::getName)
+                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
         List<String> baseSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getBaseSidePaymentMethodSpecs())
                 .stream()
-                .map(PaymentMethod::getName)
+                .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
 
         UserProfile userProfile = userProfileService.findUserProfile(authorUserProfileId).orElseThrow();

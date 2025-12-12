@@ -19,7 +19,8 @@ package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.platform.Platform;
@@ -28,6 +29,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -37,6 +39,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import com.google.common.base.Throwables;
@@ -57,9 +60,19 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
@@ -71,11 +84,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -83,14 +104,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected final static double DEFAULT_WIDTH = 668;
 
     public static Region primaryStageOwner;
-    private static String baseDir;
+    private static Path appDataDirPath;
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
     private static DontShowAgainService dontShowAgainService;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
-        Overlay.baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
+        Overlay.appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
         Overlay.settingsService = serviceProvider.getSettingsService();
         Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
         Overlay.dontShowAgainService = serviceProvider.getDontShowAgainService();
@@ -127,6 +148,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         WARNING(AnimationType.ScaleDownToCenter),
         INVALID(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),
+        FAILURE(AnimationType.ScaleDownToCenter),
         ERROR(AnimationType.ScaleDownToCenter);
 
         public final AnimationType animationType;
@@ -161,8 +183,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     @Getter
     protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
-    protected boolean useAnimation = true;
-
     protected Label headlineIcon, headlineLabel, messageLabel;
     protected String headline, message;
     protected String closeButtonText, actionButtonText,
@@ -173,7 +193,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
     protected Button closeButton;
-    private Region content;
+    protected Region content;
 
     private HPos buttonAlignment = HPos.RIGHT;
 
@@ -197,15 +217,13 @@ public abstract class Overlay<T extends Overlay<T>> {
     };
 
     public Overlay() {
-        id = UUID.randomUUID().toString();
+        id = StringUtils.createUid();
         TypeToken<T> typeToken = new TypeToken<>(getClass()) {
         };
         if (!typeToken.isSupertypeOf(getClass())) {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
         owner = primaryStageOwner;
-
-
     }
 
 
@@ -410,6 +428,28 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T failure(String header, String errorMessage, String footer) {
+        type = Type.FAILURE;
+        width = 800;
+        if (headline == null) {
+            this.headline = Res.get("popup.headline.failure");
+        }
+
+        processMessage(header);
+
+        Label footerLabel = new Label(footer);
+        footerLabel.getStyleClass().add("overlay-message");
+        footerLabel.setWrapText(true);
+        footerLabel.setMinWidth(width);
+
+        TextArea textArea = getFailureTextArea(errorMessage, width);
+        VBox.setMargin(textArea, new Insets(-15, 0, 5, 0));
+        VBox vBox = new VBox(10, textArea, footerLabel);
+        content(vBox);
+
+        return cast();
+    }
+
     public T invalid(String message) {
         type = Type.INVALID;
 
@@ -435,17 +475,41 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         String version = Res.get("version.versionAndCommitHash", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         String platformDetails = Platform.getDetails();
-        String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
-        TextArea errorReportTextArea = new TextArea(errorReport);
-        errorReportTextArea.setContextMenu(new ContextMenu());
-        errorReportTextArea.setEditable(false);
-        errorReportTextArea.setPrefWidth(width);
-        errorReportTextArea.setWrapText(true);
-        errorReportTextArea.getStyleClass().addAll("code-block", "error-log");
+        String metaData = Res.get("popup.reportBug.metaData", version, platformDetails);
+        TextArea metaDataTextArea = getErrorTextArea(metaData, width);
+        metaDataTextArea.setMaxHeight(50);
 
-        content(errorReportTextArea);
+        String errorReport = Res.get("popup.reportBug.message", message);
+        TextArea errorReportTextArea = getErrorTextArea(errorReport, width);
+
+        VBox.setVgrow(metaDataTextArea, Priority.NEVER);
+        VBox.setVgrow(errorReportTextArea, Priority.ALWAYS);
+        VBox errorReportVBox = new VBox(10, metaDataTextArea, errorReportTextArea);
+        content(errorReportVBox);
 
         return cast();
+    }
+
+    private static TextArea getErrorTextArea(String text, double width) {
+        TextArea textArea = new TextArea(text);
+        textArea.setContextMenu(new ContextMenu());
+        textArea.setEditable(false);
+        textArea.setPrefWidth(width);
+        textArea.setWrapText(true);
+        textArea.getStyleClass().addAll("code-block", "error-log");
+        return textArea;
+    }
+
+    private static TextArea getFailureTextArea(String text, double width) {
+        TextArea textArea = new TextArea(text);
+        textArea.setPadding(new Insets(5));
+        textArea.setMaxHeight(140);
+        textArea.setContextMenu(new ContextMenu());
+        textArea.setEditable(false);
+        textArea.setPrefWidth(width);
+        textArea.setWrapText(true);
+        textArea.getStyleClass().addAll("code-block", "error-log");
+        return textArea;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -536,6 +600,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T dontShowAgainId(DontShowAgainKey key) {
+        this.dontShowAgainId = key.getKey();
+        return cast();
+    }
+
     public T dontShowAgainText(String dontShowAgainText) {
         this.dontShowAgainText = dontShowAgainText;
         return cast();
@@ -543,11 +612,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T hideCloseButton() {
         this.hideCloseButton = true;
-        return cast();
-    }
-
-    public T useAnimation(boolean useAnimation) {
-        this.useAnimation = useAnimation;
         return cast();
     }
 
@@ -575,7 +639,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void blurAgain() {
-        UIScheduler.run(() -> getTransitionsType().apply(owner)).after(Transitions.DEFAULT_DURATION);
+        UIScheduler.run(() -> getTransitionsType().apply(owner)).after(ManagedDuration.getDefaultDurationMillis());
     }
 
     public void display() {
@@ -651,64 +715,64 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         rootContainer.setOpacity(0);
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(400);
+        Duration duration = ManagedDuration.millis(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         AnimationType animationType = getAnimationType();
         if (animationType == AnimationType.SlideDownFromCenterTop) {
             double startY = -rootContainer.getHeight();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), startY, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), -50, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleYFromCenter) {
             double startYScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startYScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleDownToCenter) {
             double startScale = 1.1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (animationType == AnimationType.FadeInAtCenter) {
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
         }
@@ -718,7 +782,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void animateHide(Runnable onFinishedHandler) {
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = getDuration(200);
+        Duration duration = ManagedDuration.millis(200);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -726,11 +790,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         AnimationType animationType = getAnimationType();
         if (animationType == AnimationType.SlideDownFromCenterTop) {
             double endY = -rootContainer.getHeight();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), -10, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), endY, interpolator)
             ));
@@ -739,12 +803,12 @@ public abstract class Overlay<T extends Overlay<T>> {
             timeline.play();
         } else if (animationType == AnimationType.ScaleFromCenter) {
             double endScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
@@ -752,31 +816,31 @@ public abstract class Overlay<T extends Overlay<T>> {
         } else if (animationType == AnimationType.ScaleYFromCenter) {
             rootContainer.setRotationAxis(Rotate.X_AXIS);
             rootContainer.getScene().setCamera(new PerspectiveCamera());
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.rotateProperty(), 0, interpolator),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         } else if (animationType == AnimationType.ScaleDownToCenter) {
             double endScale = 0.1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
         } else if (animationType == AnimationType.FadeInAtCenter) {
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         }
@@ -846,6 +910,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     headlineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
                     break;
+                case FAILURE:
                 case ERROR:
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
                     headlineLabel.getStyleClass().add("overlay-headline-error");
@@ -873,7 +938,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             headlineIcon.setManaged(false);
             headlineIcon.setVisible(false);
             headlineIcon.setAlignment(Pos.CENTER);
-            headlineIcon.setPadding(new Insets(-2, 5, 0, 0));
+            headlineIcon.setPadding(new Insets(0, 5, 0, 0));
             headlineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
@@ -943,43 +1008,40 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private void addReportErrorButtons() {
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        logButton.setOnAction(event -> PlatformUtils.open(new File(baseDir, "bisq.log")));
+        logButton.setOnAction(event -> PlatformUtils.open(appDataDirPath.resolve("bisq.log")));
 
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), appDataDirPath, "")
                 .ifPresent(directory -> {
                     // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
                     // private data gets leaked in case the user used their real name as their OS user.
-                    Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
-                    File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
+                    Path debugLogPath = Path.of(appDataDirPath + "/tor/").resolve("debug.log");
+                    Path debugLogForZipFilePath = Path.of(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
                     try {
-                        if (debugLogForZipFile.exists()) {
-                            debugLogForZipFile.delete();
-                        }
-                        FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
-                        String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
+                        Files.deleteIfExists(debugLogForZipFilePath);
+                        FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
+                        String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
                         logContent = StringUtils.maskHomeDirectory(logContent);
-                        FileUtils.writeToFile(logContent, debugLogForZipFile);
+                        FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    String zipDirectory = directory.getAbsolutePath();
-                    URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                    URI uri = URI.create("jar:file:" + directory.resolve("bisq2-logs.zip").toUri().getRawPath());
                     Map<String, String> env = Map.of("create", "true");
                     List<Path> logPaths = Arrays.asList(
-                            Path.of(baseDir).resolve("bisq.log"),
-                            debugLogForZipFile.toPath());
+                            appDataDirPath.resolve("bisq.log"),
+                            debugLogForZipFilePath);
                     try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
                         logPaths.forEach(logPath -> {
-                            if (logPath.toFile().isFile()) {
+                            if (Files.isRegularFile(logPath)) {
                                 try {
-                                    Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                    Files.copy(logPath, zipFileSystem.getPath(logPath.getFileName().toString()), StandardCopyOption.REPLACE_EXISTING);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
                             }
                         });
-                        PlatformUtils.open(zipDirectory);
+                        PlatformUtils.open(directory);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -1110,10 +1172,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         this.message = StringUtils.extractHyperlinks(message, messageHyperlinks);
         setTruncatedMessage();
-    }
-
-    protected double getDuration(double duration) {
-        return useAnimation && settingsService.getUseAnimations().get() ? duration : 1;
     }
 
     public boolean isDisplayed() {

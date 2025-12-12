@@ -17,7 +17,7 @@
 
 package bisq.desktop.overlay;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationModel;
@@ -52,7 +52,4 @@ public class OverlayModel extends NavigationModel {
         settingsService = serviceProvider.getSettingsService();
     }
 
-    double getDuration(double duration) {
-        return settingsService.getUseAnimations().get() ? duration : 1;
-    }
 }

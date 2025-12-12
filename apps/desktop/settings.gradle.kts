@@ -19,5 +19,6 @@ include("desktop")
 include("desktop-app")
 include("desktop-app-launcher")
 include("webcam-app")
+include("bi2p")
 
 rootProject.name = "desktop"

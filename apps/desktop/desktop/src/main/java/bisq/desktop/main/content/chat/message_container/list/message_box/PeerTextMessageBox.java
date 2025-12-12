@@ -49,7 +49,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         activeReactionsDisplayHBox.getStyleClass().add("peer-text-message-box-active-reactions");
         messageHBox.getChildren().setAll(messageBgHBox, activeReactionsDisplayHBox, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenuBox, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copy, reactMenuBox, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -58,7 +58,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, userName, dateTime);
+        userNameAndDateHBox = new HBox(10, item.getBondedRoleBadge(), userName, dateTime);
         userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
     }
 
@@ -94,7 +94,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         replyAction.setOnAction(e -> controller.onReply(chatMessage));
         openPrivateChatAction.setOnAction(e -> controller.onOpenPrivateChannel(chatMessage));
-        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
+        copy.setOnAction(e -> onCopyMessage(chatMessage));
         ignoreUserMenuItem.setOnAction(e -> controller.onIgnoreUser(chatMessage));
         reportUserMenuItem.setOnAction(e -> controller.onReportUser(chatMessage));
 
@@ -141,7 +141,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         replyAction.setOnAction(null);
         openPrivateChatAction.setOnAction(null);
-        copyAction.setOnAction(null);
+        copy.setOnAction(null);
         ignoreUserMenuItem.setOnAction(null);
         reportUserMenuItem.setOnAction(null);
 

@@ -17,34 +17,47 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
+import bisq.account.accounts.fiat.CashByMailAccountPayload;
+import bisq.account.accounts.fiat.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.account.accounts.fiat.InteracETransferAccountPayload;
+import bisq.account.accounts.fiat.PayIdAccountPayload;
+import bisq.account.accounts.fiat.RevolutAccountPayload;
+import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
- * AccountPayload is sent over the wire to the peer. It must not contain sensitive data.
+ * AccountPayload is sent over the wire to the peer during the trade process. It is not used in the offer.
  */
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class AccountPayload implements NetworkProto {
+public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
-    private final String paymentMethodName;
 
-    public AccountPayload(String id, String paymentMethodName) {
+    public AccountPayload(String id) {
         this.id = id;
-        this.paymentMethodName = paymentMethodName;
     }
 
     @Override
     public void verify() {
         NetworkDataValidation.validateId(id);
-        NetworkDataValidation.validateText(paymentMethodName, 100);
+        NetworkDataValidation.validateText(getPaymentMethodName(), 100);
     }
 
     @Override
@@ -59,22 +72,50 @@ public abstract class AccountPayload implements NetworkProto {
 
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
-                .setId(id)
-                .setPaymentMethodName(paymentMethodName);
+                .setId(id);
     }
 
-    public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getMessageCase()) {
             case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
             case COUNTRYBASEDACCOUNTPAYLOAD -> CountryBasedAccountPayload.fromProto(proto);
             case REVOLUTACCOUNTPAYLOAD -> RevolutAccountPayload.fromProto(proto);
             case USERDEFINEDFIATACCOUNTPAYLOAD -> UserDefinedFiatAccountPayload.fromProto(proto);
             case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
+            case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
+            case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
             case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
-            case CASHAPPACCOUNTPAYLOAD -> CashAppAccountPayload.fromProto(proto);
+            case CRYPTOASSETACCOUNTPAYLOAD -> CryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
+
+    public abstract M getPaymentMethod();
+
+    public String getPaymentMethodName() {
+        return getPaymentMethod().getPaymentRailName();
+    }
+
+    public String getDefaultAccountName() {
+        return getPaymentMethodName() + "-" + StringUtils.truncate(id, 8);
+    }
+
+    public List<String> getSelectedCurrencyCodes() {
+        return switch (this) {
+            case MultiCurrencyAccountPayload multiCurrencyAccountPayload ->
+                    multiCurrencyAccountPayload.getSelectedCurrencyCodes();
+            case SelectableCurrencyAccountPayload selectableCurrencyAccountPayload ->
+                    Collections.singletonList(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
+            case SingleCurrencyAccountPayload singleCurrencyAccountPayload ->
+                    Collections.singletonList(singleCurrencyAccountPayload.getCurrencyCode());
+            default -> {
+                log.error("accountPayload of unexpected type: {}", getClass().getSimpleName());
+                yield List.of();
+            }
+        };
+    }
+
+    public abstract String getAccountDataDisplayString();
 }

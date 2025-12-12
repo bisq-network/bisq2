@@ -21,27 +21,39 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.common.util.MathUtils;
+import bisq.common.util.StringUtils;
 import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
+import bisq.desktop.components.controls.MaterialBitcoinAmountDisplay;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.components.controls.validator.*;
+import bisq.desktop.components.controls.validator.BitcoinAddressValidator;
+import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
+import bisq.desktop.components.controls.validator.LightningInvoiceValidator;
+import bisq.desktop.components.controls.validator.LightningPreImageValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -54,7 +66,12 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -83,14 +100,11 @@ public class SellerState3a extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private final SettingsService settingsService;
 
         private Controller(ServiceProvider serviceProvider,
                            BisqEasyTrade bisqEasyTrade,
                            BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
-
-            settingsService = serviceProvider.getSettingsService();
         }
 
         @Override
@@ -107,7 +121,6 @@ public class SellerState3a extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setUseAnimations(settingsService.getUseAnimations().get());
             model.setApplicationRoot(OverlayController.getInstance().getApplicationRoot());
 
             BitcoinPaymentRail paymentRail = getPaymentRail();
@@ -116,9 +129,9 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
-            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
             double factor = 2.5;
-            if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
+            if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
                 model.setSmallQrCodeSize(116); //233
                 model.getBtcSentButtonDisabled().bind(model.getPaymentProof().isEmpty());
@@ -140,28 +153,26 @@ public class SellerState3a extends BaseState {
             super.onDeactivate();
 
             model.getBtcSentButtonDisabled().unbind();
-
+            //QrCodeWindow closes if model.getQrCodeWindow() is not null
+            //So, close QrCodeWindow first, before clearing model
+            doCloseQrCodeWindow();
             model.getQrCodeWindow().set(null);
             model.setLargeQrCodeImage(null);
             model.setSmallQrCodeImage(null);
             model.setPaymentProofValidator(null);
             model.setBitcoinPaymentValidator(null);
-            doCloseQrCodeWindow();
         }
 
         private void onConfirmedBtcSent() {
             BitcoinPaymentRail paymentRail = getPaymentRail();
-            boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
-            String paymentProof = model.getPaymentProof().get();
+            boolean isMainChain = paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN);
+            // model.getPaymentProof().get() can be null (default) or empty (if user has edited and cleared input)
+            Optional<String> paymentProof = StringUtils.toOptional(model.getPaymentProof().get());
             boolean isValid;
             if (isMainChain) {
-                isValid = paymentProof != null && model.getPaymentProofValidator().validateAndGet();
+                isValid = paymentProof.isPresent() && model.getPaymentProofValidator().validateAndGet();
             } else {
-                if (paymentProof == null) {
-                    isValid = true;
-                } else {
-                    isValid = model.getPaymentProofValidator().validateAndGet();
-                }
+                isValid = paymentProof.isEmpty() || model.getPaymentProofValidator().validateAndGet();
             }
 
             String userName = model.getChannel().getMyUserIdentity().getUserName();
@@ -177,14 +188,14 @@ public class SellerState3a extends BaseState {
             }
         }
 
-        private void confirmedBtcSent(String paymentProof, String userName, String proofType) {
-            if (paymentProof == null) {
+        private void confirmedBtcSent(Optional<String> paymentProof, String userName, String proofType) {
+            if (paymentProof.isEmpty()) {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
             } else {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                        userName, proofType, paymentProof));
+                        userName, proofType, paymentProof.get()));
             }
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), Optional.ofNullable(paymentProof));
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getTrade(), paymentProof);
         }
 
         void onShowQrCodeDisplay() {
@@ -225,7 +236,7 @@ public class SellerState3a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 
@@ -252,8 +263,6 @@ public class SellerState3a extends BaseState {
         @Setter
         private Image smallQrCodeImage;
         @Setter
-        private boolean useAnimations;
-        @Setter
         private Region applicationRoot;
         @Setter
         private ValidatorBase paymentProofValidator;
@@ -266,12 +275,18 @@ public class SellerState3a extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
+        private enum BitcoinAmountDisplayStyleType {
+            HEADLINE,
+            BASE_AMOUNT
+        }
+
         private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
         private final Button sentButton;
         private final MaterialTextField paymentProof;
-        private final WrappingText sendBtcHeadline, fiatReceiptConfirmed;
-        private final MaterialTextField baseAmount;
+        private final BitcoinAmountDisplay sendBtcAmount;
+        private final WrappingText fiatReceiptConfirmed;
+        private final MaterialBitcoinAmountDisplay baseAmount;
         private final MaterialTextField bitcoinPayment;
         private final Label qrCodeLabel;
         private final ImageView qrCodeImageView, openQrCodeWindowIcon;
@@ -286,9 +301,20 @@ public class SellerState3a extends BaseState {
             fiatReceiptConfirmed = confirmPair.getFirst();
             HBox fiatReceiptConfirmedHBox = confirmPair.getSecond();
 
-            sendBtcHeadline = FormUtils.getHeadline();
+            WrappingText sendBtcPrefix = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.prefix") + " ");
 
-            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "", false);
+            sendBtcAmount = new BitcoinAmountDisplay();
+            configureBitcoinAmountDisplay(sendBtcAmount, BitcoinAmountDisplayStyleType.HEADLINE);
+
+            WrappingText sendBtcSuffix = FormUtils.getHeadline(" " + Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.suffix"));
+
+            HBox sendBtcHeadline = new HBox(2, sendBtcPrefix, sendBtcAmount, sendBtcSuffix);
+            sendBtcHeadline.setAlignment(Pos.BASELINE_LEFT);
+
+            HBox.setMargin(sendBtcAmount, new Insets(8, 0, 0, 0));
+
+            baseAmount = FormUtils.getMaterialBitcoinAmountDisplay(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "0", false);
+            configureBitcoinAmountDisplay(baseAmount.getBitcoinAmountDisplay(), BitcoinAmountDisplayStyleType.BASE_AMOUNT);
             bitcoinPayment = FormUtils.getTextField("", "", false);
             paymentProof = FormUtils.getTextField("", "", true);
 
@@ -341,7 +367,8 @@ public class SellerState3a extends BaseState {
             paymentProof.setValidator(model.getPaymentProofValidator());
             bitcoinPayment.setValidators(model.getBitcoinPaymentValidator());
 
-            baseAmount.setText(model.getFormattedBaseAmount());
+            sendBtcAmount.setBtcAmount(model.getBaseAmount());
+            baseAmount.setText(model.getBaseAmount());
             bitcoinPayment.setDescription(model.getBitcoinPaymentDescription());
             qrCodeLabel.setText(model.getBitcoinPaymentDescription());
             bitcoinPayment.setText(model.getBitcoinPaymentData());
@@ -349,7 +376,6 @@ public class SellerState3a extends BaseState {
 
             paymentProof.setDescription(model.getPaymentProofDescription());
             paymentProof.setPromptText(model.getPaymentProofPrompt());
-            sendBtcHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc", model.getFormattedBaseAmount()));
             fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
             sentButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcSentButton", model.getFormattedBaseAmount()));
             qrCodeImageView.setImage(model.getSmallQrCodeImage());
@@ -392,12 +418,36 @@ public class SellerState3a extends BaseState {
             bitcoinPayment.resetValidation();
         }
 
+        private void configureBitcoinAmountDisplay(
+                BitcoinAmountDisplay display,
+                BitcoinAmountDisplayStyleType bitcoinAmountDisplayStyleType) {
+            switch (bitcoinAmountDisplayStyleType) {
+                case HEADLINE:
+                    display.getIntegerPart().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display-integer");
+                    display.getLeadingZeros().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display-leading-zeros");
+                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display");
+                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display");
+                    display.setBaselineAlignment();
+                    display.setTranslateY(7.5);
+                    break;
+
+                case BASE_AMOUNT:
+                    display.getIntegerPart().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display-integer");
+                    display.getLeadingZeros().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display-leading-zeros");
+                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display");
+                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display");
+                    break;
+            }
+        }
+
         private void qrCodeWindowChanged(Stage qrCodeWindow) {
             if (qrCodeWindow != null) {
                 int qrCodeSize = model.getLargeQrCodeSize();
-                String shortTradeId = model.getBisqEasyTrade().getShortId();
+                String shortTradeId = model.getTrade().getShortId();
 
-                Label headline = new Label(Res.get("bisqEasy.tradeState.info.seller.phase3a.qrCodeDisplay.window.title", shortTradeId));
+                Label headline =
+                        new Label(Res.get("bisqEasy.tradeState.info.seller.phase3a.qrCodeDisplay.window.title",
+                                shortTradeId));
                 headline.getStyleClass().add("qr-code-window-headline");
                 ImageView qrCodeImageView = new ImageView(model.getLargeQrCodeImage());
 
@@ -478,18 +528,18 @@ public class SellerState3a extends BaseState {
         }
 
         private void startShowAnimation(Node node, Stage qrCodeWindow) {
-            double duration = model.isUseAnimations() ? 400 : 0;
+            Duration duration = ManagedDuration.millis(400);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
             double startScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
+            keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
                     new KeyValue(qrCodeWindow.opacityProperty(), 0, INTERPOLATOR),
                     new KeyValue(node.scaleXProperty(), startScale, INTERPOLATOR),
                     new KeyValue(node.scaleYProperty(), startScale, INTERPOLATOR)
 
             ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
+            keyFrames.add(new KeyFrame(duration,
                     new KeyValue(qrCodeWindow.opacityProperty(), 1, INTERPOLATOR),
                     new KeyValue(node.scaleXProperty(), 1, INTERPOLATOR),
                     new KeyValue(node.scaleYProperty(), 1, INTERPOLATOR)

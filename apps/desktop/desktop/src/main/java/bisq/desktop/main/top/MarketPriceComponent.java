@@ -21,7 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -105,18 +105,18 @@ public class MarketPriceComponent {
                             selectedMarketPin.unbind();
                         }
                         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
-                                UIThread.run(() -> {
-                                    if (selectedMarket != null) {
-                                        model.items.stream()
-                                                .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
-                                                .findAny()
-                                                .ifPresent(listItem -> {
-                                                    model.price.set(listItem.price);
-                                                    model.codes.set(listItem.codes);
-                                                    model.selected.set(listItem);
-                                                });
-                                    }
-                                }));
+                            UIThread.run(() -> {
+                                if (selectedMarket != null) {
+                                    model.items.stream()
+                                            .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
+                                            .findAny()
+                                            .ifPresent(listItem -> {
+                                                model.price.set(listItem.price);
+                                                model.codes.set(listItem.codes);
+                                                model.selected.set(listItem);
+                                            });
+                                }
+                            }));
                     }));
         }
 
@@ -336,9 +336,10 @@ public class MarketPriceComponent {
         }
 
         public String getProviderUrl() {
-            return marketPriceService.getMarketPriceRequestService().getMostRecentProvider()
+            return marketPriceService.getMarketPriceRequestService()
+                    .flatMap(MarketPriceRequestService::getMostRecentProvider)
                     .map(MarketPriceRequestService.Provider::getBaseUrl)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         public String getMarketPriceProvidingOracle() {
@@ -347,7 +348,7 @@ public class MarketPriceComponent {
                     .map(NetworkId::getAddressByTransportTypeMap)
                     .flatMap(map -> map.values().stream().findAny())
                     .map(Address::getFullAddress)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
         }
 
         public String getSource() {

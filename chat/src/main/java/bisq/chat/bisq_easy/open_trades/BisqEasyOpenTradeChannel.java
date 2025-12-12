@@ -30,7 +30,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,7 +51,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<BisqEasyOpenTradeMessage> {
     public static String createId(String tradeId) {
-        return ChatChannelDomain.BISQ_EASY_OPEN_TRADES.name().toLowerCase() + "." + tradeId;
+        return ChatChannelDomain.BISQ_EASY_OPEN_TRADES.name().toLowerCase(Locale.ROOT) + "." + tradeId;
     }
 
     public static BisqEasyOpenTradeChannel createByTrader(String tradeId,
@@ -235,6 +240,8 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
 
         if (isInMediation) {
             mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
+        } else {
+            mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.remove(userProfile.getId()));
         }
     }
 

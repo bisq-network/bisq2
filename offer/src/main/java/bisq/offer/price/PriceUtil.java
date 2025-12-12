@@ -19,7 +19,7 @@ package bisq.offer.price;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.offer.Offer;

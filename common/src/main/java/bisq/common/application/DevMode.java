@@ -18,11 +18,29 @@
 package bisq.common.application;
 
 import lombok.Setter;
+
 public class DevMode {
     @Setter
     private static boolean isDevMode;
 
     public static boolean isDevMode() {
         return isDevMode;
+    }
+
+    // Can be set as jvm argument if isDevMode is true. Value has to be > 0.
+    // All trade apps need to have that value set as it is used in a static manner independent of the user profile.
+    // This makes dev testing easier as sellers need to have reputation to be able to trade.
+    @Setter
+    private static long devModeReputationScore;
+
+    public static long devModeReputationScore() {
+        return devModeReputationScore;
+    }
+
+    @Setter
+    private static boolean isDevModeWalletSetup;
+
+    public static boolean isDevModeWalletSetup() {
+        return isDevModeWalletSetup;
     }
 }

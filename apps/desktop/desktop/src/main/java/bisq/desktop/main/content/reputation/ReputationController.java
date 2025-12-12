@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.reputation;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;

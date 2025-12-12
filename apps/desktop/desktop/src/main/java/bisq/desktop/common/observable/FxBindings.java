@@ -22,10 +22,16 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.threading.UIThread;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -127,6 +133,10 @@ public class FxBindings {
         }
 
         public Pin to(ObservableArray<S> observable) {
+            return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
+        }
+
+        public Pin to(ReadOnlyObservableSet<S> observable) {
             return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
         }
     }
@@ -333,7 +343,7 @@ public class FxBindings {
         }
 
         public Pin to(Observable<Long> observable) {
-            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set((Long) newValue);
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set(newValue.longValue());
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {
@@ -344,7 +354,7 @@ public class FxBindings {
 
         public Pin to(ReadOnlyObservable<Long> observable, Consumer<Long> setter) {
             ChangeListener<Number> listener = (o, oldValue, newValue) -> {
-                setter.accept((Long) newValue);
+                setter.accept(newValue.longValue());
             };
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
@@ -363,7 +373,7 @@ public class FxBindings {
         }
 
         public Pin to(Observable<Integer> observable) {
-            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set((Integer) newValue);
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set(newValue.intValue());
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {
@@ -374,7 +384,7 @@ public class FxBindings {
 
         public Pin to(ReadOnlyObservable<Integer> observable, Consumer<Integer> setter) {
             ChangeListener<Number> listener = (o, oldValue, newValue) -> {
-                setter.accept((Integer) newValue);
+                setter.accept(newValue.intValue());
             };
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
@@ -393,7 +403,7 @@ public class FxBindings {
         }
 
         public Pin to(Observable<Double> observable) {
-            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set((Double) newValue);
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set(newValue.doubleValue());
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {
@@ -404,7 +414,7 @@ public class FxBindings {
 
         public Pin to(ReadOnlyObservable<Double> observable, Consumer<Double> setter) {
             ChangeListener<Number> listener = (o, oldValue, newValue) -> {
-                setter.accept((Double) newValue);
+                setter.accept(newValue.doubleValue());
             };
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));

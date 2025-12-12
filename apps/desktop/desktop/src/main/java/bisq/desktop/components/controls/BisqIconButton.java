@@ -58,6 +58,10 @@ public class BisqIconButton extends Button {
         return button;
     }
 
+    public static Button createInfoIconButton() {
+        return createInfoIconButton("");
+    }
+
     public static Button createInfoIconButton(String tooltipText) {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO_SIGN);
         button.getStyleClass().add("icon-button");

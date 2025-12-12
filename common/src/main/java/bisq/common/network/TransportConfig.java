@@ -20,17 +20,11 @@ package bisq.common.network;
 import java.nio.file.Path;
 
 public interface TransportConfig {
-    Path getDataDir();
+    Path getDataDirPath();
 
     int getDefaultNodePort();
 
-    int getDefaultNodeSocketTimeout(); // in ms
-
-    int getUserNodeSocketTimeout(); // in ms
-
-    default int getDevModeDelayInMs() {
-        return 0;
-    }
+    int getSocketTimeout(); // in ms
 
     int getSendMessageThrottleTime(); // in ms
 

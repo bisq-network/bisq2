@@ -19,6 +19,7 @@ package bisq.desktop.main.content.reputation.build_reputation.burn.tab1;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -55,7 +56,7 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Reputation");
 
         HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

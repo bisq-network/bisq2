@@ -18,9 +18,11 @@
 package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.user.banned.BannedUserService;
@@ -33,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Slf4j
@@ -43,7 +44,7 @@ public class ReputationService implements Service {
     private final AccountAgeService accountAgeService;
     private final SignedWitnessService signedWitnessService;
     private final Observable<String> userProfileIdWithScoreChange = new Observable<>();
-    private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
+    private final ObservableHashMap<String, Long> scoreByUserProfileId = new ObservableHashMap<>();
     private final ProfileAgeService profileAgeService;
     private final NetworkService networkService;
 
@@ -121,11 +122,11 @@ public class ReputationService implements Service {
     /* --------------------------------------------------------------------- */
 
     public ReputationScore getReputationScore(String userProfileId) {
-        return findReputationScore(userProfileId).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+        return findReputationScore(userProfileId).orElseGet(() -> new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
-        return findReputationScore(userProfile).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+        return findReputationScore(userProfile).orElseGet(() -> new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
@@ -133,10 +134,16 @@ public class ReputationService implements Service {
     }
 
     public Optional<ReputationScore> findReputationScore(String userProfileId) {
-        if (!scoreByUserProfileId.containsKey(userProfileId)) {
-            return Optional.empty();
+        long score;
+        if (DevMode.isDevMode() && DevMode.devModeReputationScore() > 0) {
+            score = DevMode.devModeReputationScore();
+        } else {
+            if (!scoreByUserProfileId.containsKey(userProfileId)) {
+                return Optional.empty();
+            }
+            score = scoreByUserProfileId.get(userProfileId);
         }
-        long score = scoreByUserProfileId.get(userProfileId);
+
         double fiveSystemScore = getFiveSystemScore(score);
         int index = getIndex(score, scoreByUserProfileId.values());
         int rank = scoreByUserProfileId.size() - index;

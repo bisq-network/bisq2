@@ -26,7 +26,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +34,9 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
     private static final int VERSION = 1;
@@ -48,24 +47,22 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
         return new RefreshAuthenticatedDataRequest(VERSION,
                 authenticatedData.getMetaData(),
                 hash,
                 publicKey.getEncoded(),
                 publicKey,
-                newSequenceNumber,
+                sequenceNumber,
                 signature,
                 System.currentTimeMillis());
     }
 
 
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final MetaData metaData;
 
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
 
@@ -197,5 +194,28 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     created=" + new Date(created) + " (" + created + ")" +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RefreshAuthenticatedDataRequest that)) return false;
+
+        return sequenceNumber == that.sequenceNumber &&
+                created == that.created &&
+                Arrays.equals(hash, that.hash) &&
+                Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
+                Objects.equals(ownerPublicKey, that.ownerPublicKey) &&
+                Arrays.equals(signature, that.signature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(hash);
+        result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(ownerPublicKey);
+        result = 31 * result + sequenceNumber;
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Long.hashCode(created);
+        return result;
     }
 }

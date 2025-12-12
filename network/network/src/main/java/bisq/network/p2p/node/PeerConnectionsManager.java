@@ -30,7 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -76,7 +80,9 @@ public class PeerConnectionsManager {
 
     public void shutdown() {
         server.ifPresent(ServerChannel::shutdown);
+        server = Optional.empty();
         outboundConnectionMultiplexer.ifPresent(OutboundConnectionMultiplexer::shutdown);
+        outboundConnectionMultiplexer = Optional.empty();
     }
 
     public Optional<Address> findMyAddress() {
@@ -95,7 +101,10 @@ public class PeerConnectionsManager {
             CompletableFuture<OutboundConnectionChannel> connection = outboundConnectionMultiplexer.get().getConnection(address);
             try {
                 return connection.get(2, MINUTES);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            } catch (InterruptedException e) {
+                log.warn("Couldn't connect to {}. Thread was interrupted at throttle method", address, e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+            } catch (ExecutionException | TimeoutException e) {
                 log.warn("Couldn't connect to {}", address);
             }
         }
@@ -121,7 +130,7 @@ public class PeerConnectionsManager {
     }
 
     private Capability createServerAndListen(Node node) throws IOException {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle());
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle(), node.getNodeId());
         List<TransportType> supportedTransportTypes = new ArrayList<>(config.getSupportedTransportTypes());
         List<Feature> features = new ArrayList<>(config.getFeatures());
         Capability serverCapability = Capability.myCapability(serverSocketResult.getAddress(), supportedTransportTypes, features);

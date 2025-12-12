@@ -18,8 +18,10 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.observable.Observable;
 import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -75,8 +77,7 @@ public class MainController extends NavigationController {
         if (getClass().getClassLoader() instanceof URLClassLoader) {
             // We only verify version if we have been loaded as jar into the launcher. 
             // In that case our class loader is of typ URLClassLoader.
-            String baseDirPath = config.getBaseDir().toAbsolutePath().toString();
-            Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(baseDirPath);
+            Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(config.getAppDataDirPath());
             if (versionFromVersionFile.isPresent()) {
                 Version version = ApplicationVersion.getVersion();
                 if (!version.toString().equals(versionFromVersionFile.get())) {
@@ -91,12 +92,8 @@ public class MainController extends NavigationController {
             }
         }
 
-        updaterService.getReleaseNotification().addObserver(releaseNotification -> {
-            if (releaseNotification == null) {
-                return;
-            }
-            UIThread.run(() -> Navigation.navigateTo(NavigationTarget.UPDATER));
-        });
+        updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
+        updaterService.getIgnoreNewRelease().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
     }
 
     @Override
@@ -115,5 +112,19 @@ public class MainController extends NavigationController {
     @Override
     public void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         leftNavController.setNavigationTarget(navigationTarget);
+    }
+
+    private void maybeShowUpdatePopup() {
+        Boolean isNewReleaseAvailable = updaterService.getIsNewReleaseAvailable().get();
+        Observable<Boolean> ignoreNewRelease = updaterService.getIgnoreNewRelease();
+        ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
+        if (isNewReleaseAvailable == null ||
+                !isNewReleaseAvailable ||
+                releaseNotification == null ||
+                ignoreNewRelease == null ||
+                ignoreNewRelease.get()) {
+            return;
+        }
+        Navigation.navigateTo(NavigationTarget.UPDATER);
     }
 }

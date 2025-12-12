@@ -1,9 +1,8 @@
 package bisq.network.tor.controller;
 
-import bisq.common.threading.ThreadName;
-import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescEventListener;
 import lombok.Getter;
@@ -33,7 +32,7 @@ public class TorControlReader implements AutoCloseable {
 
     public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
-            ThreadName.setName("TorControlReader.start");
+            Thread.currentThread().setName("TorControlReader.start");
             try {
                 var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 
@@ -49,11 +48,11 @@ public class TorControlReader implements AutoCloseable {
                             String eventType = parts[1];
 
                             if (isStatusClientEvent(eventType)) {
-                                Optional<BootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(parts);
+                                Optional<TorBootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(parts);
                                 if (bootstrapEventOptional.isPresent()) {
                                     parsedEvent = true;
-                                    BootstrapEvent bootstrapEvent = bootstrapEventOptional.get();
-                                    bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(bootstrapEvent));
+                                    TorBootstrapEvent torBootstrapEvent = bootstrapEventOptional.get();
+                                    bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(torBootstrapEvent));
                                 }
 
                             } else if (isHsDescEvent(eventType)) {
@@ -98,6 +97,8 @@ public class TorControlReader implements AutoCloseable {
         try {
             return replies.take();
         } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at readLine method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RuntimeException(e);
         }
     }

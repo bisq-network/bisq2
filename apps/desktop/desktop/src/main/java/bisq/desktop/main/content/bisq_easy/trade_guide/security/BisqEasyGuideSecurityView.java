@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_guide.security;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -53,7 +54,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
 
         HBox buttons = new HBox(20, backButton, nextButton);
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Bisq_Easy");
 
         VBox.setMargin(headline, new Insets(10, 0, -5, 0));
         VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));

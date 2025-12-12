@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.components;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -54,7 +55,7 @@ public class MaterialUserProfileSelection extends Pane {
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-        onWidthChanged((double) newValue);
+        onWidthChanged(newValue.doubleValue());
         layoutIconButton();
     };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
@@ -243,7 +244,7 @@ public class MaterialUserProfileSelection extends Pane {
         if (focus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, getWidth());
+            Transitions.animatePrefWidth(selectionLine, getWidth());
         } else {
             Transitions.fadeOut(selectionLine, 200);
         }
@@ -297,7 +298,7 @@ public class MaterialUserProfileSelection extends Pane {
 
     void update() {
         if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
-            Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
+            Transitions.animateLayoutY(descriptionLabel, 6.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
         }
         helpLabel.setVisible(StringUtils.isNotEmpty(helpProperty().get()));
         helpLabel.setManaged(StringUtils.isNotEmpty(helpProperty().get()));
@@ -333,11 +334,11 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
     protected double getBgHeight() {
-        return 56;
+        return 67;
     }
 
     protected double getFieldLayoutY() {
-        return 19;
+        return 26;
     }
 
     @Override

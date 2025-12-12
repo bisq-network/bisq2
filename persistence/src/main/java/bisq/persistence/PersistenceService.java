@@ -18,28 +18,34 @@
 package bisq.persistence;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.persistence.backup.MaxBackupSize;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class PersistenceService {
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("PersistenceService");
+
     @Getter
-    private final String baseDir;
+    private final Path appDataDirPath;
     @Getter
     protected final List<PersistenceClient<? extends PersistableProto>> clients = new CopyOnWriteArrayList<>();
     protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
 
-    public PersistenceService(String baseDir) {
-        this.baseDir = baseDir;
+    public PersistenceService(Path appDataDirPath) {
+        this.appDataDirPath = appDataDirPath;
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
@@ -86,13 +92,17 @@ public class PersistenceService {
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                                 String subDir,
+                                                                                 Path subDirPath,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore,
                                                                                  MaxBackupSize maxBackupSize) {
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
-        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName, maxBackupSize);
+        Path normalizedPath = subDirPath.normalize();
+        if (normalizedPath.isAbsolute()) {
+            throw new IllegalArgumentException("subDir must be relative to appDataDirPath");
+        }
+        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize);
         persistenceInstances.add(persistence);
         return persistence;
     }
@@ -101,33 +111,41 @@ public class PersistenceService {
         List<CompletableFuture<Void>> list = clients.stream()
                 .map(PersistenceClient::getPersistence)
                 .map(Persistence::pruneBackups)
-                .toList();
+                .collect(Collectors.toList());
         return CompletableFutureUtils.allOf(list).thenApply(l -> null);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
-        List<String> storagePaths = clients.stream()
-                .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()
-                        .toAbsolutePath().toString())
-                .sorted()
-                .collect(Collectors.toList());
-        log.info("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
-        return CompletableFutureUtils.allOf(clients.stream()
-                        .map(persistenceClient -> persistenceClient.readPersisted()
-                                .whenComplete((optionalResult, throwable) -> {
-                                    String storagePath = persistenceClient.getPersistence().getStorePath()
-                                            .toAbsolutePath().toString();
-                                    if (throwable == null) {
-                                        if (optionalResult.isPresent()) {
-                                            log.debug("Read persisted data from {}", storagePath);
-                                        } else {
-                                            log.debug("No persisted data at {} found", storagePath);
-                                        }
-                                    } else {
-                                        log.error("Error at read persisted data from: {}", storagePath, throwable);
-                                    }
-                                })))
-                .thenApply(list -> true);
+        if (log.isDebugEnabled()) {
+            List<String> storagePaths = clients.stream()
+                    .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()
+                            .toAbsolutePath().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+            log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            // We read sequentially as we need to ensure that low level data is present before higher level data
+            // potentially access it.
+            long ts = System.currentTimeMillis();
+            AtomicBoolean result = new AtomicBoolean(true);
+            clients.forEach(client -> {
+                String storagePath = client.getPersistence().getStorePath().toAbsolutePath().toString();
+                try {
+                    Optional<? extends PersistableProto> optionalResult = client.readPersisted();
+                    if (optionalResult.isPresent()) {
+                        log.debug("Read persisted data from {}", storagePath);
+                    } else {
+                        log.debug("No persisted data at {} found", storagePath);
+                    }
+                } catch (Exception e) {
+                    log.error("Error at read persisted data from: {}", storagePath, e);
+                    result.set(false);
+                }
+            });
+            log.info("Reading all persisted data took {} ms", System.currentTimeMillis() - ts);
+            return result.get();
+        }, EXECUTOR);
     }
 
     public CompletableFuture<Boolean> persistAllClients() {
@@ -135,7 +153,7 @@ public class PersistenceService {
                         .map(persistenceClient -> persistenceClient.persist()
                                 .whenComplete((result, throwable) -> {
                                     if (throwable != null) {
-                                        throwable.printStackTrace();
+                                        log.error("persistAllClients failed", throwable);
                                     } else if (!result) {
                                         log.warn("Failed to persist");
                                     }

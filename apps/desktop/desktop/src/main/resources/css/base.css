@@ -57,6 +57,11 @@
 
     -bisq2-green-desaturated: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
 
+    -bisq2-yellow-lit-50: #e7c18f;
+    -bisq2-yellow-lit-40: #e2b478;
+    -bisq2-yellow-lit-30: #dea862;
+    -bisq2-yellow-lit-20: #d99b4b;
+    -bisq2-yellow-lit-10: #d48f35;
     -bisq2-yellow: #d0831f;
     -bisq2-yellow-dim-10: #bb751b;
     -bisq2-yellow-dim-20: #a66818;
@@ -102,6 +107,7 @@
     -bisq-dark-grey: -bisq-dark-grey-20;
     -bisq-content-bg-grey: -bisq-dark-grey-40;
     -bisq-popup-bg-grey: -bisq-dark-grey-40;
+    -bisq-form-bg: rgba(255, 255, 255, 0.05);
 
     /* Border colors */
     -bisq-border-color-grey: -bisq-mid-grey-10;
@@ -118,9 +124,17 @@
     -fx-box-border: transparent;
     -fx-focus-color: -bisq2-green;
     -fx-faint-focus-color: -bisq2-green;
+
+    /* Button colors */
     -fx-default-button: -bisq2-green-dim-20;
     -bisq-green-hover: -bisq2-green-dim-10;
     -bisq-green-pressed: -bisq2-green-dim-30;
+    -fx-red-button: -bisq2-red-lit-10;
+    -bisq-red-hover: -bisq2-red;
+    -bisq-red-pressed: -bisq2-red-dim-10;
+    -fx-grey-button: -bisq-mid-grey-10;
+    -bisq-grey-hover: -bisq-mid-grey-20;
+    -bisq-grey-pressed: -bisq-dark-grey-50;
 
     -fx-dark-text-color: -bisq-black;
     -fx-mid-text-color: -bisq-mid-grey-20;

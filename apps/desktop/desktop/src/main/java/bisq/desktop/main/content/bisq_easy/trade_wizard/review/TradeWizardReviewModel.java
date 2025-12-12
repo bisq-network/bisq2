@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.monetary.Monetary;
@@ -92,9 +92,13 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private String priceDescription;
     @Setter
-    private String price;
+    private String priceWithCode;
     @Setter
     private String priceDetails;
+    @Setter
+    private String price;
+    @Setter
+    private String priceCode;
     @Setter
     private String fee;
     @Setter
@@ -128,8 +132,10 @@ class TradeWizardReviewModel implements Model {
         headline = null;
         detailsHeadline = null;
         priceDescription = null;
-        price = null;
+        priceWithCode = null;
         priceDetails = null;
+        price = null;
+        priceCode = null;
         bitcoinPaymentMethodDescription = null;
         bitcoinPaymentMethod = null;
         fiatPaymentMethodDescription = null;

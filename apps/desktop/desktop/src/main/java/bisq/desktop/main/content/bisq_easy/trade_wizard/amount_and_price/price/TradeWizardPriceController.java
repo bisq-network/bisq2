@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -35,6 +35,7 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,20 @@ import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
 public class TradeWizardPriceController implements Controller {
+    // Price feedback thresholds for buyers
+    private static final double BUYER_VERY_LOW_THRESHOLD = -0.05;
+    private static final double BUYER_LOW_THRESHOLD = 0.0;
+    private static final double BUYER_MODERATE_THRESHOLD = 0.05;
+    private static final double BUYER_GOOD_THRESHOLD = 0.15;
+    // Price feedback thresholds for sellers
+    private static final double SELLER_VERY_GOOD_THRESHOLD = 0.0;
+    private static final double SELLER_GOOD_THRESHOLD = 0.10;
+    private static final double SELLER_MODERATE_THRESHOLD = 0.25;
+    private static final double SELLER_LOW_THRESHOLD = 0.35;
+    // Warning thresholds
+    private static final double BUYER_WARNING_THRESHOLD = 0.05;
+    private static final double SELLER_WARNING_THRESHOLD = 0.10;
+
     private final TradeWizardPriceModel model;
     @Getter
     private final TradeWizardPriceView view;
@@ -67,7 +82,7 @@ public class TradeWizardPriceController implements Controller {
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardPriceModel();
-        view = new TradeWizardPriceView(model, this, priceInput);
+        view = new TradeWizardPriceView(model, this, priceInput.getRoot());
     }
 
     public void setMarket(Market market) {
@@ -110,6 +125,7 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setMarketPriceMarkerLayoutX(calculateMarketPriceMarkerLayoutX());
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
@@ -154,7 +170,7 @@ public class TradeWizardPriceController implements Controller {
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
 
-        model.getShouldShowFeedback().set(model.getDirection().isBuy());
+        model.getShouldShowLearnWhyButton().set(model.getDirection().isBuy());
 
         applyPriceSpec();
     }
@@ -170,14 +186,15 @@ public class TradeWizardPriceController implements Controller {
         priceSliderValuePin.unsubscribe();
         percentagePin.unsubscribe();
 
-        view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+
+        model.setShouldFocusPriceComponent(false);
     }
 
-    void onPercentageFocussed(boolean focussed) {
-        model.setFocused(focussed);
-        if (!focussed) {
+    void onPercentageFocused(boolean focused) {
+        model.setFocused(focused);
+        if (!focused) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
                 String percentageAsString = PercentageFormatter.formatToPercent(percentage);
@@ -189,6 +206,78 @@ public class TradeWizardPriceController implements Controller {
                 model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
         }
+    }
+
+    void onPriceComponentUpdated() {
+        if (!model.isShouldFocusPriceComponent()) {
+            model.setShouldFocusPriceComponent(true);
+        }
+    }
+
+    void onUpdatePriceSpec() {
+        if (model.getUseFixPrice().get()) {
+            boolean shouldRequestFocus = model.isShouldFocusPriceComponent();
+            priceInput.activate(shouldRequestFocus);
+        } else {
+            priceInput.deactivate();
+        }
+    }
+
+    void onToggleUseFixPrice() {
+        boolean useFixPrice = !model.getUseFixPrice().get();
+
+        // In case of in invalid inputs we apply the value from the flip side before switching,
+        // so that the then inactive field has a valid value again.
+        if (!useFixPrice && !priceInput.isPriceValid().get()) {
+            applyPercentageString(model.getPercentageInput().get());
+        } else if (useFixPrice && model.getErrorMessage().get() != null) {
+            onQuoteInput(priceInput.getQuote().get());
+        }
+        model.getUseFixPrice().set(useFixPrice);
+        settingsService.setCookie(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey(), useFixPrice);
+        applyPriceSpec();
+    }
+
+    void useFixedPrice() {
+        if (!model.getUseFixPrice().get()) {
+            onToggleUseFixPrice();
+        }
+    }
+
+    void usePercentagePrice() {
+        if (model.getUseFixPrice().get()) {
+            onToggleUseFixPrice();
+        }
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
+    void onShowOverlay() {
+        if (!model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getIsOverlayVisible().set(true);
+        }
+    }
+
+    void onCloseOverlay() {
+        if (model.getIsOverlayVisible().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getIsOverlayVisible().set(false);
+        }
+    }
+
+    void onMarketPriceMarkerClicked() {
+        applyPercentageString(PercentageFormatter.formatToPercent(0));
+    }
+
+    private double calculateMarketPriceMarkerLayoutX() {
+        double marketPricePercentage = 0;
+        double normalizedValue = (marketPricePercentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
+        return normalizedValue * model.getPriceComponentWidth() + 5; // 5 for the padding
     }
 
     private void onPercentageInput(String percentageAsString) {
@@ -226,49 +315,6 @@ public class TradeWizardPriceController implements Controller {
         } catch (Exception e) {
             model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
         }
-    }
-
-    void onToggleUseFixPrice() {
-        boolean useFixPrice = !model.getUseFixPrice().get();
-
-        // In case of in invalid inputs we apply the value from the flip side before switching,
-        // so that the then inactive field has a valid value again.
-        if (!useFixPrice && !priceInput.isPriceValid().get()) {
-            applyPercentageString(model.getPercentageInput().get());
-        } else if (useFixPrice && model.getErrorMessage().get() != null) {
-            onQuoteInput(priceInput.getQuote().get());
-        }
-        model.getUseFixPrice().set(useFixPrice);
-        settingsService.setCookie(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey(), useFixPrice);
-        applyPriceSpec();
-    }
-
-    void useFixedPrice() {
-        if (!model.getUseFixPrice().get()) {
-            onToggleUseFixPrice();
-        }
-    }
-
-    void usePercentagePrice() {
-        if (model.getUseFixPrice().get()) {
-            onToggleUseFixPrice();
-        }
-    }
-
-    void onShowOverlay() {
-        navigationButtonsVisibleHandler.accept(false);
-        model.getIsOverlayVisible().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
-        });
-    }
-
-    void onCloseOverlay() {
-        navigationButtonsVisibleHandler.accept(true);
-        model.getIsOverlayVisible().set(false);
-        view.getRoot().setOnKeyPressed(null);
     }
 
     private void applyPriceSpec() {
@@ -370,31 +416,50 @@ public class TradeWizardPriceController implements Controller {
         // 0.001 BTC - 0.01 BTC             2-10%
         Optional<Double> percentage = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, model.getMarket());
         if (percentage.isPresent()) {
-            double percentageValue = percentage.get();
-            String feedbackSentence;
-            if (percentageValue < -0.05) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryLow"));
-            } else if (percentageValue < 0d) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.low"));
-            } else if (percentageValue < 0.05) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.some"));
-            } else if (percentageValue < 0.15) {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.good"));
+            if (model.getDirection().isBuy()) {
+                updateFeedbackForBuyer(percentage.get());
             } else {
-                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+                updateFeedbackForSeller(percentage.get());
             }
-
-            model.getShouldShowWarningIcon().set(percentageValue < 0.05);
-            model.getFeedbackSentence().set(feedbackSentence);
         } else {
             model.getFeedbackSentence().set(null);
         }
     }
 
-    private String getFeedbackSentence(String adjective) {
-        return model.getDirection().isBuy()
-                ? Res.get("bisqEasy.price.feedback.buyOffer.sentence", adjective)
-                : Res.get("bisqEasy.price.feedback.sellOffer.sentence", adjective);
+    private void updateFeedbackForBuyer(double percentageValue) {
+        String buyFeedbackText = "bisqEasy.price.feedback.buyOffer.sentence";
+        String feedbackSentence;
+        if (percentageValue < BUYER_VERY_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryLow"));
+        } else if (percentageValue < BUYER_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.low"));
+        } else if (percentageValue < BUYER_MODERATE_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.some"));
+        } else if (percentageValue < BUYER_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.good"));
+        } else {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+        }
+        model.getShouldShowWarningIcon().set(percentageValue < BUYER_WARNING_THRESHOLD);
+        model.getFeedbackSentence().set(feedbackSentence);
+    }
+
+    private void updateFeedbackForSeller(double percentageValue) {
+        String buyFeedbackText = "bisqEasy.price.feedback.sellOffer.sentence";
+        String feedbackSentence;
+        if (percentageValue < SELLER_VERY_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryGood"));
+        } else if (percentageValue < SELLER_GOOD_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.good"));
+        } else if (percentageValue < SELLER_MODERATE_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.some"));
+        } else if (percentageValue < SELLER_LOW_THRESHOLD) {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.low"));
+        } else {
+            feedbackSentence = Res.get(buyFeedbackText, Res.get("bisqEasy.price.feedback.sentence.veryLow"));
+        }
+        model.getShouldShowWarningIcon().set(percentageValue >= SELLER_WARNING_THRESHOLD);
+        model.getFeedbackSentence().set(feedbackSentence);
     }
 
     private void applyPriceFromCookie(String price) {

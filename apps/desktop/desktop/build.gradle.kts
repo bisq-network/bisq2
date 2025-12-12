@@ -5,14 +5,14 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 javafx {
-    version = "22.0.1"
+    version = "21.0.6"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
@@ -36,21 +36,20 @@ dependencies {
     implementation("bisq:trade")
     implementation("bisq:bonded-roles")
     implementation("bisq:settings")
+    implementation("bisq:burningman")
     implementation("bisq:user")
     implementation("bisq:chat")
     implementation("bisq:support")
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
+    implementation("bisq:mu-sig")
     implementation("bisq:application")
     implementation("bisq:evolution")
+    implementation("bisq:wallet")
 
     implementation("network:network")
     implementation("network:network-identity")
-
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
+    implementation("network:i2p")
 
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)

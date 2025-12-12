@@ -18,17 +18,17 @@
 package bisq.http_api_node;
 
 import bisq.application.Executable;
-import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case RestAPI
+ * is used without websockets
  */
 @Slf4j
 public class HttpApiApp extends Executable<HttpApiApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(HttpApiApp.class, "main");
+        Thread.currentThread().setName("HttpApiApp.main");
         new HttpApiApp(args);
     }
 

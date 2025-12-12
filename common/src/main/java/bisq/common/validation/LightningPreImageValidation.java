@@ -22,9 +22,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Pattern;
 
 public class LightningPreImageValidation {
+    public static final int LENGTH = 64; // 32 bytes = hex characters
     private static final Pattern HEX64_PATTERN = Pattern.compile("^[a-fA-F0-9]{64}$");
 
-    public static boolean validatePreImage(@NotNull String preImage) {
+    public static boolean isValid(@NotNull String preImage) {
         return HEX64_PATTERN.matcher(preImage).matches();
     }
 }

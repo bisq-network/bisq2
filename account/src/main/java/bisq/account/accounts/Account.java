@@ -17,8 +17,17 @@
 
 package bisq.account.accounts;
 
+import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.fiat.CashByMailAccount;
+import bisq.account.accounts.fiat.CountryBasedAccount;
+import bisq.account.accounts.fiat.FasterPaymentsAccount;
+import bisq.account.accounts.fiat.InteracETransferAccount;
+import bisq.account.accounts.fiat.PayIdAccount;
+import bisq.account.accounts.fiat.RevolutAccount;
+import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -26,9 +35,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Account is only stored locally and never shared with the peer. It can contain sensitive data.
@@ -37,26 +44,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements PersistableProto {
+public abstract class Account<M extends PaymentMethod<?>, P extends AccountPayload<M>> implements PersistableProto {
+    protected final String id;
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
-    protected final M paymentMethod;
 
-    public Account(String accountName,
-                   M paymentMethod,
-                   P accountPayload) {
-        this(new Date().getTime(), accountName, paymentMethod, accountPayload);
-    }
-
-    public Account(long creationDate,
+    public Account(String id,
+                   long creationDate,
                    String accountName,
-                   M paymentMethod,
                    P accountPayload) {
+        this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
-        this.paymentMethod = paymentMethod;
     }
 
     @Override
@@ -71,9 +72,9 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
 
     protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.Account.newBuilder()
+                .setId(id)
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
@@ -84,17 +85,21 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
             case REVOLUTACCOUNT -> RevolutAccount.fromProto(proto);
             case COUNTRYBASEDACCOUNT -> CountryBasedAccount.fromProto(proto);
             case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
-            case PAYIDACCOUNT -> PayIDAccount.fromProto(proto);
+            case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
+            case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
             case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
-            case CASHAPPACCOUNT -> CashAppAccount.fromProto(proto);
+            case CRYPTOASSETACCOUNT -> CryptoAssetAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
 
+    public M getPaymentMethod() {
+        return accountPayload.getPaymentMethod();
+    }
 
-    public Set<String> getTradeCurrencyCodes() {
-        return paymentMethod.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+    public List<String> getSupportedCurrencyCodes() {
+        return getPaymentMethod().getSupportedCurrencyCodes();
     }
 }

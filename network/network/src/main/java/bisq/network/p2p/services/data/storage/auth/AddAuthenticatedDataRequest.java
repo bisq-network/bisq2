@@ -27,7 +27,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +34,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -42,7 +42,6 @@ import java.util.Optional;
  * A signature of the authenticatedSequentialData is verified with the given public key.
  * The data gets compared with existing map entries and need to be deterministic.
  */
-@EqualsAndHashCode
 @Slf4j
 public final class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
@@ -53,14 +52,16 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
-        AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] hashForSignature = data.serializeForHash();
-        byte[] signature = SignatureUtil.sign(hashForSignature, keyPair.getPrivate());
+        AuthenticatedSequentialData data =
+                new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
+        byte[] messageForSignature = data.serializeForHash();
+        // messageForSignature will get hashed internally by signature algo (SHA256withECDSA)
+        byte[] signature = SignatureUtil.sign(messageForSignature, keyPair.getPrivate());
          /*  log.error("hashForStoreMap={}", Hex.encode(hashForStoreMap));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
         log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
         log.error("sequenceNumber={}", sequenceNumber);
-        log.error("hashForSignature={}", Hex.encode(hashForSignature));
+        log.error("messageForSignature={}", Hex.encode(messageForSignature));
         log.error("signature={}", Hex.encode(signature));
         log.error("data={}", data);*/
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
@@ -202,8 +203,27 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
                 "\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ", \r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ", \r\n     authenticatedSequentialData=" + authenticatedSequentialData +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AddAuthenticatedDataRequest that)) return false;
+
+        return Objects.equals(authenticatedSequentialData, that.authenticatedSequentialData) &&
+                Arrays.equals(signature, that.signature) &&
+                Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
+                Objects.equals(ownerPublicKey, that.ownerPublicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(authenticatedSequentialData);
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(ownerPublicKey);
+        return result;
     }
 }

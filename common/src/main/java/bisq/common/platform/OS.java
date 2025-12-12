@@ -48,6 +48,10 @@ public enum OS {
         throw new IllegalStateException("Running on unsupported OS: " + osName);
     }
 
+    public static boolean isUnix() {
+        return isLinux() || isMacOs();
+    }
+
     public static boolean isLinux() {
         return isLinux(getOsName());
     }

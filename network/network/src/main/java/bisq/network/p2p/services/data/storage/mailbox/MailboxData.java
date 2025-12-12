@@ -40,10 +40,6 @@ public final class MailboxData implements StorageData {
     private static final int VERSION = 1;
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
 
-    public static MailboxData cloneWithVersion0(MailboxData mailboxData) {
-        return new MailboxData(0, mailboxData.getMetaData(), mailboxData.getConfidentialMessage());
-    }
-
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;

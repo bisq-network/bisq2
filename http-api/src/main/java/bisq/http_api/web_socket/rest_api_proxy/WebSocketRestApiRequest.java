@@ -26,6 +26,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -37,6 +38,9 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String path;
     private String method;
     private String body;
+    private String authToken;
+    private String authTs;
+    private String authNonce;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&

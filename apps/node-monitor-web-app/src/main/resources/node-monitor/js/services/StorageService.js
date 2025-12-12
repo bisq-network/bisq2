@@ -121,7 +121,7 @@ export class StorageService {
     };
 
     #isValidAddressFormat = (address) => {
-        const addressPattern = /^[a-zA-Z0-9.-]+:\d+$/;
+        const addressPattern = /^[a-zA-Z0-9/_\-.,:=~]+$/;
         return addressPattern.test(address);
     };
 

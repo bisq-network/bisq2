@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
@@ -32,6 +49,7 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final SortedList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> sortedChatMessages = new SortedList<>(filteredChatMessages);
     private final Set<String> chatMessageIds = new HashSet<>();
     private final BooleanProperty layoutChildrenDone = new SimpleBooleanProperty();
+    private final BooleanProperty hasBisqEasyOfferMessages = new SimpleBooleanProperty(false);
 
     private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
     private final ChatChannelDomain chatChannelDomain;
@@ -46,6 +64,8 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final BooleanProperty showScrolledDownButton = new SimpleBooleanProperty();
     private final BooleanProperty scrollBarVisible = new SimpleBooleanProperty();
     private final DoubleProperty scrollValue = new SimpleDoubleProperty();
+    private final StringProperty placeholderTitle = new SimpleStringProperty();
+    private final StringProperty placeholderDescription = new SimpleStringProperty();
 
     public ChatMessagesListModel(UserIdentityService userIdentityService,
                                  ChatChannelDomain chatChannelDomain) {

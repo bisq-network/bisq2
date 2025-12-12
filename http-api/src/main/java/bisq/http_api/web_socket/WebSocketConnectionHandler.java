@@ -19,22 +19,22 @@ package bisq.http_api.web_socket;
 
 
 import bisq.common.application.Service;
+import bisq.common.threading.ExecutorFactory;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.http_api.web_socket.subscription.SubscriptionService;
-import bisq.network.NetworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.DataFrame;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
-import java.net.http.HttpClient;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class WebSocketConnectionHandler extends WebSocketApplication implements Service {
+    public final ExecutorService executor = ExecutorFactory.newCachedThreadPool("WebSocketConnectionHandler", 1, 50, 30);
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService) {
@@ -50,6 +50,7 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         getWebSockets().forEach(WebSocket::close);
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -78,6 +79,6 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
             } else {
                 log.error("No service found for handling message: {}", message);
             }
-        }, NetworkService.NETWORK_IO_POOL);
+        }, executor);
     }
 }

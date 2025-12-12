@@ -19,24 +19,25 @@ package bisq.http_api.rest_api.domain.offers;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.dto.DtoMappings;
-import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -49,14 +50,25 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -121,7 +133,8 @@ public class OfferbookRestApi extends RestApiBase {
             bisqEasyOfferbookChannelService.deleteChatMessage(offerbookMessage, userIdentity.getNetworkIdWithKeyPair()).get();
             asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at deleteOffer method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (ExecutionException e) {
             asyncResponse.resume(buildErrorResponse("Failed to delete the offer: " + e.getCause().getMessage()));
@@ -182,19 +195,21 @@ public class OfferbookRestApi extends RestApiBase {
                     bitcoinPaymentMethods,
                     fiatPaymentMethods,
                     userProfile.getTerms(),
-                    supportedLanguageCodes);
+                    supportedLanguageCodes,
+                    BisqEasyProtocol.VERSION);
             String channelId = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow().getId();
             BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channelId,
                     userProfile.getId(),
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),
                     Optional.empty(),
-                    new Date().getTime(),
+                    System.currentTimeMillis(),
                     false);
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateOfferResponse(bisqEasyOffer.getId())));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            log.warn("Thread got interrupted at createOffer method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
@@ -290,7 +305,7 @@ public class OfferbookRestApi extends RestApiBase {
     @Path("markets/{currencyCode}/offers")
     public Response getOffers(@PathParam("currencyCode") String currencyCode) {
         try {
-            String marketCodes = "BTC/" + currencyCode.toUpperCase();
+            String marketCodes = "BTC/" + currencyCode.toUpperCase(Locale.ROOT);
             return findOffer(marketCodes)
                     .map(this::buildOkResponse)
                     .orElseGet(() -> {

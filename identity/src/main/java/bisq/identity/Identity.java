@@ -29,24 +29,26 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public final class Identity implements PersistableProto {
-    // Reference to usage (e.g. offerId)
     @Getter
     private final String tag;
     @Getter
     private final NetworkId networkId;
     @Getter
     private final KeyBundle keyBundle;
+    @Getter
+    private final transient NetworkIdWithKeyPair networkIdWithKeyPair;
 
     public Identity(String tag, NetworkId networkId, KeyBundle keyBundle) {
         this.tag = tag;
         this.networkId = networkId;
         this.keyBundle = keyBundle;
+        networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyBundle.getKeyPair());
     }
 
     @Override
     public bisq.identity.protobuf.Identity.Builder getBuilder(boolean serializeForHash) {
         return bisq.identity.protobuf.Identity.newBuilder()
-                .setDomainId(tag)
+                .setTag(tag)
                 .setNetworkId(networkId.toProto(serializeForHash))
                 .setKeyBundle(keyBundle.toProto(serializeForHash));
     }
@@ -57,13 +59,9 @@ public final class Identity implements PersistableProto {
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
-        return new Identity(proto.getDomainId(),
+        return new Identity(proto.getTag(),
                 NetworkId.fromProto(proto.getNetworkId()),
                 KeyBundle.fromProto(proto.getKeyBundle()));
-    }
-
-    public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
-        return new NetworkIdWithKeyPair(networkId, keyBundle.getKeyPair());
     }
 
     public String getId() {

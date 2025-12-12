@@ -23,13 +23,30 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 
+/**
+ * A thread-safe observable map based on {@link java.util.concurrent.ConcurrentHashMap}.
+ * <p>
+ * Observers can register to be notified when entries are added, removed, or cleared.
+ * <p>
+ * All core map operations (`put`, `remove`, `clear`) trigger notifications to all registered {@link HashMapObserver}s.
+ * Iteration over keys/values/entries is weakly consistent and does not throw {@link java.util.ConcurrentModificationException}.
+ *
+ * @param <K> the type of keys
+ * @param <V> the type of values
+ */
 @EqualsAndHashCode
-public class ObservableHashMap<K, V> implements Map<K, V> {
+public class ObservableHashMap<K, V> implements Map<K, V>, ReadOnlyObservableMap<K, V> {
     @Getter
-    private final Map<K, V> map = new HashMap<>();
+    private final Map<K, V> map = new ConcurrentHashMap<>();
 
     @EqualsAndHashCode.Exclude
     private final List<HashMapObserver<K, V>> observers = new CopyOnWriteArrayList<>();
@@ -39,6 +56,11 @@ public class ObservableHashMap<K, V> implements Map<K, V> {
 
     private ObservableHashMap(Map<K, V> map) {
         putAll(map);
+    }
+
+    @Override
+    public Map<K, V> getUnmodifiableMap() {
+        return Collections.unmodifiableMap(map);
     }
 
     public Pin addObserver(HashMapObserver<K, V> observer) {
@@ -125,6 +147,15 @@ public class ObservableHashMap<K, V> implements Map<K, V> {
     @Override
     public Set<Entry<K, V>> entrySet() {
         return map.entrySet();
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        return map.computeIfAbsent(key, k -> {
+            V value = mappingFunction.apply(k);
+            observers.forEach(observer -> observer.put(k, value));
+            return value;
+        });
     }
 
     @Override

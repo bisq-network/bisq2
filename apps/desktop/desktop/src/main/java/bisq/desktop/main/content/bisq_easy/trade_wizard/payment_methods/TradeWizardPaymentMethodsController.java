@@ -17,10 +17,17 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
-import bisq.account.payment_method.*;
-import bisq.common.currency.Market;
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodUtil;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
+import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -30,13 +37,14 @@ import bisq.settings.SettingsService;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.layout.Region;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,13 +59,15 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private final TradeWizardPaymentMethodsView view;
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
-    private final Region owner;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private ListChangeListener<FiatPaymentMethod> addedCustomFiatPaymentMethodsListener;
 
-    public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
+    public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider,
+                                               Consumer<Boolean> navigationButtonsVisibleHandler,
+                                               Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.onNextHandler = onNextHandler;
-        this.owner = owner;
 
         model = new TradeWizardPaymentMethodsModel();
         view = new TradeWizardPaymentMethodsView(model, this);
@@ -73,19 +83,20 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     public boolean validate() {
         if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
-                    .owner(owner)
-                    .show();
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowOverlay().set(true);
+            model.getOverlayText().set(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"));
             return false;
         }
 
         if (getCustomFiatPaymentMethodNameNotEmpty()) {
             return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
+
         if (model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
-                    .owner(owner)
-                    .show();
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowOverlay().set(true);
+            model.getOverlayText().set(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"));
             return false;
         }
 
@@ -203,6 +214,19 @@ public class TradeWizardPaymentMethodsController implements Controller {
         doAddCustomFiatMethod();
     }
 
+    void onCloseOverlay() {
+        if (model.getShouldShowOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
     private boolean doAddCustomFiatMethod() {
         if (model.getSelectedFiatPaymentMethods().size() >= MAX_ALLOWED_SELECTED_FIAT_PAYMENTS) {
             new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.maxMethodsReached")).show();
@@ -218,7 +242,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         }
         FiatPaymentMethod customFiatPaymentMethod = FiatPaymentMethod.fromCustomName(customName);
         if (model.getAddedCustomFiatPaymentMethods().contains(customFiatPaymentMethod)) {
-            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customPaymentMethodAlreadyExists", customFiatPaymentMethod.getName())).show();
+            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customPaymentMethodAlreadyExists", customFiatPaymentMethod.getPaymentRailName())).show();
             return false;
         }
         return maybeAddCustomFiatPaymentMethod(customFiatPaymentMethod);
@@ -237,7 +261,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private boolean maybeAddCustomFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
         if (fiatPaymentMethod != null) {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
-                String customName = fiatPaymentMethod.getName().toUpperCase().strip();
+                String customName = fiatPaymentMethod.getPaymentRailName().toUpperCase().strip();
                 if (isPredefinedPaymentMethodsContainName(customName)) {
                     new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");

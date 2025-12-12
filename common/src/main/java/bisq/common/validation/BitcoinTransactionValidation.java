@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * @author Rodrigo Varela
  */
 public class BitcoinTransactionValidation {
-
+    public static final int LENGTH = 64; // 32 bytes = hex characters
     private static final Pattern TXID_PATTERN = Pattern.compile("^[a-fA-F0-9]{64}$");
 
     /**
@@ -37,7 +37,7 @@ public class BitcoinTransactionValidation {
      * @param txId The string to be checked.
      * @return True if it is a Bitcoin transaction ID, false otherwise.
      */
-    public static boolean validateTransactionId(@NotNull String txId) {
+    public static boolean isValid(@NotNull String txId) {
         return TXID_PATTERN.matcher(txId).matches();
     }
 }

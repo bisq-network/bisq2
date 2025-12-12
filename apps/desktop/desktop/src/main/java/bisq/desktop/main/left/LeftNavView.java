@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.left;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -27,21 +27,27 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.top.TopPanelView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
@@ -54,12 +60,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Button horizontalExpandIcon, horizontalCollapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems;
+    private final VBox mainMenuItems, networkInfoRoot;
     private final int menuTop;
-    private final LeftNavButton authorizedRole;
+    private final LeftNavButton authorizedRole, muSigLeftNavButton, wallet;
     private final Label version;
-    private final VBox networkInfoRoot;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription,
+            selectedNavigationButtonPin, newVersionAvailablePin, isMuSigActivatedPin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller, VBox networkInfoRoot) {
         super(new AnchorPane(), model, controller);
@@ -82,15 +88,26 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
 
+        muSigLeftNavButton = createNavigationButton(Res.get("navigation.muSig"),
+                "nav-musig",
+                NavigationTarget.MU_SIG, false);
+
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
                 NavigationTarget.REPUTATION, false);
+
+        LeftNavButton contactsList = createNavigationButton(Res.get("navigation.contacts"),
+                "nav-contacts",
+                NavigationTarget.CONTACTS_LIST, false);
+        Label contactsListLabel = contactsList.getButtonLabel();
+        contactsListLabel.setGraphic(ImageUtil.getImageViewById("new-badge"));
+        contactsListLabel.setContentDisplay(ContentDisplay.RIGHT);
 
         LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
-        LeftNavButton wallet = createNavigationButton(Res.get("navigation.wallet"),
+        wallet = createNavigationButton(Res.get("navigation.wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
@@ -154,19 +171,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, reputation, protocols,
-                learn, chat, support, user, network, settings, authorizedRole);
-        if (model.isWalletEnabled()) {
-            mainMenuItems.getChildren().add(3, wallet);
-        }
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, muSigLeftNavButton, reputation,
+                contactsList, protocols, learn, chat, support, user, network, settings, authorizedRole);
+        mainMenuItems.getChildren().add(3, wallet);
 
         mainMenuItems.setLayoutY(menuTop);
 
         version = new Label(model.getVersion());
-        version.setOpacity(0.5);
-        version.getStyleClass().add("bisq-smaller-dimmed-label");
         version.setLayoutX(91);
-        version.setLayoutY(26.5);
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
 
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
@@ -176,8 +188,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewAttached() {
+        wallet.visibleProperty().bind(model.getIsMuSigActivated());
+        wallet.managedProperty().bind(model.getIsMuSigActivated());
         authorizedRole.visibleProperty().bind(model.getAuthorizedRoleVisible());
         authorizedRole.managedProperty().bind(model.getAuthorizedRoleVisible());
+
 
         horizontalExpandIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         horizontalCollapseIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
@@ -190,59 +205,66 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         horizontalExpandIcon.setVisible(false);
         horizontalExpandIcon.setManaged(false);
 
+        isMuSigActivatedPin = EasyBind.subscribe(model.getIsMuSigActivated(), isMuSigActivated -> {
+            muSigLeftNavButton.setManaged(isMuSigActivated);
+            muSigLeftNavButton.setVisible(isMuSigActivated);
+        });
+
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuHorizontalExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-            AtomicInteger duration = new AtomicInteger(400);
+            long duration = ManagedDuration.inMillis(400);
+            long halfOfDuration = ManagedDuration.inMillis(200);
+            long quoterOfDuration = ManagedDuration.inMillis(100);
             if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
-                                .forEach(e -> e.setHorizontalExpanded(true, duration.get() / 2)))
-                        .after(duration.get() / 2);
-                Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
+                                .forEach(e -> e.setHorizontalExpanded(true, halfOfDuration)))
+                        .after(halfOfDuration);
+                Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration);
                 networkInfoRoot.setPrefWidth(width + MARKER_WIDTH);
-                Transitions.fadeIn(networkInfoRoot, duration.get());
+                Transitions.fadeIn(networkInfoRoot, duration);
 
-                Transitions.fadeOut(horizontalExpandIcon, duration.get() / 4, () -> {
+                Transitions.fadeOut(horizontalExpandIcon, quoterOfDuration, () -> {
                     horizontalExpandIcon.setVisible(false);
                     horizontalExpandIcon.setManaged(false);
                 });
                 UIScheduler.run(() -> {
-                    Transitions.fadeIn(logoExpanded, duration.get() / 4, () -> {
+                    Transitions.fadeIn(logoExpanded, quoterOfDuration, () -> {
                         logoCollapsed.setVisible(false);
                         logoCollapsed.setManaged(false);
                     });
                     logoExpanded.setVisible(true);
                     logoExpanded.setManaged(true);
                     version.setLayoutX(91);
-                }).after(duration.get() / 2);
+                }).after(halfOfDuration);
                 UIScheduler.run(() -> {
                     networkInfoRoot.setOpacity(0);
-                    Transitions.fadeIn(networkInfoRoot, duration.get() / 4);
+                    Transitions.fadeIn(networkInfoRoot, quoterOfDuration);
                     networkInfoRoot.setVisible(true);
                     networkInfoRoot.setManaged(true);
                     horizontalCollapseIcon.setOpacity(0);
                     horizontalCollapseIcon.setVisible(true);
                     horizontalCollapseIcon.setManaged(true);
-                    Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
-                }).after(duration.get() + 100);
+                    Transitions.fadeIn(horizontalCollapseIcon, ManagedDuration.getDefaultDurationMillis(), 0.3, null);
+                }).after(ManagedDuration.inMillis(duration + 100));
             } else {
                 horizontalExpandIcon.setOpacity(0);
                 horizontalExpandIcon.setVisible(true);
                 horizontalExpandIcon.setManaged(true);
 
-                model.getLeftNavButtons().forEach(e -> e.setHorizontalExpanded(false, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setHorizontalExpanded(false, halfOfDuration));
                 UIScheduler.run(() -> {
-                            Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
+                            Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration);
                             horizontalCollapseIcon.setVisible(false);
                             horizontalCollapseIcon.setManaged(false);
                             horizontalCollapseIcon.setOpacity(0);
-                            Transitions.fadeIn(horizontalExpandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
+                            Transitions.fadeIn(horizontalExpandIcon, 2 * ManagedDuration.getDefaultDurationMillis(), 0.3, null);
                         })
-                        .after(duration.get() / 4);
-                Transitions.fadeOut(networkInfoRoot, duration.get() / 2, () -> {
+                        .after(quoterOfDuration);
+                Transitions.fadeOut(networkInfoRoot, halfOfDuration, () -> {
                     networkInfoRoot.setVisible(false);
                     networkInfoRoot.setManaged(false);
                 });
-                Transitions.fadeOut(logoExpanded, duration.get() / 2, () -> {
+                Transitions.fadeOut(logoExpanded, halfOfDuration, () -> {
                     logoExpanded.setVisible(false);
                     logoExpanded.setManaged(false);
                     version.setLayoutX(53);
@@ -254,7 +276,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         root.setOnMouseEntered(e -> {
             if (horizontalCollapseIcon.isVisible()) {
-                Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
+                Transitions.fadeIn(horizontalCollapseIcon, ManagedDuration.getDefaultDurationMillis(), 0.3, null);
             }
         });
         root.setOnMouseExited(e -> {
@@ -270,17 +292,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
 
-        newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
+        newVersionAvailablePin = EasyBind.subscribe(model.getIsNewReleaseAvailable(),
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
-                        version.setOpacity(1);
                         version.getStyleClass().remove("bisq-smaller-dimmed-label");
                         version.getStyleClass().addAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(26);
                         version.setOnMouseClicked(e -> controller.onOpenUpdateWindow());
                     } else {
-                        version.setOpacity(0.5);
                         version.getStyleClass().add("bisq-smaller-dimmed-label");
                         version.getStyleClass().removeAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(25);
                         version.setOnMouseClicked(null);
                     }
                 });
@@ -288,6 +310,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     @Override
     protected void onViewDetached() {
+        wallet.visibleProperty().unbind();
+        wallet.managedProperty().unbind();
         authorizedRole.visibleProperty().unbind();
         authorizedRole.managedProperty().unbind();
         horizontalExpandIcon.setOnMouseClicked(null);
@@ -296,6 +320,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         menuExpandedSubscription.unsubscribe();
         selectedNavigationButtonPin.unsubscribe();
         newVersionAvailablePin.unsubscribe();
+        isMuSigActivatedPin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
     }
@@ -353,34 +378,31 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     }
 
     private void maybeAnimateMark() {
-        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-        if (selectedLeftNavButton == null) return;
+        Optional<LeftNavButton> buttonForAnimation = findButtonForAnimation();
+        double height = findButtonForAnimation().map(Region::getHeight).orElse(0d);
+        if (height > 0) {
+            Transitions.animateNavigationButtonMarks(selectionMarker, height, calculateTargetY());
+            updateSubmenu();
+        } else {
+            // If height is zero we try again after a short delay
+            UIScheduler.run(this::maybeAnimateMark).after(20);
+        }
+    }
 
-        LeftNavButton buttonForHeight;
+    private Optional<LeftNavButton> findButtonForAnimation() {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        if (selectedLeftNavButton == null) {
+            return Optional.empty();
+        }
+
         if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (!parentButton.getIsSubMenuExpanded().get()) {
-                buttonForHeight = parentButton;
-            } else {
-                buttonForHeight = selectedLeftNavButton;
+                return Optional.of(parentButton);
             }
-        } else {
-            buttonForHeight = selectedLeftNavButton;
         }
 
-        if (buttonForHeight.getHeight() > 0) {
-            Transitions.animateNavigationButtonMarks(selectionMarker,
-                    buttonForHeight.getHeight(),
-                    calculateTargetY());
-        } else {
-            // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
-            // We only know target position after the initial animation is done.
-            UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
-                            buttonForHeight.getHeight(),
-                            calculateTargetY()))
-                    .after(Transitions.getDuration(Transitions.DEFAULT_DURATION / 2));
-        }
-        updateSubmenu();
+        return Optional.of(selectedLeftNavButton);
     }
 
     private double calculateTargetY() {

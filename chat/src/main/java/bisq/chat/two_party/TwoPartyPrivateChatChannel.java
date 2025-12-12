@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,7 +43,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         List<String> userIds = Stream.of(userProfileId1, userProfileId2)
                 .sorted()
                 .toList();
-        return chatChannelDomain.migrate().name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
+        return chatChannelDomain.migrate().name().toLowerCase(Locale.ROOT) + "." + userIds.get(0) + "-" + userIds.get(1);
     }
 
     @Getter
@@ -119,7 +120,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         public static String migrateChannelId(String chatChannelId) {
             try {
                 String[] tokens = chatChannelId.split("\\.");
-                String chatChannelDomainName = tokens[0].toUpperCase();
+                String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
                 ChatChannelDomain chatChannelDomain = ChatChannelDomain.valueOf(chatChannelDomainName).migrate();
                 String[] peers = tokens[1].split("-");
                 String userProfileId1 = peers[0];

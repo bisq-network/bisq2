@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -26,9 +25,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -43,15 +42,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ReputationRankingController implements Controller {
     @Getter
     private final ReputationRankingView view;
+    private final ReputationRankingModel model;
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
-    private final ReputationRankingModel model;
     private Pin userProfileByIdPin, proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
@@ -95,10 +95,8 @@ public class ReputationRankingController implements Controller {
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
-                    HashSet<UserProfile> userProfilesClone = new HashSet<>(map.values());
-                    CatHash.pruneOutdatedProfileIcons(userProfilesClone);
-
-                    HashSet<? extends UserProfile> clone = new HashSet<>(map.values());
+                    model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
+                    Set<? extends UserProfile> clone = new HashSet<>(map.values());
                     List<ReputationRankingView.ListItem> listItems = clone.stream()
                             .map(userProfile -> new ReputationRankingView.ListItem(userProfile,
                                     reputationService,
@@ -117,14 +115,20 @@ public class ReputationRankingController implements Controller {
                         Optional<ReputationRankingView.ListItem> toRemove = model.getListItems().stream()
                                 .filter(e -> e.getUserProfile().getId().equals(key))
                                 .findAny();
-                        toRemove.ifPresent(listItem -> model.getListItems().remove(listItem));
+                        toRemove.ifPresent(listItem -> {
+                            listItem.dispose();
+                            model.getListItems().remove(listItem);
+                        });
                     });
                 }
             }
 
             @Override
             public void clear() {
-                UIThread.run(() -> model.getListItems().clear());
+                UIThread.run(() -> {
+                    model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
+                    model.getListItems().clear();
+                });
             }
         });
 

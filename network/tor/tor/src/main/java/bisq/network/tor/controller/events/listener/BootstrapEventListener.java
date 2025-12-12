@@ -17,7 +17,7 @@
 
 package bisq.network.tor.controller.events.listener;
 
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,5 +31,5 @@ public abstract class BootstrapEventListener {
         this.eventType = eventType;
     }
 
-    abstract public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
+    abstract public void onBootstrapStatusEvent(TorBootstrapEvent torBootstrapEvent);
 }

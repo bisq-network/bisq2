@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.AccountService;
-import bisq.account.accounts.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -78,8 +78,8 @@ public abstract class BaseState {
             BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
             model.setQuoteCode(bisqEasyOffer.getMarket().getQuoteCurrencyCode());
 
-            long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
-            long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
+            long baseSideAmount = model.getTrade().getContract().getBaseSideAmount();
+            long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
             model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
             model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
             model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
@@ -106,7 +106,7 @@ public abstract class BaseState {
 
     @Getter
     protected static class Model implements bisq.desktop.common.view.Model {
-        protected final BisqEasyTrade bisqEasyTrade;
+        protected final BisqEasyTrade trade;
         protected final BisqEasyOpenTradeChannel channel;
         @Setter
         protected String quoteCode;
@@ -119,13 +119,13 @@ public abstract class BaseState {
         @Setter
         protected String formattedQuoteAmount;
 
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            this.bisqEasyTrade = bisqEasyTrade;
+        protected Model(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+            this.trade = trade;
             this.channel = channel;
         }
 
         protected BisqEasyOffer getBisqEasyOffer() {
-            return bisqEasyTrade.getOffer();
+            return trade.getOffer();
         }
     }
 

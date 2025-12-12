@@ -17,10 +17,14 @@
 
 package bisq.desktop.main.content;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.TabButton;
+import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.chat.BaseChatView;
-import bisq.desktop.main.notification.NotificationPanelView;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.layout.VBox;
@@ -29,6 +33,7 @@ import org.fxmisc.easybind.Subscription;
 
 public abstract class ContentTabView<M extends ContentTabModel, C extends ContentTabController<M>> extends TabView<M, C> {
     private static final Insets NOTIFICATION_PADDING = new Insets(0, 40, 0, 40);
+
     private Subscription isNotificationVisiblePin;
 
     public ContentTabView(M model, C controller) {
@@ -53,14 +58,13 @@ public abstract class ContentTabView<M extends ContentTabModel, C extends Conten
     @Override
     protected void onViewAttached() {
         isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
-                    if (!visible) {
-                        UIScheduler.run(() -> topBox.setPadding(TabView.DEFAULT_TOP_PANE_PADDING))
-                                .after(NotificationPanelView.DURATION);
-                    } else {
-                        topBox.setPadding(NOTIFICATION_PADDING);
-                    }
-                }
-        );
+            if (!visible) {
+                UIScheduler.run(() -> topBox.setPadding(TabView.DEFAULT_TOP_PANE_PADDING))
+                        .after(ManagedDuration.getNotificationPanelDurationMillis());
+            } else {
+                topBox.setPadding(NOTIFICATION_PADDING);
+            }
+        });
     }
 
     @Override

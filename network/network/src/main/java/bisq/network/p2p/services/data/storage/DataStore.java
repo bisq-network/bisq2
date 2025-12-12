@@ -23,7 +23,9 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,16 +35,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 @ToString
 public final class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
-    @Getter
+    @Getter(AccessLevel.PUBLIC)
     private final Map<ByteArray, T> map = new ConcurrentHashMap<>();
 
-    public DataStore() {
-    }
-
-    public DataStore(Map<ByteArray, T> map) {
+    DataStore(Map<ByteArray, T> map) {
         this.map.putAll(map);
     }
 
@@ -87,6 +87,13 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
 
     @Override
     public DataStore<T> getClone() {
+        return new DataStore<>(Map.copyOf(map));
+    }
+
+    // This is only temporary to not risk that we get an exception if a client mutates
+    // the map which is a not valid case, but we the mobile release we prefer to avoid the risk to run into an exception.
+    // For main and for a major mobile update we should remove that.
+    public DataStore<T> getMutableClone() {
         return new DataStore<>(new HashMap<>(map));
     }
 }

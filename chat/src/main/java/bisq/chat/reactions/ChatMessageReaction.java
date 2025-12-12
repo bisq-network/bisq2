@@ -35,12 +35,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements NetworkProto {
-    private final String id;
+    protected final String id;
     protected final String userProfileId;
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
-    private final int reactionId;
+    private final int reactionId; // ordinal of Reaction icon enum
     private final long date;
 
     public ChatMessageReaction(String id,
@@ -85,6 +85,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
             case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);
             case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
             case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
+            case MUSIGOPENTRADEMESSAGEREACTION -> MuSigOpenTradeMessageReaction.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
@@ -112,6 +113,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
                 return switch (proto.getMessageCase()) {
                     case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
                     case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
+                    case MUSIGOPENTRADEMESSAGEREACTION -> MuSigOpenTradeMessageReaction.fromProto(proto);
                     case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };

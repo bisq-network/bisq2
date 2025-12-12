@@ -21,10 +21,11 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.http_api.HttpApiService;
 import bisq.http_api.rest_api.RestApiService;
@@ -46,16 +47,18 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.wallets.core.BitcoinWalletSelection;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.SystemTray;
+import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -84,28 +87,18 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final BurningmanService burningmanService;
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public HttpApiApplicationService(String[] args) {
         super("http_api_app", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
-        com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
-        BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (bitcoinWalletSelection) {
-           /* case BITCOIND:
-                walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
-                break;
-            case ELECTRUM:
-                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
-                break;*/
-            case NONE:
-            default:
-                walletService = Optional.empty();
-                break;
-        }
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
+        walletService = Optional.empty();
+
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyBundleService(),
@@ -124,6 +117,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         accountService = new AccountService(persistenceService);
 
         contractService = new ContractService(securityService);
+
+        burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
 
         userService = new UserService(persistenceService,
                 securityService,
@@ -146,8 +141,10 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService, networkService, chatService, userService, bondedRolesService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
+        TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService,
+                accountService, burningmanService);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -170,6 +167,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                config.getAppDataDirPath(),
                 securityService,
                 networkService,
                 userService,
@@ -178,44 +176,36 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
-                openTradeItemsService);
+                bisqEasyService,
+                openTradeItemsService,
+                accountService,
+                userService.getReputationService());
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
-
-                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
-                            .orElse(CompletableFuture.completedFuture(true));
-
-                    networkFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at networkFuture.initialize", throwable);
-                        } else if (!walletFuture.isDone()) {
+                    return networkService.initialize();
+                })
+                .thenCompose(result -> walletService
+                        .map(walletService -> {
                             setState(State.INITIALIZE_WALLET);
-                        }
-                    });
-                    walletFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at walletService.initialize", throwable);
-                        }
-                    });
-                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
+                            return walletService.initialize();
+                        })
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_SERVICES);
+                    return identityService.initialize();
                 })
-                .whenComplete((r, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.INITIALIZE_SERVICES);
-                    }
-                })
-                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
@@ -231,8 +221,11 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                         if (success) {
                             setState(State.APP_INITIALIZED);
 
-                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                            difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                    .getMostRecentValueOrDefault()
+                                    .addObserver(mostRecentValueOrDefault ->
+                                            networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
 
                             log.info("ApplicationService initialized");
                         } else {
@@ -243,11 +236,18 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                         setState(State.FAILED);
                         log.error("Initializing applicationService failed", throwable);
                     }
-                });
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
+
+        // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> httpApiService.shutdown()
                 .thenCompose(result -> openTradeItemsService.shutdown())
@@ -258,6 +258,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> systemNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
+                .thenCompose(result -> burningmanService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
@@ -269,8 +270,17 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null)
-                .join());
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     public KeyBundleService getKeyBundleService() {
@@ -281,7 +291,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
         try {
             switch (OS.getOS()) {
                 case LINUX:
-                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                    return Optional.of(new LinuxNotificationService(config.getAppDataDirPath(), settingsService));
                 case MAC_OS:
                     return Optional.of(new OsxNotificationService());
                 case WINDOWS:

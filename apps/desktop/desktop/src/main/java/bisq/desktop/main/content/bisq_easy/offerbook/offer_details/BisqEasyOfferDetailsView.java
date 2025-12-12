@@ -17,157 +17,277 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
-import bisq.desktop.DesktopModel;
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MaterialTextArea;
-import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.overlay.Overlay;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
+// Use offer creation review screen as design template
 @Slf4j
-public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDetailsModel, BisqEasyOfferDetailsController> {
+public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsModel, BisqEasyOfferDetailsController> {
     private final Button closeButton;
-    private final MaterialTextField id, offerType, date, paymentMethods, baseSideAmount, quoteSideAmount, price;
-    private final MaterialTextArea makersTradeTerms;
-    private final VBox vBox;
-    private Subscription widthPin, heightPin;
+    private final Label offerDate, makersTradeTermsDescription, direction, quoteSideAmountDescription,
+            baseSideAmountDescription, baseSidePaymentMethodDescription, baseSidePaymentMethod,
+            quoteSidePaymentMethodDescription, quoteSidePaymentMethod, offerId;
+    private final TextFlow quoteSideAmount, baseSideAmount, price, priceDetails;
+    private final BisqMenuItem offerIdCopyButton;
+    private final TextArea makersTradeTerms;
 
-    public BisqEasyOfferDetailsView(BisqEasyOfferDetailsModel model,
-                                    BisqEasyOfferDetailsController controller) {
-        super(new ScrollPane(), model, controller);
+    public BisqEasyOfferDetailsView(BisqEasyOfferDetailsModel model, BisqEasyOfferDetailsController controller) {
+        super(new VBox(), model, controller);
 
-        root.setMinWidth(OverlayModel.WIDTH);
-        root.setMinHeight(OverlayModel.HEIGHT);
-        root.setMaxWidth(DesktopModel.PREF_WIDTH);
-        root.setMaxHeight(DesktopModel.PREF_HEIGHT);
-
-        root.setFitToHeight(true);
-        root.setFitToWidth(true);
-
-        vBox = new VBox();
-        vBox.setPadding(new Insets(30));
-        vBox.setSpacing(20);
-        vBox.setFillWidth(true);
-        vBox.setAlignment(Pos.TOP_LEFT);
-        root.setContent(vBox);
+        closeButton = BisqIconButton.createIconButton("close");
+        HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
+        closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
 
         Label headline = new Label(Res.get("bisqEasy.offerDetails.headline"));
-        headline.getStyleClass().add("large-thin-headline");
+        headline.getStyleClass().add("bisq-text-17");
+        headline.setMaxWidth(Double.MAX_VALUE);
+        headline.setAlignment(Pos.CENTER);
 
-        VBox mainFields = new VBox(20);
+        // Content
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setAlignment(Pos.CENTER);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 4);
+        int rowIndex = 0;
 
-        offerType = getField(Res.get("bisqEasy.offerDetails.direction"));
-        mainFields.getChildren().add(offerType);
+        String descriptionStyle = "offer-details-description";
+        String valueStyle = "offer-details-value";
+        String detailsStyle = "offer-details-details";
 
-        quoteSideAmount = getField("");
-        baseSideAmount = getField(Res.get("bisqEasy.offerDetails.baseSideAmount"));
-        price = getField("");
-        HBox.setHgrow(quoteSideAmount, Priority.ALWAYS);
-        HBox.setHgrow(price, Priority.ALWAYS);
-        HBox.setHgrow(baseSideAmount, Priority.ALWAYS);
-        HBox amountsAndPriceBox = new HBox(20, baseSideAmount, price, quoteSideAmount);
-        mainFields.getChildren().add(amountsAndPriceBox);
 
-        paymentMethods = getField(Res.get("bisqEasy.offerDetails.paymentMethods"));
-        mainFields.getChildren().add(paymentMethods);
+        // Overview
+        Label overviewHeadline = new Label(Res.get("bisqEasy.offerDetails.overview").toUpperCase());
+        overviewHeadline.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
+        GridPane.setMargin(overviewHeadline, new Insets(5, 0, 0, 0));
+        GridPane.setColumnSpan(overviewHeadline, 4);
+        gridPane.add(overviewHeadline, 0, rowIndex);
 
-        VBox detailFields = new VBox(20);
+        rowIndex++;
+        Region line1 = getLine();
+        GridPane.setMargin(line1, new Insets(-10, 0, -5, 0));
+        GridPane.setColumnSpan(line1, 4);
+        gridPane.add(line1, 0, rowIndex);
 
-        id = getField(Res.get("bisqEasy.offerDetails.id"));
-        date = getField(Res.get("bisqEasy.offerDetails.date"));
 
-        HBox.setHgrow(id, Priority.ALWAYS);
-        HBox.setHgrow(date, Priority.ALWAYS);
-        HBox detailsBox = new HBox(20, id, date);
-        detailFields.getChildren().add(detailsBox);
+        // Direction
+        rowIndex++;
+        Label directionDescription = new Label(Res.get("bisqEasy.offerDetails.directionDescription"));
+        directionDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(directionDescription, 0, rowIndex);
 
-        makersTradeTerms = addTextArea(Res.get("bisqEasy.offerDetails.makersTradeTerms"));
-        makersTradeTerms.setPrefHeight(30);
-        detailFields.getChildren().add(makersTradeTerms);
+        direction = new Label();
+        direction.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(direction, 3);
+        gridPane.add(direction, 1, rowIndex);
 
-        closeButton = new Button(Res.get("action.close"));
-        closeButton.setDefaultButton(true);
-        HBox buttonBox = new HBox(closeButton);
-        buttonBox.setAlignment(Pos.CENTER_RIGHT);
-        vBox.getChildren().addAll(headline, mainFields, detailFields, buttonBox);
+
+        // Fiat amount
+        rowIndex++;
+        quoteSideAmountDescription = new Label();
+        quoteSideAmountDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(quoteSideAmountDescription, 0, rowIndex);
+
+        quoteSideAmount = new TextFlow();
+        quoteSideAmount.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(quoteSideAmount, 3);
+        gridPane.add(quoteSideAmount, 1, rowIndex);
+
+
+        // BTC amount
+        rowIndex++;
+        baseSideAmountDescription = new Label();
+        baseSideAmountDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(baseSideAmountDescription, 0, rowIndex);
+
+        baseSideAmount = new TextFlow();
+        baseSideAmount.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(baseSideAmount, 3);
+        gridPane.add(baseSideAmount, 1, rowIndex);
+
+
+        // Price
+        rowIndex++;
+        Label priceDescription = new Label(Res.get("bisqEasy.offerDetails.priceDescription"));
+        priceDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(priceDescription, 0, rowIndex);
+
+        price = new TextFlow();
+        price.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(price, 3);
+        gridPane.add(price, 1, rowIndex);
+
+        // Price details
+        rowIndex++;
+        Label priceDetailsDescription = new Label(Res.get("bisqEasy.offerDetails.priceDetailsDescription"));
+        priceDetailsDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(priceDetailsDescription, 0, rowIndex);
+
+        priceDetails = new TextFlow();
+        priceDetails.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(priceDetails, 3);
+        gridPane.add(priceDetails, 1, rowIndex);
+
+
+        // Fiat payment methods
+        rowIndex++;
+        quoteSidePaymentMethodDescription = new Label();
+        quoteSidePaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(quoteSidePaymentMethodDescription, 0, rowIndex);
+
+        quoteSidePaymentMethod = new Label();
+        quoteSidePaymentMethod.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(quoteSidePaymentMethod, 3);
+        gridPane.add(quoteSidePaymentMethod, 1, rowIndex);
+
+
+        // Bitcoin settlement methods
+        rowIndex++;
+        baseSidePaymentMethodDescription = new Label();
+        baseSidePaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(baseSidePaymentMethodDescription, 0, rowIndex);
+
+        baseSidePaymentMethod = new Label();
+        baseSidePaymentMethod.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(baseSidePaymentMethod, 3);
+        gridPane.add(baseSidePaymentMethod, 1, rowIndex);
+
+
+        // Details
+        rowIndex++;
+        Label detailsHeadline = new Label(Res.get("bisqEasy.offerDetails.details").toUpperCase());
+        detailsHeadline.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
+        GridPane.setMargin(detailsHeadline, new Insets(20, 0, 0, 0));
+        GridPane.setColumnSpan(detailsHeadline, 4);
+        gridPane.add(detailsHeadline, 0, rowIndex);
+
+        rowIndex++;
+        Region line2 = getLine();
+        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
+        GridPane.setColumnSpan(line2, 4);
+        gridPane.add(line2, 0, rowIndex);
+
+
+        // OfferId
+        rowIndex++;
+        Label offerIdDescription = new Label(Res.get("bisqEasy.offerDetails.offerIdDescription"));
+        offerIdDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(offerIdDescription, 0, rowIndex);
+
+        offerId = new Label();
+        offerId.getStyleClass().add(valueStyle);
+        offerIdCopyButton = getBisqMenuItem(Res.get("action.copyToClipboard"));
+        HBox offerIdBox = new HBox(offerId, Spacer.fillHBox(), offerIdCopyButton);
+        GridPane.setColumnSpan(offerIdBox, 3);
+        gridPane.add(offerIdBox, 1, rowIndex);
+
+
+        // Offer date
+        rowIndex++;
+        Label offerDateDescription = new Label(Res.get("bisqEasy.offerDetails.dateDescription"));
+        offerDateDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(offerDateDescription, 0, rowIndex);
+
+        offerDate = new Label();
+        offerDate.getStyleClass().add(valueStyle);
+        GridPane.setColumnSpan(offerDate, 3);
+        gridPane.add(offerDate, 1, rowIndex);
+
+
+        // Makers trade terms (optional)
+        rowIndex++;
+        makersTradeTermsDescription = new Label(Res.get("bisqEasy.offerDetails.makersTradeTermsDescription"));
+        makersTradeTermsDescription.getStyleClass().add(descriptionStyle);
+        gridPane.add(makersTradeTermsDescription, 0, rowIndex);
+
+        makersTradeTerms = new TextArea();
+        makersTradeTerms.setMaxHeight(70);
+        makersTradeTerms.setWrapText(true);
+        makersTradeTerms.getStyleClass().add(valueStyle);
+        GridPane.setMargin(makersTradeTerms, new Insets(0, 0, 0, -7));
+        GridPane.setColumnSpan(makersTradeTerms, 3);
+        gridPane.add(makersTradeTerms, 1, rowIndex);
+
+        VBox content = new VBox(10, headline, gridPane);
+        content.setAlignment(Pos.CENTER_LEFT);
+
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
+
+        VBox.setMargin(content, new Insets(-40, 80, 0, 80));
+        VBox.setVgrow(content, Priority.ALWAYS);
+        root.getChildren().addAll(closeButtonRow, content);
     }
 
     @Override
     protected void onViewAttached() {
-        id.textProperty().bind(model.getId());
-        offerType.textProperty().bind(model.getOfferType());
-        date.textProperty().bind(model.getDate());
-        paymentMethods.textProperty().bind(model.getPaymentMethods());
-        baseSideAmount.textProperty().bind(model.getBaseSideAmount());
-        quoteSideAmount.textProperty().bind(model.getQuoteSideAmount());
-        quoteSideAmount.descriptionProperty().bind(model.getQuoteSideAmountDescription());
-        price.textProperty().bind(model.getPrice());
-        price.descriptionProperty().bind(model.getPriceDescription());
-        makersTradeTerms.textProperty().bind(model.getMakersTradeTerms());
-        makersTradeTerms.visibleProperty().bind(model.getMakersTradeTermsVisible());
-        makersTradeTerms.managedProperty().bind(model.getMakersTradeTermsVisible());
+        direction.setText(model.getDirection());
 
-        widthPin = EasyBind.subscribe(Overlay.primaryStageOwner.widthProperty(), w -> {
-            if (vBox.getWidth() > 0) {
-                double prefWidth = Math.min(vBox.getWidth(), Math.min(root.getMaxWidth(), Math.max(root.getMinWidth(), w.doubleValue() - 60)));
-                root.setPrefWidth(prefWidth);
-            }
-        });
-        heightPin = EasyBind.subscribe(Overlay.primaryStageOwner.heightProperty(), h -> {
-            if (vBox.getHeight() > 0) {
-                double prefHeight = Math.min(vBox.getHeight(), Math.min(root.getMaxHeight(), Math.max(root.getMinHeight(), h.doubleValue() - 60)));
-                root.setPrefHeight(prefHeight);
-            }
-        });
+        quoteSideAmountDescription.setText(Res.get("bisqEasy.offerDetails.quoteSideAmountDescription", model.getQuoteSideCurrencyCode()));
+        TextFlowUtils.updateTextFlow(quoteSideAmount, model.getQuoteSideAmount());
+
+        baseSideAmountDescription.setText(Res.get("bisqEasy.offerDetails.baseSideAmountDescription", model.getBaseSideCurrencyCode()));
+        TextFlowUtils.updateTextFlow(baseSideAmount, model.getBaseSideAmount());
+
+        TextFlowUtils.updateTextFlow(price, model.getPrice());
+        TextFlowUtils.updateTextFlow(priceDetails, model.getPriceDetails());
+
+        quoteSidePaymentMethodDescription.setText(model.getQuoteSidePaymentMethodDescription());
+        quoteSidePaymentMethod.setText(model.getQuoteSidePaymentMethods());
+
+        baseSidePaymentMethodDescription.setText(model.getBaseSidePaymentMethodDescription());
+        baseSidePaymentMethod.setText(model.getBaseSidePaymentMethods());
+
+        offerId.setText(model.getId());
+        offerDate.setText(model.getDate());
+        makersTradeTerms.setText(model.getMakersTradeTerms());
+        makersTradeTermsDescription.setVisible(model.getMakersTradeTermsVisible());
+        makersTradeTermsDescription.setManaged(model.getMakersTradeTermsVisible());
+        makersTradeTerms.setVisible(model.getMakersTradeTermsVisible());
+        makersTradeTerms.setManaged(model.getMakersTradeTermsVisible());
 
         closeButton.setOnAction(e -> controller.onClose());
-
-        UIThread.runOnNextRenderFrame(root::requestFocus);
+        offerIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getId()));
     }
 
     @Override
     protected void onViewDetached() {
-        id.textProperty().unbind();
-        offerType.textProperty().unbind();
-        date.textProperty().unbind();
-        paymentMethods.textProperty().unbind();
-        baseSideAmount.textProperty().unbind();
-        quoteSideAmount.textProperty().unbind();
-        quoteSideAmount.descriptionProperty().unbind();
-        price.textProperty().unbind();
-        price.descriptionProperty().unbind();
-        makersTradeTerms.textProperty().unbind();
-        makersTradeTerms.visibleProperty().unbind();
-        makersTradeTerms.managedProperty().unbind();
-
-        widthPin.unsubscribe();
-        heightPin.unsubscribe();
-
         closeButton.setOnAction(null);
+        offerIdCopyButton.setOnAction(null);
     }
 
-    private MaterialTextField getField(String description) {
-        MaterialTextField field = new MaterialTextField(description, null);
-        field.setEditable(false);
-        return field;
+    private static BisqMenuItem getBisqMenuItem(String tooltip) {
+        BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
+        bisqMenuItem.setTooltip(tooltip);
+        return bisqMenuItem;
     }
 
-    private MaterialTextArea addTextArea(String description) {
-        MaterialTextArea field = new MaterialTextArea(description, null);
-        field.setEditable(false);
-        return field;
+    private Region getLine() {
+        Region line = new Region();
+        line.setMinHeight(1);
+        line.setMaxHeight(1);
+        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.setPadding(new Insets(9, 0, 8, 0));
+        return line;
     }
 }

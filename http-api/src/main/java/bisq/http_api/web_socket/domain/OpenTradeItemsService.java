@@ -36,6 +36,7 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +53,7 @@ public class OpenTradeItemsService implements Service {
     private final ObservableArray<TradeItemPresentationDto> items = new ObservableArray<>();
     @Getter
     private final Observable<Boolean> isAnyTradeInMediation = new Observable<>();
-
+    @Nullable
     private Pin channelsPin, tradesPin;
     private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
 
@@ -112,14 +113,18 @@ public class OpenTradeItemsService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (channelsPin != null) {
             channelsPin.unbind();
+            channelsPin = null;
         }
         if (tradesPin != null) {
             tradesPin.unbind();
+            tradesPin = null;
         }
         isInMediationPinMap.values().forEach(Pin::unbind);
         isInMediationPinMap.clear();
+        items.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -189,11 +194,6 @@ public class OpenTradeItemsService implements Service {
         if (findListItem(trade).isPresent()) {
             log.debug("We got called handleTradeAndChannelAdded but we have that trade list item already. " +
                     "This is expected as we get called both when a trade is added and the associated channel.");
-            return;
-        }
-        if (trade.getContract() == null) {
-            // TODO should we throw an exception?
-            log.error("Contract is null for trade {}", trade);
             return;
         }
 

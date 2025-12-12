@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -73,7 +72,8 @@ public class CitationBlock {
         }
 
         String truncated = StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH);
-        return Optional.of(new Citation(userProfile.getId(), truncated));
+        String chatMessageId = controller.model.chatMessageId;
+        return Optional.of(new Citation(userProfile.getId(), truncated, Optional.of(chatMessageId)));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -82,15 +82,14 @@ public class CitationBlock {
         private final View view;
         private final UserProfileService userProfileService;
 
-
         private Controller(ServiceProvider serviceProvider) {
-            ChatService chatService = serviceProvider.getChatService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
         }
 
         private void reply(ChatMessage chatMessage) {
+            model.chatMessageId = chatMessage.getId();
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
@@ -117,11 +116,13 @@ public class CitationBlock {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        static final double CAT_HASH_IMAGE_SIZE = 25;
+        private static final double CAT_HASH_IMAGE_SIZE = 25;
+
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
         private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
+        private String chatMessageId;
         private UserProfile author;
 
         private Model() {
@@ -138,6 +139,7 @@ public class CitationBlock {
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
+
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setStyle("-fx-background-color: -bisq-dark-grey-10;");

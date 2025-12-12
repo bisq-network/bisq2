@@ -9,18 +9,10 @@ fun readPropertiesFile(filePath: String): Properties {
 
 plugins {
     id("bisq.java-library")
-    id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
+   // id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     id("bisq.gradle.packaging.PackagingPlugin")
     alias(libs.plugins.openjfx)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
-    }
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
 }
 
 
@@ -38,7 +30,7 @@ packaging {
 }
 
 javafx {
-    version = "22.0.1"
+    version = "21.0.6"
     modules = listOf("javafx.controls", "javafx.media")
 }
 

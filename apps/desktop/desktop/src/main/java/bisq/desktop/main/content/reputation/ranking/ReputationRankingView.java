@@ -34,14 +34,22 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
-import bisq.user.reputation.data.*;
+import bisq.user.reputation.data.AuthorizedAccountAgeData;
+import bisq.user.reputation.data.AuthorizedBondedReputationData;
+import bisq.user.reputation.data.AuthorizedProofOfBurnData;
+import bisq.user.reputation.data.AuthorizedSignedWitnessData;
+import bisq.user.reputation.data.AuthorizedTimestampData;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -51,12 +59,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
 public class ReputationRankingView extends View<VBox, ReputationRankingModel, ReputationRankingController> {
+    private static final double SIDE_PADDING = 40;
+
     private final RichTableView<ListItem> richTableView;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
@@ -65,24 +81,16 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                                  ReputationRankingController controller) {
         super(new VBox(), model, controller);
 
-        Label headlineLabel = new Label(Res.get("reputation.table.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-5");
-
         richTableView = new RichTableView<>(model.getSortedList(),
-                "",
+                Res.get("reputation.table.headline"),
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
-                controller::applySearchPredicate);
+                controller::applySearchPredicate,
+                Res.get("reputation.table.entriesUnit"));
         configTableView();
 
-        VBox contentBox = new VBox(10);
-        contentBox.getStyleClass().add("bisq-common-bg");
-        VBox.setVgrow(richTableView, Priority.ALWAYS);
-        contentBox.getChildren().addAll(headlineLabel, richTableView);
-
-        VBox.setVgrow(contentBox, Priority.ALWAYS);
-        root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(0, 40, 20, 40));
+        root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        root.getChildren().addAll(richTableView);
     }
 
     @Override
@@ -93,6 +101,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
                 richTableView.refresh();
+                richTableView.sort();
             }
         });
 
@@ -171,6 +180,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
     }
 
     private void configTableView() {
+        richTableView.getColumns().add(richTableView.getTableView().getSelectionMarkerColumn());
+
         richTableView.getColumns().add(IndexColumnUtil.getIndexColumn(model.getSortedList()));
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.userProfile"))
@@ -339,7 +350,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDaysAndYears)
-                    .orElse(Res.get("data.na"));
+                    .orElseGet(() -> Res.get("data.na"));
 
             // applyReputationScore gets called from selectedToggleChanged
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
@@ -356,17 +367,19 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         void applyReputationScore(String userProfileId) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(toggleGroup.getSelectedToggle());
             reputationScore = reputationService.getReputationScore(userProfileId);
+            totalScore = reputationScore.getTotalScore();
+            totalScoreString = String.valueOf(totalScore);
+
+            updateAmountBySource();
+
             if (selectedReputationSource.isEmpty() || !valuePairBySource.containsKey(selectedReputationSource.get())) {
-                totalScore = reputationScore.getTotalScore();
-                totalScoreString = String.valueOf(totalScore);
+                value = totalScore;
                 valueAsStringProperty.set(String.valueOf(totalScore));
             } else {
                 Pair<Long, String> pair = valuePairBySource.get(selectedReputationSource.get());
                 value = pair.getFirst();
                 valueAsStringProperty.set(pair.getSecond());
             }
-
-            updateAmountBySource();
         }
 
         private void updateAmountBySource() {
@@ -398,7 +411,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         }
 
         private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
-            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+            valuePairBySource.put(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {

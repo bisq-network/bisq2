@@ -374,13 +374,13 @@ public class FsmTest {
             fsm.handle(new MockEvent1(model, ""));
         });
 
-        // fromStates null
+        // fromStates empty
         Assertions.assertThrows(FsmConfigException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             //noinspection ConfusingArgumentToVarargsMethod
             fsm.addTransition()
-                    .fromStates(null)
+                    .fromStates()
                     .on(MockEvent1.class)
                     .run(MockEventHandler.class)
                     .to(MockState.S1);
@@ -571,16 +571,14 @@ public class FsmTest {
         }
     }
 
-    public static class MockEventHandler implements EventHandler {
+    public static class MockEventHandler implements EventHandler<MockEvent1> {
         @Override
-        public void handle(Event event) {
-            if (event instanceof MockEvent1 mockEvent) {
-                mockEvent.model.data = mockEvent.data;
-            }
+        public void handle(MockEvent1 event) {
+            event.model.data = event.data;
         }
     }
 
-    public static class InvalidMockEventHandler implements EventHandler {
+    public static class InvalidMockEventHandler implements EventHandler<Event> {
         public InvalidMockEventHandler(String test) {
         }
 
@@ -592,7 +590,7 @@ public class FsmTest {
         }
     }
 
-    public static class FailingMockEventHandler implements EventHandler {
+    public static class FailingMockEventHandler implements EventHandler<Event> {
         public FailingMockEventHandler() {
         }
 

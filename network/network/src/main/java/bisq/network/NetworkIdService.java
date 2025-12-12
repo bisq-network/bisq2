@@ -20,15 +20,17 @@ package bisq.network;
 
 import bisq.common.application.Service;
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileUtils;
-import bisq.common.util.NetworkUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.I2PAddress;
+import bisq.common.network.TorAddress;
 import bisq.common.network.TransportType;
+import bisq.common.util.NetworkUtils;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
@@ -42,7 +44,6 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -51,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Service {
+public class NetworkIdService extends RateLimitedPersistenceClient<NetworkIdStore> implements Service {
 
     @Getter
     private final NetworkIdStore persistableStore = new NetworkIdStore();
@@ -74,31 +75,45 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
 
     public NetworkId getOrCreateDefaultNetworkId() {
         // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
         KeyBundle keyBundle = keyBundleService.findDefaultKeyBundle().orElseThrow();
-        return getOrCreateNetworkId(keyBundle, "default");
+        String tag = "default";
+        maybeUpdateNetworkId(keyBundle, tag);
+        return getOrCreateNetworkId(keyBundle, tag);
     }
 
     public NetworkId getOrCreateNetworkId(KeyBundle keyBundle, String tag) {
         return findNetworkId(tag)
                 .orElseGet(() -> createNetworkId(keyBundle, tag));
+    }
+
+    public void maybeUpdateNetworkId(KeyBundle keyBundle, String tag) {
+        findNetworkId(tag).ifPresent(networkId -> {
+            // In case we had already a networkId persisted, but we get a new transportType
+            // added we update and persist the networkId.
+            AddressByTransportTypeMap addressByTransportTypeMap = networkId.getAddressByTransportTypeMap();
+            int previousSize = addressByTransportTypeMap.size();
+            supportedTransportTypes.stream()
+                    .filter(transportType -> !addressByTransportTypeMap.containsKey(transportType))
+                    .forEach(transportType -> {
+                        int port = getPortByTransport(tag, transportType);
+                        Address address = getAddressByTransport(keyBundle, port, transportType);
+                        log.warn("We add a new address to the addressByTransportTypeMap for {}: {}", transportType, address);
+                        addressByTransportTypeMap.put(transportType, address);
+                    });
+            if (addressByTransportTypeMap.size() > previousSize) {
+                KeyPair keyPair = keyBundle.getKeyPair();
+                PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
+                NetworkId updatedNetworkId = new NetworkId(addressByTransportTypeMap, pubKey);
+                log.warn("We updated the networkId for {}: {}", tag, updatedNetworkId);
+                persistableStore.getNetworkIdByTag().put(tag, updatedNetworkId);
+                persist();
+            }
+        });
     }
 
     public Optional<NetworkId> findNetworkId(String tag) {
@@ -149,14 +164,13 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
     private int getPortByTransport(String tag, TransportType transportType) {
         boolean isDefault = tag.equals("default");
-        /*  return isDefault ?
-                            defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
-                            NetworkUtils.selectRandomPort();*/
         return switch (transportType) {
             case TOR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
                     NetworkUtils.selectRandomPort();
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
+            case I2P -> isDefault ?
+                    defaultPortByTransportType.computeIfAbsent(TransportType.I2P, key -> NetworkUtils.selectRandomPort()) :
+                    NetworkUtils.selectRandomPort();
             case CLEAR -> isDefault ?
                     defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
                     NetworkUtils.findFreeSystemPort();
@@ -164,11 +178,12 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
         return switch (transportType) {
-            case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR -> FacadeProvider.getLocalhostFacade().toMyLocalhost(port);
+            case TOR -> new TorAddress(keyBundle.getTorKeyPair().getOnionAddress(), port);
+            case I2P -> new I2PAddress(keyBundle.getI2PKeyPair().getDestinationBase64(),
+                    keyBundle.getI2PKeyPair().getDestinationBase32(),
+                    port);
+            case CLEAR -> FacadeProvider.getClearNetAddressTypeFacade().toMyLocalAddress(port);
         };
     }
 
@@ -176,9 +191,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         Path storeFilePath = persistence.getStorePath();
         Path parentDirectoryPath = storeFilePath.getParent();
         try {
-            FileUtils.backupCorruptedFile(
-                    parentDirectoryPath.toAbsolutePath().toString(),
-                    storeFilePath.toFile(),
+            FileMutatorUtils.backupCorruptedFile(
+                    parentDirectoryPath,
+                    storeFilePath,
                     storeFilePath.getFileName().toString(),
                     "corruptedNetworkId"
             );

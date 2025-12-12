@@ -1,6 +1,12 @@
+import java.util.Locale.getDefault
+
 plugins {
     java
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
+}
+
+fun getGradleCommand(): String {
+    return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
 }
 
 tasks.register("buildAll") {
@@ -9,23 +15,23 @@ tasks.register("buildAll") {
 
     doLast {
         listOf(
+            ":build-logic:build",
             "build",
-            //":apps:seed-node-app:installDist",
+            ":network:build",
+            ":network:tor:build",
+            ":apps:seed-node-app:build",
+            ":apps:oracle-node-app:build",
+            ":apps:http-api-app:build",
+            ":apps:node-monitor-web-app:build",
             ":apps:desktop:desktop:build",
             ":apps:desktop:desktop-app:build",
             ":apps:desktop:desktop-app-launcher:build",
-            //":apps:desktop:desktop-app:installDist",
-           // ":apps:desktop:desktop-app-launcher:generateInstallers",
             ":apps:desktop:webcam-app:build",
-            ":apps:http-api-app:build",
-            ":apps:node-monitor-web-app:build",
-            ":apps:oracle-node-app:build",
-            ":apps:seed-node-app:build",
-            ":wallets:build",
+            ":apps:desktop:bi2p:build",
         ).forEach {
             exec {
                 println("Executing Build: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -37,6 +43,10 @@ tasks.register("cleanAll") {
 
     doLast {
         listOf(
+            ":build-logic:clean",
+            "clean",
+            ":network:clean",
+            ":network:tor:clean",
             ":apps:seed-node-app:clean",
             ":apps:oracle-node-app:clean",
             ":apps:http-api-app:clean",
@@ -45,18 +55,11 @@ tasks.register("cleanAll") {
             ":apps:desktop:desktop-app:clean",
             ":apps:desktop:desktop-app-launcher:clean",
             ":apps:desktop:webcam-app:clean",
-            ":bisq-easy:clean",
-            ":persistence:clean",
-            ":build-logic:clean", // not really necessary
-            ":network:clean",
-            ":application:clean",
-            ":wallets:clean",
-            "clean",
-//            ":REPLACEME:clean",
+            ":apps:desktop:bi2p:clean",
         ).forEach {
             exec {
                 println("Executing Clean: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }
@@ -91,7 +94,7 @@ tasks.register("publishAll") {
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
-                commandLine("./gradlew", it)
+                commandLine(getGradleCommand(), it)
             }
         }
     }

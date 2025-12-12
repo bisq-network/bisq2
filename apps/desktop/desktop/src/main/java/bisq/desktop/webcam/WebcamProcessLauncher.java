@@ -19,61 +19,63 @@ package bisq.desktop.webcam;
 
 import bisq.common.application.DevMode;
 import bisq.common.archive.ZipFileExtractor;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+
 @Slf4j
 public class WebcamProcessLauncher {
-    private final String webcamDir;
+    private final Path webcamDirPath;
     private Optional<Process> runningProcess = Optional.empty();
 
-    public WebcamProcessLauncher(String baseDir) {
-        this.webcamDir = baseDir + "/webcam";
+    public WebcamProcessLauncher(Path appDataDirPath) {
+        this.webcamDirPath = appDataDirPath.resolve("webcam");
     }
 
     public CompletableFuture<Process> start(int port) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String version = FileUtils.readStringFromResource("webcam-app/version.txt");
-                String jarFilePath = webcamDir + "/webcam-app-" + version + "-all.jar";
-                File jarFile = new File(jarFilePath);
+                String version = FileReaderUtils.readStringFromResource("webcam-app/version.txt");
+                Path jarFilePath = webcamDirPath.resolve("webcam-app-" + version + "-all.jar");
 
-                if (!jarFile.exists() || DevMode.isDevMode()) {
+                if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
                     String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    File destDir = new File(webcamDir);
-                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
+                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, webcamDirPath);
                     zipFileExtractor.extractArchive();
-                    log.info("Extracted zip file {} to {}", resourcePath, webcamDir);
+                    log.info("Extracted zip file {} to {}", resourcePath, webcamDirPath);
                 }
 
                 String portParam = "--port=" + port;
-                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
-                String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
+                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileReaderUtils.FILE_SEP + "webcam-app";
+                String languageTagParam = "--languageTag=" + LanguageRepository.getDefaultLanguageTag();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 ProcessBuilder processBuilder;
                 if (OS.isMacOs()) {
-                    String iconPath = webcamDir + "/webcam-app-icon.png";
-                    File bisqIcon = new File(iconPath);
-                    if (!bisqIcon.exists()) {
-                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
+                    String iconPath = webcamDirPath + "/webcam-app-icon.png";
+                    Path bisqIconPath = Path.of(iconPath);
+                    if (!Files.exists(bisqIconPath)) {
+                        FileMutatorUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam, logFileParam, languageParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 }
                 log.info("ProcessBuilder commands: {}", processBuilder.command());
                 Process process = processBuilder.start();
@@ -94,14 +96,17 @@ public class WebcamProcessLauncher {
             boolean terminatedGraceFully = false;
             try {
                 terminatedGraceFully = process.waitFor(2, TimeUnit.SECONDS);
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at shutdown", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
             }
+
             if (process.isAlive()) {
                 log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
                 process.destroyForcibly();
                 terminatedGraceFully = false;
             }
             return terminatedGraceFully;
-        }).orElse(true));
+        }).orElse(true), commonForkJoinPool());
     }
 }

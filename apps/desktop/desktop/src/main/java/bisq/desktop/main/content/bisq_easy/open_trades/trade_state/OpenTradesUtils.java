@@ -3,7 +3,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.encoding.Csv;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -33,8 +33,8 @@ public class OpenTradesUtils {
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
-            String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElse(Res.get("data.na"));
-            String bitcoinPaymentData = trade.getBitcoinPaymentData().get();
+            String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElseGet(() -> Res.get("data.na"));
+            String bitcoinPaymentData = Optional.ofNullable(trade.getBitcoinPaymentData().get()).orElseGet(() -> Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
             String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
             String paymentMethod = bitcoinMethod + " / " + fiatMethod;
@@ -61,7 +61,7 @@ public class OpenTradesUtils {
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileMutatorUtils.writeToPath(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }
@@ -71,24 +71,10 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void reportToMediator(BisqEasyOpenTradeChannel channel,
-                                        BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService,
-                                        BisqEasyOpenTradeChannelService channelService) {
-        openDispute(channel, contract, mediationRequestService, channelService);
-    }
-
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
-                                        BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService,
-                                        BisqEasyOpenTradeChannelService channelService) {
-        openDispute(channel, contract, mediationRequestService, channelService);
-    }
-
-    private static void openDispute(BisqEasyOpenTradeChannel channel,
-                                    BisqEasyContract contract,
-                                    MediationRequestService mediationRequestService,
-                                    BisqEasyOpenTradeChannelService channelService) {
+                                         BisqEasyContract contract,
+                                         MediationRequestService mediationRequestService,
+                                         BisqEasyOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
@@ -97,8 +83,8 @@ public class OpenTradesUtils {
                     .onAction(() -> {
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
-
                         channel.setIsInMediation(true);
+                        channelService.persist();
                         mediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))

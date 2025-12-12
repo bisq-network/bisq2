@@ -17,112 +17,103 @@
 
 package bisq.desktop.main.content.settings.misc;
 
-import bisq.common.util.MathUtils;
-import bisq.desktop.common.converters.Converters;
-import bisq.desktop.common.converters.DoubleStringConverter;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.controls.validator.NumberValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.persistence.backup.BackupService;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettingsController> {
     private static final double TEXT_FIELD_WIDTH = 500;
-    private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
-            new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
-    private static final ValidatorBase TOTAL_MAX_BACKUP_SIZE_VALIDATOR =
-            new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid", 1, 1000),
-                    1, 1000);
 
-    private final Switch ignoreDiffAdjustFromSecManagerSwitch;
-    private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;
-    private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
+    private final Button resetDontShowAgain;
+    private final Switch useAnimations, preventStandbyMode, addContactsAutomatically;
+    private final MaterialTextField totalMaxBackupSizeInMB;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
+        // Display settings
+        Label displayHeadline = SettingsViewUtils.getHeadline(Res.get("settings.display.headline"));
 
-        Label networkHeadline = new Label(Res.get("settings.network.headline"));
-        networkHeadline.getStyleClass().add("large-thin-headline");
+        useAnimations = new Switch(Res.get("settings.display.useAnimations"));
+        preventStandbyMode = new Switch(Res.get("settings.display.preventStandbyMode"));
+        resetDontShowAgain = new Button(Res.get("settings.display.resetDontShowAgain"));
+        resetDontShowAgain.getStyleClass().add("grey-transparent-outlined-button");
 
-        difficultyAdjustmentFactor = new MaterialTextField();
-        difficultyAdjustmentFactor.setMaxWidth(TEXT_FIELD_WIDTH);
-        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-        difficultyAdjustmentFactor.setStringConverter(Converters.DOUBLE_STRING_CONVERTER);
-        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
+        VBox.setMargin(resetDontShowAgain, new Insets(10, 0, 0, 0));
+        VBox displayVBox = new VBox(10, useAnimations, preventStandbyMode, resetDontShowAgain);
 
-        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
-
-        Label backupHeadline = new Label(Res.get("settings.backup.headline"));
-        backupHeadline.getStyleClass().add("large-thin-headline");
+        // Backup settings
+        Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("settings.backup.headline"));
+        ImageView infoIcon = ImageUtil.getImageViewById("info");
+        infoIcon.setOpacity(0.6);
+        Tooltip.install(infoIcon, new BisqTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip")));
+        HBox.setMargin(infoIcon, new Insets(5, 0, 0, 0));
+        HBox backupHeadlineHBox = new HBox(10, backupHeadline, infoIcon);
 
         totalMaxBackupSizeInMB = new MaterialTextField(Res.get("settings.backup.totalMaxBackupSizeInMB.description"));
         totalMaxBackupSizeInMB.setMaxWidth(TEXT_FIELD_WIDTH);
-        totalMaxBackupSizeInMB.setValidators(TOTAL_MAX_BACKUP_SIZE_VALIDATOR);
-        totalMaxBackupSizeInMB.setStringConverter(Converters.DOUBLE_STRING_CONVERTER);
-        totalMaxBackupSizeInMB.setIcon(AwesomeIcon.INFO_SIGN);
-        totalMaxBackupSizeInMB.setIconTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip"));
+        totalMaxBackupSizeInMB.setValidators(model.getTotalMaxBackupSizeValidator());
 
-        VBox contentBox = new VBox(50);
-        contentBox.getChildren().addAll(networkHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), networkVBox,
-                backupHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), totalMaxBackupSizeInMB);
+        // Contacts settings
+        Label contactsHeadline = SettingsViewUtils.getHeadline(Res.get("settings.contacts.headline"));
+        Label contactsDescription = new Label(Res.get("settings.contacts.addContactsAutomatically.description"));
+        contactsDescription.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+        addContactsAutomatically = new Switch(Res.get("settings.contacts.addContactsAutomatically.switch"));
+        VBox contactsVBox = new VBox(20, contactsDescription, addContactsAutomatically);
+
+        VBox.setMargin(displayVBox, new Insets(0, 5, 0, 5));
+        VBox contentBox = new VBox(50,
+                displayHeadline, separator(), displayVBox,
+                backupHeadlineHBox, separator(), totalMaxBackupSizeInMB,
+                contactsHeadline, separator(), contactsVBox);
         contentBox.getStyleClass().add("bisq-common-bg");
+        root.setAlignment(Pos.TOP_LEFT);
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
     protected void onViewAttached() {
-        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
-                Converters.DOUBLE_STRING_CONVERTER);
-        difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
-        difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
+        useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
+        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
 
         Bindings.bindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB(),
-                new DoubleStringConverter() {
-                    @Override
-                    public Number fromString(String value) {
-                        double result = MathUtils.parseToDouble(value);
-                        if(TOTAL_MAX_BACKUP_SIZE_VALIDATOR.validateAndGet()){
-                            return result;
-                        }else{
-                            return BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
-                        }
-                    }
-                });
+                model.getTotalMaxBackupSizeConverter());
+        totalMaxBackupSizeInMB.validate();
 
-        ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
-                ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
+        addContactsAutomatically.selectedProperty().bindBidirectional(model.getAddContactsAutomatically());
     }
 
     @Override
     protected void onViewDetached() {
-        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
-        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
-        difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
-        difficultyAdjustmentFactor.descriptionProperty().unbind();
+        useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
+        preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
+        resetDontShowAgain.setOnAction(null);
 
         Bindings.unbindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB());
-
-        ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
-        difficultyAdjustmentFactor.resetValidation();
         totalMaxBackupSizeInMB.resetValidation();
+
+        addContactsAutomatically.selectedProperty().unbindBidirectional(model.getAddContactsAutomatically());
+    }
+
+    private static Region separator() {
+        return SettingsViewUtils.getLineAfterHeadline(50);
     }
 }

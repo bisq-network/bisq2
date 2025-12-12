@@ -19,7 +19,8 @@ package bisq.desktop.common.utils;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.image.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -28,7 +29,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.InputStream;
 import java.util.Objects;
 
 @Slf4j

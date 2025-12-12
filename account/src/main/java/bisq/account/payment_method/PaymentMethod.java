@@ -17,7 +17,11 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.TradeCurrency;
+import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
+import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.common.asset.Asset;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -27,6 +31,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * PaymentMethod wraps the PaymentRail by its enum name and provides util methods.
@@ -43,63 +48,50 @@ import java.util.List;
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, NetworkProto {
     public final static int MAX_NAME_LENGTH = 50;
 
-    // Only name is used for protobuf, thus other fields are transient.
-    protected final String name;
+    // Only paymentRail name is used for protobuf, thus other fields are transient.
+    protected final String paymentRailName;
 
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
-    protected transient final String displayString;
-    protected transient final String shortDisplayString;
 
     /**
      * @param paymentRail The method to be associated with that payment method
      */
     protected PaymentMethod(R paymentRail) {
-        this.name = paymentRail.name();
-
+        this.paymentRailName = paymentRail.name();
         this.paymentRail = paymentRail;
-
-        displayString = createDisplayString();
-        shortDisplayString = createShortDisplayString();
-
-        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
     }
 
     /**
-     * @param customName Provide custom payment method name not covered by a Method enum.
-     *                   In that case we set the method to the fallback method (e.g. USER_DEFINED).
+     * @param customPaymentRailName Provide custom payment method name not covered by a Method enum.
      */
-    protected PaymentMethod(String customName) {
-        this.name = customName;
+    protected PaymentMethod(String customPaymentRailName) {
+        this.paymentRailName = customPaymentRailName;
         this.paymentRail = getCustomPaymentRail();
-
-        // Avoid accidentally using a translation string in case the customName would match a key
-        displayString = name;
-        shortDisplayString = name;
-
-        verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(name, 100);
+        NetworkDataValidation.validateText(paymentRailName, MAX_NAME_LENGTH);
     }
 
-    protected String createDisplayString() {
-        return Res.has(name) ? Res.get(name) : name;
+    public abstract String getId();
+
+    public String getDisplayString() {
+        return Res.has(paymentRailName) ? Res.get(paymentRailName) : paymentRailName;
     }
 
-    protected String createShortDisplayString() {
-        String shortName = name + "_SHORT";
-        return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
+    public String getShortDisplayString() {
+        String shortName = paymentRailName + "_SHORT";
+        return Res.has(shortName) ? Res.get(shortName) : getDisplayString();
     }
 
     @Override
     public abstract bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash);
 
     protected bisq.account.protobuf.PaymentMethod.Builder getPaymentMethodBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PaymentMethod.newBuilder().setName(name);
+        return bisq.account.protobuf.PaymentMethod.newBuilder().setPaymentRailName(paymentRailName);
     }
 
     public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {
@@ -107,20 +99,35 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
             case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
             case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
             case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
+            case STABLECOINPAYMENTMETHOD -> StableCoinPaymentMethod.fromProto(proto);
+            case CBDCPAYMENTMETHOD -> CbdcPaymentMethod.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 
-    protected abstract R getCustomPaymentRail();
-
-    public abstract List<TradeCurrency> getTradeCurrencies();
-
-    public boolean isCustomPaymentMethod() {
-        return paymentRail == getCustomPaymentRail();
-    }
 
     @Override
     public int compareTo(PaymentMethod<R> o) {
-        return name.compareTo(o.getName());
+        return paymentRailName.compareTo(o.getPaymentRailName());
     }
+
+    public List<String> getSupportedCurrencyCodes() {
+        return getSupportedCurrencies().stream()
+                .map(Asset::getCode)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getSupportedCurrencyDisplayNameAndCode() {
+        return getSupportedCurrencies().stream()
+                .map(Asset::getDisplayNameAndCode)
+                .collect(Collectors.toList());
+    }
+
+    public abstract List<? extends Asset> getSupportedCurrencies();
+
+    public boolean isCustomPaymentMethod() {
+        return paymentRail.equals(getCustomPaymentRail());
+    }
+
+    protected abstract R getCustomPaymentRail();
 }

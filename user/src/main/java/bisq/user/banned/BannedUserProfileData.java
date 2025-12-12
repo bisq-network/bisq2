@@ -33,8 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @EqualsAndHashCode
@@ -64,7 +63,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    public BannedUserProfileData(int version,
+    private BannedUserProfileData(int version,
                                   UserProfile userProfile,
                                   boolean staticPublicKeysProvided) {
         this.version = version;

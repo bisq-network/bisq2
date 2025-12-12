@@ -20,6 +20,7 @@ package bisq.chat;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
@@ -30,7 +31,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ToString
@@ -77,6 +82,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
                     BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
             case COMMONPUBLICCHATCHANNEL ->
                     CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
+            case MUSIGOPENTRADECHANNEL -> MuSigOpenTradeChannel.fromProto(proto, proto.getMuSigOpenTradeChannel());
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

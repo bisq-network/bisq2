@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -41,24 +42,26 @@ public class UserService implements Service {
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
+    private final ContactListService contactListService;
 
     public UserService(PersistenceService persistenceService,
                        SecurityService securityService,
                        IdentityService identityService,
                        NetworkService networkService,
                        BondedRolesService bondedRolesService) {
+        contactListService = new ContactListService(persistenceService);
 
-        bannedUserService = new BannedUserService(persistenceService,
-                bondedRolesService.getAuthorizedBondedRolesService());
-
-        userProfileService = new UserProfileService(persistenceService, securityService, networkService);
+        userProfileService = new UserProfileService(persistenceService, securityService, networkService, contactListService);
 
         userIdentityService = new UserIdentityService(persistenceService,
                 securityService,
                 identityService,
                 networkService);
 
-        republishUserProfileService = new RepublishUserProfileService(userIdentityService);
+        republishUserProfileService = new RepublishUserProfileService(userIdentityService, networkService);
+
+        bannedUserService = new BannedUserService(persistenceService,
+                bondedRolesService.getAuthorizedBondedRolesService());
 
         reputationService = new ReputationService(persistenceService,
                 networkService,
@@ -68,26 +71,27 @@ public class UserService implements Service {
                 bondedRolesService.getAuthorizedBondedRolesService());
     }
 
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return userProfileService.initialize()
+        return contactListService.initialize()
+                .thenCompose(result -> userProfileService.initialize())
                 .thenCompose(result -> userIdentityService.initialize())
                 .thenCompose(result -> republishUserProfileService.initialize())
-                .thenCompose(result -> reputationService.initialize())
-                .thenCompose(result -> bannedUserService.initialize());
+                .thenCompose(result -> bannedUserService.initialize())
+                .thenCompose(result -> reputationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return userProfileService.shutdown()
-                .thenCompose(result -> userIdentityService.shutdown())
+        return reputationService.shutdown()
+                .thenCompose(result -> bannedUserService.shutdown())
                 .thenCompose(result -> republishUserProfileService.shutdown())
-                .thenCompose(result -> reputationService.shutdown())
-                .thenCompose(result -> bannedUserService.shutdown());
+                .thenCompose(result -> userIdentityService.shutdown())
+                .thenCompose(result -> userProfileService.shutdown())
+                .thenCompose(result -> contactListService.shutdown());
     }
 }

@@ -1,5 +1,6 @@
-import bisq.gradle.tasks.VersionUtil
+import bisq.gradle.common.VersionUtil
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 plugins {
     id("bisq.java-library")
@@ -15,7 +16,7 @@ application {
 }
 
 javafx {
-    version = "22.0.1"
+    version = "21.0.6"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
@@ -28,6 +29,7 @@ sourceSets {
 }
 
 dependencies {
+    implementation("bisq:i18n")
     implementation(libs.zxing)
     implementation(libs.sarxos)
     implementation(libs.javacv) {
@@ -93,7 +95,6 @@ dependencies {
     }
 }
 
-
 tasks {
     named<Jar>("jar") {
         manifest {
@@ -110,6 +111,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         val version = VersionUtil.getVersionFromFile(project)
         archiveClassifier.set("$version-all")
+        mergeServiceFiles()
     }
 
     distZip {

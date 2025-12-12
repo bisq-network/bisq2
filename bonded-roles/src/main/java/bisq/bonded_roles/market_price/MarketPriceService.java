@@ -21,10 +21,11 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
 import bisq.common.encoding.Hex;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -33,8 +34,8 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,14 +52,15 @@ import java.util.stream.Collectors;
  */
 
 @Slf4j
-public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, AuthorizedBondedRolesService.Listener {
+public class MarketPriceService extends RateLimitedPersistenceClient<MarketPriceStore>
+        implements Service, AuthorizedBondedRolesService.Listener {
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
     @Getter
     private final Persistence<MarketPriceStore> persistence;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
-    private final MarketPriceRequestService marketPriceRequestService;
+    private final Optional<MarketPriceRequestService> marketPriceRequestService;
     private Pin marketPriceByCurrencyMapPin;
     @Getter
     private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
@@ -67,8 +69,11 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                               PersistenceService persistenceService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
+        boolean enabled = marketPrice.getBoolean("enabled");
         this.authorizedBondedRolesService = authorizedBondedRolesService;
-        marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService);
+        marketPriceRequestService = enabled
+                ? Optional.of(new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService))
+                : Optional.empty();
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
@@ -81,22 +86,35 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         log.info("initialize");
 
         authorizedBondedRolesService.addListener(this);
+        setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket());
 
-        setSelectedMarket(MarketRepository.getDefault());
+        return marketPriceRequestService
+                .map(service -> {
+                    marketPriceByCurrencyMapPin = service.getMarketPriceByCurrencyMap()
+                            .addObserver(() -> applyNewMap(service.getMarketPriceByCurrencyMap()));
 
-        marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() ->
-                applyNewMap(marketPriceRequestService.getMarketPriceByCurrencyMap()));
-
-        return marketPriceRequestService.initialize();
+                    // Ensure we have at least some outdated price data in case the clearnet provider is offline and
+                    // no persisted data are present
+                    if (DevMode.isDevMode() && getMarketPriceByCurrencyMap().isEmpty()) {
+                        applyNewMap(service.loadStaticDevMarketPrice());
+                    }
+                    return service.initialize();
+                })
+                .orElseGet(() -> CompletableFuture.completedFuture(true));
     }
+
 
     public CompletableFuture<Boolean> shutdown() {
         if (marketPriceByCurrencyMapPin != null) {
             marketPriceByCurrencyMapPin.unbind();
         }
         authorizedBondedRolesService.removeListener(this);
-        return marketPriceRequestService.shutdown();
+
+        return marketPriceRequestService
+                .map(MarketPriceRequestService::shutdown)
+                .orElseGet(() -> CompletableFuture.completedFuture(true));
     }
+
 
 
     /* --------------------------------------------------------------------- */
@@ -127,8 +145,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     /* --------------------------------------------------------------------- */
 
     public void setSelectedMarket(Market market) {
-        getSelectedMarket().set(market);
-        persist();
+        if (getSelectedMarket().set(market)) {
+            persist();
+        }
     }
 
     public Optional<MarketPrice> findMarketPrice(Market market) {
@@ -186,5 +205,4 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-
 }

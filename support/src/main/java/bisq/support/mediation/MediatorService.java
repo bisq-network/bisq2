@@ -34,7 +34,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * Service used by mediators
  */
 @Slf4j
-public class MediatorService implements PersistenceClient<MediatorStore>, Service, ConfidentialMessageService.Listener {
+public class MediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter
@@ -99,7 +99,7 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
@@ -115,13 +115,20 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     /* --------------------------------------------------------------------- */
 
     public void closeMediationCase(MediationCase mediationCase) {
-        mediationCase.setClosed(true);
+        if (mediationCase.setClosed(true)) {
+            persist();
+        }
+    }
+
+    public void removeMediationCase(MediationCase mediationCase) {
+        getMediationCases().remove(mediationCase);
         persist();
     }
 
     public void reOpenMediationCase(MediationCase mediationCase) {
-        mediationCase.setClosed(false);
-        persist();
+        if (mediationCase.setClosed(false)) {
+            persist();
+        }
     }
 
     public ObservableSet<MediationCase> getMediationCases() {
@@ -136,7 +143,8 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
     public Stream<UserIdentity> findMyMediatorUserIdentities() {
-        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+        // If we got banned we still want to show the admin UI
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream());
     }
@@ -180,13 +188,13 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     requester.getNetworkId(),
                     networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
 
             // Send to peer
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     peer.getNetworkId(),
                     networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
         });
     }
 

@@ -17,14 +17,14 @@
 
 package bisq.persistence;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -42,8 +42,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     public synchronized Optional<T> read() {
-        File storeFile = storeFilePath.toFile();
-        if (!storeFile.exists()) {
+        if (!Files.exists(storeFilePath)) {
             return Optional.empty();
         }
 
@@ -68,11 +67,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
-            writeStoreToTempFile(persistableStore);
+            writeStoreToTempFilePath(persistableStore);
             boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
             if (!hasFileBeenBackedUp) {
-                File storeFile = storeFilePath.toFile();
-                FileUtils.deleteFile(storeFile);
+                Files.deleteIfExists(storeFilePath);
             }
             storeFileManager.renameTempFileToCurrentFile();
         } catch (CouldNotSerializePersistableStore e) {
@@ -87,8 +85,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     private PersistableStore<?> readStoreFromFile() throws IOException {
-        File storeFile = storeFilePath.toFile();
-        try (FileInputStream fileInputStream = new FileInputStream(storeFile)) {
+        try (InputStream fileInputStream = Files.newInputStream(storeFilePath)) {
             Any any = Any.parseDelimitedFrom(fileInputStream);
             return PersistableStore.fromAny(any);
         }
@@ -96,9 +93,9 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     private void tryToBackupCorruptedStoreFile() {
         try {
-            FileUtils.backupCorruptedFile(
-                    parentDirectoryPath.toAbsolutePath().toString(),
-                    storeFilePath.toFile(),
+            FileMutatorUtils.backupCorruptedFile(
+                    parentDirectoryPath,
+                    storeFilePath,
                     storeFilePath.getFileName().toString(),
                     "corruptedFilesAtRead"
             );
@@ -107,13 +104,13 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         }
     }
 
-    private void writeStoreToTempFile(T persistableStore) {
-        File tempFile = storeFileManager.getTempFilePath().toFile();
-        writeStoreToFile(persistableStore, tempFile);
+    private void writeStoreToTempFilePath(T persistableStore) {
+        Path tempFilePath = storeFileManager.getTempFilePath();
+        writeStoreToFilePath(persistableStore, tempFilePath);
     }
 
-    private void writeStoreToFile(T persistableStore, File file) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+    private void writeStoreToFilePath(T persistableStore, Path filePath) {
+        try (OutputStream fileOutputStream = Files.newOutputStream(filePath)) {
             // We use an Any container (byte blob) as we do not have the dependencies to the
             // external PersistableStore implementations (at deserialization we would have an issue otherwise as
             // it requires static access).

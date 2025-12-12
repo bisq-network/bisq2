@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -30,7 +30,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -62,7 +62,7 @@ public class OfferbookListItem {
     private final ReputationService reputationService;
     private final UserProfile senderUserProfile;
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
-            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType,
+            fiatPaymentMethodsAsString, authorUserProfileId, quoteCurrencyCode, offerType,
             formattedOfferAge, offerAgeTooltipText;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
@@ -98,7 +98,7 @@ public class OfferbookListItem {
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
-        marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+        quoteCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
         offerType = bisqEasyOffer.getDirection().isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");

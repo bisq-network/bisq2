@@ -17,7 +17,7 @@
 
 package bisq.identity;
 
-import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.NetworkService;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
@@ -48,13 +48,13 @@ import static org.mockito.Mockito.*;
 @Disabled
 public class IdentityServiceTest {
     @TempDir
-    private Path tempDir;
+    private Path tempDirPath;
     private KeyBundleService keyBundleService;
     private IdentityService identityService;
 
     @BeforeEach
     void setUp() {
-        PersistenceService persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        PersistenceService persistenceService = new PersistenceService(tempDirPath);
 
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
@@ -160,7 +160,7 @@ public class IdentityServiceTest {
     @Test
     void findInvalidIdentityByNetworkId() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
-                Map.of(TransportType.CLEAR, DefaultLocalhostFacade.toLocalHostAddress(1234)));
+                Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
 
         String keyId = keyBundleService.getKeyIdFromTag("myTag2");
         KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
@@ -192,7 +192,7 @@ public class IdentityServiceTest {
     @Test
     void findInvalidRetiredIdentity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
-                Map.of(TransportType.CLEAR, DefaultLocalhostFacade.toLocalHostAddress(1234)));
+                Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
         String keyId = keyBundleService.getKeyIdFromTag("myTag3");
         KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         var pubKey = new PubKey(keyPair.getPublic(), keyId);

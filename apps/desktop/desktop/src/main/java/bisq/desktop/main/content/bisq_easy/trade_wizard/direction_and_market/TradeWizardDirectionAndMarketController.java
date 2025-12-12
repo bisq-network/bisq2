@@ -18,15 +18,15 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -34,6 +34,7 @@ import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -147,7 +148,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
 
     @Override
     public void onDeactivate() {
-        view.getRoot().setOnKeyPressed(null);
         searchTextPin.unsubscribe();
     }
 
@@ -178,16 +178,18 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     void onMarketListItemClicked(TradeWizardDirectionAndMarketView.ListItem item) {
-        if (item == null) {
+        if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
-        }
-        if (item.equals(model.getSelectedMarketListItem().get())) {
-            onNextHandler.run();
         }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
         bisqEasyOfferbookChannelService.findChannel(item.getMarket())
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onBuildReputation);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
     }
 
     private void setDirection(Direction direction) {
@@ -209,18 +211,11 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         // Sell offer
         if (!model.isAllowedToCreateSellOffer()) {
             showReputationInfoOverlay();
-        } else {
-            view.getRoot().setOnKeyPressed(null);
         }
     }
 
     private void showReputationInfoOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getShowReputationInfo().set(true);
-        view.getRoot().setOnKeyPressed(keyEvent -> {
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-            });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
-        });
     }
 }

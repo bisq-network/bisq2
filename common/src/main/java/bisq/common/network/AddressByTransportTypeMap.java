@@ -18,6 +18,7 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -141,6 +143,17 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
     @Override
     public Set<Map.Entry<TransportType, Address>> entrySet() {
         return map.entrySet();
+    }
+
+    public Optional<Address> getAddress(TransportType transportType) {
+        return Optional.ofNullable(get(transportType));
+    }
+
+    @Override
+    public String toString() {
+        return Joiner.on("\n").join(map.entrySet().stream()
+                .map(entry -> entry.getKey().name() + ": " + entry.getValue().toString())
+                .collect(Collectors.toList()));
     }
 }
 

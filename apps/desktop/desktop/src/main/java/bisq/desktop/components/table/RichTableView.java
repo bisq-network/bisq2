@@ -1,14 +1,35 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.components.table;
 
 import bisq.common.encoding.Csv;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.FileChooserUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -21,7 +42,13 @@ import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -58,61 +85,82 @@ public class RichTableView<T> extends VBox {
     private final DropdownMenu filterMenu;
     private final BisqTooltip tooltip;
     private final SearchBox searchBox;
-    private final Hyperlink exportHyperlink;
+    private final Button exportButton;
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
+    private final String entriesUnit;
+    private final HBox headerBox, subheaderBox;
+    private final BisqMenuItem tableInfoMenuItem;
     private Subscription searchTextPin;
     @Setter
     private Optional<List<String>> csvHeaders = Optional.empty();
     @Setter
     private Optional<List<List<String>>> csvData = Optional.empty();
+    private Optional<String> learnMoreTitle = Optional.empty();
+    private Optional<String> learnMoreContent = Optional.empty();
 
     public RichTableView(ObservableList<T> observableList) {
         this(new SortedList<>(observableList));
     }
 
     public RichTableView(ObservableList<T> observableList, String headline) {
-        this(new SortedList<>(observableList), headline);
+        this(new SortedList<>(observableList), Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList) {
-        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    public RichTableView(SortedList<T> sortedList, String headline) {
-        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty());
+    public RichTableView(SortedList<T> sortedList, String headline, String entriesUnit, Consumer<String> searchTextHandler) {
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler), Optional.of(entriesUnit));
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup) {
-        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.empty());
+        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.empty(), Optional.empty());
+    }
+
+    public RichTableView(SortedList<T> sortedList,
+                         Consumer<String> searchTextHandler) {
+        this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          Consumer<String> searchTextHandler) {
-        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler));
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler), Optional.empty());
     }
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup,
-                         Consumer<String> searchTextHandler) {
-        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler));
+                         Consumer<String> searchTextHandler,
+                         String entriesUnit) {
+        this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler), Optional.of(entriesUnit));
+    }
+
+    public RichTableView(SortedList<T> sortedList,
+                         List<FilterMenuItem<T>> filterItems,
+                         ToggleGroup toggleGroup,
+                         Consumer<String> searchTextHandler,
+                         String entriesUnit) {
+        this(sortedList, Optional.empty(), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler), Optional.of(entriesUnit));
     }
 
     private RichTableView(SortedList<T> sortedList,
                           Optional<String> headline,
                           Optional<List<FilterMenuItem<T>>> filterItems,
                           Optional<ToggleGroup> toggleGroup,
-                          Optional<Consumer<String>> searchTextHandler) {
+                          Optional<Consumer<String>> searchTextHandler,
+                          Optional<String> entriesUnit) {
         this.headline = headline;
         this.filterItems = filterItems;
         this.toggleGroup = toggleGroup;
         this.searchTextHandler = searchTextHandler;
+        this.entriesUnit = entriesUnit.orElseGet(() -> Res.get("component.standardTable.entriesUnit.generic"));
         if (filterItems.isPresent()) {
             checkArgument(toggleGroup.isPresent(), "filterItems and toggleGroup must be both present or empty");
         }
@@ -120,50 +168,63 @@ public class RichTableView<T> extends VBox {
             checkArgument(filterItems.isPresent(), "filterItems and toggleGroup must be both present or empty");
         }
 
+        // Header: contains headline + num entries + export button
         headlineLabel = new Label(headline.orElse(""));
         headlineLabel.setManaged(headline.isPresent());
         headlineLabel.setVisible(headlineLabel.isManaged());
-        headlineLabel.getStyleClass().add("rich-table-headline");
-        headlineLabel.setAlignment(Pos.BASELINE_LEFT);
+        headlineLabel.getStyleClass().add("bisq-easy-container-headline");
 
-        tableView = new BisqTableView<>(sortedList);
-        tableView.getStyleClass().add("rich-table-view");
-        tableView.setMinHeight(200);
+        numEntriesLabel = new Label();
+        HBox.setMargin(numEntriesLabel, new Insets(0, 0, -5, 0));
+        numEntriesLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text", "font-light");
+
+        exportButton = new Button(Res.get("action.exportAsCsv"));
+        exportButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+        exportButton.getStyleClass().addAll("export-button", "normal-text");
+
+        // Show table info button
+        tableInfoMenuItem = new BisqMenuItem("icon-help-grey", "icon-help-white");
+        tableInfoMenuItem.setManaged(false);
+        tableInfoMenuItem.setVisible(false);
+        tableInfoMenuItem.setTooltip(Res.get("component.standardTable.tableInfo"));
+        HBox.setMargin(tableInfoMenuItem, new Insets(0, 0, 0, 5));
+
+        headerBox = new HBox(5, headlineLabel, numEntriesLabel, Spacer.fillHBox(), exportButton, tableInfoMenuItem);
+        headerBox.getStyleClass().add("chat-container-header");
+
+        VBox headerWithLineBox = new VBox(headerBox, Layout.hLine());
+        if (headline.isEmpty()) {
+            headerWithLineBox.setVisible(false);
+            headerWithLineBox.setManaged(false);
+        }
+
+        // Subheader: contains search + filters
+        searchBox = new SearchBox();
+        searchBox.setManaged(searchTextHandler.isPresent());
+        searchBox.setVisible(searchBox.isManaged());
+        searchBox.setPrefWidth(200);
 
         filterMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        filterMenu.getStyleClass().add("dropdown-offer-rich-table-filter-menu");
         filterMenu.setManaged(filterItems.isPresent());
         filterMenu.setVisible(filterMenu.isManaged());
         filterItems.ifPresent(filterMenu::addMenuItems);
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
 
-        searchBox = new SearchBox();
-        searchBox.setManaged(searchTextHandler.isPresent());
-        searchBox.setVisible(searchBox.isManaged());
-        searchBox.setPrefWidth(90);
-        searchBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox filterBox = new HBox(10, searchBox, filterMenu);
-        filterBox.setAlignment(Pos.BASELINE_LEFT);
+        subheaderBox = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
+        subheaderBox.getStyleClass().add("rich-table-subheader");
+        subheaderBox.setAlignment(Pos.CENTER);
+        subheaderBox.setPadding(new Insets(0, 20, 0, 20));
 
-        HBox headerBox = new HBox(headlineLabel, Spacer.fillHBox(), filterBox);
-        headerBox.setAlignment(Pos.BASELINE_LEFT);
-
-        numEntriesLabel = new Label();
-        numEntriesLabel.getStyleClass().add("rich-table-num-entries");
-        numEntriesLabel.setAlignment(Pos.BASELINE_LEFT);
-
-        exportHyperlink = new Hyperlink(Res.get("action.exportAsCsv"));
-        exportHyperlink.getStyleClass().add("rich-table-num-entries");
-        exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
-
-        HBox.setMargin(exportHyperlink, new Insets(8, 10, 0, 0));
-        VBox footerVBox = new VBox(5, numEntriesLabel, exportHyperlink);
-        footerVBox.setAlignment(Pos.BASELINE_LEFT);
-
-        VBox.setMargin(headerBox, new Insets(0, 0, 5, 0));
+        // TableView
+        tableView = new BisqTableView<>(sortedList);
+        tableView.getStyleClass().add("rich-table-view");
+        tableView.setMinHeight(200);
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        VBox.setMargin(footerVBox, new Insets(10, 0, 0, 0));
-        getChildren().addAll(headerBox, tableView, footerVBox);
+
+        getChildren().addAll(headerWithLineBox, subheaderBox, tableView);
+        VBox.setVgrow(this, Priority.ALWAYS);
         getStyleClass().add("rich-table-view-box");
 
         listChangeListener = c -> listItemsChanged();
@@ -178,15 +239,15 @@ public class RichTableView<T> extends VBox {
         selectedFilterMenuItemChanged();
         filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
-        exportHyperlink.setOnAction(ev -> {
-            List<String> headers = csvHeaders.orElse(buildCsvHeaders());
-            List<List<String>> data = csvData.orElse(buildCsvData());
+        exportButton.setOnAction(ev -> {
+            List<String> headers = csvHeaders.orElseGet(() -> buildCsvHeaders());
+            List<List<String>> data = csvData.orElseGet(() -> buildCsvData());
             String csv = Csv.toCsv(headers, data);
             String initialFileName = headline.orElse("Bisq-table-data") + ".csv";
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
-                    .ifPresent(file -> {
+                    .ifPresent(filePath -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileMutatorUtils.writeToPath(csv, filePath);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }
@@ -202,7 +263,8 @@ public class RichTableView<T> extends VBox {
         if (searchTextPin != null) {
             searchTextPin.unsubscribe();
         }
-        exportHyperlink.setOnAction(null);
+        exportButton.setOnAction(null);
+        tableInfoMenuItem.setOnAction(null);
     }
 
     public void resetSearch() {
@@ -244,6 +306,12 @@ public class RichTableView<T> extends VBox {
         tableView.refresh();
     }
 
+    public void sort() {
+        if (!tableView.getSortOrder().isEmpty()) {
+            tableView.sort();
+        }
+    }
+
     public ObservableList<TableColumn<T, ?>> getSortOrder() {
         return tableView.getSortOrder();
     }
@@ -256,8 +324,31 @@ public class RichTableView<T> extends VBox {
         return tableView.getColumns();
     }
 
+    public BisqTableColumn<T> getSelectionMarkerColumn() {
+        return tableView.getSelectionMarkerColumn();
+    }
+
+    public TableView.TableViewSelectionModel<T> getSelectionModel() {
+        return tableView.getSelectionModel();
+    }
+
     public void setFixHeight(double value) {
         tableView.setFixHeight(value);
+    }
+
+    public void setTableInfo(String title, String content) {
+        tableInfoMenuItem.setManaged(true);
+        tableInfoMenuItem.setVisible(true);
+        learnMoreTitle = Optional.of(title);
+        learnMoreContent = Optional.of(content);
+        tableInfoMenuItem.setOnAction(e -> openLearnMorePopup());
+    }
+
+    public void openLearnMorePopup() {
+        if (learnMoreTitle.isPresent() && learnMoreContent.isPresent()) {
+            Navigation.navigateTo(NavigationTarget.SHOW_TABLE_INFO,
+                    new ShowTableInfo.InitData(learnMoreTitle.get(), learnMoreContent.get()));
+        }
     }
 
 
@@ -274,7 +365,7 @@ public class RichTableView<T> extends VBox {
     }
 
     private void listItemsChanged() {
-        numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
+        numEntriesLabel.setText(String.format("(%s %s)", tableView.getItems().size(), entriesUnit.toLowerCase()));
     }
 
 

@@ -21,15 +21,15 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
 public final class ConfidentialData implements NetworkProto {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
 
@@ -47,13 +47,18 @@ public final class ConfidentialData implements NetworkProto {
         this.cipherText = cipherText;
         this.signature = signature;
 
-        verify();
+        try {
+            verify();
+        } catch (Exception e) {
+            log.error("ConfidentialData verification failed", e);
+            throw e;
+        }
     }
 
     @Override
     public void verify() {
         checkArgument(iv.length <= 20);
-        checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT);
+        checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT, "cipherText size must not exceed 20 000 bytes");
         NetworkDataValidation.validateECPubKey(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
     }
@@ -91,5 +96,24 @@ public final class ConfidentialData implements NetworkProto {
                 ", cipherText=" + Hex.encode(cipherText) +
                 ", signature=" + Hex.encode(signature) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ConfidentialData that)) return false;
+
+        return Arrays.equals(senderPublicKey, that.senderPublicKey) &&
+                Arrays.equals(iv, that.iv) &&
+                Arrays.equals(cipherText, that.cipherText) &&
+                Arrays.equals(signature, that.signature);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(senderPublicKey);
+        result = 31 * result + Arrays.hashCode(iv);
+        result = 31 * result + Arrays.hashCode(cipherText);
+        result = 31 * result + Arrays.hashCode(signature);
+        return result;
     }
 }

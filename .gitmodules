@@ -1,3 +1,0 @@
-[submodule "wallets/bitcoind"]
-	path = wallets/bitcoind
-	url = https://github.com/bisq-network/bitcoind.git

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.wallet.settings;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,8 @@ public class WalletSettingsView extends View<VBox, WalletSettingsModel, WalletSe
 
     public WalletSettingsView(WalletSettingsModel model, WalletSettingsController controller) {
         super(new VBox(20), model, controller);
+        root.setPadding(new Insets(0, 40, 40, 40));
+
     }
 
     @Override

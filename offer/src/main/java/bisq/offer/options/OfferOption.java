@@ -35,6 +35,8 @@ public interface OfferOption extends NetworkProto {
             case COLLATERALOPTION -> CollateralOption.fromProto(proto.getCollateralOption());
             case FIATPAYMENTOPTION -> FiatPaymentOption.fromProto(proto.getFiatPaymentOption());
             case FEEOPTION -> FeeOption.fromProto(proto.getFeeOption());
+            case LANGUAGEOPTION -> LanguageOption.fromProto(proto.getLanguageOption());
+            case ACCOUNTOPTION -> AccountOption.fromProto(proto.getAccountOption());
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

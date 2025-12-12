@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.user.profile.UserProfile;
@@ -62,6 +62,10 @@ public class UserProfileDisplay extends HBox {
         this(userProfile, DEFAULT_ICON_SIZE, null, openProfileCardOnClick);
     }
 
+    public UserProfileDisplay(@Nullable UserProfile userProfile, boolean openProfileCardOnClick, boolean useNicknameOnly) {
+        this(userProfile, DEFAULT_ICON_SIZE, null, openProfileCardOnClick, useNicknameOnly);
+    }
+
     public UserProfileDisplay(@Nullable UserProfile userProfile, @Nullable ReputationScore reputationScore) {
         this(userProfile, reputationScore, true);
     }
@@ -76,6 +80,14 @@ public class UserProfileDisplay extends HBox {
                               double size,
                               @Nullable ReputationScore reputationScore,
                               boolean openProfileCardOnClick) {
+        this(userProfile, size, reputationScore, openProfileCardOnClick, false);
+    }
+
+    public UserProfileDisplay(@Nullable UserProfile userProfile,
+                              double size,
+                              @Nullable ReputationScore reputationScore,
+                              boolean openProfileCardOnClick,
+                              boolean useNicknameOnly) {
         super(10);
 
         getStyleClass().add("user-profile-display");
@@ -94,7 +106,7 @@ public class UserProfileDisplay extends HBox {
         getChildren().addAll(userProfileIcon, vBox);
 
         if (userProfile != null) {
-            setUserProfile(userProfile, openProfileCardOnClick);
+            setUserProfile(userProfile, openProfileCardOnClick, useNicknameOnly);
         }
 
         if (reputationScore != null) {
@@ -107,10 +119,14 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
+        setUserProfile(userProfile, openProfileCardOnClick, false);
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick, boolean useNicknameOnly) {
         userProfileIcon.setUserProfile(userProfile, openProfileCardOnClick);
         applyTooltip();
         if (userProfile != null) {
-            userName.setText(userProfile.getUserName());
+            userName.setText(useNicknameOnly ? userProfile.getNickName() : userProfile.getUserName());
         }
         if (openProfileCardOnClick) {
             userName.setOnMouseClicked(e ->

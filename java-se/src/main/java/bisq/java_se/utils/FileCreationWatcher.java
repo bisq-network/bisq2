@@ -17,7 +17,6 @@
 
 package bisq.java_se.utils;
 
-import com.sun.nio.file.SensitivityWatchEventModifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -30,28 +29,28 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class FileCreationWatcher {
-    private final Path directoryToWatch;
+    private final Path dirPathToWatch;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public FileCreationWatcher(Path directoryToWatch) {
-        this.directoryToWatch = directoryToWatch;
+    public FileCreationWatcher(Path dirPathToWatch) {
+        this.dirPathToWatch = dirPathToWatch;
     }
 
     public Future<Path> waitUntilNewFileCreated() {
-        return executor.submit(() -> waitForNewFile(Optional.empty()));
+        return executor.submit(() -> waitForNewFilePath(Optional.empty()));
     }
 
-    public Future<Path> waitForFile(Path path) {
-        return executor.submit(() -> waitForNewFile(Optional.of(path)));
-    }
-
-    private Path waitForNewFile(Optional<Path> optionalPath) {
+    private Path waitForNewFilePath(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            directoryToWatch.register(watchService,
-                    new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE},
-                    SensitivityWatchEventModifier.HIGH);
+            dirPathToWatch.register(watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE);
+
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
+                if (watchKey == null) {
+                    throw new FileCreationWatcherTimeoutException("No changes detected for 1 minute (timeout).");
+                }
+
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
 
@@ -61,19 +60,25 @@ public class FileCreationWatcher {
 
                     @SuppressWarnings("unchecked")
                     WatchEvent<Path> castedWatchEvent = (WatchEvent<Path>) event;
-                    Path filename = castedWatchEvent.context();
-                    Path newFilePath = directoryToWatch.resolve(filename);
+                    Path filenamePath = castedWatchEvent.context();
+                    Path newFilePath = dirPathToWatch.resolve(filenamePath);
 
                     if (optionalPath.isEmpty()) {
                         return newFilePath;
                     } else if (optionalPath.get().equals(newFilePath)) {
                         return newFilePath;
                     }
-                    watchKey.reset();
+                }
+
+                if (!watchKey.reset()) {
+                    log.warn("File watcher is no longer valid.");
                 }
             }
-        } catch (IOException | InterruptedException e) {
-            log.error("Couldn't watch directory: {}", directoryToWatch.toAbsolutePath(), e);
+        } catch (InterruptedException e) {
+            log.error("Couldn't watch directory: {}. Thread got interrupted at waitForNewFilePath method", dirPathToWatch.toAbsolutePath(), e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+        } catch (IOException e) {
+            log.error("Couldn't watch directory: {}", dirPathToWatch.toAbsolutePath(), e);
         }
 
         throw new IllegalStateException("FileCreationWatcher terminated prematurely.");

@@ -14,12 +14,12 @@ import java.util.List;
 @Slf4j
 public class Migrator {
     private final Version appVersion;
-    private final Path dataDir;
+    private final Path appDataDirPath;
     private final List<Migration> allMigrations;
 
-    public Migrator(Version appVersion, Path dataDir, List<Migration> allMigrations) {
+    public Migrator(Version appVersion, Path appDataDirPath, List<Migration> allMigrations) {
         this.appVersion = appVersion;
-        this.dataDir = dataDir;
+        this.appDataDirPath = appDataDirPath;
         this.allMigrations = allMigrations;
     }
 
@@ -32,7 +32,7 @@ public class Migrator {
                 log.info("Running {} migrations.", migrationVersion);
 
                 try {
-                    migration.run(dataDir);
+                    migration.run(appDataDirPath);
                 } catch (MigrationFailedException e) {
                     log.error("Migration failed.", e);
                     allMigrationsSucceeded = false;
@@ -42,7 +42,7 @@ public class Migrator {
 
         if (allMigrationsSucceeded) {
             try {
-                Path versionFilePath = dataDir.resolve("version");
+                Path versionFilePath = appDataDirPath.resolve("version");
                 Files.writeString(versionFilePath, ApplicationVersion.getVersion().toString());
             } catch (IOException e) {
                 throw new MigrationFailedException(e);

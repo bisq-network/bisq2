@@ -36,19 +36,39 @@ message Region {
   string name = 2;
 }
 
-message CryptoCurrency {
-}
-
 message FiatCurrency {
 }
 
-message TradeCurrency {
+message Asset {
   string code = 1;
   string name = 2;
   oneof message {
-    CryptoCurrency cryptoCurrency = 10;
-    FiatCurrency fiatCurrency = 11;
+    FiatCurrency fiatCurrency = 10;
+    DigitalAsset digitalAsset = 11;
   }
+}
+
+message DigitalAsset {
+  oneof message {
+    CryptoAsset cryptoAsset = 11;
+    StableCoin stableCoin = 12;
+    CentralBankDigitalCurrency centralBankDigitalCurrency = 13;
+  }
+}
+
+message CryptoAsset {
+}
+
+message StableCoin {
+  string pegCurrencyCode = 1;
+  string network = 2;
+  string tokenStandard = 3;
+  string issuer = 4;
+}
+
+message CentralBankDigitalCurrency {
+  string pegCurrencyCode = 1;
+  string countryCode = 2;
 }
 
 message Market {

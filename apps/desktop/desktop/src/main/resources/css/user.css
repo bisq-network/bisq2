@@ -24,6 +24,38 @@
 }
 
 /*******************************************************************************
+ * Payment Method Selection                                                     *
+ ******************************************************************************/
+
+.payment-method-selection-view {
+    -fx-alignment: center;
+    -fx-spacing: 20;
+}
+
+.payment-method-table {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.payment-method-table .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.payment-method-search-box {
+    -fx-background-color: transparent;
+}
+
+.payment-method-header {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-alignment: center-left;
+    -fx-label-padding: 0 10 0 10;
+}
+
+
+/*******************************************************************************
  * Reputation                                                                  *
  ******************************************************************************/
 
@@ -113,6 +145,10 @@
     -fx-alignment: center;
 }
 
+.user-profile-selection-w-cat-hash-image .dropdown-menu {
+    -fx-padding: 0 2 0 5 !important;
+}
+
 .user-profile-selection-material-design .user-profile-display-name {
     -fx-font-size: 0.8em !important;
 }
@@ -121,8 +157,9 @@
 .user-profile-selection-material-design .single-user-profile {
     -fx-padding: 0 10 !important;
     -fx-min-height: 35;
-    -fx-alignment: center;
+    -fx-alignment: center-left;
 }
+
 
 /*******************************************************************************
  * Profile Card                                                                *
@@ -157,7 +194,7 @@
 
 .profile-card .profile-card-table-header {
     -fx-pref-height: 8;
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -183,7 +220,7 @@
 }
 
 .profile-card .profile-card-table.table-view .column-header-background {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-padding: 0 0 3 0;
 }
 
@@ -207,4 +244,185 @@
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.3em;
     -fx-padding: 130 0 0 0;
+}
+
+.profile-card .bisq-menu-item.in-my-contact-list-menu-item,
+.profile-card .bisq-menu-item.in-my-contact-list-menu-item:hover {
+    -fx-text-fill: -bisq2-green;
+}
+
+
+/*******************************************************************************
+ * Create Account Summary View                                                 *
+ ******************************************************************************/
+
+.account-summary-section-header {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 14px;
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.account-summary-header-separator {
+    -fx-background-color: -bisq-mid-grey-20;
+}
+
+.account-summary-section {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 15 0 15 0;
+}
+
+.account-summary-section .grid-pane {
+    -fx-hgap: 20;
+    -fx-vgap: 10;
+    -fx-alignment: top-left;
+}
+
+.account-summary-section .grid-pane .label {
+    -fx-wrap-text: true;
+    -fx-max-width: 400;
+    -fx-pref-width: -fx-computed-value;
+}
+
+.account-summary-section .account-summary-label-value {
+    -fx-text-overrun: ellipsis;
+    -fx-wrap-text: true;
+}
+
+.account-summary-title {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 22px;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.account-summary-subtitle {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 18px;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.account-summary-label-key {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.account-summary-label-value {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-wrap-text: true;
+    -fx-text-alignment: left;
+    -fx-alignment: top-left;
+}
+
+.account-summary-edge-to-edge {
+    -fx-background-color: transparent;
+}
+
+.account-summary-edge-to-edge .scroll-pane {
+    -fx-fit-to-width: true;
+    -fx-fit-to-height: false;
+}
+
+.account-summary-edge-to-edge .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/*******************************************************************************
+ * Account Summary Risk Level Styles                                           *
+ ******************************************************************************/
+
+.risk-high {
+    -fx-text-fill: -bisq2-red-lit-10;
+}
+
+.risk-medium {
+    -fx-text-fill: -bisq2-yellow;
+}
+
+.risk-low {
+    -fx-text-fill: -bisq2-green;
+}
+
+.risk-limit-container {
+    -fx-background-color: -bisq-form-bg;
+    -fx-background-radius: 4;
+    -fx-padding: 5 10 5 10;
+}
+
+/*******************************************************************************
+ * Form Error Labels                                                           *
+ ******************************************************************************/
+
+.form-error-label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -bisq-error;
+    -fx-font-size: 12px;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 2 0 0 0;
+    -fx-min-height: 20;
+    -fx-pref-height: 20;
+    -fx-max-height: 20;
+    -fx-wrap-text: true;
+}
+
+/*******************************************************************************
+ * SEPA Form Styles                                                            *
+ ******************************************************************************/
+
+.sepa-form-section-header {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 16px;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.sepa-form-accept-all-checkbox {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 16px;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.sepa-form-country-hint {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 15px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-wrap-text: true;
+}
+
+.sepa-form-countries-container {
+    -fx-background-color: rgba(255, 255, 255, 0.02);
+    -fx-background-radius: 4;
+    -fx-padding: 8;
+}
+
+.sepa-form-countries-container-error {
+    -fx-background-color: rgba(255, 100, 100, 0.05);
+    -fx-background-radius: 4;
+}
+
+.sepa-form-country-checkbox {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: monospace;
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+}
+
+.sepa-form-accepted-countries-section {
+    -fx-padding: 12 0 5 0;
+    -fx-border-color: rgba(255, 255, 255, 0.1);
+    -fx-border-width: 1 0 0 0;
+    -fx-border-radius: 0;
+}
+
+
+/*******************************************************************************
+ * Add to contacts list popup                                                  *
+ ******************************************************************************/
+
+.add-to-contacts-list-window .material-text-field-bg,
+.add-to-contacts-list-window .material-text-field-bg-hover,
+.add-to-contacts-list-window .material-text-field-bg-selected {
+    -fx-background-radius: 4 4 0 0;
 }

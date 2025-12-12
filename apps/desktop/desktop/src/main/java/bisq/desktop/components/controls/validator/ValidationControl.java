@@ -56,8 +56,13 @@ public class ValidationControl {
     }
 
     public void setValidators(ValidatorBase... validators) {
-        this.validators.addAll(validators);
+        this.validators.setAll(validators);
         this.validators.forEach(validator -> validator.setSrcControl(control));
+    }
+
+    public void clearValidators() {
+        validators.clear();
+        activeValidator.set(null);
     }
 
     /**

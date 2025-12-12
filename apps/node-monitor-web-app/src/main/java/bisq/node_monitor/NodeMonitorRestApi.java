@@ -81,7 +81,8 @@ public class NodeMonitorRestApi {
         try {
             return ReportDto.from(networkService.requestReport(Address.fromFullAddress(address)).get());
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupt status
+            log.warn("Thread got interrupted at getReport method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RestApiException(e);
         } catch (Exception e) {
             throw new RestApiException(e);
@@ -110,7 +111,8 @@ public class NodeMonitorRestApi {
                     .map(ReportDto::from)
                     .collect(Collectors.toList());
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupt status
+            log.warn("Thread got interrupted at getReports method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RestApiException(e);
         } catch (Exception e) {
             throw new RestApiException(e);

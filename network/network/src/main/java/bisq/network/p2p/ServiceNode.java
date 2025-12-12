@@ -18,11 +18,12 @@
 package bisq.network.p2p;
 
 
-import bisq.common.observable.Observable;
-import bisq.common.platform.MemoryReportService;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
+import bisq.common.threading.ExecutorFactory;
+import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -60,9 +61,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Creates nodesById, the default node and the services according to the Config.
@@ -108,7 +111,7 @@ public class ServiceNode implements Node.Listener {
 
     private final Config config;
     private final Node.Config nodeConfig;
-    private final PeerGroupManager.Config peerGroupServiceConfig;
+    private final PeerGroupManager.Config peerGroupManagerConfig;
     private final Optional<DataService> dataService;
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
@@ -151,7 +154,7 @@ public class ServiceNode implements Node.Listener {
 
     ServiceNode(Config config,
                 Node.Config nodeConfig,
-                PeerGroupManager.Config peerGroupServiceConfig,
+                PeerGroupManager.Config peerGroupManagerConfig,
                 InventoryService.Config inventoryServiceConfig,
                 KeyBundleService keyBundleService,
                 PersistenceService persistenceService,
@@ -164,7 +167,7 @@ public class ServiceNode implements Node.Listener {
                 MemoryReportService memoryReportService) {
         this.config = config;
         this.nodeConfig = nodeConfig;
-        this.peerGroupServiceConfig = peerGroupServiceConfig;
+        this.peerGroupManagerConfig = peerGroupManagerConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
@@ -177,7 +180,7 @@ public class ServiceNode implements Node.Listener {
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
-        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupServiceConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
+        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupManagerConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
 
         nodesById.addNodeListener(this);
     }
@@ -211,15 +214,14 @@ public class ServiceNode implements Node.Listener {
     // API
     /* --------------------------------------------------------------------- */
 
-    Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
+    CompletableFuture<Node> getInitializedDefaultNodeAsync(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);
-
         Set<SupportedService> supportedServices = config.getSupportedServices();
         peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
                 Optional.of(new PeerGroupManager(defaultNode,
                         peerGroupService,
                         banList,
-                        peerGroupServiceConfig)) :
+                        peerGroupManagerConfig)) :
                 Optional.empty();
 
         boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) &&
@@ -263,23 +265,30 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new NetworkLoadService(this,
                         dataService.orElseThrow().getStorageService(),
                         networkLoadSnapshot,
-                        peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
+                        peerGroupManagerConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
-        setState(State.INITIALIZING);
-        transportService.initialize();// blocking
-        defaultNode.initialize();// blocking
-        peerGroupManager.ifPresentOrElse(peerGroupManager -> {
-                    peerGroupManager.initialize();// blocking
-                    setState(State.INITIALIZED);
-                },
-                () -> setState(State.INITIALIZED));
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor(transportType + "-DefaultNode.initialize");
+        return supplyAsync(() -> {
+            setState(State.INITIALIZING);
+            transportService.initialize();// blocking
+            defaultNode.initializeAsync().join();// blocking
+            peerGroupManager.ifPresentOrElse(peerGroupManager -> {
+                        peerGroupManager.initialize();// blocking
+                        setState(State.INITIALIZED);
+                    },
+                    () -> setState(State.INITIALIZED));
 
-        return defaultNode;
+            return defaultNode;
+        }, executor)
+                .whenComplete((node, throwable) -> ExecutorFactory.shutdownAndAwaitTermination(executor));
     }
 
     CompletableFuture<Boolean> shutdown() {
         setState(State.STOPPING);
+        reportRequestService.ifPresent(ReportRequestService::shutdown);
+        reportResponseService.ifPresent(ReportResponseService::shutdown);
+        networkLoadService.ifPresent(NetworkLoadService::shutdown);
         peerGroupManager.ifPresent(PeerGroupManager::shutdown);
         dataNetworkService.ifPresent(DataNetworkService::shutdown);
         inventoryService.ifPresent(InventoryService::shutdown);
@@ -289,21 +298,33 @@ public class ServiceNode implements Node.Listener {
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
-
-    Node initializeNode(NetworkId networkId) {
-        return nodesById.initializeNode(networkId);
+    CompletableFuture<Node> initializeNodeAsync(NetworkId networkId) {
+        return nodesById.initializeNodeAsync(networkId);
     }
 
     boolean isNodeInitialized(NetworkId networkId) {
         return nodesById.isNodeInitialized(networkId);
     }
 
-    void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+    void addSeedNodeAddresses(Set<Address> addresses) {
+        Set<Address> seedNodeAddresses = addresses.stream().filter(address -> {
+                    if (address == null) {
+                        log.warn("address is null at addSeedNodeAddresses");
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toSet());
+
         this.seedNodeAddresses.addAll(seedNodeAddresses);
         peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.addSeedNodeAddresses(seedNodeAddresses));
     }
 
     void addSeedNodeAddress(Address seedNodeAddress) {
+        if (seedNodeAddress == null) {
+            log.warn("seedNodeAddress is null at addSeedNodeAddress");
+            return;
+        }
         // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
         // seedNodeAddresses field
         seedNodeAddresses.add(seedNodeAddress);
@@ -323,10 +344,6 @@ public class ServiceNode implements Node.Listener {
                                                    NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
         return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
-    }
-
-    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return nodesById.send(senderNetworkId, envelopePayloadMessage, address);
     }
 
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
@@ -355,8 +372,8 @@ public class ServiceNode implements Node.Listener {
         return nodesById.findNode(networkId);
     }
 
-    boolean isPeerOnline(NetworkId networkId, Address address) {
-        return nodesById.isPeerOnline(networkId, address);
+    CompletableFuture<Boolean> isPeerOnlineAsync(NetworkId networkId, Address address) {
+        return nodesById.isPeerOnlineAsync(networkId, address);
     }
 
     private void setState(State newState) {
@@ -367,13 +384,7 @@ public class ServiceNode implements Node.Listener {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(listener -> {
-            try {
-                listener.onStateChanged(newState);
-            } catch (Exception e) {
-                log.error("Calling onMessage at onStateChanged {} failed", listener, e);
-            }
-        }), NetworkService.DISPATCHER);
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onStateChanged(newState)));
     }
 
     CompletableFuture<Report> requestReport(Address address) {

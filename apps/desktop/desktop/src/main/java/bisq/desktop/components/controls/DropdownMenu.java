@@ -45,19 +45,19 @@ import java.util.Collection;
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
 
-    private final ImageView defaultIcon, activeIcon;
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
-    private final ContextMenu contextMenu = new ContextMenu();
     @Getter
     private final HBox hBox = new HBox();
-    private ImageView buttonIcon;
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
     private Double prefWidth = null;
+    protected ImageView defaultIcon, activeIcon;
+    protected ImageView buttonIcon;
+    protected final ContextMenu contextMenu = new ContextMenu();
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Window> windowListener;
@@ -113,6 +113,20 @@ public class DropdownMenu extends HBox {
         attachListeners();
     }
 
+    public void setIcons(String newDefaultIconId, String newActiveIconId) {
+        ImageView newDefault = ImageUtil.getImageViewById(newDefaultIconId);
+        ImageView newActive = ImageUtil.getImageViewById(newActiveIconId);
+
+        defaultIcon = newDefault;
+        activeIcon = newActive;
+
+        if (isMenuShowing.get() || isHover()) {
+            updateIcon(activeIcon);
+        } else {
+            updateIcon(defaultIcon);
+        }
+    }
+
     public void setLabelAsContent(String text) {
         Label label = new Label(text);
         label.setAlignment(Pos.BASELINE_LEFT);
@@ -125,18 +139,6 @@ public class DropdownMenu extends HBox {
 
     public void useSpaceBetweenContentAndIcon() {
         getChildren().setAll(hBox, Spacer.fillHBox(), buttonIcon);
-    }
-
-    private void toggleContextMenu() {
-        if (!contextMenu.isShowing()) {
-            contextMenu.setAnchorLocation(getAnchorLocation());
-            Bounds bounds = localToScreen(getBoundsInLocal());
-            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
-            double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
-            contextMenu.show(this, x, y);
-        } else {
-            contextMenu.hide();
-        }
     }
 
     public void addMenuItems(Collection<? extends MenuItem> items) {
@@ -167,6 +169,26 @@ public class DropdownMenu extends HBox {
         }
     }
 
+    protected void toggleContextMenu() {
+        if (!contextMenu.isShowing()) {
+            contextMenu.setAnchorLocation(getAnchorLocation());
+            Bounds bounds = localToScreen(getBoundsInLocal());
+            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
+            double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
+            contextMenu.show(this, x, y);
+        } else {
+            contextMenu.hide();
+        }
+    }
+
+    protected void updateIcon(ImageView newIcon) {
+        if (buttonIcon != newIcon) {
+            getChildren().remove(buttonIcon);
+            buttonIcon = newIcon;
+            getChildren().add(buttonIcon);
+        }
+    }
+
     private void attachListeners() {
         setOnMouseClicked(e -> toggleContextMenu());
         setOnMouseExited(e -> updateIcon(contextMenu.isShowing() ? activeIcon : defaultIcon));
@@ -183,7 +205,7 @@ public class DropdownMenu extends HBox {
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
-            updateIcon(defaultIcon);
+            updateIcon(isHover() ? activeIcon : defaultIcon);
             isMenuShowing.setValue(false);
         });
 
@@ -199,14 +221,6 @@ public class DropdownMenu extends HBox {
             if (item instanceof DropdownMenuItem dropdownMenuItem) {
                 dropdownMenuItem.updateWidth(prefWidth);
             }
-        }
-    }
-
-    private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            getChildren().remove(buttonIcon);
-            buttonIcon = newIcon;
-            getChildren().add(buttonIcon);
         }
     }
 

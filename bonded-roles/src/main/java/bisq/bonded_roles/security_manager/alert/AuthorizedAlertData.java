@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -37,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
 @ToString
@@ -49,7 +51,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_BANNED_ACCOUNT_DATA_LENGTH = 10_000;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -72,7 +74,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    // Added in version 2.1.4
+    // Added in version 2.1.6
     private final Optional<String> bannedAccountData;
 
     public AuthorizedAlertData(String id,
@@ -102,7 +104,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 bannedAccountData);
     }
 
-    public AuthorizedAlertData(int version,
+    private AuthorizedAlertData(int version,
                                 String id,
                                 long date,
                                 AlertType alertType,
@@ -114,7 +116,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                 Optional<AuthorizedBondedRole> bannedRole,
                                 String securityManagerProfileId,
                                 boolean staticPublicKeysProvided,
-                               Optional<String> bannedAccountData) {
+                                Optional<String> bannedAccountData) {
         this.version = version;
         this.id = id;
         this.date = date;
@@ -191,14 +193,14 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 proto.getSecurityManagerProfileId(),
                 proto.getStaticPublicKeysProvided(),
                 proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty()
-                );
+        );
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {
-        if (alertType == AlertType.BAN) {
-            return Optional.empty();
-        } else {
+        if (AlertType.isMessageAlert(alertType)) {
             return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
+        } else {
+            return Optional.empty();
         }
     }
 
@@ -233,6 +235,15 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
+        // Can be removed after I2P is activated
+        if (!AuthorizedData.IS_I2P_ACTIVATED ) {
+            Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid(pubKeyHash)).orElse(false);
+            if(isBannedRoleInvalid){
+                log.warn("AuthorizedAlertData considered invalid as bannedRole is invalid.\n" +
+                        "bannedRole={}", bannedRole);
+                return true;
+            }
+        }
         return message.orElse("").length() > MAX_MESSAGE_LENGTH;
     }
 }

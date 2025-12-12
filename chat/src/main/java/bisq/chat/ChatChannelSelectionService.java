@@ -17,28 +17,32 @@
 
 package bisq.chat;
 
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public abstract class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
+public abstract class ChatChannelSelectionService extends RateLimitedPersistenceClient<ChatChannelSelectionStore> implements Service {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
                                        ChatChannelDomain chatChannelDomain) {
-        String prefix = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
+        String prefix = StringUtils.capitalize(
+                StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase(Locale.ROOT), Locale.ROOT),
+                Locale.ROOT);
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
                 prefix + "ChannelSelectionStore",
@@ -53,15 +57,7 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
                 .orElse(null));
     }
 
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void selectChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 

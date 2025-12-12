@@ -23,7 +23,11 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.security.*;
+import bisq.security.AesGcm;
+import bisq.security.AesSecretKey;
+import bisq.security.EncryptedData;
+import bisq.security.ScryptKeyDeriver;
+import bisq.security.ScryptParameters;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -37,13 +41,14 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
-public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
+final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
     // For plain text those data are set. If encryption is used the protobuf lists are not filled.
     private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities = new ObservableSet<>();
@@ -155,7 +160,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     @Override
     public UserIdentityStore getClone() {
         return new UserIdentityStore(getSelectedUserIdentityId(),
-                new HashSet<>(userIdentities),
+                Set.copyOf(userIdentities),
                 encryptedData,
                 scryptParameters,
                 aesSecretKey);
@@ -214,7 +219,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     CompletableFuture<EncryptedData> encrypt() {
@@ -225,7 +230,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             EncryptedData encryptedData = encryptPlainTextProto(getPlainTextBuilder().build());
             log.info("encrypt took {} ms", System.currentTimeMillis() - ts);
             return encryptedData;
-        }).whenComplete((encrypted, throwable) -> {
+        }, commonForkJoinPool()).whenComplete((encrypted, throwable) -> {
             if (throwable == null && encrypted != null) {
                 this.encryptedData = Optional.of(encrypted);
             }
@@ -248,7 +253,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             } catch (GeneralSecurityException | IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     CompletableFuture<Void> removeKey(CharSequence password) {
@@ -269,7 +274,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, commonForkJoinPool());
     }
 
     void clearEncryptedData() {

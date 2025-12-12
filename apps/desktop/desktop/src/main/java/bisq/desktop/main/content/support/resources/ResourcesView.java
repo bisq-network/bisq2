@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.support.resources;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.DirectoryPathValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -34,9 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ResourcesView extends View<VBox, ResourcesModel, ResourcesController> {
-
-    private static final ValidatorBase DIRECTORY_PATH_VALIDATOR = new DirectoryPathValidator(Res.get("support.resources.backup.location.invalid"));
-
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute,
@@ -57,7 +54,7 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         backupLocation = new MaterialTextField(Res.get("support.resources.backup.location"),
                 Res.get("support.resources.backup.location.prompt"),
                 Res.get("support.resources.backup.location.help"));
-        backupLocation.setValidators(DIRECTORY_PATH_VALIDATOR);
+        backupLocation.setValidators(model.getDirectoryPathValidator());
         setBackupLocationButton = new Button(Res.get("support.resources.backup.setLocationButton"));
         backupButton = new Button(Res.get("support.resources.backup.backupButton"));
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
@@ -70,17 +67,30 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
 
         VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton, openTorLogFileButton);
 
+        Label localVersionHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.localVersion.headline"));
+
+        String versionString = ApplicationVersion.getVersion() != null ?
+                ApplicationVersion.getVersion().getVersionAsString() : Res.get("na");
+        String commitHash = ApplicationVersion.getBuildCommitShortHash() != null ?
+                ApplicationVersion.getBuildCommitShortHash() : Res.get("na");
+        String torVersion = ApplicationVersion.getTorVersionString() != null ?
+                ApplicationVersion.getTorVersionString() : Res.get("na");
+
+        Label details = new Label(Res.get("support.resources.localVersion.details",
+                versionString, commitHash, torVersion));
+        details.getStyleClass().add("user-content-note");
+        VBox localVersionBox = new VBox(5, details);
 
         Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.resources.headline"));
-        webpage = new Hyperlink(Res.get("support.resources.resources.webpage"));
-        dao = new Hyperlink(Res.get("support.resources.resources.dao"));
-        sourceCode = new Hyperlink(Res.get("support.resources.resources.sourceCode"));
-        community = new Hyperlink(Res.get("support.resources.resources.community"));
-        contribute = new Hyperlink(Res.get("support.resources.resources.contribute"));
+        webpage = new BisqHyperlink(Res.get("support.resources.resources.webpage"), "https://bisq.network/");
+        dao = new BisqHyperlink(Res.get("support.resources.resources.dao"), "https://bisq.network/dao");
+        sourceCode = new BisqHyperlink(Res.get("support.resources.resources.sourceCode"), "https://github.com/bisq-network/bisq2");
+        community = new BisqHyperlink(Res.get("support.resources.resources.community"), "https://matrix.to/#/%23bisq:bitcoin.kyoto");
+        contribute = new BisqHyperlink(Res.get("support.resources.resources.contribute"), "https://bisq.wiki/Contributor_checklist");
 
         Label legalHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.legal.headline"));
         tac = new Hyperlink(Res.get("support.resources.legal.tac"));
-        license = new Hyperlink(Res.get("support.resources.legal.license"));
+        license = new BisqHyperlink(Res.get("support.resources.legal.license"), "https://github.com/bisq-network/bisq2/blob/main/LICENSE");
         VBox legalBox = new VBox(5, tac, license);
 
         VBox resourcesBox = new VBox(5, webpage, dao, sourceCode, community, contribute);
@@ -91,11 +101,13 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         VBox.setMargin(guidesBox, value);
         VBox.setMargin(legalBox, value);
         VBox.setMargin(resourcesBox, value);
+        VBox.setMargin(localVersionBox, value);
         VBox contentBox = new VBox(50);
         contentBox.getChildren().addAll(
                 guidesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), guidesBox,
                 localDataHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), localDataBox,
                 backupHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), backupBox,
+                localVersionHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), localVersionBox,
                 resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), resourcesBox,
                 legalHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), legalBox
         );

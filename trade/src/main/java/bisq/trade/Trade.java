@@ -26,11 +26,13 @@ import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,7 +43,15 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
     public static String createId(String offerId, String takerPubKeyHash) {
-        String combined = offerId + takerPubKeyHash;
+        return createId(offerId, takerPubKeyHash, Optional.empty());
+    }
+
+    public static String createId(String offerId, String takerPubKeyHash, long takeOfferDate) {
+        return createId(offerId, takerPubKeyHash, Optional.of(takeOfferDate));
+    }
+
+    public static String createId(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
+        String combined = offerId + takerPubKeyHash + takeOfferDate.map(String::valueOf).orElse("");
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
 
@@ -64,11 +74,15 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final C contract;
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<String> errorStackTrace = new Observable<>();
+    private final Observable<TradeProtocolFailure> tradeProtocolFailure = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+    private final Observable<TradeProtocolFailure> peersTradeProtocolFailure = new Observable<>();
 
     // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
+
+    private final Observable<TradeLifecycleState> lifecycleState = new Observable<>();
 
     public Trade(C contract,
                  State state,
@@ -77,14 +91,16 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  Identity myIdentity,
                  T offer,
                  P taker,
-                 P maker) {
+                 P maker,
+                 TradeLifecycleState lifecycleState) {
         this(contract,
                 state,
-                createId(offer.getId(), taker.getNetworkId().getId()),
+                createId(offer.getId(), taker.getNetworkId().getId(), contract.getTakeOfferDate()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 taker,
-                maker);
+                maker,
+                lifecycleState);
     }
 
     protected Trade(C contract,
@@ -93,7 +109,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     TradeRole tradeRole,
                     Identity myIdentity,
                     P taker,
-                    P maker) {
+                    P maker,
+                    TradeLifecycleState lifecycleState) {
         super(state);
 
         this.contract = contract;
@@ -102,6 +119,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.myIdentity = myIdentity;
         this.taker = taker;
         this.maker = maker;
+        this.setLifecycleState(lifecycleState);
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
@@ -112,18 +130,22 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setMyIdentity(myIdentity.toProto(serializeForHash))
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
-                .setState(getState().name());
+                .setState(getState().name())
+                .setLifecycleState(getLifecycleState().toProtoEnum());
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
+        Optional.ofNullable(getTradeProtocolFailure()).ifPresent(e -> builder.setTradeProtocolFailure(e.toProtoEnum()));
+        Optional.ofNullable(getPeersTradeProtocolFailure()).ifPresent(e -> builder.setPeersTradeProtocolFailure(e.toProtoEnum()));
         return builder;
     }
 
-    public void setErrorMessage(String errorMessage) {
+    protected void setErrorMessage(String errorMessage) {
         this.errorMessage.set(errorMessage);
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessage.get();
     }
@@ -132,11 +154,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorMessage;
     }
 
-
-    public void setErrorStackTrace(String peersErrorStacktrace) {
+    protected void setErrorStackTrace(String peersErrorStacktrace) {
         this.errorStackTrace.set(peersErrorStacktrace);
     }
 
+    @Nullable
     public String getErrorStackTrace() {
         return errorStackTrace.get();
     }
@@ -145,11 +167,34 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorStackTrace;
     }
 
-
-    public void setPeersErrorMessage(String errorMessage) {
-        this.peersErrorMessage.set(errorMessage);
+    protected void setTradeProtocolFailure(TradeProtocolFailure tradeProtocolFailure) {
+        this.tradeProtocolFailure.set(tradeProtocolFailure);
     }
 
+    @Nullable
+    public TradeProtocolFailure getTradeProtocolFailure() {
+        return tradeProtocolFailure.get();
+    }
+
+    public ReadOnlyObservable<TradeProtocolFailure> tradeProtocolFailureObservable() {
+        return tradeProtocolFailure;
+    }
+
+
+    public void setErrorData(TradeProtocolFailure tradeProtocolFailure,
+                             String errorStackTrace,
+                             String errorMessage) {
+        this.tradeProtocolFailure.set(tradeProtocolFailure);
+        this.errorStackTrace.set(errorStackTrace);
+        this.errorMessage.set(errorMessage);
+    }
+
+
+    protected void setPeersErrorMessage(String peersErrorMessage) {
+        this.peersErrorMessage.set(peersErrorMessage);
+    }
+
+    @Nullable
     public String getPeersErrorMessage() {
         return peersErrorMessage.get();
     }
@@ -158,16 +203,39 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return peersErrorMessage;
     }
 
-    public void setPeersErrorStackTrace(String peersErrorStackTrace) {
+    protected void setPeersErrorStackTrace(String peersErrorStackTrace) {
         this.peersErrorStackTrace.set(peersErrorStackTrace);
     }
 
+    @Nullable
     public String getPeersErrorStackTrace() {
         return peersErrorStackTrace.get();
     }
 
     public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
         return peersErrorStackTrace;
+    }
+
+    protected void setPeersTradeProtocolFailure(TradeProtocolFailure peersTradeProtocolFailure) {
+        this.peersTradeProtocolFailure.set(peersTradeProtocolFailure);
+    }
+
+    @Nullable
+    public TradeProtocolFailure getPeersTradeProtocolFailure() {
+        return peersTradeProtocolFailure.get();
+    }
+
+    public ReadOnlyObservable<TradeProtocolFailure> peersTradeProtocolFailureObservable() {
+        return peersTradeProtocolFailure;
+    }
+
+
+    public void setPeersErrorData(TradeProtocolFailure peersTradeProtocolFailure,
+                                  String peersErrorStackTrace,
+                                  String peersErrorMessage) {
+        this.peersTradeProtocolFailure.set(peersTradeProtocolFailure);
+        this.peersErrorStackTrace.set(peersErrorStackTrace);
+        this.peersErrorMessage.set(peersErrorMessage);
     }
 
 
@@ -179,6 +247,17 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return this.protocolVersion.get();
     }
 
+    public void setLifecycleState(TradeLifecycleState lifecycleState) {
+        this.lifecycleState.set(lifecycleState);
+    }
+
+    public TradeLifecycleState getLifecycleState() {
+        return this.lifecycleState.get();
+    }
+
+    public ReadOnlyObservable<TradeLifecycleState> lifecycleState() {
+        return lifecycleState;
+    }
 
     /* --------------------------------------------------------------------- */
     // Delegates

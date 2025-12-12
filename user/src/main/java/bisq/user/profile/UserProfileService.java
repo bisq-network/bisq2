@@ -19,53 +19,83 @@ package bisq.user.profile;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import bisq.user.contact_list.ContactListService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener, Service {
+public class UserProfileService extends RateLimitedPersistenceClient<UserProfileStore> implements DataService.Listener, Service {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
+    @Getter
+    private static UserProfileService instance;
 
     @Getter
     private final UserProfileStore persistableStore = new UserProfileStore();
     @Getter
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
+    private final ContactListService contactListService;
     @Getter
-    private final Observable<Integer> numUserProfiles = new Observable<>();
+    private final Observable<Integer> numUserProfiles = new Observable<>(0);
     private final HashCashProofOfWorkService hashCashProofOfWorkService;
+    private final ObservableHashMap<String, UserProfile> userProfileById = new ObservableHashMap<>();
+    @Getter
+    private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
 
     public UserProfileService(PersistenceService persistenceService,
                               SecurityService securityService,
-                              NetworkService networkService) {
+                              NetworkService networkService,
+                              ContactListService contactListService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
         this.networkService = networkService;
-        UserNameLookup.setUserProfileService(this);
+        this.contactListService = contactListService;
+
+        instance = this;
     }
 
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
+        networkService.getDataService().ifPresent(dataService -> {
+            dataService.getAuthenticatedData().forEach(authenticatedData -> {
+                if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+                    processUserProfileAddedOrRefreshed(userProfile, true);
+                }
+            });
+            persist();
+        });
+
+        numUserProfiles.set(userProfileById.size());
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
@@ -103,7 +133,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     /* --------------------------------------------------------------------- */
 
     public Optional<UserProfile> findUserProfile(String id) {
-        return Optional.ofNullable(getUserProfileById().get(id));
+        return Optional.ofNullable(userProfileById.get(id));
     }
 
     // We update the publishDate in our managed userProfiles. Only if the userProfile is not found we return
@@ -113,7 +143,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public List<UserProfile> getUserProfiles() {
-        return new ArrayList<>(getUserProfileById().values());
+        return new ArrayList<>(userProfileById.values());
     }
 
     public boolean isChatUserIgnored(String profileId) {
@@ -127,55 +157,85 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public void ignoreUserProfile(UserProfile userProfile) {
-        getIgnoredUserProfileIds().add(userProfile.getId());
+        persistableStore.addIgnoredUserProfileIds(userProfile.getId());
         persist();
     }
 
     public void undoIgnoreUserProfile(UserProfile userProfile) {
-        getIgnoredUserProfileIds().remove(userProfile.getId());
+        persistableStore.removeIgnoredUserProfileIds(userProfile.getId());
         persist();
     }
 
-    public ObservableSet<String> getIgnoredUserProfileIds() {
+    public ReadOnlyObservableSet<String> getIgnoredUserProfileIds() {
         return persistableStore.getIgnoredUserProfileIds();
     }
 
-    public String getUserName(String nym, String nickName) {
-        int numNymsForNickName = Optional.ofNullable(getNymsByNickName().get(nickName))
-                .map(Set::size)
-                .orElse(0);
-        if (numNymsForNickName <= 1) {
-            return nickName;
-        } else {
+    public String evaluateUserName(String nickName, String nym) {
+        if (shouldAddNymToNickName(nickName, nym, getNymsByNickName(), contactListService.getNymsByNickName())) {
             return nickName + SEPARATOR_START + nym + SEPARATOR_END;
+        } else {
+            return nickName;
         }
     }
 
+    @VisibleForTesting
+    static boolean shouldAddNymToNickName(String nickName,
+                                          String nym,
+                                          Map<String, Set<String>> nymsByNickNameFromNetwork,
+                                          Map<String, Set<String>> nymsByNickNameFromContactList) {
+        Optional<Set<String>> nymsForNickNameFromNetwork = Optional.ofNullable(nymsByNickNameFromNetwork.get(nickName));
+        long numNymsWithSameNicknameInNetwork = nymsForNickNameFromNetwork.map(Set::size).orElse(0);
+        int numNickNamesWithDifferentNymInContactList = Optional.ofNullable(nymsByNickNameFromContactList.get(nickName))
+                .filter(set -> !set.contains(nym))
+                .map(Set::size)
+                .orElse(0);
+        Optional<String> singleDifferentNymFromNetwork = nymsForNickNameFromNetwork
+                .filter(set -> set.size() == 1)
+                .map(set -> set.iterator().next())
+                .filter(e -> !e.equals(nym));
+        return numNymsWithSameNicknameInNetwork > 1 ||
+                numNickNamesWithDifferentNymInContactList > 0 ||
+                singleDifferentNymFromNetwork.isPresent();
+    }
+
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
-        Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
+        processUserProfileAddedOrRefreshed(userProfile, false);
+    }
+
+    private void processUserProfileAddedOrRefreshed(UserProfile userProfile, boolean fromBatchProcessing) {
+        String userProfileId = userProfile.getId();
+        Optional<UserProfile> existingUserProfile = findUserProfile(userProfileId);
         // ApplicationVersion is excluded in equals check, so we check manually for it.
         if (existingUserProfile.isEmpty() ||
                 !existingUserProfile.get().equals(userProfile) ||
                 !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
             if (verifyUserProfile(userProfile)) {
-                ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
-                    userProfileById.put(userProfile.getId(), userProfile);
+                    userProfileById.put(userProfileId, userProfile);
                 }
                 numUserProfiles.set(userProfileById.size());
-                persist();
+                if (!fromBatchProcessing) {
+                    // At initial batch processing we call persist at the end, to avoid many multiple persist calls
+                    persist();
+                }
+            } else {
+                log.warn("Invalid user profile {}", userProfile);
             }
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
                 existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
-                persist();
+                if (!fromBatchProcessing) {
+                    // At initial batch processing we call persist at the end, to avoid many multiple persist calls
+                    persist();
+                }
+            } else {
+                log.debug("Ignore added userProfile as we have it already and nothing has changed");
             }
         }
     }
 
     private void processUserProfileRemoved(UserProfile userProfile) {
-        ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
         synchronized (persistableStore) {
             removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
             userProfileById.remove(userProfile.getId());
@@ -198,14 +258,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return true;
     }
 
-    private Map<String, Set<String>> getNymsByNickName() {
-        return persistableStore.getNymsByNickName();
-    }
-
-    public ObservableHashMap<String, UserProfile> getUserProfileById() {
-        synchronized (persistableStore) {
-            return persistableStore.getUserProfileById();
-        }
+    public ReadOnlyObservableMap<String, UserProfile> getUserProfileById() {
+        return userProfileById;
     }
 
     private void addNymToNickNameHashMap(String nym, String nickName) {
@@ -215,7 +269,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.add(nym);
-        persist();
     }
 
     private void removeNymFromNickNameHashMap(String nym, String nickName) {
@@ -225,6 +278,5 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.remove(nym);
-        persist();
     }
 }

@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class MaterialTextArea extends MaterialTextField {
-    private static final double DEFAULT_HEIGHT = 128;
+    private static final double DEFAULT_HEIGHT = 125;
 
     private double height;
 
@@ -62,7 +62,7 @@ public class MaterialTextArea extends MaterialTextField {
 
     @Override
     protected double getFieldLayoutY() {
-        return 18 + 5;
+        return 23; // 18 + 5 = 23;
     }
 
     public void setFixedHeight(double height) {

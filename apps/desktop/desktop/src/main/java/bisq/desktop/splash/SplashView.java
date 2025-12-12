@@ -18,28 +18,37 @@
 package bisq.desktop.splash;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SplashView extends View<VBox, SplashModel, SplashController> {
     public static final int WIDTH = 535;
+
     private final ProgressBar progressBar;
-    private final Label applicationServiceState;
+    private final Label applicationServiceState, duration;
+    private final GridPane detailsGrid;
+    private Button deleteTorButton;
+    private Subscription isSlowStartupPin;
 
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("bisq-content-bg");
 
         ImageView logo = new ImageView();
         logo.setId("logo-splash");
@@ -52,35 +61,76 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         logoAndVersion.setAlignment(Pos.CENTER);
         StackPane.setMargin(version, new Insets(-25, 0, 0, 200));
 
-        applicationServiceState = new Label("");
+        applicationServiceState = new Label();
         applicationServiceState.getStyleClass().add("splash-application-state");
         applicationServiceState.setTextAlignment(TextAlignment.CENTER);
+
+        Label separator = new Label("|");
+        separator.setOpacity(0.75);
+        separator.getStyleClass().add("splash-application-state");
+
+        duration = new Label();
+        duration.getStyleClass().add("splash-application-duration");
+        duration.setMouseTransparent(true);
+        HBox hBox = new HBox(12.5, applicationServiceState, separator, duration);
+        hBox.setAlignment(Pos.CENTER);
 
         progressBar = new ProgressBar();
         progressBar.setMinHeight(3);
         progressBar.setMaxHeight(3);
         progressBar.setMinWidth(WIDTH);
 
+        detailsGrid = new GridPane();
+        detailsGrid.setVgap(5);
+        detailsGrid.setHgap(10);
+        detailsGrid.setAlignment(Pos.TOP_LEFT);
+
         VBox.setMargin(logoAndVersion, new Insets(-52, 0, 83, 0));
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
-        root.getChildren().addAll(logoAndVersion, applicationServiceState, progressBar);
+        root.getChildren().addAll(logoAndVersion, hBox, progressBar, new HBox(Spacer.fillHBox(), detailsGrid, Spacer.fillHBox()));
     }
 
     @Override
     protected void onViewAttached() {
+        for (int i = 0; i < model.getBootstrapElementsPerTransports().size(); i++) {
+            BootstrapElementsPerTransport bootstrapElementsPerTransport = model.getBootstrapElementsPerTransports().get(i);
+            detailsGrid.add(bootstrapElementsPerTransport.getView().getRoot(), 0, i);
+        }
+
         applicationServiceState.textProperty().bind(model.getApplicationServiceState());
+        duration.textProperty().bind(model.getDuration());
         progressBar.progressProperty().bind(model.getProgress());
-        model.getBootstrapStateDisplays().forEach(bootstrapStateDisplay -> {
-            GridPane bootstrapStateDisplayRoot = bootstrapStateDisplay.getView().getRoot();
-            bootstrapStateDisplayRoot.setMaxWidth(WIDTH);
-            VBox.setMargin(bootstrapStateDisplayRoot, new Insets(0, 0, 7.5, 0));
-            root.getChildren().add(bootstrapStateDisplayRoot);
+
+        isSlowStartupPin = EasyBind.subscribe(model.getIsSlowStartup(), isSlowStartup -> {
+            if (isSlowStartup) {
+                Label warning = new Label(Res.get("splash.applicationServiceState.slowStartup.warning", model.getMaxExpectedStartupTime()));
+                warning.setWrapText(true);
+                warning.getStyleClass().addAll("bisq-text-yellow-dim", "normal-text");
+                warning.setAlignment(Pos.CENTER);
+                warning.setTextAlignment(TextAlignment.CENTER);
+
+                deleteTorButton = new Button(Res.get("splash.applicationServiceState.slowStartup.deleteTor"));
+                deleteTorButton.getStyleClass().add("yellow-outlined-button");
+                deleteTorButton.setOnAction(e -> controller.onDeleteTor());
+
+                VBox vBox = new VBox(20, warning, deleteTorButton);
+                vBox.setAlignment(Pos.CENTER);
+                VBox.setMargin(vBox, new Insets(20));
+                root.getChildren().add(2, vBox);
+            }
         });
     }
 
     @Override
     protected void onViewDetached() {
         applicationServiceState.textProperty().unbind();
+        duration.textProperty().unbind();
         progressBar.progressProperty().unbind();
+
+        isSlowStartupPin.unsubscribe();
+
+        if (deleteTorButton != null) {
+            deleteTorButton.setOnAction(null);
+        }
     }
 }

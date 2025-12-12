@@ -22,6 +22,10 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,27 +34,30 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
-    // Once we have persisted the stores we use the secretUid from the persisted data
-    private String secretUid = StringUtils.createUid();
+    // Once we have persisted the stores we use the secretUid from the persisted data if not overridden by jvm data
+    @Getter(AccessLevel.PACKAGE)
+    @Setter(AccessLevel.PACKAGE)
+    private String secretUid;
     private final Map<String, KeyBundle> keyBundleById = new ConcurrentHashMap<>();
 
-    public KeyBundleStore() {
+    KeyBundleStore(Optional<String> keyStoreSecretUid) {
+        this(keyStoreSecretUid.orElseGet(StringUtils::createUid), new HashMap<>());
     }
 
-    private KeyBundleStore(String secretUid,
-                           Map<String, KeyBundle> keyBundleById) {
+    private KeyBundleStore(String secretUid, Map<String, KeyBundle> keyBundleById) {
         this.secretUid = secretUid;
         this.keyBundleById.putAll(keyBundleById);
     }
 
     @Override
     public KeyBundleStore getClone() {
-        return new KeyBundleStore(secretUid, new HashMap<>(keyBundleById));
+        return new KeyBundleStore(secretUid, Map.copyOf(keyBundleById));
     }
 
     @Override
@@ -92,21 +99,23 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
         keyBundleById.putAll(persisted.keyBundleById);
     }
 
-    public Optional<KeyBundle> findKeyBundle(String keyId) {
+    Optional<KeyBundle> findKeyBundle(String keyId) {
         synchronized (keyBundleById) {
             return Optional.ofNullable(keyBundleById.get(keyId));
         }
     }
 
-    public void putKeyBundle(String keyId, KeyBundle keyBundle) {
+    boolean hadEmptyI2PKeyPair() {
+        synchronized (keyBundleById) {
+            return keyBundleById.values().stream().anyMatch(KeyBundle::isHadEmptyI2PKeyPair);
+        }
+    }
+
+    void putKeyBundle(String keyId, KeyBundle keyBundle) {
         synchronized (keyBundleById) {
             if (keyBundleById.put(keyId, keyBundle) != null) {
                 log.warn("We had already an entry for key ID {}", keyId);
             }
         }
-    }
-
-    String getSecretUid() {
-        return secretUid;
     }
 }

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -58,9 +58,6 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
         content.getStyleClass().add("content-box");
 
         StackPane layeredContent = new StackPane(content, amountOverlay, priceOverlay);
-        StackPane.setMargin(amountOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        // For unclear reasons the priceOverlay is not centered
-        StackPane.setMargin(priceOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 70));
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }
@@ -88,8 +85,12 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
             } else {
                 Transitions.removeEffect(content);
                 if (amountOverlay.isVisible()) {
-                    Transitions.fadeOut(amountOverlay, Transitions.DEFAULT_DURATION / 2,
+                    Transitions.fadeOut(amountOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> amountOverlay.setVisible(false));
+                }
+                // Return the focus to the wizard
+                if (root.getParent() != null) {
+                    root.getParent().requestFocus();
                 }
             }
         });
@@ -103,8 +104,12 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
             } else {
                 Transitions.removeEffect(content);
                 if (priceOverlay.isVisible()) {
-                    Transitions.fadeOut(priceOverlay, Transitions.DEFAULT_DURATION / 2,
+                    Transitions.fadeOut(priceOverlay, ManagedDuration.getHalfOfDefaultDurationMillis(),
                             () -> priceOverlay.setVisible(false));
+                }
+                // Return the focus to the wizard
+                if (root.getParent() != null) {
+                    root.getParent().requestFocus();
                 }
             }
         });

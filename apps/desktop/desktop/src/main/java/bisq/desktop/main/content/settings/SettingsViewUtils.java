@@ -24,6 +24,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class SettingsViewUtils {
+    public static final double TEXT_FIELD_WIDTH = 500;
+
     public static Label getHeadline(String text) {
         Label headline = new Label(text);
         headline.getStyleClass().add("large-thin-headline");

@@ -27,4 +27,9 @@ public class BooleanFormatter {
     public static String toYesNo(boolean value) {
         return value ? Res.get("confirmation.yes") : Res.get("confirmation.no");
     }
+    public static String toEnabledDisabled(boolean value) {
+        return value ?  Res.get("state.enabled") : Res.get("state.disabled");
+    }
+
+
 }

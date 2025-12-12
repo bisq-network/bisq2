@@ -27,7 +27,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +36,11 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
+// Data size about 200-250 bytes
 @Slf4j
-@EqualsAndHashCode
 @Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
     private static final int VERSION = 1;
@@ -60,21 +60,9 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 created);
     }
 
-    public static RemoveMailboxRequest cloneWithVersion0(RemoveMailboxRequest request) {
-        return new RemoveMailboxRequest(0,
-                request.getMetaData(),
-                request.getHash(),
-                request.getReceiverPublicKeyBytes(),
-                request.getReceiverPublicKey(),
-                request.getSignature(),
-                request.getCreated());
-    }
-
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
 
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
 
@@ -223,5 +211,28 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 ", created=" + new Date(created) + " (" + created + ")" +
                 ", receiverPublicKey=" + receiverPublicKey +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RemoveMailboxRequest that)) return false;
+
+        return created == that.created &&
+                Arrays.equals(hash, that.hash) &&
+                Arrays.equals(receiverPublicKeyBytes, that.receiverPublicKeyBytes) &&
+                Arrays.equals(signature, that.signature) &&
+                Objects.equals(receiverPublicKey, that.receiverPublicKey) &&
+                Objects.equals(metaDataFromDistributedData, that.metaDataFromDistributedData);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(hash);
+        result = 31 * result + Arrays.hashCode(receiverPublicKeyBytes);
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Long.hashCode(created);
+        result = 31 * result + Objects.hashCode(receiverPublicKey);
+        result = 31 * result + Objects.hashCode(metaDataFromDistributedData);
+        return result;
     }
 }

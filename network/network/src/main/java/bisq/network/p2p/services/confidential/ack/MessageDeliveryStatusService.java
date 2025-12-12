@@ -27,16 +27,17 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -50,14 +51,16 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.Listener {
+public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<MessageDeliveryStatusStore> implements ConfidentialMessageService.Listener {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
-    private final Set<String> ackedMessageIds = new HashSet<>();
+    private final Set<String> ackedMessageIds = ConcurrentHashMap.newKeySet();
+    @Nullable
+    private Scheduler checkPendingScheduler;
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
                                         KeyBundleService keyBundleService,
@@ -83,7 +86,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
-        Scheduler.run(this::checkPending)
+        checkPendingScheduler = Scheduler.run(this::checkPending)
                 .host(this)
                 .runnableName("checkPending")
                 .after(1000);
@@ -95,7 +98,12 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void shutdown() {
+        if (checkPendingScheduler != null) {
+            checkPendingScheduler.stop();
+            checkPendingScheduler = null;
+        }
         networkService.removeConfidentialMessageListener(this);
+        ackedMessageIds.clear();
     }
 
 
@@ -117,11 +125,15 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     // API
     /* --------------------------------------------------------------------- */
 
-    public void applyMessageDeliveryStatus(String messageId, MessageDeliveryStatus status) {
+    public void applyMessageDeliveryStatus(String ackRequestingMessageId, MessageDeliveryStatus status) {
+        if (ackRequestingMessageId == null) {
+            log.warn("ackRequestingMessageId must not be null");
+            return;
+        }
         Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = getMessageDeliveryStatusByMessageId();
         synchronized (messageDeliveryStatusByMessageId) {
-            if (messageDeliveryStatusByMessageId.containsKey(messageId)) {
-                Observable<MessageDeliveryStatus> observableStatus = messageDeliveryStatusByMessageId.get(messageId);
+            if (messageDeliveryStatusByMessageId.containsKey(ackRequestingMessageId)) {
+                Observable<MessageDeliveryStatus> observableStatus = messageDeliveryStatusByMessageId.get(ackRequestingMessageId);
                 // If we have already a received state we return.
                 // This ensures that a later received failed state from one transport does not overwrite the received state from
                 // another transport.
@@ -130,13 +142,13 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                 }
                 observableStatus.set(status);
             } else {
-                persistableStore.getCreationDateByMessageId().putIfAbsent(messageId, System.currentTimeMillis());
-                messageDeliveryStatusByMessageId.put(messageId, new Observable<>(status));
+                persistableStore.getCreationDateByMessageId().putIfAbsent(ackRequestingMessageId, System.currentTimeMillis());
+                messageDeliveryStatusByMessageId.put(ackRequestingMessageId, new Observable<>(status));
             }
-            log.info("Persist MessageDeliveryStatus {} with message ID {}",
-                    messageDeliveryStatusByMessageId.get(messageId).get(), messageId);
-            persist();
         }
+        log.info("Persist MessageDeliveryStatus {} with ackRequestingMessageId {}",
+                messageDeliveryStatusByMessageId.get(ackRequestingMessageId).get(), ackRequestingMessageId);
+        persist();
     }
 
     public ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
@@ -179,31 +191,39 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     private void processAckRequestingMessage(AckRequestingMessage message) {
-        if (ackedMessageIds.contains(message.getId())) {
+        if (!message.allFieldsValid()) {
+            return;
+        }
+
+        if (ackedMessageIds.contains(message.getAckRequestingMessageId())) {
             log.warn("We received already that AckRequestingMessage and sent the AckMessage");
             return;
         }
 
-        AckMessage ackMessage = new AckMessage(message.getId());
+        AckMessage ackMessage = new AckMessage(message.getAckRequestingMessageId());
         NetworkId networkId = message.getReceiver();
         keyBundleService.findKeyPair(networkId.getPubKey().getKeyId())
                 .ifPresent(keyPair -> {
-                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
+                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getAckRequestingMessageId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
                     networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
-                    ackedMessageIds.add(message.getId());
+                    ackedMessageIds.add(message.getAckRequestingMessageId());
                 });
     }
 
     private void checkPending() {
-        Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItems = getMessageDeliveryStatusByMessageId().entrySet().stream()
-                .filter(e -> e.getValue().get() == MessageDeliveryStatus.CONNECTING ||
-                        e.getValue().get() == MessageDeliveryStatus.SENT ||
-                        e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
-                .collect(Collectors.toSet());
-        if (!pendingItems.isEmpty()) {
-            log.warn("We have pending messages which have not been successfully sent. pendingItems={}", pendingItems);
-            pendingItems.forEach(e -> getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));
+        Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItemsSnapshot;
+        var map = getMessageDeliveryStatusByMessageId();
+        synchronized (map) {
+            pendingItemsSnapshot = map.entrySet().stream()
+                    .filter(e -> e.getValue().get() == MessageDeliveryStatus.CONNECTING
+                            || e.getValue().get() == MessageDeliveryStatus.SENT
+                            || e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
+                    .collect(Collectors.toSet());
+        }
+        if (!pendingItemsSnapshot.isEmpty()) {
+            log.warn("We have pending messages which have not been successfully sent. pendingItems={}", pendingItemsSnapshot);
+            pendingItemsSnapshot.forEach(e -> map.get(e.getKey()).set(MessageDeliveryStatus.FAILED));
             persist();
         }
     }

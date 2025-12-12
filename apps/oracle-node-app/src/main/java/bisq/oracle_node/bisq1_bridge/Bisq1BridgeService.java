@@ -17,529 +17,217 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
-import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
-import bisq.common.application.DevMode;
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
-import bisq.common.platform.MemoryReportService;
-import bisq.common.threading.ThreadName;
-import bisq.common.timer.Scheduler;
-import bisq.common.util.CompletableFutureUtils;
+import bisq.common.threading.ExecutorFactory;
 import bisq.identity.Identity;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
-import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
-import bisq.persistence.DbSubDirectory;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
+import bisq.oracle_node.bisq1_bridge.grpc.services.BsqBlockGrpcService;
+import bisq.oracle_node.bisq1_bridge.grpc.services.BurningmanGrpcService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
-import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyGeneration;
-import bisq.user.reputation.data.AuthorizedAccountAgeData;
-import bisq.user.reputation.data.AuthorizedBondedReputationData;
-import bisq.user.reputation.data.AuthorizedProofOfBurnData;
-import bisq.user.reputation.data.AuthorizedSignedWitnessData;
-import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
-import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener,
-        AuthorizedBondedRolesService.Listener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService implements Service, Node.Listener {
     @Getter
     public static class Config {
-        private final com.typesafe.config.Config httpService;
+        private final int grpcServicePort;
+        private final int initialDelayInSeconds;
+        private final int throttleDelayInSeconds;
+        private final int numConnectionsForRepublish;
 
-        public Config(com.typesafe.config.Config httpService) {
-            this.httpService = httpService;
+        public Config(int grpcServicePort,
+                      int initialDelayInSeconds,
+                      int throttleDelayInSeconds,
+                      int numConnectionsForRepublish) {
+            this.grpcServicePort = grpcServicePort;
+            this.initialDelayInSeconds = initialDelayInSeconds;
+            this.throttleDelayInSeconds = throttleDelayInSeconds;
+            this.numConnectionsForRepublish = numConnectionsForRepublish;
         }
 
         public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
-            return new Bisq1BridgeService.Config(config.getConfig("httpService"));
+            com.typesafe.config.Config grpcService = config.getConfig("grpcService");
+            return new Bisq1BridgeService.Config(grpcService.getInt("port"),
+                    config.getInt("initialDelayInSeconds"),
+                    config.getInt("throttleDelayInSeconds"),
+                    config.getInt("numConnectionsForRepublish"));
         }
     }
 
-    @Getter
-    private final Bisq1BridgeStore persistableStore = new Bisq1BridgeStore();
-    @Getter
-    private final Persistence<Bisq1BridgeStore> persistence;
+    private final GrpcClient grpcClient;
+    private final Bisq1BridgeService.Config config;
+    private final IdentityService identityService;
     private final NetworkService networkService;
-    private final Bisq1BridgeHttpService httpService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final MemoryReportService memoryReportService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
-    private final boolean ignoreSecurityManager;
-    private final boolean staticPublicKeysProvided;
-
-    @Setter
-    private AuthorizedOracleNode authorizedOracleNode;
-    @Setter
-    private AuthorizedOracleNode authorizedOracleNodeOldVersion;
-    @Setter
-    private Identity identity;
-
+    private final BsqBlockGrpcService bsqBlockGrpcService;
+    private final BurningmanGrpcService burningmanGrpcService;
+    private final AuthorizedOracleNode myAuthorizedOracleNode;
+    private final Bisq1BridgeRequestService bisq1BridgeRequestService;
+    private final BlockingQueue<AuthorizedDistributedData> queue = new LinkedBlockingQueue<>(10000);
     @Nullable
-    private Scheduler periodicRequestDoaDataScheduler, initialDelayScheduler;
+    private KeyPair keyPair;
+    @Nullable
+    private volatile ScheduledExecutorService executor;
+    private final Object executorLock = new Object();
 
     public Bisq1BridgeService(Config config,
-                              NetworkService networkService,
                               PersistenceService persistenceService,
+                              IdentityService identityService,
+                              NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
-                              MemoryReportService memoryReportService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey,
-                              boolean ignoreSecurityManager,
-                              boolean staticPublicKeysProvided) {
+                              boolean staticPublicKeysProvided,
+                              AuthorizedOracleNode myAuthorizedOracleNode) {
+
+        grpcClient = new GrpcClient(config.getGrpcServicePort());
+        this.config = config;
+        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.myAuthorizedOracleNode = myAuthorizedOracleNode;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
-        this.ignoreSecurityManager = ignoreSecurityManager;
-        this.staticPublicKeysProvided = staticPublicKeysProvided;
-        this.memoryReportService = memoryReportService;
 
-        Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
-        httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
+        bsqBlockGrpcService = new BsqBlockGrpcService(staticPublicKeysProvided,
+                grpcClient,
+                queue);
 
-        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided,
+                grpcClient,
+                queue);
+
+        bisq1BridgeRequestService = new Bisq1BridgeRequestService(persistenceService,
+                identityService,
+                networkService,
+                authorizedBondedRolesService,
+                authorizedPrivateKey,
+                authorizedPublicKey,
+                staticPublicKeysProvided,
+                myAuthorizedOracleNode,
+                grpcClient);
     }
-
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return httpService.initialize()
-                .whenComplete((result, throwable) -> {
-                    networkService.getConfidentialMessageServices().stream()
-                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                            .forEach(this::onMessage);
-                    networkService.addConfidentialMessageListener(this);
-                    authorizedBondedRolesService.addListener(this);
 
-                    int delay = DevMode.isDevMode() ? 1 : 60;
-                    initialDelayScheduler = Scheduler.run(this::initialRepublish)
-                            .host(this)
-                            .runnableName("initialRepublish")
-                            .after(delay, TimeUnit.SECONDS);
-                });
+        networkService.addDefaultNodeListener(this);
+
+        return grpcClient.initialize()
+                .thenCompose(result -> bisq1BridgeRequestService.initialize())
+                .thenCompose(result -> bsqBlockGrpcService.initialize());
+        // v.2.1.7 does not know AuthorizedBurningmanListByBlock thus we do not
+        // .thenCompose(result -> burningmanGrpcService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (periodicRequestDoaDataScheduler != null) {
-            periodicRequestDoaDataScheduler.stop();
-        }
-        if (initialDelayScheduler != null) {
-            initialDelayScheduler.stop();
-        }
-        networkService.removeConfidentialMessageListener(this);
-        authorizedBondedRolesService.removeListener(this);
-        return httpService.shutdown();
-    }
 
+        networkService.removeDefaultNodeListener(this);
 
-    /* --------------------------------------------------------------------- */
-    // ConfidentialMessageService.Listener
-    /* --------------------------------------------------------------------- */
+        queue.clear();
 
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest) {
-            processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest) {
-            processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) envelopePayloadMessage);
+        ScheduledExecutorService toShutdown;
+        synchronized (executorLock) {
+            toShutdown = executor;
+            executor = null;
         }
+        if (toShutdown != null) {
+            ExecutorFactory.shutdownAndAwaitTermination(toShutdown, 100);
+        }
+
+        // v.2.1.7 does not know AuthorizedBurningmanListByBlock thus we do not use burningmanGrpcService yet
+        //burningmanGrpcService.shutdown()
+        return bsqBlockGrpcService.shutdown()
+                .thenCompose(result -> bisq1BridgeRequestService.shutdown())
+                .thenCompose(result -> grpcClient.shutdown());
     }
 
     @Override
-    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
-        if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest) {
-            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) envelopePayloadMessage, senderPublicKey);
-        }
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // AuthorizedBondedRolesService.Listener
-    /* --------------------------------------------------------------------- */
-
     @Override
-    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedAlertData authorizedAlertData) {
-            if (authorizedAlertData.getAlertType() == AlertType.BAN &&
-                    isAuthorized(authorizedData) &&
-                    authorizedAlertData.getBannedRole().isPresent()) {
-                BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedRole().get().getBondedRoleType();
-                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getBondedRoleType() == bannedBondedRoleType)
-                        .forEach(bannedRole -> {
-                            if (ignoreSecurityManager) {
-                                log.warn("We received an alert message from the security manager to ban a bonded role but " +
-                                                "you have set ignoreSecurityManager to true, so we do not remove the role data from the network.\n" +
-                                                "bannedRole={}\nauthorizedData sent by security manager={}",
-                                        bannedRole, authorizedData);
-                            } else {
-                                //todo (Critical)
-                                //removeAuthorizedData(...);
-                            }
-                        });
+    public void onConnection(Connection connection) {
+        // We ensure with the null check against executor that we only start the ScheduledExecutorService once.
+        if (executor != null) return;
+
+        synchronized (executorLock) {
+            if (executor != null) return;
+            int numAllConnections = networkService.getNumConnectionsOnAllTransports();
+            if (numAllConnections >= config.getNumConnectionsForRepublish()) {
+                networkService.removeDefaultNodeListener(this);
+
+                ScheduledExecutorService tmp = ExecutorFactory.newSingleThreadScheduledExecutor("Bisq1BridgePublisher");
+                tmp.scheduleWithFixedDelay(() -> {
+                    AuthorizedDistributedData data = queue.poll();
+                    if (data != null) {
+                        publishAuthorizedData(data);
+                    }
+                }, config.getInitialDelayInSeconds(), config.getThrottleDelayInSeconds(), TimeUnit.SECONDS);
+                executor = tmp;
+
+                republishAuthorizedBondedRoles();
             }
         }
     }
 
-    /* --------------------------------------------------------------------- */
-    // Private
-    /* --------------------------------------------------------------------- */
-
-    private void initialRepublish() {
-        log.info("Start republishAuthorizedBondedRoles");
-        republishAuthorizedBondedRoles();
-        memoryReportService.logReport();
-        log.info("Completed republishAuthorizedBondedRoles");
-        log.info("Start request and publish DaoData");
-        requestDaoData().join(); // takes about 6 minutes for 500 items
-        memoryReportService.logReport();
-        log.info("Completed request and publish DaoData");
-        periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
-                .host(this)
-                .runnableName("periodicRepublish")
-                .periodically(5, TimeUnit.SECONDS);
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
-    private void periodicRepublish() {
-        log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
-        requestDaoData().join();
-        memoryReportService.logReport();
-        log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
-    }
-
-    private boolean isAuthorized(AuthorizedData authorizedData) {
-        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
-    }
-
-    private CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
-        log.info("requestProofOfBurnTxs");
-        return httpService.requestProofOfBurnTxs();
-    }
-
-    private CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
-        log.info("requestBondedReputations");
-        return httpService.requestBondedReputations();
-    }
-
-    private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
-        return CompletableFuture.supplyAsync(() -> {
-            ThreadName.set(this, "publishProofOfBurnDtoSet");
-            // After v2.1.0 we can remove support for version 0 data
-            log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
-            Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
-                    .map(dto -> new AuthorizedProofOfBurnData(
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(stream
-                            .map(this::publishAuthorizedData)
-                            .collect(Collectors.toList()))
-                    .thenApply(results -> !results.contains(false))
-                    .join();
-        }, NetworkService.NETWORK_IO_POOL);
-    }
-
-    private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-        return CompletableFuture.supplyAsync(() -> {
-            ThreadName.set(this, "publishBondedReputationDtoSet");
-            // After v2.1.0 we can remove support for version 0 data
-            log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
-            Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
-                    .map(dto -> new AuthorizedBondedReputationData(
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getLockTime(),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(stream
-                            .map(this::publishAuthorizedData)
-                            .collect(Collectors.toList()))
-                    .thenApply(results -> !results.contains(false))
-                    .join();
-        }, NetworkService.NETWORK_IO_POOL);
-    }
-
-    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return networkService.publishAuthorizedData(data,
-                        identity.getNetworkIdWithKeyPair().getKeyPair(),
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
-                .thenApply(broadCastDataResult -> {
-                    int numSuccess = broadCastDataResult.stream()
-                            .mapToInt(e -> {
-                                try {
-                                    e.join();
-                                    return 1;
-                                } catch (Exception ex) {
-                                    return 0;
-                                }
-                            })
-                            .sum();
-                    return numSuccess == broadCastDataResult.size();
-                });
-    }
-
-    private CompletableFuture<Boolean> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData) {
-        return networkService.removeAuthorizedData(authorizedDistributedData,
-                        identity.getNetworkIdWithKeyPair().getKeyPair(),
-                        authorizedPublicKey)
-                .thenApply(broadCastDataResult -> true);
-    }
-
-    private boolean republishAuthorizedBondedRoles() {
-        List<AuthorizedBondedRole> list = networkService.getDataService().stream()
+    // The OracleNodeService has scheduler for republishing oracle data every 50 days and is also used to call our
+    // republishAuthorizedBondedRoles. AuthorizedBondedRole has a 100 day TTL.
+    public void republishAuthorizedBondedRoles() {
+        Set<AuthorizedBondedRole> bannedAuthorizedBondedRoleSet = authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream().collect(Collectors.toSet());
+        networkService.getDataService().stream()
                 .flatMap(dataService -> dataService.getAuthorizedData()
                         .map(AuthorizedData::getAuthorizedDistributedData)
-                        .filter(authorizedDistributedData -> authorizedDistributedData instanceof AuthorizedBondedRole)
-                        .map(authorizedDistributedData -> (AuthorizedBondedRole) authorizedDistributedData))
-                .toList();
-        int numSuccess = list.stream()
-                .map(authorizedBondedRole -> {
-                            Optional<AuthorizedOracleNode> authorizingOracleNode = authorizedBondedRole.getAuthorizingOracleNode();
-                            String bondUserName = authorizedBondedRole.getBondUserName();
-                            if (authorizingOracleNode.isPresent()) {
-                                if (authorizingOracleNode.get().getProfileId().equals(authorizedOracleNode.getProfileId())) {
-                                    log.info("Republish AuthorizedBondedRole with bondUserName {}. authorizedOracleNode={}",
-                                            bondUserName, authorizedOracleNode.getBondUserName());
-                                    try {
-                                        return publishAuthorizedData(authorizedBondedRole).get();
-                                    } catch (Exception e) {
-                                        return false;
-                                    }
-                                } else {
-                                    log.info("Cannot republish AuthorizedBondedRole with bondUserName {} because we are not the authorizedOracleNode for that data",
-                                            bondUserName);
-                                }
-                            } else {
-                                log.info("Cannot republish AuthorizedBondedRole with bondUserName {} because authorizedOracleNode is missing",
-                                        bondUserName);
-                            }
-                            return false;
-                        }
-                ).mapToInt(success -> success ? 1 : 0)
-                .sum();
-        return list.size() == numSuccess;
+                        .filter(AuthorizedBondedRole.class::isInstance)
+                        .map(AuthorizedBondedRole.class::cast)
+                        .filter(authorizedBondedRole -> !bannedAuthorizedBondedRoleSet.contains(authorizedBondedRole))
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().isPresent())
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().get().getProfileId().equals(myAuthorizedOracleNode.getProfileId()))
+                )
+                .forEach(queue::offer);
     }
 
-    private CompletableFuture<Boolean> requestDaoData() {
-        log.info("requestDaoData");
-        return requestProofOfBurnTxs()
-                .thenCompose(this::publishProofOfBurnDtoSet)
-                .thenCompose(result -> requestBondedReputations())
-                .thenCompose(this::publishBondedReputationDtoSet);
-    }
-
-    private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
-        log.info("processAuthorizeAccountAgeRequest {}", request);
-        long requestDate = request.getDate();
-        String profileId = request.getProfileId();
-        String hashAsHex = request.getHashAsHex();
-        String messageString = profileId + hashAsHex + requestDate;
-        byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
-        try {
-            String pubKeyBase64 = request.getPubKeyBase64();
-            PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(pubKeyBase64), KeyGeneration.DSA);
-            boolean isValid = SignatureUtil.verify(message,
-                    signature,
-                    publicKey,
-                    SignatureUtil.SHA256withDSA);
-            if (isValid) {
-                httpService.requestAccountAgeWitness(hashAsHex)
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                result.ifPresentOrElse(date -> {
-                                    if (date == requestDate) {
-                                        persistableStore.getAccountAgeRequests().add(request);
-                                        persist();
-                                        AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId,
-                                                requestDate,
-                                                staticPublicKeysProvided);
-                                        publishAuthorizedData(data);
-                                    } else {
-                                        log.warn("Date of account age for {} is not matching the date from the users request. " +
-                                                        "Date from bridge service call: {}; Date from users request: {}",
-                                                hashAsHex, date, requestDate);
-                                    }
-                                }, () -> log.warn("Result of requestAccountAgeWitness returns empty optional. Request was: {}", request));
-                            } else {
-                                log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
-                            }
-                        });
-            } else {
-                log.warn("Signature verification for {} failed", request);
-            }
-        } catch (GeneralSecurityException e) {
-            log.warn("Error at processAuthorizeAccountAgeRequest", e);
+    private void publishAuthorizedData(AuthorizedDistributedData data) {
+        if (keyPair == null) {
+            Identity identity = identityService.getOrCreateDefaultIdentity();
+            keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
         }
-    }
 
-    private void processAuthorizeSignedWitnessRequest(AuthorizeSignedWitnessRequest request) {
-        log.info("processAuthorizeSignedWitnessRequest {}", request);
-        long witnessSignDate = request.getWitnessSignDate();
-        if (witnessSignDate < 61) {
-            log.warn("Age is not at least 60 days");
-            return;
-        }
-        String messageString = request.getProfileId() + request.getHashAsHex() + request.getAccountAgeWitnessDate() + witnessSignDate;
-        byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
-        byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
-        try {
-            PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(request.getPubKeyBase64()), KeyGeneration.DSA);
-            boolean isValid = SignatureUtil.verify(message,
-                    signature,
-                    publicKey,
-                    SignatureUtil.SHA256withDSA);
-            if (isValid) {
-                httpService.requestSignedWitnessDate(request.getHashAsHex())
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                result.ifPresentOrElse(date -> {
-                                    if (date == witnessSignDate) {
-                                        persistableStore.getSignedWitnessRequests().add(request);
-                                        persist();
-                                        AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(),
-                                                request.getWitnessSignDate(),
-                                                staticPublicKeysProvided);
-                                        publishAuthorizedData(data);
-                                    } else {
-                                        log.warn("Date of signed witness for {} is not matching the date from the users request. " +
-                                                        "Date from bridge service call: {}; Date from users request: {}",
-                                                request.getHashAsHex(), date, witnessSignDate);
-                                    }
-                                }, () -> log.warn("Result of requestSignedWitnessDate returns empty optional. Request was: {}", request));
-                            } else {
-                                log.warn("Error at signedWitnessService.requestSignedWitnessDate", throwable);
-                            }
-                        });
-            } else {
-                log.warn("Signature verification for {} failed", request);
-            }
-        } catch (GeneralSecurityException e) {
-            log.warn("Error at processAuthorizeSignedWitnessRequest", e);
-        }
-    }
-
-    private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request,
-                                                      PublicKey senderPublicKey) {
-        log.info("processBondedRoleRegistrationRequest {}", request);
-        String profileId = request.getProfileId();
-
-        // Verify if message sender is owner of the profileId
-        String sendersProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
-        checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
-
-        BondedRoleType bondedRoleType = request.getBondedRoleType();
-        String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
-        String bondUserName = request.getBondUserName();
-        String signatureBase64 = request.getSignatureBase64();
-        log.info("Received BondedRoleRegistrationRequest {}", request);
-        httpService.requestBondedRoleVerification(bondUserName, bisq1RoleTypeName, profileId, signatureBase64)
-                .whenComplete((bondedRoleVerificationDto, throwable) -> {
-                    if (throwable == null) {
-                        if (bondedRoleVerificationDto.getErrorMessage() == null) {
-                            AuthorizedBondedRole data = new AuthorizedBondedRole(profileId,
-                                    request.getAuthorizedPublicKey(),
-                                    bondedRoleType,
-                                    bondUserName,
-                                    signatureBase64,
-                                    request.getAddressByTransportTypeMap(),
-                                    request.getNetworkId(),
-                                    Optional.of(authorizedOracleNode),
-                                    false);
-                            if (request.isCancellationRequest()) {
-                                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                                        .filter(authorizedBondedRole -> authorizedBondedRole.equals(data))
-                                        .forEach(this::removeAuthorizedData);
-                            } else {
-                                publishAuthorizedData(data);
-                            }
-
-                            // Can be removed once there are no pre 2.1.0 versions out there anymore
-                            AuthorizedBondedRole oldVersion = new AuthorizedBondedRole(0,
-                                    profileId,
-                                    request.getAuthorizedPublicKey(),
-                                    bondedRoleType,
-                                    bondUserName,
-                                    signatureBase64,
-                                    request.getAddressByTransportTypeMap(),
-                                    request.getNetworkId(),
-                                    Optional.of(authorizedOracleNodeOldVersion),
-                                    false);
-                            if (request.isCancellationRequest()) {
-                                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                                        .filter(authorizedBondedRole -> authorizedBondedRole.equals(oldVersion))
-                                        .forEach(this::removeAuthorizedData);
-                            } else {
-                                publishAuthorizedData(oldVersion);
-                            }
-                        } else {
-                            log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
-                        }
-                    } else {
-                        log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
-                    }
-                });
-    }
-
-    private String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
-        String name = bondedRoleType.name();
-        return switch (name) {
-            case "MEDIATOR" -> "MEDIATOR"; // 5k
-            case "MODERATOR" -> "YOUTUBE_ADMIN"; // 5k; repurpose unused role
-            case "ARBITRATOR" -> "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
-            case "SECURITY_MANAGER" -> "BITCOINJ_MAINTAINER"; // 10k; repurpose unused role
-            case "RELEASE_MANAGER" -> "FORUM_ADMIN"; // 10k; repurpose unused role
-            case "ORACLE_NODE" -> "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
-            case "SEED_NODE" -> "SEED_NODE_OPERATOR"; // 10k
-            case "EXPLORER_NODE" -> "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
-            case "MARKET_PRICE_NODE" -> "DATA_RELAY_NODE_OPERATOR";
-            default -> // 10k; price node
-                    name;
-        };
+        networkService.publishAuthorizedData(data,
+                keyPair,
+                authorizedPrivateKey,
+                authorizedPublicKey);
     }
 }

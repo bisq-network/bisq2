@@ -22,7 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
@@ -39,7 +39,7 @@ public class TopPanelController implements Controller {
     public TopPanelController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService();
 
-        model = new TopPanelModel(serviceProvider.getWalletService().isPresent());
+        model = new TopPanelModel(serviceProvider.getMuSigService().getMuSigActivated().get());
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         MarketPriceComponent marketPriceComponent = new MarketPriceComponent(serviceProvider);
         view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRoot());

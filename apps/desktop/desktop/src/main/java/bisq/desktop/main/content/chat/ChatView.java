@@ -20,12 +20,17 @@ package bisq.desktop.main.content.chat;
 import bisq.desktop.common.Layout;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
+    protected AnchorPane contentAnchorPane;
 
     public ChatView(ChatModel model,
                     ChatController<V, M> controller,
@@ -80,11 +85,11 @@ public abstract class ChatView<V extends ChatView<V, M>, M extends ChatModel> ex
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
 
-        AnchorPane wrapper = new AnchorPane();
-        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        wrapper.getChildren().add(containerHBox);
+        contentAnchorPane = new AnchorPane();
+        contentAnchorPane.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        contentAnchorPane.getChildren().add(containerHBox);
 
-        root.setContent(wrapper);
+        root.setContent(contentAnchorPane);
 
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);

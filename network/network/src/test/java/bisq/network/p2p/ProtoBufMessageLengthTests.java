@@ -18,10 +18,9 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
 import bisq.common.network.Address;
-import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Feature;
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +49,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProtoBufMessageLengthTests {
 
-    private final Path tmpDir = FileUtils.createTempDir();
     private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
     private final AuthorizationService authorizationService;
 
@@ -105,6 +102,7 @@ public class ProtoBufMessageLengthTests {
     }
 
     private AuthorizationService createAuthorizationService() {
+        //noinspection deprecation
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
@@ -112,11 +110,11 @@ public class ProtoBufMessageLengthTests {
     }
 
     private bisq.network.protobuf.NetworkEnvelope createValidRequest() {
-        Capability peerCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(2345), supportedTransportTypes);
+        Capability peerCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
-                DefaultLocalhostFacade.toLocalHostAddress(1234).getFullAddress(),
+                LocalHostAddressTypeFacade.toLocalHostAddress(1234).getFullAddress(),
                 0, new ArrayList<>());
         return new NetworkEnvelope(token, request).completeProto();
     }

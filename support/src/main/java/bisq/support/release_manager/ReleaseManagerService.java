@@ -67,24 +67,7 @@ public class ReleaseManagerService implements Service {
 
 
     /* --------------------------------------------------------------------- */
-    // Service
-
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // API
-
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
@@ -95,26 +78,13 @@ public class ReleaseManagerService implements Service {
         String releaseManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         ReleaseNotification releaseNotification = new ReleaseNotification(StringUtils.createUid(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isPreRelease,
                 isLauncherUpdate,
                 releaseNotes,
                 version,
                 releaseManagerProfileId,
                 staticPublicKeysProvided);
-
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        ReleaseNotification oldVersion = new ReleaseNotification(0,
-                releaseNotification.getId(),
-                releaseNotification.getDate(),
-                releaseNotification.isPreRelease(),
-                releaseNotification.isLauncherUpdate(),
-                releaseNotification.getReleaseNotes(),
-                releaseNotification.getVersionString(),
-                releaseNotification.getReleaseManagerProfileId(),
-                releaseNotification.isStaticPublicKeysProvided());
-        networkService.publishAuthorizedData(oldVersion, keyPair);
-
         return networkService.publishAuthorizedData(releaseNotification, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

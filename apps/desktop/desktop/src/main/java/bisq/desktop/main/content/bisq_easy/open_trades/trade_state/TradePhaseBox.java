@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.data.Triple;
@@ -225,12 +225,6 @@ class TradePhaseBox {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
-        void onReportToMediator() {
-            OpenTradesUtils.reportToMediator(model.getSelectedChannel(),
-                    model.getBisqEasyTrade().getContract(),
-                    mediationRequestService, channelService);
-        }
-
         void onRequestMediation() {
             OpenTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
@@ -339,7 +333,7 @@ class TradePhaseBox {
             requestMediationButton.disableProperty().bind(model.getIsInMediation());
 
             requestMediationButton.setOnAction(e -> controller.onRequestMediation());
-            reportToMediator.setOnAction(e -> controller.onReportToMediator());
+            reportToMediator.setOnAction(e -> controller.onRequestMediation());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
             walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
@@ -413,7 +407,6 @@ class TradePhaseBox {
             Label label = new Label();
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
-            badge.setUseAnimation(false);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
             return new Triple<>(hBox, label, badge);

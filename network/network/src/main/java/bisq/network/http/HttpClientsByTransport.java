@@ -17,16 +17,37 @@
 
 package bisq.network.http;
 
+import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
+import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.network.http.utils.Socks5ProxyProvider;
+import bisq.network.p2p.node.transport.I2PTransportService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Creates HTTP clients for each transport, using cached I2P proxy selection with TTL-based health checks.
+ */
+@Slf4j
 public class HttpClientsByTransport {
-    public HttpClientsByTransport() {
+    private final AtomicInteger counter = new AtomicInteger();
+    private final Map<TransportType, TransportConfig> configByTransportType;
+
+    public HttpClientsByTransport(Map<TransportType, TransportConfig> configByTransportType) {
+        this.configByTransportType = configByTransportType;
+    }
+
+    public BaseHttpClient getHttpClient(String url,
+                                        String userAgent,
+                                        TransportType transportType) {
+        return getHttpClient(url, userAgent, transportType, Optional.empty(), Optional.empty());
     }
 
     public BaseHttpClient getHttpClient(String url,
@@ -38,17 +59,18 @@ public class HttpClientsByTransport {
             case TOR -> {
                 Socks5ProxyProvider socks5ProxyProvider = socks5ProxyAddress
                         .map(Socks5ProxyProvider::new)
-                        .orElse(socksProxy.map(Socks5ProxyProvider::new)
+                        .orElseGet(() -> socksProxy.map(Socks5ProxyProvider::new)
                                 .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
                 yield new TorHttpClient(url, userAgent, socks5ProxyProvider);
-                // If we have a socks5ProxyAddress defined in options we use that as proxy
             }
-            case I2P ->
-                // The I2P router exposes a local HTTP proxy on port 4444 for I2P destinations
-                // Note: only works with external I2P router (embedded one doesn't provide this proxy by default)
-                    new ClearNetHttpClient(url, userAgent,
-                            new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 4444))
-                    );
+
+            case I2P -> {
+                I2PTransportService.Config config = (I2PTransportService.Config) configByTransportType.get(TransportType.I2P);
+                Address address = new ClearnetAddress(config.getHttpProxyHost(), config.getHttpProxyPort());
+                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address.getHost(), address.getPort()));
+                yield new ClearNetHttpClient(url, userAgent, proxy);
+            }
+
             case CLEAR -> new ClearNetHttpClient(url, userAgent);
         };
     }

@@ -44,7 +44,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,6 +60,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
     @Getter
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
+    private final Set<BisqEasyOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
     public BisqEasyOpenTradeChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
@@ -69,13 +72,17 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
 
     /* --------------------------------------------------------------------- */
-    // MessageListener
+    // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage) {
             processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
+            if (!pendingMessages.isEmpty()) {
+                log.info("Processing pendingMessages messages");
+                pendingMessages.forEach(this::processMessage);
+            }
         } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
             processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
         }
@@ -152,7 +159,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     addMessage(takeOfferMessage, channel);
                     return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNetworkIdWithKeyPair());
                 })
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
+                .orElseGet(() -> CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
     public CompletableFuture<SendMessageResult> sendTradeLogMessage(String text,
@@ -170,19 +177,22 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                                              Optional<Citation> citation,
                                                              ChatMessageType chatMessageType,
                                                              BisqEasyOpenTradeChannel channel) {
-        String shortUid = StringUtils.createUid();
-        long date = new Date().getTime();
+        String messageId = StringUtils.createUid();
+        long date = System.currentTimeMillis();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
+            String senderId = channel.getMyUserIdentity().getId();
             List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
-                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, chatMessageType, date))
+                    .filter(peer -> !peer.getId().equals(senderId))
+                    .map(peer -> sendMessage(messageId, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
             channel.getMediator()
-                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
+                    .filter(mediator -> !mediator.getId().equals(senderId))
+                    .map(mediator -> sendMessage(messageId, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
-            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), chatMessageType, date);
+            return sendMessage(messageId, text, citation, channel, channel.getPeer(), chatMessageType, date);
         }
     }
 
@@ -198,7 +208,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         super.leaveChannel(channel);
 
         // We want to send a leave message even the peer has not sent any message so far (is not participant yet).
-        long date = new Date().getTime();
+        long date = System.currentTimeMillis();
         Stream.concat(channel.getTraders().stream(), channel.getMediator().stream())
                 .filter(userProfile -> allowSendLeaveMessage(channel, userProfile))
                 .forEach(userProfile -> sendLeaveMessage(channel, userProfile, date));
@@ -227,7 +237,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false,
                 channel.getMediator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
@@ -285,7 +295,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
     //todo (refactor, low prio)
     @Override
-    protected BisqEasyOpenTradeChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected BisqEasyOpenTradeChannel createAndGetNewPrivateChatChannel(UserProfile peer,
+                                                                         UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
@@ -306,9 +317,22 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 isRemoved
         );
+    }
+
+    @Override
+    protected void addMessageAndProcessQueuedReactions(BisqEasyOpenTradeMessage message,
+                                                       BisqEasyOpenTradeChannel channel) {
+        addMessage(message, channel);
+        // Check if there are any reactions that should be added to existing messages
+        processQueuedReactions();
+
+        if (pendingMessages.contains(message)) {
+            log.info("Removing message from pendingMessages. message={}", message);
+            pendingMessages.remove(message);
+        }
     }
 
     @Override
@@ -326,9 +350,10 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
             // This is a very unlikely case, so we ignore it.
             // It also happens if we left a trade channel and receive a message again.
             // We ignore that and do not re-open the channel.
-            // TODO we could put it into a queue for re-processing once a valid trade message comes.
             log.warn("We received the first message for a new channel without an offer. " +
-                    "We drop that message. Message={}", message);
+                    "We add that message to pendingMessages for re-processing when we receive the next message. " +
+                    "Message={}", message);
+            pendingMessages.add(message);
             return Optional.empty();
         }
     }

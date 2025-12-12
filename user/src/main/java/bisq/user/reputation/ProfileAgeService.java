@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.timer.Delay;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -30,6 +31,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -38,12 +40,20 @@ import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 /**
  * We do not apply a score for profile age as otherwise all users would have such a score after 1 day.
@@ -52,12 +62,14 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public class ProfileAgeService extends SourceReputationService<AuthorizedTimestampData> implements PersistenceClient<ProfileAgeStore> {
-
     @Getter
     private final ProfileAgeStore persistableStore = new ProfileAgeStore();
     @Getter
     private final Persistence<ProfileAgeStore> persistence;
-    private CompletableFuture<Void> requestForAllProfileIdsBeforeExpiredFuture, requestForAllProfileIdsFuture;
+    @Nullable
+    private CompletableFuture<Void> requestTimestampFuture;
+    @Nullable
+    private Scheduler requestTimestampScheduler;
 
     public ProfileAgeService(PersistenceService persistenceService,
                              NetworkService networkService,
@@ -73,19 +85,33 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     public CompletableFuture<Boolean> initialize() {
         super.initialize();
 
-        // We delay a bit to ensure the network is well established
-        Scheduler.run(this::maybeRequestAgain)
+        requestTimestampScheduler = Scheduler.run(this::maybeRequestTimestampForAllUserProfiles)
                 .host(this)
-                .runnableName("maybeRequestAgain")
-                .after(30, TimeUnit.SECONDS);
+                .runnableName("requestTimestamp")
+                .repeated(5, 90, TimeUnit.SECONDS, 2);
 
         userIdentityService.getNewlyCreatedUserIdentity().addObserver(userIdentity -> {
             if (userIdentity != null) {
-                requestTimestamp(userIdentity.getUserProfile().getId());
+                requestTimestamp(userIdentity);
+                // lastRequested is set only when we check for all user profiles. When we create a new user profile
+                // we do not update it.
             }
         });
 
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        if (requestTimestampScheduler != null) {
+            requestTimestampScheduler.stop();
+            requestTimestampScheduler = null;
+        }
+        if (requestTimestampFuture != null) {
+            requestTimestampFuture.cancel(true);
+            requestTimestampFuture = null;
+        }
+        return super.shutdown();
     }
 
     @Override
@@ -150,72 +176,81 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                 .map(AuthorizedTimestampData::getDate);
     }
 
-    private boolean requestTimestamp(String profileId) {
-        return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
-                    AuthorizeTimestampRequest request = new AuthorizeTimestampRequest(profileId);
-                    return send(userIdentity, request);
-                })
-                .orElse(false);
+    private boolean requestTimestamp(UserIdentity userIdentity) {
+        log.info("Request timestamp for {}", userIdentity.getUserProfile().getUserName());
+        return send(userIdentity, new AuthorizeTimestampRequest(userIdentity.getId()));
     }
 
-    private void maybeRequestAgain() {
-        boolean didRequestForAllProfileIds = requestForAllProfileIdsBeforeExpired();
-        if (!didRequestForAllProfileIds && requestForAllProfileIdsFuture == null) {
-            // We check if we have some userProfiles which have not been timestamped yet.
-            // If so, we request timestamping of the missing one.
-            var timeStamped = networkService.getDataService()
-                    .map(service -> service.getAuthorizedData()
-                            .filter(authorizedData -> authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData)
-                            .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
-                            .map(AuthorizedTimestampData::getProfileId)
-                            .collect(Collectors.toSet()));
-            List<String> candidates = userIdentityService.getUserIdentities().stream()
-                    .map(userIdentity -> userIdentity.getUserProfile().getId())
-                    .filter(profileId -> timeStamped.isEmpty() || !timeStamped.get().contains(profileId))
-                    .collect(Collectors.toList());
-            requestForAllProfileIdsFuture = requestTimestampWithRandomDelay(candidates,
-                    "requestForAllProfileIds")
-                    .whenComplete((r, t) -> {
-                        requestForAllProfileIdsFuture = null;
-                    });
+    private void maybeRequestTimestampForAllUserProfiles() {
+        if (requestTimestampFuture != null) {
+            log.warn("requestTimestampFuture is still not completed");
+            return;
         }
-    }
-
-    private boolean requestForAllProfileIdsBeforeExpired() {
-        // Before timeout gets triggered we request 
-        long now = System.currentTimeMillis();
-        boolean shouldRepublish = now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2;
-        if (requestForAllProfileIdsBeforeExpiredFuture == null && shouldRepublish) {
-            requestForAllProfileIdsBeforeExpiredFuture = requestTimestampWithRandomDelay(persistableStore.getProfileIds(),
-                    "requestForAllProfileIdsBeforeExpired")
-                    .whenComplete((nil, t) -> {
-                        if (t == null) {
-                            persistableStore.setLastRequested(now);
-                            persist();
-                        }
-                        requestForAllProfileIdsBeforeExpiredFuture = null;
-                    });
-            return true;
+        // We check if we have some userProfiles which have not been timestamped yet.
+        // If so, we request timestamping of the missing one.
+        Set<String> timeStampedProfileIds = getTimeStampedProfileIds();
+        List<UserIdentity> candidates = userIdentityService.getUserIdentities().stream()
+                .filter(userIdentity -> requireTimestamp(userIdentity, timeStampedProfileIds))
+                .collect(Collectors.toList());
+        if (candidates.isEmpty()) {
+            return;
         }
-        return false;
-    }
 
-    private CompletableFuture<Void> requestTimestampWithRandomDelay(Collection<String> profileIds, String threadName) {
-        return CompletableFuture.runAsync(() -> {
-            List<String> candidates = new ArrayList<>(profileIds);
-            Collections.shuffle(candidates);
-            AtomicInteger index = new AtomicInteger();
-            candidates.forEach(userProfileId -> {
-                boolean wasSent = requestTimestamp(userProfileId);
-                if (wasSent && index.get() > 0) {
-                    long delay = 30_000 + new Random().nextInt(90_000);
-                    try {
-                        Thread.sleep(delay);
-                    } catch (InterruptedException ignore) {
-                    }
+        Collections.shuffle(candidates);
+
+        requestTimestampFuture = CompletableFuture.runAsync(() -> {
+            try {
+                AtomicBoolean hasRequested = new AtomicBoolean();
+                for (int i = 0; i < candidates.size(); i++) {
+                    long delay = i * (10_000 + new Random().nextLong(110_000));
+                    UserIdentity userIdentity = candidates.get(i);
+                    // The requestTimestamp() is using the NetworkService.NETWORK_IO_POOL at network call level.
+                    // At first iteration the delay is 0, thus no delay is used.
+                    Delay.run(() -> {
+                                        boolean requestSuccess = requestTimestamp(userIdentity);
+                                        if (!requestSuccess) {
+                                            log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
+                                        }
+                                        hasRequested.compareAndSet(false, requestSuccess);
+                                    }
+                            )
+                            .withExecutor(commonForkJoinPool())
+                            .after(delay, TimeUnit.MILLISECONDS);
                 }
-                index.getAndIncrement();
-            });
-        }, ExecutorFactory.newSingleThreadScheduledExecutor(threadName));
+
+                if (hasRequested.get()) {
+                    // lastRequested is set only when we check for all user profiles. When we create a new user profile
+                    // we do not update it.
+                    persistableStore.setLastRequested(System.currentTimeMillis());
+                    persist();
+                }
+            } finally {
+                requestTimestampFuture = null;
+            }
+        }, ExecutorFactory.newSingleThreadScheduledExecutor("requestTimestamp"));
+    }
+
+    // If not already time stamped, or if time since last timestamp is > as half of TTL
+    private boolean requireTimestamp(UserIdentity userIdentity, Set<String> timeStampedProfileIds) {
+        boolean notAlreadyTimestamped = !timeStampedProfileIds.contains(userIdentity.getUserProfile().getId());
+        return notAlreadyTimestamped || isExpiringSoon();
+    }
+
+    private boolean isExpiringSoon() {
+        long lastRequested = persistableStore.getLastRequested();
+        if (lastRequested == 0) {
+            return false;
+        }
+        return System.currentTimeMillis() - lastRequested > AuthorizedTimestampData.TTL / 2;
+    }
+
+    private Set<String> getTimeStampedProfileIds() {
+        return networkService.getDataService()
+                .map(service -> service.getAuthorizedData()
+                        .filter(authorizedData -> authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData)
+                        .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
+                        .map(AuthorizedTimestampData::getProfileId)
+                        .collect(Collectors.toSet()))
+                .orElseGet(Collections::emptySet);
     }
 }

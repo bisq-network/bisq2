@@ -17,41 +17,39 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.account.accounts.UserDefinedFiatAccountPayload;
-import bisq.common.fsm.Event;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
+public class BisqEasyAccountDataMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
+    private String paymentAccountData;
 
     public BisqEasyAccountDataMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyAccountDataMessage message = (BisqEasyAccountDataMessage) event;
-        verifyMessage(message);
-        commitToModel(message.getPaymentAccountData());
+    protected void verify(BisqEasyAccountDataMessage message) {
+        checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()), "PaymentAccountData must not be empty");
+        checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
+                "PaymentAccountData length must not be longer than " + UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
+        checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
     @Override
-    protected void verifyMessage(BisqEasyAccountDataMessage message) {
-        super.verifyMessage(message);
-
-        checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()));
-        checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
-        checkNotNull(message.getBisqEasyOffer());
+    protected void process(BisqEasyAccountDataMessage message) {
+        paymentAccountData = message.getPaymentAccountData();
     }
 
-    private void commitToModel(String paymentAccountData) {
+    @Override
+    protected void commit() {
         trade.getPaymentAccountData().set(paymentAccountData);
     }
 }

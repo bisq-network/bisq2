@@ -29,26 +29,25 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@EqualsAndHashCode
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
-    @EqualsAndHashCode.Exclude
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;
     private final long blockTime;
@@ -64,7 +63,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
     // and use default `@ExcludeForHash` instead.
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedProofOfBurnData(long blockTime,
@@ -77,12 +75,12 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     private AuthorizedProofOfBurnData(int version,
-                                     long blockTime,
-                                     long amount,
-                                     byte[] hash,
-                                     int blockHeight,
-                                     String txId,
-                                     boolean staticPublicKeysProvided) {
+                                      long blockTime,
+                                      long amount,
+                                      byte[] hash,
+                                      int blockHeight,
+                                      String txId,
+                                      boolean staticPublicKeysProvided) {
         this.version = version;
         this.blockTime = blockTime;
         this.amount = amount;
@@ -179,5 +177,28 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizedProofOfBurnData that)) return false;
+
+        return blockTime == that.blockTime &&
+                amount == that.amount &&
+                blockHeight == that.blockHeight &&
+                Objects.equals(metaData, that.metaData) &&
+                Arrays.equals(hash, that.hash) &&
+                Objects.equals(txId, that.txId);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(metaData);
+        result = 31 * result + Long.hashCode(blockTime);
+        result = 31 * result + Long.hashCode(amount);
+        result = 31 * result + Arrays.hashCode(hash);
+        result = 31 * result + blockHeight;
+        result = 31 * result + Objects.hashCode(txId);
+        return result;
     }
 }

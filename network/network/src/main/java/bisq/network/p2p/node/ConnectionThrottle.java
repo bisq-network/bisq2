@@ -72,7 +72,10 @@ public class ConnectionThrottle {
         throttle(receiveMessageTimestamp, myNetworkLoadSnapshot, receiveMessageThrottleTime, "receive");
     }
 
-    private void throttle(AtomicLong timestamp, NetworkLoadSnapshot networkLoadSnapshot, long throttleTime, String direction) {
+    private void throttle(AtomicLong timestamp,
+                          NetworkLoadSnapshot networkLoadSnapshot,
+                          long throttleTime,
+                          String direction) {
         long now = System.currentTimeMillis();
         long passed = now - timestamp.get();
         double load = networkLoadSnapshot.getCurrentNetworkLoad().getLoad();
@@ -82,7 +85,7 @@ public class ConnectionThrottle {
             try {
                 long pause = throttleTime - passed;
                 pause = MathUtils.bounded(1, MAX_THROTTLE_TIME, pause);
-                String logMessage = String.format("Pause '%s' message for %d ms. Network=%f", direction, pause, load);
+                String logMessage = String.format("Pause %s message for %d ms. Network=%f", direction, pause, load);
                 long passedSinceLastLog = now - lastLoggedTs.get();
                 if (passedSinceLastLog < MAX_LOG_FREQUENCY) {
                     LAST_LOGS.add(logMessage);
@@ -104,7 +107,10 @@ public class ConnectionThrottle {
                     lastLoggedTs.set(now);
                 }
                 Thread.sleep(pause);
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at throttle method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
+                throw new ConnectionException(e);
             }
         }
         timestamp.set(now);

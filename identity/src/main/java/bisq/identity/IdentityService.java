@@ -19,16 +19,19 @@ package bisq.identity;
 
 
 import bisq.common.application.Service;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.timer.Scheduler;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.google.common.annotations.VisibleForTesting;
@@ -36,15 +39,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class IdentityService implements PersistenceClient<IdentityStore>, Service {
+public class IdentityService extends RateLimitedPersistenceClient<IdentityStore> implements Service {
     public static final String DEFAULT_IDENTITY_TAG = "default";
 
     @Getter
@@ -67,6 +73,26 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         networkIdService = networkService.getNetworkIdService();
     }
 
+    @Override
+    public IdentityStore preProcessPersisted(IdentityStore persisted) {
+        // We store the key bundle also in identity. To ensure it is in sync with the key bundle from
+        // key bundle service, we check for equality and if not matching we replace the key bundle.
+        var optionalDefaultIdentity = persisted.getDefaultIdentity()
+                .map(this::maybeUpdateKeyBundle);
+
+        var activeIdentityByTag = persisted.getActiveIdentityByTag().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> maybeUpdateKeyBundle(e.getValue())
+                ));
+
+        var retired = persisted.getRetired().stream()
+                .map(this::maybeUpdateKeyBundle)
+                .collect(Collectors.toSet());
+
+        return new IdentityStore(optionalDefaultIdentity, Map.copyOf(activeIdentityByTag), Set.copyOf(retired));
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Service
@@ -83,39 +109,29 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         // Create default identity
         getOrCreateDefaultIdentity();
 
-        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport();
-        if (map.isEmpty()) {
-            return CompletableFuture.failedFuture(new RuntimeException("networkService.getInitializedDefaultNodeByTransport returns an empty map"));
+        if (getActiveIdentityByTag().isEmpty()) {
+            return CompletableFuture.completedFuture(true);
         }
 
-        CompletableFuture<Boolean> result = new CompletableFuture<>();
-        AtomicInteger failures = new AtomicInteger();
-        map.forEach((transportType, future) -> future.whenComplete((node, throwable) -> {
-            if (throwable == null && node != null) {
-                // After each successful initialisation of the default node on a transport we start to
-                // initialize the active identities for that transport
-                initializeActiveIdentities(transportType);
-                if (!result.isDone()) {
-                    result.complete(true);
-                }
-            } else if (!result.isDone()) {
-                if (failures.incrementAndGet() == map.size()) {
-                    // All failed
-                    result.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
-                }
-            }
-        }));
-        return result;
-    }
+        List<Identity> snapshot;
+        synchronized (lock) {
+            snapshot = List.copyOf(getActiveIdentityByTag().values());
+        }
+        snapshot.forEach(this::maybeUpdateNetworkId);
 
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
+        // We get called after networkService with the default node is already initialized.
+        // We publish now all onion services of our active identities.
+        // We do not wait for them to be completed as with many identities and in case tor is slow that could
+        // trigger startup timeouts.
+        networkService.getSupportedTransportTypes().forEach(this::initializeAllActiveIdentities);
+
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public CompletableFuture<Boolean> persist() {
-        return PersistenceClient.super.persist();
+    public CompletableFuture<Boolean> shutdown() {
+        fatalException.set(null);
+        return CompletableFuture.completedFuture(true);
     }
 
 
@@ -125,7 +141,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Identity getOrCreateDefaultIdentity() {
         Optional<Identity> defaultIdentity = persistableStore.getDefaultIdentity();
-        defaultIdentity.ifPresent(this::maybeRecoverNetworkId);
+        defaultIdentity.ifPresent(this::maybeUpdateNetworkId);
         return defaultIdentity
                 .orElseGet(() -> {
                     Identity identity = createIdentity(DEFAULT_IDENTITY_TAG);
@@ -194,11 +210,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public Optional<Identity> findAnyIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
             return Stream.concat(Stream.concat(persistableStore.getDefaultIdentity().stream(),
-                            getActiveIdentityByTag().values().stream()),
+                                    getActiveIdentityByTag().values().stream()),
                             getRetired().stream())
                     .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
+    }
+
+    public Map<String, Identity> getActiveIdentityByTag() {
+        return persistableStore.getActiveIdentityByTag();
     }
 
 
@@ -206,13 +226,17 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void initializeActiveIdentities(TransportType transportType) {
-        getActiveIdentityByTag().values().stream()
-                .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity -> {
-                    maybeRecoverNetworkId(identity);
-                    networkService.supplyInitializedNode(transportType, identity.getNetworkId());
-                });
+    private CompletableFuture<List<Node>> initializeAllActiveIdentities(TransportType transportType) {
+        List<Identity> snapshot;
+        synchronized (lock) {
+            snapshot = getActiveIdentityByTag().values().stream()
+                    .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
+                    .collect(Collectors.toList());
+        }
+        Stream<CompletableFuture<Node>> futures = snapshot.stream()
+                .map(identity -> networkService.supplyInitializedNode(transportType, identity.getNetworkId()));
+
+        return CompletableFutureUtils.allOf(futures);
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
@@ -232,10 +256,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         return new Identity(identityTag, networkId, keyBundle);
     }
 
-    private Map<String, Identity> getActiveIdentityByTag() {
-        return persistableStore.getActiveIdentityByTag();
-    }
-
     private Set<Identity> getRetired() {
         return persistableStore.getRetired();
     }
@@ -253,11 +273,29 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag).join());
     }
 
-    private void maybeRecoverNetworkId(Identity identity) {
-        networkIdService.findNetworkId(identity.getTag())
+    private void maybeUpdateNetworkId(Identity identity) {
+        String identityTag = identity.getTag();
+        // Update networkId if we got I2P added
+        networkIdService.maybeUpdateNetworkId(identity.getKeyBundle(), identityTag);
+
+        networkIdService.findNetworkId(identityTag)
                 .ifPresent(fromNetworkIdStore -> {
                     NetworkId fromIdentityStore = identity.getNetworkId();
-                    if (!fromNetworkIdStore.equals(fromIdentityStore)) {
+                    if (fromNetworkIdStore.equals(fromIdentityStore)) {
+                        return;
+                    }
+
+                    AddressByTransportTypeMap mapFromIdentityStore = fromIdentityStore.getAddressByTransportTypeMap();
+                    AddressByTransportTypeMap mapFromNetworkStore = fromNetworkIdStore.getAddressByTransportTypeMap();
+                    Set<TransportType> missing = mapFromNetworkStore.keySet().stream()
+                            .filter(transportType ->
+                                    mapFromNetworkStore.getAddress(transportType).isPresent() &&
+                                            (mapFromIdentityStore.getAddress(transportType).isEmpty() ||
+                                                    !mapFromNetworkStore.getAddress(transportType).get().equals(mapFromIdentityStore.getAddress(transportType).get()))
+                            )
+                            .collect(Collectors.toSet());
+                    if (missing.isEmpty()) {
+                        // mapFromIdentityStore contains different entries or mapFromNetworkStore miss entries
                         String errorMessage = "Data inconsistency detected.\n" +
                                 "The inconsistent data got restored and requires a restart of the application.\n" +
                                 "Details:\n" +
@@ -267,9 +305,36 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                                 "Data:\n" +
                                 "FromIdentityStore=" + fromIdentityStore + "\nFromNetworkIdStore=" + fromNetworkIdStore;
                         log.error(errorMessage);
-                        networkIdService.recoverInvalidNetworkIds(fromIdentityStore, identity.getTag());
+                        networkIdService.recoverInvalidNetworkIds(fromIdentityStore, identityTag);
                         fatalException.set(new RuntimeException(errorMessage));
+                    } else {
+                        // Expected in case we have got added I2P to an identity which was created with Tor only
+                        KeyBundle keyBundle = identity.getKeyBundle();
+                        Identity upDatedIdentity = new Identity(identityTag, fromNetworkIdStore, keyBundle);
+                        log.warn("We update the identity for tag {} with the new networkId from network ID store. {}\n" +
+                                "This is expected when user update to the I2P enabled version", identityTag, fromNetworkIdStore);
+                        synchronized (lock) {
+                            if (identityTag.equals(DEFAULT_IDENTITY_TAG)) {
+                                persistableStore.setDefaultIdentity(upDatedIdentity);
+                            } else {
+                                persistableStore.getActiveIdentityByTag().put(identityTag, upDatedIdentity);
+                            }
+                        }
+                        persist();
                     }
                 });
+    }
+
+    private Identity maybeUpdateKeyBundle(Identity identity) {
+        var optionalKeyBundle = keyBundleService.findKeyBundle(identity.getKeyBundle().getKeyId());
+        checkArgument(optionalKeyBundle.isPresent(), "keyBundle from keyBundleService must be present. IdentityTag=" + identity.getTag());
+        var keyBundle = optionalKeyBundle.get();
+        if (!identity.getKeyBundle().equals(keyBundle)) {
+            log.warn("keyBundle from identity is not matching the one from keyBundleService. " +
+                    "Updating Identity with keyBundle from keyBundleService. IdentityTag={}", identity.getTag());
+            Scheduler.run(this::persist).after(2000);
+            return new Identity(identity.getTag(), identity.getNetworkId(), keyBundle);
+        }
+        return identity;
     }
 }

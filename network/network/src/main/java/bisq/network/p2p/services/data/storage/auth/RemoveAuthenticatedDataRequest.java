@@ -28,7 +28,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,45 +37,35 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
+// Data size about 200-250 bytes
 @Getter
-@EqualsAndHashCode
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
     private static final int VERSION = 1;
 
-    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                                      AuthenticatedData authenticatedData,
+                                                      KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int newSequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
         return new RemoveAuthenticatedDataRequest(VERSION,
                 authenticatedData.getMetaData(),
                 hash,
                 publicKey.getEncoded(),
                 publicKey,
-                newSequenceNumber,
+                sequenceNumber,
                 signature);
     }
 
-
-    public static RemoveAuthenticatedDataRequest cloneWithVersion0(RemoveAuthenticatedDataRequest request) {
-        return new RemoveAuthenticatedDataRequest(0,
-                request.getMetaData(),
-                request.getHash(),
-                request.getOwnerPublicKeyBytes(),
-                request.getOwnerPublicKey(),
-                request.getSequenceNumber(),
-                request.getSignature());
-    }
-
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
 
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
 
@@ -176,7 +165,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         }
     }
 
-    public MetaData getMetaDataFromProto() {
+    public MetaData getFallbackMetaData() {
         return metaData;
     }
 
@@ -239,5 +228,30 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     created=" + new Date(created) + " (" + created + ")" +
                 "\r\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RemoveAuthenticatedDataRequest that)) return false;
+
+        return sequenceNumber == that.sequenceNumber &&
+                created == that.created &&
+                Arrays.equals(hash, that.hash) &&
+                Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
+                Objects.equals(ownerPublicKey, that.ownerPublicKey) &&
+                Arrays.equals(signature, that.signature) &&
+                Objects.equals(metaDataFromDistributedData, that.metaDataFromDistributedData);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(hash);
+        result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(ownerPublicKey);
+        result = 31 * result + sequenceNumber;
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Long.hashCode(created);
+        result = 31 * result + Objects.hashCode(metaDataFromDistributedData);
+        return result;
     }
 }

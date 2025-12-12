@@ -18,16 +18,18 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -38,6 +40,8 @@ import lombok.Setter;
 public class AmountSelectionModel implements Model {
     private final double sliderMin = 0;
     private final double sliderMax = 1;
+    public final int amountBoxWidth = 300;
+    public final int amountBoxHeight = 120;
 
     private final ObjectProperty<Monetary> maxOrFixedBaseSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxOrFixedQuoteSideAmount = new SimpleObjectProperty<>();
@@ -49,6 +53,8 @@ public class AmountSelectionModel implements Model {
     private final DoubleProperty minAmountSliderValue = new SimpleDoubleProperty();
     private final BooleanProperty maxOrFixedAmountSliderFocus = new SimpleBooleanProperty();
     private final BooleanProperty minAmountSliderFocus = new SimpleBooleanProperty();
+    private final BooleanProperty rangeSliderLowThumbFocus = new SimpleBooleanProperty();
+    private final BooleanProperty rangeSliderHighThumbFocus = new SimpleBooleanProperty();
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
 
     @Setter
@@ -64,13 +70,14 @@ public class AmountSelectionModel implements Model {
     @Setter
     private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxQuoteAllowedLimitation = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxBaseAllowedLimitation = new SimpleObjectProperty<>();
     @Setter
     private Monetary leftMarkerQuoteSideValue;
     @Setter
     private Monetary rightMarkerQuoteSideValue;
     private final StringProperty sliderTrackStyle = new SimpleStringProperty();
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
     private Direction direction = Direction.BUY;
     private final StringProperty description = new SimpleStringProperty();
@@ -79,6 +86,15 @@ public class AmountSelectionModel implements Model {
     private final StringProperty maxRangeValueLimitationAsString = new SimpleStringProperty();
     private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
+    private final BooleanProperty allowInvertingBaseAndQuoteCurrencies = new SimpleBooleanProperty(false);
+    private final IntegerProperty baseAmountSelectionHBoxWidth = new SimpleIntegerProperty(amountBoxWidth);
+    private final BooleanProperty areBaseAndQuoteCurrenciesInverted = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowMinAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowInvertedMinAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowMaxOrFixedAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldShowInvertedMaxOrFixedAmounts = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldFocusInputTextField = new SimpleBooleanProperty(false);
+    private final BooleanProperty shouldApplyNewInputTextFontStyle = new SimpleBooleanProperty(false);
 
     void reset() {
         maxOrFixedBaseSideAmount.set(null);
@@ -90,6 +106,8 @@ public class AmountSelectionModel implements Model {
         minAmountSliderValue.set(0L);
         maxOrFixedAmountSliderFocus.set(false);
         minAmountSliderFocus.set(false);
+        rangeSliderLowThumbFocus.set(false);
+        rangeSliderHighThumbFocus.set(false);
         isRangeAmountEnabled.set(false);
         minRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
         maxRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
@@ -98,10 +116,11 @@ public class AmountSelectionModel implements Model {
         minRangeQuoteSideValue.set(null);
         maxRangeQuoteSideValue.set(null);
         maxQuoteAllowedLimitation.set(null);
+        maxBaseAllowedLimitation.set(null);
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
         sliderTrackStyle.set(null);
-        market = MarketRepository.getDefault();
+        market = MarketRepository.getDefaultBtcFiatMarket();
         direction = Direction.BUY;
         description.set(null);
         minRangeValueAsString.set(null);
@@ -109,5 +128,14 @@ public class AmountSelectionModel implements Model {
         maxRangeValueLimitationAsString.set(null);
         maxRangeCodeAsString.set(null);
         showRangeAmountSelection.set(false);
+        allowInvertingBaseAndQuoteCurrencies.set(false);
+        baseAmountSelectionHBoxWidth.set(amountBoxWidth);
+        areBaseAndQuoteCurrenciesInverted.set(false);
+        shouldShowMinAmounts.set(false);
+        shouldShowInvertedMinAmounts.set(false);
+        shouldShowMaxOrFixedAmounts.set(false);
+        shouldShowInvertedMaxOrFixedAmounts.set(false);
+        shouldFocusInputTextField.set(false);
+        shouldApplyNewInputTextFontStyle.set(false);
     }
 }

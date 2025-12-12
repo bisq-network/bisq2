@@ -17,8 +17,8 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.market.Market;
+import bisq.common.asset.Asset;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,8 +42,8 @@ public class ProtocolTypeUtil {
         if (isLNSwapSupported(market)) {
             result.add(TradeProtocolType.LIGHTNING_ESCROW);
         }
-        if (isBisqMuSigSupported(market)) {
-            result.add(TradeProtocolType.BISQ_MU_SIG);
+        if (isMuSigSupported(market)) {
+            result.add(TradeProtocolType.MU_SIG);
         }
 
         result.sort(Comparator.comparingInt(TradeProtocolType::ordinal));
@@ -53,7 +53,7 @@ public class ProtocolTypeUtil {
     private static boolean isBisqEasySupported(Market market) {
         String baseCurrencyCode = market.getBaseCurrencyCode();
         String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        return (baseCurrencyCode.equals("BTC") && TradeCurrency.isFiat(quoteCurrencyCode));
+        return (baseCurrencyCode.equals("BTC") && Asset.isFiat(quoteCurrencyCode));
     }
 
     private static boolean isBtcXmrSwapSupported(Market market) {
@@ -80,7 +80,7 @@ public class ProtocolTypeUtil {
         return false;//TODO (deferred) need some liquid asset lookup table
     }
 
-    private static boolean isBisqMuSigSupported(Market market) {
+    private static boolean isMuSigSupported(Market market) {
         return market.getQuoteCurrencyCode().equals("BTC") || market.getBaseCurrencyCode().equals("BTC");
     }
 }

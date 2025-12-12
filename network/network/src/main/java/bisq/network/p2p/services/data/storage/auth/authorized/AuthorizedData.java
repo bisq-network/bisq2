@@ -18,18 +18,22 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -38,9 +42,13 @@ import java.util.Optional;
  * the authorizedDistributedData object, which will return a hard coded set of pubKeys.
  */
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
+    // Can be removed after I2P is activated
+    public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
+    public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
+
+
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
@@ -163,5 +171,24 @@ public final class AuthorizedData extends AuthenticatedData {
                 ",\r\n               authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
                 ",\r\n               distributedData=" + distributedData +
                 "\r\n} ";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizedData that)) return false;
+        if (!super.equals(o)) return false;
+
+        return Objects.equals(signature, that.signature) &&
+                Arrays.equals(authorizedPublicKeyBytes, that.authorizedPublicKeyBytes) &&
+                Objects.equals(authorizedPublicKey, that.authorizedPublicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Objects.hashCode(signature);
+        result = 31 * result + Arrays.hashCode(authorizedPublicKeyBytes);
+        result = 31 * result + Objects.hashCode(authorizedPublicKey);
+        return result;
     }
 }

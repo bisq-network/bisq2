@@ -19,31 +19,31 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.PaymentMethodUtil;
-import bisq.account.payment_method.PaymentRail;
-import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class AccountService implements PersistenceClient<AccountStore>, Service {
+public class AccountService extends RateLimitedPersistenceClient<AccountStore> implements Service {
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
-    private final transient ObservableSet<Account<?, ? extends PaymentMethod<?>>> accounts = new ObservableSet<>();
+    private final transient ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts = new ObservableSet<>();
 
     public AccountService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -59,11 +59,8 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     // Service
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public CompletableFuture<Boolean> shutdown() {
+        accounts.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -72,7 +69,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     // API
     /* --------------------------------------------------------------------- */
 
-    public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
+    public Map<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 
@@ -80,13 +77,13 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         return !getAccountByNameMap().isEmpty();
     }
 
-    public void addPaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    public void addPaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().put(account.getAccountName(), account);
         accounts.add(account);
         persist();
     }
 
-    public void removePaymentAccount(Account<?, ? extends PaymentMethod<?>> account) {
+    public void removePaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().remove(account.getAccountName());
         accounts.remove(account);
         getSelectedAccount().ifPresent(s -> {
@@ -97,30 +94,34 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
         persist();
     }
 
-    public Optional<Account<?, ? extends PaymentMethod<?>>> findAccount(String name) {
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String name) {
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
-    public Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccountAsObservable() {
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(AccountPayload<?> accountPayload) {
+        return getAccountByNameMap().values().stream()
+                .filter(account -> account.getAccountPayload().equals(accountPayload))
+                .findAny();
+    }
+
+    public Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
 
-    public Optional<Account<?, ? extends PaymentMethod<?>>> getSelectedAccount() {
+    public Optional<Account<? extends PaymentMethod<?>, ?>> getSelectedAccount() {
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
 
-    public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> account) {
-        selectedAccountAsObservable().set(account);
-        persist();
+    //todo do we need that?
+    public void setSelectedAccount(Account<? extends PaymentMethod<?>, ?> account) {
+        if (selectedAccountAsObservable().set(account)) {
+            persist();
+        }
     }
 
-    public List<Account<?, ? extends PaymentMethod<?>>> getMatchingAccounts(TradeProtocolType protocolTyp,
-                                                                            String currencyCode) {
-        Set<? extends PaymentRail> paymentMethods =
-                new HashSet<>(PaymentMethodUtil.getPaymentRails(protocolTyp, currencyCode));
-        return persistableStore.getAccountByName().values().stream()
-                .filter(account -> paymentMethods.contains(account.getPaymentMethod().getPaymentRail()))
-                .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
-                .collect(Collectors.toList());
+    public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {
+        return accounts.stream()
+                .filter(account -> account.getPaymentMethod().equals(paymentMethod))
+                .collect(Collectors.toSet());
     }
 }

@@ -39,13 +39,15 @@ public class PruneExpiredEntriesService implements Service {
         scheduler = Optional.of(Scheduler.run(this::pruneExpired)
                 .host(this)
                 .runnableName("prune")
-                .periodically(1, TimeUnit.SECONDS));
+                .periodically(0, 10, TimeUnit.MINUTES));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
+        tasks.clear();
         return CompletableFuture.completedFuture(true);
     }
 

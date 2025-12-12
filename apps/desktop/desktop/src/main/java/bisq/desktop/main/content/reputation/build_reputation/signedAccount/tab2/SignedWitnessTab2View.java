@@ -20,6 +20,7 @@ package bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab2
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.user.reputation.SignedWitnessService;
@@ -37,7 +38,9 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
 
-    public SignedWitnessTab2View(SignedWitnessTab2Model model, SignedWitnessTab2Controller controller, VBox simulation) {
+    public SignedWitnessTab2View(SignedWitnessTab2Model model,
+                                 SignedWitnessTab2Controller controller,
+                                 VBox simulation) {
         super(new VBox(), model, controller);
 
         Label headline = new Label(Res.get("reputation.signedWitness.score.headline"));
@@ -58,7 +61,7 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Reputation");
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

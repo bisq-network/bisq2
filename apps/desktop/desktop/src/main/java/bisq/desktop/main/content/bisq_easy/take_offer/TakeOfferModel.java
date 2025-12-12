@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -60,6 +60,6 @@ public class TakeOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAKE_OFFER_AMOUNT;
+        return NavigationTarget.BISQ_EASY_TAKE_OFFER_AMOUNT;
     }
 }

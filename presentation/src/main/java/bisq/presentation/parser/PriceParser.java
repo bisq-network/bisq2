@@ -17,7 +17,7 @@
 
 package bisq.presentation.parser;
 
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 
 public class PriceParser {

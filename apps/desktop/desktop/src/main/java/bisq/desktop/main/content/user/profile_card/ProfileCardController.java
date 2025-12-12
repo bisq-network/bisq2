@@ -17,28 +17,30 @@
 
 package bisq.desktop.main.content.user.profile_card;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.components.AddToContactsListWindow;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
 import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesController;
+import bisq.desktop.main.content.user.profile_card.my_notes.ProfileCardMyNotesController;
 import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -49,7 +51,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ProfileCardController extends TabController<ProfileCardModel>
@@ -78,11 +81,14 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final UserProfileService userProfileService;
     protected final UserIdentityService userIdentityService;
     private final ChatService chatService;
+    private final ContactListService contactListService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final ProfileCardDetailsController profileCardDetailsController;
     private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private final ProfileCardMessagesController profileCardMessagesController;
+    private final ProfileCardMyNotesController profileCardMyNotesController;
     private Optional<Runnable> ignoreUserStateHandler;
 
     public ProfileCardController(ServiceProvider serviceProvider) {
@@ -94,12 +100,15 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
         chatService = serviceProvider.getChatService();
+        contactListService = serviceProvider.getUserService().getContactListService();
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
         profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         profileCardOffersController = new ProfileCardOffersController(serviceProvider);
         profileCardMessagesController = new ProfileCardMessagesController(serviceProvider);
+        profileCardMyNotesController = new ProfileCardMyNotesController(serviceProvider);
 
         view = new ProfileCardView(model, this);
     }
@@ -112,6 +121,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             case PROFILE_CARD_OFFERS -> Optional.of(profileCardOffersController);
             case PROFILE_CARD_REPUTATION -> Optional.of(profileCardReputationController);
             case PROFILE_CARD_MESSAGES -> Optional.of(profileCardMessagesController);
+            case PROFILE_CARD_MY_NOTES ->  Optional.of(profileCardMyNotesController);
             default -> Optional.empty();
         };
     }
@@ -127,15 +137,26 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         profileCardReputationController.setUserProfile(userProfile);
         profileCardOffersController.setUserProfile(userProfile);
         profileCardMessagesController.setUserProfile(userProfile);
+        profileCardMyNotesController.setUserProfile(userProfile);
 
-        model.getReputationScore().set(reputationService.getReputationScore(userProfile));
+        model.setReputationScore(reputationService.getReputationScore(userProfile));
 
         boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
-        model.getShouldShowUserActionsMenu().set(!isMyProfile);
-        model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
+        model.setShouldShowUserActionsMenu(!isMyProfile);
+        model.setOffersTabButtonText(Res.get("user.profileCard.tab.offers",
                 profileCardOffersController.getNumberOffers()).toUpperCase());
-        model.getMessagesTabButtonText().set(Res.get("user.profileCard.tab.messages",
+        model.setMessagesTabButtonText(Res.get("user.profileCard.tab.messages",
                 profileCardMessagesController.getNumberMessages(userProfile.getId())).toUpperCase());
+
+        Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .filter(bondedRole ->
+                        (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
+                                || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
+                                && userProfile.getId().equals(bondedRole.getProfileId()))
+                .map(AuthorizedBondedRole::getBondedRoleType)
+                .collect(Collectors.toSet());
+        model.setUserProfileBondedRoleTypes(bondedRoleTypes);
+        model.getIsUserInMyContactList().set(contactListService.isUserInContactList(userProfile));
     }
 
     @Override
@@ -144,6 +165,17 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     @Override
     public void onDeactivate() {
+    }
+
+    @Override
+    public void onActivateInternal() {
+        super.onActivateInternal();
+
+        if (model.getSelectedTabButton().get() != null
+                && model.getSelectedTabButton().get().getNavigationTarget() == NavigationTarget.PROFILE_CARD_MY_NOTES
+                && !model.getIsUserInMyContactList().get()) {
+            Navigation.navigateTo(NavigationTarget.PROFILE_CARD_OVERVIEW);
+        }
     }
 
     boolean isUserProfileBanned() {
@@ -171,6 +203,16 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         OverlayController.hide(() ->
                 Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                         new ReportToModeratorWindow.InitData(model.getUserProfile())));
+    }
+
+    void onAddToContacts() {
+        OverlayController.hide(() ->
+                Navigation.navigateTo(NavigationTarget.ADD_TO_CONTACTS_LIST,
+                        new AddToContactsListWindow.InitData(model.getUserProfile())));
+    }
+
+    void onGoToMyContactList() {
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.CONTACTS_LIST));
     }
 
     void onClose() {

@@ -26,6 +26,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,10 +42,10 @@ public class ConnectionMetrics {
     private final TreeMap<Integer, AtomicLong> deserializeTimePerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> receivedBytesPerMinute = new TreeMap<>();
-    private final Map<String, AtomicLong> numSentMessagesByClassName = new HashMap<>();
-    private final Map<String, AtomicLong> numReceivedMessagesByClassName = new HashMap<>();
-    private final Map<String, AtomicLong> numSentDistributedDataByClassName = new HashMap<>();
-    private final Map<String, AtomicLong> numReceivedDistributedDataByClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numSentMessagesByClassName = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> numReceivedMessagesByClassName = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> numSentDistributedDataByClassName = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> numReceivedDistributedDataByClassName = new ConcurrentHashMap<>();
 
     private final AtomicLong numMessagesReceived = new AtomicLong();
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
@@ -144,6 +145,32 @@ public class ConnectionMetrics {
     public long getDeserializeTimePerMinute() {
         return sumOf(deserializeTimePerMinute);
     }
+
+
+    public long getNumMessagesSentOfLast5Minutes() {
+        return getNumMessagesSentOfLastMinutes(5);
+    }
+
+    public long getSentBytesOfLast5Minutes() {
+        return getSentBytesOfLastMinutes(5);
+    }
+
+    public long getSpentSendMessageTimeOfLast5Minutes() {
+        return getSpentSendMessageTimeOfLastMinutes(5);
+    }
+
+    public long getReceivedBytesOfLast5Minutes() {
+        return getReceivedBytesOfLastMinutes(5);
+    }
+
+    public long getDeserializeTimeOfLast5Minutes() {
+        return getDeserializeTimeOfLastMinutes(5);
+    }
+
+    public long getNumMessagesReceivedOfLast5Minutes() {
+        return getNumMessagesReceivedOfLastMinutes(5);
+    }
+
 
     public long getNumMessagesSentOfLastHour() {
         return getNumMessagesSentOfLastMinutes(60);

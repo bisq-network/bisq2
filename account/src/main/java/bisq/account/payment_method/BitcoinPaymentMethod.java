@@ -17,12 +17,13 @@
 
 package bisq.account.payment_method;
 
-import bisq.common.currency.CryptoCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
+import bisq.common.asset.Asset;
+import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Collections;
 import java.util.List;
 
 @ToString(callSuper = true)
@@ -37,13 +38,16 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
         return new BitcoinPaymentMethod(customName);
     }
 
-
     private BitcoinPaymentMethod(BitcoinPaymentRail paymentRail) {
         super(paymentRail);
+
+        verify();
     }
 
     private BitcoinPaymentMethod(String name) {
         super(name);
+
+        verify();
     }
 
     @Override
@@ -57,7 +61,7 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getName());
+        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
     }
 
     @Override
@@ -66,7 +70,12 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     @Override
-    public List<TradeCurrency> getTradeCurrencies() {
-        return List.of(CryptoCurrencyRepository.BITCOIN);
+    public List<Asset> getSupportedCurrencies() {
+        return Collections.singletonList(CryptoAssetRepository.BITCOIN);
+    }
+
+    @Override
+    public String getId() {
+        return getPaymentRailName();
     }
 }

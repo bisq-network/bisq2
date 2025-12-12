@@ -22,18 +22,18 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
+@Getter(AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPartyPrivateChatChannelStore> {
     private final ObservableSet<TwoPartyPrivateChatChannel> channels = new ObservableSet<>();
-
-    TwoPartyPrivateChatChannelStore() {
-    }
 
     TwoPartyPrivateChatChannelStore(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
         setAll(twoPartyPrivateChatChannels);
@@ -77,10 +77,10 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
 
     @Override
     public TwoPartyPrivateChatChannelStore getClone() {
-        return new TwoPartyPrivateChatChannelStore(new HashSet<>(channels));
+        return new TwoPartyPrivateChatChannelStore(Set.copyOf(channels));
     }
 
-    public void setAll(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
+    void setAll(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
         this.channels.setAll(twoPartyPrivateChatChannels);
     }
 }

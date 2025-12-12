@@ -24,6 +24,8 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -34,15 +36,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class AccountStore implements PersistableStore<AccountStore> {
-    private final Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName = new ConcurrentHashMap<>();
-    private final Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new Observable<>();
+    @Getter(AccessLevel.PACKAGE)
+    private final Map<String, Account<? extends PaymentMethod<?>, ?>> accountByName = new ConcurrentHashMap<>();
+    @Getter(AccessLevel.PACKAGE)
+    private final Observable<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new Observable<>();
 
-    public AccountStore() {
+    AccountStore() {
         this(new HashMap<>(), Optional.empty());
     }
 
-    public AccountStore(Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName,
-                        Optional<Account<?, ? extends PaymentMethod<?>>> selectedAccount) {
+    AccountStore(Map<String, Account<? extends PaymentMethod<?>, ?>> accountByName,
+                 Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount) {
         this.accountByName.putAll(accountByName);
         this.selectedAccount.set(selectedAccount.orElse(null));
     }
@@ -84,7 +88,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public AccountStore getClone() {
-        return new AccountStore(new HashMap<>(accountByName), Optional.ofNullable(selectedAccount.get()));
+        return new AccountStore(Map.copyOf(accountByName), Optional.ofNullable(selectedAccount.get()));
     }
 
     @Override
@@ -92,13 +96,5 @@ public final class AccountStore implements PersistableStore<AccountStore> {
         accountByName.clear();
         accountByName.putAll(persisted.accountByName);
         selectedAccount.set(persisted.selectedAccount.get());
-    }
-
-    Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByName() {
-        return accountByName;
-    }
-
-    Observable<Account<?, ? extends PaymentMethod<?>>> getSelectedAccount() {
-        return selectedAccount;
     }
 }

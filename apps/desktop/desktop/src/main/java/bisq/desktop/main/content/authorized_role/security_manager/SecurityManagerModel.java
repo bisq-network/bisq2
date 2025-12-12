@@ -25,6 +25,7 @@ import bisq.desktop.main.content.authorized_role.security_manager.SecurityManage
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,8 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
     private final ObjectProperty<BondedRoleListItem> selectedBondedRoleListItem = new SimpleObjectProperty<>();
     private final ObservableList<BondedRoleListItem> bondedRoleListItems = FXCollections.observableArrayList();
-    private final SortedList<BondedRoleListItem> bondedRoleSortedList = new SortedList<>(bondedRoleListItems);
+    private final FilteredList<BondedRoleListItem> bondedRoleFilteredList = new FilteredList<>(bondedRoleListItems);
+    private final SortedList<BondedRoleListItem> bondedRoleSortedList = new SortedList<>(bondedRoleFilteredList);
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();

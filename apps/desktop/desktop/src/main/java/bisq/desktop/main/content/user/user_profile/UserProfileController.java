@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.bisq_easy.BisqEasyService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
+import static bisq.desktop.navigation.NavigationTarget.CREATE_PROFILE_STEP1;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -94,7 +94,7 @@ public class UserProfileController implements Controller {
 
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDaysAndYears)
-                                .orElse(Res.get("data.na")));
+                                .orElseGet(() -> Res.get("data.na")));
 
                         if (livenessUpdateScheduler != null) {
                             livenessUpdateScheduler.stop();
@@ -161,7 +161,8 @@ public class UserProfileController implements Controller {
 
     void onSave() {
         var userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
+        UserIdentity oldUserIdentity = model.getSelectedUserIdentity().get();
+        if (userIdentity == null || oldUserIdentity == null) {
             // This should never happen as the combobox selection is validated before getting here
             new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return;
@@ -170,7 +171,8 @@ public class UserProfileController implements Controller {
             new Popup().warning(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
             return;
         }
-        userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
+
+        userIdentityService.editUserProfile(oldUserIdentity, model.getTerms().get(), model.getStatement().get())
                 .thenAccept(result -> UIThread.runOnNextRenderFrame(() -> {
                     UserIdentity value = userIdentityService.getSelectedUserIdentity();
                     model.getSelectedUserIdentity().set(value);
@@ -211,12 +213,12 @@ public class UserProfileController implements Controller {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable).show());
                     } else {
-                        if (!model.getUserIdentities().isEmpty()) {
-                            UIThread.runOnNextRenderFrame(() -> {
+                        UIThread.runOnNextRenderFrame(() -> {
+                            if (!model.getUserIdentities().isEmpty()) {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                            });
-                        }
+                            }
+                        });
                     }
                 });
     }

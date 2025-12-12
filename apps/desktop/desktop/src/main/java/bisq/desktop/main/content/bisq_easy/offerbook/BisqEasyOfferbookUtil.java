@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -50,10 +51,11 @@ import java.util.List;
 
 @Slf4j
 public class BisqEasyOfferbookUtil {
-    static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
+    static final List<Market> majorMarkets = MarketRepository.getMajorFiatMarkets();
 
     static Comparator<MarketChannelItem> sortByNumOffers() {
-        return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());
+        return Comparator.<MarketChannelItem>comparingInt(o -> o.getNumOffers().get()).reversed()
+                .thenComparing(o -> o.getMarket().toString());
     }
 
     static Comparator<MarketChannelItem> sortByMajorMarkets() {
@@ -125,7 +127,10 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    numOffers.setText(BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()));
+                    numOffers.textProperty().bind(Bindings.createStringBinding(
+                            () -> getFormattedOfferNumber(item.getNumOffers().get()),
+                            item.getNumOffers()
+                    ));
                     String quoteCurrencyDisplayName = StringUtils.capitalize(item.getMarket().getQuoteCurrencyDisplayName());
                     marketDetailsTooltip.setText(BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
                     marketName.setText(quoteCurrencyDisplayName);
@@ -134,6 +139,7 @@ public class BisqEasyOfferbookUtil {
                     setGraphic(container);
                 } else {
                     favouritesLabel.setOnMouseClicked(null);
+                    numOffers.textProperty().unbind();
                     setGraphic(null);
                 }
             }

@@ -64,11 +64,6 @@
     -fx-border-insets: 0 0 -1 0;
 }
 
-.chat-user-profile-bg {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 8;
-}
-
 .chat-input-field {
     -fx-faint-focus-color: transparent;
     -fx-text-fill: -fx-light-text-color;
@@ -324,12 +319,16 @@
     -fx-text-fill: grey;
 }
 
-#onboarding-top-panel {
-    -fx-background-color: -bisq-dark-grey-20;
-}
-
 .notifications-settings-menu .dropdown-menu-popup {
     -fx-padding: 18 8 8 8 !important;
+}
+
+.notifications-settings-menu-label-default {
+    -fx-text-fill: -fx-mid-text-color !important;
+}
+
+.notifications-settings-menu-label-active {
+    -fx-text-fill: -fx-light-text-color !important;
 }
 
 
@@ -463,7 +462,7 @@
 
 .system-message-background {
     -fx-background-color: rgba(36, 36, 36, 0.4); /* -bisq-dark-grey-30 */
-    -fx-padding: 25 0 25 0;
+    -fx-padding: 25 25 25 25;
 }
 
 .system-message-background .leave-chat-message,

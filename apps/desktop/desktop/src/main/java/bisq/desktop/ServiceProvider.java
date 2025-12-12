@@ -24,9 +24,12 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
+import bisq.common.platform.MemoryReportService;
 import bisq.contract.ContractService;
 import bisq.desktop.webcam.WebcamAppService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
+import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
@@ -37,9 +40,8 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.user.UserService;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,10 +69,12 @@ public class ServiceProvider {
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
+    private final MuSigService muSigService;
     private final AlertNotificationsService alertNotificationsService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
+    private final MemoryReportService memoryReportService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -91,10 +95,12 @@ public class ServiceProvider {
                            TradeService tradeService,
                            UpdaterService updaterService,
                            BisqEasyService bisqEasyService,
+                           MuSigService muSigService,
                            AlertNotificationsService alertNotificationsService,
                            FavouriteMarketsService favouriteMarketsService,
                            DontShowAgainService dontShowAgainService,
-                           WebcamAppService webcamAppService) {
+                           WebcamAppService webcamAppService,
+                           MemoryReportService memoryReportService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -114,9 +120,11 @@ public class ServiceProvider {
         this.tradeService = tradeService;
         this.updaterService = updaterService;
         this.bisqEasyService = bisqEasyService;
+        this.muSigService = muSigService;
         this.alertNotificationsService = alertNotificationsService;
         this.favouriteMarketsService = favouriteMarketsService;
         this.dontShowAgainService = dontShowAgainService;
         this.webcamAppService = webcamAppService;
+        this.memoryReportService = memoryReportService;
     }
 }

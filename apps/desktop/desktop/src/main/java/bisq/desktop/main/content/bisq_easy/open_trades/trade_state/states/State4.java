@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
@@ -31,10 +30,12 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -51,6 +52,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static bisq.settings.DontShowAgainKey.CONFIRM_CLOSE_BISQ_EASY_TRADE;
+
 @Slf4j
 public abstract class State4<C extends State4.Controller<?, ?>> extends BaseState {
     protected final C controller;
@@ -66,6 +69,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
     protected static abstract class Controller<M extends State4.Model, V extends State4.View<?, ?>> extends BaseState.Controller<M, V> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
+        private final DontShowAgainService dontShowAgainService;
 
         protected Controller(ServiceProvider serviceProvider,
                              BisqEasyTrade bisqEasyTrade,
@@ -74,18 +78,19 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
+            dontShowAgainService = serviceProvider.getDontShowAgainService();
         }
 
         @Override
         public void onActivate() {
             super.onActivate();
 
-            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
+            BisqEasyTrade bisqEasyTrade = model.getTrade();
             BisqEasyContract contract = bisqEasyTrade.getContract();
             BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
-            model.setBlockExplorerLinkVisible(paymentRail == BitcoinPaymentRail.MAIN_CHAIN);
+            model.setBlockExplorerLinkVisible(paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
             String paymentProof = bisqEasyTrade.getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
@@ -115,23 +120,30 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onCloseCompletedTrade() {
-            new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
-                    .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
-                    .onAction(() -> {
-                        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
-                        leavePrivateChatManager.leaveChannel(model.getChannel());
-                    })
-                    .closeButtonText(Res.get("action.cancel"))
-                    .show();
+            if (dontShowAgainService.showAgain(CONFIRM_CLOSE_BISQ_EASY_TRADE)) {
+                new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
+                        .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
+                        .onAction(this::doCloseCompletedTrade)
+                        .closeButtonText(Res.get("action.cancel"))
+                        .dontShowAgainId(CONFIRM_CLOSE_BISQ_EASY_TRADE)
+                        .show();
+            } else {
+                doCloseCompletedTrade();
+            }
+        }
+
+        private void doCloseCompletedTrade() {
+            bisqEasyTradeService.removeTrade(model.getTrade());
+            leavePrivateChatManager.leaveChannel(model.getChannel());
         }
 
         protected void onShowDetails() {
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                    new TradeDetailsController.InitData(model.getBisqEasyTrade(), model.getChannel()));
+                    new TradeDetailsController.InitData(model.getTrade(), model.getChannel()));
         }
 
         protected void onExportTrade() {
-            OpenTradesUtils.exportTrade(model.getBisqEasyTrade(), getView().getRoot().getScene());
+            OpenTradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
         }
 
         protected void openExplorer() {
@@ -144,7 +156,11 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
         protected String getBlockExplorerUrl() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            return provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
+            if (provider == null) {
+                log.warn("SelectedProvider is null");
+                return Res.get("data.na");
+            }
+            return provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
         }
     }
 

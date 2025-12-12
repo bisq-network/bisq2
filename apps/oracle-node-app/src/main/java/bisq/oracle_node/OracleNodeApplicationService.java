@@ -19,6 +19,7 @@ package bisq.oracle_node;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
+import bisq.common.observable.Pin;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -27,9 +28,12 @@ import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
@@ -40,13 +44,15 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
     private final BondedRolesService bondedRolesService;
+    @Nullable
+    private Pin difficultyAdjustmentServicePin;
 
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
-        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
@@ -82,7 +88,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and run it on ExecutorFactory.commonForkJoinPool().
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -91,17 +98,27 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                        difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                .getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
                         log.info("NetworkApplicationService initialized");
                     } else {
                         log.error("Initializing networkApplicationService failed", throwable);
                     }
-                });
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (difficultyAdjustmentServicePin != null) {
+            difficultyAdjustmentServicePin.unbind();
+            difficultyAdjustmentServicePin = null;
+        }
+
+        // Move shutdown work off the current thread and run it on ExecutorFactory.commonForkJoinPool().
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -109,8 +126,17 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
-                .orTimeout(2, TimeUnit.MINUTES)
-                .handle((result, throwable) -> throwable == null)
-                .join());
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 }

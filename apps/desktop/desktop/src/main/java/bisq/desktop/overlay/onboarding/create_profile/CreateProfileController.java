@@ -17,13 +17,13 @@
 
 package bisq.desktop.overlay.onboarding.create_profile;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -43,6 +43,8 @@ import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 @Slf4j
 public class CreateProfileController implements Controller {
@@ -149,7 +151,7 @@ public class CreateProfileController implements Controller {
 
     private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {
         long ts = System.currentTimeMillis();
-        return CompletableFuture.supplyAsync(() -> userIdentityService.mintNymProofOfWork(pubKeyHash))
+        return CompletableFuture.supplyAsync(() -> userIdentityService.mintNymProofOfWork(pubKeyHash), commonForkJoinPool())
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
@@ -192,6 +194,8 @@ public class CreateProfileController implements Controller {
             // Limit to 200-2000 ms
             Thread.sleep(Math.min(2000, Math.max(200, (200 + random - powDuration))));
         } catch (InterruptedException e) {
+            log.warn("Thread got interrupted at createSimulatedDelay method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
             throw new RuntimeException(e);
         }
     }

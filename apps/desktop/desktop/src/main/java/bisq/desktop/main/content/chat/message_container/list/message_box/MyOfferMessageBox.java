@@ -35,11 +35,13 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.Locale;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
-    private BisqMenuItem removeOffer;
+    private BisqMenuItem removeOffer, showOfferDetails;
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -68,7 +70,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Actions
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), copyAction, removeOffer);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), showOfferDetails, removeOffer);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
@@ -78,7 +80,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, dateTime, userName);
+        userNameAndDateHBox = new HBox(10, dateTime, item.getBondedRoleBadge(), userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         VBox.setMargin(userNameAndDateHBox, new Insets(0, 10, 5, 0));
     }
@@ -87,15 +89,21 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
+        showOfferDetails = new BisqMenuItem("offer-details-grey", "offer-details-white");
+        showOfferDetails.useIconOnly();
+        showOfferDetails.setTooltip(Res.get("chat.message.contextMenu.showOfferDetails"));
+        HBox.setMargin(showOfferDetails, ACTION_ITEMS_MARGIN);
+
         removeOffer = new BisqMenuItem("delete-t-grey", "delete-t-red");
         removeOffer.useIconOnly();
-        removeOffer.setTooltip(Res.get("offer.deleteOffer"));
+        removeOffer.setTooltip(Res.get("offer.delete"));
         HBox.setMargin(removeOffer, ACTION_ITEMS_MARGIN);
     }
 
     @Override
     protected void addActionsHandlers() {
-        copyAction.setOnAction(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
+        ChatMessage chatMessage = item.getChatMessage();
+        showOfferDetails.setOnAction(e -> controller.onShowOfferDetails(chatMessage));
         removeOffer.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
     }
 
@@ -105,7 +113,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
                 "Bisq Easy Offerbook message must contain an offer");
 
         Direction direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection();
-        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase()));
+        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase(Locale.ROOT)));
         String title = Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessageTitle", directionString);
         Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
@@ -118,7 +126,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     public void dispose() {
         super.dispose();
 
-        copyAction.setOnAction(null);
+        showOfferDetails.setOnAction(null);
         removeOffer.setOnAction(null);
     }
 }

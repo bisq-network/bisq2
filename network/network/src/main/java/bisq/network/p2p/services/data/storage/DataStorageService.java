@@ -34,7 +34,7 @@ import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,9 +48,9 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final DataStore<T> persistableStore = new DataStore<>();
     @Getter
-    private final String storeKey;
+    protected final String storeKey;
     @Getter
-    protected final String subDirectory;
+    protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
@@ -61,15 +61,17 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
-        subDirectory = dbSubDirectory.getDbPath() + File.separator + storeName;
+        subDirPath = dbSubDirectory.getDbPath().resolve(storeName);
         persistence = persistenceService.getOrCreatePersistence(this,
-                subDirectory,
+                subDirPath,
                 storageFileName,
                 persistableStore,
                 MaxBackupSize.from(dbSubDirectory));
     }
 
     public void shutdown() {
+        prunedAndExpiredDataRequests.clear();
+        maxMapSize = Optional.empty();
     }
 
     @Override
@@ -103,8 +105,8 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     .map(DataRequest::getMaxMapSize)
                     .findFirst()
                     .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 5000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_5000, size));
+            // Until the too low values in some MetaData are fixed we use 10000 as min size
+            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
         }
         return maxMapSize.get();
     }

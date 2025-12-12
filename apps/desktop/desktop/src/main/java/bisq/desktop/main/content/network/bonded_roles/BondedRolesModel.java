@@ -17,7 +17,10 @@
 
 package bisq.desktop.main.content.network.bonded_roles;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -31,4 +34,5 @@ public abstract class BondedRolesModel implements Model {
     protected final ObservableList<BondedRolesListItem> bondedRolesListItems = FXCollections.observableArrayList();
     protected final FilteredList<BondedRolesListItem> filteredList = new FilteredList<>(bondedRolesListItems);
     protected final SortedList<BondedRolesListItem> sortedList = new SortedList<>(filteredList);
+    protected final ObjectProperty<BondedRoleType> selectedBondedRoleType = new SimpleObjectProperty<>();
 }

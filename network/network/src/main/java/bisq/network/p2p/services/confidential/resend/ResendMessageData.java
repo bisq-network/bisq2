@@ -121,7 +121,7 @@ public class ResendMessageData implements NetworkProto {
     }
 
     public String getId() {
-        return getAckRequestingMessage().getId();
+        return getAckRequestingMessage().getAckRequestingMessageId();
     }
 
     public AckRequestingMessage getAckRequestingMessage() {

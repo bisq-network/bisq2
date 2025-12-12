@@ -19,7 +19,7 @@ package bisq.dto.account.protocol_type;
 
 public enum TradeProtocolTypeDto {
     BISQ_EASY,
-    BISQ_MU_SIG,
+    MU_SIG,
     SUBMARINE,
     LIQUID_MU_SIG,
     BISQ_LIGHTNING,

@@ -25,17 +25,13 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
-import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
@@ -54,15 +50,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
@@ -77,7 +76,7 @@ public class ServiceNodesByTransport {
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
                                    ServiceNode.Config serviceNodeConfig,
-                                   Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
+                                   Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    InventoryService.Config inventoryServiceConfig,
                                    AuthorizationService.Config authorizationServiceConfig,
@@ -100,22 +99,22 @@ public class ServiceNodesByTransport {
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
+            int maxNumConnectedPeers = peerGroupManagerConfigByTransport.get(transportType).getPeerGroupConfig().getMaxNumConnectedPeers();
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     features,
                     transportConfig,
-                    transportConfig.getDefaultNodeSocketTimeout(),
-                    transportConfig.getUserNodeSocketTimeout(),
-                    transportConfig.getDevModeDelayInMs(),
+                    transportConfig.getSocketTimeout(),
                     transportConfig.getSendMessageThrottleTime(),
-                    transportConfig.getReceiveMessageThrottleTime());
+                    transportConfig.getReceiveMessageThrottleTime(),
+                    maxNumConnectedPeers);
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
-            PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
+            PeerGroupManager.Config peerGroupManagerConfig = peerGroupManagerConfigByTransport.get(transportType);
 
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
-                    peerGroupServiceConfig,
+                    peerGroupManagerConfig,
                     inventoryServiceConfig,
                     keyBundleService,
                     persistenceService,
@@ -137,12 +136,8 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> {
-                                    ThreadName.set(this, "getInitializedDefaultNode-" + entry.getKey().name());
-                                    return entry.getValue().getInitializedDefaultNode(defaultNetworkId);
-                                },
-                                NETWORK_IO_POOL)));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        entry.getValue().getInitializedDefaultNodeAsync(defaultNetworkId)));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {
@@ -165,21 +160,20 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
-        return supplyAsync(() -> {
-            ThreadName.set(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
-            ServiceNode serviceNode = map.get(transportType);
-            if (serviceNode.isNodeInitialized(networkId)) {
-                return serviceNode.findNode(networkId).orElseThrow();
-            } else {
-                return serviceNode.initializeNode(networkId);
-            }
-        }, NETWORK_IO_POOL);
+        ServiceNode serviceNode = map.get(transportType);
+        if (serviceNode.isNodeInitialized(networkId)) {
+            return CompletableFuture.completedFuture(serviceNode.findNode(networkId).orElseThrow());
+        } else {
+            return serviceNode.initializeNodeAsync(networkId);
+        }
     }
 
     public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {
         supportedTransportTypes.forEach(transportType -> {
             Set<Address> seeds = seedNodeMaps.stream()
-                    .map(map -> map.get(transportType))
+                    .map(map -> map.getAddress(transportType))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toSet());
             map.get(transportType).addSeedNodeAddresses(seeds);
         });
@@ -207,33 +201,28 @@ public class ServiceNodesByTransport {
                                               NetworkId senderNetworkId) {
         SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
+            ServiceNode serviceNode;
+            // We try to use the transport of the receivers address
             if (map.containsKey(transportType)) {
-                ServiceNode serviceNode = map.get(transportType);
-                SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
-                        receiverNetworkId,
-                        address,
-                        receiverNetworkId.getPubKey(),
-                        senderKeyPair,
-                        senderNetworkId);
-                sendMessageResult.put(transportType, result);
+                serviceNode = map.get(transportType);
+            } else if (!map.isEmpty()) {
+                // In case we do not have the transport of the receivers address we use our first transport.
+                // This would be the case when we use Tor only and the peer use I2P only. As we do not have a
+                // serviceNode for I2P we would fall back to Tor. In ConfidentialMessageService we will not find the node, and send it as mailbox message.
+                // That way any node the p2p network supporting both networks act as a relay.
+                serviceNode = map.values().stream().findFirst().get();
+            } else {
+                throw new RuntimeException("confidentialSend called but we do not have any serviceNode available. This should never happen.");
             }
+            SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
+                    receiverNetworkId,
+                    address,
+                    receiverNetworkId.getPubKey(),
+                    senderKeyPair,
+                    senderNetworkId);
+            sendMessageResult.put(transportType, result);
         });
         return sendMessageResult;
-    }
-
-    public Map<TransportType, Connection> send(NetworkId senderNetworkId,
-                                               EnvelopePayloadMessage envelopePayloadMessage,
-                                               AddressByTransportTypeMap receiver) {
-        return receiver.entrySet().stream().map(entry -> {
-                    TransportType transportType = entry.getKey();
-                    if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue()));
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
     public void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
@@ -252,27 +241,24 @@ public class ServiceNodesByTransport {
         map.values().forEach(serviceNode -> serviceNode.getDefaultNode().removeListener(nodeListener));
     }
 
-    public Optional<Socks5Proxy> getSocksProxy() {
-        return findServiceNode(TransportType.TOR)
-                .flatMap(serviceNode -> {
-                    try {
-                        return serviceNode.getSocksProxy();
-                    } catch (IOException e) {
-                        log.warn("Could not get socks proxy", e);
-                        return Optional.empty();
-                    }
-                });
+    public Optional<Socks5Proxy> getSocksProxy(TransportType transportType) {
+        if (transportType == TransportType.TOR) {
+            return findServiceNode(TransportType.TOR)
+                    .flatMap(serviceNode -> {
+                        try {
+                            return serviceNode.getSocksProxy();
+                        } catch (IOException e) {
+                            log.warn("Could not get socks proxy", e);
+                            return Optional.empty();
+                        }
+                    });
+        }
+        return Optional.empty();
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
-    }
-
-    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().getTransportService().getBootstrapInfo()));
     }
 
     public Optional<ServiceNode> findServiceNode(TransportType transport) {
@@ -290,11 +276,12 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toSet());
     }
 
-    public Map<TransportType, Boolean> isPeerOnline(NetworkId networkId, AddressByTransportTypeMap peer) {
+    public Map<TransportType, CompletableFuture<Boolean>> isPeerOnlineAsync(NetworkId networkId,
+                                                                            AddressByTransportTypeMap peer) {
         return peer.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).isPeerOnline(networkId, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).isPeerOnlineAsync(networkId, entry.getValue()));
                     } else {
                         return null;
                     }
@@ -303,8 +290,12 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
-    public Collection<ServiceNode> getAllServices() {
+    public Collection<ServiceNode> getAllServiceNodes() {
         return map.values();
+    }
+
+    public Map<TransportType, ServiceNode> getServiceNodesByTransport() {
+        return map;
     }
 
     public CompletableFuture<Report> requestReport(Address address) {

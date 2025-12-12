@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.take_offer.review;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
@@ -51,9 +51,13 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
-    private String price;
+    private String priceWithCode;
     @Setter
     private String priceDetails;
+    @Setter
+    private String price;
+    @Setter
+    private String priceCode;
     @Setter
     private String bitcoinPaymentMethod;
     @Setter

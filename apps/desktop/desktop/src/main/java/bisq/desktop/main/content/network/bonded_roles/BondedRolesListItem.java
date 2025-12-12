@@ -20,10 +20,10 @@ package bisq.desktop.main.content.network.bonded_roles;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
-import bisq.i18n.Res;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.i18n.Res;
+import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -57,7 +57,8 @@ public class BondedRolesListItem {
     private final String userName;
     private final String address;
     private final String addressInfoJson;
-    private final String isBanned;
+    private final String isBannedString;
+    private final boolean isBanned;
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
@@ -66,12 +67,13 @@ public class BondedRolesListItem {
         this.bondedRole = bondedRole;
 
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
-        isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
+        isBanned = bondedRole.isBanned();
+        isBannedString = isBanned ? Res.get("confirmation.yes") : "";
         UserProfileService userProfileService = userService.getUserProfileService();
-        userProfile = userProfileService.findUserProfile(authorizedBondedRoleData.getProfileId());
-        userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
-        userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+        userProfileId = authorizedBondedRoleData.getProfileId();
+        userProfile = userProfileService.findUserProfile(userProfileId);
         bondUserName = authorizedBondedRoleData.getBondUserName();
+        userName = userProfile.map(UserProfile::getUserName).orElseGet(() -> Res.get("data.na") + " (" + bondUserName + ")");
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
@@ -83,7 +85,16 @@ public class BondedRolesListItem {
                     .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
                     .collect(Collectors.toList());
             address = Joiner.on("\n").join(list);
-            addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressMap);
+            String json = "N/A";
+            try {
+                json = new GsonBuilder()
+                        .setPrettyPrinting()
+                        .create()
+                        .toJson(addressMap);
+            } catch (Exception e) {
+                log.error("Could not create json from {}", addressMap, e);
+            }
+            this.addressInfoJson = json;
 
             Set<String> bondedRoleAddresses = addressMap.values().stream()
                     .map(Address::getFullAddress)

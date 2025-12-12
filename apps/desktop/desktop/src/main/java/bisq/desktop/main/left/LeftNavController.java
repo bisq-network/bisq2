@@ -18,8 +18,7 @@
 package bisq.desktop.main.left;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.ChatChannelDomainNavigationTargetMapper;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
@@ -27,12 +26,15 @@ import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationUtil;
+import bisq.evolution.updater.UpdaterService;
+import bisq.mu_sig.MuSigService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -53,8 +55,8 @@ public class LeftNavController implements Controller {
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final SettingsService settingsService;
-    private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
-    private Pin changedChatNotificationPin;
+    private final MuSigService muSigService;
+    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin, changedChatNotificationPin, isMuSigActivatedPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -63,9 +65,10 @@ public class LeftNavController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         updaterService = serviceProvider.getUpdaterService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        muSigService = serviceProvider.getMuSigService();
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
-        model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
+        model = new LeftNavModel();
         model.setVersion("v" + ApplicationVersion.getVersion().toString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
     }
@@ -75,18 +78,27 @@ public class LeftNavController implements Controller {
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
 
-        releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification ->
-                UIThread.run(() -> model.getNewVersionAvailable().set(releaseNotification != null)));
+        isNewReleaseAvailablePin = updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> {
+            UIThread.run(() -> {
+                if (isNewReleaseAvailable == null) {
+                    return;
+                }
+                model.getIsNewReleaseAvailable().set(isNewReleaseAvailable && updaterService.getReleaseNotification().get() != null);
+            });
+        });
 
         model.getMenuHorizontalExpanded().set(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
+
+        isMuSigActivatedPin = FxBindings.bind(model.getIsMuSigActivated()).to(muSigService.getMuSigActivated());
     }
 
     @Override
     public void onDeactivate() {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
-        releaseNotificationPin.unbind();
+        isNewReleaseAvailablePin.unbind();
         changedChatNotificationPin.unbind();
+        isMuSigActivatedPin.unbind();
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
@@ -133,8 +145,11 @@ public class LeftNavController implements Controller {
 
             findLeftNavButton(notification.getChatChannelDomain()).ifPresent(leftNavButton -> {
                 NavigationTarget navigationTarget = leftNavButton.getNavigationTarget();
-                long numNotifications = bisqEasyNotificationsService.getNumNotifications(navigationTarget);
-                if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
+                long numNotifications = bisqEasyNotificationsService.getNumNotifications(NavigationUtil.fromNavigationTarget(navigationTarget));
+                //noinspection deprecation
+                if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                        notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES ||
+                        notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
                     // In case we are a mediator we ignore the notifications in the BISQ_EASY_OPEN_TRADES as those
                     // we handle in the mediation view.
                     numNotifications = Math.max(0, numNotifications - numMediatorsNotConsumedNotifications.get());
@@ -189,7 +204,9 @@ public class LeftNavController implements Controller {
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream().anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
+            // If we got banned we still want to show the admin UI
+            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
+                    .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
             if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible &&
                     model.getSelectedNavigationTarget().get() == NavigationTarget.AUTHORIZED_ROLE) {
                 UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
@@ -200,7 +217,7 @@ public class LeftNavController implements Controller {
 
 
     private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {
-        return ChatChannelDomainNavigationTargetMapper.fromChatChannelDomain(chatChannelDomain)
+        return NavigationUtil.fromChatChannelDomain(chatChannelDomain)
                 .flatMap(this::findNavButton);
     }
 }

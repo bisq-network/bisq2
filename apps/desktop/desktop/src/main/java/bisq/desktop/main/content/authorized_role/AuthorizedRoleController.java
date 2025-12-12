@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.authorized_role;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -102,7 +102,14 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+
+            model.getBannedAuthorizedBondedRoles().clear();
+            model.getBannedAuthorizedBondedRoles().addAll(authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream()
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .collect(Collectors.toSet()));
+            // If we got banned we still want to show the admin UI
+            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                     .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
                     .map(AuthorizedBondedRole::getBondedRoleType)
                     .collect(Collectors.toSet()));

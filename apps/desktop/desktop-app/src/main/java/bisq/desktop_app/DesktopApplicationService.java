@@ -23,22 +23,22 @@ import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
-import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.http_api.HttpApiService;
-import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
+import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -54,15 +54,17 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.wallets.core.BitcoinWalletSelection;
-import bisq.wallets.core.WalletService;
+import bisq.wallet.MockWalletService;
+import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -106,29 +108,24 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final WebcamAppService webcamAppService;
     private final HttpApiService httpApiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final MuSigService muSigService;
+    private final BurningmanService burningmanService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
-        com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
-        BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (bitcoinWalletSelection) {
-           /* case BITCOIND:
-                walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
-                break;
-            case ELECTRUM:
-                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
-                break;*/
-            case NONE:
-            default:
-                walletService = Optional.empty();
-                break;
-        }
+        var walletCfg = WalletService.Config.from(getConfig("wallet"));
+      /*  walletService = walletCfg.isEnabled()
+                ? Optional.of(new WalletService(walletCfg))
+                : Optional.empty();*/
+        walletService = walletCfg.isEnabled()
+                ? Optional.of(new MockWalletService(walletCfg))
+                : Optional.empty();
 
-        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
+
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyBundleService(),
@@ -156,6 +153,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
+        burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
+
         systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
@@ -173,12 +172,32 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 userService,
                 bondedRolesService);
 
-        tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
-                contractService, supportService, chatService, bondedRolesService, userService, settingsService);
+        TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
+                contractService, supportService, chatService, bondedRolesService, userService, settingsService,
+                accountService, burningmanService);
 
-        updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
+        updaterService = new UpdaterService(getConfig(),
+                settingsService,
+                bondedRolesService.getReleaseNotificationsService(),
+                bondedRolesService.getAlertService());
 
         bisqEasyService = new BisqEasyService(persistenceService,
+                securityService,
+                networkService,
+                identityService,
+                bondedRolesService,
+                accountService,
+                offerService,
+                contractService,
+                userService,
+                chatService,
+                settingsService,
+                supportService,
+                systemNotificationService,
+                tradeService);
+
+        muSigService = new MuSigService(persistenceService,
                 securityService,
                 networkService,
                 identityService,
@@ -220,17 +239,20 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 tradeService,
                 updaterService,
                 bisqEasyService,
+                muSigService,
                 alertNotificationsService,
                 favouriteMarketsService,
                 dontShowAgainService,
-                webcamAppService);
+                webcamAppService,
+                memoryReportService);
 
-        openTradeItemsService = new OpenTradeItemsService( chatService, tradeService, userService);
+        openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                getConfig().getAppDataDirPath(),
                 securityService,
                 networkService,
                 userService,
@@ -239,45 +261,37 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
-                openTradeItemsService);
+                bisqEasyService,
+                openTradeItemsService,
+                accountService,
+                userService.getReputationService());
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return memoryReportService.initialize()
+        // Move initialization work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
+        return supplyAsync(() -> memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
-
-                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
-                            .orElse(CompletableFuture.completedFuture(true));
-
-                    networkFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at networkFuture.initialize", throwable);
-                        } else if (!walletFuture.isDone()) {
+                    return networkService.initialize();
+                })
+                .thenCompose(result -> walletService
+                        .map(walletService -> {
                             setState(State.INITIALIZE_WALLET);
-                        }
-                    });
-                    walletFuture.whenComplete((r, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Error at walletService.initialize", throwable);
-                        }
-                    });
-                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
+                            return walletService.initialize();
+                        })
+                        .orElseGet(() -> CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_SERVICES);
+                    return identityService.initialize();
                 })
-                .whenComplete((r, throwable) -> {
-                    if (throwable == null) {
-                        setState(State.INITIALIZE_SERVICES);
-                    }
-                })
-                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
+                .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
@@ -285,6 +299,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
+                .thenCompose(result -> muSigService.initialize())
                 .thenCompose(result -> alertNotificationsService.initialize())
                 .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
@@ -308,12 +323,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     }
                     setState(State.FAILED);
                     return false;
-                });
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
@@ -323,6 +340,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> muSigService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> bisqEasyService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))
@@ -330,6 +348,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> burningmanService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
@@ -348,7 +367,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                             log.info("ApplicationService shutdown completed");
                             return true;
                         } else {
-                            startupErrorMessage.set("Shutdown applicationService failed with result=false");
+                            shutDownErrorMessage.set("Shutdown applicationService failed with result=false");
                             log.error(shutDownErrorMessage.get());
                         }
                     } else {
@@ -356,16 +375,15 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
                     return false;
-                })
-                .join());
+                }), commonForkJoinPool())
+                .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
-
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
         try {
             switch (OS.getOS()) {
                 case LINUX:
-                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                    return Optional.of(new LinuxNotificationService(config.getAppDataDirPath(), settingsService));
                 case MAC_OS:
                     return Optional.of(new OsxNotificationService());
                 case WINDOWS:

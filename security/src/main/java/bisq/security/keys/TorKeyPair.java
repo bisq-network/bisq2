@@ -2,22 +2,20 @@ package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.digests.SHA512Digest;
 
+import java.util.Objects;
+
 @Slf4j
-@Getter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class TorKeyPair implements PersistableProto {
     @ToString.Exclude
     private final byte[] privateKey;
     @ToString.Exclude
     private final byte[] publicKey;
-    @EqualsAndHashCode.Include
     @Getter
     private final String onionAddress;
 
@@ -26,8 +24,8 @@ public class TorKeyPair implements PersistableProto {
     }
 
     public TorKeyPair(byte[] privateKey, byte[] publicKey, String onionAddress) {
-        this.privateKey = privateKey;
-        this.publicKey = publicKey;
+        this.privateKey = privateKey.clone();
+        this.publicKey = publicKey.clone();
         this.onionAddress = onionAddress;
     }
 
@@ -79,5 +77,25 @@ public class TorKeyPair implements PersistableProto {
         secretScalar[31] |= 64;
 
         return secretScalar;
+    }
+
+    public byte[] getPrivateKey() {
+        return privateKey.clone();
+    }
+
+    public byte[] getPublicKey() {
+        return publicKey.clone();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof TorKeyPair that)) return false;
+
+        return Objects.equals(onionAddress, that.onionAddress);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(onionAddress);
     }
 }

@@ -46,7 +46,7 @@ message UserIdentityStore {
   optional string selectedUserIdentityId = 2;
   optional security.EncryptedData encryptedData = 3;
   optional security.ScryptParameters scryptParameters = 4;
-  sint64 lastUserProfilePublishingDate = 5  [deprecated = true]; // Not used anymore in v2.1.0
+  sint64 lastUserProfilePublishingDate = 5 [deprecated = true]; // Not used anymore in v2.1.0
 }
 
 message NymList {
@@ -54,9 +54,9 @@ message NymList {
 }
 
 message UserProfileStore {
-  map<string, NymList> nymListByNickName = 1;
+  map<string, NymList> nymListByNickName = 1 [deprecated = true]; // Not used anymore in v2.1.8
   repeated string ignoredUserProfileIds = 2;
-  map<string, UserProfile> userProfileById = 3;
+  map<string, UserProfile> userProfileById = 3 [deprecated = true]; // Not used anymore in v2.1.8
 }
 
 message ProofOfBurnProof {
@@ -83,7 +83,7 @@ message SignedWitnessStore {
 }
 
 message ProfileAgeStore {
-  repeated string profileIds = 1;
+  repeated string profileIds = 1 [deprecated = true]; // Not used anymore in v2.1.8
   sint64 lastRequested = 2;
 }
 
@@ -157,4 +157,26 @@ message BannedUserProfileData {
 }
 message BannedUserStore {
   repeated BannedUserProfileData bannedUserProfileDataSet = 1;
+}
+
+enum ContactReason {
+  CONTACTREASON_UNSPECIFIED = 0;
+  CONTACTREASON_PRIVATE_CHAT = 1;
+  CONTACTREASON_BISQ_EASY_TRADE = 2;
+  CONTACTREASON_MUSIG_TRADE = 3;
+  CONTACTREASON_MANUALLY_ADDED = 4;
+}
+
+message ContactListEntry{
+  UserProfile userProfile = 1;
+  sint64 date = 2;
+  ContactReason contactReason = 3;
+  optional double trustScore = 4;
+  optional string tag = 5;
+  optional string notes = 6;
+  UserProfile myUserProfile = 7;
+}
+
+message ContactListStore {
+  repeated ContactListEntry contactListEntries = 1;
 }

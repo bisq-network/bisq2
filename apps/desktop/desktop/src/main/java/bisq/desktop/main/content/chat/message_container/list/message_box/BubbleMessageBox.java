@@ -29,6 +29,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.SelectableLabel;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -80,7 +81,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected ReactMenuBox reactMenuBox;
     protected Label userName;
     protected Label dateTime;
-    protected final Label message;
+    protected final SelectableLabel message;
     protected HBox userNameAndDateHBox;
     protected final HBox messageBgHBox;
     protected final HBox messageHBox;
@@ -88,7 +89,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox amountAndPriceBox;
     protected final HBox paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
-    protected BisqMenuItem copyAction;
+    protected BisqMenuItem copy;
     protected DropdownMenu moreActionsMenu;
     private Subscription showHighlightedPin, reactMenuPin;
     private Timeline timeline;
@@ -131,6 +132,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected void setUpUserNameAndDateTime() {
         userName = new Label();
         userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
+
         dateTime = new Label();
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
         dateTime.setText(item.getDate());
@@ -176,11 +178,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected void setUpActions() {
-        copyAction = new BisqMenuItem("copy-grey", "copy-white");
-        copyAction.useIconOnly();
-        copyAction.setTooltip(Res.get("action.copyToClipboard"));
+        copy = new BisqMenuItem("copy-grey", "copy-white");
+        copy.useIconOnly();
+        copy.setTooltip(Res.get("action.copyToClipboard"));
+
         actionsHBox.setVisible(false);
-        HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(copy, ACTION_ITEMS_MARGIN);
         HBox.setMargin(reactMenuBox, ACTION_ITEMS_MARGIN);
     }
 
@@ -210,6 +213,8 @@ public abstract class BubbleMessageBox extends MessageBox {
         if (messageBgHBox != null) {
             messageBgHBox.setEffect(null);
         }
+
+        quotedMessageVBox.setOnMouseClicked(null);
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {
@@ -302,21 +307,23 @@ public abstract class BubbleMessageBox extends MessageBox {
                 userName.getStyleClass().add("font-medium");
                 userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
                 quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
+                quotedMessageVBox.setOnMouseClicked(e -> controller.onClickQuoteMessage(citation.getChatMessageId()));
+                quotedMessageVBox.getStyleClass().add("hand-cursor");
             }
         } else {
             quotedMessageVBox.getChildren().clear();
             quotedMessageVBox.setVisible(false);
             quotedMessageVBox.setManaged(false);
+            quotedMessageVBox.setOnMouseClicked(null);
         }
     }
 
-    private Label createAndGetMessage() {
-        Label label = new Label();
+    private SelectableLabel createAndGetMessage() {
+        SelectableLabel label = new SelectableLabel(item.getMessage());
         label.maxWidthProperty().unbind();
         label.setWrapText(true);
         label.setPadding(new Insets(10));
-        label.getStyleClass().addAll("text-fill-white", "medium-text", "font-default");
-        label.setText(item.getMessage());
+        label.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
         return label;
     }
 

@@ -27,7 +27,7 @@ public record SettingsDto(boolean isTacAccepted,
                           String languageCode,
                           Set<String> supportedLanguageCodes,
                           double maxTradePriceDeviation,
-                          MarketDto selectedMarket,
+                          MarketDto selectedMuSigMarket,
                           int numDaysAfterRedactingTradeData,
                           boolean useAnimations) {
 }

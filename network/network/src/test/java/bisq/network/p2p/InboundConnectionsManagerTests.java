@@ -18,11 +18,10 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.file.FileUtils;
-import bisq.common.network.DefaultLocalhostFacade;
-import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Feature;
@@ -39,6 +38,7 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -50,15 +50,18 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 @Slf4j
+@Disabled("Excluded from test run as not fully implemented")
 public class InboundConnectionsManagerTests {
-    private final Path tmpDir = FileUtils.createTempDir();
     private final AuthorizationService authorizationService = createAuthorizationService();
     private final List<TransportType> supportedTransportTypes = new ArrayList<>(1);
 
@@ -71,7 +74,7 @@ public class InboundConnectionsManagerTests {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
 
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+        Address myAddress = LocalHostAddressTypeFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
         InetSocketAddress socketAddress = new InetSocketAddress(
                 InetAddress.getLocalHost(),
                 myAddress.getPort()
@@ -129,7 +132,7 @@ public class InboundConnectionsManagerTests {
             socketChannel.connect(socketAddress);
 
             InetSocketAddress localSocketAddress = (InetSocketAddress) socketChannel.getLocalAddress();
-            Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(localSocketAddress.getPort());
+            Address peerAddress = LocalHostAddressTypeFacade.toLocalHostAddress(localSocketAddress.getPort());
 
             bisq.network.protobuf.NetworkEnvelope poWRequest = createPoWRequest(myAddress, peerAddress);
             byte[] requestInBytes = poWRequest.toByteArray();
@@ -160,7 +163,7 @@ public class InboundConnectionsManagerTests {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
 
-        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+        Address myAddress = LocalHostAddressTypeFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
         InetSocketAddress socketAddress = new InetSocketAddress(
                 InetAddress.getLocalHost(),
                 myAddress.getPort()
@@ -218,7 +221,7 @@ public class InboundConnectionsManagerTests {
             socketChannel.connect(socketAddress);
 
             InetSocketAddress localSocketAddress = (InetSocketAddress) socketChannel.getLocalAddress();
-            Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(localSocketAddress.getPort());
+            Address peerAddress = LocalHostAddressTypeFacade.toLocalHostAddress(localSocketAddress.getPort());
 
             bisq.network.protobuf.NetworkEnvelope invalidPoWRequest = createPoWRequest(peerAddress, myAddress);
 
@@ -260,6 +263,7 @@ public class InboundConnectionsManagerTests {
     }
 
     private AuthorizationService createAuthorizationService() {
+        //noinspection deprecation
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),

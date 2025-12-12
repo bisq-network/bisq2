@@ -1,9 +1,16 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
-import bisq.common.timer.Scheduler;
+import bisq.common.network.clear_net_address_types.AndroidEmulatorAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.ClearNetAddressType;
+import bisq.common.network.clear_net_address_types.LANAddressTypeFacade;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
@@ -16,72 +23,86 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
+import static bisq.common.facades.FacadeProvider.getClearNetAddressTypeFacade;
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+import static com.google.common.base.Preconditions.checkArgument;
 
 
 @Slf4j
 public class ClearNetTransportService implements TransportService {
-
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
-        public static Config from(Path dataDir, com.typesafe.config.Config config) {
-
-            return new Config(dataDir,
+        public static Config from(Path dataDirPath, com.typesafe.config.Config config) {
+            return new Config(dataDirPath,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
-                    config.getInt("devModeDelayInMs"),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    config.getInt("connectTimeoutMs")
+                    config.getInt("connectTimeoutMs"),
+                    config.getEnum(ClearNetAddressType.class, "clearNetAddressType")
             );
         }
 
-        private final Path dataDir;
+        private final Path dataDirPath;
         private final int defaultNodePort;
-        private final int defaultNodeSocketTimeout;
-        private final int userNodeSocketTimeout;
-        private final int devModeDelayInMs;
+        private final int socketTimeout;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
         private final int connectTimeoutMs;
+        private final ClearNetAddressType clearNetAddressType;
 
-        public Config(Path dataDir,
+        public Config(Path dataDirPath,
                       int defaultNodePort,
-                      int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout,
-                      int devModeDelayInMs,
+                      int socketTimeout,
                       int sendMessageThrottleTime,
                       int receiveMessageThrottleTime,
-                      int connectTimeoutMs) {
-            this.dataDir = dataDir;
+                      int connectTimeoutMs,
+                      ClearNetAddressType clearNetAddressType) {
+            this.dataDirPath = dataDirPath;
             this.defaultNodePort = defaultNodePort;
-            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
-            this.userNodeSocketTimeout = userNodeSocketTimeout;
-            this.devModeDelayInMs = devModeDelayInMs;
+            this.socketTimeout = socketTimeout;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
             this.connectTimeoutMs = connectTimeoutMs;
+            this.clearNetAddressType = clearNetAddressType;
         }
     }
 
-    private final int devModeDelayInMs;
+    private final int socketTimeout;
     private final int connectTimeoutMs;
-    private int numSocketsCreated = 0;
-    @Getter
-    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
-    private Scheduler startBootstrapProgressUpdater;
+    @Getter
+    public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
+    @Getter
+    public final ObservableHashMap<TransportState, Long> timestampByTransportState = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public ClearNetTransportService(TransportConfig config) {
-        devModeDelayInMs = config.getDevModeDelayInMs();
+        socketTimeout = config.getSocketTimeout();
         connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
+        setTransportState(TransportState.NEW);
+
+        switch (((Config) config).getClearNetAddressType()) {
+            case LOCAL_HOST -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LocalHostAddressTypeFacade());
+            }
+            case ANDROID_EMULATOR -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new AndroidEmulatorAddressTypeFacade());
+            }
+            case LAN -> {
+                FacadeProvider.setClearNetAddressTypeFacade(new LANAddressTypeFacade());
+            }
+        }
     }
 
     @Override
@@ -89,89 +110,71 @@ public class ClearNetTransportService implements TransportService {
         if (initializeCalled) {
             return;
         }
+        setTransportState(TransportState.INITIALIZE);
         initializeCalled = true;
-        maybeSimulateDelay();
-        bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
-                .host(this)
-                .runnableName("updateStartBootstrapProgress")
-                .periodically(1000);
+        setTransportState(TransportState.INITIALIZED);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
+        if (!initializeCalled) {
+            return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.supplyAsync(() -> true,
-                CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS));
+        initializeCalled = false;
+        setTransportState(TransportState.STOPPING);
+        initializeServerSocketTimestampByNetworkId.clear();
+        initializedServerSocketTimestampByNetworkId.clear();
+        timestampByTransportState.clear();
+        setTransportState(TransportState.TERMINATED);
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
-        int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
+    public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
+        Optional<Address> optionalAddress = networkId.getAddressByTransportTypeMap().getAddress(TransportType.CLEAR);
+        checkArgument(optionalAddress.isPresent(), "networkId.getAddressByTransportTypeMap().getAddress(TransportType.CLEAR) must not be empty");
+        int port = optionalAddress.map(Address::getPort).orElseThrow();
+        initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
         log.info("Create serverSocket at port {}", port);
 
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
-        bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-        bootstrapInfo.getBootstrapProgress().set(0.25);
-        bootstrapInfo.getBootstrapDetails().set("Start creating server");
-
-        maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address myAddress = getLocalhostFacade().toMyLocalhost(port);
+            ClearnetAddress address = getClearNetAddressTypeFacade().toMyLocalAddress(port);
             log.debug("ServerSocket created at port {}", port);
-
-            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-            bootstrapInfo.getBootstrapProgress().set(0.5);
-            bootstrapInfo.getBootstrapDetails().set("Server created: " + myAddress);
-
-            return new ServerSocketResult(serverSocket, myAddress);
+            initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
+            return new ServerSocketResult(serverSocket, address);
         } catch (IOException e) {
-            log.error("{}. Server port {}", e, port);
+            log.error("Error at getServerSocket. Port {}", port, e);
             throw new CompletionException(e);
         }
     }
 
     @Override
-    public Socket getSocket(Address address) throws IOException {
-        address = getLocalhostFacade().toPeersLocalhost(address);
-
-        log.debug("Create new Socket to {}", address);
-        maybeSimulateDelay();
-        Socket socket = new Socket();
-        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
-
-        numSocketsCreated++;
-
-        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
-        bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
-        bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
-
-        return socket;
-    }
-
-    @Override
-    public boolean isPeerOnline(Address address) {
-        try (Socket ignored = getSocket(address)) {
-            return true;
-        } catch (IOException e) {
-            return false;
+    public Socket getSocket(Address address, String nodeId) throws IOException {
+        if (address instanceof ClearnetAddress clearnetAddress) {
+            clearnetAddress = getClearNetAddressTypeFacade().toPeersLocalAddress(clearnetAddress);
+            log.debug("Create new Socket to {}", clearnetAddress);
+            Socket socket = new Socket();
+            socket.setSoTimeout(socketTimeout);
+            socket.connect(new InetSocketAddress(clearnetAddress.getHost(), clearnetAddress.getPort()), connectTimeoutMs);
+            return socket;
+        } else {
+            throw new IllegalArgumentException("Address is not a ClearnetAddress");
         }
     }
 
-    private void maybeSimulateDelay() {
-        if (devModeDelayInMs > 0) {
-            try {
-                Thread.sleep(devModeDelayInMs);
-            } catch (Throwable t) {
-                log.error("Exception", t);
-            }
+    @Override
+    public CompletableFuture<Boolean> isPeerOnlineAsync(Address address, String nodeId) {
+        if (address instanceof ClearnetAddress clearnetAddress) {
+            return CompletableFuture.supplyAsync(() -> {
+                try (Socket ignored = getSocket(clearnetAddress, nodeId)) {
+                    return true;
+                } catch (IOException e) {
+                    return false;
+                }
+            }, commonForkJoinPool());
+        } else {
+            throw new IllegalArgumentException("Address is not a ClearnetAddress");
         }
     }
 }

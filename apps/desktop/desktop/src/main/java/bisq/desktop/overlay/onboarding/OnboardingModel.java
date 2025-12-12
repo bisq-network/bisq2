@@ -17,7 +17,7 @@
 
 package bisq.desktop.overlay.onboarding;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

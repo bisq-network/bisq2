@@ -17,17 +17,15 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.threading.ExecutorFactory;
-import bisq.evolution.updater.DownloadItem;
-import bisq.evolution.updater.UpdaterService;
-import bisq.evolution.updater.UpdaterUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,49 +33,54 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.evolution.updater.UpdaterUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static bisq.evolution.updater.UpdaterUtils.UPDATES_DIR;
+import static bisq.evolution.updater.UpdaterUtils.readVersionFromVersionFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 // Tests deactivated as they fail on CI due FileNotFoundException probably related to the srcBaseDir location.
 // Locally it works. But anyway the test could be removed as well. Leaving it still until the updater project is completed.
 @Slf4j
 public class UpdaterIntegrationTest {
-    private File srcBaseDir;
-    private File destinationBaseDir;
+    private Path srcBaseDirPath;
+    private Path destinationBaseDirPath;
     private ExecutorService executorService;
 
     @BeforeEach
     void setUp() {
-        srcBaseDir = Path.of("build/resources/test").toFile();
-        destinationBaseDir = Path.of("temp").toFile();
+        srcBaseDirPath = Path.of("build/resources/test");
+        destinationBaseDirPath = Path.of("temp");
 
         executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        if (destinationBaseDir.exists()) {
-            FileUtils.deleteFileOrDirectory(destinationBaseDir);
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
+        if (Files.exists(destinationBaseDirPath)) {
+            FileMutatorUtils.deleteFileOrDirectory(destinationBaseDirPath);
         }
     }
 
     // @Test
     public void downloadAndVerifyLauncher() {
-        String baseDir = destinationBaseDir.getAbsolutePath();
         String version = "1.9.9";
-        String sourceDirectory = Path.of(srcBaseDir.getAbsolutePath(), version).toString();
-        String destinationDirectory = Path.of(destinationBaseDir.getAbsolutePath(), UPDATES_DIR, version).toString();
+        Path sourceDirPath = srcBaseDirPath.resolve(version);
+        Path destinationDirPath = destinationBaseDirPath.resolve(UPDATES_DIR).resolve(version);
 
         boolean isLauncherUpdate = true;
         boolean ignoreSigningKeyInResourcesCheck = false;
         List<String> keyIds = List.of("387C8307");
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
-            FileUtils.makeDirs(new File(destinationDirectory));
-            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
-            simulateDownload(downloadItemList, sourceDirectory, executorService)
-                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
-                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, baseDir, executorService))
+            Files.createDirectories(destinationDirPath);
+            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
+            simulateDownload(downloadItemList, sourceDirPath.toString(), executorService)
+                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirPath, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, destinationBaseDirPath, executorService))
                     .whenComplete((e, throwable) -> {
                         if (throwable != null) {
                             throwable.printStackTrace();
@@ -86,11 +89,11 @@ public class UpdaterIntegrationTest {
                     })
                     .join();
 
-            List<String> filesInSourceDirectory = FileUtils.listFilesInDirectory(sourceDirectory, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
-            List<String> filesInDestinationDirectory = FileUtils.listFilesInDirectory(destinationDirectory, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInSourceDirectory = FileReaderUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInDestinationDirectory = FileReaderUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
             assertEquals(filesInSourceDirectory, filesInDestinationDirectory);
 
-            Optional<String> versionFromFile = readVersionFromVersionFile(baseDir);
+            Optional<String> versionFromFile = readVersionFromVersionFile(destinationBaseDirPath);
             assertTrue(versionFromFile.isPresent());
             assertEquals(version, versionFromFile.get());
         } catch (IOException e) {
@@ -101,21 +104,20 @@ public class UpdaterIntegrationTest {
 
     // @Test
     public void downloadAndVerifyJar() {
-        String baseDir = destinationBaseDir.getAbsolutePath();
         String version = "1.9.10";
-        String sourceDirectory = Path.of(srcBaseDir.getAbsolutePath(), version).toString();
-        String destinationDirectory = Path.of(destinationBaseDir.getAbsolutePath(), UPDATES_DIR, version).toString();
+        Path sourceDirPath = srcBaseDirPath.resolve(version);
+        Path destinationDirPath = destinationBaseDirPath.resolve(UPDATES_DIR).resolve(version);
 
         boolean isLauncherUpdate = false;
         boolean ignoreSigningKeyInResourcesCheck = false;
         List<String> keyIds = List.of("387C8307");
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
-            FileUtils.makeDirs(new File(destinationDirectory));
-            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));
-            simulateDownload(downloadItemList, sourceDirectory, executorService)
-                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirectory, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
-                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, baseDir, executorService))
+            Files.createDirectories(destinationDirPath);
+            List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
+            simulateDownload(downloadItemList, sourceDirPath.toString(), executorService)
+                    .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirPath, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
+                    .thenCompose(nil -> UpdaterService.writeVersionFile(version, destinationBaseDirPath, executorService))
                     .whenComplete((e, throwable) -> {
                         if (throwable != null) {
                             throwable.printStackTrace();
@@ -124,11 +126,11 @@ public class UpdaterIntegrationTest {
                     })
                     .join();
 
-            List<String> filesInSourceDirectory = FileUtils.listFilesInDirectory(sourceDirectory, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
-            List<String> filesInDestinationDirectory = FileUtils.listFilesInDirectory(destinationDirectory, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInSourceDirectory = FileReaderUtils.listFilesInDirectory(sourceDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
+            List<String> filesInDestinationDirectory = FileReaderUtils.listFilesInDirectory(destinationDirPath, 100).stream().filter(e -> !e.equals(".DS_Store")).sorted().toList();
             assertEquals(filesInSourceDirectory, filesInDestinationDirectory);
 
-            Optional<String> versionFromFile = readVersionFromVersionFile(baseDir);
+            Optional<String> versionFromFile = readVersionFromVersionFile(destinationBaseDirPath);
             assertTrue(versionFromFile.isPresent());
             assertEquals(version, versionFromFile.get());
         } catch (IOException e) {
@@ -137,11 +139,15 @@ public class UpdaterIntegrationTest {
         }
     }
 
-    CompletableFuture<Void> simulateDownload(List<DownloadItem> downloadItemList, String localDevTestSrcDir, ExecutorService executorService) {
+    CompletableFuture<Void> simulateDownload(List<DownloadItem> downloadItemList,
+                                             String localDevTestSrcDir,
+                                             ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
-                    FileUtils.copyFile(new File(localDevTestSrcDir, downloadItem.getSourceFileName()), downloadItem.getDestinationFile());
+                    FileMutatorUtils.copyFile(
+                            Path.of(localDevTestSrcDir, downloadItem.getSourceFileName()),
+                            downloadItem.getDestinationFilePath());
                     downloadItem.getProgress().set(1d);
                 } catch (Exception e) {
                     e.printStackTrace();

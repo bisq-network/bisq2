@@ -21,26 +21,39 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.*;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.data.storage.mailbox.*;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -48,10 +61,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.p2p.services.data.storage.StoreType.*;
+import static bisq.network.p2p.services.data.storage.StoreType.ALL;
+import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
+import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STORE;
 
 @Slf4j
 public class StorageService {
+    // TODO Use a field for a single handler as only one listener is used by DataService
     public interface Listener {
         void onAdded(StorageData storageData);
 
@@ -63,6 +80,12 @@ public class StorageService {
     final Map<String, AuthenticatedDataStorageService> authenticatedDataStores = new ConcurrentHashMap<>();
     final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
+
+    // TODO Use a field for a single handler as only one listener is used by DataService
+    private final Map<String, AuthenticatedDataStorageService.Listener> authenticatedDataStoresListeners = new HashMap<>();
+    private final Map<String, MailboxDataStorageService.Listener> mailboxStoresListeners = new HashMap<>();
+    private final Map<String, AppendOnlyDataStorageService.Listener> appendOnlyDataStoresListeners = new HashMap<>();
+
     private final PersistenceService persistenceService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
@@ -74,15 +97,15 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        String subPath = persistenceService.getBaseDir() + File.separator + DbSubDirectory.NETWORK_DB.getDbPath();
+        Path subPath = persistenceService.getAppDataDirPath().resolve(DbSubDirectory.NETWORK_DB.getDbPath());
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
-            String directory = subPath + File.separator + authStoreName;
-            if (new File(directory).exists()) {
-                getExistingStoreKeys(directory)
+            Path dirPath = subPath.resolve(authStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
-                            dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
+                            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(AuthenticatedData authenticatedData) {
                                     listeners.forEach(listener -> {
@@ -115,17 +138,19 @@ public class StorageService {
                                         }
                                     });
                                 }
-                            });
+                            };
+                            dataStore.addListener(listener);
+                            authenticatedDataStoresListeners.put(storeKey, listener);
                             authenticatedDataStores.put(storeKey, dataStore);
                         });
             }
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
-            directory = subPath + File.separator + mailboxStoreName;
-            if (new File(directory).exists()) {
-                getExistingStoreKeys(directory)
+            dirPath = subPath.resolve(mailboxStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
-                            dataStore.addListener(new MailboxDataStorageService.Listener() {
+                            MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
                                     listeners.forEach(listener -> {
@@ -147,24 +172,28 @@ public class StorageService {
                                         }
                                     });
                                 }
-                            });
+                            };
+                            dataStore.addListener(listener);
+                            mailboxStoresListeners.put(storeKey, listener);
                             mailboxStores.put(storeKey, dataStore);
                         });
             }
 
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
-            directory = subPath + File.separator + appendStoreName;
-            if (new File(directory).exists()) {
-                getExistingStoreKeys(directory)
+            dirPath = subPath.resolve(appendStoreName);
+            if (Files.exists(dirPath)) {
+                getExistingStoreKeys(dirPath)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
-                            dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> {
+                            AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
                                 try {
-                                    listener.onAdded(appendOnlyData);
+                                    l.onAdded(appendOnlyData);
                                 } catch (Exception e) {
-                                    log.error("Calling onAdded at listener {} failed", listener, e);
+                                    log.error("Calling onAdded at listener {} failed", l, e);
                                 }
-                            }));
+                            });
+                            dataStore.addListener(listener);
+                            appendOnlyDataStoresListeners.put(storeKey, listener);
                             appendOnlyDataStores.put(storeKey, dataStore);
                         });
             }
@@ -174,9 +203,33 @@ public class StorageService {
     }
 
     public void shutdown() {
+        authenticatedDataStores.forEach((key, store) -> {
+            AuthenticatedDataStorageService.Listener listener = authenticatedDataStoresListeners.get(key);
+            store.removeListener(listener);
+        });
+        authenticatedDataStoresListeners.clear();
+
+        mailboxStores.forEach((key, store) -> {
+            MailboxDataStorageService.Listener listener = mailboxStoresListeners.get(key);
+            store.removeListener(listener);
+        });
+        mailboxStoresListeners.clear();
+
+        appendOnlyDataStores.forEach((key, store) -> {
+            AppendOnlyDataStorageService.Listener listener = appendOnlyDataStoresListeners.get(key);
+            store.removeListener(listener);
+        });
+        appendOnlyDataStoresListeners.clear();
+
         authenticatedDataStores.values().forEach(DataStorageService::shutdown);
+        authenticatedDataStores.clear();
+
         mailboxStores.values().forEach(DataStorageService::shutdown);
+        mailboxStores.clear();
+
         appendOnlyDataStores.values().forEach(DataStorageService::shutdown);
+        appendOnlyDataStores.clear();
+        listeners.clear();
     }
 
 
@@ -192,12 +245,13 @@ public class StorageService {
         return getAuthenticatedData(getStoreByFileName(storeKey));
     }
 
-    public Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
+    private Stream<AuthenticatedData> getAuthenticatedData(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(this::getAuthenticatedData);
     }
 
     private Stream<AuthenticatedData> getAuthenticatedData(DataStorageService<? extends DataRequest> store) {
-        return store.getPersistableStore().getClone().getMap().values().stream()
+        // todo use getClone once tested enough on main
+        return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
                 .map(e -> (AddAuthenticatedDataRequest) e)
                 .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
@@ -292,7 +346,7 @@ public class StorageService {
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
                     if (dataStorageResult.isSuccess()) {
-                        return Optional.of(dataStorageResult.getRemovedData());
+                        return Optional.ofNullable(dataStorageResult.getRemovedData());
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
                             log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
@@ -307,7 +361,7 @@ public class StorageService {
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
                     if (dataStorageResult.isSuccess()) {
-                        return Optional.of(dataStorageResult.getRemovedData());
+                        return Optional.ofNullable(dataStorageResult.getRemovedData());
                     } else {
                         if (dataStorageResult.isSevereFailure()) {
                             log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
@@ -318,15 +372,18 @@ public class StorageService {
     }
 
     public Stream<Map<ByteArray, AuthenticatedDataRequest>> getAuthenticatedDataStoreMaps() {
-        return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map<ByteArray, MailboxRequest>> getMailboxStoreMaps() {
-        return mailboxStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return mailboxStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map<ByteArray, AddAppendOnlyDataRequest>> getAddAppendOnlyDataStoreMaps() {
-        return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
+        // todo use getClone once tested enough on main
+        return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getMutableClone().getMap());
     }
 
     public Stream<Map.Entry<ByteArray, ? extends DataRequest>> getAllDataRequestMapEntries() {
@@ -344,7 +401,8 @@ public class StorageService {
     }
 
     private Stream<MailboxData> getMailboxData(DataStorageService<? extends DataRequest> store) {
-        return store.getPersistableStore().getClone().getMap().values().stream()
+        // todo use getClone once tested enough on main
+        return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddMailboxRequest)
                 .map(e -> (AddMailboxRequest) e)
                 .map(e -> e.getMailboxSequentialData().getMailboxData());
@@ -357,11 +415,12 @@ public class StorageService {
 
     public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
         if (!authenticatedDataStores.containsKey(storeKey)) {
-            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
+            AuthenticatedDataStorageService storageService = new AuthenticatedDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     storeKey);
-            dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
+
+            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
                     listeners.forEach(listener -> {
@@ -383,9 +442,13 @@ public class StorageService {
                         }
                     });
                 }
-            });
-            authenticatedDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApplyAsync(store -> dataStore, NetworkService.DISPATCHER);
+            };
+
+            storageService.addListener(listener);
+            authenticatedDataStoresListeners.put(storeKey, listener);
+            authenticatedDataStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }
@@ -393,11 +456,12 @@ public class StorageService {
 
     public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
         if (!mailboxStores.containsKey(storeKey)) {
-            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
+            MailboxDataStorageService storageService = new MailboxDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     MAILBOX_DATA_STORE.getStoreName(),
                     storeKey);
-            dataStore.addListener(new MailboxDataStorageService.Listener() {
+
+            MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
                     listeners.forEach(listener -> {
@@ -419,9 +483,15 @@ public class StorageService {
                         }
                     });
                 }
-            });
-            mailboxStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+            };
+
+            storageService.addListener(listener);
+            mailboxStoresListeners.put(storeKey, listener);
+            mailboxStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
+
+
         } else {
             return CompletableFuture.completedFuture(mailboxStores.get(storeKey));
         }
@@ -429,11 +499,23 @@ public class StorageService {
 
     public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
         if (!appendOnlyDataStores.containsKey(storeKey)) {
-            AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService,
+            AppendOnlyDataStorageService storageService = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
                     storeKey);
-            appendOnlyDataStores.put(storeKey, dataStore);
-            return dataStore.readPersisted().thenApply(nil -> dataStore);
+
+            AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
+                try {
+                    l.onAdded(appendOnlyData);
+                } catch (Exception e) {
+                    log.error("Calling onAdded at listener {} failed", l, e);
+                }
+            });
+
+            storageService.addListener(listener);
+            appendOnlyDataStoresListeners.put(storeKey, listener);
+            appendOnlyDataStores.put(storeKey, storageService);
+            storageService.readPersisted();
+            return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
         }
@@ -530,11 +612,11 @@ public class StorageService {
                 .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
-    private Set<String> getExistingStoreKeys(String directory) {
+    private Set<String> getExistingStoreKeys(Path dirPath) {
         return NetworkStorageWhiteList.getClassNames().stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
-                    return Path.of(directory, storageFileName).toFile().exists();
+                    return Files.exists(dirPath.resolve(storageFileName));
                 })
                 .collect(Collectors.toSet());
     }

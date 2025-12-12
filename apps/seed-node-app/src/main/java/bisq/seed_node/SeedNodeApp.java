@@ -18,8 +18,7 @@
 package bisq.seed_node;
 
 import bisq.application.Executable;
-import bisq.common.file.FileUtils;
-import bisq.common.threading.ThreadName;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.AddressByTransportTypeMap;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ import java.nio.file.Path;
 @Slf4j
 public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(SeedNodeApp.class, "main");
+        Thread.currentThread().setName("SeedNodeApp.main");
         new SeedNodeApp(args);
     }
 
@@ -43,9 +42,9 @@ public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
         AddressByTransportTypeMap addressByTransportTypeMap =
                 applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap();
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
-        Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
+        Path path = applicationService.getConfig().getAppDataDirPath().resolve("default_node_address.json");
         try {
-            FileUtils.writeToFile(json, path.toFile());
+            FileMutatorUtils.writeToPath(json, path);
         } catch (IOException e) {
             log.error("Error at write json", e);
         }

@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
@@ -44,7 +44,7 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
     @Setter
     private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
     @Setter
@@ -54,6 +54,7 @@ public class TradeWizardAmountModel implements Model {
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowHowToBuildReputationButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowWarningIcon = new SimpleBooleanProperty();
+    private final BooleanProperty learnMoreVisible = new SimpleBooleanProperty();
     @Setter
     private String amountLimitInfoLink;
     @Setter
@@ -76,7 +77,7 @@ public class TradeWizardAmountModel implements Model {
 
     public void reset() {
         direction = null;
-        market = MarketRepository.getDefault();
+        market = MarketRepository.getDefaultBtcFiatMarket();
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         amountLimitInfo.set(null);
@@ -84,6 +85,7 @@ public class TradeWizardAmountModel implements Model {
         shouldShowAmountLimitInfo.set(false);
         shouldShowHowToBuildReputationButton.set(false);
         shouldShowWarningIcon.set(false);
+        learnMoreVisible.set(false);
         amountLimitInfoLink = null;
         linkToWikiText = null;
         isCreateOfferMode = false;

@@ -19,8 +19,15 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
+import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.services.data.storage.*;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -31,14 +38,16 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
+    // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
     public interface Listener {
         void onAdded(AuthenticatedData authenticatedData);
 
@@ -48,6 +57,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
 
@@ -70,6 +80,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
+        listeners.clear();
     }
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
@@ -96,7 +107,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedSequentialData.isExpired()) {
-                log.info("AddAuthenticatedDataRequest with {} is expired on {}",
+                log.debug("AddAuthenticatedDataRequest with {} is expired on {}",
                         distributedData.getClass().getSimpleName(),
                         new Date(authenticatedSequentialData.getCreated() + distributedData.getMetaData().getTtl())
                 );
@@ -111,7 +122,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             if (authenticatedData instanceof AuthorizedData authorizedData) {
                 if (authorizedData.isNotAuthorized()) {
-                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 500));
+                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
                     return new DataStorageResult(false).isNotAuthorized();
                 }
             }
@@ -206,12 +217,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // different versions and metaData has changed between those versions.
             // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
             MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
-            if (!request.getMetaDataFromProto().equals(metaDataFromDistributedData)) {
+            if (!request.getFallbackMetaData().equals(metaDataFromDistributedData)) {
                 request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
                 log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
                                 "metadata with the one we have from the associated distributed data." +
                                 "{} vs. {}",
-                        request.getMetaDataFromProto(),
+                        request.getFallbackMetaData(),
                         metaDataFromDistributedData);
             }
 
@@ -384,20 +395,58 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     // Useful for debugging state of the store
     private void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
             var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(e -> e.getDistributedData().getClass().getSimpleName())
-                    .toList();
+                    .collect(Collectors.toList());
             var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
-                    .toList();
-            var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), dataStore.getMap().size());
+                    .collect(Collectors.toList());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}, Max size: {}",
+                    methodName,
+                    storeKey,
+                    added.size(),
+                    removed.size(),
+                    dataStore.getMap().size(),
+                    DataSizeFormatter.format(dataSize),
+                    getMaxMapSize());
+            boolean showDetails = false;
+            if (showDetails) {
+                long now = System.currentTimeMillis();
+                String summaryAdded = dataStore.getMap().values().stream()
+                        .filter(AddAuthenticatedDataRequest.class::isInstance)
+                        .map(AddAuthenticatedDataRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+                String summaryRemoved = dataStore.getMap().values().stream()
+                        .filter(RemoveAuthenticatedDataRequest.class::isInstance)
+                        .map(RemoveAuthenticatedDataRequest.class::cast)
+                        .collect(Collectors.groupingBy(
+                                e -> TimeUnit.MILLISECONDS.toDays(now - e.getCreated()),
+                                TreeMap::new, // sorted by age in days
+                                Collectors.counting()
+                        ))
+                        .entrySet().stream()
+                        .map(entry -> entry.getKey() + " days old: " + entry.getValue())
+                        .collect(Collectors.joining("\n"));
+
+
+                log.info("AddAuthenticatedDataRequest: {}\n{}", storeKey, summaryAdded);
+                log.info("RemoveAuthenticatedDataRequest: {}\n{}", storeKey, summaryRemoved);
+            }
         }
     }
 }

@@ -17,11 +17,27 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
+@Slf4j
 public class WalletView extends ContentTabView<WalletModel, WalletController> {
+    private Button setupWalletButton;
+    private Hyperlink restoreWalletLink;
+    private Subscription isWalletInitializedPin;
+
     public WalletView(WalletModel model, WalletController controller) {
         super(model, controller);
 
@@ -30,5 +46,72 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
         addTab(Res.get("wallet.receive"), NavigationTarget.WALLET_RECEIVE);
         addTab(Res.get("wallet.txs"), NavigationTarget.WALLET_TXS);
         addTab(Res.get("wallet.settings"), NavigationTarget.WALLET_SETTINGS);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        super.onViewAttached();
+
+        isWalletInitializedPin = EasyBind.subscribe(model.getIsWalletInitialized(), isInitialized -> {
+            log.info("Wallet initialization status changed: {}", isInitialized);
+            if (isInitialized) {
+                setContentToTabs();
+            } else {
+                setContentToNotInitialized();
+                Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
+            }
+        });
+    }
+
+    @Override
+    protected void onViewDetached() {
+        super.onViewDetached();
+
+        isWalletInitializedPin.unsubscribe();
+
+        if (setupWalletButton != null) {
+            setupWalletButton.setOnAction(null);
+        }
+        if (restoreWalletLink != null) {
+            restoreWalletLink.setOnAction(null);
+        }
+    }
+
+    private void setContentToTabs() {
+        root.setPadding(new Insets(0));
+        root.getChildren().setAll(topBox, lineAndMarker, scrollPane);
+        if (model.getView().get() != null) {
+            scrollPane.setContent(model.getView().get().getRoot());
+        }
+    }
+
+    private void setContentToNotInitialized() {
+        Label label = new Label(Res.get("wallet.noSetup.headline"));
+        label.getStyleClass().addAll("thin-text", "very-large-text");
+
+        setupWalletButton = new Button(Res.get("wallet.noSetup.button.setup"));
+        setupWalletButton.setDefaultButton(true);
+        setupWalletButton.setOnAction(e -> controller.onSetupWalletButtonClicked());
+
+        restoreWalletLink = new Hyperlink(Res.get("wallet.noSetup.button.restore"));
+        restoreWalletLink.setOnAction(e -> controller.onRestoreWalletLinkClicked());
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(label, setupWalletButton, restoreWalletLink);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setAlignment(Pos.CENTER);
+
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
+        VBox.setMargin(label, new Insets(0, 0, 20, 0));
+        root.setPadding(new Insets(40, 40, 20, 40));
+        root.getChildren().setAll(contentBox);
+    }
+
+    private WalletModel getModel() {
+        return (WalletModel) model;
+    }
+
+    private WalletController getController() {
+        return (WalletController) controller;
     }
 }

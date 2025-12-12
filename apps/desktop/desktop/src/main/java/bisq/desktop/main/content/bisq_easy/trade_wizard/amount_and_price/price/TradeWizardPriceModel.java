@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 
 @Getter
 public class TradeWizardPriceModel implements Model {
+    private final double priceComponentWidth = 340;
     private final double maxPercentage = 0.5;
     private final double minPercentage = -0.1;
     private final double sliderMin = 0;
@@ -39,6 +40,11 @@ public class TradeWizardPriceModel implements Model {
     private Market market = null;
     @Setter
     private Direction direction;
+    @Setter
+    private boolean shouldFocusPriceComponent = false;
+    @Setter
+    private double marketPriceMarkerLayoutX;
+
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageInput = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
@@ -50,7 +56,7 @@ public class TradeWizardPriceModel implements Model {
     private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
-    private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowLearnWhyButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowWarningIcon = new SimpleBooleanProperty();
     @Setter
     private boolean isFocused;
@@ -60,6 +66,8 @@ public class TradeWizardPriceModel implements Model {
     public void reset() {
         market = null;
         direction = null;
+        shouldFocusPriceComponent = false;
+        marketPriceMarkerLayoutX = 0;
         percentage.set(0d);
         percentageInput.set(null);
         priceAsString.set(null);
@@ -69,7 +77,7 @@ public class TradeWizardPriceModel implements Model {
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
         isOverlayVisible.set(false);
-        shouldShowFeedback.set(false);
+        shouldShowLearnWhyButton.set(false);
         isFocused = false;
         priceSliderValue.set(0d);
         sliderFocus.set(false);

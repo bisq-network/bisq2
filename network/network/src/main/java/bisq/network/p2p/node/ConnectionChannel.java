@@ -17,9 +17,10 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
+import bisq.common.util.StringUtils;
+import bisq.network.NetworkExecutors;
+import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -44,7 +45,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                  AuthorizationToken authorizationToken,
+                                  ConnectionChannel connectionChannel);
 
         void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }
@@ -142,16 +145,8 @@ public abstract class ConnectionChannel {
             networkEnvelopeSocketChannel.close();
         } catch (IOException ignore) {
         }
-        NetworkService.DISPATCHER.submit(() -> {
-            listeners.forEach(listener -> {
-                try {
-                    listener.onConnectionClosed(closeReason);
-                } catch (Exception e) {
-                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
-                }
-            });
-            listeners.clear();
-        });
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
+        listeners.clear();
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {

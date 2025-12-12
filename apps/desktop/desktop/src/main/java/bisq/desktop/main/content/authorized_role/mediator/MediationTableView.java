@@ -1,7 +1,7 @@
 package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.common.encoding.Csv;
-import bisq.common.file.FileUtils;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
@@ -112,7 +112,7 @@ class MediationTableView extends VBox {
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileUtils.writeToFile(csv, file);
+                            FileMutatorUtils.writeToPath(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }
@@ -139,7 +139,6 @@ class MediationTableView extends VBox {
                 });
         noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
             if (noOpenCases) {
-                tableView.removeListeners();
                 tableView.getStyleClass().add("empty-table");
                 tableView.setPlaceholderText(model.getShowClosedCases().get() ?
                         Res.get("authorizedRole.mediator.noClosedCases") :
@@ -203,7 +202,7 @@ class MediationTableView extends VBox {
 
     private void applySearchPredicate(String searchText) {
         String string = searchText.toLowerCase();
-        model.getListItems().setPredicate(item ->
+        model.getSearchPredicate().set(item ->
                 StringUtils.isEmpty(string) ||
                         item.getMaker().getUserName().toLowerCase().contains(string) ||
                         item.getTaker().getUserName().toLowerCase().contains(string) ||

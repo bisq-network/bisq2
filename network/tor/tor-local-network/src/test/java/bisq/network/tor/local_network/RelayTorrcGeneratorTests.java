@@ -20,12 +20,13 @@ package bisq.network.tor.local_network;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -38,15 +39,15 @@ import static org.mockito.Mockito.spy;
 @Disabled
 public class RelayTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) {
-        Path relayAPath = tempDir.resolve("RELAY_A");
-        assertThat(relayAPath.toFile().mkdir()).isTrue();
+    void basicTest(@TempDir Path tempDirPath) throws IOException {
+        Path relayAPath = tempDirPath.resolve("RELAY_A");
+        Files.createDirectory(relayAPath);
 
         TorNode firstRelay = spy(
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("A")
-                        .dataDir(relayAPath)
+                        .dataDirPath(relayAPath)
 
                         .orPort(2)
                         .dirPort(3)
@@ -66,7 +67,7 @@ public class RelayTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.RELAY)
                         .nickname("B")
-                        .dataDir(tempDir.resolve("DA_B"))
+                        .dataDirPath(tempDirPath.resolve("DA_B"))
 
                         .orPort(2)
                         .dirPort(3)
@@ -89,7 +90,7 @@ public class RelayTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("A")
-                        .dataDir(tempDir.resolve("dir_auth"))
+                        .dataDirPath(tempDirPath.resolve("dir_auth"))
 
                         .orPort(2)
                         .dirPort(3)

@@ -108,10 +108,10 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
         stage.setHeight(model.getStageHeight());
         stage.setMinWidth(DesktopModel.MIN_WIDTH);
         stage.setMinHeight(DesktopModel.MIN_HEIGHT);
-        stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
-        stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
-        stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));
-        stage.heightProperty().addListener((observable, oldValue, newValue) -> controller.onStageHeightChanged((double) newValue));
+        stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged(newValue.doubleValue()));
+        stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged(newValue.doubleValue()));
+        stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged(newValue.doubleValue()));
+        stage.heightProperty().addListener((observable, oldValue, newValue) -> controller.onStageHeightChanged(newValue.doubleValue()));
     }
 
     private void configKeyEventHandlers() {

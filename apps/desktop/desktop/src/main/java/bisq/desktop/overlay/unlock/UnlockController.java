@@ -17,7 +17,7 @@
 
 package bisq.desktop.overlay.unlock;
 
-import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;

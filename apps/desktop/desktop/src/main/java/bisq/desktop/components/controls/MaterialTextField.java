@@ -18,14 +18,21 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.formatter.SafeInputStringConverter;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.TooltipUtil;
 import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
@@ -35,6 +42,7 @@ import javafx.event.WeakEventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -65,11 +73,10 @@ public class MaterialTextField extends Pane {
     protected final BisqIconButton iconButton = new BisqIconButton();
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
-    private Optional<StringConverter<Number>> stringConverter = Optional.empty();
-
+    protected Optional<StringConverter<?>> stringConverter = Optional.empty();
     private ChangeListener<Number> iconButtonHeightListener;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
+    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged(newValue.doubleValue());
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Boolean> textInputControlFocusListener = (observable, oldValue, newValue) -> onInputTextFieldFocus(newValue);
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
@@ -118,6 +125,7 @@ public class MaterialTextField extends Pane {
         line.setPrefHeight(1);
         line.setStyle("-fx-background-color: -bisq-mid-grey-20");
         line.setMouseTransparent(true);
+        line.getStyleClass().add("material-text-field-line");
 
         selectionLine.setPrefWidth(0);
         selectionLine.setPrefHeight(2);
@@ -154,7 +162,6 @@ public class MaterialTextField extends Pane {
         }
 
         errorLabel.setLayoutX(16);
-        errorLabel.setMouseTransparent(true);
         errorLabel.getStyleClass().add("material-text-field-error");
         errorLabel.setManaged(false);
         errorLabel.setVisible(false);
@@ -179,6 +186,7 @@ public class MaterialTextField extends Pane {
 
         validationControl = new ValidationControl(this.textInputControl);
 
+        cleanUserInput(true);
         doLayout();
         update();
     }
@@ -211,6 +219,11 @@ public class MaterialTextField extends Pane {
         // validator.hasErrorsProperty().addListener((observable, oldValue, newValue) -> validate());
     }
 
+    public void clearValidators() {
+        resetValidation();
+        validationControl.clearValidators();
+    }
+
     public boolean validate() {
         resetValidation();
         boolean valid = validationControl.validate();
@@ -222,16 +235,25 @@ public class MaterialTextField extends Pane {
         errorLabel.setManaged(errorLabel.isVisible());
         Optional<ValidatorBase> activeValidator = getActiveValidator();
         errorLabel.setText(activeValidator.map(ValidatorBase::getMessage).orElse(""));
+        TooltipUtil.showTooltipIfTruncated(errorLabel);
         update();
         return valid;
     }
 
     public void resetValidation() {
-        validationControl.resetValidation();
-        isValid.set(false);
+        boolean hasValidators = !validationControl.getValidators().isEmpty();
+        boolean valid = true;
+        if (hasValidators) {
+            valid = validationControl.validate();
+            validationControl.resetValidation();
+        }
+        isValid.set(valid);
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         errorLabel.setText("");
+        errorLabel.setTooltip(null);
+        errorLabel.setManaged(false);
+        errorLabel.setVisible(false);
     }
 
     public BooleanProperty isValidProperty() {
@@ -290,7 +312,7 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    public void setStringConverter(StringConverter<Number> stringConverter) {
+    public void setStringConverter(StringConverter<?> stringConverter) {
         this.stringConverter = Optional.of(stringConverter);
     }
 
@@ -396,6 +418,18 @@ public class MaterialTextField extends Pane {
 
 
     /* --------------------------------------------------------------------- */
+    // Clean user input
+    /* --------------------------------------------------------------------- */
+
+    public void cleanUserInput(boolean value) {
+        if (value) {
+            textInputControl.setTextFormatter(new TextFormatter<>(new SafeInputStringConverter()));
+        } else {
+            textInputControl.setTextFormatter(null);
+        }
+    }
+
+    /* --------------------------------------------------------------------- */
     // Event handlers
     /* --------------------------------------------------------------------- */
 
@@ -428,12 +462,14 @@ public class MaterialTextField extends Pane {
                 resetValidation();
                 selectionLine.setPrefWidth(0);
                 selectionLine.setOpacity(1);
-                Transitions.animateWidth(selectionLine, getWidth());
+                Transitions.animatePrefWidth(selectionLine, getWidth());
             } else {
                 Transitions.fadeOut(selectionLine, 200);
                 stringConverter.ifPresent(stringConverter -> {
                     try {
-                        setText(stringConverter.toString(stringConverter.fromString(getText())));
+                        Object o = stringConverter.fromString(getText());
+                        //noinspection unchecked
+                        setText(((StringConverter<Object>) stringConverter).toString(o));
                     } catch (Exception ignore) {
                     }
                 });
@@ -503,13 +539,7 @@ public class MaterialTextField extends Pane {
     }
 
     void update() {
-        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
-            if (showInputTextField()) {
-                Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
-            } else {
-                Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
-            }
-        }
+        animateDescriptionLabel();
 
         helpLabel.setVisible(StringUtils.isNotEmpty(getHelpText()) && StringUtils.isEmpty(errorLabel.getText()));
         helpLabel.setManaged(helpLabel.isVisible());
@@ -551,6 +581,16 @@ public class MaterialTextField extends Pane {
         setOpacity(textInputControl.isDisabled() ? 0.35 : 1);
         UIThread.runOnNextRenderFrame(this::layoutIconButton);
         layout();
+    }
+
+    protected void animateDescriptionLabel() {
+        if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
+            if (showInputTextField()) {
+                Transitions.animateLayoutY(descriptionLabel, 6.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
+            } else {
+                Transitions.animateLayoutY(descriptionLabel, 16.5, ManagedDuration.getOneSixthOfDefaultDurationMillis(), null);
+            }
+        }
     }
 
     protected void removeBgStyles() {

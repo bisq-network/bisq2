@@ -19,54 +19,85 @@ package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.StringUtils;
-import bisq.common.validation.NetworkDataValidation;
-import com.google.common.net.InetAddresses;
+import bisq.common.validation.NetworkPortValidation;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.StringTokenizer;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
+// We do not change the proto with subclasses to avoid breaking old clients.
 @Slf4j
 @EqualsAndHashCode
-@Getter
-public final class Address implements NetworkProto, Comparable<Address> {
-    public static Address fromFullAddress(String fullAddress) {
-        StringTokenizer st = new StringTokenizer(fullAddress, ":");
-        String host = maybeConvertLocalHost(st.nextToken());
-        checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
-        int port = Integer.parseInt(st.nextToken());
-        return new Address(host, port);
+public abstract class Address implements NetworkProto, Comparable<Address> {
+
+    public static Address from(String host, int port) {
+        if (TorAddress.isTorAddress(host)) {
+            return new TorAddress(host, port);
+        } else if (I2PAddress.isBase64Destination(host)) {
+            return new I2PAddress(host, port);
+        } else if (I2PAddress.isBase32Destination(host)) {
+            throw new IllegalArgumentException("Base32 I2P destination is not permitted as host: " + host);
+        } else {
+            return new ClearnetAddress(host, port);
+        }
     }
 
-    private final String host;
-    private final int port;
+    public static Address fromFullAddress(String socketAddress) {
+        String original = socketAddress;
+        checkArgument(StringUtils.isNotEmpty(socketAddress), "SocketAddress must not be null or empty");
+        try {
+            socketAddress = removeProtocolPrefix(socketAddress.trim());
+            checkArgument(!socketAddress.isEmpty(), "SocketAddress must not be empty");
+            // IPv6 bracketed form: [host]:port
+            if (socketAddress.startsWith("[")) {
+                int end = socketAddress.indexOf(']');
+                checkArgument(end > 0 && end + 1 < socketAddress.length() && socketAddress.charAt(end + 1) == ':',
+                        "Invalid IPv6 socket address, expected [host]:port");
+                String hostToken = socketAddress.substring(1, end);
+                String portToken = socketAddress.substring(end + 2).trim();
+                int port = Integer.parseInt(portToken);
+                return Address.from(hostToken, port);
+            }
 
-    public Address(String host, int port) {
-        this.host = maybeConvertLocalHost(host);
-        this.port = port;
+            // IPv4/hostname: split at last colon
+            checkArgument(socketAddress.split(":").length == 2, "Socket address must be of form host:port");
+            int sep = socketAddress.lastIndexOf(':');
+            checkArgument(sep > 0 && sep < socketAddress.length() - 1, "Socket address must be of form host:port");
+            String hostToken = socketAddress.substring(0, sep).trim();
+            String portToken = socketAddress.substring(sep + 1).trim();
+            int port = Integer.parseInt(portToken);
+            return Address.from(hostToken, port);
+        } catch (Exception e) {
+            log.error("Could not resolve address from {}", original, e);
+            throw e;
+        }
+    }
 
-        verify();
+    @Getter
+    protected final String host;
+    @Getter
+    protected final int port;
+
+    protected Address(String host, int port) {
+        try {
+            checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
+            host = host.trim();
+            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
+            this.host = host;
+            this.port = port;
+            verify();
+        } catch (Exception e) {
+            log.error("Could not resolve address from {}:{}", host, port, e);
+            throw e;
+        }
     }
 
 
     /* --------------------------------------------------------------------- */
     // Protobuf
     /* --------------------------------------------------------------------- */
-
-    @Override
-    public void verify() {
-        if (isTorAddress()) {
-            NetworkDataValidation.validateText(host, 62);
-        } else if (isClearNetAddress()) {
-            NetworkDataValidation.validateText(host, 45);
-        } else {
-            // I2P
-            NetworkDataValidation.validateText(host, 512);
-        }
-    }
 
     @Override
     public bisq.common.protobuf.Address toProto(boolean serializeForHash) {
@@ -80,37 +111,22 @@ public final class Address implements NetworkProto, Comparable<Address> {
                 .setPort(port);
     }
 
+    abstract public TransportType getTransportType();
+
     public static Address fromProto(bisq.common.protobuf.Address proto) {
-        return new Address(proto.getHost(), proto.getPort());
+        return Address.from(proto.getHost(), proto.getPort());
     }
 
     public boolean isClearNetAddress() {
-        return InetAddresses.isInetAddress(host);
+        return this instanceof ClearnetAddress;
     }
 
     public boolean isTorAddress() {
-        return host.endsWith(".onion");
+        return this instanceof TorAddress;
     }
 
     public boolean isI2pAddress() {
-        //TODO (deferred) add more specific check
-        return !isClearNetAddress() && !isTorAddress();
-    }
-
-    public boolean isLocalhost() {
-        return host.equals("127.0.0.1");
-    }
-
-    public TransportType getTransportType() {
-        if (isClearNetAddress()) {
-            return TransportType.CLEAR;
-        } else if (isTorAddress()) {
-            return TransportType.TOR;
-        } else if (isI2pAddress()) {
-            return TransportType.I2P;
-        } else {
-            throw new IllegalArgumentException("Could not derive TransportType from address: " + getFullAddress());
-        }
+        return this instanceof I2PAddress;
     }
 
     public String getFullAddress() {
@@ -119,20 +135,33 @@ public final class Address implements NetworkProto, Comparable<Address> {
 
     @Override
     public String toString() {
-        if (isLocalhost()) {
-            return "[" + port + "]";
-        } else {
-            return StringUtils.truncate(host, 1000) + ":" + port;
-        }
-    }
-
-    private static String maybeConvertLocalHost(String host) {
-        return host.equals("localhost") ? "127.0.0.1" : host;
+        return getFullAddress();
     }
 
     @Override
     public int compareTo(Address o) {
         return getFullAddress().compareTo(o.getFullAddress());
+    }
+
+    @VisibleForTesting
+    static String removeProtocolPrefix(String fullAddress) {
+        // Match leading scheme
+        // RFC 3986 scheme: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+        String schemePattern = "^[a-zA-Z][a-zA-Z0-9+.-]*://";
+        if (fullAddress.matches("(?i)^://.*")) {
+            throw new IllegalArgumentException("Address has missing scheme before ://: " + fullAddress);
+        }
+
+        String withoutScheme = fullAddress.replaceFirst("(?i)" + schemePattern, "");
+        // After removing scheme, ensure the remaining string is not another scheme
+        if (withoutScheme.matches("(?i)^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
+            throw new IllegalArgumentException("Address has repeated scheme: " + fullAddress);
+        }
+
+        if (withoutScheme.isEmpty()) {
+            throw new IllegalArgumentException("Address is empty after removing scheme: " + fullAddress);
+        }
+        return withoutScheme;
     }
 }
 

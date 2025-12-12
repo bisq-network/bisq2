@@ -17,42 +17,52 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.common.fsm.Event;
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.BitcoinAddressValidation;
+import bisq.common.validation.LightningInvoiceValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeMessageHandler;
+import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
+public class BisqEasyBtcAddressMessageHandler extends BisqEasyTradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
+    private String bitcoinPaymentData;
 
     public BisqEasyBtcAddressMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    public void handle(Event event) {
-        BisqEasyBtcAddressMessage message = (BisqEasyBtcAddressMessage) event;
-        verifyMessage(message);
+    protected void verify(BisqEasyBtcAddressMessage message) {
+        String bitcoinPaymentData = message.getBitcoinPaymentData();
+        checkArgument(StringUtils.isNotEmpty(bitcoinPaymentData), "Bitcoin payment data must not be empty");
 
-        commitToModel(message.getBitcoinPaymentData());
+        boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+        if (isMainChain) {
+            // We do not check for the min. length as we do not enforce the validation in the UI
+            checkArgument(bitcoinPaymentData.length() <= BitcoinAddressValidation.MAX_LENGTH,
+                    "Bitcoin address length must not be longer than " + BitcoinAddressValidation.MAX_LENGTH);
+        } else {
+            // We do not check for the min. length as we do not enforce the validation in the UI
+            checkArgument(bitcoinPaymentData.length() <= LightningInvoiceValidation.MAX_LENGTH,
+                    "Lightning invoice length must not be longer than " + LightningInvoiceValidation.MAX_LENGTH);
+        }
+
+        checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }
 
     @Override
-    protected void verifyMessage(BisqEasyBtcAddressMessage message) {
-        super.verifyMessage(message);
-
-        checkArgument(StringUtils.isNotEmpty(message.getBitcoinPaymentData()));
-        // We leave it flexible so that users can use other than a BTC address data as btcAddress
-        checkArgument(message.getBitcoinPaymentData().length() <= 1000);
-        checkNotNull(message.getBisqEasyOffer());
+    protected void process(BisqEasyBtcAddressMessage message) {
+        bitcoinPaymentData = message.getBitcoinPaymentData();
     }
 
-    private void commitToModel(String btcAddress) {
-        trade.getBitcoinPaymentData().set(btcAddress);
+    @Override
+    protected void commit() {
+        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
     }
 }

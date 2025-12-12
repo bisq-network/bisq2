@@ -19,20 +19,48 @@
     -fx-image: url("/images/bullet-point.png");
 }
 
-#clearnet {
-    -fx-image: url("/images/clearnet.png");
+#clearnet-white {
+    -fx-image: url("/images/clearnet-white.png");
 }
 
-#tor {
-    -fx-image: url("/images/tor.png");
+#clearnet-grey {
+    -fx-image: url("/images/clearnet-grey.png");
 }
 
-#tor_green {
-    -fx-image: url("/images/tor_green.png");
+#clearnet-green {
+    -fx-image: url("/images/clearnet-green.png");
 }
 
-#i2p {
-    -fx-image: url("/images/i2p.png");
+#tor-white {
+    -fx-image: url("/images/tor-white.png");
+}
+
+#tor-grey {
+    -fx-image: url("/images/tor-grey.png");
+}
+
+#tor-green {
+    -fx-image: url("/images/tor-green.png");
+}
+
+#i2p-white {
+    -fx-image: url("/images/i2p-white.png");
+}
+
+#i2p-grey {
+    -fx-image: url("/images/i2p-grey.png");
+}
+
+#i2p-green {
+    -fx-image: url("/images/i2p-green.png");
+}
+
+#rocket {
+    -fx-image: url("/images/icons/rocket.png");
+}
+
+#peer-group {
+    -fx-image: url("/images/icons/peer-group.png");
 }
 
 #info {
@@ -299,6 +327,46 @@
     -fx-image: url("/images/new.png");
 }
 
+#arrows-left-white {
+    -fx-image: url("/images/icons/arrows-left-white.png");
+}
+
+#arrows-left-grey {
+    -fx-image: url("/images/icons/arrows-left-grey.png");
+}
+
+#arrows-right-white {
+    -fx-image: url("/images/icons/arrows-right-white.png");
+}
+
+#arrows-right-grey {
+    -fx-image: url("/images/icons/arrows-right-grey.png");
+}
+
+#chart-icon-green {
+    -fx-image: url("/images/icons/chart-icon-green.png");
+}
+
+#chart-icon-grey {
+    -fx-image: url("/images/icons/chart-icon-grey.png");
+}
+
+#chart-icon-white {
+    -fx-image: url("/images/icons/chart-icon-white.png");
+}
+
+#lock-icon-green {
+    -fx-image: url("/images/icons/lock-icon-green.png");
+}
+
+#lock-icon-grey {
+    -fx-image: url("/images/icons/lock-icon-grey.png");
+}
+
+#lock-icon-white {
+    -fx-image: url("/images/icons/lock-icon-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
@@ -338,6 +406,18 @@
 
 #nav-reputation-hover {
     -fx-image: url("/images/navigation/nav-reputation-hover.png");
+}
+
+#nav-contacts {
+    -fx-image: url("/images/navigation/nav-contacts.png");
+}
+
+#nav-contacts-active {
+    -fx-image: url("/images/navigation/nav-contacts-active.png");
+}
+
+#nav-contacts-hover {
+    -fx-image: url("/images/navigation/nav-contacts-hover.png");
 }
 
 #nav-community {
@@ -496,104 +576,120 @@
     -fx-image: url("/images/navigation/nav-list-hover.png");
 }
 
+#nav-musig {
+    -fx-image: url("/images/navigation/nav-musig.png");
+}
+
+#nav-musig-active {
+    -fx-image: url("/images/navigation/nav-musig-active.png");
+}
+
+#nav-musig-hover {
+    -fx-image: url("/images/navigation/nav-musig-hover.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Onboarding */
 /* ------------------------------------------------------------------------------------ */
 
-#crowd {
-    -fx-image: url("/images/onboarding/crowd.png");
-}
-
 #bisq-easy {
-    -fx-image: url("/images/onboarding/bisq-easy.png");
-}
-
-#chat {
-    -fx-image: url("/images/onboarding/chat.png");
-}
-
-#learn {
-    -fx-image: url("/images/onboarding/learn.png");
+    -fx-image: url("/images/onboarding/bisq-easy-green.png");
 }
 
 #reputation-ribbon {
-    -fx-image: url("/images/onboarding/reputation-ribbon.png");
+    -fx-image: url("/images/onboarding/reputation-ribbon-green.png");
 }
 
-#dollar-btc {
-    -fx-image: url("/images/onboarding/dollar-btc.png");
+#learn-discover-green {
+    -fx-image: url("/images/onboarding/btc-microscope-green.png");
 }
 
-#fiat-btc {
-    -fx-image: url("/images/onboarding/fiat-btc.png");
+#trade-green {
+    -fx-image: url("/images/onboarding/fiat-btc-green.png");
 }
 
-#fiat-btc-small {
-    -fx-image: url("/images/onboarding/fiat-btc-small.png");
+#trade-small-green {
+    -fx-image: url("/images/onboarding/fiat-btc-small-green.png");
 }
 
-#fiat-btc-small-white {
+#trade-small-white {
     -fx-image: url("/images/onboarding/fiat-btc-small-white.png");
 }
 
-#thumbs-up-white {
-    -fx-image: url("/images/onboarding/thumbs-up-white.png");
+#thumbs-up-in-circle-green {
+    -fx-image: url("/images/onboarding/thumbs-up-in-circle-green.png");
 }
 
-#thumbs-up {
-    -fx-image: url("/images/onboarding/thumbs-up.png");
+#thumbs-up-in-circle-white {
+    -fx-image: url("/images/onboarding/thumbs-up-in-circle-white.png");
 }
 
-#onboarding-1-fraction {
-    -fx-image: url("/images/onboarding/onboarding-1-fraction.png");
+#reputation-in-circle-green {
+    -fx-image: url("/images/onboarding/star-in-circle-green.png");
 }
 
-#reputation {
-    -fx-image: url("/images/onboarding/reputation.png");
+#chat-in-circle-green {
+    -fx-image: url("/images/onboarding/chat-in-circle-green.png");
 }
 
-#reputation-white {
-    -fx-image: url("/images/onboarding/reputation-white.png");
+#trading-in-circle-green {
+    -fx-image: url("/images/onboarding/dollar-btc-in-circle-green.png");
 }
 
-#onboarding-2-chat {
-    -fx-image: url("/images/onboarding/onboarding-2-chat.png");
+#learn-in-circle-green {
+    -fx-image: url("/images/onboarding/open-book-in-circle-green.png");
 }
 
-#onboarding-2-chat-white {
-    -fx-image: url("/images/onboarding/onboarding-2-chat-white.png");
-}
-
-#onboarding-2-offer {
-    -fx-image: url("/images/onboarding/onboarding-2-offer.png");
-}
-
-#onboarding-2-offer-white {
-    -fx-image: url("/images/onboarding/onboarding-2-offer-white.png");
-}
-
-#onboarding-2-payment {
-    -fx-image: url("/images/onboarding/onboarding-2-payment.png");
-}
-
-#onboarding-3-market {
-    -fx-image: url("/images/onboarding/onboarding-3-market.png");
-}
-
-#onboarding-3-method {
-    -fx-image: url("/images/onboarding/onboarding-3-method.png");
-}
-
-#onboarding-3-profile {
-    -fx-image: url("/images/onboarding/onboarding-3-profile.png");
+#market-in-circle-green {
+    -fx-image: url("/images/onboarding/graph-in-circle-green.png");
 }
 
 
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
+#DOMESTIC_WIRE_TRANSFER {
+    -fx-image: url("/images/payment/domestic-wire-transfer.png");
+}
+
+#SAME_BANK {
+    -fx-image: url("/images/payment/same-bank.png");
+}
+
+#WISE_USD {
+    -fx-image: url("/images/payment/wise-us.png");
+}
+
+#PIN_4 {
+    -fx-image: url("/images/payment/pin-4.png");
+}
+
+#SWISH {
+    -fx-image: url("/images/payment/swish.png");
+}
+
+#PROMPT_PAY {
+    -fx-image: url("/images/payment/prompt-pay.png");
+}
+
+#UPHOLD {
+    -fx-image: url("/images/payment/uphold.png");
+}
+
+#MONEY_BEAM {
+    -fx-image: url("/images/payment/money-beam.png");
+}
+
+#MONEY_GRAM {
+    -fx-image: url("/images/payment/money-gram.png");
+}
+
+#HAL_CASH {
+    -fx-image: url("/images/payment/hal-cash.png");
+}
+
 #SEPA {
-    -fx-image: url("/images/payment/sepa-.png");
+    -fx-image: url("/images/payment/sepa.png");
 }
 
 #SEPA_INSTANT {
@@ -601,15 +697,15 @@
 }
 
 #ZELLE {
-    -fx-image: url("/images/payment/zelle-.png");
+    -fx-image: url("/images/payment/zelle.png");
 }
 
 #REVOLUT {
-    -fx-image: url("/images/payment/revolut-.png");
+    -fx-image: url("/images/payment/revolut.png");
 }
 
 #WISE {
-    -fx-image: url("/images/payment/wise-.png");
+    -fx-image: url("/images/payment/wise.png");
 }
 
 #NATIONAL_BANK {
@@ -621,15 +717,15 @@
 }
 
 #F2F {
-    -fx-image: url("/images/payment/f2f-.png");
+    -fx-image: url("/images/payment/f2f.png");
 }
 
 #ACH_TRANSFER {
-    -fx-image: url("/images/payment/ach-.png");
+    -fx-image: url("/images/payment/ach.png");
 }
 
 #PIX {
-    -fx-image: url("/images/payment/pix-.png");
+    -fx-image: url("/images/payment/pix.png");
 }
 
 #FASTER_PAYMENTS {
@@ -649,7 +745,7 @@
 }
 
 #STRIKE {
-    -fx-image: url("/images/payment/strike-.png");
+    -fx-image: url("/images/payment/strike.png");
 }
 
 #INTERAC_E_TRANSFER {
@@ -657,7 +753,7 @@
 }
 
 #AMAZON_GIFT_CARD {
-    -fx-image: url("/images/payment/amazon-.png");
+    -fx-image: url("/images/payment/amazon.png");
 }
 
 #CASH_DEPOSIT {
@@ -665,15 +761,19 @@
 }
 
 #UPI {
-    -fx-image: url("/images/payment/upi-.png");
+    -fx-image: url("/images/payment/upi.png");
 }
 
 #BIZUM {
-    -fx-image: url("/images/payment/bizum-.png");
+    -fx-image: url("/images/payment/bizum.png");
 }
 
 #CASH_APP {
-    -fx-image: url("/images/payment/cashapp-.png");
+    -fx-image: url("/images/payment/cashapp.png");
+}
+
+#XMR {
+    -fx-image: url("/images/markets/crypto-menus/xmr-menu.png");
 }
 
 #CUSTOM_PAYMENT_1 {
@@ -743,8 +843,8 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-bisq-mu-sig {
-    -fx-image: url("/images/protocols/protocol-bisq-mu-sig.png");
+#protocol-mu-sig {
+    -fx-image: url("/images/protocols/protocol-mu-sig.png");
 }
 
 #protocol-submarine {
@@ -781,16 +881,36 @@
 /* Icons */
 /* ------------------------------------------------------------------------------------ */
 
-#icon-bell-grey {
-    -fx-image: url("/images/icons/icon-bell-grey.png");
+#icon-notification-mention-grey {
+    -fx-image: url("/images/icons/icon-notification-mention-grey.png");
 }
 
-#icon-bell-white {
-    -fx-image: url("/images/icons/icon-bell-white.png");
+#icon-notification-mention-white {
+    -fx-image: url("/images/icons/icon-notification-mention-white.png");
 }
 
-#icon-bell-green {
-    -fx-image: url("/images/icons/icon-bell-green.png");
+#icon-notification-off-grey {
+    -fx-image: url("/images/icons/icon-notification-off-grey.png");
+}
+
+#icon-notification-off-white {
+    -fx-image: url("/images/icons/icon-notification-off-white.png");
+}
+
+#icon-notification-all-grey {
+    -fx-image: url("/images/icons/icon-notification-all-grey.png");
+}
+
+#icon-notification-all-white {
+    -fx-image: url("/images/icons/icon-notification-all-white.png");
+}
+
+#icon-notification-default-grey {
+    -fx-image: url("/images/icons/icon-notification-default-grey.png");
+}
+
+#icon-notification-default-white {
+    -fx-image: url("/images/icons/icon-notification-default-white.png");
 }
 
 #icon-info-white {
@@ -981,6 +1101,78 @@
     -fx-image: url("/images/icons/interchangeable-green.png");
 }
 
+#moderator-badge {
+    -fx-image: url("/images/icons/moderator-badge.png");
+}
+
+#moderator-badge-large {
+    -fx-image: url("/images/icons/moderator-badge-large.png");
+}
+
+#flip-fields-arrows-grey {
+    -fx-image: url("/images/icons/flip-fields-arrows-grey.png");
+}
+
+#flip-fields-arrows-white {
+    -fx-image: url("/images/icons/flip-fields-arrows-white.png");
+}
+
+#flip-fields-arrows-green {
+    -fx-image: url("/images/icons/flip-fields-arrows-green.png");
+}
+
+#close-mid-grey {
+    -fx-image: url("/images/icons/close-mid-icon-grey.png");
+}
+
+#close-mid-white {
+    -fx-image: url("/images/icons/close-mid-icon-white.png");
+}
+
+#save-grey {
+    -fx-image: url("/images/icons/save-icon-grey.png");
+}
+
+#save-white {
+    -fx-image: url("/images/icons/save-icon-white.png");
+}
+
+#save-green {
+    -fx-image: url("/images/icons/save-icon-green.png");
+}
+
+#warning-grey {
+    -fx-image: url("/images/icons/warning-grey.png");
+}
+
+#warning-white {
+    -fx-image: url("/images/icons/warning-white.png");
+}
+
+#warning-green {
+    -fx-image: url("/images/icons/warning-green.png");
+}
+
+#warning-yellow {
+    -fx-image: url("/images/icons/warning-yellow.png");
+}
+
+#warning-red {
+    -fx-image: url("/images/icons/warning-red.png");
+}
+
+#info-grey {
+    -fx-image: url("/images/icons/info-grey.png");
+}
+
+#info-white {
+    -fx-image: url("/images/icons/info-white.png");
+}
+
+#info-green {
+    -fx-image: url("/images/icons/info-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
@@ -1066,6 +1258,14 @@
     -fx-image: url("/images/chat/report/report-white.png");
 }
 
+#offer-details-grey {
+    -fx-image: url("/images/chat/offer-details/offer-details-grey.png");
+}
+
+#offer-details-white {
+    -fx-image: url("/images/chat/offer-details/offer-details-white.png");
+}
+
 #ignore-green {
     -fx-image: url("/images/chat/ignore/ignore-green.png");
 }
@@ -1100,6 +1300,18 @@
 
 #private-chat-white {
     -fx-image: url("/images/chat/private-chat/private-chat-white.png");
+}
+
+#contacts-green {
+    -fx-image: url("/images/chat/contacts/contacts-green.png");
+}
+
+#contacts-grey {
+    -fx-image: url("/images/chat/contacts/contacts-grey.png");
+}
+
+#contacts-white {
+    -fx-image: url("/images/chat/contacts/contacts-white.png");
 }
 
 #laugh {
@@ -1156,6 +1368,10 @@
 
 #try-again-green {
     -fx-image: url("/images/chat/message-status/try-again-green.png");
+}
+
+#try-again-dark {
+    -fx-image: url("/images/chat/message-status/try-again-dark.png");
 }
 
 #try-again-grey {
@@ -1358,6 +1574,19 @@
 
 #market-xmr {
     -fx-image: url("/images/markets/market-xmr.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Crypto Menus */
+/* ------------------------------------------------------------------------------------ */
+
+#btc-menu {
+    -fx-image: url("/images/markets/crypto-menus/btc-menu.png");
+}
+
+#xmr-menu {
+    -fx-image: url("/images/markets/crypto-menus/xmr-menu.png");
 }
 
 
@@ -1624,4 +1853,30 @@
 
 #stars-reputation-table {
     -fx-image: url("/images/reputation/rep-table.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Wallet */
+/* ------------------------------------------------------------------------------------ */
+
+#wallet-password {
+    -fx-image: url("/images/wallet/password.png");
+}
+
+#wallet-seeds {
+    -fx-image: url("/images/wallet/seeds.png");
+}
+
+#wallet-verify {
+    -fx-image: url("/images/wallet/verify.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Misc */
+/* ------------------------------------------------------------------------------------ */
+
+#no-available-cat-hash {
+    -fx-image: url("/images/cathash/no-available-cat-hash.png");
 }

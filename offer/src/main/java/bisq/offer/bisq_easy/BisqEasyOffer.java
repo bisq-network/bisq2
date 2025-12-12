@@ -18,9 +18,10 @@
 package bisq.offer.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.common.currency.Market;
+import bisq.common.application.BuildVersion;
+import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -29,10 +30,10 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
-import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,6 +50,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+    private static final int VERSION = 0;
+
+    // todo OfferOption could be used instead
     private final List<String> supportedLanguageCodes;
 
     public BisqEasyOffer(NetworkId makerNetworkId,
@@ -59,10 +63,11 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
-                         List<String> supportedLanguageCodes) {
+                         List<String> supportedLanguageCodes,
+                         String tradeProtocolVersion) {
         // We use the default SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE (as we don't have the dependency
         // to settings we use the plain value) so that offers from makers on 2.1.1 can only be taken by v2.1.0 takers with
-        // 30k reputation score. This can be removed once there are no pre-2.1.1 users anymore.
+        // 30k reputation score.
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -74,22 +79,28 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, 30_000),
-                supportedLanguageCodes
+                supportedLanguageCodes,
+                VERSION,
+                tradeProtocolVersion,
+                BuildVersion.VERSION
         );
     }
 
     public BisqEasyOffer(String id,
-                          long date,
-                          NetworkId makerNetworkId,
-                          Direction direction,
-                          Market market,
-                          AmountSpec amountSpec,
-                          PriceSpec priceSpec,
-                          List<TradeProtocolType> protocolTypes,
-                          List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                          List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                          List<OfferOption> offerOptions,
-                          List<String> supportedLanguageCodes) {
+                         long date,
+                         NetworkId makerNetworkId,
+                         Direction direction,
+                         Market market,
+                         AmountSpec amountSpec,
+                         PriceSpec priceSpec,
+                         List<TradeProtocolType> protocolTypes,
+                         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                         List<OfferOption> offerOptions,
+                         List<String> supportedLanguageCodes,
+                         int version,
+                         String tradeProtocolVersion,
+                         String appVersion) {
         super(id,
                 date,
                 makerNetworkId,
@@ -100,7 +111,10 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 protocolTypes,
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
-                offerOptions);
+                offerOptions,
+                version,
+                tradeProtocolVersion,
+                appVersion);
 
         // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
         this.supportedLanguageCodes = new ArrayList<>(supportedLanguageCodes);
@@ -151,6 +165,9 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions,
-                new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()));
+                new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()),
+                proto.getVersion(),
+                proto.getTradeProtocolVersion(),
+                proto.getAppVersion());
     }
 }

@@ -1,25 +1,19 @@
 ## Building Bisq 2
 
 1. **Clone Bisq 2**
-
-   ```sh
-   git clone https://github.com/bisq-network/bisq2
+   ```bash
+   git clone https://github.com/bisq-network/bisq2.git
+   ```
+   ```bash
    cd bisq2
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 21.
 
-3. **Setup bitcoind git submodule:**
-   At project setup run first:
-   ```sh
-   git submodule init
-   git submodule update
-   ```
-
-   In case the submodule has changed after a project update, run:
-   ```sh
-   git submodule update
+3. **Update to latest GitHub version:**
+   ```bash
+   git pull
    ```
 
 4. **Build Bisq**
@@ -70,7 +64,7 @@ For a quick full cleanup/rebuild you can use
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq requires JDK 22. You can find out which
+2. Bisq requires JDK 21. You can find out which
    version you have with:
 
    ```sh
@@ -88,7 +82,7 @@ For a quick full cleanup/rebuild you can use
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:
 
 ```sh
-./gradlew apps:desktop:desktop-app:run
+apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
 ```
 
 In that configuration the desktop app connects to the public seed nodes via the Tor network.
@@ -158,6 +152,7 @@ Overriding the marketPrice provider with a self-hosted one would be done as foll
 application {
     bondedRoles = {
         marketPrice = {
+            enabled = true
             providers = [
                         {
                             url = "http://[MY_ONION_ADDRESS].onion"
@@ -221,7 +216,20 @@ Note, that in that case it runs with the default config (using Tor).
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
 Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.
 
-
-
+### Setting devMode and devModeReputationScore
+A seller requires reputation for trading. This can be achieved in dev environment with setting up an oracle node and Bisq 1, though this setup is a bit advanced.
+To make it easier for devs, we added a `devModeReputationScore` field to the config. It also requires that the `devMode` flag is set to true.
+Set the desired reputation score to `devModeReputationScore` and apply that to all your trade apps. This value will not 
+be applied per user profile but overrides the reputation score lookup globally.
+For proper release testing a correct setup should be used, as this workaround does not cover all the use cases for reputation.
+```sh
+JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.devMode=true \
+    -Dapplication.devModeReputationScore=50000" \
+    apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
+```
 
 

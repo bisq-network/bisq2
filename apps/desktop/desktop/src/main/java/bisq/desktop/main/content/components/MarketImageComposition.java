@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.Market;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.market.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.security.DigestUtil;
 import javafx.geometry.Pos;
@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -59,9 +60,17 @@ public class MarketImageComposition {
             .collect(Collectors.toUnmodifiableSet());
     private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
-    public static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
-        String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase();
-        String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase();
+    public static StackPane getMarketIcons(Market market) {
+        return getMarketIcons(market, Optional.empty());
+    }
+
+    public static StackPane getMarketIcons(Market market, Map<String, StackPane> dedicatedCache) {
+        return getMarketIcons(market, Optional.of(dedicatedCache));
+    }
+
+    private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
+        String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase(Locale.ROOT);
+        String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase(Locale.ROOT);
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
 
         if (dedicatedCache.isPresent()) {
@@ -74,12 +83,20 @@ public class MarketImageComposition {
             }
         }
 
+        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode);
+
+        if (dedicatedCache.isPresent()) {
+            dedicatedCache.get().put(key, pane);
+        } else {
+            MARKET_IMAGE_CACHE.put(key, pane);
+        }
+        return pane;
+    }
+
+    public static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
         pane.setPrefWidth(61);
-
-        Stream<String> stream = baseCurrencyCode.equals("btc")
-                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
-                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
+        Stream<String> stream = Stream.of(baseCurrencyCode, quoteCurrencyCode);
         stream.forEach(code -> {
             if (quoteCurrencyCode.equals(code)) {
                 double radius = 18;
@@ -101,12 +118,6 @@ public class MarketImageComposition {
                 pane.getChildren().add(node);
             }
         });
-
-        if (dedicatedCache.isPresent()) {
-            dedicatedCache.get().put(key, pane);
-        } else {
-            MARKET_IMAGE_CACHE.put(key, pane);
-        }
         return pane;
     }
 
@@ -152,7 +163,7 @@ public class MarketImageComposition {
     }
 
     public static Node createMarketLogo(String marketCode) {
-        String market = marketCode.toLowerCase();
+        String market = marketCode.toLowerCase(Locale.ROOT);
         String iconId = String.format("market-%s", market);
         return FIAT_MARKETS_WITH_LOGO.contains(market) || CRYPTO_MARKETS_WITH_LOGO.contains(market)
                 ? ImageUtil.getImageViewById(iconId)

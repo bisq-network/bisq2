@@ -20,11 +20,22 @@ package bisq.common.observable.collection;
 import lombok.EqualsAndHashCode;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A thread-safe observable set backed by a {@link java.util.concurrent.ConcurrentHashMap}.
+ * <p>
+ * This class notifies registered observers on element additions, removals, and resets.
+ * Internally, it uses {@link ConcurrentHashMap#newKeySet()} to provide a concurrent set.
+ * <p>
+ * All operations on this set are thread-safe.
+ *
+ * @param <S> the type of elements maintained by this set
+ */
 @EqualsAndHashCode(callSuper = true)
-public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> {
+public class ObservableSet<S> extends ObservableCollection<S> implements Set<S>, ReadOnlyObservableSet<S> {
     public ObservableSet() {
         super();
     }
@@ -35,10 +46,14 @@ public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> 
 
     @Override
     protected Collection<S> createCollection() {
-        return new CopyOnWriteArraySet<>();
+        return ConcurrentHashMap.newKeySet();
     }
 
     public Set<S> getSet() {
         return (Set<S>) collection;
+    }
+
+    public Set<S> getUnmodifiableSet() {
+        return Collections.unmodifiableSet(getSet());
     }
 }

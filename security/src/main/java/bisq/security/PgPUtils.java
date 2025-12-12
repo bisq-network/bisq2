@@ -18,11 +18,23 @@
 package bisq.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SignatureException;
 import java.util.Iterator;
 
@@ -32,34 +44,34 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PgPUtils {
 
-    public static boolean isSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
+    public static boolean isSignatureValid(Path pubKeyFilePath, Path sigFilePath, Path dataFilePath) {
         try {
-            PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFile);
-            PGPSignature pgpSignature = readPgpSignature(sigFile);
+            PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFilePath);
+            PGPSignature pgpSignature = readPgpSignature(sigFilePath);
             long keyIdFromSignature = pgpSignature.getKeyID();
             PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
-            return isSignatureValid(pgpSignature, publicKey, jarFileName);
+            return isSignatureValid(pgpSignature, publicKey, dataFilePath);
         } catch (PGPException | IOException | SignatureException e) {
-            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \njarFileName={}.",
-                    pubKeyFile, sigFile, jarFileName, e);
+            log.error("Signature verification failed. \npubKeyFilePath={} \nsigFilePath={} \ndataFilePath={}.",
+                    pubKeyFilePath, sigFilePath, dataFilePath, e);
             return false;
         }
     }
 
-    public static PGPPublicKeyRing readPgpPublicKeyRing(File pubKeyFile) throws IOException, PGPException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(pubKeyFile))) {
+    public static PGPPublicKeyRing readPgpPublicKeyRing(Path pubKeyFilePath) throws IOException, PGPException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(pubKeyFilePath))) {
             PGPPublicKeyRingCollection publicKeyRingCollection = new PGPPublicKeyRingCollection(inputStream, new JcaKeyFingerprintCalculator());
             Iterator<PGPPublicKeyRing> iterator = publicKeyRingCollection.getKeyRings();
             if (iterator.hasNext()) {
                 return iterator.next();
             } else {
-                throw new PGPException("Could not find public keyring in provided key file");
+                throw new PGPException("Could not find public keyring in provided key file path");
             }
         }
     }
 
-    public static PGPSignature readPgpSignature(File sigFile) throws IOException, SignatureException {
-        try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(sigFile))) {
+    public static PGPSignature readPgpSignature(Path sigFilePath) throws IOException, SignatureException {
+        try (InputStream inputStream = PGPUtil.getDecoderStream(Files.newInputStream(sigFilePath))) {
             PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
             Object signatureObject = pgpObjectFactory.nextObject();
             if (signatureObject instanceof PGPSignatureList signatureList) {
@@ -68,15 +80,17 @@ public class PgPUtils {
             } else if (signatureObject instanceof PGPSignature) {
                 return (PGPSignature) signatureObject;
             } else {
-                throw new SignatureException("Could not find signature in provided signature file");
+                throw new SignatureException("Could not find signature in provided signature file path");
             }
         }
     }
 
-    public static boolean isSignatureValid(PGPSignature pgpSignature, PGPPublicKey publicKey, File dataFile) throws IOException, PGPException {
+    public static boolean isSignatureValid(PGPSignature pgpSignature,
+                                           PGPPublicKey publicKey,
+                                           Path dataFilePath) throws IOException, PGPException {
         checkArgument(pgpSignature.getKeyID() == publicKey.getKeyID(), "Key ID from signature not matching key ID from pub Key");
         pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
-        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFile)))) {
+        try (InputStream inputStream = new DataInputStream(new BufferedInputStream(Files.newInputStream((dataFilePath))))) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while (true) {

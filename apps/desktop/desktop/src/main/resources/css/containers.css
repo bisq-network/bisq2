@@ -242,6 +242,8 @@
     -fx-background-color: transparent;
     -fx-border-color: -bisq-dark-grey;
     -fx-border-width: 0 0 1 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
     -fx-pref-height: 54px;
 }
 
@@ -357,11 +359,9 @@
  *                                                                             *
  ******************************************************************************/
 
-.rich-table-view-box {
-}
-
-.rich-table-view-box .dropdown-menu {
-    -fx-padding: 5;
+.rich-table-view-box .dropdown-offer-rich-table-filter-menu {
+    -fx-padding: 3 10 0 10;
+    -fx-max-height: 25;
 }
 
 .rich-table-headline {
@@ -370,14 +370,96 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.rich-table-view-box .export-button {
+    -fx-min-width: 160;
+    -fx-background-color: -fx-grey-button;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+}
+
+.rich-table-view-box .export-button:hover {
+    -fx-background-color: -bisq-grey-hover;
+}
+
+.rich-table-view-box .export-button:pressed {
+    -fx-background-color: -bisq-grey-pressed;
+}
+
+.rich-table-subheader {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-radius: 0;
+    -fx-max-height: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.rich-table-view-box .search-box,
+.rich-table-view-box .search-box-active {
+    -fx-background-color: transparent;
+}
+
 .rich-table-view {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-border-color: transparent;
-    -fx-padding: 0;
+}
+
+.rich-table-view:focused {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-effect: null;
 }
 
 .rich-table-view .column-header {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-max-height: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+}
+
+.rich-table-view .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-pref-height: 54px;
+}
+
+.rich-table-view .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-pref-height: 54px;
+}
+
+.rich-table-view .table-row-cell:hover {
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.rich-table-view .table-row-cell:selected {
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-border-color: -bisq-dark-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.rich-table-view .table-cell {
+    -fx-background-insets: 0;
+    -fx-padding: 0 10 0 10;
 }
 
 .rich-table-num-entries {
@@ -607,6 +689,12 @@
     -fx-padding: 40;
 }
 
+.bisq-card-dark-bg {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 8 8 8;
+    -fx-padding: 40;
+}
+
 .common-line-spacing .label {
     -fx-line-spacing: 5px;
     -fx-wrap-text: true;
@@ -630,12 +718,12 @@
     -fx-padding: 10 10 10 15;
 }
 
+
 /*******************************************************************************
  *                                                                             *
  * Controlsfx Popover                                                          *
  *                                                                             *
  ******************************************************************************/
-
 
 .popover {
     -fx-background-color: transparent;
@@ -729,3 +817,56 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Wizard                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+#wizard-progress-box {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Charts                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.chart-series-line {
+    -fx-stroke-width: 1px; /* Default is 2px */
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * WizardOverlay                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.wizard-overlay .headline {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.wizard-overlay .default-warning {
+    -fx-fill: -bisq2-yellow-lit-20;
+    -fx-text-fill: -bisq2-yellow-lit-20;
+}
+
+.wizard-overlay .red-warning {
+    -fx-fill: -bisq2-red-lit-10;
+    -fx-text-fill: -bisq2-red-lit-10;
+}
+
+.wizard-overlay .green-warning,
+.wizard-overlay .default-info {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+}
+
+.wizard-overlay .white-warning {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}

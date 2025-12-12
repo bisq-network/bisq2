@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.top;
 
-
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
 import bisq.presentation.formatters.AmountFormatter;
@@ -29,14 +28,21 @@ import lombok.Getter;
 
 @Getter
 public class TopPanelModel implements Model {
-    private final boolean isWalletEnabled;
+    private final boolean muSigActivated;
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
+            () -> {
+                Coin amount = balanceAsCoinProperty.get();
+                if (amount != null) {
+                    return AmountFormatter.formatBaseAmount(amount);
+                } else {
+                    return "";
+                }
+            },
             balanceAsCoinProperty
     );
 
-    public TopPanelModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
+    public TopPanelModel(boolean muSigActivated) {
+        this.muSigActivated = muSigActivated;
     }
 }

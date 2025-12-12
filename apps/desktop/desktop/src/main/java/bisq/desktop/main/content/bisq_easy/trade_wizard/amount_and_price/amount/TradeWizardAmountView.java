@@ -20,9 +20,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -41,25 +40,21 @@ import org.fxmisc.easybind.Subscription;
 public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, TradeWizardAmountController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
-    private final AmountSelectionController amountSelectionController;
     private final Label amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
-    private final Hyperlink learnMoreHyperLink, linkToWiki;
+    private final Hyperlink learnMore, linkToWiki;
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox, amountLimitInfoHBox;
-    private Subscription isRangeAmountEnabledPin;
+    private final HBox amountModelsBox, amountLimitInfoHBox, learnHowToBuildReputationBox;
+    private Subscription isRangeAmountEnabledPin, isOverlayVisible;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
-                                 AmountSelectionController amountSelectionController) {
+                                 VBox amountSelectionBox) {
         super(new VBox(10), model, controller);
 
-        this.amountSelectionController = amountSelectionController;
-
-        VBox amountSelectionRoot = amountSelectionController.getView().getRoot();
-        amountSelectionRoot.getStyleClass().add("min-amount");
-        HBox amountBox = new HBox(0, amountSelectionRoot);
+        amountSelectionBox.getStyleClass().add("min-amount");
+        HBox amountBox = new HBox(0, amountSelectionBox);
         amountBox.setAlignment(Pos.BASELINE_LEFT);
         amountBox.getStyleClass().add("amount-box");
 
@@ -72,11 +67,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         amountLimitInfo = new Label();
         amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
 
-        learnMoreHyperLink = new Hyperlink();
-        learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
-        learnMoreHyperLink.setMinWidth(Hyperlink.USE_PREF_SIZE);
+        learnMore = new Hyperlink();
+        learnMore.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMore.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
-        amountLimitInfoHBox = new HBox(2.5, warningIcon, amountLimitInfo, learnMoreHyperLink);
+        amountLimitInfoHBox = new HBox(2.5, warningIcon, amountLimitInfo, learnMore);
         amountLimitInfoHBox.setAlignment(Pos.CENTER);
 
         // Amount model selection
@@ -100,11 +95,15 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
         learnHowToBuildReputation = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.learnHowToBuildReputation"));
         learnHowToBuildReputation.getStyleClass().add("outlined-button");
+        learnHowToBuildReputationBox = new HBox(learnHowToBuildReputation);
         linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
-        linkToWiki.getStyleClass().add("text-fill-green");
-        overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
-                linkToWikiText, linkToWiki, learnHowToBuildReputation);
+        overlay = new WizardOverlay(root)
+                .warning()
+                .headline("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline")
+                .description(createAndGetOverlayContent(amountLimitInfoOverlayInfo, linkToWikiText, linkToWiki, learnHowToBuildReputationBox))
+                .buttons(closeOverlayButton)
+                .build();
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);
@@ -113,17 +112,19 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
     @Override
     protected void onViewAttached() {
-        learnMoreHyperLink.setText(model.getAmountLimitInfoLink());
+        learnMore.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
         amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
         amountLimitInfoHBox.visibleProperty().bind(model.getShouldShowAmountLimitInfo());
         amountLimitInfoHBox.managedProperty().bind(model.getShouldShowAmountLimitInfo());
+        learnMore.visibleProperty().bind(model.getLearnMoreVisible());
+        learnMore.managedProperty().bind(model.getLearnMoreVisible());
         amountModelsBox.visibleProperty().bind(model.getShowRangeAmounts());
         amountModelsBox.managedProperty().bind(model.getShowRangeAmounts());
-        learnHowToBuildReputation.visibleProperty().bind(model.getShouldShowHowToBuildReputationButton());
-        learnHowToBuildReputation.managedProperty().bind(model.getShouldShowHowToBuildReputationButton());
+        learnHowToBuildReputationBox.visibleProperty().bind(model.getShouldShowHowToBuildReputationButton());
+        learnHowToBuildReputationBox.managedProperty().bind(model.getShouldShowHowToBuildReputationButton());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
         warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
 
@@ -135,55 +136,67 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             } else {
                 fixedAmount.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             }
-            amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
-        learnMoreHyperLink.setOnAction(e -> controller.onShowOverlay());
+        isOverlayVisible = EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
+            if (isOverlayVisible) {
+                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
+            } else {
+                root.setOnKeyPressed(null);
+            }
+        });
+
+        learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
         closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
-        fixedAmount.setOnAction(e -> controller.useFixedAmount());
-        rangeAmount.setOnAction(e -> controller.useRangeAmount());
+        fixedAmount.setOnAction(e -> controller.onSelectFixedAmount());
+        rangeAmount.setOnAction(e -> controller.onSelectRangeAmount());
     }
 
     @Override
     protected void onViewDetached() {
         amountLimitInfo.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
+        learnMore.visibleProperty().unbind();
+        learnMore.managedProperty().unbind();
         amountLimitInfoHBox.visibleProperty().unbind();
         amountLimitInfoHBox.managedProperty().unbind();
         amountModelsBox.visibleProperty().unbind();
         amountModelsBox.managedProperty().unbind();
-        learnHowToBuildReputation.visibleProperty().unbind();
-        learnHowToBuildReputation.managedProperty().unbind();
+        learnHowToBuildReputationBox.visibleProperty().unbind();
+        learnHowToBuildReputationBox.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
 
         isRangeAmountEnabledPin.unsubscribe();
+        isOverlayVisible.unsubscribe();
 
-        learnMoreHyperLink.setOnAction(null);
+        learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
         learnHowToBuildReputation.setOnAction(null);
         fixedAmount.setOnAction(null);
         rangeAmount.setOnAction(null);
+
+        root.setOnKeyPressed(null);
     }
 
-    private static VBox createOverlay(Label amountLimitInfo,
-                                      Button closeOverlayButton,
-                                      Label linkToWikiText,
-                                      Hyperlink linkToWiki,
-                                      Button learnHowToBuildReputation) {
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+    private static VBox createAndGetOverlayContent(Label amountLimitInfo,
+                                                   Label linkToWikiText,
+                                                   Hyperlink linkToWiki,
+                                                   HBox learnHowToBuildReputationBox) {
+        amountLimitInfo.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        amountLimitInfo.setMaxWidth(amountLimitInfo.getMinWidth());
+        amountLimitInfo.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfo.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        amountLimitInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
-        HBox amountLimitInfoBox = new HBox(amountLimitInfo);
-        amountLimitInfoBox.setAlignment(Pos.BASELINE_LEFT);
+        learnHowToBuildReputationBox.setAlignment(Pos.CENTER);
 
-        linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        linkToWikiText.setMaxWidth(linkToWikiText.getMinWidth());
+        linkToWikiText.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
 
-        linkToWiki.getStyleClass().addAll("bisq-text-21");
+        linkToWiki.getStyleClass().addAll("normal-text", "text-fill-green");
         String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
                 ? Res.get("popup.hyperlink.copy.tooltip", linkToWiki.getText())
                 : Res.get("popup.hyperlink.openInBrowser.tooltip", linkToWiki.getText());
@@ -192,17 +205,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
 
-        VBox.setMargin(learnHowToBuildReputation, new Insets(0, 0, 40, 0));
+        VBox.setMargin(learnHowToBuildReputationBox, new Insets(0, 0, 40, 0));
         VBox.setMargin(linkBox, new Insets(-40, 0, 0, 0));
-        VBox.setMargin(closeOverlayButton, new Insets(10, 0, 0, 0));
-        VBox content = new VBox(40, headlineLabel, amountLimitInfoBox,
-                learnHowToBuildReputation, linkBox, closeOverlayButton);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getStyleClass().setAll("trade-wizard-feedback-bg");
-        content.setPadding(new Insets(30));
 
-        VBox vBox = new VBox(content, Spacer.fillVBox());
-        vBox.setMaxWidth(700);
+        VBox vBox = new VBox(40, amountLimitInfo, learnHowToBuildReputationBox, linkBox);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
         return vBox;
     }
 }

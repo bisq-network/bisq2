@@ -23,7 +23,6 @@ import lombok.Builder;
 import lombok.Getter;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -41,7 +40,7 @@ public class TorNode {
     private final Type type;
     private final String nickname;
 
-    private final Path dataDir;
+    private final Path dataDirPath;
 
     private final int orPort;
     private final int dirPort;
@@ -57,17 +56,17 @@ public class TorNode {
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
-    public TorNode(Type type, String nickname, Path dataDir, int orPort, int dirPort) {
+    public TorNode(Type type, String nickname, Path dataDirPath, int orPort, int dirPort) {
         this.type = type;
         this.nickname = nickname;
-        this.dataDir = dataDir;
+        this.dataDirPath = dataDirPath;
         this.orPort = orPort;
         this.dirPort = dirPort;
-        this.keysPath = dataDir.resolve("keys");
+        this.keysPath = dataDirPath.resolve("keys");
     }
 
     public Path getTorrcPath() {
-        return dataDir.resolve("torrc");
+        return dataDirPath.resolve("torrc");
     }
 
     public Optional<String> getAuthorityIdentityKeyFingerprint() {
@@ -79,8 +78,8 @@ public class TorNode {
             return identityKeyFingerprint;
         }
 
-        File certificateFile = new File(keysPath.toFile(), "authority_certificate");
-        identityKeyFingerprint = readFingerprint(certificateFile, "fingerprint ");
+        Path certificateFilePath = keysPath.resolve("authority_certificate");
+        identityKeyFingerprint = readFingerprint(certificateFilePath, "fingerprint ");
         return identityKeyFingerprint;
     }
 
@@ -89,8 +88,8 @@ public class TorNode {
             return relayKeyFingerprint;
         }
 
-        File fingerprintFile = new File(dataDir.toFile(), "fingerprint");
-        relayKeyFingerprint = readFingerprint(fingerprintFile, "Unnamed ");
+        Path fingerprintFilePath = dataDirPath.resolve("fingerprint");
+        relayKeyFingerprint = readFingerprint(fingerprintFilePath, "Unnamed ");
         return relayKeyFingerprint;
     }
 
@@ -108,10 +107,10 @@ public class TorNode {
                 .build();
     }
 
-    private Optional<String> readFingerprint(File fingerprintFile, String linePrefix) {
+    private Optional<String> readFingerprint(Path fingerprintFilePath, String linePrefix) {
         Predicate<String> lineMatcher = s -> s.startsWith(linePrefix);
         UnaryOperator<String> dataExtractor = s -> s.split(" ")[1].strip();
-        var keyFingerprintReader = new KeyFingerprintReader(fingerprintFile, lineMatcher, dataExtractor);
+        var keyFingerprintReader = new KeyFingerprintReader(fingerprintFilePath, lineMatcher, dataExtractor);
         return keyFingerprintReader.read();
     }
 }

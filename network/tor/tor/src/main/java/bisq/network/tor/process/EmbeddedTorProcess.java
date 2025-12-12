@@ -20,8 +20,8 @@ package bisq.network.tor.process;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -83,6 +83,8 @@ public class EmbeddedTorProcess {
                     log.info("Tor process has exited successfully");
                 }
             } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at waitUntilExited method", e);
+                Thread.currentThread().interrupt(); // Restore interrupted state
                 throw new CouldNotWaitForTorShutdownException(e);
             }
         });
@@ -93,9 +95,9 @@ public class EmbeddedTorProcess {
         String[] searchPaths = pathEnvironmentVariable.split(":");
 
         for (var path : searchPaths) {
-            File torBinary = new File(path, "tor");
-            if (torBinary.exists()) {
-                return Optional.of(torBinary.toPath());
+            Path torBinaryPath = Path.of(path, "tor");
+            if (Files.exists(torBinaryPath)) {
+                return Optional.of(torBinaryPath);
             }
         }
 
@@ -103,10 +105,11 @@ public class EmbeddedTorProcess {
     }
 
     private void createTorControlDirectory() {
-        File controlDirFile = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).toFile();
-        if (!controlDirFile.exists()) {
-            boolean isSuccess = controlDirFile.mkdirs();
-            if (!isSuccess) {
+        Path controlDirFilePath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
+        if (!Files.exists(controlDirFilePath)) {
+            try {
+                Files.createDirectories(controlDirFilePath);
+            } catch (IOException e) {
                 throw new TorStartupFailedException("Couldn't create Tor control directory.");
             }
         }

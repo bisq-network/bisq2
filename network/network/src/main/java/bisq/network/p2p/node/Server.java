@@ -17,10 +17,9 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.threading.ThreadName;
-import bisq.common.util.StringUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
+import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -36,52 +36,55 @@ public final class Server {
     private final ServerSocket serverSocket;
     @Getter
     private final Address address;
-    private volatile boolean isStopped;
-    private final Future<?> future;
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
+    public final ExecutorService executor;
 
     Server(ServerSocketResult serverSocketResult,
+           int socketTimeout,
            Consumer<Socket> socketHandler,
            Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.getServerSocket();
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
-        future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            ThreadName.set(this, "listen-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
+        executor = ExecutorFactory.newSingleThreadExecutor("Server.listen-" + StringUtils.truncate(serverSocketResult.getAddress(), 16));
+        executor.submit(() -> {
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
+                    socket.setSoTimeout(socketTimeout);
                     log.debug("Accepted new connection on server: {}", serverSocketResult);
                     if (isNotStopped()) {
-                        // Call handler on new thread
-                        NetworkService.NETWORK_IO_POOL.submit(() -> {
-                            ThreadName.set(this, "handle-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
-                            socketHandler.accept(socket);
-                        });
+                        // Consumer is expected to be non-blocking
+                        socketHandler.accept(socket);
                     }
                 }
             } catch (IOException e) {
-                if (!isStopped) {
+                if (!isStopped.get()) {
+                    // Consumer is expected to be non-blocking
                     exceptionHandler.accept(e);
                     shutdown();
                 }
+            } finally {
+                shutdown();
             }
         });
     }
 
     void shutdown() {
         log.info("shutdown {}", address);
-        if (isStopped) {
+        if (isStopped.get()) {
             return;
         }
-        isStopped = true;
-        future.cancel(true);
+        isStopped.set(true);
+        // future.cancel(true); would not do anything here as serverSocket.accept() does not respond to thread interrupts.
         try {
             serverSocket.close();
         } catch (IOException ignore) {
         }
+        ExecutorFactory.shutdownAndAwaitTermination(executor);
     }
 
     private boolean isNotStopped() {
-        return !isStopped && !Thread.currentThread().isInterrupted();
+        return !isStopped.get() && !Thread.currentThread().isInterrupted();
     }
 }

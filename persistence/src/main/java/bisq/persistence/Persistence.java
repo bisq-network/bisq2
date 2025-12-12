@@ -27,12 +27,11 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
     public static final String EXTENSION = ".protobuf";
-    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence");
+    private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("Persistence");
 
     @Getter
     private final Path storePath;
@@ -41,24 +40,20 @@ public class Persistence<T extends PersistableStore<T>> {
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
-    public Persistence(String directory, String fileName, MaxBackupSize maxBackupSize) {
+    public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
-        storePath = Path.of(directory, storageFileName + EXTENSION);
+        storePath = directoryPath.resolve(storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
 
-    public CompletableFuture<Optional<T>> readAsync(Consumer<T> consumer) {
-        return readAsync().whenComplete((result, throwable) -> result.ifPresent(consumer));
-    }
-
-    public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, executorService);
+    public Optional<T> read() {
+        return persistableStoreReaderWriter.read();
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        return CompletableFuture.runAsync(() -> persist(serializable), executorService);
+        return CompletableFuture.runAsync(() -> persist(serializable), EXECUTOR);
     }
 
     protected void persist(T persistableStore) {
@@ -66,6 +61,6 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> pruneBackups() {
-        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, executorService);
+        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, EXECUTOR);
     }
 }

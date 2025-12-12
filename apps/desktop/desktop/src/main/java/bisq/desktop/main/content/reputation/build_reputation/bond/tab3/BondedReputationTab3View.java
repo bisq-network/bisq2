@@ -19,6 +19,7 @@ package bisq.desktop.main.content.reputation.build_reputation.bond.tab3;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
@@ -59,7 +60,7 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
 
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
-        learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Reputation");
         backButton = new Button(Res.get("action.back"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);

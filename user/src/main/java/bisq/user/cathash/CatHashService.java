@@ -18,18 +18,23 @@
 package bisq.user.cathash;
 
 import bisq.common.encoding.Hex;
-import bisq.common.file.FileUtils;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ByteArrayUtils;
 import bisq.user.profile.UserProfile;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -38,8 +43,11 @@ import java.util.stream.Stream;
 @Slf4j
 public abstract class CatHashService<T> {
     // Largest size in offerbook is 60px, in reputationListView it is 40px and in chats 30px.
-    // Larger images are used only rarely and are not cached.
-    public static final double SIZE_OF_CACHED_ICONS = 60;
+    // Larger images are used only rarely and are not cached. We use 2x60 for retina resolution
+    public static final double SIZE_OF_CACHED_ICONS = 120;
+
+    // We limit size to max. 300 px as the png files for the image composition are of that size.
+    public static final double MAX_ICON_SIZE = 300;
 
     // This is a 120*120 image meaning 14400 pixels. At 4 bytes each, that takes 57.6 KB in memory (and on disk as we use raw format).
     // With 5000 images we would get about 288 MB.
@@ -47,17 +55,17 @@ public abstract class CatHashService<T> {
 
     private final ConcurrentHashMap<BigInteger, T> cache = new ConcurrentHashMap<>();
     @Setter
-    private Path baseDir;
+    private Path appDataDirPath;
 
-    public CatHashService(Path baseDir) {
-        this.baseDir = baseDir;
+    public CatHashService(Path appDataDirPath) {
+        this.appDataDirPath = appDataDirPath;
     }
 
     protected abstract T composeImage(String[] paths, double size);
 
-    protected abstract void writeRawImage(T image, File iconFile) throws IOException;
+    protected abstract void writeRawImage(T image, Path iconPath) throws IOException;
 
-    protected abstract T readRawImage(File iconFile) throws IOException;
+    protected abstract T readRawImage(Path iconPath) throws IOException;
 
     public T getImage(UserProfile userProfile, double size) {
         return getImage(userProfile.getPubKeyHash(),
@@ -70,30 +78,36 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        File iconsDir = Path.of(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
-        File iconFile = Path.of(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
+        Path iconsDirPath = getCatHashIconsDirPath().resolve("v" + avatarVersion);
+        Path iconFilePath = iconsDirPath.resolve(userProfileId + ".raw");
 
-        boolean useCache = size <= SIZE_OF_CACHED_ICONS;
+        // We create the images internally with 2x size for retina resolution
+        double scaledSize = 2 * size;
+        if (scaledSize > MAX_ICON_SIZE) {
+            log.warn("Scaled size for cat hash image is {} px. We limit size to max. {} px as the png files for the image composition " +
+                    "are of that size.", scaledSize, MAX_ICON_SIZE);
+            scaledSize = MAX_ICON_SIZE;
+        }
+        boolean useCache = scaledSize <= getSizeOfCachedIcons();
         if (useCache) {
             // First approach is to look up the cache
             if (cache.containsKey(catHashInput)) {
                 return cache.get(catHashInput);
             }
 
-
-            if (!iconsDir.exists()) {
+            if (!Files.exists(iconsDirPath)) {
                 try {
-                    FileUtils.makeDirs(iconsDir);
+                    Files.createDirectories(iconsDirPath);
                 } catch (IOException e) {
                     log.error(e.toString());
                 }
             }
 
             // Next approach is to read the image from file
-            if (iconFile.exists()) {
+            if (Files.exists(iconFilePath)) {
                 try {
-                    T image = readRawImage(iconFile);
-                    if (cache.size() < MAX_CACHE_SIZE) {
+                    T image = readRawImage(iconFilePath);
+                    if (cache.size() < getMaxCacheSize()) {
                         cache.put(catHashInput, image);
                     }
                     return image;
@@ -110,15 +124,13 @@ public abstract class CatHashService<T> {
         BucketConfig bucketConfig = getBucketConfig(avatarVersion);
         int[] buckets = BucketEncoder.encode(catHashInput, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
-        // For retina support we scale by 2
-        T image = composeImage(paths, 2 * SIZE_OF_CACHED_ICONS);
+        T image = composeImage(paths, scaledSize);
         //log.info("Creating user profile icon for {} took {} ms.", userProfileId, System.currentTimeMillis() - ts);
-        if (useCache && cache.size() < MAX_CACHE_SIZE) {
+        // We use the MAX_CACHE_SIZE as limit for files on disk
+        if (useCache && cache.size() < getMaxCacheSize()) {
             cache.put(catHashInput, image);
-
-            // We use the MAX_CACHE_SIZE also as limit for files on disk
             try {
-                writeRawImage(image, iconFile);
+                writeRawImage(image, iconFilePath);
             } catch (IOException e) {
                 log.error("Write image failed", e);
             }
@@ -131,57 +143,100 @@ public abstract class CatHashService<T> {
         if (userProfiles.isEmpty()) {
             return;
         }
-        File iconsDirectory = getCatHashIconsDirectory().toFile();
-        File[] versionDirs = iconsDirectory.listFiles();
-        if (versionDirs == null) {
-            return;
-        }
-        Map<String, List<File>> iconFilesByVersion = Stream.of(versionDirs)
-                .filter(File::isDirectory)
-                .filter(dir -> dir.listFiles() != null)
-                .collect(Collectors.toMap(File::getName,
-                        dir -> Arrays.asList(Objects.requireNonNull(dir.listFiles()))));
+        Path iconsDirPath = getCatHashIconsDirPath();
 
-        Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
-                .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
-
-        iconFilesByVersion.forEach((versionDir, iconFiles) -> {
-            try {
-                int version = Integer.parseInt(versionDir
-                        .replace("v", ""));
-                Set<String> fromDisk = iconFiles.stream()
-                        .map(File::getName)
-                        .collect(Collectors.toSet());
-                Set<String> fromData = Optional.of(userProfilesByVersion.get(version).stream()
-                                .map(userProfile -> userProfile.getId() + ".raw")
-                                .collect(Collectors.toSet()))
-                        .orElse(new HashSet<>());
-                Set<String> toRemove = new HashSet<>(fromDisk);
-                toRemove.removeAll(fromData);
-                CompletableFuture.runAsync(() -> {
-                    log.info("We remove following user profile icons which are not found in the current user profile list:{}", toRemove);
-                    toRemove.forEach(fileName -> {
-                        File file = Path.of(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
-                        try {
-                            log.error("Remove {}", file);
-                            FileUtils.deleteFile(file);
-                        } catch (IOException e) {
-                            log.error("Failed to remove file {}", file, e);
+        try (Stream<Path> versionDirStream = Files.list(iconsDirPath)) {
+            Map<String, List<Path>> iconFilesPathByVersion = versionDirStream
+                    .filter(Files::isDirectory)
+                    .filter(dir -> {
+                        String name = dir.getFileName().toString();
+                        if (!name.startsWith("v")) {
+                            log.warn("Version directory in the cat_hash_icons directory not prefixed with 'v' {}", name);
+                            return false;
                         }
-                    });
-                }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
-            } catch (Exception e) {
-                log.error("Unexpected versionDir {}", versionDir, e);
-            }
-        });
+                        try {
+                            int version = Integer.parseInt(name.replace("v", ""));
+                            boolean contains = BucketConfig.ALL_VERSIONS.contains(version);
+                            if (!contains) {
+                                log.warn("Version string '{}' of the version directory found in the existing versions: {}",
+                                        version, BucketConfig.ALL_VERSIONS);
+                            }
+                            return contains;
+                        } catch (NumberFormatException e) {
+                            log.warn("Version postfix is not an integer in the directory: {}", name, e);
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toMap(
+                            path -> path.getFileName().toString(),
+                            dirPath -> {
+                                try (Stream<Path> files = Files.list(dirPath)) {
+                                    return files.collect(Collectors.toList());
+                                } catch (IOException e) {
+                                    log.error("Failed to list files in directory {}", dirPath, e);
+                                    return Collections.emptyList();
+                                }
+                            }
+                    ));
+
+            Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
+                    .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
+            CompletableFuture.runAsync(() -> {
+                iconFilesPathByVersion.forEach((versionDir, iconFiles) -> {
+                    try {
+                        int version = Integer.parseInt(versionDir.replace("v", ""));
+                        Set<String> fromDisk = iconFiles.stream()
+                                .map(path -> path.getFileName().toString())
+                                .collect(Collectors.toSet());
+                        Set<String> fromData = Optional.ofNullable(userProfilesByVersion.get(version))
+                                .map(profiles -> profiles.stream()
+                                        .map(userProfile -> userProfile.getId() + ".raw")
+                                        .collect(Collectors.toSet()))
+                                .orElseGet(Collections::emptySet);
+                        Set<String> toRemove = new HashSet<>(fromDisk);
+                        toRemove.removeAll(fromData);
+
+                        log.info("We remove {} outdated user profile icons (not found in the current user profile list)", toRemove.size());
+                        if (toRemove.size() < 10) {
+                            log.info("Removed user profile icons: {}", toRemove);
+                        }
+                        toRemove.forEach(fileName -> {
+                            Path filePath = iconsDirPath.resolve(versionDir).resolve(fileName);
+                            try {
+                                log.debug("Remove {}", filePath);
+                                Files.deleteIfExists(filePath);
+                            } catch (IOException e) {
+                                log.error("Failed to remove file {}", filePath, e);
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        log.error("Unexpected versionDir {}", versionDir, e);
+                    }
+                });
+            }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
+        } catch (IOException e) {
+            log.error("Failed to list version directories in the cat_hash_icons directory", e);
+        }
     }
 
     public int currentAvatarsVersion() {
         return BucketConfig.CURRENT_VERSION;
     }
 
-    private Path getCatHashIconsDirectory() {
-        return Path.of(baseDir.toString(), "db", "cache", "cat_hash_icons");
+    protected double getSizeOfCachedIcons() {
+        return SIZE_OF_CACHED_ICONS;
+    }
+
+    protected int getMaxCacheSize() {
+        return MAX_CACHE_SIZE;
+    }
+
+    private Path getCatHashIconsDirPath() {
+        return appDataDirPath
+                .resolve("db")
+                .resolve("cache")
+                .resolve("cat_hash_icons");
     }
 
     private BucketConfig getBucketConfig(int avatarVersion) {

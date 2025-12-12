@@ -38,11 +38,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         super(new VBox(20), model, controller);
 
         root.setSpacing(20);
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         Triple<VBox, Label, Label> balanceTriple = createBalanceBox();
         VBox balanceBox = balanceTriple.getFirst();
         balanceLabel = balanceTriple.getSecond();
-        VBox.setMargin(balanceBox, new Insets(40, 0, 0, 0));
 
         send = getCardButton(Res.get("wallet.sendBtc"), "card-button");
         send.setDefaultButton(true);

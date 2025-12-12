@@ -17,27 +17,20 @@
 
 package bisq.network.p2p.services.peer_group.keep_alive;
 
-import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
-import bisq.network.NetworkService;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.common.RequestResponseHandler;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
-public class KeepAliveService implements Node.Listener {
+public class KeepAliveService extends RequestResponseHandler<Ping, Pong> {
     @Getter
     @ToString
     public static final class Config {
@@ -60,18 +53,16 @@ public class KeepAliveService implements Node.Listener {
         }
     }
 
-    private final Node node;
     private final Config config;
-    private final Map<String, KeepAliveHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> scheduler = Optional.empty();
 
     public KeepAliveService(Node node, Config config) {
-        this.node = node;
+        super(node, config.getTimeout());
         this.config = config;
-        this.node.addListener(this);
     }
 
     public void initialize() {
+        super.initialize();
         scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
                 .host(this)
                 .runnableName("sendPingIfRequired")
@@ -79,57 +70,34 @@ public class KeepAliveService implements Node.Listener {
     }
 
     public void shutdown() {
+        super.shutdown();
         scheduler.ifPresent(Scheduler::stop);
-        requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
-        requestHandlerMap.clear();
-    }
-
-    public void sendPing(Connection connection) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            log.info("requestHandlerMap contains {}. " +
-                            "This is expected if the connection is still pending the response or the peer is not available " +
-                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                    key, connection);
-            return;
-        }
-        KeepAliveHandler handler = new KeepAliveHandler(node, connection);
-        requestHandlerMap.put(key, handler);
-        handler.request()
-                .orTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
-                .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
+        scheduler = Optional.empty();
     }
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof Ping ping) {
-            log.debug("{} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> {
-                ThreadName.set(this, "pong");
-                return node.send(new Pong(ping.getNonce()
-                ), connection);
-            });
-            log.debug("{} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());
-        }
+    protected Pong createResponse(Connection connection, Ping request) {
+        return new Pong(request.getNonce());
     }
 
     @Override
-    public void onConnection(Connection connection) {
+    protected Class<Ping> getRequestClass() {
+        return Ping.class;
     }
 
     @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            requestHandlerMap.get(key).dispose();
-            requestHandlerMap.remove(key);
-        }
+    protected Class<Pong> getResponseClass() {
+        return Pong.class;
     }
 
     private void sendPingIfRequired() {
         node.getAllActiveConnections()
                 .filter(this::isRequired)
-                .forEach(this::sendPing);
+                .forEach(this::request);
+    }
+
+    private void request(Connection connection) {
+        super.request(connection, new Ping(createNonce()));
     }
 
     private boolean isRequired(Connection connection) {

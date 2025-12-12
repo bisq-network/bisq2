@@ -26,8 +26,10 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.Trade;
+import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,19 +76,21 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 myIdentity,
                 offer,
                 new BisqEasyTradeParty(takerNetworkId),
-                new BisqEasyTradeParty(makerNetworkId));
+                new BisqEasyTradeParty(makerNetworkId),
+                TradeLifecycleState.ACTIVE);
 
-        stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
+        stateObservable().addObserver(state -> tradeState.set((BisqEasyTradeState) state));
     }
 
-    public BisqEasyTrade(BisqEasyContract contract,
-                         BisqEasyTradeState state,
-                         String id,
-                         TradeRole tradeRole,
-                         Identity myIdentity,
-                         BisqEasyTradeParty taker,
-                         BisqEasyTradeParty maker) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker);
+    private BisqEasyTrade(BisqEasyContract contract,
+                          BisqEasyTradeState state,
+                          String id,
+                          TradeRole tradeRole,
+                          Identity myIdentity,
+                          BisqEasyTradeParty taker,
+                          BisqEasyTradeParty maker,
+                          TradeLifecycleState lifecycleState) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -122,7 +126,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
+                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
+                TradeLifecycleState.fromProto(proto.getLifecycleState()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
@@ -134,6 +139,12 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         }
         if (proto.hasPeersErrorStackTrace()) {
             trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+        }
+        if (proto.hasTradeProtocolFailure()) {
+            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+        }
+        if (proto.hasPeersTradeProtocolFailure()) {
+            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
         }
 
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();

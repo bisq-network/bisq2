@@ -1,0 +1,197 @@
+.offerbook-level2-tab {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.offerbook-container {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Offerbook                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.mu-sig-offerbook-market-title {
+    -fx-font-size: 1.2em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dropdown-menu.base-currency-dropdown-menu {
+    -fx-alignment: center;
+}
+
+.dropdown-menu.base-currency-dropdown-menu:hover,
+.dropdown-menu-active.base-currency-dropdown-menu {
+    -fx-background-radius: 6 6 0 0;
+    -fx-border-color: -bisq-dark-grey-50;
+    -fx-border-width: 1;
+    -fx-border-radius: 6 6 0 0;
+}
+
+.dropdown-menu.base-currency-dropdown-menu .label {
+    -fx-font-size: 0.85em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dropdown-menu.base-currency-dropdown-menu .dropdown-menu-content-hbox {
+    -fx-alignment: center;
+}
+
+.mu-sig-offerbook-subheader-content {
+    -fx-alignment: center-right;
+    -fx-padding: 0 25 0 25;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button {
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+    -fx-font-size: 0.96em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-alignment: baseline-center;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-mid-text-color;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:hover {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox {
+    -fx-alignment: center-right;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:focused,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:selected,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:pressed {
+    -fx-max-height: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-padding: -1 12 1 12;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .toggle-button:selected {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-border-color: transparent;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-all-offers.toggle-button:selected,
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-my-offers.toggle-button:selected {
+    -fx-background-color: -bisq-mid-grey-10;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-buy.toggle-button:selected {
+    -fx-background-color: -fx-default-button;
+}
+
+.mu-sig-offerbook-offerlist-toggle-button-hbox .offerlist-toggle-button-sell.toggle-button:selected {
+    -fx-background-color: -bisq2-red-dim-20;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box {
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+    -fx-border-radius: 8;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box.my-offer-to-buy {
+    -fx-border-color: -bisq2-green-dim-10;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box.my-offer-to-sell {
+    -fx-border-color: -bisq2-red-lit-10;
+}
+
+.mu-sig-offerbook-offerlist-myOffer-label-box > .label {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.mu-sig-offerbook-offerlist-take-offer-button {
+    -fx-padding: 0 24 0 24;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Create offer                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.trade-pair-box {
+    -fx-cursor: hand;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 2 7 2 7;
+}
+
+.trade-pair-box:hover,
+.trade-pair-box.active-market-selection-popup,
+.trade-pair-box:hover .quote-currency-market-logo,
+.trade-pair-box.active-market-selection-popup .quote-currency-market-logo {
+    -fx-background-color: -bisq-dark-grey-30 !important;
+}
+
+.trade-pair-box .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
+
+.markets-table-view-box {
+    -fx-border-color: -bisq-dark-grey-50;
+    -fx-border-width: 0 0 0 1;
+    -fx-effect: none;
+}
+
+.slider.price-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M481.89,0H28.35C12.69,0,0,12.69,0,28.35v170.08h0l255.12,226.77,255.12-226.77V28.35C510.24,12.69,497.55,0,481.89,0Z";
+    -fx-scale-x: 1.4;
+    -fx-scale-y: 1.2;
+    -fx-translate-y: -9;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * My offers                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.mu-sig-my-offers-table .table-row-cell:hover .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-50 !important;
+}
+
+.mu-sig-my-offers-table .table-row-cell:selected .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
+
+.mu-sig-my-offers-table .export-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-border-color: -fx-grey-button;
+}
+
+.mu-sig-my-offers-table .export-button:hover {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-effect: none;
+}
+
+.mu-sig-my-offers-table .export-button:pressed {
+    -fx-background-color: -bisq-dark-grey-10;
+    -fx-effect: none;
+}

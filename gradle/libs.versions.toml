@@ -5,7 +5,7 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-bisq = '2.1.6'
+bisq = '2.1.8'
 annotations-lib = { strictly = '23.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
@@ -18,8 +18,8 @@ bouncycastle-lib = { strictly = '1.78.1' }
 
 commons-codec = { strictly = '1.17.1' }
 
-chimp-jsocks-lib = { strictly = '567e1cd6' }
-chimp-jtorctl-lib = { strictly = '9b5ba203' }
+jsocks-lib = { strictly = '43b004b' }
+jtorctl-lib = { strictly = 'b2a172f' }
 
 failsafe-lib = { strictly = '3.2.4' }
 
@@ -35,13 +35,13 @@ glassfish-jaxb-runtime-lib = { strictly = '4.0.5' }
 
 grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
-google-gson-lib = { strictly = '2.9.0' }
+google-gson-lib = { strictly = '2.10.1' }
 google-guava-lib = { strictly = '33.2.1-jre' }
+google-libphonenumber-lib = { strictly = '9.0.8' }
 
 grpc = { strictly = '1.61.0' }
 
-i2p-lib = { strictly = '1.8.0' }
-i2p-v2 = { strictly = '2.4.0' }
+i2p-lib = { strictly = '2.7.0' }
 
 jackson-lib = { strictly = '2.17.2' }
 jakarta-lib = { strictly = '2.2.0' }
@@ -92,8 +92,8 @@ bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bou
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 
-chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib' }
-chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
+jsocks = { module = 'com.github.bisq-network:jsocks', version.ref = 'jsocks-lib' }
+jtorctl = { module = 'com.github.bisq-network:jtorctl', version.ref = 'jtorctl-lib' }
 
 failsafe = { module = 'dev.failsafe:failsafe', version.ref = 'failsafe-lib' }
 
@@ -114,16 +114,19 @@ glassfish-grizzly-websockets-server = { module = 'org.glassfish.grizzly:grizzly-
 
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
+google-libphonenumber = { module = 'com.googlecode.libphonenumber:libphonenumber', version.ref = 'google-libphonenumber-lib' }
 
 grpc-netty-shaded = { module = 'io.grpc:grpc-netty-shaded', version.ref = 'grpc' }
 grpc-protobuf = { module = 'io.grpc:grpc-protobuf', version.ref = 'grpc' }
 grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
 grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
+grpc-testing = { module = 'io.grpc:grpc-testing', version.ref = 'grpc' }
+grpc-inprocess = { module = 'io.grpc:grpc-inprocess', version.ref = 'grpc' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
-i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
+i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
-i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-v2' }
+i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
 i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
@@ -137,12 +140,14 @@ javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
+junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
 
 logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
 mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
+mockito-junit-jupiter = { module = 'org.mockito:mockito-junit-jupiter', version.ref = 'mockito-lib' }
 openjfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'openjfx-monocle-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
@@ -178,7 +183,6 @@ glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson'
     'glassfish-jaxb-runtime']
 grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
-i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson',

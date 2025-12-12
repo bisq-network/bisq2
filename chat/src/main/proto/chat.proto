@@ -32,6 +32,7 @@ enum ChatMessageType {
   CHATMESSAGETYPE_LEAVE = 2;
   CHATMESSAGETYPE_TAKE_BISQ_EASY_OFFER = 3;
   CHATMESSAGETYPE_PROTOCOL_LOG_MESSAGE = 4;
+  CHATMESSAGETYPE_CHAT_RULES_WARNING = 5;
 }
 
 enum ChatChannelNotificationType {
@@ -50,11 +51,13 @@ enum ChatChannelDomain {
   CHATCHANNELDOMAIN_DISCUSSION = 4;
   CHATCHANNELDOMAIN_EVENTS = 5 [deprecated = true]; // Dropped in 2.1.1, all messages will fall back on domain DISCUSSION
   CHATCHANNELDOMAIN_SUPPORT = 6;
+  CHATCHANNELDOMAIN_MU_SIG_OPEN_TRADES = 7;
 }
 
 message Citation {
   string authorUserProfileId = 1;
   string text = 2;
+  optional string chatMessageId = 3;
 }
 
 message ChatMessage {
@@ -72,6 +75,7 @@ message ChatMessage {
     CommonPublicChatMessage commonPublicChatMessage = 21;
     BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = 22;
     BisqEasyOfferbookMessage bisqEasyOfferbookMessage = 23;
+    MuSigOpenTradeMessage muSigOpenTradeMessage = 24;
   }
 }
 
@@ -84,6 +88,7 @@ message ChatChannel {
     CommonPublicChatChannel commonPublicChatChannel = 11;
     BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = 12;
     BisqEasyOfferbookChannel bisqEasyOfferbookChannel = 13;
+    MuSigOpenTradeChannel muSigOpenTradeChannel = 14;
   }
 }
 
@@ -187,6 +192,7 @@ message ChatMessageReaction {
     BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction = 21;
     TwoPartyPrivateChatMessageReaction twoPartyPrivateChatMessageReaction = 22;
     BisqEasyOpenTradeMessageReaction bisqEasyOpenTradeMessageReaction = 23;
+    MuSigOpenTradeMessageReaction muSigOpenTradeMessageReaction = 24;
   }
 }
 
@@ -204,6 +210,35 @@ message TwoPartyPrivateChatMessageReaction {
 }
 
 message BisqEasyOpenTradeMessageReaction {
+  string receiverUserProfileId = 1;
+  user.UserProfile sender = 2;
+  network.identity.NetworkId receiverNetworkId = 3;
+  bool isRemoved = 4;
+}
+
+// MuSig
+message MuSigOpenTradeMessage {
+  string tradeId = 1;
+  string receiverUserProfileId = 2;
+  network.identity.NetworkId receiverNetworkId = 3;
+  user.UserProfile sender = 4;
+  optional user.UserProfile mediator = 5;
+  optional offer.Offer muSigOffer = 6;
+  repeated ChatMessageReaction chatMessageReactions = 7;
+}
+message MuSigOpenTradeChannel {
+  string tradeId = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated user.UserProfile traders = 3;
+  optional user.UserProfile mediator = 4;
+  repeated ChatMessage chatMessages = 5;
+  bool isInMediation = 6;
+}
+message MuSigOpenTradeChannelStore {
+  repeated ChatChannel channels = 1;
+}
+
+message MuSigOpenTradeMessageReaction {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   network.identity.NetworkId receiverNetworkId = 3;

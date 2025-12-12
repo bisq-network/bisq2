@@ -46,6 +46,10 @@ public class NumberValidator extends ValidatorBase {
         this(message, Optional.empty(), Optional.empty(), allowEmptyString);
     }
 
+    public NumberValidator(Number minValue, Number maxValue) {
+        this(Res.get("validation.invalidNumber"), minValue, maxValue, true);
+    }
+
     public NumberValidator(String message, Number minValue, Number maxValue) {
         this(message, minValue, maxValue, true);
     }
@@ -76,13 +80,12 @@ public class NumberValidator extends ValidatorBase {
     @Override
     protected void eval() {
         hasErrors.set(false);
-        var textField = (TextInputControl) srcControl.get();
-        try {
-            String text = textField.getText();
-            if (allowEmptyString && StringUtils.isEmpty(text)) {
-                return;
-            }
+        var textField = (TextInputControl) srcControl.get(); String text = textField.getText();
+        if (allowEmptyString && StringUtils.isEmpty(text)) {
+            return;
+        }
 
+        try {
             double value = MathUtils.parseToDouble(text);
             numberValue = Optional.of(value);
 

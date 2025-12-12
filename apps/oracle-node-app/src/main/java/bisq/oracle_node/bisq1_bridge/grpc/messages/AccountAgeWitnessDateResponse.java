@@ -1,0 +1,51 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.oracle_node.bisq1_bridge.grpc.messages;
+
+import bisq.common.proto.NetworkProto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+@Getter
+@EqualsAndHashCode
+public final class AccountAgeWitnessDateResponse implements NetworkProto {
+    private final long date;
+
+    public AccountAgeWitnessDateResponse(long date) {
+        this.date = date;
+    }
+
+    @Override
+    public void verify() {
+    }
+
+    @Override
+    public bisq.bridge.protobuf.AccountAgeWitnessDateResponse.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bridge.protobuf.AccountAgeWitnessDateResponse.newBuilder()
+                .setDate(date);
+    }
+
+    @Override
+    public bisq.bridge.protobuf.AccountAgeWitnessDateResponse toProto(boolean serializeForHash) {
+        return getBuilder(serializeForHash).build();
+    }
+
+    public static AccountAgeWitnessDateResponse fromProto(bisq.bridge.protobuf.AccountAgeWitnessDateResponse proto) {
+        return new AccountAgeWitnessDateResponse(proto.getDate());
+    }
+}

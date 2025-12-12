@@ -18,7 +18,9 @@
 package bisq.common.validation;
 
 import bisq.common.platform.Version;
+import bisq.common.proto.Proto;
 import bisq.common.util.DateUtils;
+import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
@@ -82,13 +84,34 @@ public class NetworkDataValidation {
         validateText(tradeId, 200);
     }
 
+    public static void validateSerializedSize(Proto proto, int maxSize) {
+        checkArgument(proto.getSerializedSize() <= maxSize,
+                "Proto must not be larger than " + maxSize + " bytes. Proto=" + proto);
+    }
+
     public static void validateText(String text, int maxLength) {
         checkArgument(text.length() <= maxLength,
                 "Text must not be longer than " + maxLength + ". text=" + text);
     }
 
+    public static void validateText(String text, int minLength, int maxLength) {
+        validateText(text, maxLength);
+        checkArgument(text.length() >= minLength,
+                "Text must not be shorter than " + minLength + ". text=" + text);
+    }
+
     public static void validateText(Optional<String> text, int maxTextLength) {
         text.ifPresent(e -> validateText(e, maxTextLength));
+    }
+
+    public static void validateRequiredText(String text, int minLength, int maxLength) {
+        checkArgument(!StringUtils.isEmpty(text), "Text must not be null or empty");
+        validateText(text, minLength, maxLength);
+    }
+
+    public static void validateRequiredText(String text, int maxLength) {
+        checkArgument(!StringUtils.isEmpty(text), "Text must not be null or empty");
+        validateText(text, maxLength);
     }
 
     public static void validateByteArray(byte[] bytes, int maxLength) {
@@ -107,6 +130,13 @@ public class NetworkDataValidation {
     public static void validateCode(String code) {
         checkArgument(code.length() < 10,
                 "Code too long. code=" + code);
+        checkArgument(code.length() > 1,
+                "Code too short. code=" + code);
+    }
+
+    public static void validateRequiredCode(String code) {
+        checkArgument(!StringUtils.isEmpty(code), "Code must not be null or empty");
+        validateCode(code);
     }
 
     public static void validateBtcTxId(String txId) {

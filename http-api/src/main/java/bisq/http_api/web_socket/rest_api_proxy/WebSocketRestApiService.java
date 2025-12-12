@@ -18,6 +18,8 @@
 package bisq.http_api.web_socket.rest_api_proxy;
 
 import bisq.common.application.Service;
+import bisq.http_api.auth.AuthUtils;
+import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.Response;
@@ -27,6 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,11 +44,15 @@ import java.util.concurrent.CompletableFuture;
 public class WebSocketRestApiService implements Service {
     private final ObjectMapper objectMapper;
     private final String restApiAddress;
+    private final WebSocketRequestValidator requestValidator;
     private Optional<HttpClient> httpClient = Optional.empty();
 
-    public WebSocketRestApiService(ObjectMapper objectMapper, String restApiAddress) {
+    public WebSocketRestApiService(ObjectMapper objectMapper,
+                                   String restApiAddress,
+                                   WebSocketRequestValidator requestValidator) {
         this.objectMapper = objectMapper;
         this.restApiAddress = restApiAddress;
+        this.requestValidator = requestValidator;
     }
 
     @Override
@@ -66,15 +73,18 @@ public class WebSocketRestApiService implements Service {
 
     public void onMessage(String json, WebSocket webSocket) {
         WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(this::sendToRestApiServer)
+                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs(), request.getAuthNonce()))
                 .flatMap(response -> response.toJson(objectMapper))
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
                                 "\nJson={}", json));
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
-        String errorMessage = RequestValidation.validateRequest(request);
+    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request,
+                                                         @Nullable String authToken,
+                                                         @Nullable String authTs,
+                                                         @Nullable String authNonce) {
+        String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
             return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.BAD_REQUEST.getStatusCode(), errorMessage);
@@ -88,13 +98,18 @@ public class WebSocketRestApiService implements Service {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
+        if (authToken != null && authTs != null && authNonce != null) {
+            requestBuilder.header(AuthUtils.AUTH_HEADER, authToken);
+            requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, authTs);
+            requestBuilder.header(AuthUtils.AUTH_NONCE_HEADER, authNonce);
+        }
         try {
             HttpRequest httpRequest = requestBuilder.build();
-            log.info("Send {} httpRequest to {}. httpRequest={} ", method, url, httpRequest);
+            log.info("Forwarding {} request to {}", method, url);
             // Blocking send
             HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
             log.info("httpResponse {}", httpResponse);
-            return new WebSocketRestApiResponse( request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
+            return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
             errorMessage = String.format("Error at sending a '%s' request to '%s' with body: '%s'. Error: %s", method, url, body, e.getMessage());
             log.error(errorMessage, e);

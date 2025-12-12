@@ -32,7 +32,7 @@ public class RelayKeyGenProcess {
     public void generateKeys(String identityKeyFingerprint) throws IOException, InterruptedException {
         var processBuilder = new ProcessBuilder(
                 "tor", "--list-fingerprint",
-                "--DataDirectory", directoryAuthority.getDataDir().toAbsolutePath().toString(),
+                "--DataDirectory", directoryAuthority.getDataDirPath().toAbsolutePath().toString(),
                 "--ORPort", String.valueOf(directoryAuthority.getOrPort()),
 
                 "--DirAuthority",

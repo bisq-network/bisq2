@@ -20,12 +20,13 @@ package bisq.network.tor.local_network;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.network.tor.local_network.TorNode;
 import bisq.network.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -39,15 +40,15 @@ import static org.mockito.Mockito.spy;
 @Disabled
 public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
-    void basicTest(@TempDir Path tempDir) {
-        Path daAPath = tempDir.resolve("DA_A");
-        assertThat(daAPath.toFile().mkdir()).isTrue();
+    void basicTest(@TempDir Path tempDirPath) throws IOException {
+        Path daAPath = tempDirPath.resolve("DA_A");
+        Files.createDirectory(daAPath);
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("A")
-                        .dataDir(daAPath)
+                        .dataDirPath(daAPath)
 
                         .orPort(2)
                         .dirPort(3)
@@ -67,7 +68,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
                 TorNode.builder()
                         .type(TorNode.Type.DIRECTORY_AUTHORITY)
                         .nickname("B")
-                        .dataDir(tempDir.resolve("DA_B"))
+                        .dataDirPath(tempDirPath.resolve("DA_B"))
 
                         .orPort(2)
                         .dirPort(3)

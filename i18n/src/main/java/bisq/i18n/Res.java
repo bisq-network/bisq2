@@ -22,7 +22,11 @@ import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -32,7 +36,9 @@ public class Res {
     private static final char ARGS_SEPARATOR = 0x1f;
     private static final char PARAM_SEPARATOR = 0x1e;
 
-    private static final List<String> BUNDLE_NAMES = List.of(
+    // We include also webcam to get support from the AI translation pipeline.
+    // It would cause extra effort to apply the automated translations to those projects.
+    public static final List<String> DEFAULT_BUNDLE_NAMES = List.of(
             "default",
             "application",
             "bisq_easy",
@@ -46,22 +52,56 @@ public class Res {
             "settings",
             "wallet",
             "authorized_role",
-            "payment_method"
+            "account",
+            "mu_sig",
+            "webcam",
+            "bi2p"
     );
 
-    private static final List<ResourceBundle> bundles = new ArrayList<>();
+    private static volatile List<ResourceBundle> bundles = List.of();
+    private static volatile List<String> bundleNames = DEFAULT_BUNDLE_NAMES;
+    private static volatile Locale locale = Locale.US;
 
-    public static void setLanguage(String languageCode) {
-        Locale locale = "en".equalsIgnoreCase(languageCode) ? new Locale("") : Locale.forLanguageTag(languageCode);
 
-        bundles.clear();
+    /* --------------------------------------------------------------------- */
+    // Config
+    /* --------------------------------------------------------------------- */
 
-        bundles.addAll(
-                BUNDLE_NAMES.stream()
-                        .map(bundleName -> ResourceBundle.getBundle(bundleName, locale))
-                        .toList()
-        );
+    public static void setBundleNames(List<String> bundleNames) {
+        Res.bundleNames = bundleNames;
     }
+
+    public static void setAndApplyBundleNames(List<String> bundleNames) {
+        setBundleNames(bundleNames);
+        updateBundles();
+    }
+
+    public static void setLanguageTag(String languageTag) {
+        // We use Locale.ROOT so that the i18n file without language suffix is used. in our case that's english.
+        locale = "en".equalsIgnoreCase(languageTag) ? Locale.ROOT : Locale.forLanguageTag(languageTag);
+    }
+
+    public static void setAndApplyLanguageTag(String languageTag) {
+        setLanguageTag(languageTag);
+        updateBundles();
+    }
+
+    public static void updateBundles() {
+        // Use collectors to avoid Samsung devices crashes (not fully supporting Java 16+ APIs)
+        var newBundles = new ArrayList<ResourceBundle>(bundleNames.size());
+        for (String bundleName : bundleNames) {
+            try {
+                newBundles.add(ResourceBundle.getBundle(bundleName, locale));
+            } catch (MissingResourceException e) {
+                log.warn("Resource bundle '{}' not found for locale {}. Skipping.", bundleName, locale);
+            }
+        }
+        bundles = List.copyOf(newBundles);
+    }
+
+    /* --------------------------------------------------------------------- */
+    // API
+    /* --------------------------------------------------------------------- */
 
     public static String get(String key, Object... arguments) {
         return MessageFormat.format(get(key), arguments);
@@ -109,7 +149,6 @@ public class Res {
     public static boolean has(String key) {
         return bundles.stream().anyMatch(bundle -> bundle.containsKey(key));
     }
-
 
     public static String encode(String key, Object... arguments) {
         if (arguments.length == 0) {

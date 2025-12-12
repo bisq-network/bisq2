@@ -25,10 +25,12 @@ import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -99,10 +101,15 @@ public class TorHttpClient extends BaseHttpClient {
         var cm = new PoolingTorHttpClientConnectionManager();
         cm.setDefaultSocketConfig(SocketConfig.custom()
                 .setSocksProxyAddress(socksAddress)
+                .setSoTimeout(Timeout.ofSeconds(30))
                 .build());
         try {
             closeableHttpClient = checkNotNull(HttpClients.custom()
-                    .setConnectionManager(cm).build());
+                    .setConnectionManager(cm)
+                    .setDefaultRequestConfig(RequestConfig.custom()
+                            .setResponseTimeout(Timeout.ofSeconds(30))
+                            .build()) // Timeout waiting for response
+                    .build());
             var uri = URI.create(baseUrl);
             var request = new HttpGet("/" + param);
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));

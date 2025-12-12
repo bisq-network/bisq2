@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -58,7 +59,9 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
         this.channels = channels;
 
-        String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
+        String name = StringUtils.capitalize(
+                StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase(Locale.ROOT), Locale.ROOT),
+                Locale.ROOT);
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.CACHE,
                 "Public" + name + "ChatChannelStore",
@@ -120,7 +123,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                 authorUserProfileId.getId(),
                 text,
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false);
     }
 
@@ -158,6 +161,6 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 }

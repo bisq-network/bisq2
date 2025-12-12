@@ -21,33 +21,28 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-@Getter
-public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> {
-    private final Set<String> profileIds = new CopyOnWriteArraySet<>();
-    @Setter
+final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> {
+    @Setter(AccessLevel.PACKAGE)
+    @Getter(AccessLevel.PACKAGE)
     private long lastRequested = 0;
 
-    public ProfileAgeStore() {
-    }
-
-    private ProfileAgeStore(Set<String> jsonRequests, long lastRequested) {
+    private ProfileAgeStore(long lastRequested) {
         this.lastRequested = lastRequested;
-        this.profileIds.addAll(jsonRequests);
     }
 
     @Override
     public bisq.user.protobuf.ProfileAgeStore.Builder getBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.user.protobuf.ProfileAgeStore.newBuilder()
-                .addAllProfileIds(profileIds)
+                .clearProfileIds() // Not used anymore with v2.1.8
                 .setLastRequested(lastRequested);
     }
 
@@ -57,7 +52,7 @@ public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> 
     }
 
     public static ProfileAgeStore fromProto(bisq.user.protobuf.ProfileAgeStore proto) {
-        return new ProfileAgeStore(new HashSet<>(proto.getProfileIdsList()), proto.getLastRequested());
+        return new ProfileAgeStore(proto.getLastRequested());
     }
 
     @Override
@@ -73,13 +68,11 @@ public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> 
 
     @Override
     public ProfileAgeStore getClone() {
-        return new ProfileAgeStore(new HashSet<>(profileIds), lastRequested);
+        return new ProfileAgeStore(lastRequested);
     }
 
     @Override
     public void applyPersisted(ProfileAgeStore persisted) {
-        profileIds.clear();
-        profileIds.addAll(persisted.getProfileIds());
         lastRequested = persisted.getLastRequested();
     }
 }

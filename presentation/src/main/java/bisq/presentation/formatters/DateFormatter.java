@@ -20,6 +20,9 @@ package bisq.presentation.formatters;
 import bisq.common.locale.LocaleRepository;
 
 import java.text.DateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -44,6 +47,15 @@ public class DateFormatter {
         String formattedDate = formatDate(date, dateFormat, useLocalTimezone);
         String formattedTime = formatTime(date, timeFormat, useLocalTimezone);
         return formattedDate + delimiter + formattedTime;
+    }
+
+    public static String formatDateTimeNoSeconds(long date) {
+        return formatDateTimeNoSeconds(new Date(date));
+    }
+
+    public static String formatDateTimeNoSeconds(Date date) {
+        // Use SHORT for time to omit seconds
+        return formatDateTime(date, DateFormat.DEFAULT, DateFormat.SHORT, true, ", ");
     }
 
     public static String formatDate(long date) {
@@ -88,5 +100,31 @@ public class DateFormatter {
         // Java time formatter returns a U+202F (narrow no-break space) before the AM/PM.
         // We replace it with a normal space as it's not printed by our font.
         return timeFormatter.format(date).replace("\u202F"," ");
+    }
+
+    /**
+     * Formats a date as "d MMM" if it's in the current year, or "d MMM yyyy" if it's in another year.
+     * Example: "1 May" (this year), "1 May 2024" (other years).
+     * Uses the default locale and local timezone.
+     * @param date the date to format
+     * @return formatted date string
+     */
+    public static String formatDayMonthOrDayMonthYear(Date date) {
+        if (date == null) {
+            return "";
+        }
+        Locale defaultLocale = LocaleRepository.getDefaultLocale();
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime zonedDateTime = date.toInstant().atZone(zoneId);
+        int year = zonedDateTime.getYear();
+        int currentYear = ZonedDateTime.now(zoneId).getYear();
+        DateTimeFormatter formatter = year == currentYear
+                ? DateTimeFormatter.ofPattern("d MMM", defaultLocale)
+                : DateTimeFormatter.ofPattern("d MMM yyyy", defaultLocale);
+        return formatter.format(zonedDateTime);
+    }
+
+    public static String formatDayMonthOrDayMonthYear(long date) {
+        return formatDayMonthOrDayMonthYear(new Date(date));
     }
 }

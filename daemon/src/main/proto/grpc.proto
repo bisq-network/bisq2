@@ -30,7 +30,7 @@ message Command {
 }
 
 message BootstrapEvent {
-  uint32 progress = 1;
+  sint32 progress = 1;
   string tag = 2;
   string summary = 3;
 }

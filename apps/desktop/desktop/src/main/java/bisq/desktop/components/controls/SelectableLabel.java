@@ -21,10 +21,13 @@ import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.WeakListChangeListener;
+import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +45,8 @@ import java.util.List;
 public class SelectableLabel extends StackPane {
     private final Label label = new Label();
     private final TextArea textArea = new TextArea();
-    boolean isInSelectionMode;
+    boolean isSwapped;
+
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ListChangeListener<String> styleClassListener = c -> {
         c.next();
@@ -56,14 +60,10 @@ public class SelectableLabel extends StackPane {
             textArea.getStyleClass().removeAll(removedList);
         }
     };
-    private final ChangeListener<Number> labelHeightListener = (observable, oldValue, newValue) -> {
-        if (label.getHeight() > 0) {
-            if (label.getWidth() > 0) {
-                swap();
-            } else {
-                // Not expected as height is set before width
-                UIThread.runOnNextRenderFrame(this::swap);
-            }
+
+    private final ChangeListener<Bounds> labelBoundsListener = (observable, oldBounds, newBounds) -> {
+        if (!isSwapped && newBounds.getWidth() > 0 && newBounds.getHeight() > 0) {
+            UIThread.runOnNextRenderFrame(this::swap);
         }
     };
 
@@ -77,17 +77,31 @@ public class SelectableLabel extends StackPane {
         label.setCursor(Cursor.TEXT);
         textArea.setContextMenu(new ContextMenu());
         textArea.setText(text);
+        textArea.setEditable(false);
         textArea.getStyleClass().addAll("selectable-label", "hide-vertical-scrollbar");
-        label.heightProperty().addListener(labelHeightListener);
+        label.boundsInParentProperty().addListener(labelBoundsListener);
         getStyleClass().addListener(new WeakListChangeListener<>(styleClassListener));
     }
 
+    public String getText() {
+        return this.textArea.getText();
+    }
+
     private void swap() {
-        label.heightProperty().removeListener(labelHeightListener);
-        textArea.setMinWidth(label.getWidth());
-        textArea.setMaxWidth(textArea.getMinWidth());
-        textArea.setMinHeight(label.getHeight());
-        textArea.setMaxHeight(textArea.getMinHeight());
+        if (isSwapped) {
+            return;
+        }
+
+        isSwapped = true;
+        label.boundsInParentProperty().removeListener(labelBoundsListener);
+
+        // Required to set give size instead of taking available size from parent.
+        // Default would be Double.MAX_VALUE, which allows to grow to max. size of parent.
+        textArea.setMaxWidth(Region.USE_PREF_SIZE);
+        textArea.setMaxHeight(Region.USE_PREF_SIZE);
+
+        textArea.setPrefWidth(label.getWidth());
+        textArea.setPrefHeight(label.getHeight());
         getChildren().remove(label);
         getChildren().add(textArea);
     }
@@ -102,5 +116,10 @@ public class SelectableLabel extends StackPane {
     public void setWrapText(boolean value) {
         label.setWrapText(value);
         textArea.setWrapText(value);
+    }
+
+    public void setTooltip(Tooltip value) {
+        label.setTooltip(value);
+        textArea.setTooltip(value);
     }
 }

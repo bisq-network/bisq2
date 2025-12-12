@@ -23,10 +23,9 @@ import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatChannelService;
 import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.Reaction;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -53,29 +52,12 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     private final BisqEasyOfferbookChannelStore persistableStore = new BisqEasyOfferbookChannelStore();
     @Getter
     private final Persistence<BisqEasyOfferbookChannelStore> persistence;
-    @Getter
-    private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
 
     public BisqEasyOfferbookChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
                                            UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
-
-        getChannels().addObserver(() -> {
-            getChannels().forEach(
-                    channel -> {
-                        var code = channel.getMarket().getQuoteCurrencyCode();
-                        ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
-                        chatMessages.addObserver(()->{
-                            var numOffers = (int) chatMessages.stream()
-                                    .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                                    .count();
-                            numOffersByCurrencyCode.put(code, numOffers);
-                        });
-                    }
-            );
-        });
     }
 
 
@@ -123,7 +105,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
 
     @Override
     public Optional<BisqEasyOfferbookChannel> getDefaultChannel() {
-        Market defaultMarket = MarketRepository.getDefault();
+        Market defaultMarket = MarketRepository.getDefaultBtcFiatMarket();
         return getChannels().stream()
                 .filter(channel -> defaultMarket.equals(channel.getMarket()))
                 .findAny()
@@ -161,7 +143,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 Optional.empty(),
                 Optional.of(text),
                 citation,
-                new Date().getTime(),
+                System.currentTimeMillis(),
                 false);
     }
 
@@ -181,11 +163,11 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     @Override
     protected void maybeAddDefaultChannels() {
         if (getChannels().isEmpty()) {
-            BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefault());
+            BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefaultBtcFiatMarket());
             maybeAddPublicTradeChannel(defaultChannel);
 
             List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
-            allMarkets.remove(MarketRepository.getDefault());
+            allMarkets.remove(MarketRepository.getDefaultBtcFiatMarket());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }
     }
@@ -201,7 +183,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime());
+                System.currentTimeMillis());
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyOfferbookChannel channel) {

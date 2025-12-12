@@ -38,23 +38,8 @@ public class ProfileCardDetailsController implements Controller {
 
     public ProfileCardDetailsController(ServiceProvider serviceProvider) {
         model = new ProfileCardDetailsModel();
-
         view = new ProfileCardDetailsView(model, this);
         reputationService = serviceProvider.getUserService().getReputationService();
-    }
-
-    public void setUserProfile(UserProfile userProfile) {
-        model.setUserProfile(userProfile);
-        model.setNickName(userProfile.getNickName());
-        model.setBotId(userProfile.getNym());
-        model.setUserId(userProfile.getId());
-        model.setTransportAddress(userProfile.getAddressByTransportDisplayString());
-        model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
-                .map(TimeFormatter::formatAgeInDaysAndYears)
-                .orElse(Res.get("data.na")));
-        model.setStatement(StringUtils.toOptional(userProfile.getStatement()));
-        String version = userProfile.getApplicationVersion();
-        model.setVersion(version.isEmpty() ? Res.get("data.na") : version);
     }
 
     @Override
@@ -69,5 +54,19 @@ public class ProfileCardDetailsController implements Controller {
     @Override
     public void onDeactivate() {
         reputationChangedPin.unbind();
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        model.setUserProfile(userProfile);
+        model.setNickName(userProfile.getNickName());
+        model.setBotId(userProfile.getNym());
+        model.setUserId(userProfile.getId());
+        model.setTransportAddress(userProfile.getAddressByTransportDisplayString());
+        model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
+                .map(TimeFormatter::formatAgeInDaysAndYears)
+                .orElseGet(() -> Res.get("data.na")));
+        model.setStatement(StringUtils.toOptional(userProfile.getStatement()));
+        String version = userProfile.getApplicationVersion();
+        model.setVersion(version.isEmpty() ? Res.get("data.na") : version);
     }
 }

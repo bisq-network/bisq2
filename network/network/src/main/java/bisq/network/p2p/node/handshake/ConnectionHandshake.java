@@ -42,10 +42,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import static bisq.network.p2p.node.ConnectionException.Reason.*;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.ONION_ADDRESS_VERIFICATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.PROTOBUF_IS_NULL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -55,13 +60,15 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public final class ConnectionHandshake {
+    // We tolerate up to 2 hours difference in clocks to peer
+    private static final long MAX_CLOCK_OFFSET = TimeUnit.HOURS.toMillis(2);
     @Getter
     private final String id = StringUtils.createUid();
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
     private final KeyBundle myKeyBundle;
-    private NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final NetworkEnvelopeSocket networkEnvelopeSocket;
 
     @Getter
     @ToString
@@ -179,35 +186,31 @@ public final class ConnectionHandshake {
         private final Capability peersCapability;
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
+        private final String connectionId;
 
-        Result(Capability peersCapability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
+        Result(Capability peersCapability,
+               NetworkLoad peersNetworkLoad,
+               ConnectionMetrics connectionMetrics,
+               String connectionId) {
             this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
+            this.connectionId = connectionId;
         }
     }
 
     public ConnectionHandshake(Socket socket,
                                BanList banList,
-                               int socketTimeout,
                                Capability capability,
                                AuthorizationService authorizationService,
-                               KeyBundle myKeyBundle) {
+                               KeyBundle myKeyBundle) throws IOException {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
         this.myKeyBundle = myKeyBundle;
 
-        try {
-            // socket.setTcpNoDelay(true);
-            // socket.setSoLinger(true, 100);
-            socket.setSoTimeout(socketTimeout);
-
-            PeerSocket peerSocket = new DefaultPeerSocket(socket);
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PeerSocket peerSocket = new DefaultPeerSocket(socket);
+        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
     }
 
     // Client side protocol
@@ -257,10 +260,11 @@ public final class ConnectionHandshake {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
             }
 
+            String connectionId = StringUtils.createUid();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myNetworkLoad,
-                    StringUtils.createUid(),
+                    connectionId,
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
@@ -273,7 +277,7 @@ public final class ConnectionHandshake {
             connectionMetrics.addRtt(rrt);
 
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
-            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics);
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -282,6 +286,7 @@ public final class ConnectionHandshake {
             if (e instanceof ConnectionException) {
                 throw (ConnectionException) e;
             } else {
+                // May be SocketTimeoutException, IOException or unexpected Exception
                 throw new ConnectionException(e);
             }
         }
@@ -290,8 +295,9 @@ public final class ConnectionHandshake {
     // Server side protocol
     public Result onSocket(NetworkLoad myNetworkLoad) {
         try {
+            // We get called from the Server's socketHandler callback on the NetworkRead thread
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
-            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
+            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope(); // Blocking
             if (requestProto == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Request NetworkEnvelope protobuf is null");
@@ -308,23 +314,31 @@ public final class ConnectionHandshake {
             }
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
+
+            //TODO banList not implemented yet to get set banned addresses.
             if (banList.isBanned(peerAddress)) {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + peerAddress);
             }
 
             Address myAddress = capability.getAddress();
-            // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
-            // AuthorizationToken.
+            // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
+            String connectionId = StringUtils.createUid();
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
                     NetworkLoad.INITIAL_NETWORK_LOAD,
-                    StringUtils.createUid(),
+                    connectionId,
                     myAddress.getFullAddress());
             if (!isAuthorized) {
                 throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
             }
 
-            if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
+            long signatureDate = request.getSignatureDate();
+            long now = System.currentTimeMillis();
+            if (Math.abs(now - signatureDate) > MAX_CLOCK_OFFSET) {
+                throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer's signature date is more than 2 hours off from the current time of our clock: " + new Date(signatureDate));
+            }
+
+            if (!OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, request.getAddressOwnershipProof())) {
                 throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                         ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
             }
@@ -342,10 +356,10 @@ public final class ConnectionHandshake {
                     requestersCapability.getFeatures());
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(token, response);
             long startSendTs = System.currentTimeMillis();
-            networkEnvelopeSocket.send(responseNetworkEnvelope);
+            networkEnvelopeSocket.send(responseNetworkEnvelope); // Blocking
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics);
+            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();

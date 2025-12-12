@@ -26,7 +26,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -75,7 +78,7 @@ public interface Proto {
     }
 
     default Set<String> getExcludedFields() {
-        return Arrays.stream(getClass().getDeclaredFields())
+        return Arrays.stream(getAllDeclaredFields(getClass()))
                 .peek(field -> field.setAccessible(true))
                 .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
                 .filter(field -> {
@@ -99,15 +102,27 @@ public interface Proto {
      */
     default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
-        if (!excludedFields.isEmpty()) {
+        /*if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
-        }
+        }*/
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
             if (excludedFields.contains(fieldDesc.getName())) {
                 builder.clearField(fieldDesc);
             }
         }
         return builder;
+    }
+
+    static Field[] getAllDeclaredFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        Class<?> current = clazz;
+        // Usually our classes implementing Proto do not extend another non-Proto base class, but we still check with
+        // isAssignableFrom if the super class is Proto (is Object otherwise).
+        while (current != null && current != Object.class && Proto.class.isAssignableFrom(current)) {
+            Collections.addAll(fields, current.getDeclaredFields());
+            current = current.getSuperclass();
+        }
+        return fields.toArray(new Field[0]);
     }
 
     private Logger getLogger() {

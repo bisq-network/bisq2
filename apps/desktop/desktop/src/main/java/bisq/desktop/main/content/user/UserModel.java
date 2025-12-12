@@ -17,14 +17,18 @@
 
 package bisq.desktop.main.content.user;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class UserModel extends ContentTabModel {
+    @Setter
+    private boolean showCryptoPaymentAccounts;
+
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+       return NavigationTarget.USER_PROFILE;
     }
 }

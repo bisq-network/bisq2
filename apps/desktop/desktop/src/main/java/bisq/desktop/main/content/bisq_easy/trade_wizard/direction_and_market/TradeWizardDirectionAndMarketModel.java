@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;

@@ -18,12 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.encoding.BitcoinURIScheme;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -38,6 +38,7 @@ import bisq.desktop.components.controls.validator.LightningInvoiceValidator;
 import bisq.desktop.components.controls.validator.SettableErrorValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.webcam.WebcamAppModel;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
@@ -46,7 +47,12 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -62,6 +68,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Locale;
 
 @Slf4j
 public class BuyerState1a extends BaseState {
@@ -108,7 +116,7 @@ public class BuyerState1a extends BaseState {
             model.setBitcoinPaymentDescription(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.description." + name));
             model.setBitcoinPaymentPrompt(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.prompt." + name));
             model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
-            if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
+            if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 model.setBitcoinPaymentValidator(new BitcoinAddressValidator());
             } else {
                 model.setBitcoinPaymentValidator(new LightningInvoiceValidator());
@@ -165,7 +173,7 @@ public class BuyerState1a extends BaseState {
             String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
             sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
-            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), bitcoinPaymentData);
+            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getTrade(), bitcoinPaymentData);
         }
 
         void onOpenWalletGuide() {
@@ -183,7 +191,7 @@ public class BuyerState1a extends BaseState {
                         // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
                         // As lower case is the common display style and bitcoin addresses and LN invoices are
                         // case-insensitive, we convert it to lowercase.
-                        String payload = qrCode.toLowerCase();
+                        String payload = qrCode.toLowerCase(Locale.ROOT);
                         if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
                             payload = BitcoinURIScheme.extractBitcoinAddress(payload);
                         }
@@ -275,7 +283,7 @@ public class BuyerState1a extends BaseState {
         }
 
         private BitcoinPaymentRail getPaymentRail() {
-            return model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            return model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         }
     }
 
@@ -453,21 +461,26 @@ public class BuyerState1a extends BaseState {
         private void setupWebcamStateAnimation() {
             webcamStateAnimationTimeline.setCycleCount(Integer.MAX_VALUE);
             ObservableList<KeyFrame> keyFrames = webcamStateAnimationTimeline.getKeyFrames();
-            int delay = 0;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.LINEAR)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            long delay = 0;
+            Duration duration = ManagedDuration.millis(delay);
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.LINEAR)));
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
             delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            duration = ManagedDuration.millis(delay);
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
             delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            duration = ManagedDuration.millis(delay);
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
             delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            duration = ManagedDuration.millis(delay);
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
             delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            duration = ManagedDuration.millis(delay);
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(duration, new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
         }
     }
 }

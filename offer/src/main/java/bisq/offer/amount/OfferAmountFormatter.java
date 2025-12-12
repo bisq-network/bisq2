@@ -18,7 +18,7 @@
 package bisq.offer.amount;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.currency.Market;
+import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -44,6 +44,10 @@ public class OfferAmountFormatter {
 
     public static String formatBaseAmount(MarketPriceService marketPriceService, Offer<?, ?> offer, boolean withCode) {
         return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, true);
+    }
+
+    public static String formatBaseAmount(MarketPriceService marketPriceService, Offer<?, ?> offer, boolean withCode, boolean useLowPrecision) {
+        return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, useLowPrecision);
     }
 
     public static String formatBaseAmount(MarketPriceService marketPriceService,
@@ -79,7 +83,7 @@ public class OfferAmountFormatter {
                                                    boolean useLowPrecision) {
         return OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, useLowPrecision))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Min
@@ -100,7 +104,7 @@ public class OfferAmountFormatter {
                                                  boolean withCode) {
         return OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Max
@@ -121,7 +125,7 @@ public class OfferAmountFormatter {
                                                  boolean withCode) {
         return OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Max or fixed
@@ -140,7 +144,7 @@ public class OfferAmountFormatter {
                                                         boolean useLowPrecision) {
         return OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, useLowPrecision))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Range (Min - Max)
@@ -213,7 +217,7 @@ public class OfferAmountFormatter {
                                                     boolean withCode) {
         return OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Min
@@ -234,7 +238,7 @@ public class OfferAmountFormatter {
                                                   boolean withCode) {
         return OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Min or fixed
@@ -255,7 +259,7 @@ public class OfferAmountFormatter {
                                                          boolean withCode) {
         return OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Max
@@ -276,7 +280,7 @@ public class OfferAmountFormatter {
                                                   boolean withCode) {
         return OfferAmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market)
                 .map(monetary -> getFormatFunction(withCode).apply(monetary, true))
-                .orElse(Res.get("data.na"));
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     // Max or fixed
@@ -291,7 +295,7 @@ public class OfferAmountFormatter {
                                                          PriceSpec priceSpec,
                                                          Market market,
                                                          boolean withCode) {
-        return OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(monetary -> getFormatFunction(withCode).apply(monetary, true)).orElse(Res.get("data.na"));
+        return OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(monetary -> getFormatFunction(withCode).apply(monetary, true)).orElseGet(() -> Res.get("data.na"));
     }
 
     // Range (Min - Max)
