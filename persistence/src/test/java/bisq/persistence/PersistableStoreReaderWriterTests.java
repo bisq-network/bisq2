@@ -90,7 +90,7 @@ public class PersistableStoreReaderWriterTests {
         ProtoResolver<PersistableStore<?>> resolver = originalStore.getResolver();
         PersistableStoreResolver.addResolver(resolver);
 
-        Path storageFilePath = tempDirPath.resolve("db").resolve("test-protofile-store.protobuf");
+        Path storageFilePath = tempDirPath.resolve("alice").resolve("db").resolve("test-protofile-store.protobuf");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath, MaxBackupSize.TEN_MB);
         var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager, new RestoreService());
 

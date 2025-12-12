@@ -515,3 +515,22 @@
 .wallet-dashboard .latest-txs-table.table-view .column-header {
     -fx-background-color: -bisq-dark-grey-40;
 }
+
+
+/*******************************************************************************
+ * Support                                                                  *
+ ******************************************************************************/
+
+.support-sub-headline {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.4em;
+}
+
+.support-normal-text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}

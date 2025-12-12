@@ -56,7 +56,7 @@ public class RestoreFromBackupView extends View<VBox, RestoreFromBackupModel, Re
         HBox.setMargin(closeIconButton, new Insets(-1, -15, 0, 0));
         HBox hBox = new HBox(headline, Spacer.fillHBox(), closeIconButton);
 
-        tableView = new BisqTableView<ListItem>(model.getSortedList());
+        tableView = new BisqTableView<>(model.getSortedList());
         tableView.setPrefHeight(200);
         tableView.getStyleClass().add("restore-from-backup-table-view");
         configTableView();
