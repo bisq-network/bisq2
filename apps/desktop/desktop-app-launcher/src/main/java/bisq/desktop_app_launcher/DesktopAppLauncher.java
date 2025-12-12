@@ -85,7 +85,6 @@ public class DesktopAppLauncher {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
         Path appDataDirPath = PlatformUtils.getUserDataDirPath().resolve(appName);
-        LogSetup.setup(appDataDirPath.resolve("bisq").toString());
         String version = UpdaterUtils.readVersionFromVersionFile(appDataDirPath)
                 .or(options::getVersion)
                 .orElse(BuildVersion.VERSION);

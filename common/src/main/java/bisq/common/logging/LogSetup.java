@@ -42,12 +42,8 @@ public class LogSetup {
     }
 
     public static void setup(String fileName, int rollingPolicyMaxIndex, String maxFileSize, Level logLevel) {
-        // If setup is called multiple times (e.g. when the app is launched from different entry points),
-        // we reset the logger context to ensure logging is reconfigured as intended.
-        // Note: resetting the logger context will remove all existing loggers and appenders,
-        // which may affect other parts of the application or libraries using the same logging context.
-        if (logbackLogger != null && LoggerFactory.getILoggerFactory() instanceof LoggerContext loggerContext) {
-            loggerContext.reset();
+        if (logbackLogger != null && LoggerFactory.getILoggerFactory() instanceof LoggerContext) {
+            return;
         }
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
