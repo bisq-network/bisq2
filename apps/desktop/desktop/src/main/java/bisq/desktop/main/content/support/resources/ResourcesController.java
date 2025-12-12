@@ -20,7 +20,6 @@ package bisq.desktop.main.content.support.resources;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
@@ -32,6 +31,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.backup.BackupFileInfo;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +41,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import static bisq.common.util.StringUtils.isEmpty;
+import static bisq.desktop.main.content.support.resources.ResourcesView.BackupSnapshotStoreItem;
 
 @Slf4j
 public class ResourcesController implements Controller {
@@ -71,6 +79,7 @@ public class ResourcesController implements Controller {
         backupLocationPin = FxBindings.bindBiDir(model.getBackupLocation())
                 .to(settingsService.getBackupLocation(), settingsService::setBackupLocation);
 
+        fillBackupSnapshots();
     }
 
     @Override
@@ -78,6 +87,8 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDefault().unbind();
         model.getBackupButtonDisabled().unbind();
         backupLocationPin.unbind();
+
+        model.getBackupSnapshotStoreItems().clear();
     }
 
     void onOpenLogFile() {
@@ -94,7 +105,7 @@ public class ResourcesController implements Controller {
 
     void onSetBackupLocation() {
         String backupLocation = model.getBackupLocation().get();
-        Path path = StringUtils.isEmpty(backupLocation)
+        Path path = isEmpty(backupLocation)
                 ? PlatformUtils.getHomeDirectoryPath()
                 : Path.of(backupLocation);
         String title = Res.get("support.resources.backup.selectLocation");
@@ -103,7 +114,7 @@ public class ResourcesController implements Controller {
     }
 
     void onBackup() {
-        if (StringUtils.isEmpty(model.getBackupLocation().get())) {
+        if (isEmpty(model.getBackupLocation().get())) {
             model.getBackupLocation().set(null);
             return;
         }
@@ -130,6 +141,38 @@ public class ResourcesController implements Controller {
                 }));
     }
 
+    private void fillBackupSnapshots() {
+        List<BackupFileInfo> backupSnapshots = persistenceService.getAllBackups();
+
+        var backupSnapshotsByStore = backupSnapshots
+                .stream()
+                .collect(Collectors.groupingBy(
+                        bfi -> bfi.getPath().getParent().getFileName().toString(),
+                        TreeMap::new,
+                        Collectors.toList()));
+
+        var result = backupSnapshotsByStore.entrySet().stream()
+                .map(entry -> new BackupSnapshotStoreItem(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .map(bfi -> {
+                                    long timestamp = bfi.getLocalDateTime()
+                                            .atZone(ZoneId.systemDefault())
+                                            .toInstant()
+                                            .toEpochMilli();
+                                    return new BackupSnapshotStoreItem.File(
+                                            bfi.getPath().toString(),
+                                            TimeFormatter.formatAge(Math.max(0, System.currentTimeMillis() - timestamp))
+                                    );
+                                })
+                                .toList()
+                ))
+                .toList();
+
+        model.getBackupSnapshotStoreItems().clear();
+        model.getBackupSnapshotStoreItems().addAll(result);
+    }
+
     void onOpenChatRules() {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
@@ -148,6 +191,10 @@ public class ResourcesController implements Controller {
 
     void onOpenLicense() {
         Browser.open("https://github.com/bisq-network/bisq2/blob/main/LICENSE");
+    }
+
+    void onOpenLearnMoreAutomaticBackup() {
+        Browser.open("https://bisq.wiki/Automatic_backup");
     }
 
     void onOpenWebpage() {

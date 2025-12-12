@@ -18,6 +18,7 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.RestoreService;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -77,6 +79,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public void pruneBackups() {
         storeFileManager.pruneBackups();
+    }
+
+    public List<BackupFileInfo> getBackups() {
+        return storeFileManager.getBackups();
     }
 
     private Optional<T> readStoreFromFileOrRestoreFromBackup() {

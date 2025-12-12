@@ -20,6 +20,7 @@ package bisq.persistence;
 import bisq.common.proto.PersistableProto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
 import com.google.common.base.Joiner;
@@ -116,6 +117,13 @@ public class PersistenceService {
                 .map(Persistence::pruneBackups)
                 .collect(Collectors.toList());
         return CompletableFutureUtils.allOf(list).thenApply(l -> null);
+    }
+
+    public List<BackupFileInfo> getAllBackups() {
+        return clients.stream()
+                .map(PersistenceClient::getPersistence)
+                .flatMap(p -> p.getBackups().stream())
+                .toList();
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

@@ -88,7 +88,7 @@ public class PersistableStoreFileManager {
     }
 
     public List<BackupFileInfo> getBackups() {
-        return backupService.getBackups();
+        return List.copyOf(backupService.getBackups());
     }
 
     private Path createTempFilePath() {
