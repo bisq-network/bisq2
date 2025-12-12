@@ -18,6 +18,7 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.BackupService;
 import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.List;
 
 @Slf4j
 public class PersistableStoreFileManager {
@@ -83,6 +85,10 @@ public class PersistableStoreFileManager {
 
     public void pruneBackups() {
         backupService.prune();
+    }
+
+    public List<BackupFileInfo> getBackups() {
+        return List.copyOf(backupService.getBackups());
     }
 
     private Path createTempFilePath() {

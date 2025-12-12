@@ -24,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -153,9 +156,9 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testPrune() {
+    void testPrune(@TempDir Path tempDir) {
         Predicate<BackupFileInfo> isMaxFileSizeReachedFunction = e -> false;
-        List<String> fileNames;
+        List<Path> paths;
         List<BackupFileInfo> list;
         List<BackupFileInfo> outdatedBackupFileInfos;
         List<BackupFileInfo> remaining;
@@ -164,317 +167,364 @@ public class BackupServiceTest {
 
 
         // Empty
-        fileNames = List.of();
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        paths = List.of();
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
         // Backup date is in the future. We treat backup as daily backup
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
         now = LocalDateTime.parse("2024-09-14_1755", BackupService.DATE_FORMAT);
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
         now = LocalDateTime.parse("2024-09-15_1755", BackupService.DATE_FORMAT);
 
         // Last 2 minutes. We keep all
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-15_1754",
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-15_1754"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
         // After 1 hour we keep only the newest per hour
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-15_1653",
-                "test_store.protobuf_2024-09-15_1654",
-                "test_store.protobuf_2024-09-15_1655", // remove as
-                "test_store.protobuf_2024-09-15_1656",
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-15_1653"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1654"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1655"), // remove as
+                tempDir.resolve("test_store.protobuf_2024-09-15_1656"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(1))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(1))));
 
 
         // At 24 hour we keep only the newest per day
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-14_1754", // remove as 14_1755 is newer
-                "test_store.protobuf_2024-09-14_1755", // use day map
-                "test_store.protobuf_2024-09-14_1756", // remove as 14_1757 is newer
-                "test_store.protobuf_2024-09-14_1757",
-                "test_store.protobuf_2024-09-14_1855",
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-14_1754"), // remove as 14_1755 is newer
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"), // use day map
+                tempDir.resolve("test_store.protobuf_2024-09-14_1756"), // remove as 14_1757 is newer
+                tempDir.resolve("test_store.protobuf_2024-09-14_1757"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1855"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(2))));
 
 
         // Different day, we keep all as in last week
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-14_1755",
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
-        assertEquals(list.get(0).getFileNameWithDate(), fileNames.get(1));
+        assertEquals(list.getFirst().getPath().getFileName(), paths.get(1).getFileName());
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
         // Same day, we keep all as in last week
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-15_1754",
-                "test_store.protobuf_2024-09-15_1755",
-                "test_store.protobuf_2024-09-15_1752"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-15_1754"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1752")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
         // Same day, we keep only newest as it's older than past 7 days
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-05_1754",
-                "test_store.protobuf_2024-09-05_1755",
-                "test_store.protobuf_2024-09-05_1752"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-05_1754"),
+                tempDir.resolve("test_store.protobuf_2024-09-05_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-05_1752")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(2))));
 
 
         // Past 7 days in calendar week
         now = LocalDateTime.parse("2024-09-15_1755", BackupService.DATE_FORMAT);
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-09_1755",
-                "test_store.protobuf_2024-09-10_1755",
-                "test_store.protobuf_2024-09-11_1755",
-                "test_store.protobuf_2024-09-12_1755",
-                "test_store.protobuf_2024-09-13_1755",
-                "test_store.protobuf_2024-09-14_1755",
-                "test_store.protobuf_2024-09-15_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-09_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-10_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-11_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-12_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-13_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertTrue(outdatedBackupFileInfos.isEmpty());
 
 
         // Past 7 days crossing the calendar week index
         now = LocalDateTime.parse("2024-09-14_1755", BackupService.DATE_FORMAT);
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-08_1755",
-                "test_store.protobuf_2024-09-09_1755",
-                "test_store.protobuf_2024-09-10_1755",
-                "test_store.protobuf_2024-09-11_1755",
-                "test_store.protobuf_2024-09-12_1755",
-                "test_store.protobuf_2024-09-13_1755",
-                "test_store.protobuf_2024-09-14_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-08_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-09_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-10_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-11_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-12_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-13_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertTrue(outdatedBackupFileInfos.isEmpty());
 
 
         // Older than 7 days, we keep only newest per week index
         now = LocalDateTime.parse("2024-09-23_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-09_1755", // monday
-                "test_store.protobuf_2024-09-10_1755",
-                "test_store.protobuf_2024-09-11_1755",
-                "test_store.protobuf_2024-09-12_1755",
-                "test_store.protobuf_2024-09-13_1755",
-                "test_store.protobuf_2024-09-14_1755",
-                "test_store.protobuf_2024-09-15_1755" // sunday
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-09_1755"), // monday
+                tempDir.resolve("test_store.protobuf_2024-09-10_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-11_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-12_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-13_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755") // sunday
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(6))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(6))));
 
 
         // Older than 7 days, we keep only newest per week index
         now = LocalDateTime.parse("2024-09-23_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-08_1755", // sunday
-                "test_store.protobuf_2024-09-09_1755", // monday
-                "test_store.protobuf_2024-09-10_1755",
-                "test_store.protobuf_2024-09-11_1755",
-                "test_store.protobuf_2024-09-12_1755",
-                "test_store.protobuf_2024-09-13_1755",
-                "test_store.protobuf_2024-09-14_1755",
-                "test_store.protobuf_2024-09-15_1755" // sunday
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-08_1755"), // sunday
+                tempDir.resolve("test_store.protobuf_2024-09-09_1755"), // monday
+                tempDir.resolve("test_store.protobuf_2024-09-10_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-11_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-12_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-13_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755") // sunday
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(7))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(7))));
         assertEquals(2, remaining.size());
 
 
         // Past 28 days, we keep only newest of each week
         now = LocalDateTime.parse("2024-09-30_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-01_1755",
-                "test_store.protobuf_2024-09-08_1755",
-                "test_store.protobuf_2024-09-15_1755", // sunday
-                "test_store.protobuf_2024-09-22_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-01_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-08_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755"), // sunday
+                tempDir.resolve("test_store.protobuf_2024-09-22_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
         // Past 29 days, we keep only newest of each week and older than 28 days for months
         now = LocalDateTime.parse("2024-09-30_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2024-09-01_1755",// sunday
-                "test_store.protobuf_2024-09-02_1755",
-                "test_store.protobuf_2024-09-07_1755",
-                "test_store.protobuf_2024-09-08_1755",// sunday
-                "test_store.protobuf_2024-09-09_1755",
-                "test_store.protobuf_2024-09-14_1755",
-                "test_store.protobuf_2024-09-15_1755", // sunday
-                "test_store.protobuf_2024-09-16_1755",
-                "test_store.protobuf_2024-09-21_1755",
-                "test_store.protobuf_2024-09-22_1755" // sunday
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2024-09-01_1755"),// sunday
+                tempDir.resolve("test_store.protobuf_2024-09-02_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-07_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-08_1755"),// sunday
+                tempDir.resolve("test_store.protobuf_2024-09-09_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-14_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-15_1755"), // sunday
+                tempDir.resolve("test_store.protobuf_2024-09-16_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-21_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-22_1755") // sunday
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(3))));
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(6))));
-        assertTrue(remaining.contains(createBackupFileInfo(fileName, fileNames.get(9))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(3))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(6))));
+        assertTrue(remaining.contains(createBackupFileInfo(fileName, paths.get(9))));
         assertEquals(4, remaining.size());
 
 
         // Past 12 months, we keep the newest one per month
         now = LocalDateTime.parse("2024-12-30_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2023-12-31_1755",
-                "test_store.protobuf_2024-01-01_1755",
-                "test_store.protobuf_2024-01-30_1755",
-                "test_store.protobuf_2024-02-30_1755",
-                "test_store.protobuf_2024-03-30_1755",
-                "test_store.protobuf_2024-04-30_1755",
-                "test_store.protobuf_2024-05-30_1755",
-                "test_store.protobuf_2024-06-30_1755",
-                "test_store.protobuf_2024-07-30_1755",
-                "test_store.protobuf_2024-08-30_1755",
-                "test_store.protobuf_2024-09-30_1755",
-                "test_store.protobuf_2024-10-30_1755",
-                "test_store.protobuf_2024-11-29_1755",
-                "test_store.protobuf_2024-11-30_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2023-12-31_1755"),
+                tempDir.resolve("test_store.protobuf_2024-01-01_1755"),
+                tempDir.resolve("test_store.protobuf_2024-01-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-02-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-03-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-04-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-05-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-06-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-07-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-08-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-09-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-10-30_1755"),
+                tempDir.resolve("test_store.protobuf_2024-11-29_1755"),
+                tempDir.resolve("test_store.protobuf_2024-11-30_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(1))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(12))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(1))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(12))));
 
 
         // Past years, we keep only the newest per year if older than 1 year
         now = LocalDateTime.parse("2024-12-30_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2018-12-29_1755",
-                "test_store.protobuf_2019-12-29_1755",
-                "test_store.protobuf_2020-11-29_1755",
-                "test_store.protobuf_2020-12-29_1755",
-                "test_store.protobuf_2021-12-29_1755",
-                "test_store.protobuf_2022-12-29_1755",
-                "test_store.protobuf_2023-12-29_1755"
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2018-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2019-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2020-11-29_1755"),
+                tempDir.resolve("test_store.protobuf_2020-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2021-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2022-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2023-12-29_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(1, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(2))));
 
 
         // All mixed up
         now = LocalDateTime.parse("2024-12-30_1755", BackupService.DATE_FORMAT); // monday
-        fileNames = List.of(
-                "test_store.protobuf_2020-10-29_1755", // remove, as newer exist
-                "test_store.protobuf_2020-11-28_1755", // remove, as newer exist
-                "test_store.protobuf_2020-11-29_1755", // remove, as newer exist
-                "test_store.protobuf_2020-12-29_1755", // keep
-                "test_store.protobuf_2021-12-29_1755",
-                "test_store.protobuf_2022-12-29_1755",
-                "test_store.protobuf_2023-12-29_1755",
-                "test_store.protobuf_2024-01-01_1755",// remove, as newer exist
-                "test_store.protobuf_2024-01-30_1755",// keep
+        paths = List.of(
+                tempDir.resolve("test_store.protobuf_2020-10-29_1755"), // remove, as newer exist
+                tempDir.resolve("test_store.protobuf_2020-11-28_1755"), // remove, as newer exist
+                tempDir.resolve("test_store.protobuf_2020-11-29_1755"), // remove, as newer exist
+                tempDir.resolve("test_store.protobuf_2020-12-29_1755"), // keep
+                tempDir.resolve("test_store.protobuf_2021-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2022-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2023-12-29_1755"),
+                tempDir.resolve("test_store.protobuf_2024-01-01_1755"),// remove, as newer exist
+                tempDir.resolve("test_store.protobuf_2024-01-30_1755"),// keep
                 // past 28 days, keep the newest per week
-                "test_store.protobuf_2024-12-01_1755",  // keep
+                tempDir.resolve("test_store.protobuf_2024-12-01_1755"),  // keep
 
-                "test_store.protobuf_2024-12-02_1755",
-                "test_store.protobuf_2024-12-03_1755",
-                "test_store.protobuf_2024-12-08_1755", // keep
+                tempDir.resolve("test_store.protobuf_2024-12-02_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-03_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-08_1755"), // keep
 
-                "test_store.protobuf_2024-12-09_1755",
-                "test_store.protobuf_2024-12-15_1755",// keep
+                tempDir.resolve("test_store.protobuf_2024-12-09_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-15_1755"),// keep
 
-                "test_store.protobuf_2024-12-16_1755",
-                "test_store.protobuf_2024-12-21_1755",
-                "test_store.protobuf_2024-12-22_1755",// keep
+                tempDir.resolve("test_store.protobuf_2024-12-16_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-21_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-22_1755"),// keep
 
                 // last 7 days, keep one per day
-                "test_store.protobuf_2024-12-23_1750", // we only use day not exact time to check for past 7 days. so we keep it
-                "test_store.protobuf_2024-12-24_1755",
-                "test_store.protobuf_2024-12-25_1755",
-                "test_store.protobuf_2024-12-26_1755",
-                "test_store.protobuf_2024-12-28_1755",
-                "test_store.protobuf_2024-12-29_1750", //remove as 29_1755 is newer
-                "test_store.protobuf_2024-12-29_1755",
+                tempDir.resolve("test_store.protobuf_2024-12-23_1750"), // we only use day not exact time to check for past 7 days. so we keep it
+                tempDir.resolve("test_store.protobuf_2024-12-24_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-25_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-26_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-28_1755"),
+                tempDir.resolve("test_store.protobuf_2024-12-29_1750"), //remove as 29_1755 is newer
+                tempDir.resolve("test_store.protobuf_2024-12-29_1755"),
 
                 // Last 24 hours, keep one per hour
-                "test_store.protobuf_2024-12-29_1756",
-                "test_store.protobuf_2024-12-30_1555",
-                "test_store.protobuf_2024-12-30_1654", //remove as 30_1655 is newer
-                "test_store.protobuf_2024-12-30_1655",
+                tempDir.resolve("test_store.protobuf_2024-12-29_1756"),
+                tempDir.resolve("test_store.protobuf_2024-12-30_1555"),
+                tempDir.resolve("test_store.protobuf_2024-12-30_1654"), //remove as 30_1655 is newer
+                tempDir.resolve("test_store.protobuf_2024-12-30_1655"),
 
                 // Last hour we keep all per minute
-                "test_store.protobuf_2024-12-30_1656",
-                "test_store.protobuf_2024-12-30_1754",
-                "test_store.protobuf_2024-12-30_1755"
+                tempDir.resolve("test_store.protobuf_2024-12-30_1656"),
+                tempDir.resolve("test_store.protobuf_2024-12-30_1754"),
+                tempDir.resolve("test_store.protobuf_2024-12-30_1755")
         );
-        list = BackupService.createBackupFileInfo(fileName, fileNames);
+        list = BackupService.createBackupFileInfo(fileName, paths);
         outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
         assertEquals(11, outdatedBackupFileInfos.size());
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(1))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(7))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(10))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(11))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(13))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(15))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(16))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(23))));
-        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(27))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(0))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(1))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(2))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(7))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(10))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(11))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(13))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(15))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(16))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(23))));
+        assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(27))));
+    }
+
+    @Test
+    void testGetBackupsReadsDirectoryAndReturnsParsedBackups(@TempDir Path tempDir) throws IOException {
+        Path dbDirPath = tempDir.resolve("db");
+        Path storePath = dbDirPath.resolve("test_store.protobuf");
+
+        List<String> fileNames = List.of(
+                "test_store.protobuf_2025-12-04_0901",
+                "test_store.protobuf_2024-01-01_0000",
+                "other.txt",
+                ".DS_Store"
+        );
+
+        Path backupPathDir = tempDir.resolve("backups").resolve("test");
+        Files.createDirectories(backupPathDir);
+
+        // create files on disk
+        for (String fn : fileNames) {
+            Files.writeString(backupPathDir.resolve(fn), "dummy text", StandardCharsets.UTF_8);
+        }
+
+        BackupService bs = new BackupService(tempDir, storePath, MaxBackupSize.HUNDRED_MB);
+        List<BackupFileInfo> backups = bs.getBackups();
+
+        // Only the two valid backup files should be returned, newest first
+        assertEquals(2, backups.size());
+        assertEquals("test_store.protobuf_2025-12-04_0901", backups.get(0).getPath().getFileName().toString());
+        assertEquals("test_store.protobuf_2024-01-01_0000", backups.get(1).getPath().getFileName().toString());
+    }
+
+    @Test
+    void testCreateBackupFileInfoParsesAndSorts(@TempDir Path tempDir) {
+        String baseName = "test_store.protobuf";
+        List<Path> paths = List.of(
+                tempDir.resolve("test_store.protobuf_2025-12-04_0901"),
+                tempDir.resolve("test_store.protobuf_2024-01-01_0000"),
+                tempDir.resolve("not_a_backup.txt"),
+                tempDir.resolve(".DS_Store")
+        );
+
+        List<BackupFileInfo> infos = BackupService.createBackupFileInfo(baseName, paths);
+
+        // Only two valid backups expected and newest first
+        assertEquals(2, infos.size());
+        assertEquals("test_store.protobuf_2025-12-04_0901", infos.get(0).getPath().getFileName().toString());
+        assertEquals("test_store.protobuf_2024-01-01_0000", infos.get(1).getPath().getFileName().toString());
     }
 
     void createBackups() throws IOException {
@@ -500,7 +550,7 @@ public class BackupServiceTest {
     }
 
 
-    private static BackupFileInfo createBackupFileInfo(String fileName, String fileNameWithDate) {
-        return BackupFileInfo.from(fileName, fileNameWithDate).orElseThrow();
+    private static BackupFileInfo createBackupFileInfo(String fileName, Path path) {
+        return BackupFileInfo.from(fileName, path).orElseThrow();
     }
 }

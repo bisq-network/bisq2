@@ -98,7 +98,7 @@ public class BackupService {
             if (Files.exists(legacyBackupFilePath)) {
                 Path newBackupFilePath = getBackupFilePath();
                 FileMutatorUtils.renameFile(legacyBackupFilePath, newBackupFilePath);
-                if (FileReaderUtils.listRegularFiles(legacyBackupDirPath).isEmpty()) {
+                if (FileReaderUtils.listRegularFilesAsPath(legacyBackupDirPath).isEmpty()) {
                     FileMutatorUtils.deleteFileOrDirectory(legacyBackupDirPath);
                 }
             }
@@ -146,15 +146,13 @@ public class BackupService {
 
         // TODO Consider to let that run in a background thread
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileReaderUtils.listRegularFiles(dirPath);
-        List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
+        List<BackupFileInfo> backupFileInfoList = getBackups();
         LocalDateTime now = LocalDateTime.now();
         List<BackupFileInfo> outdatedBackupFileInfos = findOutdatedBackups(new ArrayList<>(backupFileInfoList), now, this::isMaxFileSizeReached);
         outdatedBackupFileInfos.forEach(backupFileInfo -> {
             try {
-                String fileNameWithDate = backupFileInfo.getFileNameWithDate();
-                Files.deleteIfExists(dirPath.resolve(fileNameWithDate));
-                log.debug("Deleted outdated backup {}", fileNameWithDate);
+                Files.deleteIfExists(backupFileInfo.getPath());
+                log.debug("Deleted outdated backup {}", backupFileInfo.getPath().getFileName());
             } catch (Exception e) {
                 log.error("Failed to prune backups", e);
             }
@@ -218,9 +216,7 @@ public class BackupService {
 
     private long updateAndGetAccumulatedFileSize() {
         accumulatedFileSize = 0;
-        Set<String> fileNames = FileReaderUtils.listRegularFiles(dirPath);
-        createBackupFileInfo(fileName, fileNames)
-                .forEach(this::addAndGetAccumulatedFileSize);
+        getBackups().forEach(this::addAndGetAccumulatedFileSize);
         return accumulatedFileSize;
     }
 
@@ -231,7 +227,7 @@ public class BackupService {
     }
 
     private long getFileSize(BackupFileInfo backupFileInfo) {
-        Path path = dirPath.resolve(backupFileInfo.getFileNameWithDate());
+        Path path = backupFileInfo.getPath();
         String key = path.toAbsolutePath().toString();
         fileSizeByBackupFileInfo.computeIfAbsent(key, k -> {
             try {
@@ -244,6 +240,10 @@ public class BackupService {
         return fileSizeByBackupFileInfo.get(key);
     }
 
+    public List<BackupFileInfo> getBackups() {
+        Set<Path> paths = FileReaderUtils.listRegularFilesAsPath(dirPath);
+        return createBackupFileInfo(fileName, paths);
+    }
 
     /* --------------------------------------------------------------------- */
     // Utils
@@ -295,14 +295,15 @@ public class BackupService {
     }
 
     @VisibleForTesting
-    static List<BackupFileInfo> createBackupFileInfo(String fileName, Collection<String> fileNames) {
-        return fileNames.stream()
-                .filter(fileNameWithDate -> !fileNameWithDate.equals(".DS_Store"))
-                .map(fileNameWithDate -> BackupFileInfo.from(fileName, fileNameWithDate))
+    static List<BackupFileInfo> createBackupFileInfo(String fileName, Collection<Path> paths) {
+        List<BackupFileInfo> result = paths.stream()
+                .filter(path -> !path.getFileName().toString().equals(".DS_Store"))
+                .map(path -> BackupFileInfo.from(fileName, path))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted()
                 .collect(Collectors.toList());
+        return result;
     }
 
     private static long getBackupAgeInDays(BackupFileInfo backupFileInfo, LocalDateTime now) {

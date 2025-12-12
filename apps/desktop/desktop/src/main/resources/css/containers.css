@@ -50,6 +50,45 @@
 
 /*******************************************************************************
  *                                                                             *
+ * TreeView                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+ .tree-view {
+     -fx-background-color: rgba(255, 255, 255, 0.05);
+     -fx-background-insets: 0;
+     -fx-background-radius: 4;
+     -fx-padding: 7.5 5 7.5 5;
+ }
+
+ .tree-cell {
+     -fx-background-color: transparent;
+     -fx-padding: 5;
+ }
+
+ .tree-cell:filled:hover {
+     -fx-background-color: rgba(255, 255, 255, 0.05);
+ }
+
+ .tree-cell:filled:selected {
+     -fx-background-color: rgba(255, 255, 255, 0.1);
+ }
+
+ .tree-cell .text {
+     -fx-text-fill: -fx-mid-text-color;
+ }
+
+ .tree-cell:filled:selected .text {
+     -fx-text-fill: -fx-light-text-color;
+ }
+
+ .tree-disclosure-node {
+     -fx-background-color: transparent;
+ }
+
+
+/*******************************************************************************
+ *                                                                             *
  * Lines                                                                     *
  *                                                                             *
  ******************************************************************************/

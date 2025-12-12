@@ -130,6 +130,30 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
+
+/*******************************************************************************
+ * Restore from Backup                                                         *
+ ******************************************************************************/
+
+.restore-from-backup-headline {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 1.8em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.restore-from-backup-content {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 1.1em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.restore-from-backup-table-view {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+
 /*******************************************************************************
  * AlertBanner                                                                 *
  ******************************************************************************/
@@ -490,4 +514,23 @@
 
 .wallet-dashboard .latest-txs-table.table-view .column-header {
     -fx-background-color: -bisq-dark-grey-40;
+}
+
+
+/*******************************************************************************
+ * Support                                                                  *
+ ******************************************************************************/
+
+.support-sub-headline {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.4em;
+}
+
+.support-normal-text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
 }

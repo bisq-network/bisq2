@@ -19,11 +19,14 @@ package bisq.persistence;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.MaxBackupSize;
+import bisq.persistence.backup.RestoreService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -40,12 +43,12 @@ public class Persistence<T extends PersistableStore<T>> {
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
-    public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize) {
+    public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize, RestoreService restoreService) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
         storePath = directoryPath.resolve(storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
-        persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
+        persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager, restoreService);
     }
 
     public Optional<T> read() {
@@ -62,5 +65,9 @@ public class Persistence<T extends PersistableStore<T>> {
 
     public CompletableFuture<Void> pruneBackups() {
         return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, EXECUTOR);
+    }
+
+    public List<BackupFileInfo> getBackups() {
+        return persistableStoreReaderWriter.getBackups();
     }
 }

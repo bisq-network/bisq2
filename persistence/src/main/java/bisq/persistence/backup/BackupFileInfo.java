@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.IsoFields;
@@ -32,11 +33,12 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 public class BackupFileInfo implements Comparable<BackupFileInfo> {
-    public static Optional<BackupFileInfo> from(String fileName, String fileNameWithDate) {
+    public static Optional<BackupFileInfo> from(String fileName, Path path) {
+        String fileNameWithDate = path.getFileName().toString();
         String formattedDate = fileNameWithDate.replace(fileName + "_", "");
         try {
             LocalDateTime localDateTime = LocalDateTime.parse(formattedDate, BackupService.DATE_FORMAT);
-            return Optional.of(new BackupFileInfo(localDateTime, fileNameWithDate));
+            return Optional.of(new BackupFileInfo(localDateTime, path));
         } catch (Exception e) {
             log.error("Could not resolve date from file {}", fileNameWithDate, e);
             return Optional.empty();
@@ -44,11 +46,11 @@ public class BackupFileInfo implements Comparable<BackupFileInfo> {
     }
 
     private final LocalDateTime localDateTime;
-    private final String fileNameWithDate;
+    private final Path path;
 
-    public BackupFileInfo(LocalDateTime localDateTime, String fileNameWithDate) {
+    public BackupFileInfo(LocalDateTime localDateTime, Path path) {
         this.localDateTime = localDateTime;
-        this.fileNameWithDate = fileNameWithDate;
+        this.path = path;
     }
 
     public LocalDate getLocalDate() {
