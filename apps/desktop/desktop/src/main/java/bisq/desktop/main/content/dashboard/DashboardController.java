@@ -28,6 +28,8 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.dashboard.bisq_easy.BisqEasyDashboardColumns;
+import bisq.desktop.main.content.dashboard.top_panel.DashboardTopPanel;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
@@ -49,6 +51,8 @@ public class DashboardController implements Controller {
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final AlertNotificationsService alertNotificationsService;
+    private final BisqEasyDashboardColumns bisqEasyDashBoardColumns;
+    private final DashboardTopPanel dashboardTopPanel;
     private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
@@ -61,8 +65,10 @@ public class DashboardController implements Controller {
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
         alertNotificationsService = serviceProvider.getAlertNotificationsService();
 
+        dashboardTopPanel = new DashboardTopPanel(serviceProvider);
+        bisqEasyDashBoardColumns = new BisqEasyDashboardColumns(serviceProvider);
         model = new DashboardModel();
-        view = new DashboardView(model, this);
+        view = new DashboardView(model, this, dashboardTopPanel.getViewRoot(), bisqEasyDashBoardColumns.getViewRoot());
     }
 
     @Override
