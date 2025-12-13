@@ -9,31 +9,27 @@
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21. On Linux, you will also need to install Tor Browser if you don't already have it.
+   Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
 
-   [https://www.torproject.org/download/](https://www.torproject.org/download/)
+   Please see the official [Tor installation instructions](https://support.torproject.org/little-t-tor/getting-started/installing/):
 
-   On Debian based distributions:
+   The TLDR for Debian-based distros:
    ```bash
-   sudo apt install torbrowser-launcher
-   ```
+    sudo apt update
+    sudo apt install apt-transport-https curl
 
-   If tor browser is not available for your Linux distribution you can also download, extract and symlink the required binary. The version of Tor which Bisq was tested against is defined in gradle.properties.
+    # Add the Tor Project GPG key
+    curl https://deb.torproject.org/torproject.org/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/tor-archive-keyring.gpg
 
-   ```bash
-    awk -F= '/^tor\.version=/{print $2}' gradle.properties
-   ```
-   On Linux you should currently use version 15.0.2 as 13.5.x may be poorly supported [See release notes for 13.5.22](https://blog.torproject.org/new-release-tor-browser-13522/)
-   ```bash
-    cd /usr/local/src
-    wget https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz
-    wget https://www.torproject.org/dist/torbrowser/15.0.2/tor-browser-linux-x86_64-15.0.2.tar.xz.asc
-    gpg --keyserver hkps://keys.openpgp.org --recv-keys CAAE408AEBE2288E96FC5D5E157432CF78A65729
-    gpg --verify tor-browser-linux-x86_64-15.0.2.tar.xz.asc tor-browser-linux-x86_64-15.0.2.tar.xz
-    tar -xf tor-browser-linux-x86_64-15.0.2.tar.xz
-    ln -s /usr/local/src/tor-browser/Browser/TorBrowser/Tor/tor /usr/local/bin/tor
-    which tor
-    cd -
+    # Add Tor repository
+    echo "deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] \
+    https://deb.torproject.org/torproject.org $(lsb_release -cs) main" \
+    | sudo tee /etc/apt/sources.list.d/tor.list
+
+    # Install Tor
+    sudo apt update
+    sudo apt install tor
+
    ```
 
 4. **Update to latest GitHub version:**
