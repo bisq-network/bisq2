@@ -51,7 +51,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
         filterChangeListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null) {
                 filteredList.setPredicate(item -> item.matchUserName(newValue));
-                sortedList.setComparator(ListItem.comparator(newValue));
+                sortedList.setComparator(sortByPrefixMatchingQuery(newValue));
                 listView.setPrefHeight(Math.min(600, 20 + filteredList.size() * ListItem.CELL_HEIGHT));
                 if (oldValue == null) {
                     show(inputField);
@@ -72,6 +72,22 @@ public class ChatMentionPopupMenu extends BisqPopup {
     public void cleanup() {
         filter.removeListener(filterChangeListener);
         filter.unbind();
+    }
+
+    private static Comparator<ListItem> sortByPrefixMatchingQuery(String query) {
+        return (o1, o2) -> {
+            String q = query.toLowerCase();
+            String name1 = o1.getUserName().toLowerCase();
+            String name2 = o2.getUserName().toLowerCase();
+
+            boolean starts1 = name1.startsWith(q);
+            boolean starts2 = name2.startsWith(q);
+
+            if (starts1 && !starts2) return -1;
+            if (!starts1 && starts2) return 1;
+
+            return name1.compareTo(name2);
+        };
     }
 
     private Callback<ListView<ListItem>, ListCell<ListItem>> getCellFactory() {
@@ -126,22 +142,6 @@ public class ChatMentionPopupMenu extends BisqPopup {
 
         public boolean matchUserName(String searchString) {
             return StringUtils.containsIgnoreCase(userName, searchString);
-        }
-
-        public static Comparator<ListItem> comparator(String query) {
-            return (o1, o2) -> {
-                String q = query.toLowerCase();
-                String name1 = o1.getUserName().toLowerCase();
-                String name2 = o2.getUserName().toLowerCase();
-
-                boolean starts1 = name1.startsWith(q);
-                boolean starts2 = name2.startsWith(q);
-
-                if (starts1 && !starts2) return -1;
-                if (!starts1 && starts2) return 1;
-
-                return name1.compareTo(name2);
-            };
         }
 
         @Override
