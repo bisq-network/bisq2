@@ -19,16 +19,16 @@ package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -48,7 +48,8 @@ public class DashboardController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
-    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin;
+    private final AlertNotificationsService alertNotificationsService;
+    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
 
@@ -58,6 +59,7 @@ public class DashboardController implements Controller {
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
+        alertNotificationsService = serviceProvider.getAlertNotificationsService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -80,8 +82,8 @@ public class DashboardController implements Controller {
         allowUpdateOffersOnline = true;
         updateOffersOnline();
 
-        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
-                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
+        isNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(value -> handleBannerVisibility());
+        unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(this::handleBannerVisibility);
     }
 
     @Override
@@ -90,6 +92,7 @@ public class DashboardController implements Controller {
         marketPricePin.unbind();
         getNumUserProfilesPin.unbind();
         isNotificationVisiblePin.unbind();
+        unconsumedAlertsPin.unbind();
         channelsPins.forEach(Pin::unbind);
         channelsPins.clear();
     }
@@ -126,4 +129,8 @@ public class DashboardController implements Controller {
         }
     }
 
+    private void handleBannerVisibility() {
+        model.getIsBannerVisible().set(bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
+                !alertNotificationsService.getUnconsumedAlerts().isEmpty());
+    }
 }
