@@ -11,8 +11,7 @@
 2. **Install Dependencies:**
    Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
 
-   Please see the official [Tor installation instructions](https://support.torproject.org/little-t-tor/getting-started/installing/):
-
+   Please see the official [Tor installation instructions](https://support.torproject.org/little-t-tor/getting-started/installing/).
    The TLDR for Debian-based distros:
    ```bash
     sudo apt update
@@ -32,12 +31,12 @@
 
    ```
 
-4. **Update to latest GitHub version:**
+3. **Update to latest GitHub version:**
    ```bash
    git pull
    ```
 
-5. **Build Bisq**
+4. **Build Bisq**
 
    On macOS and Linux, execute:
    ```sh
@@ -52,7 +51,7 @@
    If you prefer to skip tests to speed up the building process, just append `-x test` to the previous commands.
 
 
-6. **Generate Seed Node & Desktop App Binaries**
+5. **Generate Seed Node & Desktop App Binaries**
 
    Seed Node:
    ```sh
@@ -66,13 +65,13 @@
    **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
 
 
-7. **Generate Installers**
+6. **Generate Installers**
 
    ```sh
    ./gradlew :apps:desktop:desktop-app-launcher:clean :apps:desktop:desktop-app-launcher:generateInstallers
    ```
 
-8. **Other useful dev gradle commands**
+7. **Other useful dev gradle commands**
 
 For a quick full cleanup/rebuild you can use
 
