@@ -645,6 +645,10 @@
     -fx-image: url("/images/onboarding/graph-in-circle-green.png");
 }
 
+#multi-sig {
+    -fx-image: url("/images/onboarding/multi-sig.png");
+}
+
 
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
