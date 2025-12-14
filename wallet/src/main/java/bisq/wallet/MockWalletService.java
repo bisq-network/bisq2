@@ -146,9 +146,134 @@ public class MockWalletService extends WalletService {
                 false
         );
 
+        TransactionInput input3 = new TransactionInput(
+                "c3b2a1f2e1d0c9b8a7z6y5x4w3v2u1t0s9r8q7p6o5n4m3l2k1j0i9h8g7f6e5d4",
+                0,
+                4294967293L,
+                new byte[]{(byte)0x05, (byte)0x06},
+                ""
+        );
+        TransactionOutput output3 = new TransactionOutput(
+                50000L,
+                "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+                new byte[]{(byte)0x76, (byte)0xa9}
+        );
+        Transaction tx3 = new Transaction(
+                "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+                List.of(input3),
+                List.of(output3),
+                0L,
+                800002,
+                new java.util.Date(System.currentTimeMillis() - 172800000L), // 2 days ago
+                0,
+                50000L,
+                false
+        );
+
+        TransactionInput input4 = new TransactionInput(
+                "d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7z6y5x4w3",
+                2,
+                4294967292L,
+                new byte[]{(byte)0x07, (byte)0x08},
+                ""
+        );
+        TransactionOutput output4 = new TransactionOutput(
+                750000L,
+                "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080",
+                new byte[]{(byte)0x76, (byte)0xa9}
+        );
+        Transaction tx4 = new Transaction(
+                "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+                List.of(input4),
+                List.of(output4),
+                0L,
+                800003,
+                new java.util.Date(System.currentTimeMillis() - 3 * 3600 * 1000L), // 3 hours ago
+                1,
+                750000L,
+                true
+        );
+
+        TransactionInput input5 = new TransactionInput(
+                "e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7z6y5x4",
+                0,
+                4294967291L,
+                new byte[]{(byte)0x09, (byte)0x0A},
+                ""
+        );
+        TransactionOutput output5 = new TransactionOutput(
+                150000L,
+                "1BoatSLRHtKNngkdXEeobR76b53LETtpyT",
+                new byte[]{(byte)0x76, (byte)0xa9}
+        );
+        Transaction tx5 = new Transaction(
+                "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+                List.of(input5),
+                List.of(output5),
+                0L,
+                799999,
+                new java.util.Date(System.currentTimeMillis() - 7L * 24L * 3600L * 1000L), // 7 days ago
+                12,
+                150000L,
+                true
+        );
+
+        TransactionInput input6 = new TransactionInput(
+                "f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7z6y5",
+                1,
+                4294967290L,
+                new byte[]{(byte)0x0B, (byte)0x0C},
+                ""
+        );
+        TransactionOutput output6 = new TransactionOutput(
+                300000L,
+                "3P1oKqQ1oQf2t1Zb1p7b6g9a4n5v8x7y6z",
+                new byte[]{(byte)0x76, (byte)0xa9}
+        );
+        Transaction tx6 = new Transaction(
+                "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
+                List.of(input6),
+                List.of(output6),
+                0L,
+                800004,
+                new java.util.Date(System.currentTimeMillis() - 30L * 60L * 1000L), // 30 minutes ago
+                0,
+                300000L,
+                false
+        );
+
+        TransactionInput input7 = new TransactionInput(
+                "a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7z6",
+                0,
+                4294967289L,
+                new byte[]{(byte)0x0D, (byte)0x0E},
+                ""
+        );
+        TransactionOutput output7 = new TransactionOutput(
+                125000L,
+                "1Ez69SnzzmePmZX3WpEzMKTrcBF2gpNQ55",
+                new byte[]{(byte)0x76, (byte)0xa9}
+        );
+        Transaction tx7 = new Transaction(
+                "a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
+                List.of(input7),
+                List.of(output7),
+                0L,
+                800005,
+                new java.util.Date(System.currentTimeMillis() - 10L * 3600L * 1000L), // 10 hours ago
+                2,
+                125000L,
+                true
+        );
+
         transactions.clear();
         transactions.add(tx1);
         transactions.add(tx2);
+        transactions.add(tx3);
+        transactions.add(tx4);
+        transactions.add(tx5);
+        transactions.add(tx6);
+        transactions.add(tx7);
         return CompletableFuture.completedFuture(transactions);
     }
 }
