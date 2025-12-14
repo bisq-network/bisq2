@@ -30,5 +30,5 @@ public class DashboardModel implements Model {
     private final StringProperty marketCode = new SimpleStringProperty();
     private final StringProperty offersOnline = new SimpleStringProperty();
     private final StringProperty activeUsers = new SimpleStringProperty();
-    private final BooleanProperty isNotificationVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isBannerVisible = new SimpleBooleanProperty();
 }

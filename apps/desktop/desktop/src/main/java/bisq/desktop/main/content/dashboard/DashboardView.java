@@ -48,13 +48,13 @@ import java.util.Optional;
 public class DashboardView extends View<ScrollPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
     private static final Insets DEFAULT_PADDING = new Insets(30, 40, 40, 40);
-    private static final Insets NOTIFICATION_PADDING = new Insets(10, 40, 40, 40);
+    private static final Insets BANNER_PADDING = new Insets(10, 40, 40, 40);
 
     private final Button tradeProtocols, buildReputation;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
     private final GridPane gridPane;
     private final HBox marketPriceHBox;
-    private Subscription isNotificationVisiblePin, marketPricePin;
+    private Subscription isBannerVisiblePin, marketPricePin;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new ScrollPane(), model, controller);
@@ -155,12 +155,12 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         offersOnlineLabel.textProperty().bind(model.getOffersOnline());
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
 
-        isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
+        isBannerVisiblePin = EasyBind.subscribe(model.getIsBannerVisible(), visible -> {
             if (!visible) {
                 UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
                         .after(ManagedDuration.getNotificationPanelDurationMillis());
             } else {
-                gridPane.setPadding(NOTIFICATION_PADDING);
+                gridPane.setPadding(BANNER_PADDING);
             }
         });
 
@@ -193,7 +193,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         offersOnlineLabel.textProperty().unbind();
         activeUsersLabel.textProperty().unbind();
 
-        isNotificationVisiblePin.unsubscribe();
+        isBannerVisiblePin.unsubscribe();
         marketPricePin.unsubscribe();
 
         tradeProtocols.setOnAction(null);
