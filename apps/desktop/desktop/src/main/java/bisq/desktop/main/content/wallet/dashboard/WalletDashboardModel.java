@@ -59,7 +59,8 @@ public class WalletDashboardModel implements Model {
     );
     private final ObservableList<WalletTxListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
-    private final SortedList<WalletTxListItem> sortedList = new SortedList<>(filteredListItems, Comparator.comparingLong(WalletTxListItem::getDate).reversed());
+    private final SortedList<WalletTxListItem> sortedListItems = new SortedList<>(filteredListItems, Comparator.comparingLong(WalletTxListItem::getDate).reversed());
+    private final ObservableList<WalletTxListItem> visibleListItems = FXCollections.observableArrayList();
 
     public WalletDashboardModel() {
     }
