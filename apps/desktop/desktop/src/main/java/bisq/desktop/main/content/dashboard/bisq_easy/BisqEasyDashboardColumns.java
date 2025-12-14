@@ -45,16 +45,13 @@ public class BisqEasyDashboardColumns {
 
     @Slf4j
     public static class Controller implements bisq.desktop.common.view.Controller {
-
-
         @Getter
         private final View view;
-        private final Model model;
         private Pin isNotificationVisiblePin;
         private boolean allowUpdateOffersOnline;
 
         public Controller(ServiceProvider serviceProvider) {
-            model = new Model();
+            Model model = new Model();
             view = new View(model, this);
         }
 
@@ -163,7 +160,6 @@ public class BisqEasyDashboardColumns {
             tradeProtocols.setOnAction(null);
             buildReputation.setOnAction(null);
         }
-
 
         private VBox getBigWidgetBox() {
             Label headlineLabel = GridPaneUtil.getHeadline(Res.get("dashboard.main.headline"),

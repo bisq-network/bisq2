@@ -25,12 +25,15 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.dashboard.bisq_easy.BisqEasyDashboardColumns;
+import bisq.desktop.main.content.dashboard.musig.MusigDashboardColumns;
 import bisq.desktop.main.content.dashboard.top_panel.DashboardTopPanel;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.mu_sig.MuSigService;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -51,11 +54,11 @@ public class DashboardController implements Controller {
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final AlertNotificationsService alertNotificationsService;
-    private final BisqEasyDashboardColumns bisqEasyDashBoardColumns;
-    private final DashboardTopPanel dashboardTopPanel;
+    private final MuSigService muSigService;
     private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
+    private Pin muSigActivatedPin;
 
     public DashboardController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -64,15 +67,22 @@ public class DashboardController implements Controller {
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
         alertNotificationsService = serviceProvider.getAlertNotificationsService();
+        muSigService = serviceProvider.getMuSigService();
 
-        dashboardTopPanel = new DashboardTopPanel(serviceProvider);
-        bisqEasyDashBoardColumns = new BisqEasyDashboardColumns(serviceProvider);
+        DashboardTopPanel dashboardTopPanel = new DashboardTopPanel(serviceProvider);
+        BisqEasyDashboardColumns bisqEasyDashBoardColumns = new BisqEasyDashboardColumns(serviceProvider);
+        MusigDashboardColumns musigDashboardColumns = new MusigDashboardColumns(serviceProvider);
         model = new DashboardModel();
-        view = new DashboardView(model, this, dashboardTopPanel.getViewRoot(), bisqEasyDashBoardColumns.getViewRoot());
+        view = new DashboardView(model, this,
+                dashboardTopPanel.getViewRoot(),
+                bisqEasyDashBoardColumns.getViewRoot(),
+                musigDashboardColumns.getViewRoot());
     }
 
     @Override
     public void onActivate() {
+        muSigActivatedPin = FxBindings.bind(model.getMuSigActivated()).to(muSigService.getMuSigActivated());
+
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
         marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(this::updateMarketPrice);
 
@@ -94,6 +104,7 @@ public class DashboardController implements Controller {
 
     @Override
     public void onDeactivate() {
+        muSigActivatedPin.unbind();
         selectedMarketPin.unbind();
         marketPricePin.unbind();
         getNumUserProfilesPin.unbind();

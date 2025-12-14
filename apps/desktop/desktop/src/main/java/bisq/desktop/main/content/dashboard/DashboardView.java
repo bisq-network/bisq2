@@ -35,14 +35,21 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
     private static final Insets BANNER_PADDING = new Insets(10, 40, 40, 40);
 
     private final VBox vBox;
+    private final GridPane bisqEasyDashBoardColumns;
+    private final GridPane musigDashboardColumns;
     private Subscription isBannerVisiblePin;
 
     public DashboardView(DashboardModel model,
                          DashboardController controller,
                          HBox dashboardTopPanel,
-                         GridPane bisqEasyDashBoardColumns) {
+                         GridPane bisqEasyDashBoardColumns,
+                         GridPane musigDashboardColumns) {
         super(new ScrollPane(), model, controller);
-        vBox = new VBox(20, dashboardTopPanel, bisqEasyDashBoardColumns);
+
+        this.bisqEasyDashBoardColumns = bisqEasyDashBoardColumns;
+        this.musigDashboardColumns = musigDashboardColumns;
+
+        vBox = new VBox(20, dashboardTopPanel, bisqEasyDashBoardColumns, musigDashboardColumns);
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
@@ -51,6 +58,11 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
     @Override
     protected void onViewAttached() {
+        bisqEasyDashBoardColumns.visibleProperty().bind(model.getMuSigActivated().not());
+        bisqEasyDashBoardColumns.managedProperty().bind(model.getMuSigActivated().not());
+        musigDashboardColumns.visibleProperty().bind(model.getMuSigActivated());
+        musigDashboardColumns.managedProperty().bind(model.getMuSigActivated());
+
         isBannerVisiblePin = EasyBind.subscribe(model.getIsBannerVisible(), visible -> {
             if (!visible) {
                 UIScheduler.run(() -> vBox.setPadding(DEFAULT_PADDING))
@@ -63,6 +75,11 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
     @Override
     protected void onViewDetached() {
+        bisqEasyDashBoardColumns.visibleProperty().unbind();
+        bisqEasyDashBoardColumns.managedProperty().unbind();
+        musigDashboardColumns.visibleProperty().unbind();
+        musigDashboardColumns.managedProperty().unbind();
+
         isBannerVisiblePin.unsubscribe();
     }
 }
