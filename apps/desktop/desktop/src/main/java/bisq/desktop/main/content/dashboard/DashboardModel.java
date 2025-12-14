@@ -31,4 +31,5 @@ public class DashboardModel implements Model {
     private final StringProperty offersOnline = new SimpleStringProperty();
     private final StringProperty activeUsers = new SimpleStringProperty();
     private final BooleanProperty isBannerVisible = new SimpleBooleanProperty();
+    private final BooleanProperty muSigActivated = new SimpleBooleanProperty();
 }

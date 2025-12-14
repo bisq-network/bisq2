@@ -156,6 +156,13 @@
     -fx-font-size: 2.5em;
 }
 
+.bisq-text-headline-6 {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.2em;
+}
+
 .bisq-text-1 {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;

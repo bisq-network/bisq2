@@ -1,6 +1,8 @@
 package bisq.desktop.common.utils;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.components.controls.WrappingText;
+import bisq.i18n.Res;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -85,6 +87,8 @@ public class GridPaneUtil {
     public static TextFlow getInfoLabel(String info, String infoLabelStyleClass) {
         Text infoLabelText = new Text(info);
         infoLabelText.getStyleClass().add(infoLabelStyleClass);
+        WrappingText subHeadline = new WrappingText(Res.get("dashboard.protocols.subHeadline"),"trade-protocols-overview-sub-headline");
+
         return new TextFlow(infoLabelText);
     }
 
