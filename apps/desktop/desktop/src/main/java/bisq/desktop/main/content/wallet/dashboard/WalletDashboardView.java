@@ -27,6 +27,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -45,6 +46,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final Label balanceLabel, availableBalanceValueLabel, reservedFundsValueLabel, lockedFundsValueLabel;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> tableViewHeightListener;
+    private final ListChangeListener<WalletTxListItem> sortedItemsListener;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -117,13 +119,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         root.setMinWidth(1050);
         VBox.setVgrow(contentBox, Priority.ALWAYS);
 
-        tableViewHeightListener = (observable, oldValue, newValue) -> {
-            double tableHeight = newValue.doubleValue();
-            int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
-            int maxNumRows = Math.max(0, numRows);
-            int numVisibleListItems = Math.min(model.getSortedListItems().size(), maxNumRows);
-            model.getVisibleListItems().setAll(model.getSortedListItems().subList(0, numVisibleListItems));
-        };
+        tableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleListItems(newValue.doubleValue());
+        sortedItemsListener = change -> updateVisibleListItems(latestTxsTableView.getHeight());
     }
 
     @Override
@@ -134,6 +131,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         latestTxsTableView.heightProperty().addListener(tableViewHeightListener);
+        model.getSortedListItems().addListener(sortedItemsListener);
+        updateVisibleListItems(latestTxsTableView.getHeight());
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
@@ -147,6 +146,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsValueLabel.textProperty().unbind();
 
         latestTxsTableView.heightProperty().removeListener(tableViewHeightListener);
+        model.getSortedListItems().removeListener(sortedItemsListener);
 
         send.setOnAction(null);
         receive.setOnAction(null);
@@ -229,5 +229,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 .valueSupplier(WalletTxListItem::getNumConfirmationsAsString)
                 .right()
                 .build());
+    }
+
+    private void updateVisibleListItems(double tableHeight) {
+        int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
+        int maxNumRows = Math.max(0, numRows);
+        int numVisibleListItems = Math.min(model.getSortedListItems().size(), maxNumRows);
+        model.getVisibleListItems().setAll(model.getSortedListItems().subList(0, numVisibleListItems));
     }
 }
