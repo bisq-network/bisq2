@@ -21,6 +21,7 @@ import bisq.common.proto.PersistableProto;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.persistence.backup.MaxBackupSize;
+import bisq.persistence.backup.RestoreService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,8 @@ public class PersistenceService {
     @Getter
     protected final List<PersistenceClient<? extends PersistableProto>> clients = new CopyOnWriteArrayList<>();
     protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
+    @Getter
+    private final RestoreService restoreService = new RestoreService();
 
     public PersistenceService(Path appDataDirPath) {
         this.appDataDirPath = appDataDirPath;
@@ -102,7 +105,7 @@ public class PersistenceService {
         if (normalizedPath.isAbsolute()) {
             throw new IllegalArgumentException("subDir must be relative to appDataDirPath");
         }
-        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize);
+        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize, restoreService);
         persistenceInstances.add(persistence);
         return persistence;
     }

@@ -41,6 +41,8 @@ public enum NavigationTarget {
     TAC(OVERLAY, false),
     UPDATER(OVERLAY, false),
 
+    RESTORE_FROM_BACKUP(OVERLAY, false),
+
     ONBOARDING(OVERLAY, false),
     ONBOARDING_WELCOME(ONBOARDING, false),
     ONBOARDING_GENERATE_NYM(ONBOARDING, false),
