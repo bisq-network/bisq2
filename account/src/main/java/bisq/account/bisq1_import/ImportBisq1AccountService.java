@@ -19,6 +19,8 @@ package bisq.account.bisq1_import;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.fiat.SepaAccount;
+import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.common.application.Service;
@@ -88,12 +90,22 @@ public class ImportBisq1AccountService implements Service {
         String saltAsHex = asText(accountNode.path("extraData"), "saltAsHex");
 
         byte[] salt = saltAsHex != null ? Hex.decode(saltAsHex) : ByteArrayUtils.getRandomBytes(32);
+
+        String holderName = asText(paymentAccountPayloadNode, "holderName");
+
+
         switch (paymentMethodId) {
             case "CLEAR_X_CHANGE":
                 String emailOrMobileNr = asText(paymentAccountPayloadNode, "emailOrMobileNr");
-                String holderName = asText(paymentAccountPayloadNode, "holderName");
-                ZelleAccountPayload accountPayload = new ZelleAccountPayload(paymentAccountPayloadId, holderName, emailOrMobileNr, paymentMethodId, salt);
-                return new ZelleAccount(accountId, creationDate, accountName, accountPayload, dsaKeyPair, KeyGeneration.DSA);
+                ZelleAccountPayload zelleAccountPayload = new ZelleAccountPayload(paymentAccountPayloadId, holderName, emailOrMobileNr, paymentMethodId, salt);
+                return new ZelleAccount(accountId, creationDate, accountName, zelleAccountPayload, dsaKeyPair, KeyGeneration.DSA);
+            case "SEPA":
+                String bic = asText(paymentAccountPayloadNode, "bic");
+                String iban = asText(paymentAccountPayloadNode, "iban");
+                String countryCode = asText(paymentAccountPayloadNode, "countryCode");
+                List<String> acceptedCountryCodes = asStringList(paymentAccountPayloadNode.get("acceptedCountryCodes"));
+                SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(paymentAccountPayloadId, holderName, iban, bic, countryCode, acceptedCountryCodes, paymentMethodId, salt);
+                return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyGeneration.DSA);
             default:
                 return null;
         }
@@ -105,8 +117,24 @@ public class ImportBisq1AccountService implements Service {
         return jsonNode == null || jsonNode.isNull() ? null : jsonNode.asText();
     }
 
+    @Nullable
     private static long asLong(JsonNode node, String field) {
         JsonNode jsonNode = node.get(field);
         return jsonNode == null || jsonNode.isNull() ? 0L : jsonNode.asLong();
+    }
+
+    private static List<String> asStringList(JsonNode node) {
+        if (node == null || !node.isArray()) {
+            throw new IllegalArgumentException("node must be an array");
+        }
+
+        List<String> list = new ArrayList<>(node.size());
+        for (JsonNode entry : node) {
+            if (!entry.isTextual()) {
+                throw new IllegalArgumentException("Entry in string list must be a string");
+            }
+            list.add(entry.asText());
+        }
+        return list;
     }
 }
