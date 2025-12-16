@@ -20,11 +20,13 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.age_witness.AccountAgeWitnessService;
 import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.network.NetworkService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,10 +47,26 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
     private final ImportBisq1AccountService importBisq1AccountService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
-    public AccountService(PersistenceService persistenceService) {
+    public AccountService(PersistenceService persistenceService, NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         importBisq1AccountService = new ImportBisq1AccountService();
+        accountAgeWitnessService = new AccountAgeWitnessService(networkService);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Service
+    /* --------------------------------------------------------------------- */
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        return accountAgeWitnessService.initialize();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return accountAgeWitnessService.shutdown();
     }
 
 

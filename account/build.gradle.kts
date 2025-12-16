@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
     implementation(project(":identity"))
+    implementation(project(":bonded-roles"))
 
     implementation("network:network:$version")
 

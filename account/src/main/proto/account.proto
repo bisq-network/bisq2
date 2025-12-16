@@ -498,3 +498,14 @@ message AccountStore {
   optional Account selectedAccount = 2;
 }
 
+message AccountAgeWitness {
+  bytes hash = 1;
+  sint64 date = 2;
+}
+
+message AuthorizedAccountAgeWitness {
+  AccountAgeWitness accountAgeWitness = 1;
+  bool staticPublicKeysProvided = 2;
+  sint32 version = 3;
+}
+

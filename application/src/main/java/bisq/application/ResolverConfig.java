@@ -17,6 +17,8 @@
 
 package bisq.application;
 
+import bisq.account.age_witness.AccountAgeWitness;
+import bisq.account.age_witness.AuthorizedAccountAgeWitness;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -105,6 +107,8 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.getResolver());
         DistributedDataResolver.addResolver("offer.MuSigOfferMessage", MuSigOfferMessage.getResolver());
         DistributedDataResolver.addResolver("burningman.AuthorizedBurningmanListByBlock", AuthorizedBurningmanListByBlock.getResolver());
+        DistributedDataResolver.addResolver("account.AccountAgeWitness", AccountAgeWitness.getResolver());
+        DistributedDataResolver.addResolver("account.AuthorizedAccountAgeWitness", AuthorizedAccountAgeWitness.getResolver());
 
         // Register resolvers for networkMessages 
         // Abstract classes

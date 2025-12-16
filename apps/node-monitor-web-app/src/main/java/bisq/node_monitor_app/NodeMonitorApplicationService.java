@@ -126,7 +126,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 persistenceService,
                 networkService);
 
-        accountService = new AccountService(persistenceService);
+        accountService = new AccountService(persistenceService, networkService);
 
         contractService = new ContractService(securityService);
 
