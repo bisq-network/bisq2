@@ -31,7 +31,12 @@ import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.user.profile.UserProfile;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -85,7 +90,7 @@ public class SellerState1 extends BaseState {
 
             model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-            accountsPin = accountService.getAccounts().addObserver(() ->
+            accountsPin = accountService.getAccountByNameMap().addObserver(() ->
                     UIThread.run(() -> {
                         List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
                                 .filter(account -> account instanceof UserDefinedFiatAccount)

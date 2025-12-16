@@ -33,7 +33,7 @@ import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -86,9 +86,9 @@ public class FiatPaymentAccountsController implements Controller {
 
     @Override
     public void onActivate() {
-        accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
+        accountsPin = accountService.getAccountByNameMap().addObserver(new HashMapObserver<>() {
             @Override
-            public void add(Account<? extends PaymentMethod<?>, ?> account) {
+            public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
                     if (!(account instanceof CryptoAssetAccount) && !model.getAccounts().contains(account)) {
                         model.getAccounts().add(account);
