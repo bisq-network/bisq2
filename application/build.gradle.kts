@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":i18n"))
     implementation(project(":persistence"))
     implementation(project(":security"))
+    implementation(project(":account"))
     implementation(project(":settings"))
     implementation(project(":user"))
     implementation(project(":burningman"))

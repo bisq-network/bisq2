@@ -33,13 +33,15 @@ import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.fiat_accounts.details.AccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.F2FAccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.FasterPaymentsAccountDetails;
@@ -58,6 +60,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.nio.file.Files;
 import java.util.Comparator;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -86,9 +89,9 @@ public class FiatPaymentAccountsController implements Controller {
 
     @Override
     public void onActivate() {
-        accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
+        accountsPin = accountService.getAccountByNameMap().addObserver(new HashMapObserver<>() {
             @Override
-            public void add(Account<? extends PaymentMethod<?>, ?> account) {
+            public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
                     if (!(account instanceof CryptoAssetAccount) && !model.getAccounts().contains(account)) {
                         model.getAccounts().add(account);
@@ -205,6 +208,19 @@ public class FiatPaymentAccountsController implements Controller {
         accountService.removePaymentAccount(account);
         model.getAccounts().remove(account);
         maybeSelectFirstAccount();
+    }
+
+    void onImportBisq1AccountData() {
+        FileChooserUtil.openFile(getView().getRoot().getScene())
+                .ifPresent(path -> {
+                    try {
+                        String json = Files.readString(path);
+                        checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
+                        accountService.importBisq1AccountData(json);
+                    } catch (Exception e) {
+                        new Popup().error(e).show();
+                    }
+                });
     }
 
     private void updateDeleteButtonStates() {

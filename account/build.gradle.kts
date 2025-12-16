@@ -12,4 +12,6 @@ dependencies {
     implementation(project(":identity"))
 
     implementation("network:network:$version")
+
+    implementation(libs.bundles.jackson)
 }

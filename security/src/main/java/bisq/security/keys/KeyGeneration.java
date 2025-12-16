@@ -21,8 +21,10 @@ import bisq.common.encoding.Hex;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
+import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECCurve;
 
 import java.security.GeneralSecurityException;
@@ -40,9 +42,11 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class KeyGeneration {
     public static final String ECDH = "ECDH";
+    public static final String EC = "EC";
+    public static final String DSA = "DSA";
+
     private static final String CURVE = "secp256k1";
     private static final String ECDSA = "ECDSA";
-    public static final String DSA = "DSA";
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -72,7 +76,7 @@ public class KeyGeneration {
     }
 
     public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
-        ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");
+        ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec(CURVE);
         KeyFactory fact = KeyFactory.getInstance(ECDSA, "BC");
         ECCurve curve = params.getCurve();
         java.security.spec.EllipticCurve ellipticCurve = EC5Util.convertCurve(curve, params.getSeed());
@@ -109,5 +113,13 @@ public class KeyGeneration {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static PublicKey deriveEcPublicKey(PrivateKey privateKey) throws GeneralSecurityException {
+        var ecPrivateKey = (ECPrivateKey) privateKey;
+        ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec(CURVE);
+        var q = params.getG().multiply(ecPrivateKey.getD());
+        var pubSpec = new ECPublicKeySpec(q, params);
+        return KeyFactory.getInstance("EC", "BC").generatePublic(pubSpec);
     }
 }

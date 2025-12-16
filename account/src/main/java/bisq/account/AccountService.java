@@ -20,10 +20,11 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -31,10 +32,9 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,25 +43,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
-    private final transient ObservableSet<Account<? extends PaymentMethod<?>, ?>> accounts = new ObservableSet<>();
+    private final ImportBisq1AccountService importBisq1AccountService;
 
     public AccountService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-    }
-
-    @Override
-    public void onPersistedApplied(AccountStore persisted) {
-        accounts.setAll(persisted.getAccountByName().values());
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
-
-    public CompletableFuture<Boolean> shutdown() {
-        accounts.clear();
-        return CompletableFuture.completedFuture(true);
+        importBisq1AccountService = new ImportBisq1AccountService();
     }
 
 
@@ -69,29 +55,37 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     // API
     /* --------------------------------------------------------------------- */
 
-    public Map<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
-        return persistableStore.getAccountByName();
-    }
-
     public boolean hasAccounts() {
         return !getAccountByNameMap().isEmpty();
     }
 
-    public void addPaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
-        getAccountByNameMap().put(account.getAccountName(), account);
-        accounts.add(account);
-        persist();
+    public boolean addPaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
+        var previous = getAccountByNameMap().putIfAbsent(account.getAccountName(), account);
+        if (previous == null) {
+            persist();
+            return true;
+        } else {
+            log.warn("There is already an entry with key {}. We ignore the addPaymentAccount call.", account.getAccountName());
+            return false;
+        }
     }
 
     public void removePaymentAccount(Account<? extends PaymentMethod<?>, ?> account) {
         getAccountByNameMap().remove(account.getAccountName());
-        accounts.remove(account);
         getSelectedAccount().ifPresent(s -> {
             if (s.equals(account)) {
                 setSelectedAccount(null);
             }
         });
         persist();
+    }
+
+    public void importBisq1AccountData(String json) {
+        importBisq1AccountService.getAccounts(json).forEach(this::addPaymentAccount);
+    }
+
+    public ObservableHashMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
+        return persistableStore.getAccountByName();
     }
 
     public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String name) {
@@ -119,8 +113,12 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         }
     }
 
+    public Collection<Account<? extends PaymentMethod<?>, ?>> getAccounts() {
+        return getAccountByNameMap().values();
+    }
+
     public Set<Account<? extends PaymentMethod<?>, ?>> getAccounts(PaymentMethod<?> paymentMethod) {
-        return accounts.stream()
+        return getAccounts().stream()
                 .filter(account -> account.getPaymentMethod().equals(paymentMethod))
                 .collect(Collectors.toSet());
     }

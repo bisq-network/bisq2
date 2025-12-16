@@ -18,6 +18,7 @@
 package bisq.security.keys;
 
 import com.google.protobuf.ByteString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -27,6 +28,7 @@ import java.security.PublicKey;
  * We use java KeyPair class for persistence.
  * This class adds support for protobuf serialisation.
  */
+@Slf4j
 public class KeyPairProtoUtil {
     public static bisq.security.protobuf.KeyPair toProto(java.security.KeyPair keyPair) {
         return bisq.security.protobuf.KeyPair.newBuilder()
@@ -36,12 +38,16 @@ public class KeyPairProtoUtil {
     }
 
     public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair) {
+        return fromProto(keyPair, KeyGeneration.ECDH);
+    }
+
+    public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair, String keyAlgorithm) {
         try {
-            PrivateKey privateKey = KeyGeneration.generatePrivate(keyPair.getPrivateKey().toByteArray());
-            PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPublicKey().toByteArray());
+            PrivateKey privateKey = KeyGeneration.generatePrivate(keyPair.getPrivateKey().toByteArray(), keyAlgorithm);
+            PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPublicKey().toByteArray(), keyAlgorithm);
             return new java.security.KeyPair(publicKey, privateKey);
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("fromProto failed", e);
             throw new RuntimeException(e);
         }
     }

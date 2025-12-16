@@ -27,12 +27,16 @@ import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
@@ -40,6 +44,12 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
 
     private final String holderName;
     private final String emailOrMobileNr;
+
+    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr, String paymentMethodId, byte[] salt) {
+        super(id, "US", paymentMethodId, salt);
+        this.holderName = holderName;
+        this.emailOrMobileNr = emailOrMobileNr;
+    }
 
     public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr) {
         super(id, "US");
@@ -77,7 +87,9 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
         return new ZelleAccountPayload(
                 proto.getId(),
                 zelleProto.getHolderName(),
-                zelleProto.getEmailOrMobileNr()
+                zelleProto.getEmailOrMobileNr(),
+                proto.getPaymentMethodId(),
+                proto.getSalt().toByteArray()
         );
     }
 
@@ -92,5 +104,13 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        // Also we want to be compatible with Bisq 1 to not break account age data
+        return super.getAgeWitnessInputData(emailOrMobileNr.getBytes(StandardCharsets.UTF_8));
     }
 }

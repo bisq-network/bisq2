@@ -20,6 +20,7 @@ package bisq.common.util;
 import com.google.common.primitives.Ints;
 
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class ByteArrayUtils {
@@ -83,5 +84,11 @@ public class ByteArrayUtils {
             integers[i] = Ints.fromBytes(bytes[j++], bytes[j++], bytes[j++], bytes[j++]);
         }
         return integers;
+    }
+
+    public static byte[] getRandomBytes(int size) {
+        byte[] bytes = new byte[size];
+        new SecureRandom().nextBytes(bytes);
+        return bytes;
     }
 }

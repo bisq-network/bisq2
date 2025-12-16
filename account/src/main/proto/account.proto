@@ -22,6 +22,7 @@ option java_package = "bisq.account.protobuf";
 option java_multiple_files = true;
 
 import "common.proto";
+import "security.proto";
 
 // ProtocolType
 enum TradeProtocolType {
@@ -101,7 +102,8 @@ message PaymentMethodSpec {
 // AccountPayload
 message AccountPayload {
   string id = 1;
-  /* string paymentRailName = 2;*/ // todo check if it breaks BE accounts
+  string paymentMethodId = 2;
+  bytes salt = 3;
   oneof message {
     ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
@@ -350,6 +352,8 @@ message Account {
   AccountPayload accountPayload = 3;
   PaymentMethod paymentMethod = 4;
   string id = 5;
+  security.KeyPair keyPair = 6;
+  string keyAlgorithm = 7;
 
   oneof message {
     ZelleAccount zelleAccount = 19;

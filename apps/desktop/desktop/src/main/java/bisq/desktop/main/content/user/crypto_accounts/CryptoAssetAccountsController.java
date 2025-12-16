@@ -24,7 +24,7 @@ import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -63,38 +63,26 @@ public class CryptoAssetAccountsController implements Controller {
 
     @Override
     public void onActivate() {
-        accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
+        accountsPin = accountService.getAccountByNameMap().addObserver(new HashMapObserver<>() {
             @Override
-            public void add(Account<? extends PaymentMethod<?>, ?> account) {
+            public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
                     if (account.getPaymentMethod() instanceof DigitalAssetPaymentMethod cryptoAssetAccount &&
                             !model.getAccounts().contains(account)) {
                         model.getAccounts().add(account);
                         handleAccountChange();
                     }
-
-                 /*   if (account instanceof CryptoAssetAccount<?> cryptoAssetAccount &&
-                            !model.getAccounts().contains(cryptoAssetAccount)) {
-                        model.getAccounts().add(cryptoAssetAccount);
-                        handleAccountChange();
-                    }*/
                 });
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof Account<?, ?> account) {
+                if (element instanceof Account<? extends PaymentMethod<?>, ?> account) {
                     UIThread.run(() -> {
                         model.getAccounts().remove(account);
                         handleAccountChange();
                     });
                 }
-               /* if (element instanceof CryptoAssetAccount<?> cryptoAssetAccount) {
-                    UIThread.run(() -> {
-                        model.getAccounts().remove(cryptoAssetAccount);
-                        handleAccountChange();
-                    });
-                }*/
             }
 
             @Override
@@ -122,7 +110,7 @@ public class CryptoAssetAccountsController implements Controller {
         model.reset();
     }
 
-    void onSelectAccount(Account<?,?> cryptoAssetAccount) {
+    void onSelectAccount(Account<?, ?> cryptoAssetAccount) {
         if (cryptoAssetAccount != null) {
             model.getSelectedAccount().set(cryptoAssetAccount);
         }
@@ -135,7 +123,7 @@ public class CryptoAssetAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        Account<?,?> cryptoAssetAccount = model.getSelectedAccount().get();
+        Account<?, ?> cryptoAssetAccount = model.getSelectedAccount().get();
         accountService.removePaymentAccount(cryptoAssetAccount);
         model.getAccounts().remove(cryptoAssetAccount);
     }
@@ -146,7 +134,7 @@ public class CryptoAssetAccountsController implements Controller {
         model.getNoAccountsAvailable().set(!hasAccounts);
     }
 
-    private void applyDataDisplay(Account<?,?> cryptoAssetAccount) {
+    private void applyDataDisplay(Account<?, ?> cryptoAssetAccount) {
         if (cryptoAssetAccount == null) {
             model.getAccountDetails().set(null);
         } else {
@@ -158,7 +146,7 @@ public class CryptoAssetAccountsController implements Controller {
         model.getDeleteButtonDisabled().set(model.getSelectedAccount().get() == null);
     }
 
-    private AccountDetails<?> getAccountDetails(Account<?,?> cryptoAssetAccount) {
+    private AccountDetails<?> getAccountDetails(Account<?, ?> cryptoAssetAccount) {
         if (cryptoAssetAccount instanceof MoneroAccount moneroAccount) {
             return new MoneroAccountDetails(moneroAccount);
         } else if (cryptoAssetAccount instanceof OtherCryptoAssetAccount otherCryptoAssetAccount) {
