@@ -26,12 +26,24 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
+
 @Getter
 @Slf4j
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> extends Account<FiatPaymentMethod, P> {
     protected final Country country;
+
+    public CountryBasedAccount(String id,
+                               long creationDate,
+                               String accountName,
+                               P accountPayload,
+                               KeyPair keyPair,
+                               String keyAlgorithm) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm);
+        this.country = accountPayload.getCountry();
+    }
 
     public CountryBasedAccount(String id, long creationDate, String accountName, P accountPayload) {
         super(id, creationDate, accountName, accountPayload);
@@ -51,7 +63,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case UPIACCOUNT -> UpiAccount.fromProto(proto);
             case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
             case WISEUSDACCOUNT -> WiseUsdAccount.fromProto(proto);
-            case MONEYBEAMACCOUNT ->  MoneyBeamAccount.fromProto(proto);
+            case MONEYBEAMACCOUNT -> MoneyBeamAccount.fromProto(proto);
             case SWISHACCOUNT -> SwishAccount.fromProto(proto);
             case UPHOLDACCOUNT -> UpholdAccount.fromProto(proto);
             case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);

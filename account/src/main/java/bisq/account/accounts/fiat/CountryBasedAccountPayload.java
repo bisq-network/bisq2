@@ -30,10 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaymentMethod> {
     protected final String countryCode;
+
+    public CountryBasedAccountPayload(String id, String countryCode, String paymentMethodId, byte[] salt) {
+        super(id, paymentMethodId, salt);
+        this.countryCode = countryCode;
+    }
 
     public CountryBasedAccountPayload(String id, String countryCode) {
         super(id);

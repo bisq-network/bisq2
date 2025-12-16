@@ -38,8 +38,10 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.fiat_accounts.details.AccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.F2FAccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.FasterPaymentsAccountDetails;
@@ -58,6 +60,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.nio.file.Files;
 import java.util.Comparator;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -205,6 +208,19 @@ public class FiatPaymentAccountsController implements Controller {
         accountService.removePaymentAccount(account);
         model.getAccounts().remove(account);
         maybeSelectFirstAccount();
+    }
+
+    void onImportBisq1AccountData() {
+        FileChooserUtil.openFile(getView().getRoot().getScene())
+                .ifPresent(path -> {
+                    try {
+                        String json = Files.readString(path);
+                        checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
+                        accountService.importBisq1AccountData(json);
+                    } catch (Exception e) {
+                        new Popup().error(e).show();
+                    }
+                });
     }
 
     private void updateDeleteButtonStates() {

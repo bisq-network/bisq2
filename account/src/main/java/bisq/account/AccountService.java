@@ -20,6 +20,7 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -42,9 +43,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
+    private final ImportBisq1AccountService importBisq1AccountService;
 
     public AccountService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        importBisq1AccountService = new ImportBisq1AccountService();
     }
 
 
@@ -75,6 +78,10 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
             }
         });
         persist();
+    }
+
+    public void importBisq1AccountData(String json) {
+        importBisq1AccountService.getAccounts(json).forEach(this::addPaymentAccount);
     }
 
     public ObservableHashMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {

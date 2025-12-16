@@ -30,11 +30,14 @@ import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.List;
 
 /**
@@ -49,15 +52,33 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;
+    protected final KeyPair keyPair; // account specific key pair used for account age verification for proof of ownership
+    protected final String keyAlgorithm; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
 
     public Account(String id,
                    long creationDate,
                    String accountName,
                    P accountPayload) {
+        this(id,
+                creationDate,
+                accountName,
+                accountPayload,
+                KeyGeneration.generateKeyPair(),
+                KeyGeneration.EC);
+    }
+
+    public Account(String id,
+                   long creationDate,
+                   String accountName,
+                   P accountPayload,
+                   KeyPair keyPair,
+                   String keyAlgorithm) {
         this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
+        this.keyPair = keyPair;
+        this.keyAlgorithm = keyAlgorithm;
     }
 
     @Override
@@ -75,7 +96,9 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setId(id)
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setAccountPayload(accountPayload.toProto(serializeForHash));
+                .setAccountPayload(accountPayload.toProto(serializeForHash))
+                .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
+                .setKeyAlgorithm(keyAlgorithm);
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {

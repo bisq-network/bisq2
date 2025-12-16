@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -32,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -48,6 +50,22 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
     private final String iban;
     private final String bic;
     private final List<String> acceptedCountryCodes;
+
+    public SepaAccountPayload(String id,
+                              String holderName,
+                              String iban,
+                              String bic,
+                              String countryCode,
+                              List<String> acceptedCountryCodes,
+                              String paymentMethodId,
+                              byte[] salt) {
+        super(id, countryCode, paymentMethodId, salt);
+        this.holderName = holderName;
+        this.iban = iban;
+        this.bic = bic;
+        this.acceptedCountryCodes = acceptedCountryCodes != null ? List.copyOf(acceptedCountryCodes) : List.of();
+        verify();
+    }
 
     public SepaAccountPayload(String id,
                               String holderName,
@@ -103,7 +121,9 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 payload.getIban(),
                 payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
-                payload.getAcceptedCountryCodesList());
+                payload.getAcceptedCountryCodesList(),
+                proto.getPaymentMethodId(),
+                proto.getSalt().toByteArray());
     }
 
     @Override
@@ -132,4 +152,11 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
         ).toString();
     }
 
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        // We don't add holderName because we don't want to break age validation if the user recreates an account with
+        // slight changes in holder name (e.g. add or remove middle name)
+        // Also we want to be compatible with Bisq 1 to not break account age data
+        return super.getAgeWitnessInputData(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
+    }
 }

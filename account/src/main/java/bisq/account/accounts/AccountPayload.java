@@ -30,13 +30,17 @@ import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,9 +53,23 @@ import java.util.List;
 @EqualsAndHashCode
 public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
+    protected final String paymentMethodId;
+    protected final byte[] salt;
 
     public AccountPayload(String id) {
+        this(id, null, ByteArrayUtils.getRandomBytes(32));
+    }
+
+    public AccountPayload(String id, @Nullable String paymentMethodId, byte[] salt) {
         this.id = id;
+        this.salt = salt;
+        this.paymentMethodId = paymentMethodId != null ? paymentMethodId : getPaymentMethodName();
+    }
+
+    // public abstract byte[] getAgeWitnessInputData();
+    //todo
+    public byte[] getAgeWitnessInputData() {
+        return id.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
@@ -72,7 +90,9 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
-                .setId(id);
+                .setId(id)
+                .setPaymentMethodId(paymentMethodId)
+                .setSalt(ByteString.copyFrom(salt));
     }
 
     public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -90,6 +110,10 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
+    }
+
+    protected byte[] getAgeWitnessInputData(byte[] data) {
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 
     public abstract M getPaymentMethod();

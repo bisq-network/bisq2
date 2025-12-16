@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel, FiatPaymentAccountsController> {
     private final Label headline;
-    private final Button createButtonWithAccounts, createButtonNoAccounts, saveButton, deletedButton;
+    private final Button createButtonWithAccounts, createButtonNoAccounts, saveButton, deletedButton, importBisq1AccountDataButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
@@ -102,6 +102,8 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         deletedButton = new Button(Res.get("paymentAccounts.deleteAccount"));
 
+        importBisq1AccountDataButton= new Button(Res.get("paymentAccounts.importBisq1AccountData"));
+
         accountDisplayPane = new StackPane();
 
         VBox contentBox = new VBox(30);
@@ -112,7 +114,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                new HBox(10, saveButton, deletedButton));
+                new HBox(10, saveButton, deletedButton, importBisq1AccountDataButton));
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);
@@ -165,6 +167,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
         createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
         saveButton.setOnAction(e -> controller.onSaveAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
+        importBisq1AccountDataButton.setOnAction(e -> controller.onImportBisq1AccountData());
     }
 
     @Override
@@ -183,5 +186,6 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
         createButtonWithAccounts.setOnAction(null);
         saveButton.setOnAction(null);
         deletedButton.setOnAction(null);
+        importBisq1AccountDataButton.setOnAction(null);
     }
 }
