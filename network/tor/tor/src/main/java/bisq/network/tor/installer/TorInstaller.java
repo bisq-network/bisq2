@@ -17,6 +17,7 @@
 
 package bisq.network.tor.installer;
 
+import bisq.common.file.FileReaderUtils;
 import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +56,7 @@ public class TorInstaller {
     }
 
     private boolean isTorUpToDate() throws IOException {
-        return Files.exists(versionFilePath) && VERSION.equals(Files.readString(versionFilePath));
+        return Files.exists(versionFilePath) && VERSION.equals(FileReaderUtils.readUTF8String(versionFilePath));
     }
 
     private void install() throws IOException {

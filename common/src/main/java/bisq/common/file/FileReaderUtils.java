@@ -83,7 +83,7 @@ public class FileReaderUtils {
 
     public static Optional<String> readFromFileIfPresent(Path path) {
         try {
-            return Optional.of(Files.readString(path));
+            return Optional.of(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
         } catch (IOException e) {
             return Optional.empty();
         }
