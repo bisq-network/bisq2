@@ -18,6 +18,8 @@
 package bisq.account.age_witness;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
@@ -27,9 +29,13 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
+import bisq.user.UserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Optional;
@@ -41,12 +47,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class AccountAgeWitnessService implements Service, DataService.Listener {
     private final NetworkService networkService;
+    private final UserIdentityService userIdentityService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     @Getter
     private final ObservableHashMap<ByteArray, AccountAgeWitness> accountAgeWitnessByHash = new ObservableHashMap<>();
 
-    public AccountAgeWitnessService(NetworkService networkService) {
+    public AccountAgeWitnessService(NetworkService networkService,
+                                    UserService userService,
+                                    BondedRolesService bondedRolesService) {
         this.networkService = networkService;
+        userIdentityService = userService.getUserIdentityService();
+        this.authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
     }
 
 
@@ -99,17 +111,47 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
     // API
     /* --------------------------------------------------------------------- */
 
-    public void registerAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                        AccountPayload<?> accountPayload,
-                                        long peersCurrentTimeMillis,
-                                        PublicKey publicKey,
-                                        byte[] nonce,
-                                        byte[] signature){
+    public void registerAccountAgeWitness(AccountPayload<?> accountPayload,
+                                          long peersCurrentTimeMillis,
+                                          KeyPair keyPair,
+                                          String keyAlgorithm,
+                                          boolean isFromBisq1) {
 
+        byte[] salt = accountPayload.getSalt();
+        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
+        byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
+        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
+        byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
 
-        // request from oracles to publish AuthorizedAccountAgeWitness
+        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(hashFromAccountPayload, System.currentTimeMillis());
+        byte[] message = accountAgeWitness.toProto(true).toByteArray();
+        try {
+            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), keyAlgorithm);
+            AuthorizeAccountAgeWitnessRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountAgeWitnessRequest(accountAgeWitness,
+                    blindedAgeWitnessInputData,
+                    publicKeyBytes,
+                    signature,
+                    keyAlgorithm,
+                    isFromBisq1);
+
+            //verify
+            accountAgeWitness.getDate(); // in tolerance
+
+            // is pubkey in hash
+            byte[] hashFromAccountPayload2 = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+            checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload2),
+                    "AgeWitnessHash not matching hashFromAccountPayload");
+
+            PublicKey publicKey = keyPair.getPublic();
+            SignatureUtil.verify(message, signature, publicKey, keyAlgorithm);
+
+            authorizedBondedRolesService.getAuthorizedOracleNodes().forEach(oracleNode ->
+                    networkService.confidentialSend(authorizeAccountAgeWitnessRequest, oracleNode.getNetworkId(), userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair()));
+
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
-
 
     public Result<Void> verifyAccountAgeWitness(AccountAgeWitness accountAgeWitness,
                                                 AccountPayload<?> accountPayload,
@@ -126,7 +168,8 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
             byte[] salt = accountPayload.getSalt();
             byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
             byte[] signaturePubKeyBytes = publicKey.getEncoded();
-            byte[] hashFromAccountPayload = ByteArrayUtils.concat(ByteArrayUtils.concat(ageWitnessInputData, salt), signaturePubKeyBytes);
+            byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
+            byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, signaturePubKeyBytes);
             checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
                     "AgeWitnessHash not matching hashFromAccountPayload");
 

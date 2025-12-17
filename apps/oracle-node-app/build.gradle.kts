@@ -23,6 +23,7 @@ dependencies {
     implementation("bisq:bonded-roles")
     implementation("bisq:burningman")
     implementation("bisq:user")
+    implementation("bisq:account")
     implementation("bisq:application")
     implementation("bisq:evolution")
 

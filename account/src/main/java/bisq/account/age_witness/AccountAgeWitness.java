@@ -17,6 +17,7 @@
 
 package bisq.account.age_witness;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -39,6 +40,10 @@ public final class AccountAgeWitness implements DistributedData {
     private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
 
     private final byte[] hash;
+
+    // We exclude the date so that the hash is the only input for the hash in the storage map. This ensures that only
+    // one entry can exist for a given AccountAgeWitness and changes of date would be ignored.
+    @ExcludeForHash
     private final long date;
 
     public AccountAgeWitness(byte[] hash, long date) {
@@ -62,7 +67,7 @@ public final class AccountAgeWitness implements DistributedData {
 
     @Override
     public bisq.account.protobuf.AccountAgeWitness toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AccountAgeWitness fromProto(bisq.account.protobuf.AccountAgeWitness proto) {

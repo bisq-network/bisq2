@@ -83,7 +83,7 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
 
     @Override
     public bisq.account.protobuf.AuthorizedAccountAgeWitness toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedAccountAgeWitness fromProto(bisq.account.protobuf.AuthorizedAccountAgeWitness proto) {

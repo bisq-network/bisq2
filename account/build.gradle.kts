@@ -10,9 +10,11 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
     implementation(project(":identity"))
+    implementation(project(":user"))
     implementation(project(":bonded-roles"))
 
     implementation("network:network:$version")
+    implementation("network:network-identity:$version")
 
     implementation(libs.bundles.jackson)
 }

@@ -17,6 +17,9 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.account.age_witness.AccountAgeWitness;
+import bisq.account.age_witness.AuthorizeAccountAgeWitnessRequest;
+import bisq.account.age_witness.AuthorizedAccountAgeWitness;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -24,6 +27,7 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ByteArrayUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -40,6 +44,8 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.security.SignatureUtil;
+import bisq.security.keys.KeyGeneration;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -49,9 +55,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq1BridgeRequestStore> implements Service, ConfidentialMessageService.Listener {
@@ -145,6 +156,8 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             processAuthorizeAccountAgeRequest(request);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
             processAuthorizeSignedWitnessRequest(request);
+        } else if (envelopePayloadMessage instanceof AuthorizeAccountAgeWitnessRequest request) {
+            processAuthorizeAccountAgeWitnessRequest(request);
         }
     }
 
@@ -189,6 +202,45 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             }
         }, executor);
     }
+
+    private void processAuthorizeAccountAgeWitnessRequest(AuthorizeAccountAgeWitnessRequest request) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                AccountAgeWitness accountAgeWitness = request.getAccountAgeWitness();
+                if (request.isFromBisq1()) {
+                    // todo grpc request to bisq 1
+                    //long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
+                } else {
+                    long date = accountAgeWitness.getDate();
+                    if (Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(2)) {
+                        log.warn("Date in request is outside tolerance. Date= {}", new Date(date));
+                        return;
+                    }
+
+                    // Check if pubkey is matching the one in the hash
+                    byte[] blindedAgeWitnessInputData = request.getBlindedAgeWitnessInputData();
+                    byte[] publicKeyBytes = request.getPublicKey();
+                    byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+                    checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
+                            "AgeWitnessHash not matching hashFromAccountPayload");
+
+                    String keyAlgorithm = request.getKeyAlgorithm();
+                    PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, keyAlgorithm);
+                    byte[] message = accountAgeWitness.toProto(true).toByteArray();
+                    SignatureUtil.verify(message, request.getSignature(), publicKey, keyAlgorithm);
+                }
+
+                //todo persist
+             //   persistableStore.getAccountAgeRequests().add(request);
+                persist();
+
+                publishAuthorizedData(new AuthorizedAccountAgeWitness(accountAgeWitness, staticPublicKeysProvided));
+            } catch (Exception e) {
+                log.error("processAuthorizeAccountAgeRequest failed", e);
+            }
+        }, executor);
+    }
+
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,
                                                       BondedRoleRegistrationRequest request) {

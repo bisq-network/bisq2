@@ -503,6 +503,16 @@ message AccountAgeWitness {
   sint64 date = 2;
 }
 
+
+message AuthorizeAccountAgeWitnessRequest {
+  AccountAgeWitness accountAgeWitness = 1;
+  bytes blindedAgeWitnessInputData = 2;
+  bytes publicKey = 3;
+  bytes signature = 4;
+  string keyAlgorithm = 5;
+  bool isFromBisq1 = 6;
+}
+
 message AuthorizedAccountAgeWitness {
   AccountAgeWitness accountAgeWitness = 1;
   bool staticPublicKeysProvided = 2;

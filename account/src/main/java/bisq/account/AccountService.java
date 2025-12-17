@@ -23,6 +23,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.age_witness.AccountAgeWitnessService;
 import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
@@ -31,6 +32,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,10 +51,13 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     private final ImportBisq1AccountService importBisq1AccountService;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
-    public AccountService(PersistenceService persistenceService, NetworkService networkService) {
+    public AccountService(PersistenceService persistenceService,
+                          NetworkService networkService,
+                          UserService userService,
+                          BondedRolesService bondedRolesService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         importBisq1AccountService = new ImportBisq1AccountService();
-        accountAgeWitnessService = new AccountAgeWitnessService(networkService);
+        accountAgeWitnessService = new AccountAgeWitnessService(networkService, userService, bondedRolesService);
     }
 
 
@@ -100,7 +105,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     }
 
     public void importBisq1AccountData(String json) {
-        importBisq1AccountService.getAccounts(json).forEach(this::addPaymentAccount);
+        importBisq1AccountService.parseAccounts(json).forEach(this::addPaymentAccount);
     }
 
     public ObservableHashMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {

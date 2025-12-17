@@ -51,7 +51,7 @@ public class ImportBisq1AccountService implements Service {
     // API
     /* --------------------------------------------------------------------- */
 
-    public List<Account<?, ?>> getAccounts(String json) {
+    public List<Account<?, ?>> parseAccounts(String json) {
         try {
             JsonNode root = JsonMapperProvider.get().readTree(json);
             String privateDsaSignatureKeyAsBase64 = asText(root, "privateDsaSignatureKeyAsBase64");
@@ -73,6 +73,7 @@ public class ImportBisq1AccountService implements Service {
             }
             return accounts;
         } catch (Exception e) {
+            // TODO redact priv keys
             log.error("importBisq1AccountData failed for json\n{}", json, e);
             throw new RuntimeException(e);
         }
@@ -80,7 +81,6 @@ public class ImportBisq1AccountService implements Service {
 
     private Account<?, ?> parseAccount(JsonNode accountNode, KeyPair dsaKeyPair) {
         String paymentMethodId = asText(accountNode.path("paymentMethod"), "id");
-        accountNode.path("paymentAccountPayload");
         long creationDate = asLong(accountNode, "creationDate");
         String accountId = asText(accountNode, "id");
         String accountName = asText(accountNode, "accountName");
@@ -91,8 +91,8 @@ public class ImportBisq1AccountService implements Service {
 
         byte[] salt = saltAsHex != null ? Hex.decode(saltAsHex) : ByteArrayUtils.getRandomBytes(32);
 
+        // commonly used fields
         String holderName = asText(paymentAccountPayloadNode, "holderName");
-
 
         switch (paymentMethodId) {
             case "CLEAR_X_CHANGE":
@@ -107,9 +107,15 @@ public class ImportBisq1AccountService implements Service {
                 SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(paymentAccountPayloadId, holderName, iban, bic, countryCode, acceptedCountryCodes, paymentMethodId, salt);
                 return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyGeneration.DSA);
             default:
+                log.warn("Import for paymentMethod {} is not yet supported.", paymentMethodId);
                 return null;
         }
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Json utils
+    /* --------------------------------------------------------------------- */
 
     @Nullable
     private static String asText(JsonNode node, String field) {

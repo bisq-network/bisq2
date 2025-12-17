@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.account.age_witness.AccountAgeWitness;
+import bisq.account.age_witness.AuthorizeAccountAgeWitnessRequest;
 import bisq.account.age_witness.AuthorizedAccountAgeWitness;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
@@ -128,6 +129,7 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MuSigMediationRequest", MuSigMediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigMediatorsResponse", MuSigMediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("account.AuthorizeAccountAgeWitnessRequest", AuthorizeAccountAgeWitnessRequest.getNetworkMessageResolver());
 
 
         // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.

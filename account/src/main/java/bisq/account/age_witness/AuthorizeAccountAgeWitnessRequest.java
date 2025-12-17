@@ -1,0 +1,120 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.account.age_witness;
+
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+
+@Slf4j
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, ExternalNetworkMessage {
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+
+    private final AccountAgeWitness accountAgeWitness;
+    private final byte[] blindedAgeWitnessInputData;
+    private final byte[] publicKey;
+    private final byte[] signature;
+    private final String keyAlgorithm;
+    private final boolean isFromBisq1;
+
+    public AuthorizeAccountAgeWitnessRequest(AccountAgeWitness accountAgeWitness,
+                                             byte[] blindedAgeWitnessInputData,
+                                             byte[] publicKey,
+                                             byte[] signature,
+                                             String keyAlgorithm,
+                                             boolean isFromBisq1) {
+        this.accountAgeWitness = accountAgeWitness;
+        this.blindedAgeWitnessInputData = blindedAgeWitnessInputData;
+        this.publicKey = publicKey;
+        this.signature = signature;
+        this.keyAlgorithm = keyAlgorithm;
+        this.isFromBisq1 = isFromBisq1;
+
+        log.error(this.toString());
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        //todo
+        NetworkDataValidation.validateByteArray(blindedAgeWitnessInputData, 1000);
+        NetworkDataValidation.validateByteArray(publicKey, 1000);
+        NetworkDataValidation.validateByteArray(signature, 1000);
+        NetworkDataValidation.validateText(keyAlgorithm, 100);
+    }
+
+    @Override
+    public bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.newBuilder()
+                .setAccountAgeWitness(accountAgeWitness.toProto(serializeForHash))
+                .setBlindedAgeWitnessInputData(ByteString.copyFrom(blindedAgeWitnessInputData))
+                .setPublicKey(ByteString.copyFrom(publicKey))
+                .setSignature(ByteString.copyFrom(signature))
+                .setKeyAlgorithm(keyAlgorithm)
+                .setIsFromBisq1(isFromBisq1);
+    }
+
+    @Override
+    public bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    public static AuthorizeAccountAgeWitnessRequest fromProto(bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest proto) {
+        return new AuthorizeAccountAgeWitnessRequest(
+                AccountAgeWitness.fromProto(proto.getAccountAgeWitness()),
+                proto.getBlindedAgeWitnessInputData().toByteArray(),
+                proto.getPublicKey().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getKeyAlgorithm(),
+                proto.getIsFromBisq1()
+        );
+    }
+
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
+        return any -> {
+            try {
+                bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest proto = any.unpack(bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.class);
+                return AuthorizeAccountAgeWitnessRequest.fromProto(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.5, 1);
+    }
+}

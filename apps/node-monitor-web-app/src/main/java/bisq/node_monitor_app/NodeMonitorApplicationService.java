@@ -126,8 +126,6 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 persistenceService,
                 networkService);
 
-        accountService = new AccountService(persistenceService, networkService);
-
         contractService = new ContractService(securityService);
 
         userService = new UserService(persistenceService,
@@ -135,6 +133,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 identityService,
                 networkService,
                 bondedRolesService);
+
+        accountService = new AccountService(persistenceService, networkService, userService, bondedRolesService);
 
         burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
 
@@ -232,9 +232,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     return identityService.initialize();
                 })
                 .thenCompose(result -> bondedRolesService.initialize())
-                .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> notificationService.initialize())
@@ -292,9 +292,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> notificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> burningmanService.shutdown())
+                .thenCompose(result -> accountService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
-                .thenCompose(result -> accountService.shutdown())
                 .thenCompose(result -> bondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
