@@ -44,7 +44,7 @@ public class FileReaderUtils {
     public static final String FILE_SEP = File.separator;
 
     public static String readUTF8String(Path path) throws IOException {
-        return Files.readString(path, StandardCharsets.UTF_8);
+        return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
     }
 
     /**
