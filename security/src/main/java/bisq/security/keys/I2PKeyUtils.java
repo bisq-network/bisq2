@@ -17,7 +17,7 @@
 
 package bisq.security.keys;
 
-import bisq.common.file.FileMutatorUtils;
+import bisq.common.facades.FacadeProvider;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.I2PSessionException;
 import net.i2p.data.Base64;
@@ -37,10 +37,10 @@ public class I2PKeyUtils {
         Path destination_b32Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "destination_b32");
         Path identityBase64Path = I2PKeyGeneration.getDestinationFilePath(storageDirPath, tag, "identity_b64");
         try {
-            FileMutatorUtils.createRestrictedDirectories(i2pPrivateKeyDirPath);
-            FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase64(), destination_b64Path);
-            FileMutatorUtils.writeToPath(i2pKeyPair.getDestinationBase32(), destination_b32Path);
-            FileMutatorUtils.writeToPath(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
+            FacadeProvider.getJdkFacade().createDirectories(i2pPrivateKeyDirPath);
+            FacadeProvider.getJdkFacade().writeString(i2pKeyPair.getDestinationBase64(), destination_b64Path);
+            FacadeProvider.getJdkFacade().writeString(i2pKeyPair.getDestinationBase32(), destination_b32Path);
+            FacadeProvider.getJdkFacade().writeString(Base64.encode(i2pKeyPair.getIdentityBytes()), identityBase64Path);
             log.info("Persisted the I2P private key and destinations into {}", i2pPrivateKeyDirPath);
         } catch (Exception e) {
             log.error("Could not persist I2P destination files", e);
