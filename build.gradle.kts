@@ -72,6 +72,7 @@ tasks.register("publishAll") {
     doLast {
         listOf(
             ":account:publishToMavenLocal",
+            ":burningman:publishToMavenLocal",
             ":application:publishToMavenLocal",
             ":bonded-roles:publishToMavenLocal",
             ":chat:publishToMavenLocal",
