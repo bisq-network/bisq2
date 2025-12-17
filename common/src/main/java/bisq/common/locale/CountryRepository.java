@@ -17,6 +17,8 @@
 
 package bisq.common.locale;
 
+import bisq.common.util.LocaleUtils;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +66,7 @@ public class CountryRepository {
     }
 
     public static String getLocalizedCountryDisplayString(String countryCode) {
-        return Locale.of("", countryCode).getDisplayCountry(LocaleRepository.getDefaultLocale());
+        return LocaleUtils.of("", countryCode).getDisplayCountry(LocaleRepository.getDefaultLocale());
     }
 
     public static Country getCountry(String countryCode) {
