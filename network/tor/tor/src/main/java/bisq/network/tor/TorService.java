@@ -46,6 +46,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -370,9 +371,9 @@ public class TorService implements Service {
             String torConfig;
             if (!Files.exists(torConfigFilePath)) {
                 torConfig = FileReaderUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileMutatorUtils.writeToPath(torConfig, torConfigFilePath);
+                FacadeProvider.getJdkFacade().writeString(torConfig, torConfigFilePath);
             } else {
-                torConfig = FileReaderUtils.readUTF8String(torConfigFilePath);
+                torConfig = FacadeProvider.getJdkFacade().readString(torConfigFilePath, StandardCharsets.UTF_8);
             }
             Set<String> lines = torConfig.lines().collect(Collectors.toSet());
             for (String line : lines) {

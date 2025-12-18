@@ -158,7 +158,7 @@ public class FileMutatorUtils {
      */
     public static void writeToPath(String content, Path path) throws IOException {
         try {
-            Files.write(path, content.getBytes(StandardCharsets.UTF_8));
+            Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
         } catch (IOException e) {
             log.warn("Could not write to file {}", path);
             throw e;

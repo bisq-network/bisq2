@@ -19,6 +19,7 @@ package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
@@ -86,6 +87,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -1020,9 +1022,9 @@ public abstract class Overlay<T extends Overlay<T>> {
                     try {
                         Files.deleteIfExists(debugLogForZipFilePath);
                         FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
-                        String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
+                        String logContent = FacadeProvider.getJdkFacade().readString(debugLogForZipFilePath, StandardCharsets.UTF_8);
                         logContent = StringUtils.maskHomeDirectory(logContent);
-                        FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
+                        FacadeProvider.getJdkFacade().writeString(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

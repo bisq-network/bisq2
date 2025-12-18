@@ -58,8 +58,11 @@ public class TorInstaller {
     }
 
     private boolean isTorUpToDate() throws IOException {
+        if (!Files.exists(versionFilePath)) {
+            return false;
+        }
         String torVersion = FacadeProvider.getJdkFacade().readString(versionFilePath, StandardCharsets.UTF_8);
-        return Files.exists(versionFilePath) && VERSION.equals(torVersion);
+        return VERSION.equals(torVersion);
     }
 
     private void install() throws IOException {
@@ -68,7 +71,7 @@ public class TorInstaller {
             log.info("Tor files installed to {}", torDirPath.toAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            FileMutatorUtils.writeToPath(VERSION, versionFilePath);
+            FacadeProvider.getJdkFacade().writeString(VERSION, versionFilePath);
         } catch (IOException e) {
             deleteVersionFile();
             throw e;
