@@ -247,7 +247,7 @@ jobs:
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
     strategy:
       matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
-      max-parallel: 1  # DEBUG: Serialize batches to test for concurrent batch conflicts
+      max-parallel: 2  # Controlled parallelism to avoid Transifex API rate limits
       fail-fast: false  # Don't cancel all jobs if one fails
     steps:
       - name: Checkout the repository
@@ -343,10 +343,12 @@ jobs:
               fi
 
               echo "TX config check:"
-              if grep -q "${FIRST_RESOURCE}" .tx/config; then
-                echo "✓ Resource '${FIRST_RESOURCE}' found in .tx/config"
+              # Extract resource slug from "bisq-2.applicationproperties" -> "applicationproperties"
+              RESOURCE_SLUG=$(echo "$FIRST_RESOURCE" | sed 's/^bisq-2\.//')
+              if grep -q "r:${RESOURCE_SLUG}]" .tx/config; then
+                echo "✓ Resource '${RESOURCE_SLUG}' found in .tx/config"
               else
-                echo "⚠ Resource '${FIRST_RESOURCE}' not found in .tx/config"
+                echo "⚠ Resource '${RESOURCE_SLUG}' not found in .tx/config"
               fi
               echo "::endgroup::"
 
