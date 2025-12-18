@@ -292,6 +292,8 @@ jobs:
       - name: Push ${{ matrix.name }} translations with retry
         uses: nick-fields/retry@v3
         id: push_with_retry
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
         with:
           timeout_minutes: 30  # Increased from 10 to 30 due to CLI performance issues (transifex/cli#212)
           max_attempts: 3
@@ -404,6 +406,8 @@ jobs:
       - name: Verify upload succeeded
         id: verify
         if: steps.push_with_retry.outcome == 'success'
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
           # Wait for Transifex propagation (eventual consistency)
           # Increased from 10s to 15s based on review feedback
