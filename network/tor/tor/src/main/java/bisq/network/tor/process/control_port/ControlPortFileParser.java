@@ -18,10 +18,8 @@
 package bisq.network.tor.process.control_port;
 
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileReaderUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public class ControlPortFileParser {
@@ -29,7 +27,7 @@ public class ControlPortFileParser {
 
     public static int parse(Path controlPortFilePath) {
         try {
-            String fileContent = FacadeProvider.getJdkFacade().readString(controlPortFilePath, StandardCharsets.UTF_8);
+            String fileContent = FacadeProvider.getJdkFacade().readString(controlPortFilePath);
             if (isControlPortFileReady(fileContent)) {
                 for (String line : fileContent.split("\n")) {
                     // Lines end on Windows with "\r\n". Previous String.split("\n") removed "\n" already.

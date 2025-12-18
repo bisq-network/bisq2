@@ -87,7 +87,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -1022,7 +1021,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     try {
                         Files.deleteIfExists(debugLogForZipFilePath);
                         FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
-                        String logContent = FacadeProvider.getJdkFacade().readString(debugLogForZipFilePath, StandardCharsets.UTF_8);
+                        String logContent = FacadeProvider.getJdkFacade().readString(debugLogForZipFilePath);
                         logContent = StringUtils.maskHomeDirectory(logContent);
                         FacadeProvider.getJdkFacade().writeString(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {

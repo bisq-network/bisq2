@@ -23,7 +23,6 @@ import bisq.common.platform.Platform;
 import bisq.common.platform.PlatformUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -39,12 +38,11 @@ public class UpdaterUtils {
     public static final String ASC_EXTENSION = ".asc";
 
     public static String getSigningKeyId(Path dirPath) throws IOException {
-        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(SIGNING_KEY_FILE), StandardCharsets.UTF_8);
+        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(SIGNING_KEY_FILE));
     }
 
     public static String getSigningKey(Path dirPath, String signingKeyId) throws IOException {
-        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(signingKeyId + ASC_EXTENSION),
-                StandardCharsets.UTF_8);
+        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(signingKeyId + ASC_EXTENSION));
     }
 
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {

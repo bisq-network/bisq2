@@ -21,7 +21,6 @@ import bisq.common.facades.JdkFacade;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,9 +58,9 @@ public class AndroidJdkFacade implements JdkFacade {
     }
 
     @Override
-    public String readString(Path path, Charset charset) throws IOException {
+    public String readString(Path path) throws IOException {
         // Android 33+ compatible; Files.readString is not available on all Android API levels
-        return new String(Files.readAllBytes(path), charset);
+        return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
     }
 
     @Override

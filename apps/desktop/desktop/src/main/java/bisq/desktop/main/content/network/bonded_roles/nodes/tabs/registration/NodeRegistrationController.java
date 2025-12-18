@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -97,7 +96,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
         FileChooserUtil.openFile(getView().getRoot().getScene(), path.toAbsolutePath().toString())
                 .ifPresent(p -> {
                     try {
-                        String json = FacadeProvider.getJdkFacade().readString(p, StandardCharsets.UTF_8);
+                        String json = FacadeProvider.getJdkFacade().readString(p);
                         checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
                         getNodesRegistrationModel().getAddressInfoJson().set(json);
                     } catch (Exception e) {

@@ -17,14 +17,11 @@
 
 package bisq.java_se.facades;
 
-import bisq.common.facades.FacadeProvider;
 import bisq.common.facades.JdkFacade;
-import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.management.ManagementFactory;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,8 +51,8 @@ public class JavaSeJdkFacade implements JdkFacade {
     }
 
     @Override
-    public String readString(Path path, Charset charset) throws IOException {
-        return Files.readString(path, charset);
+    public String readString(Path path) throws IOException {
+        return Files.readString(path, StandardCharsets.UTF_8);
     }
 
     @Override
