@@ -247,7 +247,7 @@ jobs:
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
     strategy:
       matrix: ${{ fromJson(needs.calculate_and_push_sources.outputs.t_matrix) }}
-      max-parallel: 1  # DEBUG: Serialize batches to test for concurrent batch conflicts
+      max-parallel: 2  # Controlled parallelism to avoid Transifex API rate limits
       fail-fast: false  # Don't cancel all jobs if one fails
     steps:
       - name: Checkout the repository
@@ -292,6 +292,8 @@ jobs:
       - name: Push ${{ matrix.name }} translations with retry
         uses: nick-fields/retry@v3
         id: push_with_retry
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
         with:
           timeout_minutes: 30  # Increased from 10 to 30 due to CLI performance issues (transifex/cli#212)
           max_attempts: 3
@@ -341,10 +343,12 @@ jobs:
               fi
 
               echo "TX config check:"
-              if grep -q "${FIRST_RESOURCE}" .tx/config; then
-                echo "✓ Resource '${FIRST_RESOURCE}' found in .tx/config"
+              # Extract resource slug from "bisq-2.applicationproperties" -> "applicationproperties"
+              RESOURCE_SLUG=$(echo "$FIRST_RESOURCE" | sed 's/^bisq-2\.//')
+              if grep -q "r:${RESOURCE_SLUG}]" .tx/config; then
+                echo "✓ Resource '${RESOURCE_SLUG}' found in .tx/config"
               else
-                echo "⚠ Resource '${FIRST_RESOURCE}' not found in .tx/config"
+                echo "⚠ Resource '${RESOURCE_SLUG}' not found in .tx/config"
               fi
               echo "::endgroup::"
 
@@ -404,6 +408,8 @@ jobs:
       - name: Verify upload succeeded
         id: verify
         if: steps.push_with_retry.outcome == 'success'
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
           # Wait for Transifex propagation (eventual consistency)
           # Increased from 10s to 15s based on review feedback
