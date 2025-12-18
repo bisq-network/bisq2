@@ -20,6 +20,7 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -29,12 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
 public final class AccountStore implements PersistableStore<AccountStore> {
-    private final Map<String, Account<?, ? extends PaymentMethod<?>>> accountByName = new ConcurrentHashMap<>();
+    private final ObservableHashMap<String, Account<?, ? extends PaymentMethod<?>>> accountByName = new ObservableHashMap<>();
     private final Observable<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new Observable<>();
 
     public AccountStore() {
@@ -84,7 +84,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public AccountStore getClone() {
-        return new AccountStore(Map.copyOf(accountByName), Optional.ofNullable(selectedAccount.get()));
+        return new AccountStore(Map.copyOf(accountByName.getMap()), Optional.ofNullable(selectedAccount.get()));
     }
 
     @Override
@@ -94,7 +94,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
         selectedAccount.set(persisted.selectedAccount.get());
     }
 
-    Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByName() {
+    ObservableHashMap<String, Account<?, ? extends PaymentMethod<?>>> getAccountByName() {
         return accountByName;
     }
 
