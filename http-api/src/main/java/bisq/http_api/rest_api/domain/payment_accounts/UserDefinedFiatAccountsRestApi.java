@@ -46,30 +46,30 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@Path("/payment-accounts")
+@Path("/payment-accounts/fiat/user-defined-fiat")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Payment Accounts API", description = "API for managing user payment accounts. Right now UserDefinedFiatAccount")
-public class PaymentAccountsRestApi extends RestApiBase {
+@Tag(name = "User-Defined Fiat Accounts API", description = "API for managing user-defined fiat payment accounts. Future endpoints will support structured account types like SEPA, Revolut, Zelle, etc.")
+public class UserDefinedFiatAccountsRestApi extends RestApiBase {
     private final AccountService accountService;
 
-    public PaymentAccountsRestApi(AccountService accountService) {
+    public UserDefinedFiatAccountsRestApi(AccountService accountService) {
         this.accountService = accountService;
     }
 
     @GET
     @Operation(
-            summary = "Get payment accounts",
-            description = "Retrieve all the payment accounts (only UserDefinedFiatAccount)",
+            summary = "Get user-defined fiat accounts",
+            description = "Retrieve all user-defined fiat payment accounts",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Payment accounts retrieved successfully",
+                    @ApiResponse(responseCode = "200", description = "User-defined fiat accounts retrieved successfully",
                             content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
     public Response getPaymentAccounts() {
         try {
-            List<UserDefinedFiatAccountDto> userAccounts = accountService.getAccountByNameMap().values().stream()
+            List<UserDefinedFiatAccountDto> userAccounts = accountService.getAccounts().stream()
                     .filter(account -> account instanceof UserDefinedFiatAccount)
                     .map(account -> (UserDefinedFiatAccount) account)
                     .map(DtoMappings.UserDefinedFiatAccountMapping::fromBisq2Model)
@@ -84,10 +84,10 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @GET
     @Operation(
-            summary = "Get selected payment account",
-            description = "Get selected payment account (only UserDefinedFiatAccount)",
+            summary = "Get selected user-defined fiat account",
+            description = "Get the currently selected user-defined fiat payment account",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Selected payment account retrieved successfully",
+                    @ApiResponse(responseCode = "200", description = "Selected user-defined fiat account retrieved successfully",
                             content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
@@ -114,14 +114,14 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @POST
     @Operation(
-            summary = "Add new payment account",
-            description = "Add new payment account (only UserDefinedFiatAccount)",
+            summary = "Add new user-defined fiat account",
+            description = "Create a new user-defined fiat payment account",
             requestBody = @RequestBody(
-                    description = "",
+                    description = "Account name and account data for the new user-defined fiat account",
                     content = @Content(schema = @Schema(implementation = AddAccountRequest.class))
             ),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "",
+                    @ApiResponse(responseCode = "201", description = "User-defined fiat account created successfully",
                             content = @Content(schema = @Schema(example = ""))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -142,12 +142,12 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @DELETE
     @Operation(
-            summary = "Delete Payment account",
-            description = "Delete Payment account",
+            summary = "Delete user-defined fiat account",
+            description = "Delete a user-defined fiat payment account by account name",
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Offer successfully deleted"),
+                    @ApiResponse(responseCode = "204", description = "User-defined fiat account successfully deleted"),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "404", description = "Offer or user identity not found"),
+                    @ApiResponse(responseCode = "404", description = "Account not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
@@ -174,17 +174,17 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @PUT
     @Operation(
-            summary = "Save payment account",
-            description = "Update an existing payment account by replacing it with new data (only UserDefinedFiatAccount)",
+            summary = "Update user-defined fiat account",
+            description = "Update an existing user-defined fiat payment account by replacing it with new data",
             requestBody = @RequestBody(
-                    description = "Account name and new account data",
+                    description = "Account name and new account data for the user-defined fiat account",
                     required = true,
                     content = @Content(schema = @Schema(implementation = SaveAccountRequest.class))
             ),
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Payment account saved successfully"),
+                    @ApiResponse(responseCode = "204", description = "User-defined fiat account updated successfully"),
                     @ApiResponse(responseCode = "400", description = "Invalid input data or account not found"),
-                    @ApiResponse(responseCode = "404", description = "Payment account not found"),
+                    @ApiResponse(responseCode = "404", description = "User-defined fiat account not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
@@ -233,15 +233,15 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @PATCH
     @Operation(
-            summary = "Update selected payment account",
-            description = "Update selected payment account (only UserDefinedFiatAccount)",
+            summary = "Set selected user-defined fiat account",
+            description = "Set the currently selected user-defined fiat payment account",
             requestBody = @RequestBody(
-                    description = "The setting key and value to be updated",
+                    description = "The user-defined fiat account to set as selected",
                     required = true,
                     content = @Content(schema = @Schema(implementation = PaymentAccountChangeRequest.class))
             ),
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Selected payment account set successfully"),
+                    @ApiResponse(responseCode = "204", description = "Selected user-defined fiat account set successfully"),
                     @ApiResponse(responseCode = "400", description = "Invalid input data"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }

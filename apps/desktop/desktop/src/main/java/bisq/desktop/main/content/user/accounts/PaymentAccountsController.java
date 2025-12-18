@@ -61,8 +61,8 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
-            model.setAllAccounts(accountService.getAccounts().values());
+        accountsPin = accountService.getAccountByNameMap().addObserver(() -> UIThread.run(() -> {
+            model.setAllAccounts(accountService.getAccounts());
             maybeSelectFirstAccount();
             model.getNoAccountsSetup().set(!accountService.hasAccounts());
             model.getHeadline().set(accountService.hasAccounts() ?

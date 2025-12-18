@@ -19,6 +19,7 @@ package bisq.account;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.account.payment_method.PaymentRail;
@@ -48,13 +49,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
-    @Override
-    public void onPersistedApplied(AccountStore persisted) {
-        persistableStore.getAccountByName().clear();
-        persistableStore.getAccountByName().putAll(persisted.getAccountByName());
-    }
-
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
@@ -72,11 +66,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     // API
     /* --------------------------------------------------------------------- */
 
-    public ObservableHashMap<String, Account<?, ? extends PaymentMethod<?>>> getAccounts() {
-        return persistableStore.getAccountByName();
+    public Collection<Account<?, ? extends PaymentMethod<?>>> getAccounts() {
+        return getAccountByNameMap().values();
     }
 
-    public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
+    public ObservableHashMap<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 

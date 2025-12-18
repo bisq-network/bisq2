@@ -85,9 +85,9 @@ public class SellerState1 extends BaseState {
 
             model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-            accountsPin = accountService.getAccounts().addObserver(() ->
+            accountsPin = accountService.getAccountByNameMap().addObserver(() ->
                     UIThread.run(() -> {
-                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().values().stream()
+                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
                                 .filter(account -> account instanceof UserDefinedFiatAccount)
                                 .map(account -> (UserDefinedFiatAccount) account)
                                 .collect(Collectors.toList());

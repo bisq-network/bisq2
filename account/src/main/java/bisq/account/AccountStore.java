@@ -50,7 +50,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
     @Override
     public bisq.account.protobuf.AccountStore.Builder getBuilder(boolean serializeForHash) {
         bisq.account.protobuf.AccountStore.Builder builder = bisq.account.protobuf.AccountStore.newBuilder()
-                .putAllAccountByName(accountByName.getMap().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                .putAllAccountByName(accountByName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                         e -> e.getValue().toProto(serializeForHash))));
         Optional.ofNullable(selectedAccount.get()).ifPresent(e -> builder.setSelectedAccount(e.toProto(serializeForHash)));
         return builder;

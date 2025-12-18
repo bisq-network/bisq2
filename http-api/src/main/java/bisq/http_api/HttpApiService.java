@@ -28,7 +28,7 @@ import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
-import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
+import bisq.http_api.rest_api.domain.payment_accounts.UserDefinedFiatAccountsRestApi;
 import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
@@ -89,7 +89,7 @@ public class HttpApiService implements Service {
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
-            PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
+            UserDefinedFiatAccountsRestApi userDefinedFiatAccountsRestApi = new UserDefinedFiatAccountsRestApi(accountService);
             UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
                     userService.getUserProfileService(),
                     supportedService.getModerationRequestService(),
@@ -106,7 +106,7 @@ public class HttpApiService implements Service {
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi,
+                        userDefinedFiatAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, baseDir, securityService, networkService));
@@ -123,7 +123,7 @@ public class HttpApiService implements Service {
                         marketPriceRestApi,
                         settingsRestApi,
                         explorerRestApi,
-                        paymentAccountsRestApi,
+                        userDefinedFiatAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
