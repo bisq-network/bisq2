@@ -19,14 +19,16 @@ package bisq.common.util;
 
 import java.util.Locale;
 
-public class LocaleUtils {
-    public static Locale of(String language, String country) {
-        // Android 33+ compatible
+public class LocaleFactory {
+    @SuppressWarnings("deprecation")
+    public static Locale from(String language, String country) {
+        // We stick to the deprecated constructor as it is Android compatible
         return new Locale(language, country);
     }
 
-    public static Locale of(String language, String country, String variant) {
-        // Android 33+ compatible
+    @SuppressWarnings("deprecation")
+    public static Locale from(String language, String country, String variant) {
+        // We stick to the deprecated constructor as it is Android compatible
         return new Locale(language, country, variant);
     }
 }

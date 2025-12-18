@@ -17,11 +17,13 @@
 
 package bisq.network.tor.installer;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -56,7 +58,8 @@ public class TorInstaller {
     }
 
     private boolean isTorUpToDate() throws IOException {
-        return Files.exists(versionFilePath) && VERSION.equals(FileReaderUtils.readUTF8String(versionFilePath));
+        String torVersion = FacadeProvider.getJdkFacade().readString(versionFilePath, StandardCharsets.UTF_8);
+        return Files.exists(versionFilePath) && VERSION.equals(torVersion);
     }
 
     private void install() throws IOException {

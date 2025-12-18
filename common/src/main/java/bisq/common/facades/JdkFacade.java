@@ -17,6 +17,9 @@
 
 package bisq.common.facades;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public interface JdkFacade {
@@ -27,4 +30,8 @@ public interface JdkFacade {
     void redirectError(ProcessBuilder processBuilder);
 
     void redirectOutput(ProcessBuilder processBuilder);
+
+    String readString(Path path, Charset charset) throws IOException;
+
+    void writeString(String data, Path path) throws IOException;
 }

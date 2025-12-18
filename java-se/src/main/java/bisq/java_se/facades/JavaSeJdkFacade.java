@@ -21,6 +21,10 @@ import bisq.common.facades.JdkFacade;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -44,5 +48,15 @@ public class JavaSeJdkFacade implements JdkFacade {
     @Override
     public void redirectOutput(ProcessBuilder processBuilder) {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+    }
+
+    @Override
+    public String readString(Path path, Charset charset) throws IOException {
+        return Files.readString(path, charset);
+    }
+
+    @Override
+    public void writeString(String data, Path path) throws IOException {
+        Files.writeString(path, data);
     }
 }

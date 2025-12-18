@@ -18,8 +18,13 @@
 package bisq.common.facades.android;
 
 import bisq.common.facades.JdkFacade;
+import bisq.common.file.FileMutatorUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class AndroidJdkFacade implements JdkFacade {
@@ -51,5 +56,16 @@ public class AndroidJdkFacade implements JdkFacade {
     public void redirectOutput(ProcessBuilder processBuilder) {
         // ProcessBuilder.Redirect.DISCARD not supported on Android
         processBuilder.redirectError(new File("/dev/null"));
+    }
+
+    @Override
+    public String readString(Path path, Charset charset) throws IOException {
+        // Android 33+ compatible; Files.readString is not available on all Android API levels
+        return new String(Files.readAllBytes(path), charset);
+    }
+
+    @Override
+    public void writeString(String data, Path path) throws IOException {
+        FileMutatorUtils.writeToPath(data, path);
     }
 }

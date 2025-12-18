@@ -20,7 +20,7 @@ package bisq.common.asset;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.util.StringUtils;
-import bisq.common.util.LocaleUtils;
+import bisq.common.util.LocaleFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,7 +98,7 @@ public class FiatCurrencyRepository {
         }
 
         // The variant component of the locale at Currency.getInstance are ignored.
-        Locale countryLocale = LocaleUtils.of(locale.getLanguage(), countryCode);
+        Locale countryLocale = LocaleFactory.from(locale.getLanguage(), countryCode);
         try {
             Currency currency = Currency.getInstance(countryLocale);
             return new FiatCurrency(currency);

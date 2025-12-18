@@ -44,7 +44,7 @@ public class FileReaderUtils {
     public static final String FILE_SEP = File.separator;
 
     public static String readUTF8String(Path path) throws IOException {
-        return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        return Files.readString(path, StandardCharsets.UTF_8);
     }
 
     /**
@@ -83,7 +83,7 @@ public class FileReaderUtils {
 
     public static Optional<String> readFromFileIfPresent(Path path) {
         try {
-            return Optional.of(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
+            return Optional.of(readUTF8String(path));
         } catch (IOException e) {
             return Optional.empty();
         }
