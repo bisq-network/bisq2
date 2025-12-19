@@ -72,12 +72,13 @@ public class ChatMentionPopupMenu extends BisqPopup {
 
         setAlignment(Alignment.LEFT);
         setContentNode(listView);
+        getStyleClass().add("chat-mention-popup");
 
         filterChangeListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null) {
                 filteredList.setPredicate(item -> item.matchUserName(newValue));
                 sortedList.setComparator(sortByPrefixMatchingQuery(newValue));
-                listView.setPrefHeight(Math.min(20 + ListItem.CELL_HEIGHT * 10, 20 + filteredList.size() * ListItem.CELL_HEIGHT));
+                listView.setPrefHeight(Math.min(ListItem.CELL_HEIGHT * 10, filteredList.size() * ListItem.CELL_HEIGHT));
                 if (oldValue == null) {
                     show(inputField);
                 }
