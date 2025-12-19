@@ -42,7 +42,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
 
         sortedList.setComparator(ListItem::compareTo);
         listView.getStyleClass().add("chat-mention-list-view");
-        listView.setPrefWidth(600);
+        listView.setPrefWidth(450);
         listView.setCellFactory(getCellFactory());
 
         setAlignment(Alignment.LEFT);
@@ -52,7 +52,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
             if (newValue != null) {
                 filteredList.setPredicate(item -> item.matchUserName(newValue));
                 sortedList.setComparator(sortByPrefixMatchingQuery(newValue));
-                listView.setPrefHeight(Math.min(600, 20 + filteredList.size() * ListItem.CELL_HEIGHT));
+                listView.setPrefHeight(Math.min(20 + ListItem.CELL_HEIGHT * 10, 20 + filteredList.size() * ListItem.CELL_HEIGHT));
                 if (oldValue == null) {
                     show(inputField);
                 }
