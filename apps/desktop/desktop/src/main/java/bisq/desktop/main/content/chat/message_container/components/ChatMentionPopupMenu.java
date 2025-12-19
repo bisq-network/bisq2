@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,6 +32,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.util.Callback;
@@ -61,6 +64,11 @@ public class ChatMentionPopupMenu extends BisqPopup {
         listView.getStyleClass().add("chat-mention-list-view");
         listView.setPrefWidth(450);
         listView.setCellFactory(getCellFactory());
+        Label placeholderLabel = new Label(Res.get("chat.atMentionPopup.placeholder"));
+        placeholderLabel.setGraphic(ImageUtil.getImageViewById("search-white"));
+        placeholderLabel.setGraphicTextGap(8);
+        placeholderLabel.getStyleClass().add("chat-mention-placeholder-label");
+        listView.setPlaceholder(placeholderLabel);
 
         setAlignment(Alignment.LEFT);
         setContentNode(listView);

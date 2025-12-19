@@ -309,6 +309,11 @@
     -fx-background-radius: 8;
 }
 
+.chat-mention-placeholder-label {
+    -fx-background-color: -bisq-black-lit;
+    -fx-padding: 5 0 20 0;
+}
+
 #user-name-label {
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1.4em;
