@@ -31,6 +31,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -71,6 +73,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
         listView.setPlaceholder(placeholderLabel);
 
         setAlignment(Alignment.LEFT);
+        setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);
         setContentNode(listView);
         getStyleClass().add("chat-mention-popup");
 
@@ -98,6 +101,12 @@ public class ChatMentionPopupMenu extends BisqPopup {
     public void cleanup() {
         filter.removeListener(filterChangeListener);
         filter.unbind();
+    }
+
+    @Override
+    public void show(Node owner) {
+        Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
+        super.show(owner, bounds.getMinX(), bounds.getMinY() - 5);
     }
 
     private static Comparator<ListItem> sortByPrefixMatchingQuery(String query) {
