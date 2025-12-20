@@ -124,7 +124,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
         root.getStyleClass().add("wallet-dashboard");
-        root.setMinWidth(1050);
+        root.setMinWidth(1080);
         VBox.setVgrow(contentBox, Priority.ALWAYS);
 
         tableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleListItems(newValue.doubleValue());
@@ -166,7 +166,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
         Label valueLabel = new Label();
-        valueLabel.getStyleClass().add("bisq-text-headline-3");
+        valueLabel.getStyleClass().add("btc-balance-value");
 
         Label codeLabel = new Label("BTC");
         codeLabel.getStyleClass().addAll("bisq-text-12");

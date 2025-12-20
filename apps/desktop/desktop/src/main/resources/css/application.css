@@ -497,6 +497,13 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.wallet-dashboard .btc-balance-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-font-size: 4.2em;
+}
+
 .wallet-dashboard .summary-title,
 .wallet-dashboard .summary-code,
 .wallet-dashboard .fiat-balance-code {
