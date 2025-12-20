@@ -24,6 +24,8 @@ import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,7 +40,7 @@ import java.util.Comparator;
 @Getter
 public class WalletDashboardModel implements Model {
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
-    private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
+    private final ObservableValue<String> formattedBtcBalanceProperty = Bindings.createStringBinding(
             () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
             balanceAsCoinProperty
     );
@@ -57,6 +59,9 @@ public class WalletDashboardModel implements Model {
             () -> AmountFormatter.formatBaseAmount(lockedFundsAsCoinProperty.get()),
             lockedFundsAsCoinProperty
     );
+    private final StringProperty fiatCodeProperty = new SimpleStringProperty();
+    private final StringProperty formattedFiatBalanceProperty = new SimpleStringProperty();
+
     private final ObservableList<WalletTxListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
     private final SortedList<WalletTxListItem> sortedListItems = new SortedList<>(filteredListItems, Comparator.comparingLong(WalletTxListItem::getDate).reversed());

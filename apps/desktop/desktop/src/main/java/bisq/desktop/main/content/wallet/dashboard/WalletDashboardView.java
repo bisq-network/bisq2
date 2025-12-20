@@ -43,7 +43,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private static final double TABLE_CELL_HEIGHT = 70;
 
     private final Button send, receive;
-    private final Label balanceLabel, availableBalanceValueLabel, reservedFundsValueLabel, lockedFundsValueLabel;
+    private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
+            lockedFundsValueLabel, fiatBalanceValueLabel, fiatBalanceCodeLabel;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> tableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedItemsListener;
@@ -52,13 +53,20 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         super(new VBox(20), model, controller);
 
         // Header
-        Triple<HBox, Label, Label> balanceTriple = createBalanceHBox();
-        HBox balanceHBox = balanceTriple.getFirst();
-        balanceLabel = balanceTriple.getSecond();
-
         Label headlineLabel = new Label(Res.get("wallet.dashboard.headline"));
         headlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-text-green");
-        VBox balanceVBox = new VBox(20, headlineLabel, balanceHBox);
+
+        Triple<HBox, Label, Label> btcBalanceTriple = createBtcBalanceHBox();
+        HBox btcBalanceHBox = btcBalanceTriple.getFirst();
+        btcBalanceLabel = btcBalanceTriple.getSecond();
+
+        Triple<HBox, Label, Label> fiatBalanceTriple = createFiatBalanceHBox();
+        HBox fiatBalanceHBox = fiatBalanceTriple.getFirst();
+        fiatBalanceValueLabel = fiatBalanceTriple.getSecond();
+        fiatBalanceCodeLabel = fiatBalanceTriple.getThird();
+
+        VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
+        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, fiatBalanceHBox);
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
         HBox availableBalanceHBox = availableBalanceTriple.getFirst();
@@ -125,7 +133,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     @Override
     protected void onViewAttached() {
-        balanceLabel.textProperty().bind(model.getFormattedBalanceProperty());
+        btcBalanceLabel.textProperty().bind(model.getFormattedBtcBalanceProperty());
+        fiatBalanceValueLabel.textProperty().bind(model.getFormattedFiatBalanceProperty());
+        fiatBalanceCodeLabel.textProperty().bind(model.getFiatCodeProperty());
         availableBalanceValueLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
         reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
         lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
@@ -140,7 +150,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     @Override
     protected void onViewDetached() {
-        balanceLabel.textProperty().unbind();
+        btcBalanceLabel.textProperty().unbind();
+        fiatBalanceValueLabel.textProperty().unbind();
+        fiatBalanceCodeLabel.textProperty().unbind();
         availableBalanceValueLabel.textProperty().unbind();
         reservedFundsValueLabel.textProperty().unbind();
         lockedFundsValueLabel.textProperty().unbind();
@@ -152,7 +164,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         receive.setOnAction(null);
     }
 
-    private Triple<HBox, Label, Label> createBalanceHBox() {
+    private Triple<HBox, Label, Label> createBtcBalanceHBox() {
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
@@ -160,6 +172,18 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         codeLabel.getStyleClass().addAll("bisq-text-12");
 
         HBox hBox = new HBox(10, valueLabel, codeLabel);
+        hBox.setAlignment(Pos.BASELINE_CENTER);
+        return new Triple<>(hBox, valueLabel, codeLabel);
+    }
+
+    private Triple<HBox, Label, Label> createFiatBalanceHBox() {
+        Label valueLabel = new Label("2500.00");
+        valueLabel.getStyleClass().add("fiat-balance-value");
+
+        Label codeLabel = new Label("USD");
+        codeLabel.getStyleClass().addAll("fiat-balance-code");
+
+        HBox hBox = new HBox(7, valueLabel, codeLabel);
         hBox.setAlignment(Pos.BASELINE_CENTER);
         return new Triple<>(hBox, valueLabel, codeLabel);
     }
@@ -178,7 +202,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         HBox hBox = new HBox(titleLabel, Spacer.fillHBox(), valueLabel, codeLabel);
         hBox.setAlignment(Pos.BASELINE_CENTER);
-        HBox.setMargin(valueLabel, new Insets(0, 10, 0, 0));
+        HBox.setMargin(valueLabel, new Insets(0, 7, 0, 0));
         return new Triple<>(hBox, titleLabel, valueLabel);
     }
 
