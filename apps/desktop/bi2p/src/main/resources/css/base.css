@@ -24,6 +24,11 @@
 }
 
 @font-face {
+    font-family: "IBM Plex Sans Extra Light";
+    src: url("/fonts/IBMPlexSans-ExtraLight.ttf");
+}
+
+@font-face {
     font-family: "IBM Plex Sans Thin";
     src: url("/fonts/IBMPlexSans-Thin.ttf");
 }

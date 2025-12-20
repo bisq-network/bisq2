@@ -497,9 +497,17 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.wallet-dashboard .btc-balance-value {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-font-size: 4.2em;
+}
+
 .wallet-dashboard .summary-title,
-.wallet-dashboard .summary-code {
-    -fx-font-size: 1.5em;
+.wallet-dashboard .summary-code,
+.wallet-dashboard .fiat-balance-code {
+    -fx-font-size: 1.3em;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
@@ -510,6 +518,13 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.wallet-dashboard .fiat-balance-value {
+    -fx-font-size: 1.7em;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 .wallet-dashboard .latest-txs-table.table-view .column-header {

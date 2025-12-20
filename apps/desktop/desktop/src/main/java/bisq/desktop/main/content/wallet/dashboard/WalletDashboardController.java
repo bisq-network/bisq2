@@ -27,8 +27,15 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.wallet.WalletService;
 import bisq.wallet.vo.Transaction;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
+import bisq.presentation.formatters.AmountFormatter;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Coin;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletDashboardController implements Controller {
@@ -36,10 +43,13 @@ public class WalletDashboardController implements Controller {
     private final WalletDashboardView view;
     private final WalletDashboardModel model;
     private final WalletService walletService;
-    private Pin balancePin, transactionsPin;
+    private final MarketPriceService marketPriceService;
+    private Pin balancePin, transactionsPin, selectedMarketPin, marketPriceByCurrencyMapPin;
+    private Subscription balanceAsCoinPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         model = new WalletDashboardModel();
         view = new WalletDashboardView(model, this);
     }
@@ -53,6 +63,16 @@ public class WalletDashboardController implements Controller {
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
 
+        balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance -> UIThread.run(this::updateFiatBalance));
+
+        // TODO: Allow changing market
+        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> UIThread.run(this::updateFiatBalance));
+
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
+                // TODO: update fiat balance when market price changes
+                UIThread.run(() -> {});
+        });
+
         walletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
                 UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
@@ -65,6 +85,9 @@ public class WalletDashboardController implements Controller {
     public void onDeactivate() {
         balancePin.unbind();
         transactionsPin.unbind();
+        balanceAsCoinPin.unsubscribe();
+        selectedMarketPin.unbind();
+        marketPriceByCurrencyMapPin.unbind();
     }
 
     void onSend() {
@@ -73,5 +96,30 @@ public class WalletDashboardController implements Controller {
 
     void onReceive() {
         Navigation.navigateTo(NavigationTarget.WALLET_RECEIVE);
+    }
+
+    private void updateFiatBalance() {
+        Coin btcBalance = model.getBalanceAsCoinProperty().get();
+        if (btcBalance == null) {
+            resetFiatBalance();
+            return;
+        }
+
+        Market selectedMarket = marketPriceService.getSelectedMarket().get();
+        marketPriceService.findMarketPrice(selectedMarket).ifPresentOrElse(
+                marketPrice -> {
+                    double fiatValue = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
+                    String fiatCode = marketPrice.getMarket().getQuoteCurrencyCode();
+                    Fiat fiat = Fiat.fromFaceValue(fiatValue, fiatCode);
+                    model.getFiatCodeProperty().set(fiatCode);
+                    model.getFormattedFiatBalanceProperty().set(AmountFormatter.formatAmount(fiat, true));
+                },
+                this::resetFiatBalance
+        );
+    }
+
+    private void resetFiatBalance() {
+        model.getFiatCodeProperty().set("");
+        model.getFormattedFiatBalanceProperty().set("");
     }
 }
