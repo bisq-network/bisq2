@@ -59,7 +59,7 @@ public class WalletDashboardController implements Controller {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(walletService.getBalance());
 
-        transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getListItems())
+        transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getWalletTxListItems())
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
 

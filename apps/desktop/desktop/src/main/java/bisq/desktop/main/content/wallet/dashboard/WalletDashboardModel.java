@@ -62,10 +62,11 @@ public class WalletDashboardModel implements Model {
     private final StringProperty formattedCurrencyConverterValueProperty = new SimpleStringProperty();
     private final StringProperty currencyConverterCodeProperty = new SimpleStringProperty();
 
-    private final ObservableList<WalletTxListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<WalletTxListItem> filteredListItems = new FilteredList<>(listItems);
-    private final SortedList<WalletTxListItem> sortedListItems = new SortedList<>(filteredListItems, Comparator.comparingLong(WalletTxListItem::getDate).reversed());
-    private final ObservableList<WalletTxListItem> visibleListItems = FXCollections.observableArrayList();
+    private final ObservableList<WalletTxListItem> walletTxListItems = FXCollections.observableArrayList();
+    private final FilteredList<WalletTxListItem> filteredWalletTxListItems = new FilteredList<>(walletTxListItems);
+    private final SortedList<WalletTxListItem> sortedWalletTxListItems = new SortedList<>(filteredWalletTxListItems,
+            Comparator.comparingLong(WalletTxListItem::getDate).reversed());
+    private final ObservableList<WalletTxListItem> visibleWalletTxListItems = FXCollections.observableArrayList();
 
     public WalletDashboardModel() {
     }

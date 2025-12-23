@@ -48,8 +48,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
             lockedFundsValueLabel, currencyConverterValueLabel, currencyConverterCodeLabel;
     private DropdownMenu currencyConverterDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
-    private final ChangeListener<Number> tableViewHeightListener;
-    private final ListChangeListener<WalletTxListItem> sortedItemsListener;
+    private final ChangeListener<Number> latestTxsTableViewHeightListener;
+    private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -114,7 +114,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
         latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
 
-        latestTxsTableView = new BisqTableView<>(model.getVisibleListItems(), false);
+        latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
         latestTxsTableView.getStyleClass().add("latest-txs-table");
         latestTxsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
         latestTxsTableView.hideVerticalScrollbar();
@@ -134,8 +134,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         root.setMinWidth(1080);
         VBox.setVgrow(contentBox, Priority.ALWAYS);
 
-        tableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleListItems(newValue.doubleValue());
-        sortedItemsListener = change -> updateVisibleListItems(latestTxsTableView.getHeight());
+        latestTxsTableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleWalletTxListItems(newValue.doubleValue());
+        sortedWalletTxListItemsListener = change -> updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
     }
 
     @Override
@@ -147,9 +147,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
         lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
-        latestTxsTableView.heightProperty().addListener(tableViewHeightListener);
-        model.getSortedListItems().addListener(sortedItemsListener);
-        updateVisibleListItems(latestTxsTableView.getHeight());
+        latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
+        model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
+        updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
@@ -164,8 +164,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         reservedFundsValueLabel.textProperty().unbind();
         lockedFundsValueLabel.textProperty().unbind();
 
-        latestTxsTableView.heightProperty().removeListener(tableViewHeightListener);
-        model.getSortedListItems().removeListener(sortedItemsListener);
+        latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
+        model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
 
         send.setOnAction(null);
         receive.setOnAction(null);
@@ -265,10 +265,10 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 .build());
     }
 
-    private void updateVisibleListItems(double tableHeight) {
+    private void updateVisibleWalletTxListItems(double tableHeight) {
         int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
         int maxNumRows = Math.max(0, numRows);
-        int numVisibleListItems = Math.min(model.getSortedListItems().size(), maxNumRows);
-        model.getVisibleListItems().setAll(model.getSortedListItems().subList(0, numVisibleListItems));
+        int numVisibleListItems = Math.min(model.getSortedWalletTxListItems().size(), maxNumRows);
+        model.getVisibleWalletTxListItems().setAll(model.getSortedWalletTxListItems().subList(0, numVisibleListItems));
     }
 }
