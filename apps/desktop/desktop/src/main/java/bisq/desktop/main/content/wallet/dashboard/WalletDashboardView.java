@@ -22,6 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
@@ -45,6 +46,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
             lockedFundsValueLabel, fiatBalanceValueLabel, fiatBalanceCodeLabel;
+    private DropdownMenu fiatCurrencyDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> tableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedItemsListener;
@@ -65,8 +67,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         fiatBalanceValueLabel = fiatBalanceTriple.getSecond();
         fiatBalanceCodeLabel = fiatBalanceTriple.getThird();
 
+        fiatCurrencyDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        fiatCurrencyDropdownMenu.setContent(fiatBalanceHBox);
+        fiatCurrencyDropdownMenu.setMaxWidth(Region.USE_PREF_SIZE);
+
         VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
-        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, fiatBalanceHBox);
+        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, fiatCurrencyDropdownMenu);
+        balanceVBox.setAlignment(Pos.CENTER);
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
         HBox availableBalanceHBox = availableBalanceTriple.getFirst();
@@ -179,12 +186,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private Triple<HBox, Label, Label> createFiatBalanceHBox() {
         Label valueLabel = new Label("2500.00");
         valueLabel.getStyleClass().add("fiat-balance-value");
+        valueLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         Label codeLabel = new Label("USD");
         codeLabel.getStyleClass().addAll("fiat-balance-code");
+        codeLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         HBox hBox = new HBox(7, valueLabel, codeLabel);
         hBox.setAlignment(Pos.BASELINE_CENTER);
+        hBox.setMaxWidth(Region.USE_PREF_SIZE);
         return new Triple<>(hBox, valueLabel, codeLabel);
     }
 
