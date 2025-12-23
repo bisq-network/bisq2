@@ -506,7 +506,7 @@
 
 .wallet-dashboard .summary-title,
 .wallet-dashboard .summary-code,
-.wallet-dashboard .fiat-balance-code {
+.wallet-dashboard .currency-converter-balance-code {
     -fx-font-size: 1.3em;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -520,7 +520,7 @@
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
-.wallet-dashboard .fiat-balance-value {
+.wallet-dashboard .currency-converter-balance-value {
     -fx-font-size: 1.7em;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;

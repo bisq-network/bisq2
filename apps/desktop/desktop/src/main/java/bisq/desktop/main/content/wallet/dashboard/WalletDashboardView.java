@@ -45,8 +45,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
-            lockedFundsValueLabel, fiatBalanceValueLabel, fiatBalanceCodeLabel;
-    private DropdownMenu fiatCurrencyDropdownMenu;
+            lockedFundsValueLabel, currencyConverterValueLabel, currencyConverterCodeLabel;
+    private DropdownMenu currencyConverterDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> tableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedItemsListener;
@@ -62,17 +62,17 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         HBox btcBalanceHBox = btcBalanceTriple.getFirst();
         btcBalanceLabel = btcBalanceTriple.getSecond();
 
-        Triple<HBox, Label, Label> fiatBalanceTriple = createFiatBalanceHBox();
-        HBox fiatBalanceHBox = fiatBalanceTriple.getFirst();
-        fiatBalanceValueLabel = fiatBalanceTriple.getSecond();
-        fiatBalanceCodeLabel = fiatBalanceTriple.getThird();
+        Triple<HBox, Label, Label> currencyConverterBalanceTriple = createCurrencyConverterBalanceHBox();
+        HBox currencyConverterBalanceHBox = currencyConverterBalanceTriple.getFirst();
+        currencyConverterValueLabel = currencyConverterBalanceTriple.getSecond();
+        currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
-        fiatCurrencyDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        fiatCurrencyDropdownMenu.setContent(fiatBalanceHBox);
-        fiatCurrencyDropdownMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        currencyConverterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        currencyConverterDropdownMenu.setContent(currencyConverterBalanceHBox);
+        currencyConverterDropdownMenu.setMaxWidth(Region.USE_PREF_SIZE);
 
         VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
-        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, fiatCurrencyDropdownMenu);
+        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, currencyConverterDropdownMenu);
         balanceVBox.setAlignment(Pos.CENTER);
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
@@ -141,8 +141,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewAttached() {
         btcBalanceLabel.textProperty().bind(model.getFormattedBtcBalanceProperty());
-        fiatBalanceValueLabel.textProperty().bind(model.getFormattedFiatBalanceProperty());
-        fiatBalanceCodeLabel.textProperty().bind(model.getFiatCodeProperty());
+        currencyConverterValueLabel.textProperty().bind(model.getFormattedCurrencyConverterValueProperty());
+        currencyConverterCodeLabel.textProperty().bind(model.getCurrencyConverterCodeProperty());
         availableBalanceValueLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
         reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
         lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
@@ -158,8 +158,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         btcBalanceLabel.textProperty().unbind();
-        fiatBalanceValueLabel.textProperty().unbind();
-        fiatBalanceCodeLabel.textProperty().unbind();
+        currencyConverterValueLabel.textProperty().unbind();
+        currencyConverterCodeLabel.textProperty().unbind();
         availableBalanceValueLabel.textProperty().unbind();
         reservedFundsValueLabel.textProperty().unbind();
         lockedFundsValueLabel.textProperty().unbind();
@@ -183,13 +183,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         return new Triple<>(hBox, valueLabel, codeLabel);
     }
 
-    private Triple<HBox, Label, Label> createFiatBalanceHBox() {
+    private Triple<HBox, Label, Label> createCurrencyConverterBalanceHBox() {
         Label valueLabel = new Label("2500.00");
-        valueLabel.getStyleClass().add("fiat-balance-value");
+        valueLabel.getStyleClass().add("currency-converter-balance-value");
         valueLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         Label codeLabel = new Label("USD");
-        codeLabel.getStyleClass().addAll("fiat-balance-code");
+        codeLabel.getStyleClass().addAll("currency-converter-balance-code");
         codeLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         HBox hBox = new HBox(7, valueLabel, codeLabel);

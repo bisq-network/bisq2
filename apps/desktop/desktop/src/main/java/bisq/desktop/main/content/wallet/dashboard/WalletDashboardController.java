@@ -63,10 +63,10 @@ public class WalletDashboardController implements Controller {
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
 
-        balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance -> UIThread.run(this::updateFiatBalance));
+        balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance -> UIThread.run(this::updateCurrencyConverterBalance));
 
         // TODO: Allow changing market
-        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> UIThread.run(this::updateFiatBalance));
+        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> UIThread.run(this::updateCurrencyConverterBalance));
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
                 // TODO: update fiat balance when market price changes
@@ -98,28 +98,28 @@ public class WalletDashboardController implements Controller {
         Navigation.navigateTo(NavigationTarget.WALLET_RECEIVE);
     }
 
-    private void updateFiatBalance() {
+    private void updateCurrencyConverterBalance() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
         if (btcBalance == null) {
-            resetFiatBalance();
+            resetCurrencyConverterBalance();
             return;
         }
 
         Market selectedMarket = marketPriceService.getSelectedMarket().get();
         marketPriceService.findMarketPrice(selectedMarket).ifPresentOrElse(
                 marketPrice -> {
-                    double fiatValue = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
-                    String fiatCode = marketPrice.getMarket().getQuoteCurrencyCode();
-                    Fiat fiat = Fiat.fromFaceValue(fiatValue, fiatCode);
-                    model.getFiatCodeProperty().set(fiatCode);
-                    model.getFormattedFiatBalanceProperty().set(AmountFormatter.formatAmount(fiat, true));
+                    double value = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
+                    String code = marketPrice.getMarket().getQuoteCurrencyCode();
+                    Fiat fiat = Fiat.fromFaceValue(value, code);
+                    model.getCurrencyConverterCodeProperty().set(code);
+                    model.getFormattedCurrencyConverterValueProperty().set(AmountFormatter.formatAmount(fiat, true));
                 },
-                this::resetFiatBalance
+                this::resetCurrencyConverterBalance
         );
     }
 
-    private void resetFiatBalance() {
-        model.getFiatCodeProperty().set("");
-        model.getFormattedFiatBalanceProperty().set("");
+    private void resetCurrencyConverterBalance() {
+        model.getCurrencyConverterCodeProperty().set("");
+        model.getFormattedCurrencyConverterValueProperty().set("");
     }
 }
