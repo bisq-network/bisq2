@@ -68,6 +68,8 @@ public class WalletDashboardModel implements Model {
             Comparator.comparingLong(WalletTxListItem::getDate).reversed());
     private final ObservableList<WalletTxListItem> visibleWalletTxListItems = FXCollections.observableArrayList();
 
+    private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
+
     public WalletDashboardModel() {
     }
 }

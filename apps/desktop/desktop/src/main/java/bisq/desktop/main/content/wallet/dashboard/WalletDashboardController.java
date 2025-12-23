@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.wallet.dashboard;
 
+import bisq.common.market.MarketRepository;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
@@ -37,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 public class WalletDashboardController implements Controller {
     @Getter
@@ -56,6 +59,10 @@ public class WalletDashboardController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getMarketItems().setAll(MarketRepository.getAllFiatMarkets().stream()
+                .map(market -> new MarketItem(market, marketPriceService))
+                .collect(Collectors.toList()));
+
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(walletService.getBalance());
 
@@ -68,10 +75,7 @@ public class WalletDashboardController implements Controller {
         // TODO: Allow changing market
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> UIThread.run(this::updateCurrencyConverterBalance));
 
-        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
-                // TODO: update fiat balance when market price changes
-                UIThread.run(() -> {});
-        });
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> UIThread.run(this::updateMarketItems));
 
         walletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
@@ -116,10 +120,17 @@ public class WalletDashboardController implements Controller {
                 },
                 this::resetCurrencyConverterBalance
         );
+
+        updateMarketItems();
     }
 
     private void resetCurrencyConverterBalance() {
         model.getCurrencyConverterCodeProperty().set("");
         model.getFormattedCurrencyConverterValueProperty().set("");
+    }
+
+    private void updateMarketItems() {
+        Coin btcBalance = model.getBalanceAsCoinProperty().get();
+        model.getMarketItems().forEach(availableMarket -> availableMarket.updateFormattedValue(btcBalance));
     }
 }

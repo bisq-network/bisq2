@@ -23,33 +23,43 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.css.PseudoClass;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
-    private static final double TABLE_CELL_HEIGHT = 70;
+    private static final double LATEST_TXS_TABLE_CELL_HEIGHT = 70;
+    private static final double DROPDOWN_MENU_MAX_HEIGHT = 450;
 
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
             lockedFundsValueLabel, currencyConverterValueLabel, currencyConverterCodeLabel;
-    private DropdownMenu currencyConverterDropdownMenu;
+    private final DropdownMenu currencyConverterDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
+    private final EventHandler<Event> onShowingContextMenu = this::onShowingContextMenu;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -70,6 +80,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         currencyConverterDropdownMenu.setContent(currencyConverterBalanceHBox);
         currencyConverterDropdownMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        currencyConverterDropdownMenu.getContextMenu().setMaxHeight(DROPDOWN_MENU_MAX_HEIGHT);
 
         VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
         VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, currencyConverterDropdownMenu);
@@ -116,7 +127,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
         latestTxsTableView.getStyleClass().add("latest-txs-table");
-        latestTxsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
+        latestTxsTableView.setFixedCellSize(LATEST_TXS_TABLE_CELL_HEIGHT);
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
@@ -153,6 +164,10 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
+
+        currencyConverterDropdownMenu.getContextMenu().addEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
+
+        addCurrencyConverterDropdownMenuItems();
     }
 
     @Override
@@ -169,6 +184,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         send.setOnAction(null);
         receive.setOnAction(null);
+
+        currencyConverterDropdownMenu.getContextMenu().removeEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
     }
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
@@ -266,9 +283,61 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private void updateVisibleWalletTxListItems(double tableHeight) {
-        int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
+        int numRows = (int) Math.floor((tableHeight - 35) / LATEST_TXS_TABLE_CELL_HEIGHT); // 35 for the header
         int maxNumRows = Math.max(0, numRows);
         int numVisibleListItems = Math.min(model.getSortedWalletTxListItems().size(), maxNumRows);
         model.getVisibleWalletTxListItems().setAll(model.getSortedWalletTxListItems().subList(0, numVisibleListItems));
+    }
+
+    private void addCurrencyConverterDropdownMenuItems() {
+        model.getMarketItems().forEach(marketItem -> {
+                Label value = new Label();
+                value.textProperty().bind(marketItem.getFormattedValue());
+                Label code = new Label(marketItem.getCode());
+                // TODO: Add icon
+                HBox displayBox = new HBox(5, value, code);
+                CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
+//                    menuItem.setOnAction();
+                currencyConverterDropdownMenu.addMenuItems(menuItem);
+            });
+    }
+
+    private void onShowingContextMenu(Event event) {
+        // How to apply max height to ContextMenu
+        // https://stackoverflow.com/questions/51272738/javafx-contextmenu-max-size-has-no-effect#51284139
+        Node content = currencyConverterDropdownMenu.getContextMenu().getSkin().getNode();
+        if (content instanceof Region) {
+            ((Region) content).setMaxHeight(currencyConverterDropdownMenu.getContextMenu().getMaxHeight());
+        }
+    }
+
+    @Getter
+    private static final class CurrencyConverterMenuItem extends DropdownMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+
+        private final MarketItem marketItem;
+        private final StringProperty valueTextProperty;
+
+        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty valueTextProperty) {
+            super("check-white", "check-white", displayBox);
+
+            this.marketItem = marketItem;
+            this.valueTextProperty = valueTextProperty;
+            getStyleClass().add("dropdown-menu-item");
+            updateSelection(false);
+        }
+
+        public void dispose() {
+            setOnAction(null);
+            valueTextProperty.unbind();
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
+        }
     }
 }

@@ -57,6 +57,7 @@ public class DropdownMenu extends HBox {
     private Double prefWidth = null;
     protected ImageView defaultIcon, activeIcon;
     protected ImageView buttonIcon;
+    @Getter
     protected final ContextMenu contextMenu = new ContextMenu();
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
