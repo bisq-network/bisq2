@@ -75,7 +75,13 @@ public class WalletDashboardController implements Controller {
         // TODO: Allow changing market
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> UIThread.run(this::updateCurrencyConverterBalance));
 
-        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> UIThread.run(this::updateMarketItems));
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(() -> {
+                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
+                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    updateFilteredMarketListItems();
+                    updateMarketItems();
+                }));
 
         walletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
@@ -132,5 +138,10 @@ public class WalletDashboardController implements Controller {
     private void updateMarketItems() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
         model.getMarketItems().forEach(availableMarket -> availableMarket.updateFormattedValue(btcBalance));
+    }
+
+    private void updateFilteredMarketListItems() {
+        model.getFilteredMarketListItems().setPredicate(null);
+        model.getFilteredMarketListItems().setPredicate(model.getMarketListItemsPredicate());
     }
 }

@@ -290,16 +290,16 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private void addCurrencyConverterDropdownMenuItems() {
-        model.getMarketItems().forEach(marketItem -> {
-                Label value = new Label();
-                value.textProperty().bind(marketItem.getFormattedValue());
-                Label code = new Label(marketItem.getCode());
-                // TODO: Add icon
-                HBox displayBox = new HBox(5, value, code);
-                CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
+        model.getSortedMarketListItems().forEach(marketItem -> {
+            Label code = new Label(marketItem.getCode());
+            Label value = new Label();
+            value.textProperty().bind(marketItem.getFormattedValue());
+            // TODO: Add icon
+            HBox displayBox = new HBox(5, code, value);
+            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
 //                    menuItem.setOnAction();
-                currencyConverterDropdownMenu.addMenuItems(menuItem);
-            });
+            currencyConverterDropdownMenu.addMenuItems(menuItem);
+        });
     }
 
     private void onShowingContextMenu(Event event) {

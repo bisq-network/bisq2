@@ -32,9 +32,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -69,6 +71,13 @@ public class WalletDashboardModel implements Model {
     private final ObservableList<WalletTxListItem> visibleWalletTxListItems = FXCollections.observableArrayList();
 
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketItem> filteredMarketListItems = new FilteredList<>(marketItems);
+    private final SortedList<MarketItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems,
+            Comparator.comparing(MarketItem::toString));
+    private final Predicate<MarketItem> marketListItemsPredicate = marketItem ->
+            getMarketPricePredicate().test(marketItem);
+    @Setter
+    private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
 
     public WalletDashboardModel() {
     }
