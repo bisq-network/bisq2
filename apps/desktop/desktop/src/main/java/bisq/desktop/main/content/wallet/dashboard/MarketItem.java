@@ -40,9 +40,6 @@ public class MarketItem {
     private final SimpleStringProperty formattedValue;
     private final String code;
 
-    //TODO: Add icon
-
-
     MarketItem(Market market, MarketPriceService marketPriceService) {
         this.market = market;
         this.marketPriceService = marketPriceService;

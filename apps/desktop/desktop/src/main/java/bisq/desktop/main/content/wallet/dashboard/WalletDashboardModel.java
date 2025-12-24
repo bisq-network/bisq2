@@ -70,6 +70,7 @@ public class WalletDashboardModel implements Model {
             Comparator.comparingLong(WalletTxListItem::getDate).reversed());
     private final ObservableList<WalletTxListItem> visibleWalletTxListItems = FXCollections.observableArrayList();
 
+    private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketListItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems,

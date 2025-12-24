@@ -19,6 +19,7 @@ package bisq.desktop.main.content.wallet.dashboard;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -46,6 +47,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
@@ -60,6 +63,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
     private final EventHandler<Event> onShowingContextMenu = this::onShowingContextMenu;
+    private Subscription selectedMarketPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -158,6 +162,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
         lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
+        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
+
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
         updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
@@ -168,6 +174,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterDropdownMenu.getContextMenu().addEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
 
         addCurrencyConverterDropdownMenuItems();
+        updateSelectedMarket();
     }
 
     @Override
@@ -179,6 +186,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         reservedFundsValueLabel.textProperty().unbind();
         lockedFundsValueLabel.textProperty().unbind();
 
+        selectedMarketPin.unsubscribe();
+
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
 
@@ -186,6 +195,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         receive.setOnAction(null);
 
         currencyConverterDropdownMenu.getContextMenu().removeEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
+
+        cleanUpCurrencyConverterMenuItems();
     }
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
@@ -297,7 +308,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
             // TODO: Add icon
             HBox displayBox = new HBox(5, code, value);
             CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
-//                    menuItem.setOnAction();
+            menuItem.setOnAction(e -> controller.onSelectMarket(marketItem));
             currencyConverterDropdownMenu.addMenuItems(menuItem);
         });
     }
@@ -309,6 +320,25 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         if (content instanceof Region) {
             ((Region) content).setMaxHeight(currencyConverterDropdownMenu.getContextMenu().getMaxHeight());
         }
+    }
+
+    private void updateSelectedMarket() {
+        MarketItem selectedMarketItem = model.getSelectedMarketItem().get();
+        if (selectedMarketItem != null) {
+            currencyConverterDropdownMenu.getMenuItems().stream()
+                .filter(CurrencyConverterMenuItem.class::isInstance)
+                .forEach(item -> {
+                    CurrencyConverterMenuItem menuItem = (CurrencyConverterMenuItem) item;
+                    menuItem.updateSelection(menuItem.getMarketItem().equals(selectedMarketItem));
+            });
+        }
+    }
+
+    private void cleanUpCurrencyConverterMenuItems() {
+        currencyConverterDropdownMenu.getMenuItems().stream()
+                .filter(CurrencyConverterMenuItem.class::isInstance)
+                .forEach(item -> ((CurrencyConverterMenuItem) item).dispose());
+        currencyConverterDropdownMenu.clearMenuItems();
     }
 
     @Getter
