@@ -212,11 +212,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private Triple<HBox, Label, Label> createCurrencyConverterBalanceHBox() {
-        Label valueLabel = new Label("2500.00");
+        Label valueLabel = new Label();
         valueLabel.getStyleClass().add("currency-converter-balance-value");
         valueLabel.setMinWidth(Region.USE_PREF_SIZE);
 
-        Label codeLabel = new Label("USD");
+        Label codeLabel = new Label();
         codeLabel.getStyleClass().addAll("currency-converter-balance-code");
         codeLabel.setMinWidth(Region.USE_PREF_SIZE);
 
