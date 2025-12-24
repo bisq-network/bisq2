@@ -64,4 +64,9 @@ public class MarketItem {
         Fiat fiat = Fiat.fromFaceValue(value, code);
         getFormattedValue().set(AmountFormatter.formatAmount(fiat, true));
     }
+
+    @Override
+    public String toString() {
+        return market.toString();
+    }
 }
