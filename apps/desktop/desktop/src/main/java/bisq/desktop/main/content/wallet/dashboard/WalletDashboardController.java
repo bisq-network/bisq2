@@ -26,6 +26,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
 import bisq.wallet.vo.Transaction;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -47,12 +48,15 @@ public class WalletDashboardController implements Controller {
     private final WalletDashboardModel model;
     private final WalletService walletService;
     private final MarketPriceService marketPriceService;
-    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin;
+    private final SettingsService settingsService;
+    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin;
     private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        settingsService = serviceProvider.getSettingsService();
+
         model = new WalletDashboardModel();
         view = new WalletDashboardView(model, this);
     }
@@ -70,13 +74,17 @@ public class WalletDashboardController implements Controller {
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
 
-        balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance -> UIThread.run(() -> {
-            updateCurrencyConverterBalance();
-            updateMarketItems();
-        }));
+        balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance ->
+                UIThread.run(() -> {
+                    updateCurrencyConverterBalance();
+                    updateMarketItems();
+                }));
 
-        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket ->
-                UIThread.run(this::updateCurrencyConverterBalance));
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarketItem ->
+                UIThread.run(() -> {
+                    updateSelectedMarket(selectedMarketItem);
+                    updateCurrencyConverterBalance();
+                }));
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(() -> {
@@ -86,14 +94,17 @@ public class WalletDashboardController implements Controller {
                     updateMarketItems();
                 }));
 
+        selectedMarketPin = FxBindings.bindBiDir(model.getSelectedMarket())
+                .to(settingsService.getSelectedWalletMarket(), settingsService::setSelectedWalletMarket);
+
         walletService.requestBalance().whenComplete((balance, throwable) -> {
-            if (throwable == null) {
-                UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
-            }
-        });
+                    if (throwable == null) {
+                        UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
+                    }
+                });
         walletService.requestTransactions();
 
-        maybeSetDefaultSelectedMarket();
+        setSelectedMarket();
     }
 
     @Override
@@ -103,6 +114,7 @@ public class WalletDashboardController implements Controller {
         balanceAsCoinPin.unsubscribe();
         selectedMarketItemPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
+        selectedMarketPin.unbind();
     }
 
     void onSend() {
@@ -157,15 +169,19 @@ public class WalletDashboardController implements Controller {
         model.getFilteredMarketListItems().setPredicate(model.getMarketListItemsPredicate());
     }
 
-    private void maybeSetDefaultSelectedMarket() {
-        if (model.getSelectedMarketItem().get() == null) {
-            Market marketPriceServiceMarket = marketPriceService.getSelectedMarket().get();
-            if (marketPriceServiceMarket != null) {
-                model.getMarketItems().stream()
-                        .filter(item -> item.getMarket().equals(marketPriceServiceMarket))
-                        .findFirst()
-                        .ifPresent(item -> model.getSelectedMarketItem().set(item));
-            }
+    private void setSelectedMarket() {
+        Market selectedMarket = model.getSelectedMarket().get();
+        if (selectedMarket != null) {
+            model.getMarketItems().stream()
+                    .filter(item -> item.getMarket().equals(selectedMarket))
+                    .findAny()
+                    .ifPresent(item -> model.getSelectedMarketItem().set(item));
+        }
+    }
+
+    private void updateSelectedMarket(MarketItem marketItem) {
+        if (marketItem != null) {
+            model.getSelectedMarket().set(marketItem.getMarket());
         }
     }
 }
