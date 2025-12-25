@@ -278,6 +278,10 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return Collections.unmodifiableMap(persistableStore.muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
+    public ReadOnlyObservable<Market> getSelectedWalletMarket() {
+        return persistableStore.selectedWalletMarket;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -385,6 +389,12 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         if (market != null) {
             persistableStore.muSigLastSelectedMarketByBaseCurrencyMap.put(market.getBaseCurrencyCode(), market);
             persist();
+        }
+    }
+
+    public void setSelectedWalletMarket(Market market) {
+        if (market != null) {
+            persistableStore.selectedWalletMarket.set(market);
         }
     }
 
