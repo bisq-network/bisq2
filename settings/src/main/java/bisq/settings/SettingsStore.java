@@ -86,6 +86,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> autoAddToContactsList = new Observable<>();
     final Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ConcurrentHashMap<>();
+    final Observable<Market> selectedWalletMarket = new Observable<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -117,7 +118,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
                 DevMode.isDevMode(),
                 true,
-                new HashMap<>());
+                new HashMap<>(),
+                MarketRepository.getDefaultBtcFiatMarket());
     }
 
     SettingsStore(Cookie cookie,
@@ -149,7 +151,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                   int numDaysAfterRedactingTradeData,
                   boolean muSigActivated,
                   boolean autoAddToContactsList,
-                  Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap) {
+                  Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap,
+                  Market selectedWalletMarket) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -180,6 +183,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
         this.muSigActivated.set(muSigActivated);
         this.autoAddToContactsList.set(autoAddToContactsList);
         this.muSigLastSelectedMarketByBaseCurrencyMap.putAll(muSigLastSelectedMarketByBaseCurrencyMap);
+        this.selectedWalletMarket.set(selectedWalletMarket);
     }
 
     @SuppressWarnings("deprecation")
@@ -216,7 +220,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMuSigActivated(muSigActivated.get())
                 .setAutoAddToContactsList(autoAddToContactsList.get())
                 .putAllMuSigLastSelectedMarketByBaseCurrencyMap(muSigLastSelectedMarketByBaseCurrencyMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))));
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))))
+                .setSelectedWalletMarket(selectedWalletMarket.get().toProto(serializeForHash));
     }
 
     @Override
@@ -275,7 +280,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getMuSigActivated(),
                 proto.getAutoAddToContactsList(),
                 proto.getMuSigLastSelectedMarketByBaseCurrencyMapMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))));
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))),
+                Market.fromProto(proto.getSelectedWalletMarket()));
     }
 
     @Override
@@ -320,7 +326,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 numDaysAfterRedactingTradeData.get(),
                 muSigActivated.get(),
                 autoAddToContactsList.get(),
-                Map.copyOf(muSigLastSelectedMarketByBaseCurrencyMap));
+                Map.copyOf(muSigLastSelectedMarketByBaseCurrencyMap),
+                selectedWalletMarket.get());
     }
 
     @Override
@@ -356,6 +363,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
             muSigActivated.set(persisted.muSigActivated.get());
             autoAddToContactsList.set(persisted.autoAddToContactsList.get());
             muSigLastSelectedMarketByBaseCurrencyMap.putAll(persisted.muSigLastSelectedMarketByBaseCurrencyMap);
+            selectedWalletMarket.set(persisted.selectedWalletMarket.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

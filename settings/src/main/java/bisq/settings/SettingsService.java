@@ -123,6 +123,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
         pins.add(getMuSigActivated().addObserver(value -> persist()));
         pins.add(getAutoAddToContactsList().addObserver(value -> persist()));
+        pins.add(getSelectedWalletMarket().addObserver(value -> persist()));
 
         isInitialized = true;
 
@@ -278,6 +279,10 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return Collections.unmodifiableMap(persistableStore.muSigLastSelectedMarketByBaseCurrencyMap);
     }
 
+    public ReadOnlyObservable<Market> getSelectedWalletMarket() {
+        return persistableStore.selectedWalletMarket;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Setters
@@ -385,6 +390,12 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         if (market != null) {
             persistableStore.muSigLastSelectedMarketByBaseCurrencyMap.put(market.getBaseCurrencyCode(), market);
             persist();
+        }
+    }
+
+    public void setSelectedWalletMarket(Market market) {
+        if (market != null) {
+            persistableStore.selectedWalletMarket.set(market);
         }
     }
 

@@ -76,4 +76,5 @@ message SettingsStore {
   bool muSigActivated = 28;
   bool autoAddToContactsList = 29;
   map<string, common.Market> muSigLastSelectedMarketByBaseCurrencyMap = 30;
+  common.Market selectedWalletMarket = 31;
 }

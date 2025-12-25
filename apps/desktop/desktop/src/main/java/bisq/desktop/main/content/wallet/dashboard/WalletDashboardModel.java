@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.wallet.dashboard;
 
+import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
@@ -71,6 +72,7 @@ public class WalletDashboardModel implements Model {
     private final ObservableList<WalletTxListItem> visibleWalletTxListItems = FXCollections.observableArrayList();
 
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketListItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems,
