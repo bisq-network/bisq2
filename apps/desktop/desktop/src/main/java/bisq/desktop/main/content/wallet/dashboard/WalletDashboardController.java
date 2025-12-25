@@ -48,7 +48,7 @@ public class WalletDashboardController implements Controller {
     private final WalletService walletService;
     private final MarketPriceService marketPriceService;
     private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin;
-    private Subscription balanceAsCoinPin, selectedMarketPin;
+    private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
@@ -75,7 +75,7 @@ public class WalletDashboardController implements Controller {
             updateMarketItems();
         }));
 
-        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket ->
+        selectedMarketItemPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket ->
                 UIThread.run(this::updateCurrencyConverterBalance));
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
@@ -101,7 +101,7 @@ public class WalletDashboardController implements Controller {
         balancePin.unbind();
         transactionsPin.unbind();
         balanceAsCoinPin.unsubscribe();
-        selectedMarketPin.unsubscribe();
+        selectedMarketItemPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
     }
 
