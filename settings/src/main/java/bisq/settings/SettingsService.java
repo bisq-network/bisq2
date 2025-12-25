@@ -123,6 +123,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
         pins.add(getMuSigActivated().addObserver(value -> persist()));
         pins.add(getAutoAddToContactsList().addObserver(value -> persist()));
+        pins.add(getSelectedWalletMarket().addObserver(value -> persist()));
 
         isInitialized = true;
 
