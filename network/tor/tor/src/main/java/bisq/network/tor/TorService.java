@@ -370,9 +370,9 @@ public class TorService implements Service {
             String torConfig;
             if (!Files.exists(torConfigFilePath)) {
                 torConfig = FileReaderUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileMutatorUtils.writeToPath(torConfig, torConfigFilePath);
+                FacadeProvider.getJdkFacade().writeString(torConfig, torConfigFilePath);
             } else {
-                torConfig = FileReaderUtils.readUTF8String(torConfigFilePath);
+                torConfig = FacadeProvider.getJdkFacade().readString(torConfigFilePath);
             }
             Set<String> lines = torConfig.lines().collect(Collectors.toSet());
             for (String line : lines) {

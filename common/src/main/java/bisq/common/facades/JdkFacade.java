@@ -17,8 +17,16 @@
 
 package bisq.common.facades;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
+/**
+ * Facade for JDK operations that differ between Java SE and Android.
+ * <p>
+ * All string I/O operations use UTF-8 encoding exclusively for consistency
+ * and to prevent data corruption from encoding mismatches.
+ */
 public interface JdkFacade {
     String getMyPid();
 
@@ -27,4 +35,22 @@ public interface JdkFacade {
     void redirectError(ProcessBuilder processBuilder);
 
     void redirectOutput(ProcessBuilder processBuilder);
+
+    /**
+     * Reads the entire content of a file as a UTF-8 encoded string.
+     *
+     * @param path the path to the file
+     * @return the file content as a string
+     * @throws IOException if an I/O error occurs
+     */
+    String readString(Path path) throws IOException;
+
+    /**
+     * Writes a string to a file using UTF-8 encoding.
+     *
+     * @param data the string to write
+     * @param path the path to the file
+     * @throws IOException if an I/O error occurs
+     */
+    void writeString(String data, Path path) throws IOException;
 }
