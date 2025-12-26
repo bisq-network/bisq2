@@ -18,8 +18,6 @@
 package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
-import bisq.common.network.DefaultPeerSocket;
-import bisq.common.network.PeerSocket;
 import bisq.common.network.TransportType;
 import bisq.common.threading.AbortPolicyWithLogging;
 import bisq.common.threading.ExecutorFactory;
@@ -36,21 +34,19 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.io.EOFException;
-import java.io.IOException;
-import java.net.Socket;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +92,7 @@ public abstract class Connection {
     }
 
     private final AuthorizationService authorizationService;
+    private final ChannelHandlerContext context;
     @Getter
     private final String id;
     @Getter
@@ -111,8 +108,6 @@ public abstract class Connection {
     private final ConnectionThrottle connectionThrottle;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    @Nullable
-    private Future<?> inputHandlerFuture;
     // We use counter value 0 in the handshake, thus we start here with 1 as it's not the first message
     @Getter(AccessLevel.PACKAGE)
     private final AtomicInteger sentMessageCounter = new AtomicInteger(1);
@@ -121,10 +116,11 @@ public abstract class Connection {
     private volatile boolean listeningStopped;
     private final ThreadPoolExecutor readExecutor;
     private final ThreadPoolExecutor sendExecutor;
+    private final SimpleChannelInboundHandler<bisq.network.protobuf.NetworkEnvelope> inboundMessageHandler;
 
     protected Connection(AuthorizationService authorizationService,
+                         ChannelHandlerContext context,
                          String connectionId,
-                         Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
@@ -132,6 +128,7 @@ public abstract class Connection {
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.authorizationService = authorizationService;
+        this.context = context;
         this.id = connectionId;
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
@@ -143,63 +140,41 @@ public abstract class Connection {
         readExecutor = createReadExecutor();
         sendExecutor = createSendExecutor();
 
-        try {
-            PeerSocket peerSocket = new DefaultPeerSocket(socket);
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
-        } catch (IOException exception) {
-            log.error("Could not create objectOutputStream/objectInputStream for socket {}", socket, exception);
-            errorHandler.accept(this, exception);
-            shutdown(CloseReason.EXCEPTION.exception(exception));
-            return;
-        }
-        try {
-            inputHandlerFuture = readExecutor.submit(() -> {
+        inboundMessageHandler = new SimpleChannelInboundHandler<>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, bisq.network.protobuf.NetworkEnvelope proto) {
                 try {
-                    long readTs = 0;
-                    while (isInputStreamActive()) {
-                        if (readTs != 0) {
-                            log.debug("Processing message took {} ms. Wait for new message from {}. ", System.currentTimeMillis() - readTs, getPeerAddress());
-                        } else {
-                            log.debug("Wait for new message from {}", getPeerAddress());
-                        }
-                        var proto = networkEnvelopeSocket.receiveNextEnvelope();
-                        readTs = System.currentTimeMillis();
-                        if (proto == null) {
-                            log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
-                                    "This is expected if the input stream has reached EOF. We shut down the connection.");
-                            shutdown(CloseReason.EXCEPTION.exception(new EOFException("Input stream reached EOF")));
-                            return;
-                        }
+                    if (proto == null) {
+                        log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
+                                "This is expected if the input stream has reached EOF. We shut down the connection.");
+                        shutdown(CloseReason.EXCEPTION.exception(new EOFException("Input stream reached EOF")));
+                        return;
+                    }
 
-                        // receiveNextEnvelope might need some time wo we check again if connection is still active
-                        if (!isInputStreamActive()) {
-                            return;
-                        }
+                    // receiveNextEnvelope might need some time wo we check again if connection is still active
+                    if (!isActive()) {
+                        return;
+                    }
 
-                        connectionThrottle.throttleReceiveMessage();
-                        // ThrottleReceiveMessage can cause a delay by Thread.sleep
-                        if (!isInputStreamActive()) {
-                            return;
-                        }
-                        long ts = System.currentTimeMillis();
-                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        long deserializeTime = System.currentTimeMillis() - ts;
-                        networkEnvelope.verifyVersion();
-                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
+                    long ts = System.currentTimeMillis();
+                    NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
 
-                        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
-                        log.debug("Received message: {} at: {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        requestResponseManager.onReceived(envelopePayloadMessage);
+                    long deserializeTime = System.currentTimeMillis() - ts;
+                    networkEnvelope.verifyVersion();
+                    connectionMetrics.onReceived(networkEnvelope, deserializeTime);
 
-                        if (isInputStreamActive()) {
-                            boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
-                                    networkEnvelope.getAuthorizationToken(),
-                                    this);
-                            if (isMessageAuthorized) {
-                                handler.handleNetworkMessage(envelopePayloadMessage, this);
-                                listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
-                            }
+                    EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
+                    log.debug("Received message: {} at: {}",
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
+                    requestResponseManager.onReceived(envelopePayloadMessage);
+
+                    if (isActive()) {
+                        boolean isMessageAuthorized = handler.isMessageAuthorized(envelopePayloadMessage,
+                                networkEnvelope.getAuthorizationToken(),
+                                Connection.this);
+                        if (isMessageAuthorized) {
+                            handler.handleNetworkMessage(envelopePayloadMessage, Connection.this);
+                            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onNetworkMessage(envelopePayloadMessage)));
                         }
                     }
                 } catch (Exception exception) {
@@ -210,17 +185,14 @@ public abstract class Connection {
 
                         // EOFException expected if connection got closed (Socket closed message)
                         if (!(exception instanceof EOFException)) {
-                            errorHandler.accept(this, exception);
+                            errorHandler.accept(Connection.this, exception);
                         }
                     }
+                } finally {
                 }
-            });
-        } catch (RejectedExecutionException e) {
-            log.error("Read executor rejected task. We shut down the connection.", e);
-            errorHandler.accept(this, e);
-            inputHandlerFuture = CompletableFuture.failedFuture(e);
-            shutdown(CloseReason.EXCEPTION.exception(e));
-        }
+            }
+        };
+        context.pipeline().addLast(inboundMessageHandler);
     }
 
     /* --------------------------------------------------------------------- */
@@ -290,7 +262,7 @@ public abstract class Connection {
                         AuthorizationToken authorizationToken = createAuthorizationToken(envelopePayloadMessage);
                         networkEnvelope = createNetworkEnvelope(envelopePayloadMessage, authorizationToken);
                         long ts = System.currentTimeMillis();
-                        networkEnvelopeSocket.send(networkEnvelope);
+                        context.writeAndFlush(networkEnvelope.completeProto());
                         spentTime = System.currentTimeMillis() - ts;
                     }
                     connectionMetrics.onSent(networkEnvelope, spentTime);
@@ -351,15 +323,7 @@ public abstract class Connection {
         shutdownStarted = true;
         requestResponseManager.dispose();
         connectionMetrics.clear();
-        if (inputHandlerFuture != null) {
-            inputHandlerFuture.cancel(true);
-        }
-        try {
-            if (networkEnvelopeSocket != null) {
-                networkEnvelopeSocket.close();
-            }
-        } catch (IOException ignore) {
-        }
+        context.pipeline().remove(inboundMessageHandler);
         handler.handleConnectionClosed(this, closeReason);
         listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnectionClosed(closeReason)));
         listeners.clear();
@@ -369,10 +333,7 @@ public abstract class Connection {
     }
 
     boolean isStopped() {
-        return shutdownStarted
-                || networkEnvelopeSocket == null
-                || networkEnvelopeSocket.isClosed()
-                || Thread.currentThread().isInterrupted();
+        return shutdownStarted || Thread.currentThread().isInterrupted();
     }
 
 
@@ -380,7 +341,7 @@ public abstract class Connection {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private boolean isInputStreamActive() {
+    private boolean isActive() {
         return !listeningStopped && isRunning();
     }
 

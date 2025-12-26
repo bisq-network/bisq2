@@ -219,6 +219,23 @@ public class I2PTransportService implements TransportService {
     }
 
     @Override
+    public CompletableFuture<Address> evaluateMyAddress(NetworkId networkId, KeyBundle keyBundle) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
+
+                I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
+                String destinationBase64 = i2PKeyPair.getDestinationBase64();
+                String destinationBase32 = i2PKeyPair.getDestinationBase32();
+                // Port is irrelevant for I2P
+                return new I2PAddress(destinationBase64, destinationBase32, port);
+            } catch (Exception exception) {
+                throw new ConnectionException(exception);
+            }
+        });
+    }
+
+    @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle, String nodeId) {
         try {
             // Port is not relevant in I2P, thus in case of updated nodes which do not have I2P set yet, we just use a random port
@@ -228,11 +245,9 @@ public class I2PTransportService implements TransportService {
             initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             I2PKeyPair i2PKeyPair = keyBundle.getI2PKeyPair();
             ServerSocket serverSocket = i2pClient.getServerSocket(i2PKeyPair, nodeId);
-            String destinationBase64 = i2PKeyPair.getDestinationBase64();
-            String destinationBase32 = i2PKeyPair.getDestinationBase32();
-            I2PAddress i2PAddress = new I2PAddress(destinationBase64, destinationBase32, port);
+            Address i2PAddress = evaluateMyAddress(networkId, keyBundle).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
-            log.info("ServerSocket created. destinationBase32={}, destinationBase64={}, port={}", i2PKeyPair.getDestinationBase32(), destinationBase64, port);
+            log.info("ServerSocket created. destinationBase32={}, destinationBase64={}, port={}", i2PKeyPair.getDestinationBase32(), i2PKeyPair.getDestinationBase64(), port);
             return new ServerSocketResult(serverSocket, i2PAddress);
         } catch (Exception exception) {
             log.error("getServerSocket failed", exception);

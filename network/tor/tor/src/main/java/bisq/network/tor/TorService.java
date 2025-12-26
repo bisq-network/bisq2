@@ -84,6 +84,8 @@ public class TorService implements Service {
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
     private final Map<String, String> externalTorConfigMap = new HashMap<>();
+    @Getter
+    private int socksPort = -1;
 
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
@@ -168,8 +170,8 @@ public class TorService implements Service {
         torController.authenticate(hashedControlPassword);
         torController.bootstrap();
 
-        int port = torController.getSocksPort();
-        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
+        socksPort = torController.getSocksPort();
+        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(socksPort));
 
         return CompletableFuture.completedFuture(true);
     }
@@ -213,6 +215,32 @@ public class TorService implements Service {
             externalTorConfigMap.clear();
             return true;
         }, commonForkJoinPool());
+    }
+
+    public CompletableFuture<Integer> publishOnionServiceForNetty(int port, TorKeyPair torKeyPair) {
+        long ts = System.currentTimeMillis();
+        try {
+            InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
+                    : Inet4Address.getByName("0.0.0.0");
+            var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
+            int localPort = localServerSocket.getLocalPort();
+            localServerSocket.close();
+            String onionAddress = torKeyPair.getOnionAddress();
+            log.info("Publish onion service for onion address {}:{}", onionAddress, port);
+            checkArgument(!publishedOnionServices.contains(onionAddress), "publishOnionServiceForNetty must be called only once");
+            torController.publish(torKeyPair, port, localPort);
+            publishedOnionServices.add(onionAddress);
+            log.info("Tor onion service Ready. Took {} ms. Onion address={}:{}",
+                    System.currentTimeMillis() - ts, onionAddress, port);
+            return CompletableFuture.completedFuture(localPort);
+        } catch (InterruptedException e) {
+            log.warn("Can't create onion service. Thread got interrupted at publishOnionService method", e);
+            Thread.currentThread().interrupt(); // Restore interrupted state
+            return CompletableFuture.failedFuture(e);
+        } catch (IOException e) {
+            log.error("Can't create onion service", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
