@@ -2,7 +2,6 @@ package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

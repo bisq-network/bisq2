@@ -20,6 +20,10 @@ package bisq.common.util;
 import java.util.Locale;
 
 public class LocaleFactory {
+    private LocaleFactory() {
+        throw new AssertionError("Utility class should not be instantiated");
+    }
+    
     @SuppressWarnings("deprecation")
     public static Locale from(String language, String country) {
         // We stick to the deprecated constructor as it is Android compatible

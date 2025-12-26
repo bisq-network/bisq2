@@ -19,7 +19,6 @@ package bisq.http_api;
 
 import bisq.common.application.Service;
 import bisq.common.facades.FacadeProvider;
-import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.TransportType;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;

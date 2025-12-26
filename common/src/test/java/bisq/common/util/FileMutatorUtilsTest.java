@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-    public class FileMutatorUtilsTest {
+public class FileMutatorUtilsTest {
 
     @Test
     void testDeleteOnExitAndReleaseTempFile(@TempDir Path tempDirPath) throws IOException {
