@@ -35,6 +35,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.Comparator.naturalOrder;
+
 @Slf4j
 public class NetworkUtils {
     private static final Set<Integer> USED = new CopyOnWriteArraySet<>();
@@ -137,6 +140,11 @@ public class NetworkUtils {
         }
         return networkInterfaceHostAddressPairs.stream()
                 .map(Pair::getSecond)
-                .findFirst();
+                .distinct()
+                .min(comparingInt((String s) -> {
+                    if (s.startsWith("192.168.")) return 0;
+                    if (s.startsWith("10.")) return 1;
+                    return 2;
+                }).thenComparing(naturalOrder()));
     }
 }

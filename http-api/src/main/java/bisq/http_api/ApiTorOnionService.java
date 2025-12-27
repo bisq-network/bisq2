@@ -20,14 +20,18 @@ package bisq.http_api;
 import bisq.common.application.Service;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.network.TransportType;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.network.Address;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -37,23 +41,28 @@ public class ApiTorOnionService implements Service {
     private final Path appDataDirPath;
     private final KeyBundleService keyBundleService;
     private final String identityTag;
+    @Getter
+    private final boolean publishOnionService;
+    @Getter
+    private Optional<Address> publishedAddress = Optional.empty();
 
     public ApiTorOnionService(Path appDataDirPath,
                               SecurityService securityService,
                               NetworkService networkService,
                               int port,
-                              String identityTag) {
+                              String identityTag,
+                              boolean publishOnionService) {
         this.appDataDirPath = appDataDirPath;
         keyBundleService = securityService.getKeyBundleService();
         this.identityTag = identityTag;
         this.networkService = networkService;
         this.port = port;
+        this.publishOnionService = publishOnionService;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (networkService.findServiceNode(TransportType.TOR).isEmpty()) {
-            // If tor is not used we don't do anything
+        if (!publishOnionService) {
             return CompletableFuture.completedFuture(true);
         }
 
@@ -64,6 +73,7 @@ public class ApiTorOnionService implements Service {
                 })
                 .thenCompose(torKeyPair -> networkService.publishOnionService(port, port, torKeyPair))
                 .thenApply(onionAddress -> {
+                    publishedAddress = Optional.of(Address.from(onionAddress, port));
                     String onionAddressWithPort = onionAddress + ":" + port;
                     log.info("{} published for {}", onionAddressWithPort, identityTag);
                     try {
