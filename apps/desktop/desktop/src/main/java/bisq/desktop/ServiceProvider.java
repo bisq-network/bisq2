@@ -28,6 +28,7 @@ import bisq.common.platform.MemoryReportService;
 import bisq.contract.ContractService;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
+import bisq.http_api.HttpApiService;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
@@ -75,6 +76,7 @@ public class ServiceProvider {
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
     private final MemoryReportService memoryReportService;
+    private final HttpApiService httpApiService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -100,7 +102,8 @@ public class ServiceProvider {
                            FavouriteMarketsService favouriteMarketsService,
                            DontShowAgainService dontShowAgainService,
                            WebcamAppService webcamAppService,
-                           MemoryReportService memoryReportService) {
+                           MemoryReportService memoryReportService,
+                           HttpApiService httpApiService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -126,5 +129,6 @@ public class ServiceProvider {
         this.dontShowAgainService = dontShowAgainService;
         this.webcamAppService = webcamAppService;
         this.memoryReportService = memoryReportService;
+        this.httpApiService = httpApiService;
     }
 }
