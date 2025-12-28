@@ -133,7 +133,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             muSigCreateOfferReviewController.setMarket(market);
 
             if (market != null) {
-                shouldSkipPaymentMethodStep();
+                tryAutoSelectSinglePaymentMethod();
             }
 
             updateNextButtonDisabledState();
@@ -157,7 +157,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
         reset();
     }
 
-    private void shouldSkipPaymentMethodStep() {
+    private void tryAutoSelectSinglePaymentMethod() {
         List<Account<?, ?>> eligibleAccounts = muSigCreateOfferPaymentController.getEligibleAccounts();
 
         if (eligibleAccounts.size() == 1) {
@@ -238,7 +238,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             if (prevIndex >= 0) {
                 if (!validate(false)) {
                     return;
-                };
+                }
                 performNavigation(prevIndex, true);
             }
         }

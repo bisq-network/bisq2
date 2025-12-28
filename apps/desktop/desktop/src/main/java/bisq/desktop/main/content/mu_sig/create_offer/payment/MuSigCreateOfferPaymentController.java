@@ -89,7 +89,8 @@ public class MuSigCreateOfferPaymentController implements Controller {
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
                 .filter(account ->
                         account.getAccountPayload().getSelectedCurrencyCodes().stream()
-                                .anyMatch(code -> code.equals(model.getPaymentMethodCurrencyCode())))                .collect(Collectors.toList());
+                                .anyMatch(code -> code.equals(currencyCode)))
+                                .collect(Collectors.toList());
     }
 
     public boolean validate() {
