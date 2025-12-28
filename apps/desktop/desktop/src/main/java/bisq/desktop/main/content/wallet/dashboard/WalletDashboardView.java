@@ -302,12 +302,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private void addCurrencyConverterDropdownMenuItems() {
         model.getSortedMarketListItems().forEach(marketItem -> {
-            Label code = new Label(marketItem.getCode());
-            Label value = new Label();
-            value.textProperty().bind(marketItem.getFormattedValue());
+            Label code = new Label(marketItem.getAmountCode());
+            Label amount = new Label();
+            amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
             // TODO: Add icon
-            HBox displayBox = new HBox(5, code, value);
-            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
+            HBox displayBox = new HBox(5, code, amount);
+            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, amount.textProperty());
             menuItem.setOnAction(e -> controller.onSelectMarket(marketItem));
             currencyConverterDropdownMenu.addMenuItems(menuItem);
         });
@@ -346,20 +346,20 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         private final MarketItem marketItem;
-        private final StringProperty valueTextProperty;
+        private final StringProperty amountTextProperty;
 
-        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty valueTextProperty) {
+        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty amountTextProperty) {
             super("check-white", "check-white", displayBox);
 
             this.marketItem = marketItem;
-            this.valueTextProperty = valueTextProperty;
+            this.amountTextProperty = amountTextProperty;
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
         }
 
         public void dispose() {
             setOnAction(null);
-            valueTextProperty.unbind();
+            amountTextProperty.unbind();
         }
 
         void updateSelection(boolean isSelected) {

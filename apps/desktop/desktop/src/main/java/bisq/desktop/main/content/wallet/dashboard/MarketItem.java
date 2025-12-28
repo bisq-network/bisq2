@@ -21,8 +21,6 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
-import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,32 +35,30 @@ public class MarketItem {
     @EqualsAndHashCode.Include
     private final Market market;
     private final MarketPriceService marketPriceService;
-    private final SimpleStringProperty formattedValue;
-    private final String code;
+    private final SimpleStringProperty formattedConvertedAmount;
+    private final String amountCode;
 
     MarketItem(Market market, MarketPriceService marketPriceService) {
         this.market = market;
         this.marketPriceService = marketPriceService;
-        formattedValue = new SimpleStringProperty("N/A");
-        code = market.getQuoteCurrencyCode();
+        formattedConvertedAmount = new SimpleStringProperty("N/A");
+        amountCode = WalletMarketUtil.getMarketCode(market);
     }
 
-    void updateFormattedValue(Coin btcBalance) {
+    void updateFormattedAmount(Coin btcBalance) {
         if (btcBalance == null) {
-            getFormattedValue().set("N/A");
+            getFormattedConvertedAmount().set("N/A");
             return;
         }
 
         Optional<MarketPrice> optionalMarketPrice = marketPriceService.findMarketPrice(market);
         if (optionalMarketPrice.isEmpty()) {
-            getFormattedValue().set("N/A");
+            getFormattedConvertedAmount().set("N/A");
             return;
         }
 
-        MarketPrice marketPrice = optionalMarketPrice.get();
-        double value = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
-        Fiat fiat = Fiat.fromFaceValue(value, code);
-        getFormattedValue().set(AmountFormatter.formatAmount(fiat, true));
+        String amount = WalletMarketUtil.getFormattedConvertedAmount(btcBalance, optionalMarketPrice.get(), true);
+        getFormattedConvertedAmount().set(amount);
     }
 
     @Override

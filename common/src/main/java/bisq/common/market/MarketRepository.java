@@ -61,6 +61,14 @@ public class MarketRepository {
                 .orElseThrow();
     }
 
+    public static Market getXmrBtcMarket() {
+        return new Market(CryptoAssetRepository.XMR.getCode(),
+                CryptoAssetRepository.BITCOIN.getCode(),
+                CryptoAssetRepository.XMR.getName(),
+                CryptoAssetRepository.BITCOIN.getName()
+        );
+    }
+
     public static Market getBsqMarket() {
         return new Market("BSQ", "BTC", "BSQ", "Bitcoin");
     }
