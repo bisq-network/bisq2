@@ -31,18 +31,25 @@ import bisq.wallet.WalletService;
 import bisq.wallet.vo.Transaction;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Coin;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletDashboardController implements Controller {
+    private static final List<Market> AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION;
+    static {
+        List<Market> list = new ArrayList<>(MarketRepository.getAllFiatMarkets());
+        list.add(MarketRepository.getXmrBtcMarket());
+        AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION = list;
+    }
+
     @Getter
     private final WalletDashboardView view;
     private final WalletDashboardModel model;
@@ -63,7 +70,7 @@ public class WalletDashboardController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getMarketItems().setAll(MarketRepository.getAllFiatMarkets().stream()
+        model.getMarketItems().setAll(AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION.stream()
                 .map(market -> new MarketItem(market, marketPriceService))
                 .collect(Collectors.toList()));
 
@@ -144,11 +151,10 @@ public class WalletDashboardController implements Controller {
 
         marketPriceService.findMarketPrice(selectedMarket.getMarket()).ifPresentOrElse(
                 marketPrice -> {
-                    double value = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
-                    String code = marketPrice.getMarket().getQuoteCurrencyCode();
-                    Fiat fiat = Fiat.fromFaceValue(value, code);
+                    String code = WalletMarketUtil.getMarketCode(marketPrice.getMarket());
                     model.getCurrencyConverterCodeProperty().set(code);
-                    model.getFormattedCurrencyConverterValueProperty().set(AmountFormatter.formatAmount(fiat, true));
+                    String amount = WalletMarketUtil.getFormattedConvertedAmount(btcBalance, marketPrice, false);
+                    model.getFormattedCurrencyConverterAmountProperty().set(amount);
                 },
                 this::resetCurrencyConverterBalance
         );
@@ -156,12 +162,12 @@ public class WalletDashboardController implements Controller {
 
     private void resetCurrencyConverterBalance() {
         model.getCurrencyConverterCodeProperty().set("");
-        model.getFormattedCurrencyConverterValueProperty().set("");
+        model.getFormattedCurrencyConverterAmountProperty().set("");
     }
 
     private void updateMarketItems() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
-        model.getMarketItems().forEach(availableMarket -> availableMarket.updateFormattedValue(btcBalance));
+        model.getMarketItems().forEach(availableMarket -> availableMarket.updateFormattedAmount(btcBalance));
     }
 
     private void updateFilteredMarketListItems() {

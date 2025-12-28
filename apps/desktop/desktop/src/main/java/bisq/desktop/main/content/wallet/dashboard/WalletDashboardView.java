@@ -56,8 +56,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private static final double DROPDOWN_MENU_MAX_HEIGHT = 450;
 
     private final Button send, receive;
-    private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
-            lockedFundsValueLabel, currencyConverterValueLabel, currencyConverterCodeLabel;
+    private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
+            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
     private final DropdownMenu currencyConverterDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
@@ -78,7 +78,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         Triple<HBox, Label, Label> currencyConverterBalanceTriple = createCurrencyConverterBalanceHBox();
         HBox currencyConverterBalanceHBox = currencyConverterBalanceTriple.getFirst();
-        currencyConverterValueLabel = currencyConverterBalanceTriple.getSecond();
+        currencyConverterAmountLabel = currencyConverterBalanceTriple.getSecond();
         currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
         currencyConverterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
@@ -92,15 +92,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
         HBox availableBalanceHBox = availableBalanceTriple.getFirst();
-        availableBalanceValueLabel = availableBalanceTriple.getThird();
+        availableBalanceAmountLabel = availableBalanceTriple.getThird();
 
         Triple<HBox, Label, Label> reservedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.reservedFunds"), "interchangeable-grey");
         HBox reservedFundsHBox = reservedFundsTriple.getFirst();
-        reservedFundsValueLabel = reservedFundsTriple.getThird();
+        reservedFundsAmountLabel = reservedFundsTriple.getThird();
 
         Triple<HBox, Label, Label> lockedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.lockedFunds"), "lock-icon-grey");
         HBox lockedFundsHBox = lockedFundsTriple.getFirst();
-        lockedFundsValueLabel = lockedFundsTriple.getThird();
+        lockedFundsAmountLabel = lockedFundsTriple.getThird();
 
         double buttonsWidth = 220;
         send = new Button(Res.get("wallet.dashboard.sendBtc"));
@@ -156,11 +156,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewAttached() {
         btcBalanceLabel.textProperty().bind(model.getFormattedBtcBalanceProperty());
-        currencyConverterValueLabel.textProperty().bind(model.getFormattedCurrencyConverterValueProperty());
+        currencyConverterAmountLabel.textProperty().bind(model.getFormattedCurrencyConverterAmountProperty());
         currencyConverterCodeLabel.textProperty().bind(model.getCurrencyConverterCodeProperty());
-        availableBalanceValueLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
-        reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
-        lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
+        availableBalanceAmountLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
+        reservedFundsAmountLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
+        lockedFundsAmountLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
 
@@ -180,11 +180,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         btcBalanceLabel.textProperty().unbind();
-        currencyConverterValueLabel.textProperty().unbind();
+        currencyConverterAmountLabel.textProperty().unbind();
         currencyConverterCodeLabel.textProperty().unbind();
-        availableBalanceValueLabel.textProperty().unbind();
-        reservedFundsValueLabel.textProperty().unbind();
-        lockedFundsValueLabel.textProperty().unbind();
+        availableBalanceAmountLabel.textProperty().unbind();
+        reservedFundsAmountLabel.textProperty().unbind();
+        lockedFundsAmountLabel.textProperty().unbind();
 
         selectedMarketPin.unsubscribe();
 
@@ -302,12 +302,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private void addCurrencyConverterDropdownMenuItems() {
         model.getSortedMarketListItems().forEach(marketItem -> {
-            Label code = new Label(marketItem.getCode());
-            Label value = new Label();
-            value.textProperty().bind(marketItem.getFormattedValue());
+            Label code = new Label(marketItem.getAmountCode());
+            Label amount = new Label();
+            amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
             // TODO: Add icon
-            HBox displayBox = new HBox(5, code, value);
-            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, value.textProperty());
+            HBox displayBox = new HBox(5, code, amount);
+            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, amount.textProperty());
             menuItem.setOnAction(e -> controller.onSelectMarket(marketItem));
             currencyConverterDropdownMenu.addMenuItems(menuItem);
         });
@@ -346,20 +346,20 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         private final MarketItem marketItem;
-        private final StringProperty valueTextProperty;
+        private final StringProperty amountTextProperty;
 
-        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty valueTextProperty) {
+        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty amountTextProperty) {
             super("check-white", "check-white", displayBox);
 
             this.marketItem = marketItem;
-            this.valueTextProperty = valueTextProperty;
+            this.amountTextProperty = amountTextProperty;
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
         }
 
         public void dispose() {
             setOnAction(null);
-            valueTextProperty.unbind();
+            amountTextProperty.unbind();
         }
 
         void updateSelection(boolean isSelected) {
