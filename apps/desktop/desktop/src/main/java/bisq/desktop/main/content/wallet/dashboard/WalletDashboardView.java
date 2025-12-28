@@ -56,8 +56,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private static final double DROPDOWN_MENU_MAX_HEIGHT = 450;
 
     private final Button send, receive;
-    private final Label btcBalanceLabel, availableBalanceValueLabel, reservedFundsValueLabel,
-            lockedFundsValueLabel, currencyConverterValueLabel, currencyConverterCodeLabel;
+    private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
+            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
     private final DropdownMenu currencyConverterDropdownMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
@@ -78,7 +78,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         Triple<HBox, Label, Label> currencyConverterBalanceTriple = createCurrencyConverterBalanceHBox();
         HBox currencyConverterBalanceHBox = currencyConverterBalanceTriple.getFirst();
-        currencyConverterValueLabel = currencyConverterBalanceTriple.getSecond();
+        currencyConverterAmountLabel = currencyConverterBalanceTriple.getSecond();
         currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
         currencyConverterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
@@ -92,15 +92,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
         HBox availableBalanceHBox = availableBalanceTriple.getFirst();
-        availableBalanceValueLabel = availableBalanceTriple.getThird();
+        availableBalanceAmountLabel = availableBalanceTriple.getThird();
 
         Triple<HBox, Label, Label> reservedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.reservedFunds"), "interchangeable-grey");
         HBox reservedFundsHBox = reservedFundsTriple.getFirst();
-        reservedFundsValueLabel = reservedFundsTriple.getThird();
+        reservedFundsAmountLabel = reservedFundsTriple.getThird();
 
         Triple<HBox, Label, Label> lockedFundsTriple = createSummaryRow(Res.get("wallet.dashboard.lockedFunds"), "lock-icon-grey");
         HBox lockedFundsHBox = lockedFundsTriple.getFirst();
-        lockedFundsValueLabel = lockedFundsTriple.getThird();
+        lockedFundsAmountLabel = lockedFundsTriple.getThird();
 
         double buttonsWidth = 220;
         send = new Button(Res.get("wallet.dashboard.sendBtc"));
@@ -156,11 +156,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewAttached() {
         btcBalanceLabel.textProperty().bind(model.getFormattedBtcBalanceProperty());
-        currencyConverterValueLabel.textProperty().bind(model.getFormattedCurrencyConverterValueProperty());
+        currencyConverterAmountLabel.textProperty().bind(model.getFormattedCurrencyConverterAmountProperty());
         currencyConverterCodeLabel.textProperty().bind(model.getCurrencyConverterCodeProperty());
-        availableBalanceValueLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
-        reservedFundsValueLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
-        lockedFundsValueLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
+        availableBalanceAmountLabel.textProperty().bind(model.getFormattedAvailableBalanceProperty());
+        reservedFundsAmountLabel.textProperty().bind(model.getFormattedReservedFundsProperty());
+        lockedFundsAmountLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
 
@@ -180,11 +180,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         btcBalanceLabel.textProperty().unbind();
-        currencyConverterValueLabel.textProperty().unbind();
+        currencyConverterAmountLabel.textProperty().unbind();
         currencyConverterCodeLabel.textProperty().unbind();
-        availableBalanceValueLabel.textProperty().unbind();
-        reservedFundsValueLabel.textProperty().unbind();
-        lockedFundsValueLabel.textProperty().unbind();
+        availableBalanceAmountLabel.textProperty().unbind();
+        reservedFundsAmountLabel.textProperty().unbind();
+        lockedFundsAmountLabel.textProperty().unbind();
 
         selectedMarketPin.unsubscribe();
 

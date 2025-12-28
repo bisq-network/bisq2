@@ -154,7 +154,7 @@ public class WalletDashboardController implements Controller {
                     String code = WalletMarketUtil.getMarketCode(marketPrice.getMarket());
                     model.getCurrencyConverterCodeProperty().set(code);
                     String amount = WalletMarketUtil.getFormattedConvertedAmount(btcBalance, marketPrice, false);
-                    model.getFormattedCurrencyConverterValueProperty().set(amount);
+                    model.getFormattedCurrencyConverterAmountProperty().set(amount);
                 },
                 this::resetCurrencyConverterBalance
         );
@@ -162,7 +162,7 @@ public class WalletDashboardController implements Controller {
 
     private void resetCurrencyConverterBalance() {
         model.getCurrencyConverterCodeProperty().set("");
-        model.getFormattedCurrencyConverterValueProperty().set("");
+        model.getFormattedCurrencyConverterAmountProperty().set("");
     }
 
     private void updateMarketItems() {

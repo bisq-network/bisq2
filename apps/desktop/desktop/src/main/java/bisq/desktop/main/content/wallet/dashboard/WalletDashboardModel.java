@@ -62,7 +62,7 @@ public class WalletDashboardModel implements Model {
             () -> AmountFormatter.formatBaseAmount(lockedFundsAsCoinProperty.get()),
             lockedFundsAsCoinProperty
     );
-    private final StringProperty formattedCurrencyConverterValueProperty = new SimpleStringProperty();
+    private final StringProperty formattedCurrencyConverterAmountProperty = new SimpleStringProperty();
     private final StringProperty currencyConverterCodeProperty = new SimpleStringProperty();
 
     private final ObservableList<WalletTxListItem> walletTxListItems = FXCollections.observableArrayList();
