@@ -29,7 +29,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.auth.AuthenticationAddOn;
-import bisq.http_api.auth.WebSocketAddressAddOn;
+import bisq.http_api.auth.WebSocketMetadataAddOn;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -165,7 +165,7 @@ public class WebSocketService implements Service {
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
-                    server.getListener("grizzly").registerAddOn(new WebSocketAddressAddOn());
+                    server.getListener("grizzly").registerAddOn(new WebSocketMetadataAddOn());
                     String password = config.getPassword();
                     if (StringUtils.isNotEmpty(password)) {
                         server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
