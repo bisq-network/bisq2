@@ -22,7 +22,6 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
@@ -49,6 +48,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     private final Switch enableSwitch;
     private final AutoCompleteComboBox<BisqConnectExposureMode> exposureModeComboBox;
     private final MaterialPasswordField passwordField;
+    private Subscription passwordSubscription;
 
 
     private final MaterialTextField connectionUrlField;
@@ -71,7 +71,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         enableSwitch = new Switch(Res.get("settings.bisqConnect.enable"));
         passwordField = new MaterialPasswordField(
                 Res.get("settings.bisqConnect.password.label"),
-                Res.get("settings.bisqConnect.password.prompt")
+                ""
         );
         passwordField.setHelpText(null);
         passwordField.setPrefWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
@@ -169,7 +169,13 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
             controller.onSelectMode(selected);
         });
 
-        passwordField.textProperty().bindBidirectional(model.getPassword());
+        passwordField.setText(model.getPassword().get());
+        passwordField.setValidator(model.getPasswordRequiredValidator());
+        passwordField.isValidProperty().bindBidirectional(model.getPasswordIsValid());
+        passwordSubscription = EasyBind.subscribe(passwordField.textProperty(), newVal -> {
+            passwordField.validate();
+            controller.onPasswordChanged(newVal);
+        });
 
         qrPlaceholder.textProperty().bind(model.getQrPlaceholder());
 
@@ -202,11 +208,8 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
         saveChangesButton.disableProperty().bind(model.getIsChangeDetected().not());
         saveChangesButton.setOnAction(e -> {
+            passwordField.validate();
             controller.onSaveChanges();
-            new Popup()
-                    .feedback(Res.get("settings.bisqConnect.restart.confirm"))
-                    .useShutDownButton()
-                    .show();
         });
     }
 
@@ -217,7 +220,11 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
         exposureModeComboBox.setOnChangeConfirmed(null);
 
-        passwordField.textProperty().unbindBidirectional(model.getPassword());
+        if (passwordSubscription != null) {
+            passwordSubscription.unsubscribe();
+            passwordSubscription = null;
+        }
+        passwordField.isValidProperty().unbindBidirectional(model.getPasswordIsValid());
 
         connectionUrlField.textProperty().unbind();
         connectionUrlField.visibleProperty().unbind();

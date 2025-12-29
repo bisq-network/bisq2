@@ -19,7 +19,10 @@ package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.common.network.Address;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.http_api.web_socket.BisqConnectClientInfo;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -46,6 +49,8 @@ public class BisqConnectModel implements Model {
     private final StringProperty apiUrl = new SimpleStringProperty("");
     private final BooleanProperty isChangeDetected = new SimpleBooleanProperty();
     private final StringProperty password = new SimpleStringProperty("");
+    private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
+    private final ValidatorBase passwordRequiredValidator = new RequiredFieldValidator(Res.get("validation.empty"));
 
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrPlaceholder = new SimpleStringProperty("");

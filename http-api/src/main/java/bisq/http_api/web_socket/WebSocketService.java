@@ -214,6 +214,7 @@ public class WebSocketService implements Service {
                     addressObservable.set(Optional.of(new ClearnetAddress("0.0.0.0", config.getPort())));
                 }
             } else {
+                initializedObservable.set(false);
                 notifyErrorListeners("Initialization completed with failure");
             }
         });

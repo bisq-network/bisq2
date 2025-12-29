@@ -28,6 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -127,11 +128,17 @@ public class BisqConnectController implements Controller {
     }
 
     void onSaveChanges() {
-        writeCustomConfig();
-        savedEnabled = model.getEnabled().get();
-        savedMode = model.getSelectedMode().get();
-        savedPassword = model.getPassword().get();
-        model.getIsChangeDetected().set(false);
+        if (model.getPasswordIsValid().get()) {
+            writeCustomConfig();
+            savedEnabled = model.getEnabled().get();
+            savedMode = model.getSelectedMode().get();
+            savedPassword = model.getPassword().get();
+            model.getIsChangeDetected().set(false);
+            new Popup()
+                    .feedback(Res.get("settings.bisqConnect.restart.confirm"))
+                    .useShutDownButton()
+                    .show();
+        }
     }
 
     private void loadFromConfig() {
@@ -243,6 +250,7 @@ public class BisqConnectController implements Controller {
         boolean changeDetected = model.getEnabled().get() != savedEnabled
                 || model.getSelectedMode().get() != savedMode
                 || !Objects.equals(model.getPassword().get(), savedPassword);
-        model.getIsChangeDetected().set(changeDetected);
+        boolean enabled = changeDetected && model.getPasswordIsValid().get();
+        model.getIsChangeDetected().set(enabled);
     }
 }
