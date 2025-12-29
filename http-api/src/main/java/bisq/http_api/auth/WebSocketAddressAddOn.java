@@ -24,10 +24,11 @@ import org.glassfish.grizzly.http.server.NetworkListener;
 
 public class WebSocketAddressAddOn implements AddOn {
 
+    @Override
     public void setup(NetworkListener networkListener, FilterChainBuilder builder) {
         int httpServerFilterIdx = builder.indexOfType(HttpServerFilter.class);
         if (httpServerFilterIdx >= 0) {
-            builder.add(httpServerFilterIdx, new WebSocketAddressFilter());
+            builder.add(httpServerFilterIdx, new WebSocketRequestMetadataFilter());
         } else {
             throw new RuntimeException("Expected HttpServerFilter to be present but was not. This prevents WebSocketAddressAddOn from setting up correctly.");
         }

@@ -135,7 +135,7 @@ public class NetworkUtils {
             if (preferred.isPresent()) {
                 return preferred;
             } else {
-                log.warn("No networkInterface found which matches the preferredNetworkInterface. We return all LAN addresses.");
+                log.warn("Preferred network interface not found. Falling back to auto-selected LAN address.");
             }
         }
         return networkInterfaceHostAddressPairs.stream()

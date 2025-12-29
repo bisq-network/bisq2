@@ -25,6 +25,7 @@ import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.auth.AuthenticationAddOn;
@@ -111,7 +112,6 @@ public class WebSocketService implements Service {
     private final Observable<Boolean> initializedObservable = new Observable<>(false);
     private final Observable<String> errorObservable = new Observable<>("");
     private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
-    private final Observable<List<RemoteControlClient>> clientsObservable = new Observable<>();
 
     public WebSocketService(Config config,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
@@ -149,11 +149,6 @@ public class WebSocketService implements Service {
         }
 
         apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "webSocketServer", config.isPublishOnionService());
-        try {
-            webSocketConnectionHandler.addClientsListener(clientsObservable::set);
-            clientsObservable.set(webSocketConnectionHandler.getClients());
-        } catch (Exception ignored) {
-        }
     }
 
     @Override
@@ -237,12 +232,12 @@ public class WebSocketService implements Service {
                 }, commonForkJoinPool()));
     }
 
-    public Boolean isPublishOnionService() {
-        return apiTorOnionService.isPublishOnionService();
+    public ObservableSet<BisqConnectClientInfo> getWebsocketClients() {
+        return webSocketConnectionHandler.getWebsocketClients();
     }
 
-    public Pin addClientsObserver(Consumer<List<RemoteControlClient>> observer) {
-        return clientsObservable.addObserver(observer);
+    public Boolean isPublishOnionService() {
+        return apiTorOnionService.isPublishOnionService();
     }
 
     public Pin addInitObserver(Consumer<Boolean> observer) {

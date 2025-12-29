@@ -19,18 +19,15 @@ package bisq.http_api.web_socket;
 
 import lombok.Getter;
 
+import java.util.Optional;
+
 @Getter
-public class RemoteControlClient {
-    private final String address;
-    private final String userAgent;
+public class BisqConnectClientInfo {
+    private final Optional<String> address;
+    private final Optional<String> userAgent;
 
-    public RemoteControlClient(String address, String userAgent) {
-        this.address = address != null ? address : "-";
-        this.userAgent = userAgent != null ? userAgent : "-";
-    }
-
-    @Override
-    public String toString() {
-        return address + "\t" + userAgent;
+    public BisqConnectClientInfo(Optional<String> address, Optional<String> userAgent) {
+        this.address = address;
+        this.userAgent = userAgent;
     }
 }

@@ -20,6 +20,7 @@ package bisq.http_api;
 import bisq.common.application.Service;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundle;
@@ -60,7 +61,8 @@ public class ApiTorOnionService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!publishOnionService) {
+        if (!publishOnionService || networkService.findServiceNode(TransportType.TOR).isEmpty()) {
+            // If tor is not used we don't do anything
             return CompletableFuture.completedFuture(true);
         }
 
