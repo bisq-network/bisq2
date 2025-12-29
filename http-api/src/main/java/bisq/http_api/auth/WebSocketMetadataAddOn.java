@@ -22,10 +22,12 @@ import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.HttpServerFilter;
 import org.glassfish.grizzly.http.server.NetworkListener;
 
-public class WebSocketAddressAddOn implements AddOn {
+public class WebSocketMetadataAddOn implements AddOn {
 
     @Override
     public void setup(NetworkListener networkListener, FilterChainBuilder builder) {
+        // WebSocketRequestMetadataFilter must be inserted before the HttpServerFilter to
+        // properly intercept and capture WebSocket metadata during the upgrade handshake.
         int httpServerFilterIdx = builder.indexOfType(HttpServerFilter.class);
         if (httpServerFilterIdx >= 0) {
             builder.add(httpServerFilterIdx, new WebSocketRequestMetadataFilter());
