@@ -32,7 +32,7 @@ public class WebSocketMetadataAddOn implements AddOn {
         if (httpServerFilterIdx >= 0) {
             builder.add(httpServerFilterIdx, new WebSocketRequestMetadataFilter());
         } else {
-            throw new RuntimeException("Expected HttpServerFilter to be present but was not. This prevents WebSocketAddressAddOn from setting up correctly.");
+            throw new RuntimeException("Expected HttpServerFilter to be present but was not. This prevents WebSocketRequestMetadataFilter from setting up correctly.");
         }
     }
 }
