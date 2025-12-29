@@ -531,6 +531,10 @@
     -fx-background-color: -bisq-dark-grey-40;
 }
 
+.wallet-dashboard .dropdown-menu {
+    -fx-padding: 5 15 5 15;
+}
+
 
 /*******************************************************************************
  * Support                                                                  *
