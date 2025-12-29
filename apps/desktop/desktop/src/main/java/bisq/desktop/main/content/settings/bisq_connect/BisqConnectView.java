@@ -137,17 +137,17 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         RichTableView<BisqConnectClientInfo> clientsTable = new RichTableView<>(sortedClients, Res.get("settings.bisqConnect.clients.headline"));
         BisqTableColumn<BisqConnectClientInfo> indexCol = IndexColumnUtil.getIndexColumn(sortedClients);
         BisqTableColumn<BisqConnectClientInfo> ipCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
-            .title(Res.get("settings.bisqConnect.clients.ip"))
-            .valueSupplier(info -> info.getAddress().orElse(""))
-            .left()
-            .minWidth(200)
-            .build();
+                .title(Res.get("settings.bisqConnect.clients.ip"))
+                .valueSupplier(info -> info.getAddress().orElse("-"))
+                .left()
+                .minWidth(200)
+                .build();
         BisqTableColumn<BisqConnectClientInfo> uaCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
-            .title(Res.get("settings.bisqConnect.clients.userAgent"))
-            .valueSupplier(info -> info.getUserAgent().orElse(""))
-            .left()
-            .minWidth(300)
-            .build();
+                .title(Res.get("settings.bisqConnect.clients.userAgent"))
+                .valueSupplier(info -> info.getUserAgent().orElse("-"))
+                .left()
+                .minWidth(300)
+                .build();
         clientsTable.getColumns().add(indexCol);
         clientsTable.getColumns().add(ipCol);
         clientsTable.getColumns().add(uaCol);
