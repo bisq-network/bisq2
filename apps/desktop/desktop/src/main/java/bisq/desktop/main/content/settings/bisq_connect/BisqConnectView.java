@@ -28,10 +28,8 @@ import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.FormUtils;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.http_api.web_socket.RemoteControlClient;
+import bisq.http_api.web_socket.BisqConnectClientInfo;
 import bisq.i18n.Res;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,7 +47,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectController> {
     private final Switch enableSwitch;
-    private final AutoCompleteComboBox<BisqConnectHostNetwork> modeComboBox;
+    private final AutoCompleteComboBox<BisqConnectExposureMode> exposureModeComboBox;
     private final MaterialPasswordField passwordField;
 
 
@@ -78,26 +76,23 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         passwordField.setHelpText(null);
         passwordField.setPrefWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
         saveChangesButton = new Button(Res.get("settings.bisqConnect.saveChanges"));
-        saveChangesButton.getStyleClass().addAll("grey-transparent-outlined-button", "font-size-12");
+        saveChangesButton.setDefaultButton(true);
 
-        ObservableList<BisqConnectHostNetwork> modes = FXCollections.observableArrayList(BisqConnectHostNetwork.values());
-        modeComboBox = new AutoCompleteComboBox<>(modes, Res.get("settings.bisqConnect.exposure.label"));
-        modeComboBox.setPrefWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
-        modeComboBox.setConverter(new StringConverter<>() {
+        exposureModeComboBox = new AutoCompleteComboBox<>(model.getExposureModes(), Res.get("settings.bisqConnect.exposureMode.label"));
+        exposureModeComboBox.setPrefWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
+        exposureModeComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(BisqConnectHostNetwork mode) {
+            public String toString(BisqConnectExposureMode mode) {
                 if (mode == null) return "";
-                return mode == BisqConnectHostNetwork.LAN
-                        ? Res.get("settings.bisqConnect.exposure.lan")
-                        : Res.get("settings.bisqConnect.exposure.tor");
+                return mode.displayString();
             }
 
             @Override
-            public BisqConnectHostNetwork fromString(String string) {
+            public BisqConnectExposureMode fromString(String string) {
                 return null;
             }
         });
-        VBox modeBox = new VBox(10, modeComboBox);
+        VBox modeBox = new VBox(10, exposureModeComboBox);
 
         connectionUrlField = FormUtils.getTextField(Res.get("settings.bisqConnect.url.label"), "", false);
 
@@ -120,8 +115,6 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         qrPane.prefWidthProperty().bind(model.getQrCodeSize().add(40));
         qrPane.prefHeightProperty().bind(model.getQrCodeSize().add(40));
 
-        saveChangesButton.setDefaultButton(true);
-
         VBox contentBox = new VBox(25,
                 headline,
                 SettingsViewUtils.getLineAfterHeadline(30),
@@ -140,21 +133,21 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
         root.getChildren().add(contentBox);
 
-        SortedList<RemoteControlClient> sortedClients = new SortedList<>(model.getConnectedClients());
-        RichTableView<RemoteControlClient> clientsTable = new RichTableView<>(sortedClients, Res.get("settings.bisqConnect.clients.headline"));
-        BisqTableColumn<RemoteControlClient> indexCol = IndexColumnUtil.getIndexColumn(sortedClients);
-        BisqTableColumn<RemoteControlClient> ipCol = new BisqTableColumn.Builder<RemoteControlClient>()
-                .title(Res.get("settings.bisqConnect.clients.ip"))
-                .valueSupplier(RemoteControlClient::getAddress)
-                .left()
-                .minWidth(200)
-                .build();
-        BisqTableColumn<RemoteControlClient> uaCol = new BisqTableColumn.Builder<RemoteControlClient>()
-                .title(Res.get("settings.bisqConnect.clients.userAgent"))
-                .valueSupplier(RemoteControlClient::getUserAgent)
-                .left()
-                .minWidth(300)
-                .build();
+        SortedList<BisqConnectClientInfo> sortedClients = new SortedList<>(model.getConnectedClients());
+        RichTableView<BisqConnectClientInfo> clientsTable = new RichTableView<>(sortedClients, Res.get("settings.bisqConnect.clients.headline"));
+        BisqTableColumn<BisqConnectClientInfo> indexCol = IndexColumnUtil.getIndexColumn(sortedClients);
+        BisqTableColumn<BisqConnectClientInfo> ipCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
+            .title(Res.get("settings.bisqConnect.clients.ip"))
+            .valueSupplier(info -> info.getAddress().orElse(""))
+            .left()
+            .minWidth(200)
+            .build();
+        BisqTableColumn<BisqConnectClientInfo> uaCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
+            .title(Res.get("settings.bisqConnect.clients.userAgent"))
+            .valueSupplier(info -> info.getUserAgent().orElse(""))
+            .left()
+            .minWidth(300)
+            .build();
         clientsTable.getColumns().add(indexCol);
         clientsTable.getColumns().add(ipCol);
         clientsTable.getColumns().add(uaCol);
@@ -166,11 +159,11 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         enableSwitch.selectedProperty().bindBidirectional(model.getEnabled());
         enableSwitch.setOnAction(e -> controller.onToggleEnabled(enableSwitch.isSelected()));
 
-        modeComboBox.getSelectionModel().select(model.getSelectedMode().get());
-        modeComboBox.setOnChangeConfirmed(e -> {
-            BisqConnectHostNetwork selected = modeComboBox.getSelectionModel().getSelectedItem();
+        exposureModeComboBox.getSelectionModel().select(model.getSelectedMode().get());
+        exposureModeComboBox.setOnChangeConfirmed(e -> {
+            BisqConnectExposureMode selected = exposureModeComboBox.getSelectionModel().getSelectedItem();
             if (selected == null) {
-                modeComboBox.getSelectionModel().select(model.getSelectedMode().get());
+                exposureModeComboBox.getSelectionModel().select(model.getSelectedMode().get());
                 return;
             }
             controller.onSelectMode(selected);
@@ -222,7 +215,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         enableSwitch.selectedProperty().unbindBidirectional(model.getEnabled());
         enableSwitch.setOnAction(null);
 
-        modeComboBox.setOnChangeConfirmed(null);
+        exposureModeComboBox.setOnChangeConfirmed(null);
 
         passwordField.textProperty().unbindBidirectional(model.getPassword());
 

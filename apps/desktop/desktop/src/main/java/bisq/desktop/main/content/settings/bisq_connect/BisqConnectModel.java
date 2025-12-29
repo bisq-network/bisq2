@@ -19,7 +19,7 @@ package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.common.network.Address;
 import bisq.desktop.common.view.Model;
-import bisq.http_api.web_socket.RemoteControlClient;
+import bisq.http_api.web_socket.BisqConnectClientInfo;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -40,7 +40,7 @@ import java.util.Optional;
 @Getter
 public class BisqConnectModel implements Model {
     private final BooleanProperty enabled = new SimpleBooleanProperty();
-    private final ObjectProperty<BisqConnectHostNetwork> selectedMode = new SimpleObjectProperty<>(BisqConnectHostNetwork.TOR);
+    private final ObjectProperty<BisqConnectExposureMode> selectedMode = new SimpleObjectProperty<>(BisqConnectExposureMode.TOR);
     private final IntegerProperty port = new SimpleIntegerProperty();
 
     private final StringProperty apiUrl = new SimpleStringProperty("");
@@ -49,9 +49,14 @@ public class BisqConnectModel implements Model {
 
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrPlaceholder = new SimpleStringProperty("");
-    private final SimpleIntegerProperty qrCodeSize = new SimpleIntegerProperty(220);
+    private final SimpleIntegerProperty qrCodeSize;
     private final BooleanProperty websocketRunning = new SimpleBooleanProperty(false);
     private final StringProperty websocketInitError = new SimpleStringProperty("");
     private final ObjectProperty<Optional<Address>> websocketAddress = new SimpleObjectProperty<>(Optional.empty());
-    private final ObservableList<RemoteControlClient> connectedClients = FXCollections.observableArrayList();
+    private final ObservableList<BisqConnectClientInfo> connectedClients = FXCollections.observableArrayList();
+    private final ObservableList<BisqConnectExposureMode> exposureModes = FXCollections.observableArrayList(BisqConnectExposureMode.values());
+
+    public BisqConnectModel(int qrCodeSize) {
+        this.qrCodeSize = new SimpleIntegerProperty(qrCodeSize);
+    }
 }

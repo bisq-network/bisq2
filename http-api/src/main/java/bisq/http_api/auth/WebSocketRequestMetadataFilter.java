@@ -28,25 +28,28 @@ import java.net.SocketAddress;
 import java.util.Objects;
 
 @Slf4j
-public class WebSocketAddressFilter extends BaseFilter {
+public class WebSocketRequestMetadataFilter extends BaseFilter {
+    public static final String ATTR_WS_USER_AGENT = "ws_user_agent";
+    public static final String ATTR_WS_REMOTE_ADDRESS = "ws_remote_address";
 
+    @Override
     public NextAction handleRead(FilterChainContext ctx) {
         Object message = ctx.getMessage();
 
         if (message instanceof HttpContent httpContent && httpContent.getHttpHeader() instanceof HttpRequestPacket request) {
             String upgradeHeader = request.getHeader("Upgrade");
             if ("websocket".equalsIgnoreCase(upgradeHeader)) {
-                if (request.getAttribute("ws_user_agent") != null) {
+                if (request.getAttribute(ATTR_WS_USER_AGENT) != null) {
                     return ctx.getInvokeAction();
                 }
 
                 Object peer = ctx.getConnection().getPeerAddress();
                 if (peer instanceof SocketAddress) {
-                    request.setAttribute("ws_remote_address", peer.toString());
+                    request.setAttribute(ATTR_WS_REMOTE_ADDRESS, peer.toString());
                 }
 
                 String ua = request.getHeader("User-Agent");
-                request.setAttribute("ws_user_agent", Objects.requireNonNullElse(ua, "-"));
+                request.setAttribute(ATTR_WS_USER_AGENT, Objects.requireNonNullElse(ua, "-"));
             }
         }
 

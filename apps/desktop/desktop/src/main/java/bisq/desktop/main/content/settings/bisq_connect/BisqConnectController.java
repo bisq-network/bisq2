@@ -51,9 +51,9 @@ public class BisqConnectController implements Controller {
     private final ServiceProvider serviceProvider;
 
     private boolean initialEnabled;
-    private BisqConnectHostNetwork initialMode = BisqConnectHostNetwork.LAN;
+    private BisqConnectExposureMode initialExposureMode = BisqConnectExposureMode.LAN;
     private boolean savedEnabled;
-    private BisqConnectHostNetwork savedMode = BisqConnectHostNetwork.LAN;
+    private BisqConnectExposureMode savedMode = BisqConnectExposureMode.LAN;
     private String savedPassword;
 
     private Pin websocketInitPin;
@@ -64,7 +64,7 @@ public class BisqConnectController implements Controller {
     public BisqConnectController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
-        model = new BisqConnectModel();
+        model = new BisqConnectModel(220);
         view = new BisqConnectView(model, this);
     }
 
@@ -73,7 +73,7 @@ public class BisqConnectController implements Controller {
         loadFromConfig();
         serviceProvider.getHttpApiService().getWebSocketService().ifPresent(ws -> {
             initialEnabled = true;
-            initialMode = ws.isPublishOnionService() ? BisqConnectHostNetwork.TOR : BisqConnectHostNetwork.LAN;
+            initialExposureMode = ws.isPublishOnionService() ? BisqConnectExposureMode.TOR : BisqConnectExposureMode.LAN;
             websocketInitPin = ws.addInitObserver(up -> UIThread.run(() -> {
                 model.getWebsocketRunning().set(up);
                 updatePreview();
@@ -86,13 +86,8 @@ public class BisqConnectController implements Controller {
                 model.getWebsocketAddress().set(address);
                 updatePreview();
             }));
-            clientsPin = ws.addClientsObserver(clients -> UIThread.run(() -> {
-                model.getConnectedClients().clear();
-                clients.forEach(c -> {
-                    if (c == null) return;
-                    model.getConnectedClients().add(c);
-                });
-            }));
+            clientsPin = ws.getWebsocketClients().addObserver(() ->
+                    UIThread.run(() -> model.getConnectedClients().setAll(ws.getWebsocketClients().getUnmodifiableSet())));
         });
         UIThread.run(this::updatePreview);
     }
@@ -120,7 +115,7 @@ public class BisqConnectController implements Controller {
         updateChangeDetectedFlag();
     }
 
-    void onSelectMode(BisqConnectHostNetwork mode) {
+    void onSelectMode(BisqConnectExposureMode mode) {
         model.getSelectedMode().set(mode);
         updateChangeDetectedFlag();
     }
@@ -155,7 +150,7 @@ public class BisqConnectController implements Controller {
         int port = websocketServerConfig.getInt("port");
         String password = websocketConfig.getString("password");
 
-        BisqConnectHostNetwork mode = publishOnionService ? BisqConnectHostNetwork.TOR : BisqConnectHostNetwork.LAN;
+        BisqConnectExposureMode mode = publishOnionService ? BisqConnectExposureMode.TOR : BisqConnectExposureMode.LAN;
 
         savedEnabled = enabled;
         savedMode = mode;
@@ -185,7 +180,7 @@ public class BisqConnectController implements Controller {
                 if (!model.getWebsocketRunning().get() && !initialEnabled) {
                     model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderDisabled"));
                 } else {
-                    if (initialMode == BisqConnectHostNetwork.LAN) {
+                    if (initialExposureMode == BisqConnectExposureMode.LAN) {
                         model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderLan"));
                     } else {
                         model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderTor"));
@@ -206,6 +201,7 @@ public class BisqConnectController implements Controller {
             model.getQrCodeImage().set(QrCodeDisplay.toImage(url, model.getQrCodeSize().get()));
         } catch (RuntimeException e) {
             log.warn("QR code generation failed", e);
+            model.getApiUrl().set("");
             model.getQrCodeImage().set(null);
             model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderError"));
         }
@@ -247,6 +243,6 @@ public class BisqConnectController implements Controller {
         boolean changeDetected = model.getEnabled().get() != savedEnabled
                 || model.getSelectedMode().get() != savedMode
                 || !Objects.equals(model.getPassword().get(), savedPassword);
-        UIThread.run(() -> model.getIsChangeDetected().set(changeDetected));
+        model.getIsChangeDetected().set(changeDetected);
     }
 }

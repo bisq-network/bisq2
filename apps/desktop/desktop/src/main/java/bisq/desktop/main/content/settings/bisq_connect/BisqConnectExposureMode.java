@@ -17,11 +17,19 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
-public enum BisqConnectHostNetwork {
+import bisq.i18n.Res;
+
+public enum BisqConnectExposureMode {
     LAN,
     TOR;
 
     public boolean isTor() {
         return this == TOR;
+    }
+
+    public String displayString() {
+        return this == BisqConnectExposureMode.LAN
+                ? Res.get("settings.bisqConnect.exposureMode.lan")
+                : Res.get("settings.bisqConnect.exposureMode.tor");
     }
 }

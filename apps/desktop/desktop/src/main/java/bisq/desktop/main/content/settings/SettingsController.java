@@ -49,7 +49,7 @@ public class SettingsController extends ContentTabController<SettingsModel> {
             case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
             case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
             case NETWORK_SETTINGS -> Optional.of(new NetworkSettingsController(serviceProvider));
-            case REMOTE_CONTROL_SETTINGS -> Optional.of(new BisqConnectController(serviceProvider));
+            case BISQ_CONNECT_SETTINGS -> Optional.of(new BisqConnectController(serviceProvider));
             case MISC_SETTINGS -> Optional.of(new MiscSettingsController(serviceProvider));
             default -> Optional.empty();
         };
