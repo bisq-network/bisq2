@@ -76,7 +76,7 @@ public class WalletDashboardModel implements Model {
     private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MarketItem> filteredMarketListItems = new FilteredList<>(marketItems);
     private final SortedList<MarketItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems,
-            Comparator.comparing(MarketItem::toString));
+            Comparator.comparing(MarketItem::getAmountCode));
     private final Predicate<MarketItem> marketListItemsPredicate = marketItem ->
             getMarketPricePredicate().test(marketItem);
     @Setter

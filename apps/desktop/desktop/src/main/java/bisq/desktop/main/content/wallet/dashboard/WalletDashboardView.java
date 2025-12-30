@@ -73,6 +73,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         // Header
         Label headlineLabel = new Label(Res.get("wallet.dashboard.headline"));
         headlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-text-green");
+        headlineLabel.setGraphic(ImageUtil.getImageViewById("bisq-btc-logo"));
+        headlineLabel.setGraphicTextGap(10);
+
+        HBox headlineLabelBox = new HBox(headlineLabel);
+        headlineLabelBox.setAlignment(Pos.CENTER_LEFT);
 
         Triple<HBox, Label, Label> btcBalanceTriple = createBtcBalanceHBox();
         HBox btcBalanceHBox = btcBalanceTriple.getFirst();
@@ -89,7 +94,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterDropdownMenu.getContextMenu().setMaxHeight(DROPDOWN_MENU_MAX_HEIGHT);
 
         VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
-        VBox balanceVBox = new VBox(headlineLabel, btcBalanceHBox, currencyConverterDropdownMenu);
+        VBox balanceVBox = new VBox(headlineLabelBox, btcBalanceHBox, currencyConverterDropdownMenu);
         balanceVBox.setAlignment(Pos.CENTER);
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
@@ -130,6 +135,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         // Latest txs
         Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
         latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        latestTxsHeadline.setGraphic(ImageUtil.getImageViewById("latest-txs-grey"));
+        latestTxsHeadline.setGraphicTextGap(10);
 
         latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
         latestTxsTableView.getStyleClass().add("latest-txs-table");

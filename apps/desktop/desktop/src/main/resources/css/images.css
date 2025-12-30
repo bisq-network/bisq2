@@ -1884,6 +1884,14 @@
     -fx-image: url("/images/wallet/verify.png");
 }
 
+#bisq-btc-logo {
+    -fx-image: url("/images/wallet/bisq-bitcoin-logo.png");
+}
+
+#latest-txs-grey {
+    -fx-image: url("/images/wallet/calendar-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Misc */
