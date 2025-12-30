@@ -28,10 +28,12 @@ import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -56,10 +58,12 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
     private static final double OPACITY = 0.35;
 
     private final List<Label> progressLabelList;
+    private final HBox progressHeaderBox = new HBox(10);
     private final Button nextButton, backButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    private final ListChangeListener<NavigationTarget> childTargetsListener = c -> rebuildHeader();
     private UIScheduler progressLabelAnimationScheduler;
     private FadeTransition progressLabelAnimation;
 
@@ -131,6 +135,9 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
+        model.getChildTargets().addListener(childTargetsListener);
+
+        rebuildHeader();
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
@@ -154,6 +161,7 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
 
         closeButton.visibleProperty().unbind();
 
+        model.getChildTargets().removeListener(childTargetsListener);
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
 
@@ -178,16 +186,16 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
         Label paymentMethods = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.paymentMethods"));
         Label review = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.review"));
 
+        progressHeaderBox.setAlignment(Pos.CENTER);
+        progressHeaderBox.setId("wizard-progress-box");
+        progressHeaderBox.setMinHeight(TOP_PANE_HEIGHT);
+        progressHeaderBox.setMaxHeight(TOP_PANE_HEIGHT);
+        progressHeaderBox.setPadding(new Insets(0, 20, 0, 50));
+
         Button closeButton = BisqIconButton.createIconButton("close");
 
-        HBox hBox = new HBox(10);
-        hBox.setAlignment(Pos.CENTER);
-        hBox.setId("wizard-progress-box");
-        hBox.setMinHeight(TOP_PANE_HEIGHT);
-        hBox.setMaxHeight(TOP_PANE_HEIGHT);
-        hBox.setPadding(new Insets(0, 20, 0, 50));
-
-        hBox.getChildren().addAll(Spacer.fillHBox(),
+        progressHeaderBox.getChildren().setAll(
+                Spacer.fillHBox(),
                 directionAndMarket,
                 getHLine(),
                 amountAtPrice,
@@ -198,7 +206,7 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amountAtPrice, paymentMethods, review)));
+        return new Triple<>(progressHeaderBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amountAtPrice, paymentMethods, review)));
     }
 
     private Region getHLine() {
@@ -214,6 +222,35 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
         label.getStyleClass().add("bisq-text-14");
         label.setOpacity(OPACITY);
         return label;
+    }
+
+    private void rebuildHeader() {
+        progressHeaderBox.getChildren().clear();
+        progressLabelList.clear();
+        progressHeaderBox.getChildren().add(Spacer.fillHBox());
+
+        List<NavigationTarget> targets = model.getChildTargets();
+        for (int i = 0; i < targets.size(); i++) {
+            Label label = createAndGetProgressLabel(getLabelForTarget(targets.get(i)));
+            progressLabelList.add(label);
+            progressHeaderBox.getChildren().add(label);
+
+            if (i < targets.size() - 1) {
+                progressHeaderBox.getChildren().add(getHLine());
+            }
+        }
+        progressHeaderBox.getChildren().addAll(Spacer.fillHBox(), closeButton);
+        applyProgress(model.getCurrentIndex().get(), false);
+    }
+
+    private String getLabelForTarget(NavigationTarget target) {
+        return switch (target) {
+            case MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET -> Res.get("bisqEasy.tradeWizard.progress.directionAndMarket");
+            case MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE -> Res.get("bisqEasy.tradeWizard.progress.amountAndPrice.createOffer");
+            case MU_SIG_CREATE_OFFER_PAYMENT_METHODS -> Res.get("bisqEasy.tradeWizard.progress.paymentMethods");
+            case MU_SIG_CREATE_OFFER_REVIEW_OFFER -> Res.get("bisqEasy.tradeWizard.progress.review");
+            default -> "";
+        };
     }
 
     private void applyProgress(int progressIndex, boolean delay) {

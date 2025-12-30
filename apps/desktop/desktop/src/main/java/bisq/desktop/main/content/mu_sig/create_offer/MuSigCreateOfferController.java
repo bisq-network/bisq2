@@ -112,13 +112,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getNextButtonDisabled().set(false);
-        model.getChildTargets().clear();
-        model.getChildTargets().addAll(List.of(
-                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
-                NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE,
-                NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS,
-                NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER
-        ));
+
+        updateChildTargets();
         model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
         directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
@@ -159,14 +154,27 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     private void tryAutoSelectSinglePaymentMethod() {
         List<Account<?, ?>> eligibleAccounts = muSigCreateOfferPaymentController.getEligibleAccounts();
-
         if (eligibleAccounts.size() == 1) {
             Account<?, ?> account = eligibleAccounts.getFirst();
-            muSigCreateOfferPaymentController.onSelectAccount(account, account.getPaymentMethod());
+            muSigCreateOfferPaymentController.selectAccount(account, account.getPaymentMethod());
             isPaymentStepSkipped = true;
+            handlePaymentMethodsUpdate();
         } else {
             isPaymentStepSkipped = false;
         }
+        updateChildTargets();
+    }
+
+    private void updateChildTargets() {
+        List<NavigationTarget> targets = new ArrayList<>(List.of(
+                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
+                NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE
+        ));
+        if (!isPaymentStepSkipped) {
+            targets.add(NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS);
+        }
+        targets.add(NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
+        model.getChildTargets().setAll(targets);
     }
 
     @Override

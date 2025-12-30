@@ -27,6 +27,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +46,7 @@ public class MuSigCreateOfferModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
-    private final List<NavigationTarget> childTargets = new ArrayList<>();
+    private final ObservableList<NavigationTarget> childTargets = FXCollections.observableArrayList();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
     private boolean animateRightOut = true;
