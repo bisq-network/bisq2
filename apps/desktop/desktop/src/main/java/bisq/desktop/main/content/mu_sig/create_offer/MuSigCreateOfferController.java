@@ -223,11 +223,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
     void navigateNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getChildTargets().get(nextIndex) == NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS && isPaymentStepSkipped) {
-                nextIndex++;
+            if (!validate(true)) {
+                return;
             }
-
-            if (!validate(true)) return;
             performNavigation(nextIndex, false);
         }
     }
@@ -240,15 +238,10 @@ public class MuSigCreateOfferController extends NavigationController implements 
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
-            if (model.getChildTargets().get(prevIndex) == NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS && isPaymentStepSkipped) {
-                prevIndex--;
+            if (!validate(false)) {
+                return;
             }
-            if (prevIndex >= 0) {
-                if (!validate(false)) {
-                    return;
-                }
-                performNavigation(prevIndex, true);
-            }
+            performNavigation(prevIndex, true);
         }
     }
 
