@@ -34,19 +34,19 @@ from the browser without CORS issues.
 - **User Profile API** - Manage user profiles, report/ignore users
 - **Market Price API** - Get market price quotes
 - **Settings API** - User settings management
-- **Payment Accounts API** - Payment account management
+- **Fiat Payment Accounts API** - Manage fiat payment accounts (supports all FiatPaymentRail types)
 - **Explorer API** - Blockchain explorer data
 
 ## Example Endpoints
 
 ```
-GET    /user-profiles?ids={ids}           - Get user profiles by IDs
-POST   /user-profiles/report/{profileId}  - Report a user profile
-GET    /market-price/quotes                - Get market price quotes
-GET    /settings                           - Get user settings
-GET    /payment-accounts                   - Get payment accounts
-GET    /explorer/selected                  - Get selected explorer provider
-GET    /explorer/tx/{txId}                 - Get transaction details
+GET    /user-profiles?ids={ids}                          - Get user profiles by IDs
+POST   /user-profiles/report/{profileId}                 - Report a user profile
+GET    /market-price/quotes                              - Get market price quotes
+GET    /settings                                         - Get user settings
+GET    /payment-accounts/fiat?paymentRails=CUSTOM        - Get fiat payment accounts (optionally filtered by payment rail)
+GET    /explorer/selected                                - Get selected explorer provider
+GET    /explorer/tx/{txId}                               - Get transaction details
 ```
 
 ## Support

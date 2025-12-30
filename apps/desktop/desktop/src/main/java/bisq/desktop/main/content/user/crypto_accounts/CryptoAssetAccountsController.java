@@ -24,7 +24,7 @@ import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -63,9 +63,9 @@ public class CryptoAssetAccountsController implements Controller {
 
     @Override
     public void onActivate() {
-        accountsPin = accountService.getAccounts().addObserver(new CollectionObserver<>() {
+        accountsPin = accountService.getAccountByNameMap().addObserver(new HashMapObserver<>() {
             @Override
-            public void add(Account<? extends PaymentMethod<?>, ?> account) {
+            public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
                     if (account.getPaymentMethod() instanceof DigitalAssetPaymentMethod cryptoAssetAccount &&
                             !model.getAccounts().contains(account)) {
@@ -82,8 +82,9 @@ public class CryptoAssetAccountsController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
-                if (element instanceof Account<?, ?> account) {
+            public void remove(Object key) {
+                Account<? extends PaymentMethod<?>, ?> account = accountService.getAccountByNameMap().get(key);
+                if (account != null) {
                     UIThread.run(() -> {
                         model.getAccounts().remove(account);
                         handleAccountChange();

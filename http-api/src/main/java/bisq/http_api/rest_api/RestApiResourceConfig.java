@@ -5,7 +5,7 @@ import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
-import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
+import bisq.http_api.rest_api.domain.payment_accounts.FiatPaymentAccountsRestApi;
 import bisq.http_api.rest_api.domain.reputation.ReputationRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
@@ -26,7 +26,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
-                                 PaymentAccountsRestApi paymentAccountsRestApi,
+                                 FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi) {
         super(config);
@@ -43,7 +43,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
         register(ExplorerRestApi.class);
-        register(PaymentAccountsRestApi.class);
+        register(FiatPaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
 
@@ -57,7 +57,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
-                bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
+                bind(fiatPaymentAccountsRestApi).to(FiatPaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
             }
