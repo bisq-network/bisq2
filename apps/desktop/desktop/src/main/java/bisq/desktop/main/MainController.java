@@ -30,6 +30,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.alert.AlertBannerController;
+import bisq.desktop.main.banner.BannerNotificationController;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
@@ -71,12 +72,14 @@ public class MainController extends NavigationController {
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
+        BannerNotificationController bannerNotificationController = new BannerNotificationController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
         AlertBannerController alertBannerController = new AlertBannerController(serviceProvider);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),
+                bannerNotificationController.getView().getRoot(),
                 topPanelController.getView().getRoot(),
                 notificationPanelController.getView().getRoot(),
                 alertBannerController.getView().getRoot());

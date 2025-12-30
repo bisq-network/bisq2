@@ -18,29 +18,35 @@
 package bisq.desktop.main;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MainView extends NavigationView<HBox, MainModel, MainController> {
+public class MainView extends NavigationView<VBox, MainModel, MainController> {
     private static AnchorPane anchorPane;
 
     public MainView(MainModel model,
                     MainController controller,
                     AnchorPane leftNav,
+                    StackPane bannerNotification,
                     HBox topPanel,
                     BorderPane notificationPanel,
                     BorderPane alertBanner) {
-        super(new HBox(), model, controller);
+        super(new VBox(), model, controller);
 
         anchorPane = new AnchorPane();
         VBox.setVgrow(anchorPane, Priority.ALWAYS);
         VBox vBox = new VBox(topPanel, notificationPanel, alertBanner, anchorPane);
         vBox.setFillWidth(true);
         HBox.setHgrow(vBox, Priority.ALWAYS);
-
-        root.setFillHeight(true);
-        root.getChildren().addAll(leftNav, vBox);
+        HBox appContent = new HBox(leftNav, vBox);
+        VBox.setVgrow(appContent, Priority.ALWAYS);
+        root.getChildren().addAll(bannerNotification, appContent);
 
         // We only get created once after splashscreen and then never get removed, so we do not need to remove the 
         // listener.

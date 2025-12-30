@@ -840,15 +840,15 @@ public class Transitions {
         }
     }
 
-    public static void animateHeight(Region node, double targetHeight) {
-        animateHeight(node, node.getPrefHeight(), targetHeight, ManagedDuration.getHalfOfDefaultDurationMillis(), null);
+    public static void animatePrefHeight(Region node, double targetHeight) {
+        animatePrefHeight(node, node.getPrefHeight(), targetHeight, ManagedDuration.getHalfOfDefaultDurationMillis(), null);
     }
 
-    public static void animateHeight(Region node,
-                                     double startHeight,
-                                     double targetHeight,
-                                     long duration,
-                                     @Nullable Runnable onFinishedHandler) {
+    public static void animatePrefHeight(Region node,
+                                         double startHeight,
+                                         double targetHeight,
+                                         long duration,
+                                         @Nullable Runnable onFinishedHandler) {
         if (useAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
@@ -870,25 +870,27 @@ public class Transitions {
         }
     }
 
-    public static void animateMaxHeight(Region node, double startHeight, double targetHeight) {
-        animateMaxHeight(node, startHeight, targetHeight, ManagedDuration.getDefaultDurationMillis(), () -> {
+    public static void animateHeight(Region node, double startHeight, double targetHeight) {
+        animateHeight(node, startHeight, targetHeight, ManagedDuration.getDefaultDurationMillis(), () -> {
         });
     }
 
-    public static void animateMaxHeight(Region node,
-                                        double startHeight,
-                                        double targetHeight,
-                                        long duration,
-                                        @Nullable Runnable onFinishedHandler) {
+    public static void animateHeight(Region node,
+                                     double startHeight,
+                                     double targetHeight,
+                                     long duration,
+                                     @Nullable Runnable onFinishedHandler) {
         if (useAnimations()) {
-            node.setMinHeight(startHeight);
-            node.setMaxHeight(startHeight);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(ManagedDuration.ZERO,
-                    new KeyValue(node.minHeightProperty(), targetHeight, Interpolator.EASE_OUT)
+                    new KeyValue(node.prefHeightProperty(), startHeight, Interpolator.LINEAR),
+                    new KeyValue(node.minHeightProperty(), startHeight, Interpolator.LINEAR),
+                    new KeyValue(node.maxHeightProperty(), startHeight, Interpolator.LINEAR)
             ));
             keyFrames.add(new KeyFrame(ManagedDuration.millis(duration),
+                    new KeyValue(node.prefHeightProperty(), targetHeight, Interpolator.EASE_OUT),
+                    new KeyValue(node.minHeightProperty(), targetHeight, Interpolator.EASE_OUT),
                     new KeyValue(node.maxHeightProperty(), targetHeight, Interpolator.EASE_OUT)
             ));
             timeline.play();
@@ -896,6 +898,7 @@ public class Transitions {
                 timeline.setOnFinished(e -> onFinishedHandler.run());
             }
         } else {
+            node.setPrefHeight(targetHeight);
             node.setMinHeight(targetHeight);
             node.setMaxHeight(targetHeight);
             if (onFinishedHandler != null) {

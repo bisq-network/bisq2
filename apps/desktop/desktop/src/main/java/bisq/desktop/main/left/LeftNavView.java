@@ -439,7 +439,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 UIThread.runOnNextRenderFrame(parentMenuItem::applyStyle);
                 int targetHeight = parentMenuItem.getIsSubMenuExpanded().get() ?
                         (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
-                Transitions.animateHeight(submenu, targetHeight);
+                Transitions.animatePrefHeight(submenu, targetHeight);
             }
         }
     }

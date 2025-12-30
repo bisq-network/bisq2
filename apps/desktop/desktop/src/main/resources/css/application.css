@@ -235,6 +235,27 @@
     -fx-text-fill: -bisq-dark-grey-50;
 }
 
+
+/*******************************************************************************
+ * BannerNotification                                                          *
+ ******************************************************************************/
+
+.banner-notification .inventory-requests-completed {
+    -fx-background-color: -bisq2-green;
+}
+
+.banner-notification .requesting-inventory {
+    -fx-background-color: -bisq2-yellow;
+}
+
+.banner-notification .inventory-requests-label {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-size: 1.02em;
+}
+
+
 /*******************************************************************************
  * Settings                                                                    *
  ******************************************************************************/
