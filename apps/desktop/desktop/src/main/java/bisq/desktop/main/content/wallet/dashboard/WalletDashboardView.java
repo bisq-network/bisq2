@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.beans.property.StringProperty;
@@ -37,6 +38,7 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -302,11 +304,14 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private void addCurrencyConverterDropdownMenuItems() {
         model.getSortedMarketListItems().forEach(marketItem -> {
+            Node marketLogo = MarketImageComposition.createMarketMenuLogo(marketItem.getAmountCode());
+            marketLogo.setCache(true);
+            marketLogo.setCacheHint(CacheHint.SPEED);
             Label code = new Label(marketItem.getAmountCode());
             Label amount = new Label();
             amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
-            // TODO: Add icon
-            HBox displayBox = new HBox(5, code, amount);
+            HBox displayBox = new HBox(10, marketLogo, code, amount);
+            HBox.setMargin(marketLogo, new Insets(0, 2, 0, 0));
             CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, amount.textProperty());
             menuItem.setOnAction(e -> controller.onSelectMarket(marketItem));
             currencyConverterDropdownMenu.addMenuItems(menuItem);

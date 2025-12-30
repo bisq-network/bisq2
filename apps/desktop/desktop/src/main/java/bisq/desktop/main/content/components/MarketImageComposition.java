@@ -163,8 +163,16 @@ public class MarketImageComposition {
     }
 
     public static Node createMarketLogo(String marketCode) {
+        return createLogo(marketCode, "market-%s");
+    }
+
+    public static Node createMarketMenuLogo(String marketCode) {
+        return createLogo(marketCode, "%s-menu");
+    }
+
+    private static Node createLogo(String marketCode, String iconIdFormat) {
         String market = marketCode.toLowerCase(Locale.ROOT);
-        String iconId = String.format("market-%s", market);
+        String iconId = String.format(iconIdFormat, market);
         return FIAT_MARKETS_WITH_LOGO.contains(market) || CRYPTO_MARKETS_WITH_LOGO.contains(market)
                 ? ImageUtil.getImageViewById(iconId)
                 : createMarketLogoPlaceholder(marketCode);
