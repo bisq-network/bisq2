@@ -16,8 +16,6 @@
  */
 
 package bisq.desktop.main.content.mu_sig.create_offer;
-
-import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
@@ -57,8 +55,8 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
     public static final double CONTENT_HEIGHT = POPUP_HEIGHT - TOP_PANE_HEIGHT - BUTTON_HEIGHT - BUTTON_BOTTOM;
     private static final double OPACITY = 0.35;
 
-    private final List<Label> progressLabelList;
-    private final HBox progressHeaderBox = new HBox(10);
+    private final List<Label> progressLabelList = new ArrayList<>();
+    private final HBox progressHeaderBox;
     private final Button nextButton, backButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
@@ -73,10 +71,14 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(POPUP_HEIGHT);
 
-        Triple<HBox, Button, List<Label>> triple = getProgressItems();
-        HBox progressItemsBox = triple.getFirst();
-        closeButton = triple.getSecond();
-        progressLabelList = triple.getThird();
+        progressHeaderBox = new HBox(10);
+        progressHeaderBox.setAlignment(Pos.CENTER);
+        progressHeaderBox.setId("wizard-progress-box");
+        progressHeaderBox.setMinHeight(TOP_PANE_HEIGHT);
+        progressHeaderBox.setMaxHeight(TOP_PANE_HEIGHT);
+        progressHeaderBox.setPadding(new Insets(0, 20, 0, 50));
+
+        closeButton = BisqIconButton.createIconButton("close");
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
@@ -92,7 +94,7 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
 
         VBox.setMargin(buttons, new Insets(0, 0, BUTTON_BOTTOM, 0));
         VBox.setMargin(content, new Insets(0, 40, 0, 40));
-        root.getChildren().addAll(progressItemsBox, content, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(progressHeaderBox, content, Spacer.fillVBox(), buttons);
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -178,35 +180,6 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
             progressLabelAnimation.stop();
             progressLabelAnimation = null;
         }
-    }
-
-    private Triple<HBox, Button, List<Label>> getProgressItems() {
-        Label directionAndMarket = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.directionAndMarket"));
-        Label amountAtPrice = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amountAndPrice.createOffer"));
-        Label paymentMethods = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.paymentMethods"));
-        Label review = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.review"));
-
-        progressHeaderBox.setAlignment(Pos.CENTER);
-        progressHeaderBox.setId("wizard-progress-box");
-        progressHeaderBox.setMinHeight(TOP_PANE_HEIGHT);
-        progressHeaderBox.setMaxHeight(TOP_PANE_HEIGHT);
-        progressHeaderBox.setPadding(new Insets(0, 20, 0, 50));
-
-        Button closeButton = BisqIconButton.createIconButton("close");
-
-        progressHeaderBox.getChildren().setAll(
-                Spacer.fillHBox(),
-                directionAndMarket,
-                getHLine(),
-                amountAtPrice,
-                getHLine(),
-                paymentMethods,
-                getHLine(),
-                review,
-                Spacer.fillHBox(),
-                closeButton);
-
-        return new Triple<>(progressHeaderBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amountAtPrice, paymentMethods, review)));
     }
 
     private Region getHLine() {
