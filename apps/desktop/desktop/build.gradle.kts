@@ -46,7 +46,7 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:wallet")
-    implementation("bisq:http_api")
+    implementation("bisq:http-api")
 
     implementation("network:network")
     implementation("network:network-identity")

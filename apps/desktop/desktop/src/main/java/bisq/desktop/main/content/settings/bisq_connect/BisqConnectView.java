@@ -69,12 +69,10 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         VBox.setMargin(description, new Insets(5, 0, 10, 0));
 
         enableSwitch = new Switch(Res.get("settings.bisqConnect.enable"));
-        passwordField = new MaterialPasswordField(
-                Res.get("settings.bisqConnect.password.label"),
-                ""
-        );
+        passwordField = new MaterialPasswordField(Res.get("settings.bisqConnect.password.label"));
         passwordField.setHelpText(null);
         passwordField.setPrefWidth(SettingsViewUtils.TEXT_FIELD_WIDTH);
+        passwordField.setValidators(model.getPasswordRequiredValidator(), model.getPasswordMinimumLengthValidator());
         saveChangesButton = new Button(Res.get("settings.bisqConnect.saveChanges"));
         saveChangesButton.setDefaultButton(true);
 
@@ -138,13 +136,13 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         BisqTableColumn<BisqConnectClientInfo> indexCol = IndexColumnUtil.getIndexColumn(sortedClients);
         BisqTableColumn<BisqConnectClientInfo> ipCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
                 .title(Res.get("settings.bisqConnect.clients.ip"))
-                .valueSupplier(info -> info.getAddress().orElse("-"))
+                .valueSupplier(info -> info.getAddress().orElse(Res.get("data.na")))
                 .left()
                 .minWidth(200)
                 .build();
         BisqTableColumn<BisqConnectClientInfo> uaCol = new BisqTableColumn.Builder<BisqConnectClientInfo>()
                 .title(Res.get("settings.bisqConnect.clients.userAgent"))
-                .valueSupplier(info -> info.getUserAgent().orElse("-"))
+                .valueSupplier(info -> info.getUserAgent().orElse(Res.get("data.na")))
                 .left()
                 .minWidth(300)
                 .build();
@@ -170,12 +168,12 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         });
 
         passwordField.setText(model.getPassword().get());
-        passwordField.setValidator(model.getPasswordRequiredValidator());
         passwordField.isValidProperty().bindBidirectional(model.getPasswordIsValid());
         passwordSubscription = EasyBind.subscribe(passwordField.textProperty(), newVal -> {
             passwordField.validate();
             controller.onPasswordChanged(newVal);
         });
+        passwordField.resetValidation(); // to reset error message set by current value of the password
 
         qrPlaceholder.textProperty().bind(model.getQrPlaceholder());
 
@@ -244,5 +242,4 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         saveChangesButton.disableProperty().unbind();
         saveChangesButton.setOnAction(null);
     }
-
 }
