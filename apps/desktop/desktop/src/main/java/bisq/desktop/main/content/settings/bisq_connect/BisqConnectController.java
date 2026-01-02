@@ -139,6 +139,7 @@ public class BisqConnectController implements Controller {
                     .useShutDownButton()
                     .show();
         }
+        updatePreview();
     }
 
     private void loadFromConfig() {
@@ -184,7 +185,9 @@ public class BisqConnectController implements Controller {
                 model.getApiUrl().set("");
                 model.getQrCodeImage().set(null);
 
-                if (!model.getWebsocketRunning().get() && !initialEnabled) {
+                if (model.getEnabled().get() && !initialEnabled) {
+                    model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderRestartRequired"));
+                } else if (!initialEnabled) {
                     model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderDisabled"));
                 } else {
                     if (initialExposureMode == BisqConnectExposureMode.LAN) {
@@ -250,7 +253,6 @@ public class BisqConnectController implements Controller {
         boolean changeDetected = model.getEnabled().get() != savedEnabled
                 || model.getSelectedMode().get() != savedMode
                 || !Objects.equals(model.getPassword().get(), savedPassword);
-        boolean enabled = changeDetected && model.getPasswordIsValid().get();
-        model.getIsChangeDetected().set(enabled);
+        model.getIsChangeDetected().set(changeDetected);
     }
 }

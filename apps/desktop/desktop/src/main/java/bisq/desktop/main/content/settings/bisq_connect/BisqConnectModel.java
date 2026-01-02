@@ -20,6 +20,7 @@ package bisq.desktop.main.content.settings.bisq_connect;
 import bisq.common.network.Address;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.http_api.web_socket.BisqConnectClientInfo;
 import bisq.i18n.Res;
@@ -51,6 +52,7 @@ public class BisqConnectModel implements Model {
     private final StringProperty password = new SimpleStringProperty("");
     private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
     private final ValidatorBase passwordRequiredValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase passwordMinimumLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"), 8);
 
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrPlaceholder = new SimpleStringProperty("");
