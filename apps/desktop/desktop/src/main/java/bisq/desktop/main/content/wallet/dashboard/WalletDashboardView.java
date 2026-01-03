@@ -224,6 +224,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("currency-converter-balance-value");
         valueLabel.setMinWidth(Region.USE_PREF_SIZE);
+        valueLabel.setGraphicTextGap(10);
 
         Label codeLabel = new Label();
         codeLabel.getStyleClass().addAll("currency-converter-balance-code");
@@ -252,6 +253,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         HBox.setMargin(valueLabel, new Insets(0, 7, 0, 0));
         return new Triple<>(hBox, titleLabel, valueLabel);
     }
+
 
     private Region getHLine() {
         Region line = Layout.hLine();
@@ -343,6 +345,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                     CurrencyConverterMenuItem menuItem = (CurrencyConverterMenuItem) item;
                     menuItem.updateSelection(menuItem.getMarketItem().equals(selectedMarketItem));
             });
+            Node marketLogo = MarketImageComposition.createMarketMenuLogo(selectedMarketItem.getAmountCode());
+            currencyConverterAmountLabel.setGraphic(marketLogo);
         }
     }
 
