@@ -21,6 +21,7 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,12 +38,14 @@ public class MarketItem {
     private final MarketPriceService marketPriceService;
     private final SimpleStringProperty formattedConvertedAmount;
     private final String amountCode;
+    private final SimpleBooleanProperty isSelected;
 
     MarketItem(Market market, MarketPriceService marketPriceService) {
         this.market = market;
         this.marketPriceService = marketPriceService;
         formattedConvertedAmount = new SimpleStringProperty("N/A");
         amountCode = WalletMarketUtil.getMarketCode(market);
+        isSelected = new SimpleBooleanProperty(false);
     }
 
     void updateFormattedAmount(Coin btcBalance) {

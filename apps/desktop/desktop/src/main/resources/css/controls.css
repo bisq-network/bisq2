@@ -1148,6 +1148,74 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Dropdown List Menu                                                          *
+ *                                                                             *
+ ******************************************************************************/
+
+.dropdown-list-menu .dropdown-menu-popup {
+    -fx-background-color: -bisq-dark-grey-40;
+}
+
+.dropdown-list-menu .table-view.table-view .column-header-background,
+.dropdown-list-menu .table-view.table-view .table-header-row,
+.dropdown-list-menu .table-view.table-view .column-header {
+    -fx-pref-height: 0px;
+    -fx-min-height: 0px;
+    -fx-max-height: 0px;
+    -fx-padding: 0px;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-border-width: 0px;
+    -fx-border-insets: 0px;
+}
+
+.dropdown-list-menu .table-view.table-view .column-header .label {
+    -fx-pref-height: 0px;
+    -fx-min-height: 0px;
+    -fx-max-height: 0px;
+    -fx-padding: 0px;
+    -fx-font-size: 0px;
+    -fx-opacity: 0;
+}
+
+.dropdown-list-menu .table-view .table-row-cell {
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+}
+
+.dropdown-list-menu .table-view .table-row-cell:selected,
+.dropdown-list-menu .table-view .table-row-cell:selected:focused,
+.dropdown-list-menu .table-view .table-row-cell:selected:hover,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected:focused,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected:hover,
+.dropdown-list-menu .table-view .table-row-cell:selected .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:selected:focused .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:selected:hover .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected:focused .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:filled:selected:hover .table-cell {
+    -fx-background-color: -bisq-dark-grey-50 !important;
+    -fx-background-insets: 0 !important;
+    -fx-border-color: transparent !important;
+    -fx-border-width: 0 !important;
+}
+
+.dropdown-list-menu .table-view .table-row-cell:hover,
+.dropdown-list-menu .table-view .table-row-cell:hover .table-cell,
+.dropdown-list-menu .table-view .table-row-cell:filled:hover,
+.dropdown-list-menu .table-view .table-row-cell:filled:hover .table-cell {
+    -fx-background-color: -bisq-dark-grey-50 !important;
+    -fx-background-insets: 0 !important;
+}
+
+.dropdown-list-menu .table-view .table-row-cell:hover {
+    -fx-cursor: hand;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
  * Drawer Menu                                                                 *
  *                                                                             *
  ******************************************************************************/

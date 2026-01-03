@@ -23,31 +23,26 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownListMenu;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
-import javafx.css.PseudoClass;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import lombok.Getter;
+import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -55,16 +50,16 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
     private static final double LATEST_TXS_TABLE_CELL_HEIGHT = 70;
-    private static final double DROPDOWN_MENU_MAX_HEIGHT = 450;
+    private static final double CURRENCY_CONVERTER_MENU_WIDTH = 230;
+    private static final double CURRENCY_CONVERTER_MENU_CELL_HEIGHT = 50;
 
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
             lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
-    private final DropdownMenu currencyConverterDropdownMenu;
+    private final DropdownListMenu<MarketItem> currencyConverterDropdownListMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private final EventHandler<Event> onShowingContextMenu = this::onShowingContextMenu;
     private Subscription selectedMarketPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
@@ -88,13 +83,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterAmountLabel = currencyConverterBalanceTriple.getSecond();
         currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
-        currencyConverterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        currencyConverterDropdownMenu.setContent(currencyConverterBalanceHBox);
-        currencyConverterDropdownMenu.setMaxWidth(Region.USE_PREF_SIZE);
-        currencyConverterDropdownMenu.getContextMenu().setMaxHeight(DROPDOWN_MENU_MAX_HEIGHT);
+        currencyConverterDropdownListMenu = new DropdownListMenu<>("chevron-drop-menu-grey", "chevron-drop-menu-white", false, model.getSortedMarketListItems());
+        currencyConverterDropdownListMenu.setContent(currencyConverterBalanceHBox);
+        currencyConverterDropdownListMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        currencyConverterDropdownListMenu.getTableView().setPrefWidth(CURRENCY_CONVERTER_MENU_WIDTH);
+        currencyConverterDropdownListMenu.getTableView().setFixedCellSize(CURRENCY_CONVERTER_MENU_CELL_HEIGHT);
+        configCurrencyConverterTableView();
 
         VBox.setMargin(btcBalanceHBox, new Insets(25, 0, 5, 0));
-        VBox balanceVBox = new VBox(headlineLabelBox, btcBalanceHBox, currencyConverterDropdownMenu);
+        VBox balanceVBox = new VBox(headlineLabelBox, btcBalanceHBox, currencyConverterDropdownListMenu);
         balanceVBox.setAlignment(Pos.CENTER);
 
         Triple<HBox, Label, Label> availableBalanceTriple = createSummaryRow(Res.get("wallet.dashboard.availableBalance"), "btcoins-grey");
@@ -164,6 +161,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     @Override
     protected void onViewAttached() {
+        currencyConverterDropdownListMenu.initialize();
+
         btcBalanceLabel.textProperty().bind(model.getFormattedBtcBalanceProperty());
         currencyConverterAmountLabel.textProperty().bind(model.getFormattedCurrencyConverterAmountProperty());
         currencyConverterCodeLabel.textProperty().bind(model.getCurrencyConverterCodeProperty());
@@ -180,14 +179,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
 
-        currencyConverterDropdownMenu.getContextMenu().addEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
-
-        addCurrencyConverterDropdownMenuItems();
         updateSelectedMarket();
     }
 
     @Override
     protected void onViewDetached() {
+        currencyConverterDropdownListMenu.dispose();
+
         btcBalanceLabel.textProperty().unbind();
         currencyConverterAmountLabel.textProperty().unbind();
         currencyConverterCodeLabel.textProperty().unbind();
@@ -202,10 +200,6 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         send.setOnAction(null);
         receive.setOnAction(null);
-
-        currencyConverterDropdownMenu.getContextMenu().removeEventHandler(Menu.ON_SHOWING, onShowingContextMenu);
-
-        cleanUpCurrencyConverterMenuItems();
     }
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
@@ -311,79 +305,58 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         model.getVisibleWalletTxListItems().setAll(model.getSortedWalletTxListItems().subList(0, numVisibleListItems));
     }
 
-    private void addCurrencyConverterDropdownMenuItems() {
-        model.getSortedMarketListItems().forEach(marketItem -> {
-            Node marketLogo = MarketImageComposition.createMarketMenuLogo(marketItem.getAmountCode());
-            marketLogo.setCache(true);
-            marketLogo.setCacheHint(CacheHint.SPEED);
-            Label code = new Label(marketItem.getAmountCode());
-            Label amount = new Label();
-            amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
-            HBox displayBox = new HBox(10, marketLogo, code, amount);
-            HBox.setMargin(marketLogo, new Insets(0, 2, 0, 0));
-            CurrencyConverterMenuItem menuItem = new CurrencyConverterMenuItem(marketItem, displayBox, amount.textProperty());
-            menuItem.setOnAction(e -> controller.onSelectMarket(marketItem));
-            currencyConverterDropdownMenu.addMenuItems(menuItem);
-        });
-    }
-
-    private void onShowingContextMenu(Event event) {
-        // How to apply max height to ContextMenu
-        // https://stackoverflow.com/questions/51272738/javafx-contextmenu-max-size-has-no-effect#51284139
-        Node content = currencyConverterDropdownMenu.getContextMenu().getSkin().getNode();
-        if (content instanceof Region) {
-            ((Region) content).setMaxHeight(currencyConverterDropdownMenu.getContextMenu().getMaxHeight());
-        }
-    }
-
     private void updateSelectedMarket() {
         MarketItem selectedMarketItem = model.getSelectedMarketItem().get();
         if (selectedMarketItem != null) {
-            currencyConverterDropdownMenu.getMenuItems().stream()
-                .filter(CurrencyConverterMenuItem.class::isInstance)
-                .forEach(item -> {
-                    CurrencyConverterMenuItem menuItem = (CurrencyConverterMenuItem) item;
-                    menuItem.updateSelection(menuItem.getMarketItem().equals(selectedMarketItem));
-            });
+            model.getMarketItems().forEach(item -> item.getIsSelected().set(item.equals(selectedMarketItem)));
             Node marketLogo = MarketImageComposition.createMarketMenuLogo(selectedMarketItem.getAmountCode());
             currencyConverterAmountLabel.setGraphic(marketLogo);
         }
     }
 
-    private void cleanUpCurrencyConverterMenuItems() {
-        currencyConverterDropdownMenu.getMenuItems().stream()
-                .filter(CurrencyConverterMenuItem.class::isInstance)
-                .forEach(item -> ((CurrencyConverterMenuItem) item).dispose());
-        currencyConverterDropdownMenu.clearMenuItems();
+    private void configCurrencyConverterTableView() {
+        currencyConverterDropdownListMenu.getTableView().getColumns().add(new BisqTableColumn.Builder<MarketItem>()
+                .left()
+                .setCellFactory(getMarketCellFactory())
+                .build());
     }
 
-    @Getter
-    private static final class CurrencyConverterMenuItem extends DropdownMenuItem {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+    private Callback<TableColumn<MarketItem, MarketItem>, TableCell<MarketItem, MarketItem>> getMarketCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label check, code, amount;
+            private final HBox displayBox = new HBox(10);
 
-        private final MarketItem marketItem;
-        private final StringProperty amountTextProperty;
+            {
+                check = new Label();
+                check.setGraphic(ImageUtil.getImageViewById("check-white"));
+                code = new Label();
+                code.setGraphicTextGap(10);
+                amount = new Label();
+                displayBox.getChildren().addAll(check, code, amount);
+                displayBox.setAlignment(Pos.CENTER_LEFT);
+            }
 
-        public CurrencyConverterMenuItem(MarketItem marketItem, HBox displayBox, StringProperty amountTextProperty) {
-            super("check-white", "check-white", displayBox);
+            @Override
+            protected void updateItem(MarketItem item, boolean empty) {
+                super.updateItem(item, empty);
 
-            this.marketItem = marketItem;
-            this.amountTextProperty = amountTextProperty;
-            getStyleClass().add("dropdown-menu-item");
-            updateSelection(false);
-        }
-
-        public void dispose() {
-            setOnAction(null);
-            amountTextProperty.unbind();
-        }
-
-        void updateSelection(boolean isSelected) {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
-
-        boolean isSelected() {
-            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
-        }
+                if (item != null && !empty) {
+                    check.visibleProperty().bind(item.getIsSelected());
+                    Node marketLogo = MarketImageComposition.createMarketMenuLogo(item.getAmountCode());
+                    code.setGraphic(marketLogo);
+                    code.setText(item.getAmountCode());
+                    amount.textProperty().bind(item.getFormattedConvertedAmount());
+                    displayBox.setOnMouseClicked(e -> controller.onSelectMarket(item));
+                    setGraphic(displayBox);
+                } else {
+                    code.setGraphic(null);
+                    code.setText("");
+                    check.visibleProperty().unbind();
+                    amount.textProperty().unbind();
+                    displayBox.setOnMouseClicked(null);
+                    setGraphic(null);
+                }
+            }
+        };
     }
 }
