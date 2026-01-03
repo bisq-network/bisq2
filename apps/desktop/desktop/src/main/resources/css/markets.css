@@ -1199,3 +1199,16 @@
 #market-btc {
     -fx-image: url("/images/markets/crypto-logos/market-btc.png");
 }
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Crypto Menu Logos                                                                    */
+/* ------------------------------------------------------------------------------------ */
+
+#btc-menu {
+    -fx-image: url("/images/markets/crypto-menus/btc-menu.png");
+}
+
+#xmr-menu {
+    -fx-image: url("/images/markets/crypto-menus/xmr-menu.png");
+}
