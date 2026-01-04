@@ -122,7 +122,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.baseAmount"))
                 .left()
-                .minWidth(160)
+                .minWidth(140)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getBaseAmountWithSymbol))
                 .setCellFactory(MuSigOfferUtil.getBaseAmountCellFactory(true))
                 .includeForCsv(false)
@@ -131,7 +131,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.quoteAmount"))
                 .left()
-                .minWidth(160)
+                .minWidth(130)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getQuoteAmountWithSymbol))
                 .valueSupplier(MuSigOfferListItem::getQuoteAmountWithSymbol)
                 .build());
@@ -139,7 +139,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         muSigMyOffersListView.getColumns().add(new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .title(Res.get("muSig.myOffers.table.header.price"))
                 .left()
-                .fixWidth(200)
+                .fixWidth(180)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
                 .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .includeForCsv(false)
@@ -222,7 +222,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
 
     private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
         return column -> new TableCell<>() {
-            private static final double PREF_WIDTH = 120;
+            private static final double PREF_WIDTH = 132;
             private static final double PREF_HEIGHT = 26;
 
             private final HBox myOfferMainBox = new HBox();
