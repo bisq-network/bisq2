@@ -4,6 +4,7 @@ import bisq.application.migration.migrations.Migration;
 import bisq.application.migration.migrations.MigrationsForV2_1_2;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Version;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class MigrationService implements Service {
         }
 
         try {
-            String version = Files.readString(versionFilePath);
+            String version = FileReaderUtils.readUTF8String(versionFilePath);
             return new Version(version);
         } catch (IOException e) {
             throw new RuntimeException("Can't identify stored version. This shouldn't happen.", e);

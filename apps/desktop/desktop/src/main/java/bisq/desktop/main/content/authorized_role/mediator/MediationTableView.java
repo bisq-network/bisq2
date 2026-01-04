@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.common.encoding.Csv;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Layout;
@@ -112,7 +113,7 @@ class MediationTableView extends VBox {
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FileMutatorUtils.writeToPath(csv, file);
+                            FacadeProvider.getJdkFacade().writeString(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

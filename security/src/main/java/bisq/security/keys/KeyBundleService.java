@@ -19,6 +19,7 @@ package bisq.security.keys;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.timer.Scheduler;
 import bisq.persistence.DbSubDirectory;
@@ -220,7 +221,7 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
                 }
                 Path filePath = defaultKeyStoragePath.resolve("keyStoreSecretUid");
                 try {
-                    FileMutatorUtils.writeToPath(persistableStore.getSecretUid(), filePath);
+                    FacadeProvider.getJdkFacade().writeString(persistableStore.getSecretUid(), filePath);
                 } catch (IOException e) {
                     log.error("Could not write keyStoreSecretUid to {}", filePath);
                 }
