@@ -349,10 +349,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                     displayBox.setOnMouseClicked(e -> controller.onSelectMarket(item));
                     setGraphic(displayBox);
                 } else {
+                    check.visibleProperty().unbind();
+                    check.setVisible(false);
                     code.setGraphic(null);
                     code.setText("");
-                    check.visibleProperty().unbind();
                     amount.textProperty().unbind();
+                    amount.setText("");
                     displayBox.setOnMouseClicked(null);
                     setGraphic(null);
                 }
