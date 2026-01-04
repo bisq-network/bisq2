@@ -20,6 +20,7 @@ package bisq.desktop.main.content.settings;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.settings.bisq_connect.BisqConnectController;
 import bisq.desktop.main.content.settings.language.LanguageSettingsController;
 import bisq.desktop.main.content.settings.misc.MiscSettingsController;
 import bisq.desktop.main.content.settings.network.NetworkSettingsController;
@@ -48,6 +49,7 @@ public class SettingsController extends ContentTabController<SettingsModel> {
             case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
             case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
             case NETWORK_SETTINGS -> Optional.of(new NetworkSettingsController(serviceProvider));
+            case BISQ_CONNECT_SETTINGS -> Optional.of(new BisqConnectController(serviceProvider));
             case MISC_SETTINGS -> Optional.of(new MiscSettingsController(serviceProvider));
             default -> Optional.empty();
         };

@@ -221,6 +221,26 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         dontShowAgainService = new DontShowAgainService(settingsService);
         webcamAppService = new WebcamAppService(config);
 
+        openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
+
+        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
+        var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
+        httpApiService = new HttpApiService(restApiConfig,
+                websocketConfig,
+                getConfig().getAppDataDirPath(),
+                securityService,
+                networkService,
+                userService,
+                bondedRolesService,
+                chatService,
+                supportService,
+                tradeService,
+                settingsService,
+                bisqEasyService,
+                openTradeItemsService,
+                accountService,
+                userService.getReputationService());
+
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
@@ -246,27 +266,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 favouriteMarketsService,
                 dontShowAgainService,
                 webcamAppService,
-                memoryReportService);
-
-        openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
-
-        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
-        httpApiService = new HttpApiService(restApiConfig,
-                websocketConfig,
-                getConfig().getAppDataDirPath(),
-                securityService,
-                networkService,
-                userService,
-                bondedRolesService,
-                chatService,
-                supportService,
-                tradeService,
-                settingsService,
-                bisqEasyService,
-                openTradeItemsService,
-                accountService,
-                userService.getReputationService());
+                memoryReportService,
+                httpApiService);
     }
 
     @Override

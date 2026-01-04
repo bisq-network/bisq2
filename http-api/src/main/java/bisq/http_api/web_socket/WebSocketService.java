@@ -21,9 +21,15 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.network.Address;
+import bisq.common.network.ClearnetAddress;
+import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.auth.AuthenticationAddOn;
+import bisq.http_api.auth.WebSocketMetadataAddOn;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -50,6 +56,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -69,8 +76,9 @@ public class WebSocketService implements Service {
                       List<String> whiteListEndPoints,
                       List<String> blackListEndPoints,
                       List<String> supportedAuth,
-                      String password) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password);
+                      String password,
+                      boolean publishOnionService) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
             this.includeRestApi = includeRestApi;
         }
 
@@ -86,7 +94,8 @@ public class WebSocketService implements Service {
                     config.getStringList("whiteListEndPoints"),
                     config.getStringList("blackListEndPoints"),
                     config.getStringList("supportedAuth"),
-                    config.getString("password")
+                    config.getString("password"),
+                    config.getBoolean("publishOnionService")
             );
         }
     }
@@ -100,6 +109,9 @@ public class WebSocketService implements Service {
     private final WebSocketRestApiService webSocketRestApiService;
     private Optional<HttpServer> httpServer = Optional.empty();
     private final ApiTorOnionService apiTorOnionService;
+    private final Observable<Boolean> initializedObservable = new Observable<>(false);
+    private final Observable<String> errorObservable = new Observable<>("");
+    private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
 
     public WebSocketService(Config config,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
@@ -136,7 +148,7 @@ public class WebSocketService implements Service {
                     "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
         }
 
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "webSocketServer");
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "webSocketServer", config.isPublishOnionService());
     }
 
     @Override
@@ -144,7 +156,7 @@ public class WebSocketService implements Service {
         if (!config.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<Boolean> initFuture = CompletableFuture.supplyAsync(() -> {
                     String protocol = config.getProtocol();
                     String host = config.getHost();
                     int port = config.getPort();
@@ -153,6 +165,7 @@ public class WebSocketService implements Service {
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
+                    server.getListener("grizzly").registerAddOn(new WebSocketMetadataAddOn());
                     String password = config.getPassword();
                     if (StringUtils.isNotEmpty(password)) {
                         server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
@@ -174,8 +187,11 @@ public class WebSocketService implements Service {
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
                         server.shutdownNow();
+                        initializedObservable.set(false);
+                        notifyErrorListeners(e.getMessage());
                         return false;
                     }
+                    initializedObservable.set(true);
                     return true;
                 }, commonForkJoinPool())
                 .thenCompose(result -> {
@@ -188,6 +204,21 @@ public class WebSocketService implements Service {
                     }
                 })
                 .thenCompose(result -> apiTorOnionService.initialize());
+        initFuture.whenComplete((res, ex) -> {
+            if (ex != null) {
+                notifyErrorListeners(ex.getMessage());
+            } else if (res != null && res) {
+                if (isPublishOnionService()) {
+                    addressObservable.set(apiTorOnionService.getPublishedAddress());
+                } else {
+                    addressObservable.set(Optional.of(new ClearnetAddress("0.0.0.0", config.getPort())));
+                }
+            } else {
+                initializedObservable.set(false);
+                notifyErrorListeners("Initialization completed with failure");
+            }
+        });
+        return initFuture;
     }
 
     @Override
@@ -200,5 +231,29 @@ public class WebSocketService implements Service {
                     httpServer = Optional.empty();
                     return true;
                 }, commonForkJoinPool()));
+    }
+
+    public ObservableSet<BisqConnectClientInfo> getWebsocketClients() {
+        return webSocketConnectionHandler.getWebsocketClients();
+    }
+
+    public Boolean isPublishOnionService() {
+        return apiTorOnionService.isPublishOnionService();
+    }
+
+    public Pin addInitObserver(Consumer<Boolean> observer) {
+        return initializedObservable.addObserver(observer);
+    }
+
+    public Pin addErrorObserver(Consumer<String> observer) {
+        return errorObservable.addObserver(observer);
+    }
+
+    public Pin addAddressObserver(Consumer<Optional<Address>> observer) {
+        return addressObservable.addObserver(observer);
+    }
+
+    private void notifyErrorListeners(String msg) {
+        errorObservable.set(msg == null ? "" : msg);
     }
 }

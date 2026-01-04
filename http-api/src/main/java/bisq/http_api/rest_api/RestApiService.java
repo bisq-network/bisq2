@@ -54,8 +54,9 @@ public class RestApiService implements Service {
                       List<String> whiteListEndPoints,
                       List<String> blackListEndPoints,
                       List<String> supportedAuth,
-                      String password) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password);
+                      String password,
+                      boolean publishOnionService) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -69,7 +70,8 @@ public class RestApiService implements Service {
                     config.getStringList("whiteListEndPoints"),
                     config.getStringList("blackListEndPoints"),
                     config.getStringList("supportedAuth"),
-                    config.getString("password")
+                    config.getString("password"),
+                    config.getBoolean("publishOnionService")
             );
         }
     }
@@ -87,7 +89,7 @@ public class RestApiService implements Service {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
 
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "restApiServer");
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "restApiServer", config.isPublishOnionService());
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
             String host = config.getHost();
