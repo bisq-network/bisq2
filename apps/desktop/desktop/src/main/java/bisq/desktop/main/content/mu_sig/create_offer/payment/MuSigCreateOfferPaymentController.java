@@ -81,6 +81,18 @@ public class MuSigCreateOfferPaymentController implements Controller {
         return model.getSelectedAccountByPaymentMethod();
     }
 
+    public List<Account<?, ?>> getEligibleAccounts() {
+        String currencyCode = model.getPaymentMethodCurrencyCode();
+        if (currencyCode == null) return List.of();
+
+        return accountService.getAccounts().stream()
+                .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                .filter(account ->
+                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
+                                .anyMatch(code -> code.equals(currencyCode)))
+                                .collect(Collectors.toList());
+    }
+
     public boolean validate() {
         if (model.getSelectedAccountByPaymentMethod().isEmpty()) {
             navigationButtonsVisibleHandler.accept(false);
@@ -118,11 +130,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     public void onActivate() {
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(model.getPaymentMethodCurrencyCode()));
-        model.getAccountsByPaymentMethod().putAll(accountService.getAccounts().stream()
-                .filter(account -> !(account instanceof UserDefinedFiatAccount))
-                .filter(account ->
-                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
-                                .anyMatch(code -> code.equals(model.getPaymentMethodCurrencyCode())))
+        model.getAccountsByPaymentMethod().putAll(getEligibleAccounts().stream()
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
                         Collectors.toList()
@@ -190,7 +198,15 @@ public class MuSigCreateOfferPaymentController implements Controller {
         }
     }
 
+    public void selectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
+        doSelectAccount(account, paymentMethod);
+    }
+
     void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
+        doSelectAccount(account, paymentMethod);
+    }
+
+    private void doSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
         if (account != null) {
             model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
             model.getPaymentMethodWithMultipleAccounts().set(null);

@@ -75,6 +75,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private Subscription directionPin, marketPin, priceSpecPin;
     private Pin selectedAccountByPaymentMethodPin;
+    private boolean isPaymentStepSkipped = false;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
@@ -111,13 +112,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getNextButtonDisabled().set(false);
-        model.getChildTargets().clear();
-        model.getChildTargets().addAll(List.of(
-                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
-                NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE,
-                NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS,
-                NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER
-        ));
+
+        updateChildTargets();
         model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
         directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
@@ -125,9 +121,16 @@ public class MuSigCreateOfferController extends NavigationController implements 
             muSigCreateOfferPaymentController.setDirection(direction);
         });
         marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
+            isPaymentStepSkipped = false;
+            muSigCreateOfferPaymentController.reset();
             muSigCreateOfferPaymentController.setMarket(market);
             muSigCreateOfferAmountAndPriceController.setMarket(market);
             muSigCreateOfferReviewController.setMarket(market);
+
+            if (market != null) {
+                tryAutoSelectSinglePaymentMethod();
+            }
+
             updateNextButtonDisabledState();
         });
         priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
@@ -147,6 +150,31 @@ public class MuSigCreateOfferController extends NavigationController implements 
         priceSpecPin.unsubscribe();
         selectedAccountByPaymentMethodPin.unbind();
         reset();
+    }
+
+    private void tryAutoSelectSinglePaymentMethod() {
+        List<Account<?, ?>> eligibleAccounts = muSigCreateOfferPaymentController.getEligibleAccounts();
+        if (eligibleAccounts.size() == 1) {
+            Account<?, ?> account = eligibleAccounts.getFirst();
+            muSigCreateOfferPaymentController.selectAccount(account, account.getPaymentMethod());
+            isPaymentStepSkipped = true;
+            handlePaymentMethodsUpdate();
+        } else {
+            isPaymentStepSkipped = false;
+        }
+        updateChildTargets();
+    }
+
+    private void updateChildTargets() {
+        List<NavigationTarget> targets = new ArrayList<>(List.of(
+                NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET,
+                NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE
+        ));
+        if (!isPaymentStepSkipped) {
+            targets.add(NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS);
+        }
+        targets.add(NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
+        model.getChildTargets().setAll(targets);
     }
 
     @Override
@@ -198,13 +226,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             if (!validate(true)) {
                 return;
             }
-
-            model.setAnimateRightOut(false);
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
+            performNavigation(nextIndex, false);
         }
     }
 
@@ -219,21 +241,25 @@ public class MuSigCreateOfferController extends NavigationController implements 
             if (!validate(false)) {
                 return;
             }
-
-            model.setAnimateRightOut(true);
-            model.getCurrentIndex().set(prevIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
+            performNavigation(prevIndex, true);
         }
     }
 
+    private void performNavigation(int index, boolean animateRight) {
+        model.setAnimateRightOut(animateRight);
+        model.getCurrentIndex().set(index);
+        NavigationTarget finalTarget = model.getChildTargets().get(index);
+        model.getSelectedChildTarget().set(finalTarget);
+        Navigation.navigateTo(finalTarget);
+        updateNextButtonDisabledState();
+    }
+
     private boolean validate(boolean calledFromNext) {
-        if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE) {
+        NavigationTarget current = model.getSelectedChildTarget().get();
+        if (current == NavigationTarget.MU_SIG_CREATE_OFFER_AMOUNT_AND_PRICE) {
             return muSigCreateOfferAmountAndPriceController.validate();
         }
-        if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS) {
+        if (calledFromNext && current == NavigationTarget.MU_SIG_CREATE_OFFER_PAYMENT_METHODS) {
             // For PaymentMethod we tolerate to go back without having one selected
             return muSigCreateOfferPaymentController.validate();
         }
@@ -257,6 +283,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         muSigCreateOfferReviewController.reset();
 
         model.reset();
+
+        isPaymentStepSkipped = false;
     }
 
     private void updateNextButtonDisabledState() {
