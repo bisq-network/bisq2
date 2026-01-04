@@ -487,15 +487,6 @@
     -fx-pref-height: 54px;
 }
 
-.rich-table-view .table-row-cell {
-    -fx-background-color: transparent;
-    -fx-border-color: -bisq-dark-grey;
-    -fx-border-width: 0 0 1 0;
-    -fx-background-insets: 0;
-    -fx-padding: 0;
-    -fx-pref-height: 54px;
-}
-
 .rich-table-view .table-row-cell:hover {
     -fx-background-color: -bisq-dark-grey-50;
     -fx-border-color: -bisq-dark-grey;
