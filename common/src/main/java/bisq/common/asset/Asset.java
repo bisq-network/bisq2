@@ -26,6 +26,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @EqualsAndHashCode
 @ToString
@@ -39,6 +41,9 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
     protected final String name;
 
     public Asset(String code, String name) {
+        checkNotNull(code, "code must not be null");
+        checkNotNull(name, "name must not be null");
+
         this.code = code;
         this.name = name;
 

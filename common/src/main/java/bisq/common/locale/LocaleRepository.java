@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class LocaleRepository {
@@ -55,6 +57,7 @@ public class LocaleRepository {
     }
 
     public static void setDefaultLocale(Locale locale) {
+        checkNotNull(locale, "locale must not be null at setDefaultLocale");
         LocaleRepository.defaultLocale = locale;
     }
 
@@ -81,6 +84,7 @@ public class LocaleRepository {
      * @see <a href="https://www.rfc-editor.org/rfc/bcp/bcp47.txt">BCP 47 - Tags for Identifying Languages</a>
      */
     public static Locale ensureValidLocale(Locale locale) {
+        checkNotNull(locale, "locale must not be null at ensureValidLocale");
         // Script-based locales (e.g., zh-Hans, zh-Hant) don't have a country code
         // but are still valid BCP 47 language tags. Only require country for
         // locales that don't have a script subtag.
