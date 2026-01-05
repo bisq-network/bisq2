@@ -81,7 +81,8 @@ public final class NetworkServiceConfig {
                 peerGroupManagerConfigByTransportType,
                 defaultPortByTransportType,
                 seedAddressesByTransport,
-                Optional.empty());
+                Optional.empty(),
+                networkConfig.getConfig("referenceTimeService"));
     }
 
     private static Map<TransportType, Integer> createDefaultPortByTransportType(Config config) {
@@ -165,6 +166,7 @@ public final class NetworkServiceConfig {
     private final Set<Feature> features;
     private final InventoryService.Config inventoryServiceConfig;
     private final AuthorizationService.Config authorizationServiceConfig;
+    private final Config referenceTimeService;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
     private final Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport;
@@ -185,7 +187,8 @@ public final class NetworkServiceConfig {
                                 Map<TransportType, PeerGroupManager.Config> peerGroupManagerConfigByTransport,
                                 Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
-                                Optional<String> socks5ProxyAddress) {
+                                Optional<String> socks5ProxyAddress,
+                                Config referenceTimeService) {
         this.appDataDirPath = appDataDirPath;
         this.version = version;
         this.notifyExecutorMaxPoolSize = notifyExecutorMaxPoolSize;
@@ -194,6 +197,7 @@ public final class NetworkServiceConfig {
         this.features = features;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.authorizationServiceConfig = authorizationServiceConfig;
+        this.referenceTimeService = referenceTimeService;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
         this.peerGroupManagerConfigByTransport = filterMap(supportedTransportTypes, peerGroupManagerConfigByTransport);

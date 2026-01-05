@@ -24,11 +24,13 @@ import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
+import bisq.network.http.utils.ReferenceTimeService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
@@ -39,6 +41,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TorTransportService;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -71,6 +74,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -115,12 +119,16 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     @Getter
     private final Optional<ResendMessageService> resendMessageService;
+    private final ReferenceTimeService referenceTimeService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
     @Getter
     private final Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport = new HashMap<>();
     @Getter
     private final Map<TransportType, Set<Address>> seedAddressesByTransportFromConfig;
+    private Set<Pin> transportStatePins = new HashSet<>();
+    @Getter
+    private final Observable<Long> referenceTime = new Observable<>();
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -173,6 +181,8 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 resendMessageService,
                 memoryReportService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
+
+        referenceTimeService = new ReferenceTimeService(ReferenceTimeService.Config.from(config.getReferenceTimeService()), this);
     }
 
     @Override
@@ -195,6 +205,9 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         Connection.setExecutorMaxPoolSize(config.getConnectionExecutorMaxPoolSize());
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
+
+        requestReferenceTime();
+
         Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);
         initializedDefaultNodeByTransport.putAll(map);
 
@@ -216,13 +229,17 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+
+        transportStatePins.forEach(Pin::unbind);
+        transportStatePins.clear();
+
         return CompletableFuture.supplyAsync(() -> {
                     messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
                     resendMessageService.ifPresent(ResendMessageService::shutdown);
-                    // networkLoadService.ifPresent(NetworkLoadService::shutdown);
                     dataService.ifPresent(DataService::shutdown);
                     return true;
                 }, commonForkJoinPool())
+                .thenCompose(result -> referenceTimeService.shutdown())
                 .thenCompose(result -> serviceNodesByTransport.shutdown()
                         .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size()))
                 .whenComplete((r, t) -> NetworkExecutors.shutdown());
@@ -543,5 +560,40 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 .map(TorTransportService.class::cast)
                 .map(torTransportService -> torTransportService.publishOnionService(localPort, onionServicePort, torKeyPair))
                 .orElse(CompletableFuture.failedFuture(new UnsupportedOperationException("Calling publishOnionService requires to have a TorTransportService running.")));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Private
+    /* --------------------------------------------------------------------- */
+
+    private void requestReferenceTime() {
+        transportStatePins.forEach(Pin::unbind);
+        transportStatePins.clear();
+        Collection<ServiceNode> allServiceNodes = serviceNodesByTransport.getAllServiceNodes();
+        transportStatePins.addAll(allServiceNodes.stream()
+                .map(serviceNode -> {
+                    TransportService transportService = serviceNode.getTransportService();
+                    return transportService.getTransportState().addObserver(state -> {
+                        // Once transport service is initialized we start requesting
+                        if (TransportService.TransportState.INITIALIZED == state) {
+                            try {
+                                referenceTimeService.request()
+                                        .whenComplete((time, throwable) -> {
+                                            if (throwable == null) {
+                                                referenceTime.set(time);
+                                            } else {
+                                                log.warn("ReferenceTimeService request triggered during initialization of transport service {} failed.",
+                                                        transportService.getClass().getSimpleName(), throwable);
+                                            }
+                                        });
+                            } catch (Exception e) {
+                                log.warn("ReferenceTimeService request triggered during initialization of transport service {} failed.",
+                                        transportService.getClass().getSimpleName(), e);
+                            }
+                        }
+                    });
+                })
+                .collect(Collectors.toSet()));
     }
 }

@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.explorer;
+package bisq.network.http.utils;
 
-import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
@@ -29,13 +28,14 @@ import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
-import bisq.network.http.utils.HttpException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -49,11 +49,13 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-// TODO We should support same registration model via oracle node as used with other nodes
-
+/**
+ * Derived from ExplorerService
+ */
 @Slf4j
-public class ExplorerService implements Service {
-    private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ExplorerService", 1, 5, 60);
+public class ReferenceTimeService implements Service {
+    private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ReferenceTimeService", 1, 4, 60);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static class RetryException extends RuntimeException {
         @Getter
@@ -118,32 +120,27 @@ public class ExplorerService implements Service {
         private final String baseUrl;
         private final String operator;
         private final String apiPath;
-        private final String txPath;
-        private final String addressPath;
         private final TransportType transportType;
 
         public Provider(String baseUrl, String operator, TransportType transportType) {
-            this(baseUrl, operator, "api/", "tx/", "address/", transportType);
+            // Returns json with server time and major fiat prices. We are only interested in the server time.
+            this(baseUrl, operator, "api/v1/prices", transportType);
         }
 
         public Provider(String baseUrl,
                         String operator,
                         String apiPath,
-                        String txPath,
-                        String addressPath,
                         TransportType transportType) {
             this.baseUrl = baseUrl;
             this.operator = operator;
             this.apiPath = apiPath;
-            this.txPath = txPath;
-            this.addressPath = addressPath;
             this.transportType = transportType;
         }
     }
 
     @Getter
     private final Observable<Provider> selectedProvider = new Observable<>();
-    private final ExplorerService.Config conf;
+    private final ReferenceTimeService.Config conf;
     private final NetworkService networkService;
     private final String userAgent;
     private final Set<Provider> candidates = new HashSet<>();
@@ -155,7 +152,7 @@ public class ExplorerService implements Service {
     private final boolean noProviderAvailable;
     private volatile boolean shutdownStarted;
 
-    public ExplorerService(Config conf, NetworkService networkService) {
+    public ReferenceTimeService(Config conf, NetworkService networkService) {
         this.conf = conf;
         this.networkService = networkService;
         userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
@@ -189,14 +186,14 @@ public class ExplorerService implements Service {
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
-    public CompletableFuture<Tx> requestTx(String txId) {
+    public CompletableFuture<Long> request() {
         try {
-            return requestTx(txId, new AtomicInteger(0))
+            return request(new AtomicInteger(0))
                     .exceptionallyCompose(throwable -> {
                         if (throwable instanceof RetryException retryException) {
-                            return requestTx(txId, retryException.getRecursionDepth());
+                            return request(retryException.getRecursionDepth());
                         } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
-                            return requestTx(txId, retryException.getRecursionDepth());
+                            return request(retryException.getRecursionDepth());
                         } else {
                             return CompletableFuture.failedFuture(throwable);
                         }
@@ -207,31 +204,35 @@ public class ExplorerService implements Service {
     }
 
     public String getSelectedProviderBaseUrl() {
-        return Optional.ofNullable(selectedProvider.get()).map(ExplorerService.Provider::getBaseUrl).orElse(Res.get("data.na"));
+        return Optional.ofNullable(selectedProvider.get()).map(ReferenceTimeService.Provider::getBaseUrl).orElse(Res.get("data.na"));
     }
 
-    private CompletableFuture<Tx> requestTx(String txId, AtomicInteger recursionDepth) {
+    private CompletableFuture<Long> request(AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
-            return CompletableFuture.failedFuture(new RuntimeException("No block explorer provider available"));
+            return CompletableFuture.failedFuture(new RuntimeException("No provider available"));
         }
         if (shutdownStarted) {
             return CompletableFuture.failedFuture(new RuntimeException("Shutdown has already started"));
         }
-
         try {
             return CompletableFuture.supplyAsync(() -> {
                         Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                         BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                         httpClient = Optional.of(client);
                         long ts = System.currentTimeMillis();
-                        String param = provider.getApiPath() + provider.getTxPath() + txId;
+                        String param = provider.getApiPath();
                         try {
-                            log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
+                            log.info("Request reference time from {}", client.getBaseUrl() + "/" + param);
                             String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                            log.info("Received tx lookup response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
+                            JsonNode timeNode = MAPPER.readTree(json).get("time");
+                            if (timeNode == null || timeNode.isNull()) {
+                                throw new RuntimeException("Response JSON missing 'time' field");
+                            }
+                            long time = timeNode.asLong() * 1000;
+                            log.info("Received reference time {} from {}/{} after {} ms", new Date(time), client.getBaseUrl(), param, System.currentTimeMillis() - ts);
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
-                            return new ObjectMapper().readValue(json, Tx.class);
+                            return time;
                         } catch (Exception e) {
                             shutdownHttpClient(client);
                             if (shutdownStarted) {
@@ -239,7 +240,7 @@ public class ExplorerService implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            log.warn("Encountered exception for TxId={} from provider {}", txId, provider.getBaseUrl(), rootCause);
+                            log.warn("Encountered exception requesting reference time from provider {}", provider.getBaseUrl(), rootCause);
 
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
@@ -264,14 +265,14 @@ public class ExplorerService implements Service {
                         }
                     }, POOL)
                     .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
-                    .thenCompose(tx -> {
-                        if (tx == null) {
+                    .thenCompose(time -> {
+                        if (time == null) {
                             return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
                         }
-                        return CompletableFuture.completedFuture(tx);
+                        return CompletableFuture.completedFuture(time);
                     });
         } catch (RejectedExecutionException e) {
-            log.error("Executor rejected requestTx task. TxId={}", txId, e);
+            log.error("Executor rejected requesting reference time task.", e);
             return CompletableFuture.failedFuture(e);
         }
     }
