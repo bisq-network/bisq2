@@ -1,5 +1,6 @@
 package bisq.common.util;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
