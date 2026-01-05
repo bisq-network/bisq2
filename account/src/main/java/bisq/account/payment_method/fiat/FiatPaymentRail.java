@@ -26,13 +26,20 @@ import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 // rename to NationalFiatPaymentRail/NationalCurrencyPaymentRail/TraditionalPaymentRail
+
 /**
  * The payment rails for fiat payments.
  * Provide static data associated with the payment rail.
@@ -271,9 +278,26 @@ public enum FiatPaymentRail implements PaymentRail {
         this.supportedCurrencies = supportedCurrencies;
         this.chargebackRisk = chargebackRisk;
 
-        supportedCurrencyCodes = supportedCurrencies.stream().map(Asset::getCode).collect(Collectors.toList());
-        supportedCurrencyCodesAsSet = new HashSet<>(supportedCurrencyCodes);
+        checkNotNull(supportedCurrencies, "supportedCurrencies must not be null");
+        supportedCurrencyCodes = supportedCurrencies.stream()
+                .map(asset -> {
+                    if (asset == null) {
+                        getLogger().error("When iterating supportedCurrencies, we got a null entry for the asset.");
+                        return null;
+                    }
+                    String code = asset.getCode();
+                    if (code == null) {
+                        getLogger().error("When iterating supportedCurrencies, we got an asset with code set to null.");
+                        getLogger().error("Asset with null code: {}", asset); // Log separately for case toString would cause an exception
+                        return null;
+                    }
 
+                    return code;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        checkArgument(!supportedCurrencyCodes.isEmpty(), "supportedCurrencies must not be empty");
+        supportedCurrencyCodesAsSet = new HashSet<>(supportedCurrencyCodes);
     }
 
     private static List<Country> countriesFromCodes(List<String> countryCodes) {
@@ -361,6 +385,10 @@ public enum FiatPaymentRail implements PaymentRail {
             case MONEY_GRAM -> DAYS_4;
             case HAL_CASH -> HOURS_24;
         };
+    }
+
+    private static Logger getLogger() {
+        return LoggerFactory.getLogger(FiatPaymentRail.class);
     }
 }
 /**

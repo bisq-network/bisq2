@@ -26,10 +26,17 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class LanguageRepository {
+    // IETF BCP 47 language tag string.  E.g. pt-BR
+    @Getter
+    private static String defaultLanguageTag = "en";
+
     public static void setDefaultLanguageTag(String languageTag) {
+        checkNotNull(languageTag, "languageTag must not be null at setDefaultLanguageTag");
         if (LANGUAGE_TAGS.contains(languageTag)) {
             defaultLanguageTag = languageTag;
         } else {
@@ -42,10 +49,6 @@ public class LanguageRepository {
                     .orElse("en");
         }
     }
-
-    // IETF BCP 47 language tag string.  E.g. pt-BR
-    @Getter
-    private static String defaultLanguageTag = "en";
 
     public static final List<String> LANGUAGE_CODES = LocaleRepository.LOCALES.stream()
             .filter(locale -> !locale.getLanguage().isEmpty() &&

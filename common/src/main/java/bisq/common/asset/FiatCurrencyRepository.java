@@ -19,8 +19,8 @@ package bisq.common.asset;
 
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
-import bisq.common.util.StringUtils;
 import bisq.common.util.LocaleFactory;
+import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +35,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class FiatCurrencyRepository {
@@ -54,7 +57,9 @@ public class FiatCurrencyRepository {
 
     // Need to be called at application setup with user locale
     public static void setLocale(Locale locale) {
+        checkNotNull(locale, "locale must not be null at setLocale");
         currencyByCode = CountryRepository.getAllCountries().stream()
+                .filter(Objects::nonNull)
                 .map(country -> getCurrencyByCountryCode(country.getCode(), locale))
                 .distinct()
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
@@ -89,21 +94,27 @@ public class FiatCurrencyRepository {
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
-        if (StringUtils.isEmpty(countryCode)) {
-            return new FiatCurrency("USD");
-        }
-
-        if (countryCode.equals("XK")) {
-            return new FiatCurrency("EUR");
-        }
-
-        // The variant component of the locale at Currency.getInstance are ignored.
-        Locale countryLocale = LocaleFactory.from(locale.getLanguage(), countryCode);
+        Locale countryLocale;
+        String localeLanguage;
         try {
+            checkArgument(!StringUtils.isEmpty(countryCode), "countryCode must not be null or empty");
+
+            if (countryCode.equals("XK")) {
+                return new FiatCurrency("EUR");
+            }
+
+            checkNotNull(locale, "locale must not be null");
+            localeLanguage = locale.getLanguage();
+            checkNotNull(localeLanguage, "localeLanguage must not be null");
+            countryLocale = LocaleFactory.from(localeLanguage, countryCode);
+
+            // The variant component of the locale at Currency.getInstance are ignored.
             Currency currency = Currency.getInstance(countryLocale);
+            checkNotNull(currency, "currency must not be null");
+
             return new FiatCurrency(currency);
         } catch (Exception e) {
-            log.error("Cannot derive currency from countryLocale {}. We call back to USD.", countryLocale, e);
+            log.error("Cannot derive currency from countryCode {} and locale {}. We fall back to USD.", countryCode, locale, e);
             return new FiatCurrency("USD");
         }
     }
