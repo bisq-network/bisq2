@@ -27,7 +27,6 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -88,8 +87,8 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
         networkService.addConfidentialMessageListener(this);
         authorizedBondedRolesService.addListener(this);
 
-        // TODO deactivate republishing until issues are resolved
-        // persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value, staticPublicKeysProvided)));
+        // We do not republish the AuthorizedTimestampData we have in our store as we rely on the user to request again
+        // once TTL is close to expiry.
 
         return CompletableFuture.completedFuture(true);
     }
@@ -160,14 +159,14 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
             date = persistableStore.getTimestampsByProfileId().get(profileId);
         }
         AuthorizedTimestampData authorizedTimestampData = new AuthorizedTimestampData(profileId, date, staticPublicKeysProvided);
-        publishAuthorizedData(authorizedTimestampData);
+        publishAuthorizedTimestampData(authorizedTimestampData);
     }
 
     private static boolean isDateTooFarOff(long date) {
         return Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(1);
     }
 
-    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+    private CompletableFuture<Boolean> publishAuthorizedTimestampData(AuthorizedTimestampData data) {
         Identity identity = identityService.getOrCreateDefaultIdentity();
         return networkService.publishAuthorizedData(data,
                         identity.getNetworkIdWithKeyPair().getKeyPair(),
