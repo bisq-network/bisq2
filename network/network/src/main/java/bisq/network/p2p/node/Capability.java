@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -121,7 +122,15 @@ public final class Capability implements NetworkProto {
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
-                .map(e -> ProtobufUtils.enumFromProto(TransportType.class, e))
+                .map(transportTypeProto -> {
+                    try {
+                        return ProtobufUtils.enumFromProto(TransportType.class, transportTypeProto);
+                    } catch (Exception e) {
+                        log.error("Could not create TransportType enum from proto {}", transportTypeProto, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         List<bisq.network.protobuf.Feature> featuresListProto = proto.getFeaturesList();
         List<Feature> features = ProtobufUtils.fromProtoEnumList(Feature.class, featuresListProto);
