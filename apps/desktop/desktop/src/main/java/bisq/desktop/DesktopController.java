@@ -20,6 +20,7 @@ package bisq.desktop;
 import bisq.application.State;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
@@ -39,7 +40,9 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.splash.SplashController;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
@@ -57,8 +60,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
 
@@ -89,6 +94,8 @@ public class DesktopController extends NavigationController {
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
+    private Pin referenceTimePin;
+    private boolean systemClockDriftWarningDisplayed;
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -186,10 +193,32 @@ public class DesktopController extends NavigationController {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> republishUserProfileService.userActivityDetected());
 
         onActivatedHandler.run();
+
+        referenceTimePin = serviceProvider.getNetworkService().getReferenceTime().addObserver(referenceTime -> {
+            if (referenceTime != null) {
+                UIThread.run(() -> {
+                    long systemTime = System.currentTimeMillis();
+                    String formattedSystemTime = DateFormatter.formatDateTime(new Date(systemTime));
+                    String formattedReferenceTime = DateFormatter.formatDateTime(new Date(referenceTime));
+                    long drift = Math.abs(systemTime - referenceTime);
+                    if (drift > TimeUnit.HOURS.toMillis(1) && !systemClockDriftWarningDisplayed) {
+                        systemClockDriftWarningDisplayed = true;
+                        new Popup().headline(Res.get("referenceTimeService.systemClockDrift.popup.headline"))
+                                .warning(Res.get("referenceTimeService.systemClockDrift.popup.message", formattedSystemTime, formattedReferenceTime))
+                                .show();
+                    } else {
+                        log.info("System clock is in tolerance range with reference time received from explorer node. " +
+                                        "System clock: {}; network reference time: {} ",
+                                formattedSystemTime, formattedReferenceTime);
+                    }
+                });
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        referenceTimePin.unbind();
         UIClock.shutdown();
     }
 

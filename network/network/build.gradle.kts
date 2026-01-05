@@ -10,6 +10,7 @@ dependencies {
     implementation("bisq:common")
     implementation("bisq:security")
     implementation("bisq:persistence")
+    implementation("bisq:i18n")
 
     implementation(project(":network-identity"))
     implementation(project(":i2p"))
@@ -22,6 +23,7 @@ dependencies {
     implementation(libs.apache.httpcomponents.httpclient)
     implementation(libs.jsocks)
     implementation(libs.bundles.i2p)
+    implementation(libs.bundles.jackson)
 
     integrationTestImplementation(libs.mockito)
 }
