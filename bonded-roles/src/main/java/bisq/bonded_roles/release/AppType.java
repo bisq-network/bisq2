@@ -32,7 +32,7 @@ public enum AppType implements ProtoEnum {
     }
 
     public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) {
-        return ProtobufUtils.enumFromProto(AppType.class, proto.name());
+        return ProtobufUtils.enumFromProto(AppType.class, proto.name(), AppType.DESKTOP);
     }
 
     public String getDisplayString() {

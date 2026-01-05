@@ -32,6 +32,10 @@ public class UnresolvableProtobufMessageException extends RuntimeException {
         super("Message case not found for proto message: \n" + proto.toString());
     }
 
+    public UnresolvableProtobufMessageException(Any proto, Throwable cause) {
+        super("Message case not found for proto message: \n" + proto.toString(), cause);
+    }
+
     public UnresolvableProtobufMessageException(Any any) {
         super("No class found for resolving proto Any message.\n" + any.toString());
     }
