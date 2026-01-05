@@ -38,8 +38,7 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
     }
 
     public static CloseConnectionMessage fromProto(bisq.network.protobuf.CloseConnectionMessage proto) {
-        return new CloseConnectionMessage(ProtobufUtils.enumFromProto(CloseReason.class,
-                proto.getCloseReason()));
+        return new CloseConnectionMessage(ProtobufUtils.enumFromProto(CloseReason.class, proto.getCloseReason(), CloseReason.UNDEFINED));
     }
 
     @Override

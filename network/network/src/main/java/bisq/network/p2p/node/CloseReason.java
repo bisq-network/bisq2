@@ -29,6 +29,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public enum CloseReason {
+    UNDEFINED(true),
     SHUTDOWN(true),
     CLOSE_MSG_RECEIVED(true),
     CLOSE_MSG_SENT(true),
