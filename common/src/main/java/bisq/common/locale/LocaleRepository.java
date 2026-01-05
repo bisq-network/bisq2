@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class LocaleRepository {
@@ -55,19 +57,46 @@ public class LocaleRepository {
     }
 
     public static void setDefaultLocale(Locale locale) {
+        checkNotNull(locale, "locale must not be null at setDefaultLocale");
         LocaleRepository.defaultLocale = locale;
     }
 
+    /**
+     * Ensures a locale is suitable for use in Bisq's locale-dependent systems.
+     *
+     * <p>For historical reasons, Bisq requires most locales to have a country code
+     * to ensure proper currency and number formatting. Script-based locales (e.g.,
+     * {@code zh-Hans}, {@code zh-Hant}) are exempt from this requirement as they are
+     * valid BCP 47 language tags without countries.
+     *
+     * <p>If a locale has neither country nor script, this method attempts to add
+     * a country code from the current locale, or falls back to {@code Locale.US}.
+     *
+     * <h2>Examples</h2>
+     * <ul>
+     *   <li>{@code zh-Hans} → returned as-is (has script)</li>
+     *   <li>{@code pt} (no country, no script) → {@code pt-BR} if current locale is Brazil</li>
+     *   <li>{@code en} (no country, no script) → {@code en-US} fallback</li>
+     * </ul>
+     *
+     * @param locale the locale to validate
+     * @return a locale with country code, or the original if it has a script
+     * @see <a href="https://www.rfc-editor.org/rfc/bcp/bcp47.txt">BCP 47 - Tags for Identifying Languages</a>
+     */
     public static Locale ensureValidLocale(Locale locale) {
-        if (locale.getCountry().isEmpty()) {
-            log.warn("Locale has no country defined. locale={}", locale);
+        checkNotNull(locale, "locale must not be null at ensureValidLocale");
+        // Script-based locales (e.g., zh-Hans, zh-Hant) don't have a country code
+        // but are still valid BCP 47 language tags. Only require country for
+        // locales that don't have a script subtag.
+        if (locale.getCountry().isEmpty() && locale.getScript().isEmpty()) {
+            log.info("Locale has no country defined. locale={}", locale);
             Locale currentLocale = LocaleRepository.getDefaultLocale();
 
             if (!locale.getLanguage().isEmpty() && !currentLocale.getCountry().isEmpty()) {
                 log.warn("Locale has no country defined. We apply the country from the current locale.");
                 return LocaleFactory.from(locale.getLanguage(), currentLocale.getCountry());
             } else {
-                log.warn("Could not set the new locale, we fall back to Locale.US");
+                log.info("Could not set the new locale, we fall back to Locale.US");
                 return Locale.US;
             }
         } else {

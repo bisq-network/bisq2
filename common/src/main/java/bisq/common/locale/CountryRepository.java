@@ -18,7 +18,6 @@
 package bisq.common.locale;
 
 import bisq.common.util.LocaleFactory;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,8 +26,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CountryRepository {
@@ -46,7 +48,9 @@ public class CountryRepository {
     }
 
     public static Optional<Country> findCountry(Locale locale) {
-        return ALL_COUNTRIES.stream().filter(c -> c.getCode().equals(locale.getCountry())).findAny();
+        return ALL_COUNTRIES.stream()
+                .filter(country -> country.getCode().equals(locale.getCountry()))
+                .findAny();
     }
 
     public static List<Country> getAllCountries() {
@@ -70,14 +74,16 @@ public class CountryRepository {
     }
 
     public static Country getCountry(String countryCode) {
+        checkNotNull(countryCode, "countryCode must not be null");
         String regionCode = RegionRepository.getRegionCode(countryCode);
+        checkNotNull(regionCode, "regionCode must not be null");
         Region region = new Region(regionCode, RegionRepository.getRegionName(regionCode));
 
-        Country country = new Country(countryCode, getLocalizedCountryDisplayString(countryCode), region);
         if (countryCode.equals("XK")) {
-            country = new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
+            return new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
+        } else {
+            return new Country(countryCode, getLocalizedCountryDisplayString(countryCode), region);
         }
-        return country;
     }
 
     public static List<Country> getCountriesFromCodes(List<String> countryCodes) {
@@ -88,22 +94,31 @@ public class CountryRepository {
 
     static {
         ALL_COUNTRIES = LocaleRepository.LOCALES.stream()
+                .filter(Objects::nonNull)
                 .map(locale -> {
-                    String countryCode = locale.getCountry();
-                    Region region = RegionRepository.getRegion(locale);
-                    Country country = new Country(countryCode, locale.getDisplayCountry(), region);
-                    if (locale.getCountry().equals("XK")) {
-                        country = new Country(locale.getCountry(), "Republic of Kosovo", region);
+                    try {
+                        String countryCode = locale.getCountry();
+                        checkNotNull(countryCode, "countryCode must not be null");
+                        Region region = RegionRepository.getRegion(locale);
+                        checkNotNull(region, "region must not be null for locale %s", locale);
+                        if (countryCode.equals("XK")) {
+                            return new Country(countryCode, CountryRepository.getNameByCode(countryCode), region);
+                        } else {
+                            return new Country(countryCode, locale.getDisplayCountry(), region);
+                        }
+                    } catch (Exception e) {
+                        log.error("Could not create country for locale {}", locale, e);
+                        return null;
                     }
-                    return country;
                 })
+                .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(Country::getName))
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
 
         ALL_COUNTRY_CODES = ALL_COUNTRIES.stream()
                 .map(Country::getCode)
                 .sorted()
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
 
