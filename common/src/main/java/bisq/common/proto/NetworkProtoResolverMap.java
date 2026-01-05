@@ -17,29 +17,9 @@
 
 package bisq.common.proto;
 
-import com.google.protobuf.Any;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-@Slf4j
-public class NetworkProtoResolverMap<T extends NetworkProto> {
-    public NetworkProtoResolverMap() {
-    }
-
-    private final Map<String, ProtoResolver<T>> map = new HashMap<>();
-
+public class NetworkProtoResolverMap<T extends NetworkProto> extends ProtoResolverMap<T> {
     public void addProtoResolver(String protoTypeName, ProtoResolver<T> resolver) {
         NetworkStorageWhiteList.add(protoTypeName, resolver);
-        map.put(protoTypeName, resolver);
-    }
-
-    public T fromAny(Any anyProto) {
-        String protoTypeName = ProtobufUtils.getProtoType(anyProto);
-        return Optional.ofNullable(map.get(protoTypeName))
-                .map(resolver -> resolver.fromAny(anyProto))
-                .orElseThrow(() -> new UnresolvableProtobufMessageException(anyProto));
+        super.addProtoResolver(protoTypeName, resolver);
     }
 }
