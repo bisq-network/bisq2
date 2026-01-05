@@ -59,7 +59,7 @@ public class TypesafeConfigUtils {
         if (Files.exists(customConfigFilePath)) {
             try {
                 com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFilePath.toFile());
-                config.checkValid(ConfigFactory.defaultReference(), "application");
+                config.withFallback(ConfigFactory.defaultReference()).checkValid(ConfigFactory.defaultReference(), "application");
                 log.info("Using custom config file: {}", customConfigFilePath.toAbsolutePath());
                 return Optional.of(config);
             } catch (Exception e) {

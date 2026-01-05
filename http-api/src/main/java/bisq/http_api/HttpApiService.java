@@ -45,6 +45,7 @@ import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
@@ -59,6 +60,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class HttpApiService implements Service {
     private final Optional<RestApiService> restApiService;
+    @Getter
     private final Optional<WebSocketService> webSocketService;
 
     public HttpApiService(RestApiService.Config restApiConfig,

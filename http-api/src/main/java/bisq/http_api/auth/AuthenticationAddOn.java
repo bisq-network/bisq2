@@ -12,6 +12,7 @@ public class AuthenticationAddOn implements AddOn {
         this.password = password;
     }
 
+    @Override
     public void setup(NetworkListener networkListener, FilterChainBuilder builder) {
         int httpServerFilterIdx = builder.indexOfType(HttpServerFilter.class);
         if (httpServerFilterIdx >= 0) {
