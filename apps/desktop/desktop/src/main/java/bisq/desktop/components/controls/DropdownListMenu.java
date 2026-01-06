@@ -22,13 +22,10 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableView;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
@@ -36,8 +33,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.PopupWindow;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -54,11 +49,6 @@ public class DropdownListMenu<T> extends HBox {
     @Setter
     private boolean openToTheRight = false;
     private ImageView defaultIcon, activeIcon, buttonIcon;
-
-    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Window> windowListener;
-    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Scene> sceneListener;
 
     public DropdownListMenu(String defaultIconId,
                             String activeIconId,
@@ -91,26 +81,36 @@ public class DropdownListMenu<T> extends HBox {
         }
 
         getStyleClass().addAll("dropdown-menu", "dropdown-list-menu");
-
-        windowListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                newValue.addEventHandler(WindowEvent.WINDOW_HIDING, e -> popup.hide());
-            }
-        };
-        sceneListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                newValue.windowProperty().addListener(new WeakChangeListener<>(windowListener));
-            }
-        };
-        attachListeners();
     }
 
     public void initialize() {
         tableView.initialize();
+
+        setOnMouseClicked(e -> togglePopup());
+        setOnMouseExited(e -> updateIcon(popup.isShowing() ? activeIcon : defaultIcon));
+        setOnMouseEntered(e -> updateIcon(activeIcon));
+        popup.setOnShowing(e -> {
+            getStyleClass().add("dropdown-menu-active");
+            updateIcon(activeIcon);
+            isMenuShowing.setValue(true);
+        });
+        popup.setOnHidden(e -> {
+            getStyleClass().remove("dropdown-menu-active");
+            updateIcon(isHover() ? activeIcon : defaultIcon);
+            isMenuShowing.setValue(false);
+        });
+        tableView.setOnMouseClicked(e -> popup.hide());
     }
 
     public void dispose() {
         tableView.dispose();
+
+        setOnMouseClicked(null);
+        setOnMouseExited(null);
+        setOnMouseEntered(null);
+        popup.setOnShowing(null);
+        popup.setOnHidden(null);
+        tableView.setOnMouseClicked(null);
     }
 
     public void setIcons(String newDefaultIconId, String newActiveIconId) {
@@ -171,25 +171,6 @@ public class DropdownListMenu<T> extends HBox {
             buttonIcon = newIcon;
             getChildren().add(buttonIcon);
         }
-    }
-
-    private void attachListeners() {
-        setOnMouseClicked(e -> togglePopup());
-        setOnMouseExited(e -> updateIcon(popup.isShowing() ? activeIcon : defaultIcon));
-        setOnMouseEntered(e -> updateIcon(activeIcon));
-        popup.setOnShowing(e -> {
-            getStyleClass().add("dropdown-menu-active");
-            updateIcon(activeIcon);
-            isMenuShowing.setValue(true);
-        });
-        popup.setOnHidden(e -> {
-            getStyleClass().remove("dropdown-menu-active");
-            updateIcon(isHover() ? activeIcon : defaultIcon);
-            isMenuShowing.setValue(false);
-        });
-        tableView.setOnMouseClicked(e -> popup.hide());
-
-        sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
     }
 
     private PopupWindow.AnchorLocation getAnchorLocation() {
