@@ -51,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -187,13 +186,19 @@ public class UserIdentityRestApi extends RestApiBase {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
             if (selectedUserIdentity == null) {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No selected user identity found"));
+            } else {
+                userIdentityService.editUserProfile(selectedUserIdentity, request.getTerms(), request.getStatement())
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Error editing user profile", ex);
+                                asyncResponse.resume(buildErrorResponse("Failed to edit user profile: " + ex.getMessage()));
+                                return;
+                            }
+                            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+                            UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile());
+                            asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+                        });
             }
-            userIdentityService.editUserProfile(Objects.requireNonNull(selectedUserIdentity), request.getTerms(), request.getStatement())
-                    .thenAccept(result -> {
-                        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-                        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile());
-                        asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
-                    });
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
@@ -229,7 +234,12 @@ public class UserIdentityRestApi extends RestApiBase {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No user identity with id " + request.getProfileId() + " found"));
             } else {
                 userIdentityService.editUserProfile(selectedUserIdentity.get(), request.getTerms(), request.getStatement())
-                        .thenAccept(result -> {
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Error editing user profile", ex);
+                                asyncResponse.resume(buildErrorResponse("Failed to edit user profile: " + ex.getMessage()));
+                                return;
+                            }
                             Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(request.getProfileId());
                             userIdentity.ifPresentOrElse((identity) -> {
                                 UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(identity.getUserProfile());
