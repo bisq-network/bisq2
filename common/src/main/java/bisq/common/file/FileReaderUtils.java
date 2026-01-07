@@ -28,6 +28,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Optional;
@@ -162,7 +163,9 @@ public class FileReaderUtils {
         }
         String protocol = dirURL.getProtocol();
         if ("file".equals(protocol)) {
-            Path dirPath = Path.of(dirURL.toURI());
+            // Using Paths.get() directly as this method is used in tests where
+            // FacadeProvider may not be initialized
+            Path dirPath = Paths.get(dirURL.toURI());
             if (!Files.isDirectory(dirPath)) {
                 throw new IOException("Resource path is not a directory: " + dirPath);
             }

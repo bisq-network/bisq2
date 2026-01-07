@@ -95,7 +95,7 @@ public class EmbeddedTorProcess {
         String[] searchPaths = pathEnvironmentVariable.split(":");
 
         for (var path : searchPaths) {
-            Path torBinaryPath = Path.of(path, "tor");
+            Path torBinaryPath = getJdkFacade().pathOf(path, "tor");
             if (Files.exists(torBinaryPath)) {
                 return Optional.of(torBinaryPath);
             }

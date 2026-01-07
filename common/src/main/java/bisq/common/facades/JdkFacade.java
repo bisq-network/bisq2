@@ -18,6 +18,7 @@
 package bisq.common.facades;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -53,4 +54,27 @@ public interface JdkFacade {
      * @throws IOException if an I/O error occurs
      */
     void writeString(String data, Path path) throws IOException;
+
+    /**
+     * Converts a path string, or a sequence of strings that when joined form a path string, to a Path.
+     * <p>
+     * On Android, this uses {@link java.nio.file.Paths#get(String, String...)} which is compatible with desugaring.
+     * On Java SE, this uses {@link Path#of(String, String...)} which is the modern API.
+     *
+     * @param first the path string or initial part of the path string
+     * @param more  additional strings to be joined to form the path string
+     * @return the resulting Path
+     */
+    Path pathOf(String first, String... more);
+
+    /**
+     * Converts a URI to a Path.
+     * <p>
+     * On Android, this uses {@link java.nio.file.Paths#get(URI)} which is compatible with desugaring.
+     * On Java SE, this uses {@link Path#of(URI)} which is the modern API.
+     *
+     * @param uri the URI to convert
+     * @return the resulting Path
+     */
+    Path pathOf(URI uri);
 }

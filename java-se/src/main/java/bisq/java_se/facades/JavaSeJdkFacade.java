@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,5 +59,15 @@ public class JavaSeJdkFacade implements JdkFacade {
     @Override
     public void writeString(String data, Path path) throws IOException {
         Files.writeString(path, data, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public Path pathOf(String first, String... more) {
+        return Path.of(first, more);
+    }
+
+    @Override
+    public Path pathOf(URI uri) {
+        return Path.of(uri);
     }
 }
