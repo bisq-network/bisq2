@@ -17,6 +17,7 @@
 
 package bisq.http_api.rest_api.domain.user_identity;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.common.encoding.Hex;
 import bisq.dto.DtoMappings;
 import bisq.dto.security.keys.KeyPairDto;
@@ -36,7 +37,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
@@ -45,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -60,10 +66,14 @@ public class UserIdentityRestApi extends RestApiBase {
 
     private final SecurityService securityService;
     private final UserIdentityService userIdentityService;
+    private final BisqEasyService bisqEasyService;
 
-    public UserIdentityRestApi(SecurityService securityService, UserIdentityService userIdentityService) {
+    public UserIdentityRestApi(SecurityService securityService,
+                               UserIdentityService userIdentityService,
+                               BisqEasyService bisqEasyService) {
         this.securityService = securityService;
         this.userIdentityService = userIdentityService;
+        this.bisqEasyService = bisqEasyService;
     }
 
     @GET
@@ -161,7 +171,7 @@ public class UserIdentityRestApi extends RestApiBase {
             ),
             responses = {
                     @ApiResponse(responseCode = "201", description = "User identity updated successfully",
-                            content = @Content(schema = @Schema(example = "{ \"userProfileId\": \"d22d7b62ef442b5df03378f134bc8f54a2171cba\" }"))),
+                            content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
@@ -176,13 +186,70 @@ public class UserIdentityRestApi extends RestApiBase {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
             if (selectedUserIdentity == null) {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No selected user identity found"));
+            } else {
+                userIdentityService.editUserProfile(selectedUserIdentity, request.getTerms(), request.getStatement())
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Error editing user profile", ex);
+                                asyncResponse.resume(buildErrorResponse("Failed to edit user profile: " + ex.getMessage()));
+                                return;
+                            }
+                            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+                            UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile());
+                            asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+                        });
             }
-            userIdentityService.editUserProfile(Objects.requireNonNull(selectedUserIdentity), request.getTerms(), request.getStatement())
-                    .thenAccept(result -> {
-                        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-                        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile());
-                        asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
-                    });
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PATCH
+    @Path("/profile")
+    @Operation(
+            summary = "Update User Identity and Publish User Profile",
+            description = "Updates user identity trade & terms and publishes the associated user profile changes.",
+            requestBody = @RequestBody(
+                    description = "Request payload containing profile id, user nickname, terms, statement, and prepared data.",
+                    content = @Content(schema = @Schema(implementation = UpdateUserIdentityV2Request.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "User identity updated successfully",
+                            content = @Content(schema = @Schema(implementation = UpdateUserIdentityResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public void updateAndPublishUserProfileV2(UpdateUserIdentityV2Request request,
+                                              @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            asyncResponse.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            Optional<UserIdentity> selectedUserIdentity = userIdentityService.findUserIdentity(request.getProfileId());
+            if (selectedUserIdentity.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "No user identity with id " + request.getProfileId() + " found"));
+            } else {
+                userIdentityService.editUserProfile(selectedUserIdentity.get(), request.getTerms(), request.getStatement())
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Error editing user profile", ex);
+                                asyncResponse.resume(buildErrorResponse("Failed to edit user profile: " + ex.getMessage()));
+                                return;
+                            }
+                            Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(request.getProfileId());
+                            userIdentity.ifPresentOrElse((identity) -> {
+                                UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(identity.getUserProfile());
+                                asyncResponse.resume(buildResponse(Response.Status.OK, new UpdateUserIdentityResponse(userProfileDto)));
+                            }, () -> {
+                                asyncResponse.resume(buildErrorResponse("Failed to fetch updated profile after edit"));
+                            });
+
+                        });
+            }
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
@@ -207,6 +274,102 @@ public class UserIdentityRestApi extends RestApiBase {
                 .map(UserIdentity::getId)
                 .collect(Collectors.toList());
         return buildOkResponse(ids);
+    }
+
+    @GET
+    @Path("/owned-profiles")
+    @Operation(
+            summary = "Get Owned User Profiles",
+            description = "Retrieves a list of owned user profiles",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Owned user profiles retrieved successfully",
+                            content = @Content(schema = @Schema(type = "array", implementation = UserProfileDto.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getUserProfiles() {
+        List<UserProfileDto> profiles = userIdentityService.getUserIdentities()
+                .stream()
+                .map(userIdentity -> DtoMappings.UserProfileMapping.fromBisq2Model(userIdentity.getUserProfile()))
+                .collect(Collectors.toList());
+        return buildOkResponse(profiles);
+    }
+
+    @POST
+    @Path("/select")
+    @Operation(
+            summary = "Select User Profile",
+            description = "Selects a user profile (by id) as the currently active/selected profile.",
+            requestBody = @RequestBody(
+                    description = "Request containing the user profile id to select",
+                    content = @Content(schema = @Schema(implementation = SelectUserProfileRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User profile selected successfully",
+                            content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "User profile not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response selectUserProfile(SelectUserProfileRequest request) {
+        if (request == null || request.getUserProfileId() == null || request.getUserProfileId().isBlank()) {
+            return buildResponse(Response.Status.BAD_REQUEST, "Invalid input: userProfileId is required");
+        }
+        Optional<UserIdentity> opt = userIdentityService.findUserIdentity(request.getUserProfileId());
+        if (opt.isEmpty()) {
+            return buildNotFoundResponse("User identity not found.");
+        }
+        userIdentityService.selectChatUserIdentity(opt.get());
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(opt.get().getUserProfile());
+        return buildOkResponse(userProfileDto);
+    }
+
+    @POST
+    @Path("/delete")
+    @Operation(
+            summary = "Delete User Profile",
+            description = "Deletes a user profile (by id) and returns the active/selected profile after its delete.",
+            requestBody = @RequestBody(
+                    description = "Request containing the user profile id to delete",
+                    content = @Content(schema = @Schema(implementation = DeleteUserProfileRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User profile deleted successfully",
+                            content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "User profile not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public void deleteUserProfile(DeleteUserProfileRequest request, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            asyncResponse.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            if (request.getUserProfileId() == null || request.getUserProfileId().isBlank()) {
+                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: userProfileId is required"));
+            } else {
+                Optional<UserIdentity> opt = userIdentityService.findUserIdentity(request.getUserProfileId());
+                if (opt.isEmpty()) {
+                    asyncResponse.resume(buildNotFoundResponse("User identity not found."));
+                } else {
+                    bisqEasyService.deleteUserIdentity(opt.get()).whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Error deleting user identity", ex);
+                            asyncResponse.resume(buildErrorResponse("Could not delete user identity: " + ex.getMessage()));
+                        } else {
+                            asyncResponse.resume(getSelectedUserProfile());
+                        }
+                    });
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
     }
 
     @GET
