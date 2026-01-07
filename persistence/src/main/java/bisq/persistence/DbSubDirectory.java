@@ -3,6 +3,7 @@ package bisq.persistence;
 import lombok.Getter;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Getter
 public enum DbSubDirectory {
@@ -14,6 +15,6 @@ public enum DbSubDirectory {
     private final Path dbPath;
 
     DbSubDirectory(String subDir) {
-        this.dbPath = Path.of("db", subDir);
+        this.dbPath = Paths.get("db", subDir);
     }
 }

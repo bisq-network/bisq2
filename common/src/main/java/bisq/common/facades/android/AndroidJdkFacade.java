@@ -21,9 +21,11 @@ import bisq.common.facades.JdkFacade;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 public class AndroidJdkFacade implements JdkFacade {
@@ -66,5 +68,17 @@ public class AndroidJdkFacade implements JdkFacade {
     @Override
     public void writeString(String data, Path path) throws IOException {
         Files.write(path, data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Path pathOf(String first, String... more) {
+        // Paths.get is compatible with Android desugaring, unlike Path.of
+        return Paths.get(first, more);
+    }
+
+    @Override
+    public Path pathOf(URI uri) {
+        // Paths.get is compatible with Android desugaring, unlike Path.of
+        return Paths.get(uri);
     }
 }

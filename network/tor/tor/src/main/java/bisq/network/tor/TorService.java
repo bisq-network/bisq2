@@ -313,7 +313,7 @@ public class TorService implements Service {
             if (torConfigMap.containsKey(COOKIE_AUTH_FILE)) {
                 String authCookiePath = torConfigMap.get(COOKIE_AUTH_FILE);
                 try {
-                    byte[] authCookie = Files.readAllBytes(Path.of(authCookiePath));
+                    byte[] authCookie = Files.readAllBytes(FacadeProvider.getJdkFacade().pathOf(authCookiePath));
                     torController.authenticate(authCookie);
                     isAuthenticated = true;
                 } catch (TorControlAuthenticationFailed e) {

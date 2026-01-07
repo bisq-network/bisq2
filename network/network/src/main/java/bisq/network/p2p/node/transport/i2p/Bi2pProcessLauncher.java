@@ -20,6 +20,7 @@ package bisq.network.p2p.node.transport.i2p;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.archive.ZipFileExtractor;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
@@ -155,7 +156,7 @@ public class Bi2pProcessLauncher implements Service {
     private static String getJavaExePath() {
         String javaHome = System.getProperty("java.home");
         String exe = OS.isWindows() ? "java.exe" : "java";
-        return Path.of(javaHome, "bin", exe).toString();
+        return FacadeProvider.getJdkFacade().pathOf(javaHome, "bin", exe).toString();
     }
 
 }
