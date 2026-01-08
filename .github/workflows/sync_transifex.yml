@@ -398,7 +398,7 @@ jobs:
               echo "TX CLI output:"
               echo "$OUTPUT" | tail -5
               echo "::endgroup::"
-              ((UPLOADED_COUNT++))
+              UPLOADED_COUNT=$((UPLOADED_COUNT + 1))
             done
 
             echo "::endgroup::"
