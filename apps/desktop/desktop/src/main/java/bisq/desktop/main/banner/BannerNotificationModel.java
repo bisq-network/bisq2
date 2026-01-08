@@ -28,7 +28,7 @@ public class BannerNotificationModel implements Model {
     @Setter
     private String pendingInventoryRequests;
     @Setter
-    private String inventoryRequestsInfo;
+    private String inventoryRequestsDotsAnimation;
     @Setter
     private String maxInventoryRequests;
     private final BooleanProperty inventoryDataChangeFlag = new SimpleBooleanProperty();
