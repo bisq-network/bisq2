@@ -47,7 +47,7 @@ public class ZipFileExtractor implements AutoCloseable {
 
     private void createDirIfNotPresent(Path destDirPath) {
         try {
-            FileMutatorUtils.createRestrictedDirectories(destDirPath);
+            FileMutatorUtils.createDirectories(destDirPath);
         } catch (IOException e) {
             throw new ZipFileExtractionFailedException("Couldn't create directory: " + destDirPath, e);
         }
@@ -69,10 +69,10 @@ public class ZipFileExtractor implements AutoCloseable {
                     throw new IOException("Entry is outside of the target directory");
                 }
                 if (zipEntry.isDirectory()) {
-                    FileMutatorUtils.createRestrictedDirectories(targetPath);
+                    FileMutatorUtils.createDirectories(targetPath);
                 } else {
                     // Ensure parent directories exist
-                    FileMutatorUtils.createRestrictedDirectories(targetPath.getParent());
+                    FileMutatorUtils.createDirectories(targetPath.getParent());
                     // Copy stream content to file
                     FileMutatorUtils.inputStreamToFile(zipInputStream, targetPath);
                 }

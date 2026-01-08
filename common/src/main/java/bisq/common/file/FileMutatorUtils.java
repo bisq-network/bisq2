@@ -238,7 +238,7 @@ public class FileMutatorUtils {
             throws IOException {
         if (Files.exists(storageFilePath)) {
             Path corruptedBackupDirPath = dirPath.resolve(backupFolderName);
-            createRestrictedDirectories(corruptedBackupDirPath);
+            createDirectories(corruptedBackupDirPath);
             String timestamp = String.valueOf(System.currentTimeMillis());
             String newFileName = fileName + "_at_" + timestamp;
             Path targetPath = dirPath.resolve(backupFolderName).resolve(newFileName);
@@ -247,7 +247,7 @@ public class FileMutatorUtils {
         }
     }
 
-    public static OutputStream newRestrictedOutputStream(Path filePath) throws IOException {
+    public static OutputStream newOutputStream(Path filePath) throws IOException {
         if (IS_POSIX) {
             if (!Files.exists(filePath)) {
                 Files.createFile(filePath, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
@@ -262,7 +262,7 @@ public class FileMutatorUtils {
         return Files.newOutputStream(filePath);
     }
 
-    public static void createRestrictedFile(Path path) throws IOException {
+    public static void createFile(Path path) throws IOException {
         if (IS_POSIX) {
             Files.createFile(path, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
@@ -271,7 +271,7 @@ public class FileMutatorUtils {
         }
     }
 
-    public static void createRestrictedDirectories(Path path) throws IOException {
+    public static void createDirectories(Path path) throws IOException {
         if (IS_POSIX) {
             Files.createDirectories(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
@@ -280,7 +280,7 @@ public class FileMutatorUtils {
         }
     }
 
-    public static void createRestrictedDirectory(Path path) throws IOException {
+    public static void createDirectory(Path path) throws IOException {
         if (IS_POSIX) {
             Files.createDirectory(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
@@ -336,7 +336,7 @@ public class FileMutatorUtils {
             try {
                 Path parentPath = targetFilePath.getParent();
                 if (parentPath != null) {
-                    createRestrictedDirectories(parentPath);
+                    createDirectories(parentPath);
                 }
                 resourceToFile(resourcePath, targetFilePath);
             } catch (IOException e) {
@@ -354,7 +354,7 @@ public class FileMutatorUtils {
         try {
             connection.connect();
             try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
-                 OutputStream outputStream = newRestrictedOutputStream(destinationPath)) {
+                 OutputStream outputStream = newOutputStream(destinationPath)) {
                 // If server does not provide contentLength it is -1
                 fileSize = connection.getContentLength();
                 double totalReadBytes = 0d;

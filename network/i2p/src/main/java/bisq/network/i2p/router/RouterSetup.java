@@ -201,7 +201,7 @@ public class RouterSetup {
             }
         } else {
             try {
-                FileMutatorUtils.createRestrictedFile(configFilePath);
+                FileMutatorUtils.createFile(configFilePath);
             } catch (IOException e) {
                 log.warn("Could not create router.config file in i2p data directory {}", configFilePath.toAbsolutePath(), e);
             }
@@ -220,7 +220,7 @@ public class RouterSetup {
 
     private Path createDirectory(Path parent, String child) throws IOException {
         Path dirPath = parent.resolve(child);
-        FileMutatorUtils.createRestrictedDirectories(dirPath);
+        FileMutatorUtils.createDirectories(dirPath);
         return dirPath;
     }
 }

@@ -53,7 +53,7 @@ public class BackupServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         Path dbDirPath = dataDirPath.resolve("db");
-        FileMutatorUtils.createRestrictedDirectories(dbDirPath);
+        FileMutatorUtils.createDirectories(dbDirPath);
         String storeFileName = "test_store" + Persistence.EXTENSION;
         storeFilePath = dbDirPath.resolve(storeFileName);
         backupService = new BackupService(dataDirPath, this.storeFilePath, MaxBackupSize.HUNDRED_MB);

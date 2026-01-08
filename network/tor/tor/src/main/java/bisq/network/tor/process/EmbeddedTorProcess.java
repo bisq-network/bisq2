@@ -109,7 +109,7 @@ public class EmbeddedTorProcess {
         Path controlDirFilePath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         if (!Files.exists(controlDirFilePath)) {
             try {
-                FileMutatorUtils.createRestrictedDirectories(controlDirFilePath);
+                FileMutatorUtils.createDirectories(controlDirFilePath);
             } catch (IOException e) {
                 throw new TorStartupFailedException("Couldn't create Tor control directory.");
             }

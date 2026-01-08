@@ -34,7 +34,7 @@ public class RouterCertificateUtil {
 
     private static Path createDirectory(Path parentPath, String child) throws IOException {
         Path dirPath = parentPath.resolve(child);
-        FileMutatorUtils.createRestrictedDirectories(dirPath);
+        FileMutatorUtils.createDirectories(dirPath);
         return dirPath;
     }
 }

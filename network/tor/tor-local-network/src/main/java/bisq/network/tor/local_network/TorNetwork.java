@@ -123,7 +123,7 @@ public class TorNetwork {
         }
 
         try {
-            FileMutatorUtils.createRestrictedDirectory(nodeDataDirPath);
+            FileMutatorUtils.createDirectory(nodeDataDirPath);
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create data directory: " + nodeDataDirPath.toAbsolutePath(), e);
         }

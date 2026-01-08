@@ -217,7 +217,7 @@ public class UpdaterService implements Service {
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         Path destinationDirPath = isLauncherUpdate ? PlatformUtils.getDownloadOfHomeDirPath() :
                 appDataDirPath.resolve(UPDATES_DIR).resolve(version);
-        FileMutatorUtils.createRestrictedDirectories(destinationDirPath);
+        FileMutatorUtils.createDirectories(destinationDirPath);
         downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
         if (executorService == null) {
             executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");

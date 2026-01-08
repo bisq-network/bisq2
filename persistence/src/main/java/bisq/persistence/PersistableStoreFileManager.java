@@ -56,7 +56,7 @@ public class PersistableStoreFileManager {
     public void createParentDirectoriesIfNotExisting() {
         if (!Files.exists(parentDirectoryPath)) {
             try {
-                FileMutatorUtils.createRestrictedDirectories(parentDirectoryPath);
+                FileMutatorUtils.createDirectories(parentDirectoryPath);
             } catch (IOException e) {
                 throw new CouldNotCreateParentDirs("Couldn't create " + parentDirectoryPath);
             }

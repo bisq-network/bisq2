@@ -41,7 +41,7 @@ public class DirectoryAuthorityFactory {
         Path keysPath = dataDirPath.resolve("keys");
         if (!Files.exists(keysPath)) {
             try {
-                FileMutatorUtils.createRestrictedDirectories(keysPath);
+                FileMutatorUtils.createDirectories(keysPath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't create keys folder in data directory for directory authority.", e);
             }
@@ -54,7 +54,7 @@ public class DirectoryAuthorityFactory {
     private void createDataDirPathIfNotPresent(Path dataDirPath) {
         if(!Files.exists(dataDirPath)) {
             try {
-                FileMutatorUtils.createRestrictedDirectory(dataDirPath);
+                FileMutatorUtils.createDirectory(dataDirPath);
             } catch (IOException e) {
                 throw new IllegalStateException("Couldn't create data directory for directory authority.", e);
             }
