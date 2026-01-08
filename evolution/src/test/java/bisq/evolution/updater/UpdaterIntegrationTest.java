@@ -76,7 +76,7 @@ public class UpdaterIntegrationTest {
         List<String> keyIds = List.of("387C8307");
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
-            FileMutatorUtils.createRestrictedDirectories(destinationDirPath);
+            FileMutatorUtils.createDirectories(destinationDirPath);
             List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
             simulateDownload(downloadItemList, sourceDirPath.toString(), executorService)
                     .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirPath, keyIds, ignoreSigningKeyInResourcesCheck, executorService))
@@ -113,7 +113,7 @@ public class UpdaterIntegrationTest {
         List<String> keyIds = List.of("387C8307");
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
         try {
-            FileMutatorUtils.createRestrictedDirectories(destinationDirPath);
+            FileMutatorUtils.createDirectories(destinationDirPath);
             List<DownloadItem> downloadItemList = new ArrayList<>(DownloadItem.createDescriptorList(version, destinationDirPath, downloadFileName, keyIds));
             simulateDownload(downloadItemList, sourceDirPath.toString(), executorService)
                     .thenCompose(nil -> UpdaterService.verify(version, isLauncherUpdate, destinationDirPath, keyIds, ignoreSigningKeyInResourcesCheck, executorService))

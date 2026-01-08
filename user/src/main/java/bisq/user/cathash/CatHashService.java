@@ -101,7 +101,7 @@ public abstract class CatHashService<T> {
 
             if (!Files.exists(iconsDirPath)) {
                 try {
-                    FileMutatorUtils.createRestrictedDirectories(iconsDirPath);
+                    FileMutatorUtils.createDirectories(iconsDirPath);
                 } catch (IOException e) {
                     log.error(e.toString());
                 }

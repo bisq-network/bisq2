@@ -141,7 +141,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     private void writeStoreToFilePath(T persistableStore, Path filePath) {
-        try (OutputStream fileOutputStream = FileMutatorUtils.newRestrictedOutputStream(filePath)) {
+        try (OutputStream fileOutputStream = FileMutatorUtils.newOutputStream(filePath)) {
             // We use an Any container (byte blob) as we do not have the dependencies to the
             // external PersistableStore implementations (at deserialization we would have an issue otherwise as
             // it requires static access).

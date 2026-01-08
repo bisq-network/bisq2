@@ -153,7 +153,7 @@ public abstract class ApplicationService implements Service {
                 ? Path.of(rootConfig.getString("application.baseDir"))
                 : userDataDirPath.resolve(appName);
         try {
-            FileMutatorUtils.createRestrictedDirectories(appDataDirPath);
+            FileMutatorUtils.createDirectories(appDataDirPath);
         } catch (IOException e) {
             log.error("Could not create data directory {}", appDataDirPath, e);
             throw new RuntimeException(e);

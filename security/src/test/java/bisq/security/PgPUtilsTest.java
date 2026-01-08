@@ -95,7 +95,7 @@ public class PgPUtilsTest {
         Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
-                 OutputStream out = FileMutatorUtils.newRestrictedOutputStream(filePath)) {
+                 OutputStream out = FileMutatorUtils.newOutputStream(filePath)) {
                 FileMutatorUtils.copy(resource, out);
             }
             return PgPUtils.readPgpPublicKeyRing(filePath);
@@ -108,7 +108,7 @@ public class PgPUtilsTest {
         Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
-                 OutputStream out = FileMutatorUtils.newRestrictedOutputStream(filePath)) {
+                 OutputStream out = FileMutatorUtils.newOutputStream(filePath)) {
                 FileMutatorUtils.copy(resource, out);
             }
             return PgPUtils.readPgpSignature(filePath);
@@ -121,7 +121,7 @@ public class PgPUtilsTest {
         Path filePath = Path.of("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName)) {
-                OutputStream out = FileMutatorUtils.newRestrictedOutputStream(filePath);
+                OutputStream out = FileMutatorUtils.newOutputStream(filePath);
                 FileMutatorUtils.copy(resource, out);
             }
             return filePath;

@@ -61,7 +61,7 @@ public class MigrationsForV2_1_2Tests {
     }
 
     private void createFakeTorPath(Path torPath) throws IOException {
-        FileMutatorUtils.createRestrictedDirectories(torPath);
+        FileMutatorUtils.createDirectories(torPath);
 
         List<String> torPathFiles = List.of("lock",
                 "libssl.so.1.1",
