@@ -48,6 +48,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -313,7 +314,7 @@ public class TorService implements Service {
             if (torConfigMap.containsKey(COOKIE_AUTH_FILE)) {
                 String authCookiePath = torConfigMap.get(COOKIE_AUTH_FILE);
                 try {
-                    byte[] authCookie = Files.readAllBytes(FacadeProvider.getJdkFacade().pathOf(authCookiePath));
+                    byte[] authCookie = Files.readAllBytes(Paths.get(authCookiePath));
                     torController.authenticate(authCookie);
                     isAuthenticated = true;
                 } catch (TorControlAuthenticationFailed e) {
@@ -370,9 +371,9 @@ public class TorService implements Service {
             String torConfig;
             if (!Files.exists(torConfigFilePath)) {
                 torConfig = FileReaderUtils.readStringFromResource("tor/" + torConfigFileName);
-                FacadeProvider.getJdkFacade().writeString(torConfig, torConfigFilePath);
+                FileMutatorUtils.writeToPath(torConfig, torConfigFilePath);
             } else {
-                torConfig = FacadeProvider.getJdkFacade().readString(torConfigFilePath);
+                torConfig = FileReaderUtils.readUTF8String(torConfigFilePath);
             }
             Set<String> lines = torConfig.lines().collect(Collectors.toSet());
             for (String line : lines) {

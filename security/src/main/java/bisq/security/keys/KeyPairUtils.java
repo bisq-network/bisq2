@@ -1,7 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
-import bisq.common.facades.FacadeProvider;
+import bisq.common.file.FileMutatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -31,12 +31,12 @@ public class KeyPairUtils {
     public static void writePrivateKey(KeyPair keyPair, Path storageDirPath, String tag) {
         Path targetPath = storageDirPath.resolve(tag);
         try {
-            Files.createDirectories(targetPath);
+            FileMutatorUtils.createDirectories(targetPath);
 
             ECPrivateKey ecPrivate = (ECPrivateKey) keyPair.getPrivate();
             byte[] priv32 = toUnsignedFixedLength(ecPrivate.getS(), 32);
 
-            FacadeProvider.getJdkFacade().writeString(Hex.encode(priv32), targetPath.resolve("private_key_hex"));
+            FileMutatorUtils.writeToPath(Hex.encode(priv32), targetPath.resolve("private_key_hex"));
             log.info("Persisted hex encoded 32-byte secp256k1 private key for tag {} at {}", tag, targetPath);
         } catch (Exception e) {
             log.error("Could not persist private key", e);
