@@ -18,8 +18,8 @@
 package bisq.api;
 
 import bisq.common.application.Service;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
-import bisq.common.facades.FacadeProvider;
 import bisq.common.network.TransportType;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
@@ -78,7 +78,7 @@ public class ApiTorOnionService implements Service {
                     log.info("{} published for {}", onionAddressWithPort, identityTag);
                     try {
                         Path path = appDataDirPath.resolve(identityTag + "_onionAddress.txt");
-                        FacadeProvider.getJdkFacade().writeString(onionAddressWithPort, path);
+                        FileMutatorUtils.writeToPath(onionAddressWithPort, path);
                         return true;
                     } catch (IOException e) {
                         log.error("Error at write onionAddress", e);

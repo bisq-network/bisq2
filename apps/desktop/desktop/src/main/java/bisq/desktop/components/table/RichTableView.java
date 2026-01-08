@@ -18,7 +18,6 @@
 package bisq.desktop.components.table;
 
 import bisq.common.encoding.Csv;
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.FileChooserUtil;
@@ -248,7 +247,7 @@ public class RichTableView<T> extends VBox {
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
                     .ifPresent(filePath -> {
                         try {
-                            FacadeProvider.getJdkFacade().writeString(csv, filePath);
+                            FileMutatorUtils.writeToPath(csv, filePath);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

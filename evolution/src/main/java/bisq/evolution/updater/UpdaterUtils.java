@@ -17,7 +17,6 @@
 
 package bisq.evolution.updater;
 
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Platform;
 import bisq.common.platform.PlatformUtils;
@@ -38,11 +37,11 @@ public class UpdaterUtils {
     public static final String ASC_EXTENSION = ".asc";
 
     public static String getSigningKeyId(Path dirPath) throws IOException {
-        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(SIGNING_KEY_FILE));
+        return FileReaderUtils.readUTF8String(dirPath.resolve(SIGNING_KEY_FILE));
     }
 
     public static String getSigningKey(Path dirPath, String signingKeyId) throws IOException {
-        return FacadeProvider.getJdkFacade().readString(dirPath.resolve(signingKeyId + ASC_EXTENSION));
+        return FileReaderUtils.readUTF8String(dirPath.resolve(signingKeyId + ASC_EXTENSION));
     }
 
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {

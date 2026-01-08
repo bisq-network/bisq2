@@ -50,6 +50,10 @@ public class FileMutatorUtils {
 
     private static final boolean IS_POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
 
+    private static boolean supportsModernFilesApi = true;
+    private static boolean supportsPosixPermissions = true;
+    private static boolean configured = false;
+
     private static final Set<PosixFilePermission> OWNER_READ_WRITE_PERMISSIONS =
             EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
     private static final Set<PosixFilePermission> OWNER_READ_WRITE_EXECUTE_PERMISSIONS =
@@ -59,6 +63,21 @@ public class FileMutatorUtils {
             PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_PERMISSIONS);
     private static final FileAttribute<Set<PosixFilePermission>> OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE =
             PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_EXECUTE_PERMISSIONS);
+
+    /**
+     * Sets platform file capabilities.
+     * Intended to be called once at startup.
+     */
+    public static synchronized void setup(boolean supportsModernFilesApi, boolean supportsPosixPermissions) {
+        if (configured) {
+            log.warn("FileMutatorUtils already configured, ignoring repeated setup call");
+            return;
+        }
+
+        FileMutatorUtils.supportsModernFilesApi = supportsModernFilesApi;
+        FileMutatorUtils.supportsPosixPermissions = supportsPosixPermissions;
+        configured = true;
+    }
 
     /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
@@ -176,8 +195,13 @@ public class FileMutatorUtils {
      */
     public static void writeToPath(String content, Path path) throws IOException {
         try {
-            Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
-            applyDefaultPermissions(path);
+            if (supportsModernFilesApi) {
+                Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
+                applyDefaultPermissions(path);
+            } else {
+                writeToPath(content.getBytes(StandardCharsets.UTF_8), path);
+            }
+
         } catch (IOException e) {
             log.warn("Could not write to file {}", path);
             throw e;
@@ -248,7 +272,7 @@ public class FileMutatorUtils {
     }
 
     public static OutputStream newOutputStream(Path filePath) throws IOException {
-        if (IS_POSIX) {
+        if (supportsSettingPosixPermissions()) {
             if (!Files.exists(filePath)) {
                 Files.createFile(filePath, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
             } else {
@@ -263,7 +287,7 @@ public class FileMutatorUtils {
     }
 
     public static void createFile(Path path) throws IOException {
-        if (IS_POSIX) {
+        if (supportsSettingPosixPermissions()) {
             Files.createFile(path, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
         } else {
@@ -272,7 +296,7 @@ public class FileMutatorUtils {
     }
 
     public static void createDirectories(Path path) throws IOException {
-        if (IS_POSIX) {
+        if (supportsSettingPosixPermissions()) {
             Files.createDirectories(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
         } else {
@@ -281,7 +305,7 @@ public class FileMutatorUtils {
     }
 
     public static void createDirectory(Path path) throws IOException {
-        if (IS_POSIX) {
+        if (supportsSettingPosixPermissions()) {
             Files.createDirectory(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
             applyDefaultPermissions(path);
         } else {
@@ -379,7 +403,7 @@ public class FileMutatorUtils {
 
     private static void applyDefaultPermissions(Path path) throws IOException {
         try {
-            if (IS_POSIX) {
+            if (supportsSettingPosixPermissions()) {
                 if (Files.isDirectory(path)) {
                     Files.setPosixFilePermissions(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS);
                 } else {
@@ -389,5 +413,9 @@ public class FileMutatorUtils {
         } catch (UnsupportedOperationException e) {
             // Non-POSIX FS — safe to ignore or log
         }
+    }
+
+    private static boolean supportsSettingPosixPermissions() {
+        return IS_POSIX && supportsPosixPermissions;
     }
 }
