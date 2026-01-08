@@ -22,7 +22,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import lombok.Getter;
@@ -97,11 +96,10 @@ public class BannerNotificationController implements Controller {
                 dots.append(".");
             }
             if (!inventoryService.getInitialInventoryRequestsCompleted().get()) {
-                model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
+                model.setInventoryRequestsDotsAnimation(String.valueOf(dots));
                 updateInventoryDataChangeFlag();
             }
         }).periodically(250);
-
 
         model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequests()));
         updateInventoryDataChangeFlag();

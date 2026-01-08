@@ -17,14 +17,16 @@
 
 package bisq.desktop.main.banner;
 
-import bisq.common.data.Pair;
+import bisq.common.data.Quadruple;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -39,9 +41,10 @@ import org.fxmisc.easybind.Subscription;
 public class BannerNotificationView extends View<StackPane, BannerNotificationModel, BannerNotificationController> {
     private static final double BANNER_HEIGHT = 30;
 
-    private final Label requestingInventoryLabel;
+    private final Label requestingInventoryLabel, requestingInventoryDotsLabel;
     private final BisqTooltip inventoryRequestsTooltip;
-    private final HBox inventoryRequestsCompletedHBox;
+    private final HBox inventoryInfoHBox, inventoryRequestsCompletedHBox;
+    private final ChangeListener<Number> widthListener;
     private UIScheduler scheduler;
     private Subscription initialInventoryRequestsCompletedPin, inventoryDataChangeFlagPin;
 
@@ -49,15 +52,18 @@ public class BannerNotificationView extends View<StackPane, BannerNotificationMo
                                   BannerNotificationController controller) {
         super(new StackPane(), model, controller);
 
-        Pair<HBox, Label> requestingInventory = getInventoryRequestBox();
-        HBox requestingInventoryHBox = requestingInventory.getFirst();
+        Quadruple<HBox, HBox, Label, Label> requestingInventory = getInventoryRequestBox();
+        inventoryInfoHBox = requestingInventory.getFirst();
+        HBox requestingInventoryHBox = requestingInventory.getSecond();
         requestingInventoryHBox.getStyleClass().add("requesting-inventory");
-        requestingInventoryLabel = requestingInventory.getSecond();
+        requestingInventoryLabel = requestingInventory.getThird();
+        requestingInventoryLabel.setText(Res.get("navigation.network.info.inventoryRequest.requesting"));
+        requestingInventoryDotsLabel = requestingInventory.getForth();
 
-        Pair<HBox, Label> inventoryRequestsCompleted = getInventoryRequestBox();
-        inventoryRequestsCompletedHBox = inventoryRequestsCompleted.getFirst();
+        Quadruple<HBox, HBox, Label, Label> inventoryRequestsCompleted = getInventoryRequestBox();
+        inventoryRequestsCompletedHBox = inventoryRequestsCompleted.getSecond();
         inventoryRequestsCompletedHBox.getStyleClass().add("inventory-requests-completed");
-        Label inventoryCompletedLabel = inventoryRequestsCompleted.getSecond();
+        Label inventoryCompletedLabel = inventoryRequestsCompleted.getThird();
         inventoryCompletedLabel.setText(Res.get("navigation.network.info.inventoryRequest.completed"));
         inventoryCompletedLabel.setGraphic(ImageUtil.getImageViewById("check-white"));
 
@@ -68,28 +74,30 @@ public class BannerNotificationView extends View<StackPane, BannerNotificationMo
         root.getChildren().addAll(requestingInventoryHBox, inventoryRequestsCompletedHBox);
         root.getStyleClass().add("banner-notification");
         VBox.setVgrow(root, Priority.ALWAYS);
+
+        widthListener = ((observable, oldValue, newValue) -> onWidthChanged(newValue.doubleValue()));
     }
 
-    private Pair<HBox, Label> getInventoryRequestBox() {
+    private Quadruple<HBox, HBox, Label, Label> getInventoryRequestBox() {
         Label infoLabel = new Label();
         infoLabel.getStyleClass().add("inventory-requests-label");
+        Label dotsLabel = new Label("");
+        dotsLabel.getStyleClass().add("inventory-requests-label");
 
-        HBox infoBox = new HBox(infoLabel);
-        infoBox.setMinWidth(200);
-        infoBox.setMaxWidth(200);
-        infoBox.setMinHeight(BANNER_HEIGHT);
-        infoBox.setMaxHeight(BANNER_HEIGHT);
-        infoBox.setAlignment(Pos.CENTER_LEFT);
+        HBox inventoryInfoHBox = new HBox(infoLabel, dotsLabel);
+        inventoryInfoHBox.setMinHeight(BANNER_HEIGHT);
+        inventoryInfoHBox.setMaxHeight(BANNER_HEIGHT);
+        inventoryInfoHBox.setAlignment(Pos.CENTER_LEFT);
 
+        HBox infoBox = new HBox(inventoryInfoHBox);
         HBox hBox = new HBox(5, Spacer.fillHBox(), infoBox, Spacer.fillHBox());
         hBox.setAlignment(Pos.CENTER);
         VBox.setVgrow(hBox, Priority.ALWAYS);
-        return new Pair<>(hBox, infoLabel);
+        return new Quadruple<>(inventoryInfoHBox, hBox, infoLabel, dotsLabel);
     }
 
     @Override
     protected void onViewAttached() {
-        requestingInventoryLabel.setText(model.getMaxInventoryRequests());
         Tooltip.install(root, inventoryRequestsTooltip);
         inventoryRequestsCompletedHBox.setTranslateY(-BANNER_HEIGHT);
 
@@ -102,7 +110,7 @@ public class BannerNotificationView extends View<StackPane, BannerNotificationMo
             }
         });
         inventoryDataChangeFlagPin = EasyBind.subscribe(model.getInventoryDataChangeFlag(), inventoryDataChangeFlag -> {
-            requestingInventoryLabel.setText(model.getInventoryRequestsInfo());
+            requestingInventoryDotsLabel.setText(model.getInventoryRequestsDotsAnimation());
             boolean initialInventoryRequestsCompleted = model.getInitialInventoryRequestsCompleted().get();
             String allReceived = initialInventoryRequestsCompleted ? Res.get("confirmation.yes") : Res.get("confirmation.no");
             inventoryRequestsTooltip.setText(
@@ -111,6 +119,8 @@ public class BannerNotificationView extends View<StackPane, BannerNotificationMo
                         model.getMaxInventoryRequests(),
                         allReceived));
         });
+
+        requestingInventoryLabel.widthProperty().addListener(widthListener);
     }
 
     @Override
@@ -123,10 +133,22 @@ public class BannerNotificationView extends View<StackPane, BannerNotificationMo
 
         inventoryDataChangeFlagPin.unsubscribe();
         initialInventoryRequestsCompletedPin.unsubscribe();
+
+        requestingInventoryLabel.widthProperty().removeListener(widthListener);
     }
 
     private void hideBanner() {
         root.setManaged(false);
         root.setVisible(false);
+    }
+
+    private void onWidthChanged(double width) {
+        UIThread.runOnNextRenderFrame(() -> {
+            if (width > 0) {
+                double dotsWidth = 25;
+                inventoryInfoHBox.setMinWidth(width + dotsWidth);
+                inventoryInfoHBox.setMaxWidth(width + dotsWidth);
+            }
+        });
     }
 }
