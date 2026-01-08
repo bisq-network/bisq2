@@ -42,6 +42,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -50,9 +51,9 @@ public class FileMutatorUtils {
 
     private static final boolean IS_POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
 
-    private static boolean supportsModernFilesApi = true;
-    private static boolean supportsPosixPermissions = true;
-    private static boolean configured = false;
+    private static volatile boolean supportsModernFilesApi = true;
+    private static volatile boolean supportsPosixPermissions = true;
+    private static final AtomicBoolean configured = new AtomicBoolean(false);
 
     private static final Set<PosixFilePermission> OWNER_READ_WRITE_PERMISSIONS =
             EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
@@ -68,15 +69,14 @@ public class FileMutatorUtils {
      * Sets platform file capabilities.
      * Intended to be called once at startup.
      */
-    public static synchronized void setup(boolean supportsModernFilesApi, boolean supportsPosixPermissions) {
-        if (configured) {
+    public static void setup(boolean supportsModernFilesApi, boolean supportsPosixPermissions) {
+        if (!configured.compareAndSet(false, true)) {
             log.warn("FileMutatorUtils already configured, ignoring repeated setup call");
             return;
         }
 
         FileMutatorUtils.supportsModernFilesApi = supportsModernFilesApi;
         FileMutatorUtils.supportsPosixPermissions = supportsPosixPermissions;
-        configured = true;
     }
 
     /**

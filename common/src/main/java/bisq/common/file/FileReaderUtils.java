@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -43,21 +44,20 @@ import java.util.stream.Stream;
 public class FileReaderUtils {
     public static final String FILE_SEP = File.separator;
 
-    private static boolean supportsModernFilesApi = true;
-    private static boolean configured = false;
+    private static volatile boolean supportsModernFilesApi = true;
+    private static final AtomicBoolean configured = new AtomicBoolean(false);
 
     /**
      * Sets platform file capabilities.
      * Intended to be called once at startup.
      */
-    public static synchronized void setup(boolean supportsModernFilesApi) {
-        if (configured) {
+    public static void setup(boolean supportsModernFilesApi) {
+        if (!configured.compareAndSet(false, true)) {
             log.warn("FileReaderUtils already configured, ignoring repeated setup call");
             return;
         }
 
         FileReaderUtils.supportsModernFilesApi = supportsModernFilesApi;
-        configured = true;
     }
 
     public static String readUTF8String(Path path) throws IOException {
