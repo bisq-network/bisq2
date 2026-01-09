@@ -1,8 +1,8 @@
 package bisq.api.rest_api;
 
 import bisq.common.util.StringUtils;
+import bisq.api.ApiConfig;
 import bisq.api.auth.ApiAuthFilter;
-import bisq.api.config.CommonApiConfig;
 import bisq.api.rest_api.error.CustomExceptionMapper;
 import bisq.api.rest_api.error.RestApiException;
 import bisq.api.rest_api.util.SwaggerResolution;
@@ -12,9 +12,9 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 public abstract class BaseRestApiResourceConfig extends ResourceConfig {
-    public BaseRestApiResourceConfig(CommonApiConfig config) {
+    public BaseRestApiResourceConfig(ApiConfig apiConfig) {
         super();
-        String swaggerBaseUrl = config.getRestApiBaseUrl();
+        String swaggerBaseUrl = apiConfig.getRestServerUrl();
         ObjectMapper mapper = new ObjectMapper();
 
         register(CustomExceptionMapper.class)
@@ -22,13 +22,13 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
                 .register(mapper);
 
 
-        String password = config.getPassword();
+        String password = ""; // TODO config.getPassword();
         if (StringUtils.isNotEmpty(password)) {
             ApiAuthFilter apiAuthFilter = new ApiAuthFilter(password);
             register(apiAuthFilter);
         }
 
-        ApiRequestFilter apiRequestFilter = ApiRequestFilter.from(config);
+        ApiRequestFilter apiRequestFilter = getApiRequestFilter(apiConfig);
         register(apiRequestFilter);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
@@ -43,4 +43,6 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
             }
         });
     }
+
+    protected abstract ApiRequestFilter getApiRequestFilter(ApiConfig apiConfig);
 }

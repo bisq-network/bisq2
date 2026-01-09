@@ -18,24 +18,21 @@
 package bisq.api.rest_api;
 
 import bisq.common.application.Service;
+import bisq.api.ApiConfig;
 import bisq.api.ApiTorOnionService;
-import bisq.api.config.CommonApiConfig;
 import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import com.sun.net.httpserver.HttpServer;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * JAX-RS application for the Bisq REST API
@@ -44,68 +41,36 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class RestApiService implements Service {
-    @Getter
-    public static class Config extends CommonApiConfig {
-        public Config(boolean enabled,
-                      String protocol,
-                      String host,
-                      int port,
-                      boolean localhostOnly,
-                      List<String> whiteListEndPoints,
-                      List<String> blackListEndPoints,
-                      List<String> supportedAuth,
-                      String password,
-                      boolean publishOnionService) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
-        }
-
-        public static Config from(com.typesafe.config.Config config) {
-            com.typesafe.config.Config server = config.getConfig("server");
-            return new Config(
-                    config.getBoolean("enabled"),
-                    server.getString("protocol"),
-                    server.getString("host"),
-                    server.getInt("port"),
-                    config.getBoolean("localhostOnly"),
-                    config.getStringList("whiteListEndPoints"),
-                    config.getStringList("blackListEndPoints"),
-                    config.getStringList("supportedAuth"),
-                    config.getString("password"),
-                    config.getBoolean("publishOnionService")
-            );
-        }
-    }
-
-    private final RestApiService.Config config;
+    private final ApiConfig apiConfig;
     private final BaseRestApiResourceConfig restApiResourceConfig;
     private final ApiTorOnionService apiTorOnionService;
     private Optional<HttpServer> httpServer = Optional.empty();
 
-    public RestApiService(Config config,
+    public RestApiService(ApiConfig apiConfig,
                           BaseRestApiResourceConfig restApiResourceConfig,
                           Path appDataDirPath,
                           SecurityService securityService,
                           NetworkService networkService) {
-        this.config = config;
+        this.apiConfig = apiConfig;
         this.restApiResourceConfig = restApiResourceConfig;
 
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "restApiServer", config.isPublishOnionService());
-
-        if (config.isEnabled() && config.isLocalhostOnly()) {
-            String host = config.getHost();
-            checkArgument(host.equals("127.0.0.1") || host.equals("localhost"),
-                    "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
-        }
+        boolean publishOnionService = true; //TODO apiConfig.isPublishOnionService();
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, apiConfig.getBindPort(), "restApiServer", publishOnionService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (config.isEnabled()) {
+        log.info("initialize");
+        if (!apiConfig.isRestEnabled()) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        if (apiConfig.isEnabled()) {
             return CompletableFuture.supplyAsync(() -> {
-                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBaseUrl()), restApiResourceConfig);
+                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(apiConfig.getRestServerUrl()), restApiResourceConfig);
                         httpServer = Optional.of(server);
                         addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
-                        log.info("Server started at {}.", config.getRestApiBaseUrl());
+                        log.info("Server started at {}.", apiConfig.getRestServerUrl());
                         return true;
                     }, commonForkJoinPool())
                     .thenCompose(result -> apiTorOnionService.initialize());
@@ -116,6 +81,11 @@ public class RestApiService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        if (!apiConfig.isRestEnabled()) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             httpServer.ifPresent(httpServer -> httpServer.stop(1));
             return true;

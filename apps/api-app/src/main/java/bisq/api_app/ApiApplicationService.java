@@ -28,9 +28,8 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
+import bisq.api.ApiConfig;
 import bisq.api.ApiService;
-import bisq.api.rest_api.RestApiService;
-import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
@@ -164,10 +163,8 @@ public class ApiApplicationService extends JavaSeApplicationService {
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 
-        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
-        apiService = new ApiService(restApiConfig,
-                websocketConfig,
+        ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
+        apiService = new ApiService(apiConfig,
                 config.getAppDataDirPath(),
                 securityService,
                 networkService,

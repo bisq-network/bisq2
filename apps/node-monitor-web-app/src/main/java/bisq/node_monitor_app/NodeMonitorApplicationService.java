@@ -28,6 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
+import bisq.api.ApiConfig;
 import bisq.api.rest_api.RestApiService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
@@ -161,11 +162,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 tradeService);
 
         nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
-
-        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        if (restApiConfig.isEnabled()) {
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
-            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
+        ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
+        if (apiConfig.isRestEnabled()) {
+            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig, networkService, nodeMonitorService);
+            restApiService = Optional.of(new RestApiService(apiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
         }
     }
 
