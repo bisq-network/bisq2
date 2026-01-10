@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
-import bisq.http_api.web_socket.BisqConnectClientInfo;
+import bisq.api.web_socket.BisqConnectClientInfo;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;

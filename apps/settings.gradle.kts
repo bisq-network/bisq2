@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 includeBuild("..")
 includeBuild("desktop")
 
-include("http-api-app")
+include("api-app")
 include("seed-node-app")
 include("oracle-node-app")
 include("node-monitor-web-app")

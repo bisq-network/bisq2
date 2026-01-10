@@ -27,7 +27,7 @@ import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.FormUtils;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.http_api.web_socket.BisqConnectClientInfo;
+import bisq.api.web_socket.BisqConnectClientInfo;
 import bisq.i18n.Res;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;

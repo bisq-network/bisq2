@@ -18,7 +18,7 @@
 package bisq.node_monitor_app;
 
 import bisq.application.Executable;
-import bisq.http_api.rest_api.util.StaticFileHandler;
+import bisq.api.rest_api.util.StaticFileHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**

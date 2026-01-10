@@ -19,7 +19,7 @@ package bisq.node_monitor;
 
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.http_api.rest_api.error.RestApiException;
+import bisq.api.rest_api.error.RestApiException;
 import bisq.network.NetworkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
