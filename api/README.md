@@ -1,4 +1,4 @@
-# Bisq HTTP API
+# Bisq API
 
 REST API for testing and interacting with Bisq2.
 
@@ -16,7 +16,7 @@ The Swagger UI provides:
 
 ## Quick Start
 
-1. **Start the Bisq2 application** with HTTP API enabled
+1. **Start the Bisq2 application** with API enabled
 2. **Open Swagger UI** in your browser: `http://localhost:8090/doc/v1/index.html`
 3. **Explore and test** the available endpoints
 
