@@ -72,7 +72,7 @@ public class BisqConnectController implements Controller {
     @Override
     public void onActivate() {
         loadFromConfig();
-        serviceProvider.getHttpApiService().getWebSocketService().ifPresent(ws -> {
+        serviceProvider.getApiService().getWebSocketService().ifPresent(ws -> {
             initialEnabled = true;
             initialExposureMode = ws.isPublishOnionService() ? BisqConnectExposureMode.TOR : BisqConnectExposureMode.LAN;
             websocketInitPin = ws.addInitObserver(up -> UIThread.run(() -> {

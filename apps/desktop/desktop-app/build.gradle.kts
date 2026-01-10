@@ -56,7 +56,7 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
-    implementation("bisq:http-api")
+    implementation("bisq:api")
     implementation("bisq:wallet")
 
     implementation(project(":desktop"))

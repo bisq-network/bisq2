@@ -1,7 +1,7 @@
 package bisq.node_monitor_app;
 
-import bisq.http_api.config.CommonApiConfig;
-import bisq.http_api.rest_api.BaseRestApiResourceConfig;
+import bisq.api.config.CommonApiConfig;
+import bisq.api.rest_api.BaseRestApiResourceConfig;
 import bisq.network.NetworkService;
 import bisq.node_monitor.NodeMonitorRestApi;
 import bisq.node_monitor.NodeMonitorService;

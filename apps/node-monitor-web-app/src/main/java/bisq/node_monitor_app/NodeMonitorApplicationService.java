@@ -28,7 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
-import bisq.http_api.rest_api.RestApiService;
+import bisq.api.rest_api.RestApiService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
