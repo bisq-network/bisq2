@@ -17,6 +17,15 @@
 
 package bisq.api.web_socket;
 
+import bisq.api.ApiConfig;
+import bisq.api.ApiTorOnionService;
+import bisq.api.auth.AuthenticationAddOn;
+import bisq.api.auth.WebSocketMetadataAddOn;
+import bisq.api.validator.WebSocketRequestValidator;
+import bisq.api.web_socket.domain.OpenTradeItemsService;
+import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
+import bisq.api.web_socket.subscription.SubscriptionService;
+import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
@@ -27,15 +36,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
-import bisq.api.ApiTorOnionService;
-import bisq.api.auth.AuthenticationAddOn;
-import bisq.api.auth.WebSocketMetadataAddOn;
-import bisq.api.config.CommonApiConfig;
-import bisq.api.validator.WebSocketRequestValidator;
-import bisq.api.web_socket.domain.OpenTradeItemsService;
-import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
-import bisq.api.web_socket.subscription.SubscriptionService;
-import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.trade.TradeService;
@@ -53,55 +53,16 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class WebSocketService implements Service {
     @Getter
-    public static class Config extends CommonApiConfig {
-        private final boolean includeRestApi;
-
-        public Config(boolean enabled,
-                      boolean includeRestApi,
-                      String protocol,
-                      String host,
-                      int port,
-                      boolean localhostOnly,
-                      List<String> whiteListEndPoints,
-                      List<String> blackListEndPoints,
-                      List<String> supportedAuth,
-                      String password,
-                      boolean publishOnionService) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
-            this.includeRestApi = includeRestApi;
-        }
-
-        public static Config from(com.typesafe.config.Config config) {
-            com.typesafe.config.Config server = config.getConfig("server");
-            return new Config(
-                    config.getBoolean("enabled"),
-                    config.getBoolean("includeRestApi"),
-                    server.getString("protocol"),
-                    server.getString("host"),
-                    server.getInt("port"),
-                    config.getBoolean("localhostOnly"),
-                    config.getStringList("whiteListEndPoints"),
-                    config.getStringList("blackListEndPoints"),
-                    config.getStringList("supportedAuth"),
-                    config.getString("password"),
-                    config.getBoolean("publishOnionService")
-            );
-        }
-    }
-
-    private final Config config;
-
+    private final ApiConfig apiConfig;
     private final WebSocketRestApiResourceConfig restApiResourceConfig;
 
     private final WebSocketConnectionHandler webSocketConnectionHandler;
@@ -113,7 +74,7 @@ public class WebSocketService implements Service {
     private final Observable<String> errorObservable = new Observable<>("");
     private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
 
-    public WebSocketService(Config config,
+    public WebSocketService(ApiConfig apiConfig,
                             WebSocketRestApiResourceConfig restApiResourceConfig,
                             Path appDataDirPath,
                             SecurityService securityService,
@@ -124,7 +85,7 @@ public class WebSocketService implements Service {
                             UserService userService,
                             BisqEasyService bisqEasyService,
                             OpenTradeItemsService openTradeItemsService) {
-        this.config = config;
+        this.apiConfig = apiConfig;
         this.restApiResourceConfig = restApiResourceConfig;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
@@ -138,51 +99,53 @@ public class WebSocketService implements Service {
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
-        WebSocketRequestValidator requestValidator = WebSocketRequestValidator.from(config);
-        webSocketRestApiService = new WebSocketRestApiService(objectMapper, config.getRestApiBaseAddress(), requestValidator);
+        WebSocketRequestValidator requestValidator = new WebSocketRequestValidator(apiConfig.getRestAllowEndpoints(), apiConfig.getRestDenyEndpoints());
+        webSocketRestApiService = new WebSocketRestApiService(objectMapper, apiConfig.getRestServerUrl(), requestValidator);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
 
-        if (config.isEnabled() && config.isLocalhostOnly()) {
-            String host = config.getHost();
-            checkArgument(host.equals("127.0.0.1") || host.equals("localhost"),
-                    "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
-        }
-
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, config.getPort(), "webSocketServer", config.isPublishOnionService());
+        boolean publishOnionService = true; // TODO apiConfig.isPublishOnionService();
+        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, apiConfig.getBindPort(), "webSocketServer", publishOnionService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!config.isEnabled()) {
+        log.info("initialize");
+        if (!apiConfig.isWebsocketEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
+
+        String webSocketProtocol = apiConfig.getWebSocketProtocol();
+        String restProtocol = apiConfig.getRestProtocol();
+        String bindHost = apiConfig.getBindHost();
+        int bindPort = apiConfig.getBindPort();
+
         CompletableFuture<Boolean> initFuture = CompletableFuture.supplyAsync(() -> {
-                    String protocol = config.getProtocol();
-                    String host = config.getHost();
-                    int port = config.getPort();
-                    URI baseUri = UriBuilder.fromUri(protocol + host + "/").port(port).build();
-                    HttpServer server = config.includeRestApi
+                    // We use `http(s)` not `ws(s)` here
+                    String uri = restProtocol + "://" + bindHost + "/";
+                    URI baseUri = UriBuilder.fromUri(uri).port(bindPort).build();
+                    boolean restEnabled = apiConfig.isRestEnabled();
+                    HttpServer server = restEnabled
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
                     server.getListener("grizzly").registerAddOn(new WebSocketMetadataAddOn());
-                    String password = config.getPassword();
+                    String password = ""; //TODO
                     if (StringUtils.isNotEmpty(password)) {
                         server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
                     }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);
 
-                    if (config.isIncludeRestApi()) {
+                    if (restEnabled) {
                         server.getServerConfiguration().addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
                     }
 
                     try {
                         server.start();
                         log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at 'ws://{}:{}/websocket'", host, port);
-                        if (config.isIncludeRestApi()) {
-                            log.info("Rest API endpoints available at '{}'", config.getRestApiBaseUrl());
+                        log.info("WebSocket endpoint available at: {}/websocket", apiConfig.getWebSocketServerUrl());
+                        if (restEnabled) {
+                            log.info("Rest API endpoints available at: {}", apiConfig.getRestServerUrl());
                         }
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
@@ -211,7 +174,7 @@ public class WebSocketService implements Service {
                 if (isPublishOnionService()) {
                     addressObservable.set(apiTorOnionService.getPublishedAddress());
                 } else {
-                    addressObservable.set(Optional.of(new ClearnetAddress("0.0.0.0", config.getPort())));
+                    addressObservable.set(Optional.of(new ClearnetAddress("0.0.0.0", bindPort)));
                 }
             } else {
                 initializedObservable.set(false);
@@ -223,6 +186,11 @@ public class WebSocketService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        if (!apiConfig.isWebsocketEnabled()) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         return subscriptionService.shutdown()
                 .thenCompose(r -> webSocketRestApiService.shutdown())
                 .thenCompose(r -> webSocketConnectionHandler.shutdown())

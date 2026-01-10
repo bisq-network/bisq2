@@ -1,6 +1,6 @@
 package bisq.api.web_socket;
 
-import bisq.api.config.CommonApiConfig;
+import bisq.api.ApiConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.domain.explorer.ExplorerRestApi;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ApplicationPath("/api/v1")
 public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
-    public WebSocketRestApiResourceConfig(CommonApiConfig config,
+    public WebSocketRestApiResourceConfig(ApiConfig apiConfig,
                                           OfferbookRestApi offerbookRestApi,
                                           TradeRestApi tradeRestApi,
                                           TradeChatMessagesRestApi tradeChatMessagesRestApi,
@@ -29,6 +29,6 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           PaymentAccountsRestApi paymentAccountsRestApi,
                                           ReputationRestApi reputationRestApi,
                                           UserProfileRestApi userProfileRestApi) {
-        super(config, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi, reputationRestApi, userProfileRestApi);
+        super(apiConfig, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi, reputationRestApi, userProfileRestApi);
     }
 }

@@ -62,9 +62,9 @@ public class ApiService implements Service {
     private final Optional<RestApiService> restApiService;
     @Getter
     private final Optional<WebSocketService> webSocketService;
+    private final ApiConfig apiConfig;
 
-    public ApiService(RestApiService.Config restApiConfig,
-                      WebSocketService.Config webSocketConfig,
+    public ApiService(ApiConfig apiConfig,
                       Path appDataDirPath,
                       SecurityService securityService,
                       NetworkService networkService,
@@ -78,9 +78,9 @@ public class ApiService implements Service {
                       OpenTradeItemsService openTradeItemsService,
                       AccountService accountService,
                       ReputationService reputationService) {
-        boolean restApiConfigEnabled = restApiConfig.isEnabled();
-        boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
-        if (restApiConfigEnabled || webSocketConfigEnabled) {
+        this.apiConfig = apiConfig;
+
+        if (apiConfig.isEnabled()) {
             OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                     bondedRolesService.getMarketPriceService(),
                     userService);
@@ -101,8 +101,8 @@ public class ApiService implements Service {
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-            if (restApiConfigEnabled) {
-                var restApiResourceConfig = new RestApiResourceConfig(restApiConfig,
+            if (apiConfig.isRestEnabled()) {
+                var restApiResourceConfig = new RestApiResourceConfig(apiConfig,
                         offerbookRestApi,
                         tradeRestApi,
                         tradeChatMessagesRestApi,
@@ -113,13 +113,13 @@ public class ApiService implements Service {
                         paymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
-                restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
+                restApiService = Optional.of(new RestApiService(apiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
             }
 
-            if (webSocketConfigEnabled) {
-                var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig,
+            if (apiConfig.isWebsocketEnabled()) {
+                var webSocketResourceConfig = new WebSocketRestApiResourceConfig(apiConfig,
                         offerbookRestApi,
                         tradeRestApi,
                         tradeChatMessagesRestApi,
@@ -130,7 +130,7 @@ public class ApiService implements Service {
                         paymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi);
-                webSocketService = Optional.of(new WebSocketService(webSocketConfig,
+                webSocketService = Optional.of(new WebSocketService(apiConfig,
                         webSocketResourceConfig,
                         appDataDirPath,
                         securityService,
@@ -153,6 +153,10 @@ public class ApiService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        if (!apiConfig.isEnabled()) {
+            return CompletableFuture.completedFuture(true);
+        }
         return CompletableFutureUtils.allOf(
                         restApiService.map(RestApiService::initialize)
                                 .orElse(CompletableFuture.completedFuture(true)),
@@ -164,6 +168,10 @@ public class ApiService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        if (!apiConfig.isEnabled()) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         return CompletableFutureUtils.allOf(
                         restApiService.map(RestApiService::shutdown)
                                 .orElse(CompletableFuture.completedFuture(true)),

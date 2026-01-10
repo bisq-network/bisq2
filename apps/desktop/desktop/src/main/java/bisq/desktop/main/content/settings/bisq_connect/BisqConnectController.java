@@ -29,6 +29,7 @@ import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.api.ApiConfig;
 import bisq.i18n.Res;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -150,24 +151,17 @@ public class BisqConnectController implements Controller {
                 .withFallback(appConfig.getRootConfig())
                 .resolve();
 
-        Config websocketConfig = currentOverrideConfig.getConfig("application.websocket");
-        Config websocketServerConfig = websocketConfig.getConfig("server");
+        ApiConfig apiConfig = ApiConfig.from(currentOverrideConfig.getConfig("application.api"));
 
-        boolean enabled = websocketConfig.getBoolean("enabled");
-        boolean publishOnionService = websocketConfig.getBoolean("publishOnionService");
-        int port = websocketServerConfig.getInt("port");
-        String password = websocketConfig.getString("password");
+        //TODO fill with dummy data for now
+        savedEnabled = apiConfig.isWebsocketEnabled();
+        savedMode = BisqConnectExposureMode.LAN;
+        savedPassword = "";
 
-        BisqConnectExposureMode mode = publishOnionService ? BisqConnectExposureMode.TOR : BisqConnectExposureMode.LAN;
-
-        savedEnabled = enabled;
-        savedMode = mode;
-        savedPassword = password;
-
-        model.getEnabled().set(enabled);
-        model.getSelectedMode().set(mode);
-        model.getPort().set(port);
-        model.getPassword().set(password);
+        model.getEnabled().set(apiConfig.isWebsocketEnabled());
+        model.getSelectedMode().set(BisqConnectExposureMode.LAN);
+        model.getPort().set(apiConfig.getBindPort());
+        model.getPassword().set("");
         model.getIsChangeDetected().set(false);
     }
 
@@ -220,16 +214,13 @@ public class BisqConnectController implements Controller {
     private void writeCustomConfig() {
         ApplicationService.Config appConfig = serviceProvider.getConfig();
         Path appDataDirPath = appConfig.getAppDataDirPath();
-
-        boolean torMode = model.getSelectedMode().get().isTor();
-        String password = Optional.ofNullable(model.getPassword().get()).orElse("");
-
+        //TODO use dummy data for now
         Config newConfig = ConfigFactory.parseMap(Map.of(
-                "application.websocket.enabled", model.getEnabled().get(),
-                "application.websocket.localhostOnly", torMode,
-                "application.websocket.publishOnionService", torMode,
-                "application.websocket.server.host", torMode ? "localhost" : "0.0.0.0",
-                "application.websocket.password", password
+                "application.api.accessTransportType", "CLEARNET",
+                "application.api.server.websocketEnabled", true,
+                "application.api.server.restEnabled", true,
+                "application.api.server.bind.host","localhost",
+                "application.api.server.bind.port", 8080
         ));
 
         Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
@@ -245,7 +236,7 @@ public class BisqConnectController implements Controller {
             FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
         } catch (IOException e) {
             log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
-            throw new RuntimeException(e);
+            new Popup().error(e).show();
         }
     }
 

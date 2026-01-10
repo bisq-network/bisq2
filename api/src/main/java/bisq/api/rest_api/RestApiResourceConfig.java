@@ -1,6 +1,6 @@
 package bisq.api.rest_api;
 
-import bisq.api.config.CommonApiConfig;
+import bisq.api.ApiConfig;
 import bisq.api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.api.rest_api.domain.market_price.MarketPriceRestApi;
@@ -11,6 +11,7 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.api.validator.ApiRequestFilter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -18,7 +19,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 @Getter
 @Slf4j
 public class RestApiResourceConfig extends BaseRestApiResourceConfig {
-    public RestApiResourceConfig(CommonApiConfig config,
+    public RestApiResourceConfig(ApiConfig apiConfig,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatMessagesRestApi tradeChatMessagesRestApi,
@@ -29,7 +30,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi) {
-        super(config);
+        super(apiConfig);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
 
@@ -62,5 +63,10 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
             }
         });
+    }
+
+    @Override
+    protected ApiRequestFilter getApiRequestFilter(ApiConfig apiConfig) {
+        return new ApiRequestFilter(apiConfig.getRestAllowEndpoints(), apiConfig.getRestDenyEndpoints());
     }
 }
