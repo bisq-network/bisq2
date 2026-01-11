@@ -18,13 +18,14 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.web_socket.WebSocketMessage;
+import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -38,20 +39,21 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String path;
     private String method;
     private String body;
-    private String authToken;
-    private String authTs;
-    private String authNonce;
+    private Map<String, String> headers;
+    private String deviceId;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&
                 message.contains("path") &&
                 message.contains("method") &&
-                message.contains("body");
+                message.contains("body") &&
+                message.contains("headers") &&
+                message.contains("deviceId");
     }
 
-    public static Optional<WebSocketRestApiRequest> fromJson(ObjectMapper objectMapper, String json) {
+    public static Optional<WebSocketRestApiRequest> fromJson(String json) {
         try {
-            return Optional.of(objectMapper.readValue(json, WebSocketRestApiRequest.class));
+            return Optional.of(JsonMapperProvider.get().readValue(json, WebSocketRestApiRequest.class));
         } catch (JsonProcessingException e) {
             log.error("Json deserialization failed. Message={}", json, e);
         }

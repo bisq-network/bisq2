@@ -93,7 +93,7 @@ public class LocaleRepository {
             Locale currentLocale = LocaleRepository.getDefaultLocale();
 
             if (!locale.getLanguage().isEmpty() && !currentLocale.getCountry().isEmpty()) {
-                log.warn("Locale has no country defined. We apply the country from the current locale.");
+                log.info("Locale has no country defined. We apply the country from the current locale.");
                 return LocaleFactory.from(locale.getLanguage(), currentLocale.getCountry());
             } else {
                 log.info("Could not set the new locale, we fall back to Locale.US");

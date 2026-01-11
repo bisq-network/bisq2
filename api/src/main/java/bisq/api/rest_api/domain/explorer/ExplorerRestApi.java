@@ -19,10 +19,10 @@ package bisq.api.rest_api.domain.explorer;
 
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Tx;
+import bisq.common.json.JsonMapperProvider;
 import bisq.common.util.ExceptionUtil;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.api.rest_api.domain.market_price.QuotesResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -116,7 +116,7 @@ public class ExplorerRestApi extends RestApiBase {
             Tx tx = explorerService.requestTx(txId).get();
             List<ExplorerOutputDto> outputs = tx.getOutputs().stream().map(o -> new ExplorerOutputDto(o.getAddress(), o.getValue())).collect(Collectors.toList());
             ExplorerTxDto explorerTxDto = new ExplorerTxDto(txId, tx.getStatus().isConfirmed(), outputs);
-            log.info("Explorer request result: {}. json={}", explorerTxDto, new ObjectMapper().writeValueAsString(explorerTxDto));
+            log.info("Explorer request result: {}. json={}", explorerTxDto, JsonMapperProvider.get().writeValueAsString(explorerTxDto));
             asyncResponse.resume(buildResponse(Response.Status.OK, explorerTxDto));
         } catch (InterruptedException e) {
             log.warn("Thread got interrupted at getTx method", e);

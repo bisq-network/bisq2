@@ -40,6 +40,7 @@ public final class ApiConfig {
     private final int bindPort;
 
     // api.server.security.*
+    private final boolean authRequired;
     private final boolean tlsRequired;
     private final boolean torClientAuthRequired;
 
@@ -57,6 +58,7 @@ public final class ApiConfig {
             boolean websocketEnabled,
             String bindHost,
             int bindPort,
+            boolean authRequired,
             boolean tlsRequired,
             boolean torClientAuthRequired,
             Optional<List<String>> restAllowEndpoints,
@@ -69,6 +71,7 @@ public final class ApiConfig {
         this.websocketEnabled = websocketEnabled;
         this.bindHost = bindHost;
         this.bindPort = bindPort;
+        this.authRequired = authRequired;
         this.tlsRequired = tlsRequired;
         this.torClientAuthRequired = torClientAuthRequired;
         this.restAllowEndpoints = restAllowEndpoints;
@@ -112,6 +115,7 @@ public final class ApiConfig {
                 bindConfig.getString("host"),
                 bindConfig.getInt("port"),
 
+                securityConfig.getBoolean("authRequired"),
                 securityConfig.getBoolean("tlsRequired"),
                 securityConfig.getBoolean("torClientAuthRequired"),
 
@@ -123,7 +127,11 @@ public final class ApiConfig {
     }
 
     public String getRestServerUrl() {
-        return getRestProtocol() + "://" + bindHost + ":" + bindPort + REST_API_BASE_PATH;
+        return getRestProtocol() + "://" + bindHost + ":" + bindPort;
+    }
+
+    public String getRestServerApiBasePath() {
+        return getRestServerUrl() + REST_API_BASE_PATH;
     }
 
     public String getWebSocketServerUrl() {

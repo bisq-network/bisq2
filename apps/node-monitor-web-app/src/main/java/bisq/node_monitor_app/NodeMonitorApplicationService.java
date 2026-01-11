@@ -18,6 +18,14 @@
 package bisq.node_monitor_app;
 
 import bisq.account.AccountService;
+import bisq.api.ApiConfig;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.http.PairingRequestHandler;
+import bisq.api.access.pairing.PairingService;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.session.SessionService;
+import bisq.api.rest_api.RestApiService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -28,8 +36,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
-import bisq.api.ApiConfig;
-import bisq.api.rest_api.RestApiService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -164,8 +170,19 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         if (apiConfig.isRestEnabled()) {
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig, networkService, nodeMonitorService);
-            restApiService = Optional.of(new RestApiService(apiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
+            PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
+            PairingService pairingService = new PairingService(permissionService);
+            SessionService sessionService = new SessionService();
+
+            SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
+            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
+                    permissionService,
+                    sessionAuthenticationService,
+                    networkService,
+                    nodeMonitorService);
+
+            PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
+            restApiService = Optional.of(new RestApiService(apiConfig, pairingRequestHandler, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
         }
     }
 

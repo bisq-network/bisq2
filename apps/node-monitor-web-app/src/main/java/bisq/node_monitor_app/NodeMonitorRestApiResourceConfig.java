@@ -1,8 +1,10 @@
 package bisq.node_monitor_app;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.rest_api.BaseRestApiResourceConfig;
-import bisq.api.validator.ApiRequestFilter;
 import bisq.network.NetworkService;
 import bisq.node_monitor.NodeMonitorRestApi;
 import bisq.node_monitor.NodeMonitorService;
@@ -12,10 +14,12 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 @Slf4j
 public class NodeMonitorRestApiResourceConfig extends BaseRestApiResourceConfig {
     public NodeMonitorRestApiResourceConfig(ApiConfig apiConfig,
+                                            PermissionService<RestPermissionMapping> permissionService,
+                                            SessionAuthenticationService sessionAuthenticationService,
                                             NetworkService networkService,
                                             NodeMonitorService nodeMonitorService
     ) {
-        super(apiConfig);
+        super(apiConfig, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
@@ -28,11 +32,5 @@ public class NodeMonitorRestApiResourceConfig extends BaseRestApiResourceConfig 
                 bind(new NodeMonitorRestApi(networkService, nodeMonitorService)).to(NodeMonitorRestApi.class);
             }
         });
-    }
-
-
-    @Override
-    protected ApiRequestFilter getApiRequestFilter(ApiConfig apiConfig) {
-        return new ApiRequestFilter(apiConfig.getRestAllowEndpoints(), apiConfig.getRestDenyEndpoints());
     }
 }

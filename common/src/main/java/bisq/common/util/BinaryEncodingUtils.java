@@ -22,14 +22,27 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public final class BinaryEncodingUtils {
+    public static void writeString(DataOutputStream out, String value, int maxStringLength) throws IOException {
+        if (value.length() > maxStringLength) {
+            throw new IllegalArgumentException("String value too long.");
+        }
+        writeString(out, value);
+    }
+
     public static void writeString(DataOutputStream out, String value) throws IOException {
         byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-        out.writeShort(bytes.length);
-        out.write(bytes);
+        writeBytes(out, bytes);
     }
 
     public static void writeInt(DataOutputStream out, int value) throws IOException {
         out.writeInt(value);
+    }
+
+    public static void writeBytes(DataOutputStream out, byte[] value, int maxLength) throws IOException {
+        if (value.length > maxLength) {
+            throw new IllegalArgumentException("Byte array too long.");
+        }
+        writeBytes(out, value);
     }
 
     public static void writeBytes(DataOutputStream out, byte[] value) throws IOException {
@@ -38,8 +51,11 @@ public final class BinaryEncodingUtils {
     }
 
     public static void writeLong(DataOutputStream out, long value) throws IOException {
-        out.writeShort(8);
         out.writeLong(value);
+    }
+
+    public static void writeByte(DataOutputStream out, byte value) throws IOException {
+        out.writeByte(value);
     }
 }
 

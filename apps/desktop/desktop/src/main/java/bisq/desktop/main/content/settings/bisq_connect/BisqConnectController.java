@@ -17,233 +17,122 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
-import bisq.application.ApplicationService;
-import bisq.application.TypesafeConfigUtils;
-import bisq.common.file.FileMutatorUtils;
-import bisq.common.network.Address;
-import bisq.common.network.ClearnetAddress;
+import bisq.api.ApiConfig;
+import bisq.api.ApiService;
+import bisq.api.access.pairing.PairingCode;
+import bisq.api.access.pairing.PairingService;
+import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
+import bisq.api.access.permissions.Permission;
+import bisq.api.access.transport.ApiAccessTransportService;
+import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
-import bisq.common.util.NetworkUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.api.ApiConfig;
-import bisq.i18n.Res;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
+import bisq.desktop.main.content.settings.bisq_connect.api_config.ApiConfigController;
+import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 public class BisqConnectController implements Controller {
-
-
     @Getter
     private final BisqConnectView view;
     private final BisqConnectModel model;
-    private final ServiceProvider serviceProvider;
-
-    private boolean initialEnabled;
-    private BisqConnectExposureMode initialExposureMode = BisqConnectExposureMode.LAN;
-    private boolean savedEnabled;
-    private BisqConnectExposureMode savedMode = BisqConnectExposureMode.LAN;
-    private String savedPassword;
-
-    private Pin websocketInitPin;
-    private Pin websocketErrorPin;
-    private Pin clientsPin;
-    private Pin websocketAddressPin;
+    private final WebSocketService webSocketService;
+    private final PairingService pairingService;
+    private final ApiAccessTransportService apiAccessTransportService;
+    private final ApiConfigController apiConfigController;
+    private final Set<Pin> pins = new HashSet<>();
+    private Subscription onionAddressSubscription;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
-        this.serviceProvider = serviceProvider;
+        ApiService apiService = serviceProvider.getApiService();
+        webSocketService = apiService.getWebSocketService();
+        pairingService = apiService.getPairingService();
+        apiAccessTransportService = apiService.getApiAccessTransportService();
 
-        model = new BisqConnectModel(220);
-        view = new BisqConnectView(model, this);
+        apiConfigController = new ApiConfigController(serviceProvider);
+        model = new BisqConnectModel(webSocketService.getApiConfig().getWebSocketServerUrl(), 220);
+        view = new BisqConnectView(model, this, apiConfigController.getView().getRoot());
+    }
+
+    private String getServiceUrl(ApiConfig apiConfig) {
+        return apiConfig.getWebSocketProtocol() + "://" + apiConfig.getBindHost() + ":" + apiConfig.getBindPort();
     }
 
     @Override
     public void onActivate() {
-        loadFromConfig();
-        serviceProvider.getApiService().getWebSocketService().ifPresent(ws -> {
-            initialEnabled = true;
-            initialExposureMode = ws.isPublishOnionService() ? BisqConnectExposureMode.TOR : BisqConnectExposureMode.LAN;
-            websocketInitPin = ws.addInitObserver(up -> UIThread.run(() -> {
-                model.getWebsocketRunning().set(up);
-                updatePreview();
-            }));
-            websocketErrorPin = ws.addErrorObserver(msg -> UIThread.run(() -> {
-                model.getWebsocketInitError().set(msg + "\n" + Res.get("settings.bisqConnect.connectionDetails.unexpectedErrorHint"));
-                updatePreview();
-            }));
-            websocketAddressPin = ws.addAddressObserver(address -> UIThread.run(() -> {
-                model.getWebsocketAddress().set(address);
-                updatePreview();
-            }));
-            clientsPin = ws.getWebsocketClients().addObserver(() ->
-                    UIThread.run(() -> model.getConnectedClients().setAll(ws.getWebsocketClients().getUnmodifiableSet())));
-        });
-        UIThread.run(this::updatePreview);
+        pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
+
+        pins.add(webSocketService.getState().addObserver(state -> {
+                    if (state != null) {
+                        UIThread.run(() -> {
+                            boolean isRunning = state == WebSocketService.State.RUNNING;
+                            model.getIsPairingVisible().set(isRunning);
+                            if (isRunning) {
+                                ApiConfig apiConfig = apiConfigController.getApiConfig();
+                                if (apiConfig.useTor()) {
+                                    if (onionAddressSubscription != null) {
+                                        onionAddressSubscription.unsubscribe();
+                                    }
+                                    onionAddressSubscription = EasyBind.subscribe(apiConfigController.getOnionServiceAddress(), address -> {
+                                        if (address != null) {
+                                            createQrCode(apiConfig.getWebSocketProtocol() + "://" + address.getHost() + ":" + address.getPort());
+                                        }
+                                    });
+                                } else {
+                                    createQrCode(apiConfig.getWebSocketServerUrl());
+                                }
+                            }
+                        });
+                    }
+                }
+        ));
+
+
+        //todo list item, binding
+        pins.add(webSocketService.getWebsocketClients().addObserver(() ->
+                UIThread.run(() -> model.getConnectedClients().setAll(webSocketService.getWebsocketClients().getUnmodifiableSet()))));
     }
 
     @Override
     public void onDeactivate() {
-        try {
-            if (websocketInitPin != null) {
-                websocketInitPin.unbind();
-                websocketErrorPin.unbind();
-                websocketAddressPin.unbind();
-                clientsPin.unbind();
-                websocketInitPin = null;
-                websocketErrorPin = null;
-                websocketAddressPin = null;
-                clientsPin = null;
-            }
-        } catch (Exception t) {
-            log.debug("Error removing websocket listeners", t);
+        pins.forEach(Pin::unbind);
+        pins.clear();
+        if (onionAddressSubscription != null) {
+            onionAddressSubscription.unsubscribe();
         }
     }
 
-    void onToggleEnabled(boolean enabled) {
-        model.getEnabled().set(enabled);
-        updateChangeDetectedFlag();
-    }
 
-    void onSelectMode(BisqConnectExposureMode mode) {
-        model.getSelectedMode().set(mode);
-        updateChangeDetectedFlag();
-    }
+    /* --------------------------------------------------------------------- */
+    // QR Code
+    /* --------------------------------------------------------------------- */
 
-    void onPasswordChanged(String password) {
-        String safePassword = password == null ? "" : password;
-        model.getPassword().set(safePassword);
-        updateChangeDetectedFlag();
-    }
+    private void createQrCode(String webSocketUrl) {
+        PairingCode pairingCode = pairingService.createPairingCode(Set.of(Permission.values()));
+        String qrCode = PairingQrCodeGenerator.generateQrCode(pairingCode,
+                webSocketUrl,
+                apiAccessTransportService.getTlsContext(),
+                apiAccessTransportService.getTorContext());
 
-    void onSaveChanges() {
-        if (model.getPasswordIsValid().get()) {
-            writeCustomConfig();
-            savedEnabled = model.getEnabled().get();
-            savedMode = model.getSelectedMode().get();
-            savedPassword = model.getPassword().get();
-            model.getIsChangeDetected().set(false);
-            new Popup()
-                    .feedback(Res.get("settings.bisqConnect.restart.confirm"))
-                    .useShutDownButton()
-                    .show();
-        }
-        updatePreview();
-    }
-
-    private void loadFromConfig() {
-        ApplicationService.Config appConfig = serviceProvider.getConfig();
-        Path appDataDirPath = appConfig.getAppDataDirPath();
-        Config currentOverrideConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath)
-                .orElse(ConfigFactory.empty())
-                .withFallback(appConfig.getRootConfig())
-                .resolve();
-
-        ApiConfig apiConfig = ApiConfig.from(currentOverrideConfig.getConfig("application.api"));
-
-        //TODO fill with dummy data for now
-        savedEnabled = apiConfig.isWebsocketEnabled();
-        savedMode = BisqConnectExposureMode.LAN;
-        savedPassword = "";
-
-        model.getEnabled().set(apiConfig.isWebsocketEnabled());
-        model.getSelectedMode().set(BisqConnectExposureMode.LAN);
-        model.getPort().set(apiConfig.getBindPort());
-        model.getPassword().set("");
-        model.getIsChangeDetected().set(false);
-    }
-
-    private void updatePreview() {
-        Optional<Address> address = model.getWebsocketAddress().get();
-
+        model.getQrCode().set(qrCode);
         try {
-            if (address.isPresent()) {
-                if (address.get().getHost().equals("0.0.0.0")) {
-                    address = Optional.of(new ClearnetAddress(NetworkUtils.findLANHostAddress(Optional.empty()).orElseThrow(), address.get().getPort()));
-                }
-                String url = "http://" + address.get().getFullAddress();
-                applyUrlToModel(url);
-            } else {
-                model.getApiUrl().set("");
-                model.getQrCodeImage().set(null);
-
-                if (model.getEnabled().get() && !initialEnabled) {
-                    model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderRestartRequired"));
-                } else if (!initialEnabled) {
-                    model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderDisabled"));
-                } else {
-                    if (initialExposureMode == BisqConnectExposureMode.LAN) {
-                        model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderLan"));
-                    } else {
-                        model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderTor"));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            model.getApiUrl().set("");
-            model.getQrCodeImage().set(null);
-            model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderLan.error"));
-        }
-    }
-
-    private void applyUrlToModel(String url) {
-        model.getApiUrl().set(url);
-        model.getQrPlaceholder().set("");
-        try {
-            model.getQrCodeImage().set(QrCodeDisplay.toImage(url, model.getQrCodeSize().get()));
+            Image image = QrCodeDisplay.toImage(qrCode, model.getQrCodeSize());
+            model.getQrCodeImage().set(image);
         } catch (RuntimeException e) {
-            log.warn("QR code generation failed", e);
-            model.getApiUrl().set("");
+            log.warn("Generating QR code failed", e);
             model.getQrCodeImage().set(null);
-            model.getQrPlaceholder().set(Res.get("settings.bisqConnect.connectionDetails.placeholderError"));
-        }
-    }
-
-    private void writeCustomConfig() {
-        ApplicationService.Config appConfig = serviceProvider.getConfig();
-        Path appDataDirPath = appConfig.getAppDataDirPath();
-        //TODO use dummy data for now
-        Config newConfig = ConfigFactory.parseMap(Map.of(
-                "application.api.accessTransportType", "CLEARNET",
-                "application.api.server.websocketEnabled", true,
-                "application.api.server.restEnabled", true,
-                "application.api.server.bind.host","localhost",
-                "application.api.server.bind.port", 8080
-        ));
-
-        Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
-        Config config = newConfig.withFallback(customConfig).resolve();
-
-        String rendered = config.root().render(ConfigRenderOptions.defaults()
-                .setOriginComments(false)
-                .setJson(false)
-                .setFormatted(true));
-
-        Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-        try {
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
-        } catch (IOException e) {
-            log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             new Popup().error(e).show();
         }
-    }
-
-    private void updateChangeDetectedFlag() {
-        boolean changeDetected = model.getEnabled().get() != savedEnabled
-                || model.getSelectedMode().get() != savedMode
-                || !Objects.equals(model.getPassword().get(), savedPassword);
-        model.getIsChangeDetected().set(changeDetected);
     }
 }

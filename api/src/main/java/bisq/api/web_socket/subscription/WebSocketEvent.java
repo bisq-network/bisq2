@@ -18,10 +18,10 @@
 package bisq.api.web_socket.subscription;
 
 import bisq.api.web_socket.WebSocketMessage;
+import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,15 +53,14 @@ public class WebSocketEvent implements WebSocketMessage {
         this.sequenceNumber = sequenceNumber;
     }
 
-    public static Optional<String> toJson(ObjectMapper objectMapper,
-                                          Topic topic,
+    public static Optional<String> toJson(Topic topic,
                                           String subscriberId,
                                           String payload,
                                           ModificationType modificationType,
                                           int sequenceNumber) {
         try {
             var webSocketEvent = new WebSocketEvent(topic, subscriberId, payload, modificationType, sequenceNumber);
-            return Optional.of(objectMapper.writeValueAsString(webSocketEvent));
+            return Optional.of(JsonMapperProvider.get().writeValueAsString(webSocketEvent));
         } catch (JsonProcessingException e) {
             log.error("Json serialisation failed", e);
         }

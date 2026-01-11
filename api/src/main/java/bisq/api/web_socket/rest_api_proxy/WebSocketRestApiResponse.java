@@ -18,11 +18,11 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.web_socket.WebSocketMessage;
+import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -48,9 +48,9 @@ public class WebSocketRestApiResponse implements WebSocketMessage {
     }
 
     @JsonIgnore
-    public Optional<String> toJson(ObjectMapper objectMapper) {
+    public Optional<String> toJson() {
         try {
-            return Optional.of(objectMapper.writeValueAsString(this));
+            return Optional.of(JsonMapperProvider.get().writeValueAsString(this));
         } catch (JsonProcessingException e) {
             log.error("Json serialisation failed", e);
         }

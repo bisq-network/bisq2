@@ -17,10 +17,11 @@
 
 package bisq.api.rest_api;
 
-import bisq.common.application.Service;
 import bisq.api.ApiConfig;
-import bisq.api.ApiTorOnionService;
+import bisq.api.access.http.PairingJdkHttpAdapter;
+import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.rest_api.util.StaticFileHandler;
+import bisq.common.application.Service;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import com.sun.net.httpserver.HttpServer;
@@ -41,21 +42,22 @@ import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
  */
 @Slf4j
 public class RestApiService implements Service {
+
     private final ApiConfig apiConfig;
+    private final PairingRequestHandler pairingRequestHandler;
     private final BaseRestApiResourceConfig restApiResourceConfig;
-    private final ApiTorOnionService apiTorOnionService;
     private Optional<HttpServer> httpServer = Optional.empty();
 
     public RestApiService(ApiConfig apiConfig,
+                          PairingRequestHandler pairingRequestHandler,
                           BaseRestApiResourceConfig restApiResourceConfig,
                           Path appDataDirPath,
                           SecurityService securityService,
-                          NetworkService networkService) {
+                          NetworkService networkService
+    ) {
         this.apiConfig = apiConfig;
+        this.pairingRequestHandler = pairingRequestHandler;
         this.restApiResourceConfig = restApiResourceConfig;
-
-        boolean publishOnionService = true; //TODO apiConfig.isPublishOnionService();
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, apiConfig.getBindPort(), "restApiServer", publishOnionService);
     }
 
     @Override
@@ -65,18 +67,21 @@ public class RestApiService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
-        if (apiConfig.isEnabled()) {
-            return CompletableFuture.supplyAsync(() -> {
-                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(apiConfig.getRestServerUrl()), restApiResourceConfig);
-                        httpServer = Optional.of(server);
-                        addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
-                        log.info("Server started at {}.", apiConfig.getRestServerUrl());
-                        return true;
-                    }, commonForkJoinPool())
-                    .thenCompose(result -> apiTorOnionService.initialize());
-        } else {
-            return CompletableFuture.completedFuture(true);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            URI uri = URI.create(apiConfig.getRestServerUrl());
+            HttpServer server = JdkHttpServerFactory.createHttpServer(uri, restApiResourceConfig);
+            httpServer = Optional.of(server);
+
+            // Pairing endpoint (bootstrap)
+            server.createContext(
+                    "/pair",
+                    new PairingJdkHttpAdapter(pairingRequestHandler)
+            );
+
+            addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
+            log.info("Server started at {}.", apiConfig.getRestServerUrl());
+            return true;
+        }, commonForkJoinPool());
     }
 
     @Override

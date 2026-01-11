@@ -18,10 +18,12 @@
 package bisq.api.web_socket;
 
 import bisq.api.ApiConfig;
-import bisq.api.ApiTorOnionService;
-import bisq.api.auth.AuthenticationAddOn;
-import bisq.api.auth.WebSocketMetadataAddOn;
-import bisq.api.validator.WebSocketRequestValidator;
+import bisq.api.access.filter.AccessFilterAddOn;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.http.PairingGrizzlyHttpAdapter;
+import bisq.api.access.http.PairingRequestHandler;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
@@ -30,18 +32,13 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.network.Address;
-import bisq.common.network.ClearnetAddress;
 import bisq.common.observable.Observable;
-import bisq.common.observable.Pin;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,27 +52,37 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 @Slf4j
 public class WebSocketService implements Service {
+    public enum State {
+        NEW,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        TERMINATED
+    }
+
     @Getter
     private final ApiConfig apiConfig;
-    private final WebSocketRestApiResourceConfig restApiResourceConfig;
-
+    private final PairingRequestHandler apiAccessService;
+    private final WebSocketRestApiResourceConfig webSocketRestApiResourceConfig;
+    private final SessionAuthenticationService sessionAuthenticationService;
+    private final PermissionService<RestPermissionMapping> permissionService;
     private final WebSocketConnectionHandler webSocketConnectionHandler;
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
     private Optional<HttpServer> httpServer = Optional.empty();
-    private final ApiTorOnionService apiTorOnionService;
-    private final Observable<Boolean> initializedObservable = new Observable<>(false);
-    private final Observable<String> errorObservable = new Observable<>("");
-    private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
+    private final Observable<String> errorMessage = new Observable<>();
+    private final Observable<State> state = new Observable<>(State.NEW);
 
     public WebSocketService(ApiConfig apiConfig,
-                            WebSocketRestApiResourceConfig restApiResourceConfig,
+                            PairingRequestHandler apiAccessService,
+                            WebSocketRestApiResourceConfig webSocketRestApiResourceConfig,
+                            SessionAuthenticationService sessionAuthenticationService,
+                            PermissionService<RestPermissionMapping> permissionService,
                             Path appDataDirPath,
                             SecurityService securityService,
                             NetworkService networkService,
@@ -86,55 +93,53 @@ public class WebSocketService implements Service {
                             BisqEasyService bisqEasyService,
                             OpenTradeItemsService openTradeItemsService) {
         this.apiConfig = apiConfig;
-        this.restApiResourceConfig = restApiResourceConfig;
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new Jdk8Module());
+        this.apiAccessService = apiAccessService;
+        this.webSocketRestApiResourceConfig = webSocketRestApiResourceConfig;
+        this.sessionAuthenticationService = sessionAuthenticationService;
+        this.permissionService = permissionService;
 
-        //objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        subscriptionService = new SubscriptionService(objectMapper,
-                bondedRolesService,
+        subscriptionService = new SubscriptionService(bondedRolesService,
                 chatService,
                 tradeService,
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
-        WebSocketRequestValidator requestValidator = new WebSocketRequestValidator(apiConfig.getRestAllowEndpoints(), apiConfig.getRestDenyEndpoints());
-        webSocketRestApiService = new WebSocketRestApiService(objectMapper, apiConfig.getRestServerUrl(), requestValidator);
+        webSocketRestApiService = new WebSocketRestApiService(apiConfig, apiConfig.getRestServerUrl());
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
-
-        boolean publishOnionService = true; // TODO apiConfig.isPublishOnionService();
-        apiTorOnionService = new ApiTorOnionService(appDataDirPath, securityService, networkService, apiConfig.getBindPort(), "webSocketServer", publishOnionService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        if (!apiConfig.isWebsocketEnabled()) {
+        if (!apiConfig.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
 
-        String webSocketProtocol = apiConfig.getWebSocketProtocol();
-        String restProtocol = apiConfig.getRestProtocol();
-        String bindHost = apiConfig.getBindHost();
-        int bindPort = apiConfig.getBindPort();
+        setState(State.STARTING);
+        return CompletableFuture.supplyAsync(() -> {
+                    String protocol = apiConfig.getWebSocketProtocol();
+                    String bindHost = apiConfig.getBindHost();
+                    int bindPort = apiConfig.getBindPort();
 
-        CompletableFuture<Boolean> initFuture = CompletableFuture.supplyAsync(() -> {
-                    // We use `http(s)` not `ws(s)` here
-                    String uri = restProtocol + "://" + bindHost + "/";
-                    URI baseUri = UriBuilder.fromUri(uri).port(bindPort).build();
+                    URI baseUri = UriBuilder
+                            .fromUri(protocol + "://" + bindHost + "/")
+                            .port(bindPort)
+                            .build();
+
                     boolean restEnabled = apiConfig.isRestEnabled();
                     HttpServer server = restEnabled
-                            ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
+                            ? GrizzlyHttpServerFactory.createHttpServer(baseUri, webSocketRestApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);
                     httpServer = Optional.of(server);
-                    server.getListener("grizzly").registerAddOn(new WebSocketMetadataAddOn());
-                    String password = ""; //TODO
-                    if (StringUtils.isNotEmpty(password)) {
-                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
-                    }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
+
+                    if (apiConfig.isAuthRequired()) {
+                        server.getListener("grizzly").registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
+                    }
+
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);
+
+                    server.getServerConfiguration().addHttpHandler(new PairingGrizzlyHttpAdapter(apiAccessService), "/pair");
 
                     if (restEnabled) {
                         server.getServerConfiguration().addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
@@ -143,18 +148,16 @@ public class WebSocketService implements Service {
                     try {
                         server.start();
                         log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at: {}/websocket", apiConfig.getWebSocketServerUrl());
+                        log.info("WebSocket endpoint available at 'ws://{}:{}/websocket'", bindHost, bindPort);
                         if (restEnabled) {
-                            log.info("Rest API endpoints available at: {}", apiConfig.getRestServerUrl());
+                            log.info("Rest API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
                         }
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
                         server.shutdownNow();
-                        initializedObservable.set(false);
-                        notifyErrorListeners(e.getMessage());
+                        errorMessage.set(e.getMessage());
                         return false;
                     }
-                    initializedObservable.set(true);
                     return true;
                 }, commonForkJoinPool())
                 .thenCompose(result -> {
@@ -166,62 +169,50 @@ public class WebSocketService implements Service {
                         return CompletableFuture.completedFuture(false);
                     }
                 })
-                .thenCompose(result -> apiTorOnionService.initialize());
-        initFuture.whenComplete((res, ex) -> {
-            if (ex != null) {
-                notifyErrorListeners(ex.getMessage());
-            } else if (res != null && res) {
-                if (isPublishOnionService()) {
-                    addressObservable.set(apiTorOnionService.getPublishedAddress());
-                } else {
-                    addressObservable.set(Optional.of(new ClearnetAddress("0.0.0.0", bindPort)));
-                }
-            } else {
-                initializedObservable.set(false);
-                notifyErrorListeners("Initialization completed with failure");
-            }
-        });
-        return initFuture;
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        errorMessage.set(ex.getMessage());
+                    } else if (res != null && res) {
+                        setState(State.RUNNING);
+                    } else {
+                        errorMessage.set("Initialization completed without success state");
+                    }
+                });
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (!apiConfig.isWebsocketEnabled()) {
+        if (!apiConfig.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
 
+        setState(State.STOPPING);
         return subscriptionService.shutdown()
                 .thenCompose(r -> webSocketRestApiService.shutdown())
                 .thenCompose(r -> webSocketConnectionHandler.shutdown())
                 .thenCompose(r -> CompletableFuture.supplyAsync(() -> {
                     httpServer.ifPresent(HttpServer::shutdown);
                     httpServer = Optional.empty();
+                    setState(State.TERMINATED);
                     return true;
                 }, commonForkJoinPool()));
     }
 
-    public ObservableSet<BisqConnectClientInfo> getWebsocketClients() {
+    public ObservableSet<WebsocketClient1> getWebsocketClients() {
         return webSocketConnectionHandler.getWebsocketClients();
     }
 
-    public Boolean isPublishOnionService() {
-        return apiTorOnionService.isPublishOnionService();
+    public ReadOnlyObservable<State> getState() {
+        return state;
     }
 
-    public Pin addInitObserver(Consumer<Boolean> observer) {
-        return initializedObservable.addObserver(observer);
+    private void setState(State value) {
+        log.info("New state: {}", value);
+        state.set(value);
     }
 
-    public Pin addErrorObserver(Consumer<String> observer) {
-        return errorObservable.addObserver(observer);
-    }
-
-    public Pin addAddressObserver(Consumer<Optional<Address>> observer) {
-        return addressObservable.addObserver(observer);
-    }
-
-    private void notifyErrorListeners(String msg) {
-        errorObservable.set(msg == null ? "" : msg);
+    public ReadOnlyObservable<String> getErrorMessage() {
+        return errorMessage;
     }
 }

@@ -17,6 +17,9 @@
 
 package bisq.api.web_socket.domain.offers;
 
+import bisq.api.web_socket.domain.BaseWebSocketService;
+import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -25,20 +28,21 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
-import bisq.api.web_socket.domain.BaseWebSocketService;
-import bisq.api.web_socket.subscription.ModificationType;
-import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,12 +58,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final MarketPriceService marketPriceService;
     private final Set<Pin> pins = new HashSet<>();
 
-    public OffersWebSocketService(ObjectMapper objectMapper,
-                                  SubscriberRepository subscriberRepository,
+    public OffersWebSocketService(SubscriberRepository subscriberRepository,
                                   ChatService chatService,
                                   UserService userService,
                                   BondedRolesService bondedRolesService) {
-        super(objectMapper, subscriberRepository, OFFERS);
+        super(subscriberRepository, OFFERS);
 
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         userProfileService = userService.getUserProfileService();
