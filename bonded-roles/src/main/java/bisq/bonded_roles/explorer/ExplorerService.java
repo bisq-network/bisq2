@@ -21,6 +21,7 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
+import bisq.common.json.JsonMapperProvider;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -30,7 +31,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -231,7 +231,7 @@ public class ExplorerService implements Service {
                             log.info("Received tx lookup response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
-                            return new ObjectMapper().readValue(json, Tx.class);
+                            return JsonMapperProvider.get().readValue(json, Tx.class);
                         } catch (Exception e) {
                             shutdownHttpClient(client);
                             if (shutdownStarted) {

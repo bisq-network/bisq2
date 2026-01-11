@@ -18,11 +18,12 @@
 package bisq.api.web_socket;
 
 
+import bisq.api.access.filter.Attributes;
+import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
+import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
-import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
-import bisq.api.web_socket.subscription.SubscriptionService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.DataFrame;
@@ -30,21 +31,21 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static bisq.api.auth.WebSocketRequestMetadataFilter.ATTR_WS_REMOTE_ADDRESS;
-import static bisq.api.auth.WebSocketRequestMetadataFilter.ATTR_WS_USER_AGENT;
-
 @Slf4j
 public class WebSocketConnectionHandler extends WebSocketApplication implements Service {
-    public final ExecutorService executor = ExecutorFactory.newCachedThreadPool("WebSocketConnectionHandler", 1, 50, 30);
+    public final ExecutorService executor = ExecutorFactory.newCachedThreadPool("WebSocketConnectionHandler",
+            1, 50, 30);
+
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
     @Getter
-    private final ObservableSet<BisqConnectClientInfo> websocketClients = new ObservableSet<>();
+    private final ObservableSet<WebsocketClient1> websocketClients = new ObservableSet<>();
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService) {
@@ -96,27 +97,27 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
 
     private void updateWebsocketClients() {
         try {
-            websocketClients.setAll(getWebSockets().stream().map(ws -> {
-                Optional<String> addr = Optional.empty();
-                Optional<String> ua = Optional.empty();
-                try {
-                    if (ws instanceof DefaultWebSocket dws) {
-                        try {
-                            addr = Optional.of((String) dws.getUpgradeRequest().getAttribute(ATTR_WS_REMOTE_ADDRESS));
-                        } catch (Exception ignore) {
-                        }
-                        try {
-                            ua = Optional.of((String) dws.getUpgradeRequest().getAttribute(ATTR_WS_USER_AGENT));
-                        } catch (Exception ignore) {
-                        }
-                        return new BisqConnectClientInfo(addr, ua);
-                    }
-                } catch (Exception ignore) {
+            websocketClients.setAll(getWebSockets().stream().map(webSocket -> {
+                Optional<String> address = Optional.empty();
+                Optional<String> userAgent = Optional.empty();
+                if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
+                    HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
+                    address = getAttribute(request, Attributes.REMOTE_ADDRESS);
+                    userAgent = getAttribute(request, Attributes.USER_AGENT);
                 }
-                return new BisqConnectClientInfo(addr, ua);
+                return new WebsocketClient1(address, userAgent);
             }).collect(Collectors.toSet()));
         } catch (Exception t) {
             log.warn("Could not notify clients listeners", t);
+        }
+    }
+
+    private static Optional<String> getAttribute(HttpServletRequest request, String key) {
+        Object attribute = request.getAttribute(key);
+        if (attribute instanceof String value) {
+            return Optional.of(value);
+        } else {
+            return Optional.empty();
         }
     }
 }

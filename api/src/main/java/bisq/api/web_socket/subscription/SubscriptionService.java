@@ -18,10 +18,6 @@
 package bisq.api.web_socket.subscription;
 
 
-import bisq.bisq_easy.BisqEasyService;
-import bisq.bonded_roles.BondedRolesService;
-import bisq.chat.ChatService;
-import bisq.common.application.Service;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
@@ -32,20 +28,22 @@ import bisq.api.web_socket.domain.offers.OffersWebSocketService;
 import bisq.api.web_socket.domain.reputation.ReputationWebSocketService;
 import bisq.api.web_socket.domain.trades.TradePropertiesWebSocketService;
 import bisq.api.web_socket.domain.trades.TradesWebSocketService;
+import bisq.api.web_socket.domain.user_profile.NumUserProfilesWebSocketService;
 import bisq.api.web_socket.util.JsonUtil;
+import bisq.bisq_easy.BisqEasyService;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatService;
+import bisq.common.application.Service;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import bisq.api.web_socket.domain.user_profile.NumUserProfilesWebSocketService;
 
 @Slf4j
 public class SubscriptionService implements Service {
-    private final ObjectMapper objectMapper;
     private final SubscriberRepository subscriberRepository;
     private final MarketPriceWebSocketService marketPriceWebSocketService;
     private final NumOffersWebSocketService numOffersWebSocketService;
@@ -57,30 +55,26 @@ public class SubscriptionService implements Service {
     private final ReputationWebSocketService reputationWebSocketService;
     private final NumUserProfilesWebSocketService numUserProfilesWebSocketService;
 
-    public SubscriptionService(ObjectMapper objectMapper,
-                               BondedRolesService bondedRolesService,
+    public SubscriptionService(BondedRolesService bondedRolesService,
                                ChatService chatService,
                                TradeService tradeService,
                                UserService userService,
                                BisqEasyService bisqEasyService,
                                OpenTradeItemsService openTradeItemsService) {
-        this.objectMapper = objectMapper;
         subscriberRepository = new SubscriberRepository();
 
-        marketPriceWebSocketService = new MarketPriceWebSocketService(objectMapper, subscriberRepository, bondedRolesService);
-        numOffersWebSocketService = new NumOffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bisqEasyService);
-        offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
-        tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
-        tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
-        tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(objectMapper,
-                subscriberRepository,
+        marketPriceWebSocketService = new MarketPriceWebSocketService(subscriberRepository, bondedRolesService);
+        numOffersWebSocketService = new NumOffersWebSocketService(subscriberRepository, chatService, userService, bisqEasyService);
+        offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService);
+        tradesWebSocketService = new TradesWebSocketService(subscriberRepository, openTradeItemsService);
+        tradePropertiesWebSocketService = new TradePropertiesWebSocketService(subscriberRepository, tradeService);
+        tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService( subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService(),
                 userService.getUserProfileService());
-        chatReactionsWebSocketService = new ChatReactionsWebSocketService(objectMapper,
-                subscriberRepository,
+        chatReactionsWebSocketService = new ChatReactionsWebSocketService(  subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService());
-        reputationWebSocketService = new ReputationWebSocketService(objectMapper, subscriberRepository, userService.getReputationService());
-        numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(objectMapper, subscriberRepository, userService);
+        reputationWebSocketService = new ReputationWebSocketService(subscriberRepository, userService.getReputationService());
+        numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(subscriberRepository, userService);
     }
 
     @Override
@@ -118,7 +112,7 @@ public class SubscriptionService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        SubscriptionRequest.fromJson(objectMapper, json)
+        SubscriptionRequest.fromJson(json)
                 .ifPresent(subscriptionRequest ->
                         subscribe(subscriptionRequest, webSocket));
     }
@@ -128,8 +122,7 @@ public class SubscriptionService implements Service {
         subscriberRepository.add(request, webSocket);
         findWebSocketService(request.getTopic())
                 .flatMap(BaseWebSocketService::getJsonPayload)
-                .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null)
-                        .toJson(objectMapper))
+                .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null).toJson())
                 .ifPresent(json -> {
                     log.info("Send SubscriptionResponse json: {}", json);
                     webSocket.send(json);

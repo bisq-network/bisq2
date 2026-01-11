@@ -17,24 +17,22 @@
 
 package bisq.api.web_socket.domain.user_profile;
 
-import bisq.common.observable.Observable;
-import bisq.common.observable.Pin;
 import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
+import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfileService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NumUserProfilesWebSocketService extends SimpleObservableWebSocketService<Observable<Integer>, Integer> {
     private final UserProfileService userProfileService;
 
-    public NumUserProfilesWebSocketService(ObjectMapper objectMapper,
-                                           SubscriberRepository subscriberRepository,
+    public NumUserProfilesWebSocketService(SubscriberRepository subscriberRepository,
                                            UserService userService) {
-        super(objectMapper, subscriberRepository, Topic.NUM_USER_PROFILES);
+        super(subscriberRepository, Topic.NUM_USER_PROFILES);
         this.userProfileService = userService.getUserProfileService();
     }
 

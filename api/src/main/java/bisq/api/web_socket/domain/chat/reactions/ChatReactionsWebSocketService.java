@@ -17,6 +17,9 @@
 
 package bisq.api.web_socket.domain.chat.reactions;
 
+import bisq.api.web_socket.domain.BaseWebSocketService;
+import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
@@ -25,10 +28,6 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.DtoMappings;
 import bisq.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
-import bisq.api.web_socket.domain.BaseWebSocketService;
-import bisq.api.web_socket.subscription.ModificationType;
-import bisq.api.web_socket.subscription.SubscriberRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -53,10 +52,9 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
     private final Map<String, Pin> chatMessagesPinsByChannelId = new ConcurrentHashMap<>();
     private final Map<String, Pin> chatMessageReactionsPinsByMessageId = new ConcurrentHashMap<>();
 
-    public ChatReactionsWebSocketService(ObjectMapper objectMapper,
-                                         SubscriberRepository subscriberRepository,
+    public ChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
                                          BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
-        super(objectMapper, subscriberRepository, CHAT_REACTIONS);
+        super(subscriberRepository, CHAT_REACTIONS);
 
         this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
     }

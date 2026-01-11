@@ -134,7 +134,6 @@ public class UserProfileRestApi extends RestApiBase {
     }
 
     @GET
-    @Path("")
     @Operation(
             summary = "Get Multiple User Profiles by IDs",
             description = "Fetches a list of user profiles given a comma-separated list of profile IDs.",

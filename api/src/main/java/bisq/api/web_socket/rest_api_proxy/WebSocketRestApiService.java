@@ -17,11 +17,10 @@
 
 package bisq.api.web_socket.rest_api_proxy;
 
-import bisq.common.application.Service;
-import bisq.api.auth.AuthUtils;
-import bisq.api.validator.WebSocketRequestValidator;
+import bisq.api.ApiConfig;
 import bisq.api.web_socket.util.JsonUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import bisq.common.application.Service;
+import bisq.common.network.Address;
 import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,30 +28,26 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
 @ToString
 public class WebSocketRestApiService implements Service {
-    private final ObjectMapper objectMapper;
-    private final String restApiAddress;
-    private final WebSocketRequestValidator requestValidator;
+    private final ApiConfig apiConfig;
+    private final String restServerUrl;
     private Optional<HttpClient> httpClient = Optional.empty();
 
-    public WebSocketRestApiService(ObjectMapper objectMapper,
-                                   String restApiAddress,
-                                   WebSocketRequestValidator requestValidator) {
-        this.objectMapper = objectMapper;
-        this.restApiAddress = restApiAddress;
-        this.requestValidator = requestValidator;
+    public WebSocketRestApiService(ApiConfig apiConfig, String restServerUrl) {
+        this.apiConfig = apiConfig;
+        this.restServerUrl = restServerUrl;
     }
 
     @Override
@@ -72,37 +67,31 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs(), request.getAuthNonce()))
-                .flatMap(response -> response.toJson(objectMapper))
+        WebSocketRestApiRequest.fromJson(json)
+                .map(this::sendToRestApiServer)
+                .flatMap(WebSocketRestApiResponse::toJson)
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
                                 "\nJson={}", json));
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request,
-                                                         @Nullable String authToken,
-                                                         @Nullable String authTs,
-                                                         @Nullable String authNonce) {
-        String errorMessage = requestValidator.validateRequest(request);
-        if (errorMessage != null) {
-            log.error(errorMessage);
-            return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.BAD_REQUEST.getStatusCode(), errorMessage);
+    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
+        if (!Address.fromFullAddress(restServerUrl).getHost().equals("127.0.0.1")) {
+            log.warn("Host of restApiAddress is expected to be 127.0.0.1 when used for wrapped requests from a WebSocket connection");
         }
 
-        String url = restApiAddress + request.getPath();
+        String url = restServerUrl + request.getPath();
         String method = request.getMethod();
         String body = request.getBody();
+
+        // We get the SESSION_ID, NONCE, TIMESTAMP and SIGNATURE headers by the client sent inside the request.headers map.
+        String[] headers = request.getHeaders().entrySet().stream()
+                .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
+                .toArray(String[]::new);
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
+                .headers(headers)
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
-        if (authToken != null && authTs != null && authNonce != null) {
-            requestBuilder.header(AuthUtils.AUTH_HEADER, authToken);
-            requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, authTs);
-            requestBuilder.header(AuthUtils.AUTH_NONCE_HEADER, authNonce);
-        }
         try {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
@@ -111,7 +100,7 @@ public class WebSocketRestApiService implements Service {
             log.info("httpResponse {}", httpResponse);
             return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
-            errorMessage = String.format("Error at sending a '%s' request to '%s' with body: '%s'. Error: %s", method, url, body, e.getMessage());
+            String errorMessage = String.format("Error at sending a '%s' request to '%s' with body: '%s'. Error: %s", method, url, body, e.getMessage());
             log.error(errorMessage, e);
             return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMessage);
         }

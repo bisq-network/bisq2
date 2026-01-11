@@ -17,18 +17,12 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
-import bisq.common.network.Address;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.controls.validator.RequiredFieldValidator;
-import bisq.desktop.components.controls.validator.TextMinLengthValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
-import bisq.api.web_socket.BisqConnectClientInfo;
-import bisq.i18n.Res;
+import bisq.api.web_socket.WebsocketClient1;
+import bisq.api.web_socket.WebSocketService;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -38,32 +32,21 @@ import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 @Getter
 public class BisqConnectModel implements Model {
-    private final BooleanProperty enabled = new SimpleBooleanProperty();
-    private final ObjectProperty<BisqConnectExposureMode> selectedMode = new SimpleObjectProperty<>(BisqConnectExposureMode.TOR);
-    private final IntegerProperty port = new SimpleIntegerProperty();
+    private final String webSocketServerUrl;
+    private final int qrCodeSize;
 
-    private final StringProperty apiUrl = new SimpleStringProperty("");
-    private final BooleanProperty isChangeDetected = new SimpleBooleanProperty();
-    private final StringProperty password = new SimpleStringProperty("");
-    private final BooleanProperty passwordIsValid = new SimpleBooleanProperty();
-    private final ValidatorBase passwordRequiredValidator = new RequiredFieldValidator(Res.get("validation.empty"));
-    private final ValidatorBase passwordMinimumLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"), 8);
-
+    private final ObjectProperty<WebSocketService.State> webSocketServiceState = new SimpleObjectProperty<>(WebSocketService.State.NEW);
+    private final BooleanProperty isPairingVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
-    private final StringProperty qrPlaceholder = new SimpleStringProperty("");
-    private final SimpleIntegerProperty qrCodeSize;
-    private final BooleanProperty websocketRunning = new SimpleBooleanProperty(false);
-    private final StringProperty websocketInitError = new SimpleStringProperty("");
-    private final ObjectProperty<Optional<Address>> websocketAddress = new SimpleObjectProperty<>(Optional.empty());
-    private final ObservableList<BisqConnectClientInfo> connectedClients = FXCollections.observableArrayList();
-    private final ObservableList<BisqConnectExposureMode> exposureModes = FXCollections.observableArrayList(BisqConnectExposureMode.values());
+    private final StringProperty qrCode = new SimpleStringProperty();
 
-    public BisqConnectModel(int qrCodeSize) {
-        this.qrCodeSize = new SimpleIntegerProperty(qrCodeSize);
+    private final ObservableList<WebsocketClient1> connectedClients = FXCollections.observableArrayList();
+
+    BisqConnectModel(String webSocketServerUrl, int qrCodeSize) {
+        this.webSocketServerUrl = webSocketServerUrl;
+        this.qrCodeSize = qrCodeSize;
     }
 }

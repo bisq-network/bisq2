@@ -25,13 +25,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LongStringConverter extends StringConverter<Number> {
     private final long defaultValue;
+    private final boolean useFormatter;
 
     public LongStringConverter() {
-        this.defaultValue = 0;
+        this(0);
     }
 
     public LongStringConverter(long defaultValue) {
+        this(defaultValue, true);
+    }
+
+    public LongStringConverter(long defaultValue, boolean useFormatter) {
         this.defaultValue = defaultValue;
+        this.useFormatter = useFormatter;
     }
 
     public Number fromString(String value) {
@@ -47,6 +53,10 @@ public class LongStringConverter extends StringConverter<Number> {
             return "";
         }
 
-        return DefaultNumberFormatter.format(numberValue);
+        if (useFormatter) {
+            return DefaultNumberFormatter.format(numberValue);
+        } else {
+            return String.valueOf(numberValue);
+        }
     }
 }

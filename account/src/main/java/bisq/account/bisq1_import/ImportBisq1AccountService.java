@@ -23,10 +23,10 @@ import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.json.JsonMapperProvider;
 import bisq.common.util.ByteArrayUtils;
 import bisq.security.keys.KeyGeneration;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,8 +41,6 @@ import java.util.List;
 @Slf4j
 @Getter
 public class ImportBisq1AccountService implements Service {
-    private final ObjectMapper mapper = new ObjectMapper();
-
     public ImportBisq1AccountService() {
     }
 
@@ -53,7 +51,7 @@ public class ImportBisq1AccountService implements Service {
 
     public List<Account<?, ?>> getAccounts(String json) {
         try {
-            JsonNode root = mapper.readTree(json);
+            JsonNode root = JsonMapperProvider.get().readTree(json);
             String privateDsaSignatureKeyAsBase64 = asText(root, "privateDsaSignatureKeyAsBase64");
             byte[] privateDsaSignatureKey = Base64.getDecoder().decode(privateDsaSignatureKeyAsBase64);
             PrivateKey privateDsaKey = KeyGeneration.generatePrivate(privateDsaSignatureKey, KeyGeneration.DSA);

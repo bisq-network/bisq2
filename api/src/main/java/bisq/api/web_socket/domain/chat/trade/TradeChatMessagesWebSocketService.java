@@ -17,6 +17,9 @@
 
 package bisq.api.web_socket.domain.chat.trade;
 
+import bisq.api.web_socket.domain.BaseWebSocketService;
+import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
@@ -25,11 +28,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.DtoMappings;
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessageDto;
 import bisq.dto.user.profile.UserProfileDto;
-import bisq.api.web_socket.domain.BaseWebSocketService;
-import bisq.api.web_socket.subscription.ModificationType;
-import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.user.profile.UserProfileService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -54,11 +53,10 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     private Pin channelsPin;
     private final Map<String, Pin> messagesByChannelIdPins = new ConcurrentHashMap<>();
 
-    public TradeChatMessagesWebSocketService(ObjectMapper objectMapper,
-                                             SubscriberRepository subscriberRepository,
+    public TradeChatMessagesWebSocketService(SubscriberRepository subscriberRepository,
                                              BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
                                              UserProfileService userProfileService) {
-        super(objectMapper, subscriberRepository, TRADE_CHAT_MESSAGES);
+        super(subscriberRepository, TRADE_CHAT_MESSAGES);
 
         this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
         this.userProfileService = userProfileService;

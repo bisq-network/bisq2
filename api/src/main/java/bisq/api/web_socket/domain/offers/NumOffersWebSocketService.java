@@ -17,6 +17,9 @@
 
 package bisq.api.web_socket.domain.offers;
 
+import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
+import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.Topic;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.ChatService;
@@ -25,14 +28,12 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
-import bisq.api.web_socket.subscription.SubscriberRepository;
-import bisq.api.web_socket.subscription.Topic;
 import bisq.user.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class NumOffersWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<String, Integer>, HashMap<String, Integer>> {
@@ -40,25 +41,27 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
 
     private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+    private final Set<Pin> pins = new CopyOnWriteArraySet<>();
 
-    public NumOffersWebSocketService(ObjectMapper objectMapper,
-                                     SubscriberRepository subscriberRepository,
+    public NumOffersWebSocketService(SubscriberRepository subscriberRepository,
                                      ChatService chatService,
                                      UserService userService,
                                      BisqEasyService bisqEasyService) {
-        super(objectMapper, subscriberRepository, Topic.NUM_OFFERS);
+        super(subscriberRepository, Topic.NUM_OFFERS);
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
 
         bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
+            pins.forEach(Pin::unbind);
+            pins.clear();
             bisqEasyOfferbookChannelService.getChannels().forEach(
                     channel -> {
                         var code = channel.getMarket().getQuoteCurrencyCode();
                         ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
-                        chatMessages.addObserver(() -> {
+                        pins.add(chatMessages.addObserver(() -> {
                             var numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
                             numOffersByCurrencyCode.put(code, numOffers);
-                        });
+                        }));
                     }
             );
         });

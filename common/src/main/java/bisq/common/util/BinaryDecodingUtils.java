@@ -45,5 +45,17 @@ public final class BinaryDecodingUtils {
         byte[] bytes = readBytes(in, maxLength);
         return new String(bytes, StandardCharsets.UTF_8);
     }
+
+    public static int readInt(DataInputStream in) throws IOException {
+        return in.readInt();
+    }
+
+    public static long readLong(DataInputStream in) throws IOException {
+        return in.readLong();
+    }
+
+    public static byte readByte(DataInputStream in) throws IOException {
+        return in.readByte();
+    }
 }
 
