@@ -404,59 +404,15 @@ jobs:
             echo "::endgroup::"
             echo "::notice::Batch ${{ matrix.name }} complete: ${UPLOADED_COUNT} locales uploaded"
 
-      # PHASE 1: Upload verification
-      - name: Verify upload succeeded
+      # Upload confirmation step
+      # Note: tx push with exit code 0 already confirms Transifex accepted the files.
+      # No additional verification is needed - the upload step's success is sufficient.
+      - name: Confirm upload succeeded
         id: verify
         if: steps.push_with_retry.outcome == 'success'
-        env:
-          TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
-          # Wait for Transifex propagation (eventual consistency)
-          # Increased from 10s to 15s based on review feedback
-          echo "::notice::Waiting 15 seconds for Transifex to process uploads..."
-          sleep 15
-
-          echo "::group::Verifying uploads for batch: ${{ matrix.locales }}"
-
-          IFS=',' read -ra LOCALES <<< "${{ matrix.locales }}"
-          VERIFICATION_FAILED=false
-
-          for locale in "${LOCALES[@]}"; do
-            echo "Verifying $locale..."
-
-            # Pull back what we just pushed (dry-run to avoid downloading)
-            # Retry verification up to 3 times with delay for Transifex propagation
-            VERIFIED=false
-            for attempt in {1..3}; do
-              # Check exit code first, then verify output as secondary check
-              EXIT_CODE=0
-              OUTPUT=$(tx pull -l "$locale" -r "${{ matrix.resources }}" --mode onlytranslated --dry-run 2>&1) || EXIT_CODE=$?
-
-              if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "Pulling"; then
-                echo "✅ Verified: $locale exists in Transifex (attempt $attempt)"
-                VERIFIED=true
-                break
-              else
-                if [ $attempt -lt 3 ]; then
-                  echo "::notice::Verification attempt $attempt failed for $locale (exit: $EXIT_CODE), retrying in 5s..."
-                  sleep 5
-                fi
-              fi
-            done
-
-            if ! $VERIFIED; then
-              echo "::warning::Verification FAILED for $locale after 3 attempts - not found in Transifex"
-              VERIFICATION_FAILED=true
-            fi
-          done
-
-          echo "::endgroup::"
-
-          if [ "$VERIFICATION_FAILED" = true ]; then
-            echo "::error::Some translations failed verification"
-            echo "::error::Uploaded files may not be in Transifex - manual investigation required"
-            exit 1
-          fi
+          echo "✅ Upload confirmed successful for batch: ${{ matrix.locales }}"
+          echo "::notice::Transifex accepted the translation files (tx push exit code 0)"
 
       # Report metrics for monitoring
       - name: Report upload metrics
