@@ -25,5 +25,7 @@ dependencies {
     implementation(libs.bundles.i2p)
     implementation(libs.bundles.jackson)
 
+    implementation(libs.bundles.nonblockingio)
+
     integrationTestImplementation(libs.mockito)
 }
