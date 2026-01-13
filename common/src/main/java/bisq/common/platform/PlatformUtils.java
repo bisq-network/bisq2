@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +34,11 @@ public class PlatformUtils {
 
     public static Path getUserDataDirPath() {
         if (OS.isWindows()) {
-            return Path.of(System.getenv("APPDATA"));
+            return Paths.get(System.getenv("APPDATA"));
         }
 
         if (OS.isMacOs()) {
-            return Path.of(System.getProperty("user.home"), "Library", "Application Support");
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
         }
 
         if (OS.isAndroid()) {
@@ -46,7 +47,7 @@ public class PlatformUtils {
         }
 
         // *nix
-        return Path.of(System.getProperty("user.home"), ".local", "share");
+        return Paths.get(System.getProperty("user.home"), ".local", "share");
     }
 
     public static int availableProcessors() {
@@ -154,6 +155,6 @@ public class PlatformUtils {
     }
 
     public static Path getHomeDirectoryPath() {
-        return Path.of(OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home"));
+        return Paths.get(OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home"));
     }
 }
