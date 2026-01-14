@@ -38,9 +38,8 @@ public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
 
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
-        applicationService.getRestApiService()
-                .ifPresent(e -> e.addStaticFileHandler("/node-monitor",
-                        new StaticFileHandler("/node-monitor/")));
+        applicationService.getHttpServerBootstrapService()
+                .addStaticFileHandler("/node-monitor","/node-monitor/");
     }
 
     @Override

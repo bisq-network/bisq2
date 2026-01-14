@@ -14,31 +14,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.api.rest_api.util;
 
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.Arrays;
 
 /**
- * JDK Server needs handler for serving files, will change in JDK 18
+ * Server needs handler for serving files, will change in JDK 18
  * Currently this is only to serve the swagger-ui content to the client.
  * So any call to this handler must begin with api/v1. We keep v1 in case
  * we will have incompatible changes in the future.
  * This handler is limited to html,css,json and javascript files.
  */
 @Slf4j
-public class StaticFileHandler implements HttpHandler {
+public class StaticFileHandler extends HttpHandler {
     private static final String NOT_FOUND = "404 (Not Found)\n";
 
     public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js"};
@@ -53,14 +53,13 @@ public class StaticFileHandler implements HttpHandler {
     protected String rootContext;
     final ClassLoader classLoader = getClass().getClassLoader();
 
-    public void handle(HttpExchange exchange) throws IOException {
-        URI uri = exchange.getRequestURI();
+    public void service(Request request, Response response) throws IOException {
+        String filename = request.getRequestURI();
 
-        log.debug("requesting: {}", uri.getPath());
-        String filename = uri.getPath();
+        log.debug("requesting: {}", filename);
         if (filename == null || !filename.startsWith(rootContext) ||
                 Arrays.stream(VALID_SUFFIX).noneMatch(filename::endsWith)) {
-            respond404(exchange);
+            respond404(response);
             return;
         }
         // resource loading without leading slash
@@ -72,7 +71,7 @@ public class StaticFileHandler implements HttpHandler {
         // we are using getResourceAsStream to ultimately prevent load from parent directories
         try (InputStream resource = classLoader.getResourceAsStream(resourceName)) {
             if (resource == null) {
-                respond404(exchange);
+                respond404(response);
                 return;
             }
             log.debug("sending: {}", resourceName);
@@ -83,11 +82,10 @@ public class StaticFileHandler implements HttpHandler {
             if (resourceName.endsWith(".css")) mime = "text/css";
             if (resourceName.endsWith(".png")) mime = "image/png";
 
-            Headers headers = exchange.getResponseHeaders();
-            headers.set("Content-Type", mime);
-            exchange.sendResponseHeaders(200, 0);
+            response.setHeader("Content-Type", mime);
+            response.setStatus(200);
 
-            try (OutputStream outputStream = exchange.getResponseBody()) {
+            try (OutputStream outputStream = response.getOutputStream()) {
                 byte[] buffer = new byte[0x10000];
                 int count;
                 while ((count = resource.read(buffer)) >= 0) {
@@ -97,10 +95,10 @@ public class StaticFileHandler implements HttpHandler {
         }
     }
 
-    private void respond404(HttpExchange exchange) throws IOException {
+    private void respond404(Response response) throws IOException {
         // Object does not exist or is not a file: reject with 404 error.
-        exchange.sendResponseHeaders(404, NOT_FOUND.length());
-        try (OutputStream outputStream = exchange.getResponseBody()) {
+        response.setStatus(404);
+        try (OutputStream outputStream = response.getOutputStream()) {
             outputStream.write(NOT_FOUND.getBytes());
         }
     }

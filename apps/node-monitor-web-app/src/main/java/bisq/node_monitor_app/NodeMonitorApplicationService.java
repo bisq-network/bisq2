@@ -19,6 +19,7 @@ package bisq.node_monitor_app;
 
 import bisq.account.AccountService;
 import bisq.api.ApiConfig;
+import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.pairing.PairingService;
@@ -93,7 +94,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final NodeMonitorService nodeMonitorService;
     private final BurningmanService burningmanService;
-    private Optional<RestApiService> restApiService = Optional.empty();
+    private HttpServerBootstrapService httpServerBootstrapService;
     @Nullable
     private Pin difficultyAdjustmentServicePin;
 
@@ -182,7 +183,13 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     nodeMonitorService);
 
             PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
-            restApiService = Optional.of(new RestApiService(apiConfig, pairingRequestHandler, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
+
+            httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
+                    new RestApiService(restApiResourceConfig),
+                    null,
+                    pairingRequestHandler,
+                    sessionAuthenticationService,
+                    permissionService);
         }
     }
 
@@ -217,8 +224,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .thenCompose(result -> restApiService.map(RestApiService::initialize)
-                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> httpServerBootstrapService.initialize())
                 .thenCompose(result -> nodeMonitorService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -252,8 +258,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
-                .thenCompose(result -> restApiService.map(RestApiService::shutdown)
-                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> httpServerBootstrapService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())

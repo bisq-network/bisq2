@@ -14,12 +14,13 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
+import jakarta.ws.rs.ApplicationPath;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
-@Getter
 @Slf4j
+@ApplicationPath("/api/v1")
 public class RestApiResourceConfig extends BaseRestApiResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
                                  PermissionService<RestPermissionMapping> permissionService,
@@ -65,5 +66,11 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
             }
         });
+    }
+
+    public RestApiResourceConfig(ApiConfig apiConfig,
+                                 PermissionService<RestPermissionMapping> permissionService,
+                                 SessionAuthenticationService sessionAuthenticationService) {
+        super(apiConfig, permissionService, sessionAuthenticationService);
     }
 }

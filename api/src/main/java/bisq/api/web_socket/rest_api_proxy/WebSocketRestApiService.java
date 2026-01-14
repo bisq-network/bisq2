@@ -91,7 +91,7 @@ public class WebSocketRestApiService implements Service {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .headers(headers)
-                .method(method, HttpRequest.BodyPublishers.ofString(body));
+                .method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body));
         try {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);

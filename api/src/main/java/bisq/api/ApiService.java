@@ -37,7 +37,6 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
-import bisq.api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
@@ -63,9 +62,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case RestAPI
- * is used without websockets
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case rest is enabled
  */
 @Slf4j
 public class ApiService implements Service {
@@ -78,7 +75,6 @@ public class ApiService implements Service {
     }
 
     private final ApiConfig apiConfig;
-    private final RestApiService restApiService;
     @Getter
     private final WebSocketService webSocketService;
     @Getter
@@ -89,6 +85,8 @@ public class ApiService implements Service {
     private final PermissionService<RestPermissionMapping> permissionService;
     @Getter
     private final SessionService sessionService;
+    @Getter
+    private final HttpServerBootstrapService httpServerBootstrapService;
 
     private final Observable<State> state = new Observable<>(State.NEW);
 
@@ -145,7 +143,7 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-        var restApiResourceConfig = new RestApiResourceConfig(apiConfig,
+        var restApiResourceConfig = apiConfig.isRestEnabled() ? new RestApiResourceConfig(apiConfig,
                 permissionService,
                 sessionAuthenticationService,
                 offerbookRestApi,
@@ -157,43 +155,22 @@ public class ApiService implements Service {
                 explorerRestApi,
                 paymentAccountsRestApi,
                 reputationRestApi,
-                userProfileRestApi);
-
-        var webSocketResourceConfig = new WebSocketRestApiResourceConfig(apiConfig,
-                permissionService,
-                sessionAuthenticationService,
-                offerbookRestApi,
-                tradeRestApi,
-                tradeChatMessagesRestApi,
-                userIdentityRestApi,
-                marketPriceRestApi,
-                settingsRestApi,
-                explorerRestApi,
-                paymentAccountsRestApi,
-                reputationRestApi,
-                userProfileRestApi);
-
-        restApiService = new RestApiService(apiConfig,
-                pairingRequestHandler,
-                restApiResourceConfig,
-                appDataDirPath,
-                securityService,
-                networkService);
+                userProfileRestApi) : new RestApiResourceConfig(apiConfig, permissionService, sessionAuthenticationService);
 
         webSocketService = new WebSocketService(apiConfig,
-                pairingRequestHandler,
-                webSocketResourceConfig,
-                sessionAuthenticationService,
-                permissionService,
-                appDataDirPath,
-                securityService,
-                networkService,
                 bondedRolesService,
                 chatService,
                 tradeService,
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
+
+        httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
+                new RestApiService(restApiResourceConfig),
+                webSocketService,
+                pairingRequestHandler,
+                sessionAuthenticationService,
+                permissionService);
     }
 
     @Override
@@ -205,13 +182,12 @@ public class ApiService implements Service {
 
         setState(State.STARTING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-        if (apiConfig.isWebsocketEnabled()) {
-            futures.add(webSocketService.initialize());
-        } else if (apiConfig.isRestEnabled()) {
-            // Rest API is not started if we use webSocket
-            // If rest is used via webSocket, this is handled inside webSocketService
-            futures.add(restApiService.initialize());
+
+        if (apiConfig.isEnabled()) {
+            // REST API and Websocket are handled inside httpServerBootstrapService
+            futures.add(httpServerBootstrapService.initialize());
         }
+
         if (apiConfig.useTor()) {
             futures.add(apiAccessTransportService.publishAndGetTorAddress().thenApply(address -> true));
         }
@@ -243,11 +219,7 @@ public class ApiService implements Service {
 
         setState(State.STOPPING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-        if (apiConfig.isWebsocketEnabled()) {
-            futures.add(webSocketService.shutdown());
-        } else if (apiConfig.isRestEnabled()) {
-            futures.add(restApiService.shutdown());
-        }
+        futures.add(httpServerBootstrapService.shutdown());
         return CompletableFutureUtils.allOf(futures)
                 .thenApply(list -> {
                     setState(State.TERMINATED);

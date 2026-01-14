@@ -17,87 +17,29 @@
 
 package bisq.api.rest_api;
 
-import bisq.api.ApiConfig;
-import bisq.api.access.http.PairingJdkHttpAdapter;
-import bisq.api.access.http.PairingRequestHandler;
-import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.common.application.Service;
-import bisq.network.NetworkService;
-import bisq.security.SecurityService;
-import com.sun.net.httpserver.HttpServer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
-
-/**
- * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case RestAPI
- * is used without websockets
- */
 @Slf4j
 public class RestApiService implements Service {
 
-    private final ApiConfig apiConfig;
-    private final PairingRequestHandler pairingRequestHandler;
+    @Getter
     private final BaseRestApiResourceConfig restApiResourceConfig;
-    private Optional<HttpServer> httpServer = Optional.empty();
 
-    public RestApiService(ApiConfig apiConfig,
-                          PairingRequestHandler pairingRequestHandler,
-                          BaseRestApiResourceConfig restApiResourceConfig,
-                          Path appDataDirPath,
-                          SecurityService securityService,
-                          NetworkService networkService
-    ) {
-        this.apiConfig = apiConfig;
-        this.pairingRequestHandler = pairingRequestHandler;
+    public RestApiService(BaseRestApiResourceConfig restApiResourceConfig) {
         this.restApiResourceConfig = restApiResourceConfig;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        if (!apiConfig.isRestEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
-        return CompletableFuture.supplyAsync(() -> {
-            URI uriWithPath = URI.create(apiConfig.getRestServerApiBasePath());
-            HttpServer server = JdkHttpServerFactory.createHttpServer(uriWithPath, restApiResourceConfig);
-            httpServer = Optional.of(server);
-
-            // Pairing endpoint (bootstrap)
-            server.createContext(
-                    "/pair",
-                    new PairingJdkHttpAdapter(pairingRequestHandler)
-            );
-
-            addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
-            log.info("Server started at {}.", apiConfig.getRestServerApiBasePath());
-            return true;
-        }, commonForkJoinPool());
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        if (!apiConfig.isRestEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
-        return CompletableFuture.supplyAsync(() -> {
-            httpServer.ifPresent(httpServer -> httpServer.stop(1));
-            return true;
-        }, commonForkJoinPool());
-    }
-
-    public void addStaticFileHandler(String path, StaticFileHandler handler) {
-        httpServer.ifPresent(httpServer -> httpServer.createContext(path, handler));
+        return CompletableFuture.completedFuture(true);
     }
 }
