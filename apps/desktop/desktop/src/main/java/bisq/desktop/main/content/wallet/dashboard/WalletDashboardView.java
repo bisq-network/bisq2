@@ -38,11 +38,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import javafx.scene.control.TableView;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -56,7 +58,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
             lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
-    private final DropdownListMenu<MarketItem> currencyConverterDropdownListMenu;
+    private final DropdownListMenu<CurrencyConverterListItem> currencyConverterDropdownListMenu;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
@@ -83,7 +85,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterAmountLabel = currencyConverterBalanceTriple.getSecond();
         currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
-        currencyConverterDropdownListMenu = new DropdownListMenu<>("chevron-drop-menu-grey", "chevron-drop-menu-white", false, model.getSortedMarketListItems());
+        currencyConverterDropdownListMenu = new DropdownListMenu<>("chevron-drop-menu-grey",
+                "chevron-drop-menu-white", false, model.getSortedCurrencyConverterListItems());
         currencyConverterDropdownListMenu.setContent(currencyConverterBalanceHBox);
         currencyConverterDropdownListMenu.setMaxWidth(Region.USE_PREF_SIZE);
         currencyConverterDropdownListMenu.getTableView().setPrefWidth(CURRENCY_CONVERTER_MENU_WIDTH);
@@ -180,6 +183,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         receive.setOnAction(e -> controller.onReceive());
 
         updateSelectedMarket();
+        updateTableViewSelectionToMarketItem();
     }
 
     @Override
@@ -308,23 +312,45 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private void updateSelectedMarket() {
         MarketItem selectedMarketItem = model.getSelectedMarketItem().get();
         if (selectedMarketItem != null) {
-            model.getMarketItems().forEach(item -> item.getIsSelected().set(item.equals(selectedMarketItem)));
+            model.getCurrencyConverterListItems().forEach(item -> {
+                if (item instanceof MarketItem marketItem) {
+                    marketItem.getIsSelected().set(marketItem.equals(selectedMarketItem));
+                }
+            });
             Node marketLogo = MarketImageComposition.createMarketMenuLogo(selectedMarketItem.getAmountCode());
             currencyConverterAmountLabel.setGraphic(marketLogo);
         }
     }
 
     private void configCurrencyConverterTableView() {
-        currencyConverterDropdownListMenu.getTableView().getColumns().add(new BisqTableColumn.Builder<MarketItem>()
+        currencyConverterDropdownListMenu.getTableView().getColumns().add(new BisqTableColumn.Builder<CurrencyConverterListItem>()
                 .left()
                 .setCellFactory(getMarketCellFactory())
                 .build());
     }
 
-    private Callback<TableColumn<MarketItem, MarketItem>, TableCell<MarketItem, MarketItem>> getMarketCellFactory() {
+    private void updateTableViewSelectionToMarketItem() {
+        TableView<CurrencyConverterListItem> table = currencyConverterDropdownListMenu.getTableView();
+        MarketItem selectedMarketItem = model.getSelectedMarketItem().get();
+        if (selectedMarketItem != null) {
+            table.getItems().stream()
+                    .filter(item -> item instanceof MarketItem && item.equals(selectedMarketItem))
+                    .findAny()
+                    .ifPresent(item -> table.getSelectionModel().select(item));
+        }
+    }
+
+    private Callback<TableColumn<CurrencyConverterListItem, CurrencyConverterListItem>, TableCell<CurrencyConverterListItem, CurrencyConverterListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
-            private final Label check, code, amount;
+            private static final String HEADER_HOVER_BACKGROUND_COLOR = "-fx-background-color: transparent !important; -fx-cursor: default;";
+
+            private final Label check, code, amount, title;
             private final HBox displayBox = new HBox(10);
+            private final ChangeListener<Boolean> hoverListener = (observable, oldValue, newValue) -> {
+                if (newValue) {
+                    setStyle(HEADER_HOVER_BACKGROUND_COLOR);
+                }
+            };
 
             {
                 check = new Label();
@@ -332,23 +358,36 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 code = new Label();
                 code.setGraphicTextGap(10);
                 amount = new Label();
+                title = new Label();
+                title.setStyle("-fx-text-fill: -fx-mid-text-color !important; -fx-opacity: 1 !important;");
                 displayBox.getChildren().addAll(check, code, amount);
                 displayBox.setAlignment(Pos.CENTER_LEFT);
             }
 
             @Override
-            protected void updateItem(MarketItem item, boolean empty) {
+            protected void updateItem(CurrencyConverterListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                resetRowHoverListener();
+                resetDisable();
+
                 if (item != null && !empty) {
-                    check.visibleProperty().bind(item.getIsSelected());
-                    Node marketLogo = MarketImageComposition.createMarketMenuLogo(item.getAmountCode());
-                    code.setGraphic(marketLogo);
-                    code.setText(item.getAmountCode());
-                    amount.textProperty().bind(item.getFormattedConvertedAmount());
-                    displayBox.setOnMouseClicked(e -> controller.onSelectMarket(item));
-                    setGraphic(displayBox);
+                    if (item instanceof MarketItem marketItem) {
+                        check.visibleProperty().bind(marketItem.getIsSelected());
+                        Node marketLogo = MarketImageComposition.createMarketMenuLogo(marketItem.getAmountCode());
+                        code.setGraphic(marketLogo);
+                        code.setText(marketItem.getAmountCode());
+                        amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
+                        displayBox.setOnMouseClicked(e -> controller.onSelectMarket(marketItem));
+                        setGraphic(displayBox);
+                    } else if (item instanceof HeaderItem(String headerTitle)) {
+                        title.setText(headerTitle);
+                        disableItem();
+                        setUpRowHoverListener();
+                        setGraphic(title);
+                    }
                 } else {
+                    // MarketItem cleanup
                     check.visibleProperty().unbind();
                     check.setVisible(false);
                     code.setGraphic(null);
@@ -356,8 +395,40 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                     amount.textProperty().unbind();
                     amount.setText("");
                     displayBox.setOnMouseClicked(null);
+
+                    // HeaderItem cleanup
+                    title.setText("");
+                    resetDisable();
+                    resetRowHoverListener();
+
                     setGraphic(null);
                 }
+            }
+
+            private void resetRowHoverListener() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.hoverProperty().removeListener(hoverListener);
+                    row.setStyle("");
+                }
+            }
+
+            private void setUpRowHoverListener() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.hoverProperty().addListener(hoverListener);
+                    row.setStyle(HEADER_HOVER_BACKGROUND_COLOR);
+                }
+            }
+
+            private void resetDisable() {
+                setDisable(false);
+                setFocusTraversable(true);
+            }
+
+            private void disableItem() {
+                setDisable(true);
+                setFocusTraversable(false);
             }
         };
     }

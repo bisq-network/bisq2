@@ -73,14 +73,14 @@ public class WalletDashboardModel implements Model {
 
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<MarketItem> marketItems = FXCollections.observableArrayList();
-    private final FilteredList<MarketItem> filteredMarketListItems = new FilteredList<>(marketItems);
-    private final SortedList<MarketItem> sortedMarketListItems = new SortedList<>(filteredMarketListItems,
-            Comparator.comparing(MarketItem::getAmountCode));
-    private final Predicate<MarketItem> marketListItemsPredicate = marketItem ->
-            getMarketPricePredicate().test(marketItem);
+    private final ObservableList<CurrencyConverterListItem> currencyConverterListItems = FXCollections.observableArrayList();
+    private final FilteredList<CurrencyConverterListItem> filteredCurrencyConverterListItems = new FilteredList<>(currencyConverterListItems);
+    private final SortedList<CurrencyConverterListItem> sortedCurrencyConverterListItems = new SortedList<>(filteredCurrencyConverterListItems,
+            Comparator.comparing(CurrencyConverterListItem::getComparatorValue));
+    private final Predicate<CurrencyConverterListItem> currencyConverterListItemsPredicate = item ->
+            getMarketPricePredicate().test(item);
     @Setter
-    private Predicate<MarketItem> marketPricePredicate = marketItem -> true;
+    private Predicate<CurrencyConverterListItem> marketPricePredicate = item -> true;
 
     public WalletDashboardModel() {
     }

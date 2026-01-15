@@ -26,6 +26,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
 import bisq.wallet.vo.Transaction;
@@ -39,15 +40,16 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletDashboardController implements Controller {
-    private static final List<Market> AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION;
+    private static final List<Market> AVAILABLE_FIAT_MARKETS_FOR_CURRENCY_CONVERSION =
+            new ArrayList<>(MarketRepository.getAllFiatMarkets());
+    private static final List<Market> AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION;
     static {
-        List<Market> list = new ArrayList<>(MarketRepository.getAllFiatMarkets());
+        List<Market> list = new ArrayList<>();
         list.add(MarketRepository.getXmrBtcMarket());
-        AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION = list;
+        AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION = list;
     }
 
     @Getter
@@ -70,9 +72,7 @@ public class WalletDashboardController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getMarketItems().setAll(AVAILABLE_MARKETS_FOR_CURRENCY_CONVERSION.stream()
-                .map(market -> new MarketItem(market, marketPriceService))
-                .collect(Collectors.toList()));
+        addCurrencyConverterListItems();
 
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(walletService.getBalance());
@@ -95,8 +95,14 @@ public class WalletDashboardController implements Controller {
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(() -> {
-                    model.setMarketPricePredicate(item -> marketPriceService.getMarketPriceByCurrencyMap().isEmpty() ||
-                            marketPriceService.getMarketPriceByCurrencyMap().containsKey(item.getMarket()));
+                    model.setMarketPricePredicate(item -> {
+                        if (item instanceof MarketItem marketItem) {
+                            return marketPriceService.getMarketPriceByCurrencyMap().isEmpty()
+                                    || marketPriceService.getMarketPriceByCurrencyMap().containsKey(marketItem.getMarket());
+                        } else {
+                            return true;
+                        }
+                    });
                     updateFilteredMarketListItems();
                     updateMarketItems();
                 }));
@@ -167,21 +173,30 @@ public class WalletDashboardController implements Controller {
 
     private void updateMarketItems() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
-        model.getMarketItems().forEach(availableMarket -> availableMarket.updateFormattedAmount(btcBalance));
+        model.getCurrencyConverterListItems().forEach(item -> {
+            if (item instanceof MarketItem marketItem) {
+                marketItem.updateFormattedAmount(btcBalance);
+            }
+        });
     }
 
     private void updateFilteredMarketListItems() {
-        model.getFilteredMarketListItems().setPredicate(null);
-        model.getFilteredMarketListItems().setPredicate(model.getMarketListItemsPredicate());
+        model.getFilteredCurrencyConverterListItems().setPredicate(null);
+        model.getFilteredCurrencyConverterListItems().setPredicate(model.getCurrencyConverterListItemsPredicate());
     }
 
     private void setSelectedMarket() {
         Market selectedMarket = model.getSelectedMarket().get();
         if (selectedMarket != null) {
-            model.getMarketItems().stream()
-                    .filter(item -> item.getMarket().equals(selectedMarket))
+            model.getCurrencyConverterListItems().stream()
+                    .filter(item -> item instanceof MarketItem marketItem
+                            && marketItem.getMarket().equals(selectedMarket))
                     .findAny()
-                    .ifPresent(item -> model.getSelectedMarketItem().set(item));
+                    .ifPresent(item -> {
+                        if (item instanceof MarketItem marketItem) {
+                            model.getSelectedMarketItem().set(marketItem);
+                        }
+                    });
         }
     }
 
@@ -189,5 +204,17 @@ public class WalletDashboardController implements Controller {
         if (marketItem != null) {
             model.getSelectedMarket().set(marketItem.getMarket());
         }
+    }
+
+    private void addCurrencyConverterListItems() {
+        model.getCurrencyConverterListItems().clear();
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.cryptoCurrencies")));
+        model.getCurrencyConverterListItems().addAll(AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION.stream()
+                .map(market -> new MarketItem(market, marketPriceService))
+                .toList());
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.fiatCurrencies")));
+        model.getCurrencyConverterListItems().addAll(AVAILABLE_FIAT_MARKETS_FOR_CURRENCY_CONVERSION.stream()
+                .map(market -> new MarketItem(market, marketPriceService))
+                .toList());
     }
 }
