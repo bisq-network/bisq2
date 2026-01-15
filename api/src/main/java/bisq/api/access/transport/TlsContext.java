@@ -19,11 +19,15 @@ package bisq.api.access.transport;
 
 import lombok.Getter;
 
+import javax.net.ssl.SSLContext;
+
 @Getter
 public class TlsContext {
     private final String tlsFingerprint;
+    private final SSLContext sslContext;
 
-    public TlsContext(String tlsFingerprint) {
+    public TlsContext(String tlsFingerprint, SSLContext sslContext) {
         this.tlsFingerprint = tlsFingerprint;
+        this.sslContext = sslContext;
     }
 }

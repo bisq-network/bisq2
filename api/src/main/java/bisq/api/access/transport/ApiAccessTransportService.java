@@ -19,6 +19,7 @@ package bisq.api.access.transport;
 
 
 import bisq.api.ApiConfig;
+import bisq.common.application.Service;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
@@ -35,12 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.security.KeyStore;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 
-public class ApiAccessTransportService {
+public class ApiAccessTransportService implements Service {
     private final String IDENTITY_TAG = "ApiAccess";
 
     private final Path appDataDirPath;
@@ -54,6 +56,7 @@ public class ApiAccessTransportService {
     private ApiAccessTransportType apiAccessTransportType = ApiAccessTransportType.TOR;
     private final boolean isTlsRequired;
     private final boolean isTorClientAuthRequired;
+
     @Getter
     private Optional<TlsContext> tlsContext = Optional.empty();
     @Getter
@@ -72,6 +75,45 @@ public class ApiAccessTransportService {
         this.keyBundleService = keyBundleService;
         this.bindPort.set(bindPort);
         this.onionServicePort = onionServicePort;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        if (isTlsRequired) {
+            try {
+                this.tlsContext = Optional.of(createTlsContext());
+            } catch (Exception exception) {
+                return CompletableFuture.failedFuture(exception);
+            }
+        }
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return Service.super.shutdown();
+    }
+
+    private TlsContext createTlsContext() throws Exception {
+        Path keyStorePath = appDataDirPath.resolve("api").resolve("tlskeystore.jks");
+
+        // TODO: check how to handle password
+        KeyStore keyStore = TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseGet(() -> {
+            log.info("No TLS identity found, generating new self-signed TLS identity for ApiAccessTransportService");
+            // TODO: define name properly
+            var tlsCertificateGenerator = TlsCertificateGenerator.create("Bisq2Api");
+            try {
+                TlsKeyStore.writeTlsIdentity(
+                        tlsCertificateGenerator.getKeyPair(), tlsCertificateGenerator.getCertificate(), keyStorePath, "password".toCharArray());
+                return TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseThrow();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        return new TlsContext(
+                TlsKeyStore.getPublicKeyFingerprint(keyStore),
+                TlsKeyStore.createSslContext(keyStore, "password".toCharArray()));
     }
 
     public Address findLanAddress() {

@@ -166,6 +166,7 @@ public class ApiService implements Service {
                 openTradeItemsService);
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
+                apiAccessTransportService,
                 new RestApiService(restApiResourceConfig),
                 webSocketService,
                 pairingRequestHandler,
@@ -182,6 +183,7 @@ public class ApiService implements Service {
 
         setState(State.STARTING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+        futures.add(apiAccessTransportService.initialize());
 
         if (apiConfig.isEnabled()) {
             // REST API and Websocket are handled inside httpServerBootstrapService
@@ -219,6 +221,7 @@ public class ApiService implements Service {
 
         setState(State.STOPPING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+        futures.add(apiAccessTransportService.shutdown());
         futures.add(httpServerBootstrapService.shutdown());
         return CompletableFutureUtils.allOf(futures)
                 .thenApply(list -> {

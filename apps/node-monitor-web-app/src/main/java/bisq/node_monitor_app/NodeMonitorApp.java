@@ -18,7 +18,6 @@
 package bisq.node_monitor_app;
 
 import bisq.application.Executable;
-import bisq.api.rest_api.util.StaticFileHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -39,7 +38,7 @@ public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         applicationService.getHttpServerBootstrapService()
-                .addStaticFileHandler("/node-monitor","/node-monitor/");
+                .ifPresent(svc -> svc.addStaticFileHandler("/node-monitor", "/node-monitor/"));
     }
 
     @Override

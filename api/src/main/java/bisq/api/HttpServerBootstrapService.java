@@ -23,8 +23,8 @@ import bisq.api.access.http.PairingGrizzlyHttpAdapter;
 import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.rest_api.RestApiService;
-import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
@@ -32,9 +32,10 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.StaticHttpHandler;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -58,6 +59,7 @@ public class HttpServerBootstrapService implements Service {
     }
 
     private final ApiConfig apiConfig;
+    private final ApiAccessTransportService apiAccessTransportService;
     private final RestApiService restApiService;
     @Nullable
     private final WebSocketService webSocketService;
@@ -70,6 +72,7 @@ public class HttpServerBootstrapService implements Service {
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public HttpServerBootstrapService(ApiConfig apiConfig,
+                                      ApiAccessTransportService apiAccessTransportService,
                                       RestApiService restApiService,
                                       @Nullable WebSocketService webSocketService,
                                       PairingRequestHandler pairingRequestHandler,
@@ -77,6 +80,7 @@ public class HttpServerBootstrapService implements Service {
                                       PermissionService<RestPermissionMapping> permissionService
     ) {
         this.apiConfig = apiConfig;
+        this.apiAccessTransportService = apiAccessTransportService;
         this.restApiService = restApiService;
         this.webSocketService = webSocketService;
         this.pairingRequestHandler = pairingRequestHandler;
@@ -112,6 +116,22 @@ public class HttpServerBootstrapService implements Service {
                         server.getListener("grizzly").registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
                     }
 
+                    if (apiConfig.isTlsRequired() && apiAccessTransportService.getTlsContext().isPresent()) {
+                        NetworkListener listener = server.getListener("grizzly");
+                        listener.setSecure(true);
+
+                        SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(apiAccessTransportService.getTlsContext().get().getSslContext())
+                                .setClientMode(false)       // server mode
+                                .setNeedClientAuth(false)  // not mutual TLS
+                                .setEnabledProtocols(new String[]{"TLSv1.3"})
+                                .setEnabledCipherSuites(new String[]{
+                                        "TLS_AES_128_GCM_SHA256",
+                                        "TLS_AES_256_GCM_SHA384",
+                                        "TLS_CHACHA20_POLY1305_SHA256"
+                                });
+                        listener.setSSLEngineConfig(sslEngineConfigurator);
+                    }
+
                     if (apiConfig.isWebsocketEnabled() && webSocketService != null) {
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.getWebSocketConnectionHandler());
                     }
@@ -125,7 +145,7 @@ public class HttpServerBootstrapService implements Service {
                     try {
                         server.start();
                         log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at 'ws://{}:{}/websocket'", bindHost, bindPort);
+                        log.info("WebSocket endpoint available at '{}://{}:{}/websocket'", apiConfig.getWebSocketProtocol(), bindHost, bindPort);
                         if (restEnabled) {
                             log.info("Rest API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
                         }

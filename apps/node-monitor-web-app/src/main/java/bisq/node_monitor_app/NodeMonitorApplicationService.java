@@ -26,6 +26,7 @@ import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
+import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.rest_api.RestApiService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
@@ -94,7 +95,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final NodeMonitorService nodeMonitorService;
     private final BurningmanService burningmanService;
-    private HttpServerBootstrapService httpServerBootstrapService;
+    private Optional<ApiAccessTransportService> apiAccessTransportService = Optional.empty();
+    private Optional<HttpServerBootstrapService> httpServerBootstrapService = Optional.empty();
     @Nullable
     private Pin difficultyAdjustmentServicePin;
 
@@ -182,14 +184,23 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     networkService,
                     nodeMonitorService);
 
+            // TODO: is this needed?
+            apiAccessTransportService = Optional.of(new ApiAccessTransportService(apiConfig,
+                    config.getAppDataDirPath(),
+                    networkService,
+                    securityService.getKeyBundleService(),
+                    apiConfig.getBindPort(),
+                    80));
+
             PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
 
-            httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
+            httpServerBootstrapService = Optional.of(new HttpServerBootstrapService(apiConfig,
+                    apiAccessTransportService.get(),
                     new RestApiService(restApiResourceConfig),
                     null,
                     pairingRequestHandler,
                     sessionAuthenticationService,
-                    permissionService);
+                    permissionService));
         }
     }
 
@@ -224,7 +235,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .thenCompose(result -> httpServerBootstrapService.initialize())
+                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> nodeMonitorService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -258,7 +272,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
-                .thenCompose(result -> httpServerBootstrapService.shutdown())
+                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
