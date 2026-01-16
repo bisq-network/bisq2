@@ -1,5 +1,6 @@
 package bisq.api.auth;
 
+import bisq.api.access.filter.authn.AuthUtils;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;

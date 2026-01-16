@@ -17,6 +17,9 @@
 
 package bisq.api.web_socket.domain.market_price;
 
+import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
+import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.Topic;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -25,10 +28,6 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.dto.DtoMappings;
 import bisq.dto.common.monetary.PriceQuoteDto;
-import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
-import bisq.api.web_socket.subscription.SubscriberRepository;
-import bisq.api.web_socket.subscription.Topic;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -39,10 +38,9 @@ import java.util.stream.Collectors;
 public class MarketPriceWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<Market, MarketPrice>, Map<String, PriceQuoteDto>> {
     private final MarketPriceService marketPriceService;
 
-    public MarketPriceWebSocketService(ObjectMapper objectMapper,
-                                       SubscriberRepository subscriberRepository,
+    public MarketPriceWebSocketService(SubscriberRepository subscriberRepository,
                                        BondedRolesService bondedRolesService) {
-        super(objectMapper, subscriberRepository, Topic.MARKET_PRICE);
+        super(subscriberRepository, Topic.MARKET_PRICE);
         marketPriceService = bondedRolesService.getMarketPriceService();
     }
 

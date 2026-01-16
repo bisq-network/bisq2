@@ -39,7 +39,11 @@ public final class ApiConfig {
     private final String bindHost;
     private final int bindPort;
 
+    //  api.tor.onionServicePort
+    private final int onionServicePort;
+
     // api.server.security.*
+    private final boolean authRequired;
     private final boolean tlsRequired;
     private final boolean torClientAuthRequired;
 
@@ -57,6 +61,8 @@ public final class ApiConfig {
             boolean websocketEnabled,
             String bindHost,
             int bindPort,
+            int onionServicePort,
+            boolean authRequired,
             boolean tlsRequired,
             boolean torClientAuthRequired,
             Optional<List<String>> restAllowEndpoints,
@@ -69,6 +75,8 @@ public final class ApiConfig {
         this.websocketEnabled = websocketEnabled;
         this.bindHost = bindHost;
         this.bindPort = bindPort;
+        this.onionServicePort = onionServicePort;
+        this.authRequired = authRequired;
         this.tlsRequired = tlsRequired;
         this.torClientAuthRequired = torClientAuthRequired;
         this.restAllowEndpoints = restAllowEndpoints;
@@ -83,6 +91,7 @@ public final class ApiConfig {
 
         Config serverConfig = config.getConfig("server");
         Config bindConfig = serverConfig.getConfig("bind");
+        Config torConfig = serverConfig.getConfig("tor");
         Config securityConfig = serverConfig.getConfig("security");
 
         Config restSecurity = securityConfig.getConfig("rest");
@@ -112,6 +121,9 @@ public final class ApiConfig {
                 bindConfig.getString("host"),
                 bindConfig.getInt("port"),
 
+                torConfig.getInt("onionServicePort"),
+
+                securityConfig.getBoolean("authRequired"),
                 securityConfig.getBoolean("tlsRequired"),
                 securityConfig.getBoolean("torClientAuthRequired"),
 
@@ -123,7 +135,11 @@ public final class ApiConfig {
     }
 
     public String getRestServerUrl() {
-        return getRestProtocol() + "://" + bindHost + ":" + bindPort + REST_API_BASE_PATH;
+        return getRestProtocol() + "://" + bindHost + ":" + bindPort;
+    }
+
+    public String getRestServerApiBasePath() {
+        return getRestServerUrl() + REST_API_BASE_PATH;
     }
 
     public String getWebSocketServerUrl() {

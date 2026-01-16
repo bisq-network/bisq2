@@ -69,9 +69,12 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
             String portToken = socketAddress.substring(sep + 1).trim();
             int port = Integer.parseInt(portToken);
             return Address.from(hostToken, port);
+        } catch (IllegalArgumentException e) {
+            log.error("Could not resolve address from {}", original, e);
+            throw new IllegalArgumentException("Could not resolve address from " + original, e);
         } catch (Exception e) {
             log.error("Could not resolve address from {}", original, e);
-            throw e;
+            throw new RuntimeException("Could not resolve address from " + original, e);
         }
     }
 

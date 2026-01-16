@@ -1,0 +1,10 @@
+Open tasks:
+
+- test all scenarios with server variants and api modes if authn and authz is done
+- persist all relevant data
+- separate transport and api level filtering
+- add permissions for WS topics
+- Maybe remove deny/allow list as redundant with permissions
+- Once TLS is added make signature based auth optional as not needed anymore. Reflect this in config.
+- Add authorizationRequired flag to config and rename authRequired to authenticationRequired
+- show WS connection state in network state box in left bottom area

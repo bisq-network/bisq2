@@ -17,13 +17,12 @@
 
 package bisq.node_monitor;
 
+import bisq.api.rest_api.error.RestApiException;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
-import bisq.api.rest_api.error.RestApiException;
-import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
@@ -33,14 +32,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class NodeMonitorService implements Service {
-    private final NetworkService networkService;
     private final UserService userService;
     private final BondedRolesService bondedRolesService;
 
-    public NodeMonitorService(NetworkService networkService,
-                              UserService userService,
+    public NodeMonitorService(UserService userService,
                               BondedRolesService bondedRolesService) {
-        this.networkService = networkService;
         this.userService = userService;
         this.bondedRolesService = bondedRolesService;
     }

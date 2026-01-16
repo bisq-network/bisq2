@@ -17,14 +17,13 @@
 
 package bisq.api.web_socket.domain.trades;
 
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.SubscriberRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -41,10 +40,9 @@ public class TradesWebSocketService extends BaseWebSocketService {
     @Nullable
     private Pin tradesPin;
 
-    public TradesWebSocketService(ObjectMapper objectMapper,
-                                  SubscriberRepository subscriberRepository,
+    public TradesWebSocketService(SubscriberRepository subscriberRepository,
                                   OpenTradeItemsService openTradeItemsService) {
-        super(objectMapper, subscriberRepository, TRADES);
+        super(subscriberRepository, TRADES);
 
         this.openTradeItemsService = openTradeItemsService;
     }

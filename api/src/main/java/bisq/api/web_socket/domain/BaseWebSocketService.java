@@ -18,10 +18,14 @@
 package bisq.api.web_socket.domain;
 
 
+import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
+import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.Topic;
+import bisq.api.web_socket.subscription.WebSocketEvent;
 import bisq.common.application.Service;
-import bisq.api.web_socket.subscription.*;
+import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -29,14 +33,11 @@ import java.util.Set;
 
 @Slf4j
 public abstract class BaseWebSocketService implements Service {
-    protected final ObjectMapper objectMapper;
     protected final SubscriberRepository subscriberRepository;
     protected final Topic topic;
 
-    public BaseWebSocketService(ObjectMapper objectMapper,
-                                SubscriberRepository subscriberRepository,
+    public BaseWebSocketService(SubscriberRepository subscriberRepository,
                                 Topic topic) {
-        this.objectMapper = objectMapper;
         this.subscriberRepository = subscriberRepository;
         this.topic = topic;
     }
@@ -46,7 +47,7 @@ public abstract class BaseWebSocketService implements Service {
     //todo
     protected <T> Optional<String> toJson(T payload) {
         try {
-            return Optional.of(objectMapper.writeValueAsString(payload));
+            return Optional.of(JsonMapperProvider.get().writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             log.error("Json serialisation failed", e);
         }
@@ -81,8 +82,9 @@ public abstract class BaseWebSocketService implements Service {
     protected void send(String json,
                         Subscriber subscriber,
                         ModificationType modificationType) {
-        log.info("Sending json with modificationType {} to subscriber: {}. json={}", subscriber, modificationType, json);
-        WebSocketEvent.toJson(objectMapper,
+        log.info("Sending json with modificationType {} to subscriber: {}. json={}", modificationType, subscriber, json);
+
+        WebSocketEvent.toJson(
                         subscriber.getTopic(),
                         subscriber.getSubscriberId(),
                         json,

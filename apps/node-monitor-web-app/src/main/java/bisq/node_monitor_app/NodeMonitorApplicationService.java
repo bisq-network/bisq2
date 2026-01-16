@@ -18,6 +18,15 @@
 package bisq.node_monitor_app;
 
 import bisq.account.AccountService;
+import bisq.api.ApiConfig;
+import bisq.api.HttpServerBootstrapService;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.http.PairingRequestHandler;
+import bisq.api.access.pairing.PairingService;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.session.SessionService;
+import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -28,8 +37,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.contract.ContractService;
-import bisq.api.ApiConfig;
-import bisq.api.rest_api.RestApiService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -50,6 +57,7 @@ import bisq.user.UserService;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -87,7 +95,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final NodeMonitorService nodeMonitorService;
     private final BurningmanService burningmanService;
-    private Optional<RestApiService> restApiService = Optional.empty();
+    private Optional<ApiAccessTransportService> apiAccessTransportService = Optional.empty();
+    private Optional<HttpServerBootstrapService> httpServerBootstrapService = Optional.empty();
     @Nullable
     private Pin difficultyAdjustmentServicePin;
 
@@ -161,11 +170,37 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-        nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
+        nodeMonitorService = new NodeMonitorService(userService, bondedRolesService);
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         if (apiConfig.isRestEnabled()) {
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig, networkService, nodeMonitorService);
-            restApiService = Optional.of(new RestApiService(apiConfig, restApiResourceConfig, getConfig().getAppDataDirPath(), securityService, networkService));
+            PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
+            PairingService pairingService = new PairingService(permissionService);
+            SessionService sessionService = new SessionService();
+
+            SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
+
+            ResourceConfig restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
+                    permissionService,
+                    sessionAuthenticationService,
+                    networkService,
+                    nodeMonitorService);
+
+            apiAccessTransportService = Optional.of(new ApiAccessTransportService(apiConfig,
+                    config.getAppDataDirPath(),
+                    networkService,
+                    securityService.getKeyBundleService(),
+                    apiConfig.getBindPort(),
+                    apiConfig.getOnionServicePort()));
+
+            PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
+
+            httpServerBootstrapService = Optional.of(new HttpServerBootstrapService(apiConfig,
+                    apiAccessTransportService.get(),
+                    Optional.of(restApiResourceConfig),
+                    Optional.empty(),
+                    pairingRequestHandler,
+                    sessionAuthenticationService,
+                    permissionService));
         }
     }
 
@@ -200,7 +235,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .thenCompose(result -> restApiService.map(RestApiService::initialize)
+                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::initialize)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> nodeMonitorService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -235,7 +272,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
-                .thenCompose(result -> restApiService.map(RestApiService::shutdown)
+                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::shutdown)
+                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())

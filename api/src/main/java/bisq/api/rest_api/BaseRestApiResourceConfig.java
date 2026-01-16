@@ -1,41 +1,33 @@
 package bisq.api.rest_api;
 
-import bisq.common.util.StringUtils;
 import bisq.api.ApiConfig;
-import bisq.api.auth.ApiAuthFilter;
-import bisq.api.rest_api.error.CustomExceptionMapper;
-import bisq.api.rest_api.error.RestApiException;
+import bisq.api.access.filter.authn.RestApiAuthenticationFilter;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.filter.authz.RestApiAuthorizationFilter;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.rest_api.util.SwaggerResolution;
-import bisq.api.validator.ApiRequestFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
 
-public abstract class BaseRestApiResourceConfig extends ResourceConfig {
-    public BaseRestApiResourceConfig(ApiConfig apiConfig) {
+public abstract class BaseRestApiResourceConfig extends BaseResourceConfig {
+    public BaseRestApiResourceConfig(ApiConfig apiConfig,
+                                     PermissionService<RestPermissionMapping> permissionService,
+                                     SessionAuthenticationService sessionAuthenticationService) {
         super();
-        String swaggerBaseUrl = apiConfig.getRestServerUrl();
-        ObjectMapper mapper = new ObjectMapper();
 
-        register(CustomExceptionMapper.class)
-                .register(RestApiException.Mapper.class)
-                .register(mapper);
-
-
-        String password = ""; // TODO config.getPassword();
-        if (StringUtils.isNotEmpty(password)) {
-            ApiAuthFilter apiAuthFilter = new ApiAuthFilter(password);
-            register(apiAuthFilter);
+        if (apiConfig.isAuthRequired()) {
+            register(new RestApiAuthenticationFilter(sessionAuthenticationService));
+            register(new RestApiAuthorizationFilter(permissionService,
+                    apiConfig.getRestAllowEndpoints(),
+                    apiConfig.getRestDenyEndpoints()));
         }
-
-        ApiRequestFilter apiRequestFilter = getApiRequestFilter(apiConfig);
-        register(apiRequestFilter);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
         register(SwaggerResolution.class);
 
+        String swaggerBaseUrl = apiConfig.getRestServerApiBasePath();
         register(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -43,6 +35,4 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
             }
         });
     }
-
-    protected abstract ApiRequestFilter getApiRequestFilter(ApiConfig apiConfig);
 }

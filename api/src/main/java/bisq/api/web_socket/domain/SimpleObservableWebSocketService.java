@@ -18,11 +18,10 @@
 package bisq.api.web_socket.domain;
 
 
-import bisq.common.observable.Pin;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import bisq.common.observable.Pin;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -41,10 +40,9 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
     @Nullable
     protected Pin pin;
 
-    public SimpleObservableWebSocketService(ObjectMapper objectMapper,
-                                            SubscriberRepository subscriberRepository,
+    public SimpleObservableWebSocketService(SubscriberRepository subscriberRepository,
                                             Topic topic) {
-        super(objectMapper, subscriberRepository, topic);
+        super(subscriberRepository, topic);
     }
 
     abstract protected Pin setupObserver();

@@ -38,4 +38,6 @@ dependencies {
     implementation(libs.bundles.i2p)
     implementation(libs.bundles.rest.api.libs)
     implementation(libs.bundles.websocket.libs)
+    implementation(libs.bouncycastle)
+    implementation(libs.bouncycastle.pkix)
 }

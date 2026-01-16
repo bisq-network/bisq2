@@ -20,6 +20,7 @@ package bisq.network.http.utils;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
+import bisq.common.json.JsonMapperProvider;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -29,7 +30,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -55,7 +55,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 public class ReferenceTimeService implements Service {
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ReferenceTimeService", 1, 4, 60);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static class RetryException extends RuntimeException {
         @Getter
@@ -224,7 +223,7 @@ public class ReferenceTimeService implements Service {
                         try {
                             log.info("Request reference time from {}", client.getBaseUrl() + "/" + param);
                             String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                            JsonNode timeNode = MAPPER.readTree(json).get("time");
+                            JsonNode timeNode = JsonMapperProvider.get().readTree(json).get("time");
                             if (timeNode == null || timeNode.isNull()) {
                                 throw new RuntimeException("Response JSON missing 'time' field");
                             }

@@ -18,13 +18,14 @@
 package bisq.api;
 
 import bisq.account.AccountService;
-import bisq.bisq_easy.BisqEasyService;
-import bisq.bonded_roles.BondedRolesService;
-import bisq.chat.ChatService;
-import bisq.common.application.Service;
-import bisq.common.util.CompletableFutureUtils;
+import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.http.PairingRequestHandler;
+import bisq.api.access.pairing.PairingService;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.session.SessionService;
+import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.rest_api.RestApiResourceConfig;
-import bisq.api.rest_api.RestApiService;
 import bisq.api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.api.rest_api.domain.market_price.MarketPriceRestApi;
@@ -35,9 +36,15 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
-import bisq.api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
+import bisq.bisq_easy.BisqEasyService;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatService;
+import bisq.common.application.Service;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
@@ -47,22 +54,43 @@ import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case RestAPI
- * is used without websockets
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
  */
 @Slf4j
 public class ApiService implements Service {
-    private final Optional<RestApiService> restApiService;
+    public enum State {
+        NEW,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        TERMINATED
+    }
+
+    @Getter
+    private final ApiConfig apiConfig;
     @Getter
     private final Optional<WebSocketService> webSocketService;
-    private final ApiConfig apiConfig;
+    @Getter
+    private final ApiAccessTransportService apiAccessTransportService;
+    @Getter
+    private final PairingService pairingService;
+    @Getter
+    private final PermissionService<RestPermissionMapping> permissionService;
+    @Getter
+    private final SessionService sessionService;
+    @Getter
+    private final HttpServerBootstrapService httpServerBootstrapService;
+
+    private final Observable<State> state = new Observable<>(State.NEW);
 
     public ApiService(ApiConfig apiConfig,
                       Path appDataDirPath,
@@ -80,75 +108,80 @@ public class ApiService implements Service {
                       ReputationService reputationService) {
         this.apiConfig = apiConfig;
 
-        if (apiConfig.isEnabled()) {
-            OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
-                    bondedRolesService.getMarketPriceService(),
-                    userService);
-            TradeRestApi tradeRestApi = new TradeRestApi(chatService,
-                    bondedRolesService.getMarketPriceService(),
-                    userService,
-                    supportedService,
-                    tradeService);
-            TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
-            UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
-            MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
-            SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
-            PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
-            UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
-                    userService.getUserProfileService(),
-                    supportedService.getModerationRequestService(),
-                    userService.getRepublishUserProfileService());
-            ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
-            ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
+        int bindPort = apiConfig.getBindPort();
 
-            if (apiConfig.isRestEnabled()) {
-                var restApiResourceConfig = new RestApiResourceConfig(apiConfig,
-                        offerbookRestApi,
-                        tradeRestApi,
-                        tradeChatMessagesRestApi,
-                        userIdentityRestApi,
-                        marketPriceRestApi,
-                        settingsRestApi,
-                        explorerRestApi,
-                        paymentAccountsRestApi,
-                        reputationRestApi,
-                        userProfileRestApi);
-                restApiService = Optional.of(new RestApiService(apiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
-            } else {
-                restApiService = Optional.empty();
-            }
+        apiAccessTransportService = new ApiAccessTransportService(apiConfig,
+                appDataDirPath,
+                networkService,
+                securityService.getKeyBundleService(),
+                bindPort,
+                apiConfig.getOnionServicePort());
 
-            if (apiConfig.isWebsocketEnabled()) {
-                var webSocketResourceConfig = new WebSocketRestApiResourceConfig(apiConfig,
-                        offerbookRestApi,
-                        tradeRestApi,
-                        tradeChatMessagesRestApi,
-                        userIdentityRestApi,
-                        marketPriceRestApi,
-                        settingsRestApi,
-                        explorerRestApi,
-                        paymentAccountsRestApi,
-                        reputationRestApi,
-                        userProfileRestApi);
-                webSocketService = Optional.of(new WebSocketService(apiConfig,
-                        webSocketResourceConfig,
-                        appDataDirPath,
-                        securityService,
-                        networkService,
-                        bondedRolesService,
-                        chatService,
-                        tradeService,
-                        userService,
-                        bisqEasyService,
-                        openTradeItemsService));
-            } else {
-                webSocketService = Optional.empty();
-            }
+        permissionService = new PermissionService<>(new RestPermissionMapping());
+        pairingService = new PairingService(permissionService);
+        sessionService = new SessionService();
 
+        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
+        SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
+
+        OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
+                bondedRolesService.getMarketPriceService(),
+                userService);
+        TradeRestApi tradeRestApi = new TradeRestApi(chatService,
+                bondedRolesService.getMarketPriceService(),
+                userService,
+                supportedService,
+                tradeService);
+        TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
+        UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
+        MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
+        SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+        PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
+        UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
+                userService.getUserProfileService(),
+                supportedService.getModerationRequestService(),
+                userService.getRepublishUserProfileService());
+        ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
+        ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
+
+        Optional<ResourceConfig> restApiResourceConfig;
+        if (apiConfig.isRestEnabled()) {
+            restApiResourceConfig = Optional.of(new RestApiResourceConfig(apiConfig,
+                    permissionService,
+                    sessionAuthenticationService,
+                    offerbookRestApi,
+                    tradeRestApi,
+                    tradeChatMessagesRestApi,
+                    userIdentityRestApi,
+                    marketPriceRestApi,
+                    settingsRestApi,
+                    explorerRestApi,
+                    paymentAccountsRestApi,
+                    reputationRestApi,
+                    userProfileRestApi));
         } else {
-            restApiService = Optional.empty();
+            restApiResourceConfig = Optional.empty();
+        }
+
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    bondedRolesService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    openTradeItemsService));
+        } else {
             webSocketService = Optional.empty();
         }
+
+        httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
+                apiAccessTransportService,
+                restApiResourceConfig,
+                webSocketService,
+                pairingRequestHandler,
+                sessionAuthenticationService,
+                permissionService);
     }
 
     @Override
@@ -157,13 +190,37 @@ public class ApiService implements Service {
         if (!apiConfig.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
-        return CompletableFutureUtils.allOf(
-                        restApiService.map(RestApiService::initialize)
-                                .orElse(CompletableFuture.completedFuture(true)),
-                        webSocketService.map(WebSocketService::initialize)
-                                .orElse(CompletableFuture.completedFuture(true)))
-                .thenApply(list -> list.stream().allMatch(e -> e));
+
+        setState(State.STARTING);
+        List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+
+        // REST API and Websocket are handled inside httpServerBootstrapService
+        futures.add(httpServerBootstrapService.initialize());
+
+        futures.add(apiAccessTransportService.initialize());
+
+        return CompletableFutureUtils.allOf(futures)
+                .thenApply(list -> {
+                    boolean allSucceeded = list.stream().allMatch(e -> e);
+                    if (allSucceeded) {
+                        setState(State.RUNNING);
+                    } else {
+                        log.warn("Api service initialisation did not succeed. We call shutdown.");
+                    }
+                    return allSucceeded;
+                })
+                .exceptionally(throwable -> {
+                    log.error("Failed to initialize ApiService. We call shutdown.", throwable);
+                    return null; // Signal failure, handled below
+                })
+                .thenCompose(result -> {
+                    if (result == null || !result) {
+                        return shutdown().thenApply(r -> false);
+                    }
+                    return CompletableFuture.completedFuture(true);
+                });
     }
+
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
@@ -172,11 +229,23 @@ public class ApiService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
-        return CompletableFutureUtils.allOf(
-                        restApiService.map(RestApiService::shutdown)
-                                .orElse(CompletableFuture.completedFuture(true)),
-                        webSocketService.map(WebSocketService::shutdown)
-                                .orElse(CompletableFuture.completedFuture(true)))
-                .thenApply(list -> list.stream().allMatch(e -> e));
+        setState(State.STOPPING);
+        List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+        futures.add(apiAccessTransportService.shutdown());
+        futures.add(httpServerBootstrapService.shutdown());
+        return CompletableFutureUtils.allOf(futures)
+                .thenApply(list -> {
+                    setState(State.TERMINATED);
+                    return list.stream().allMatch(e -> e);
+                });
+    }
+
+    public ReadOnlyObservable<State> getState() {
+        return state;
+    }
+
+    private void setState(State value) {
+        log.info("New state: {}", value);
+        state.set(value);
     }
 }
