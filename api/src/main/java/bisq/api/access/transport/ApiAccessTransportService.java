@@ -51,13 +51,13 @@ public class ApiAccessTransportService implements Service {
     private final Observable<Integer> bindPort = new Observable<>(8090);
     @Getter
     private final int onionServicePort;
+    private final boolean useTor;
 
     @Setter
     private ApiAccessTransportType apiAccessTransportType = ApiAccessTransportType.TOR;
     private final boolean isTlsRequired;
     private final boolean isTorClientAuthRequired;
 
-    @Getter
     private Optional<TlsContext> tlsContext = Optional.empty();
     @Getter
     private Optional<TorContext> torContext = Optional.empty();
@@ -69,6 +69,7 @@ public class ApiAccessTransportService implements Service {
                                      int bindPort,
                                      int onionServicePort) {
         isTlsRequired = apiConfig.isTlsRequired();
+        useTor = apiConfig.useTor();
         isTorClientAuthRequired = apiConfig.isTorClientAuthRequired();
         this.appDataDirPath = appDataDirPath;
         this.networkService = networkService;
@@ -79,19 +80,23 @@ public class ApiAccessTransportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (isTlsRequired) {
-            try {
-                this.tlsContext = Optional.of(createTlsContext());
-            } catch (Exception exception) {
-                return CompletableFuture.failedFuture(exception);
-            }
+        if (useTor) {
+            return publishAndGetTorAddress().thenApply(address -> true);
+        } else {
+            return CompletableFuture.completedFuture(true);
         }
-        return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return Service.super.shutdown();
+    }
+
+    public Optional<TlsContext> getOrCreateTlsContext() throws Exception {
+        if (isTlsRequired && tlsContext.isEmpty()) {
+            tlsContext = Optional.of(createTlsContext());
+        }
+        return tlsContext;
     }
 
     private TlsContext createTlsContext() throws Exception {
@@ -107,6 +112,7 @@ public class ApiAccessTransportService implements Service {
                         tlsCertificateGenerator.getKeyPair(), tlsCertificateGenerator.getCertificate(), keyStorePath, "password".toCharArray());
                 return TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseThrow();
             } catch (Exception e) {
+                // TODO avoid Exception wrapping
                 throw new RuntimeException(e);
             }
         });

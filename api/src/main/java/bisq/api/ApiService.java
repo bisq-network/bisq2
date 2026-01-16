@@ -26,7 +26,6 @@ import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.rest_api.RestApiResourceConfig;
-import bisq.api.rest_api.RestApiService;
 import bisq.api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.api.rest_api.domain.market_price.MarketPriceRestApi;
@@ -59,10 +58,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Swagger docs at: http://localhost:8090/doc/v1/index.html or http://localhost:8082/doc/v1/index.html in case rest is enabled
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
  */
 @Slf4j
 public class ApiService implements Service {
@@ -107,6 +107,7 @@ public class ApiService implements Service {
         this.apiConfig = apiConfig;
 
         int bindPort = apiConfig.getBindPort();
+        // TODO use config
         int onionServicePort = 80;
 
         apiAccessTransportService = new ApiAccessTransportService(apiConfig,
@@ -167,8 +168,8 @@ public class ApiService implements Service {
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
                 apiAccessTransportService,
-                new RestApiService(restApiResourceConfig),
-                webSocketService,
+                Optional.of(restApiResourceConfig),
+                Optional.of(webSocketService),
                 pairingRequestHandler,
                 sessionAuthenticationService,
                 permissionService);
@@ -183,16 +184,12 @@ public class ApiService implements Service {
 
         setState(State.STARTING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+
+        // REST API and Websocket are handled inside httpServerBootstrapService
+        futures.add(httpServerBootstrapService.initialize());
+
         futures.add(apiAccessTransportService.initialize());
 
-        if (apiConfig.isEnabled()) {
-            // REST API and Websocket are handled inside httpServerBootstrapService
-            futures.add(httpServerBootstrapService.initialize());
-        }
-
-        if (apiConfig.useTor()) {
-            futures.add(apiAccessTransportService.publishAndGetTorAddress().thenApply(address -> true));
-        }
         return CompletableFutureUtils.allOf(futures)
                 .thenApply(list -> {
                     boolean allSucceeded = list.stream().allMatch(e -> e);

@@ -27,7 +27,6 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
-import bisq.api.rest_api.RestApiService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -196,8 +195,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
             httpServerBootstrapService = Optional.of(new HttpServerBootstrapService(apiConfig,
                     apiAccessTransportService.get(),
-                    new RestApiService(restApiResourceConfig),
-                    null,
+                    Optional.of(restApiResourceConfig),
+                    Optional.empty(),
                     pairingRequestHandler,
                     sessionAuthenticationService,
                     permissionService));

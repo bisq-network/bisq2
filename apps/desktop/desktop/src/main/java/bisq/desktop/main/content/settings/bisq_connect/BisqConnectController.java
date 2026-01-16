@@ -24,6 +24,7 @@ import bisq.api.access.pairing.PairingService;
 import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.transport.ApiAccessTransportService;
+import bisq.api.access.transport.TlsContext;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -40,6 +41,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -120,9 +122,16 @@ public class BisqConnectController implements Controller {
 
     private void createQrCode(String webSocketUrl) {
         PairingCode pairingCode = pairingService.createPairingCode(Set.of(Permission.values()));
+        Optional<TlsContext> tlsContext;
+        try {
+            tlsContext = apiAccessTransportService.getOrCreateTlsContext();
+        } catch (Exception e) {
+            tlsContext = Optional.empty();
+            new Popup().error(e).show();
+        }
         String qrCode = PairingQrCodeGenerator.generateQrCode(pairingCode,
                 webSocketUrl,
-                apiAccessTransportService.getTlsContext(),
+                tlsContext,
                 apiAccessTransportService.getTorContext());
 
         model.getQrCode().set(qrCode);

@@ -80,9 +80,9 @@ public class WebSocketService implements Service {
         return webSocketConnectionHandler.initialize()
                 .thenCompose(r -> webSocketRestApiService.initialize())
                 .thenCompose(r -> subscriptionService.initialize())
-                .thenCompose(r -> {
+                .thenApply(r -> {
                     setState(State.RUNNING);
-                    return CompletableFuture.completedFuture(true);
+                    return true;
                 });
     }
 
@@ -91,9 +91,9 @@ public class WebSocketService implements Service {
         return subscriptionService.shutdown()
                 .thenCompose(r -> webSocketRestApiService.shutdown())
                 .thenCompose(r -> webSocketConnectionHandler.shutdown())
-                .thenCompose(r -> {
+                .thenApply(r -> {
                     setState(State.TERMINATED);
-                    return CompletableFuture.completedFuture(true);
+                    return true;
                 });
     }
 

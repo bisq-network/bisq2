@@ -19,12 +19,13 @@ package bisq.api;
 
 import bisq.api.access.filter.AccessFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.http.PairingGrizzlyHttpAdapter;
+import bisq.api.access.http.PairingHttpHandler;
 import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.ApiAccessTransportService;
-import bisq.api.rest_api.RestApiService;
+import bisq.api.access.transport.TlsContext;
+import bisq.api.rest_api.BaseResourceConfig;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
@@ -34,19 +35,21 @@ import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.http.server.StaticHttpHandler;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class HttpServerBootstrapService implements Service {
@@ -60,9 +63,8 @@ public class HttpServerBootstrapService implements Service {
 
     private final ApiConfig apiConfig;
     private final ApiAccessTransportService apiAccessTransportService;
-    private final RestApiService restApiService;
-    @Nullable
-    private final WebSocketService webSocketService;
+    private final Optional<ResourceConfig> restApiResourceConfig;
+    private final Optional<WebSocketService> webSocketService;
     private final PairingRequestHandler pairingRequestHandler;
     private final SessionAuthenticationService sessionAuthenticationService;
     private final PermissionService<RestPermissionMapping> permissionService;
@@ -73,15 +75,15 @@ public class HttpServerBootstrapService implements Service {
 
     public HttpServerBootstrapService(ApiConfig apiConfig,
                                       ApiAccessTransportService apiAccessTransportService,
-                                      RestApiService restApiService,
-                                      @Nullable WebSocketService webSocketService,
+                                      Optional<ResourceConfig> restApiResourceConfig,
+                                      Optional<WebSocketService> webSocketService,
                                       PairingRequestHandler pairingRequestHandler,
                                       SessionAuthenticationService sessionAuthenticationService,
                                       PermissionService<RestPermissionMapping> permissionService
     ) {
         this.apiConfig = apiConfig;
         this.apiAccessTransportService = apiAccessTransportService;
-        this.restApiService = restApiService;
+        this.restApiResourceConfig = restApiResourceConfig;
         this.webSocketService = webSocketService;
         this.pairingRequestHandler = pairingRequestHandler;
         this.sessionAuthenticationService = sessionAuthenticationService;
@@ -98,29 +100,53 @@ public class HttpServerBootstrapService implements Service {
         setState(State.STARTING);
 
         return CompletableFuture.supplyAsync(() -> {
-                    String protocol = apiConfig.getWebSocketProtocol();
+                    String webSocketProtocol = apiConfig.getWebSocketProtocol();
                     String bindHost = apiConfig.getBindHost();
                     int bindPort = apiConfig.getBindPort();
 
                     URI baseUri = UriBuilder
-                            .fromUri(protocol + "://" + bindHost + "/")
+                            .fromUri(webSocketProtocol + "://" + bindHost + "/")
                             .port(bindPort)
                             .build();
 
-                    boolean restEnabled = apiConfig.isRestEnabled();
-                    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiService.getRestApiResourceConfig(), false);
+                    // In case we do not use the rest api we still provide the ResourceConfig with basic JsonMapper config
+                    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig.orElseGet(BaseResourceConfig::new), false);
                     httpServer = Optional.of(server);
-                    server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
+                    NetworkListener networkListener = server.getListener("grizzly");
+                    ServerConfiguration serverConfiguration = server.getServerConfiguration();
 
-                    if (apiConfig.isAuthRequired()) {
-                        server.getListener("grizzly").registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
+                    boolean websocketEnabled = apiConfig.isWebsocketEnabled();
+                    if (websocketEnabled) {
+                        checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
+                        networkListener.registerAddOn(new WebSocketAddOn());
+                        WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
-                    if (apiConfig.isTlsRequired() && apiAccessTransportService.getTlsContext().isPresent()) {
-                        NetworkListener listener = server.getListener("grizzly");
-                        listener.setSecure(true);
+                    boolean restEnabled = apiConfig.isRestEnabled();
+                    if (restEnabled) {
+                        checkArgument(restApiResourceConfig.isPresent(), "If restEnabled is true we expect that restApiResourceConfig is present");
+                        serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
+                    }
 
-                        SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(apiAccessTransportService.getTlsContext().get().getSslContext())
+                    boolean authRequired = apiConfig.isAuthRequired();
+                    if (authRequired) {
+                        networkListener.registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
+                        serverConfiguration.addHttpHandler(new PairingHttpHandler(pairingRequestHandler), "/pair");
+                    }
+
+                    if (apiConfig.isTlsRequired()) {
+                        Optional<TlsContext> tlsContext;
+                        try {
+                            tlsContext = apiAccessTransportService.getOrCreateTlsContext();
+                        } catch (Exception e) {
+                            log.error("Could not create TLS context", e);
+                            return false;
+                        }
+                        checkArgument(tlsContext.isPresent(), "If tlsRequired is true we expect that tlsContext is present");
+
+                        networkListener.setSecure(true);
+
+                        SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(tlsContext.get().getSslContext())
                                 .setClientMode(false)       // server mode
                                 .setNeedClientAuth(false)  // not mutual TLS
                                 .setEnabledProtocols(new String[]{"TLSv1.3"})
@@ -129,17 +155,7 @@ public class HttpServerBootstrapService implements Service {
                                         "TLS_AES_256_GCM_SHA384",
                                         "TLS_CHACHA20_POLY1305_SHA256"
                                 });
-                        listener.setSSLEngineConfig(sslEngineConfigurator);
-                    }
-
-                    if (apiConfig.isWebsocketEnabled() && webSocketService != null) {
-                        WebSocketEngine.getEngine().register("", "/websocket", webSocketService.getWebSocketConnectionHandler());
-                    }
-
-                    server.getServerConfiguration().addHttpHandler(new PairingGrizzlyHttpAdapter(pairingRequestHandler), "/pair");
-
-                    if (restEnabled) {
-                        server.getServerConfiguration().addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
+                        networkListener.setSSLEngineConfig(sslEngineConfigurator);
                     }
 
                     try {
@@ -160,21 +176,15 @@ public class HttpServerBootstrapService implements Service {
                 .thenCompose(result -> {
                     if (!result) {
                         return CompletableFuture.completedFuture(false);
+                    } else {
+                        return webSocketService.map(WebSocketService::initialize)
+                                .orElse(CompletableFuture.completedFuture(true));
                     }
-
-                    CompletableFuture<Boolean> restInit = restApiService.initialize();
-
-                    CompletableFuture<Boolean> wsInit = webSocketService == null
-                            ? CompletableFuture.completedFuture(true)
-                            : webSocketService.initialize();
-
-                    return CompletableFuture.allOf(restInit, wsInit)
-                            .thenApply(v -> restInit.join() && wsInit.join());
                 })
-                .whenComplete((res, ex) -> {
-                    if (ex != null) {
-                        errorMessage.set(ex.getMessage());
-                    } else if (res != null && res) {
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        errorMessage.set(throwable.getMessage());
+                    } else if (result != null && result) {
                         setState(State.RUNNING);
                     } else {
                         errorMessage.set("Initialization completed without success state");
@@ -191,14 +201,8 @@ public class HttpServerBootstrapService implements Service {
 
         setState(State.STOPPING);
 
-        CompletableFuture<?> restShutdown = restApiService.shutdown();
-
-        CompletableFuture<?> wsShutdown = webSocketService == null
-                ? CompletableFuture.completedFuture(null)
-                : webSocketService.shutdown();
-
-        return CompletableFuture.allOf(restShutdown, wsShutdown)
-                .thenCompose(v -> CompletableFuture.supplyAsync(() -> {
+        return webSocketService.map(WebSocketService::shutdown).orElse(CompletableFuture.completedFuture(true))
+                .thenCompose(result -> CompletableFuture.supplyAsync(() -> {
                     httpServer.ifPresent(HttpServer::shutdown);
                     httpServer = Optional.empty();
                     setState(State.TERMINATED);
@@ -212,8 +216,9 @@ public class HttpServerBootstrapService implements Service {
     }
 
     public void addStaticFileHandler(String path, String context) {
-        httpServer.ifPresent(httpServer ->
-                httpServer.getServerConfiguration().addHttpHandler(new StaticHttpHandler(context), path));
+        httpServer.ifPresentOrElse(httpServer ->
+                        httpServer.getServerConfiguration().addHttpHandler(new StaticHttpHandler(context), path),
+                () -> log.error("addStaticFileHandler called before httpServer is set."));
     }
 
     public ReadOnlyObservable<State> getState() {

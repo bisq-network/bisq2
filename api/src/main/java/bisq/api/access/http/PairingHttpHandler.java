@@ -29,11 +29,11 @@ import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 
 // Used with WS server
-public class PairingGrizzlyHttpAdapter extends HttpHandler {
+public class PairingHttpHandler extends HttpHandler {
 
     private final PairingRequestHandler pairingRequestHandler;
 
-    public PairingGrizzlyHttpAdapter(PairingRequestHandler pairingRequestHandler
+    public PairingHttpHandler(PairingRequestHandler pairingRequestHandler
     ) {
         this.pairingRequestHandler = pairingRequestHandler;
     }
