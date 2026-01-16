@@ -20,7 +20,7 @@ package bisq.api.access.transport;
 import bisq.i18n.Res;
 
 public enum ApiAccessTransportType {
-    CLEARNET,
+    CLEAR,
     TOR,
     I2P;
 

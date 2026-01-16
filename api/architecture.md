@@ -27,7 +27,7 @@ The API module is configured via a type-safe `api` object:
 
 ```hocon
 api = {
-    accessTransportType = "CLEARNET" // Options: CLEARNET | TOR | I2P
+    accessTransportType = "CLEAR" // Options: CLEAR | TOR | I2P
 
     server = {
         restEnabled = true
@@ -143,7 +143,7 @@ If `authRequired = true`, clients must complete a **pairing protocol**:
 
 ## Transport Types
 
-* **CLEARNET** – Standard LAN or public IP communication
+* **CLEAR** – Standard LAN or public IP communication
 * **TOR** – Onion routing; client waits until the onion address is published
 * **I2P** – Potential future support, though not feasible for mobile clients
 

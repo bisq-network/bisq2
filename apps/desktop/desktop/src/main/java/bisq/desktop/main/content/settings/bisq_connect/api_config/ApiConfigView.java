@@ -141,8 +141,8 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         subscriptions.add(EasyBind.subscribe(model.getApiAccessTransportType(), type -> {
             onionServiceVBox.setVisible(type == ApiAccessTransportType.TOR);
             onionServiceVBox.setManaged(type == ApiAccessTransportType.TOR);
-            detectedLanHostVbox.setVisible(type == ApiAccessTransportType.CLEARNET);
-            detectedLanHostVbox.setManaged(type == ApiAccessTransportType.CLEARNET);
+            detectedLanHostVbox.setVisible(type == ApiAccessTransportType.CLEAR);
+            detectedLanHostVbox.setManaged(type == ApiAccessTransportType.CLEAR);
         }));
 
         // server
