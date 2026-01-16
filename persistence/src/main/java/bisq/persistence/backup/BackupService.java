@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -258,7 +259,7 @@ public class BackupService {
                 .replace(Persistence.EXTENSION, "")
                 .replace("_store", "");
         // We don't use `resolve` as we use it in unit test which need to be OS independent.
-        return Path.of(dataDir.toString() + relativeBackupDirString);
+        return Paths.get(dataDir.toString() + relativeBackupDirString);
     }
 
     @VisibleForTesting

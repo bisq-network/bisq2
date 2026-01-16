@@ -31,6 +31,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +69,7 @@ public class WebcamProcessLauncher {
                 ProcessBuilder processBuilder;
                 if (OS.isMacOs()) {
                     String iconPath = webcamDirPath + "/webcam-app-icon.png";
-                    Path bisqIconPath = Path.of(iconPath);
+                    Path bisqIconPath = Paths.get(iconPath);
                     if (!Files.exists(bisqIconPath)) {
                         FileMutatorUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }

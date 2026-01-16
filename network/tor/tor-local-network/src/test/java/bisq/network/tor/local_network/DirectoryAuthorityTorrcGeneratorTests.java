@@ -17,6 +17,7 @@
 
 package bisq.network.tor.local_network;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +42,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDirPath) throws IOException {
         Path daAPath = tempDirPath.resolve("DA_A");
-        Files.createDirectory(daAPath);
+        FileMutatorUtils.createDirectory(daAPath);
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()

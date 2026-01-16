@@ -17,6 +17,7 @@
 
 package bisq.persistence;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
@@ -101,7 +102,7 @@ public class PersistableStoreReaderWriterTests {
         persistableStoreReaderWriter.write(modifiedStore);
 
         // corrupt the main store file
-        Files.write(storeFileManager.getStoreFilePath(), "corrupted-data".getBytes());
+        FileMutatorUtils.writeToPath("corrupted-data".getBytes(), storeFileManager.getStoreFilePath());
 
         // read should recover from the backup (original values)
         Optional<TimestampStore> readOptionalStore = persistableStoreReaderWriter.read();

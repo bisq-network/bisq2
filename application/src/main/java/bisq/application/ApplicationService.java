@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -150,7 +151,7 @@ public abstract class ApplicationService implements Service {
 
         String appName = rootConfig.getString("application.appName");
         Path appDataDirPath = rootConfig.hasPath("application.baseDir")
-                ? Path.of(rootConfig.getString("application.baseDir"))
+                ? Paths.get(rootConfig.getString("application.baseDir"))
                 : userDataDirPath.resolve(appName);
         try {
             FileMutatorUtils.createDirectories(appDataDirPath);

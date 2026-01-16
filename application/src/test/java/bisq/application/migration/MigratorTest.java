@@ -3,12 +3,13 @@ package bisq.application.migration;
 import bisq.application.migration.migrations.Migration;
 import bisq.application.migration.migrations.MigrationFailedException;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -20,14 +21,14 @@ public class MigratorTest {
     void migrationSuccess(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, storedVersion.toString());
+        FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);
 
         Version appVersion = ApplicationVersion.getVersion();
         Migrator migrator = new Migrator(appVersion, appDataDirPath, Collections.emptyList());
 
         migrator.migrate();
 
-        String readVersion = Files.readString(appDataDirPath.resolve("version"));
+        String readVersion = FileReaderUtils.readUTF8String(appDataDirPath.resolve("version"));
         assertThat(readVersion).isEqualTo(appVersion.toString());
     }
 
@@ -35,7 +36,7 @@ public class MigratorTest {
     void migrationFailure(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, storedVersion.toString());
+        FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);
 
         Version appVersion = ApplicationVersion.getVersion();
         var migration = new Migration() {
@@ -53,7 +54,7 @@ public class MigratorTest {
         Migrator migrator = new Migrator(appVersion, appDataDirPath, List.of(migration, migration));
         migrator.migrate();
 
-        String readVersion = Files.readString(appDataDirPath.resolve("version"));
+        String readVersion = FileReaderUtils.readUTF8String(appDataDirPath.resolve("version"));
         assertThat(readVersion).isEqualTo(storedVersion.toString());
     }
 }
