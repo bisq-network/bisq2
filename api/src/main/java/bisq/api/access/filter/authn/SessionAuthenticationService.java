@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class SessionAuthenticationService {
 
     private static final long MAX_CLOCK_SKEW_MS = TimeUnit.MINUTES.toMillis(10);
-    private static final long NONCE_TTL_MS = SessionToken.TTL+ TimeUnit.MINUTES.toMillis(5);
+    private static final long NONCE_TTL_MS = SessionToken.TTL + TimeUnit.MINUTES.toMillis(5);
 
     private final PairingService pairingService;
     private final SessionService sessionService;
@@ -62,55 +62,58 @@ public final class SessionAuthenticationService {
             String signatureBase64,
             Optional<String> bodyHashBase64
     ) throws AuthenticationException {
-
-        checkNotNull(sessionId, "Missing sessionId");
-        checkNotNull(nonce, "Missing nonce");
-        checkNotNull(timestamp, "Missing timestamp");
-        checkNotNull(signatureBase64, "Missing signature");
-
-        long requestTime;
         try {
-            requestTime = Long.parseLong(timestamp);
-        } catch (NumberFormatException e) {
-            throw new AuthenticationException("Invalid timestamp format");
+            checkNotNull(sessionId, "Missing sessionId");
+            checkNotNull(nonce, "Missing nonce");
+            checkNotNull(timestamp, "Missing timestamp");
+            checkNotNull(signatureBase64, "Missing signature");
+
+            long requestTime;
+            try {
+                requestTime = Long.parseLong(timestamp);
+            } catch (NumberFormatException e) {
+                throw new AuthenticationException("Invalid timestamp format");
+            }
+
+            long now = System.currentTimeMillis();
+            long skew = Math.abs(now - requestTime);
+            if (skew > MAX_CLOCK_SKEW_MS) {
+                throw new AuthenticationException("Request timestamp outside allowed skew");
+            }
+
+            SessionToken session = sessionService.find(sessionId)
+                    .orElseThrow(() -> new AuthenticationException("Invalid session"));
+
+            if (session.isExpired()) {
+                throw new AuthenticationException("Session expired");
+            }
+
+            DeviceProfile deviceProfile = pairingService.findDeviceProfile(session.getDeviceId())
+                    .orElseThrow(() -> new AuthenticationException("Unknown device"));
+
+            String signedMessage = buildCanonicalRequest(
+                    nonce,
+                    timestamp,
+                    method,
+                    requestUri,
+                    bodyHashBase64
+            );
+
+            verifySignature(
+                    signedMessage,
+                    signatureBase64,
+                    deviceProfile.getPublicKey()
+            );
+
+            enforceNonceUniqueness(sessionId, nonce);
+
+            return new AuthenticatedSession(
+                    session.getSessionId(),
+                    session.getDeviceId()
+            );
+        } catch (Exception e) {
+            throw new AuthenticationException(e.getMessage(), e);
         }
-
-        long now = System.currentTimeMillis();
-        long skew = Math.abs(now - requestTime);
-        if (skew > MAX_CLOCK_SKEW_MS) {
-            throw new AuthenticationException("Request timestamp outside allowed skew");
-        }
-
-        SessionToken session = sessionService.find(sessionId)
-                .orElseThrow(() -> new AuthenticationException("Invalid session"));
-
-        if (session.isExpired()) {
-            throw new AuthenticationException("Session expired");
-        }
-
-        DeviceProfile deviceProfile = pairingService.findDeviceProfile(session.getDeviceId())
-                .orElseThrow(() -> new AuthenticationException("Unknown device"));
-
-        String signedMessage = buildCanonicalRequest(
-                nonce,
-                timestamp,
-                method,
-                requestUri,
-                bodyHashBase64
-        );
-
-        verifySignature(
-                signedMessage,
-                signatureBase64,
-                deviceProfile.getPublicKey()
-        );
-
-        enforceNonceUniqueness(sessionId, nonce);
-
-        return new AuthenticatedSession(
-                session.getSessionId(),
-                session.getDeviceId()
-        );
     }
 
     private static String buildCanonicalRequest(String nonce,

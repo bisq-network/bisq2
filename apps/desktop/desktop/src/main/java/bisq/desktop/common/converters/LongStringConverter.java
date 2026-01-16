@@ -56,7 +56,7 @@ public class LongStringConverter extends StringConverter<Number> {
         if (useFormatter) {
             return DefaultNumberFormatter.format(numberValue);
         } else {
-            return String.valueOf(numberValue);
+            return String.valueOf(numberValue.longValue());
         }
     }
 }

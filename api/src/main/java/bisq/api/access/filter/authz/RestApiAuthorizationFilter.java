@@ -38,6 +38,8 @@ public class RestApiAuthorizationFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext context) throws IOException {
         URI requestUri = context.getUriInfo().getRequestUri();
         try {
+            httpEndpointValidator.validate(requestUri);
+
             String path = requestUri.getPath();
             httpEndpointValidator.validate(path);
 
@@ -54,8 +56,12 @@ public class RestApiAuthorizationFilter implements ContainerRequestFilter {
             if (!permissionService.hasPermission(granted, required)) {
                 throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s", required.name(), granted));
             }
-        } catch (Exception e) {
+        } catch (AuthorizationException | IllegalArgumentException e) {
+            log.warn("REST authz failed: {}", e.getMessage());
             context.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+        } catch (Exception e) {
+            log.warn("REST authz filter failed unexpectedly", e);
+            context.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
     }
 }

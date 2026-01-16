@@ -65,8 +65,10 @@ public final class HttpEndpointValidator {
         try {
             uriSanitizer.validate(uri);
             endpointPolicy.validatePathAllowed(uri.getPath());
+        } catch (AuthorizationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new AuthorizationException("Invalid URI syntax: " + uri.getRawPath(), e);
+            throw new AuthorizationException("Endpoint validation failed: " + uri.getRawPath(), e);
         }
     }
 }

@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
@@ -42,6 +43,7 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
     private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final Set<Pin> pins = new CopyOnWriteArraySet<>();
+    private Pin channelsPin;
 
     public NumOffersWebSocketService(SubscriberRepository subscriberRepository,
                                      ChatService chatService,
@@ -50,21 +52,41 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
         super(subscriberRepository, Topic.NUM_OFFERS);
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
+    }
 
-        bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
-            pins.forEach(Pin::unbind);
-            pins.clear();
-            bisqEasyOfferbookChannelService.getChannels().forEach(
-                    channel -> {
-                        var code = channel.getMarket().getQuoteCurrencyCode();
-                        ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
-                        pins.add(chatMessages.addObserver(() -> {
-                            var numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
-                            numOffersByCurrencyCode.put(code, numOffers);
-                        }));
-                    }
-            );
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        return super.initialize().thenApply(result -> {
+            channelsPin = bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
+                pins.forEach(Pin::unbind);
+                pins.clear();
+                bisqEasyOfferbookChannelService.getChannels().forEach(
+                        channel -> {
+                            var code = channel.getMarket().getQuoteCurrencyCode();
+                            ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
+                            pins.add(chatMessages.addObserver(() -> {
+                                var numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
+                                numOffersByCurrencyCode.put(code, numOffers);
+                            }));
+                        }
+                );
+            });
+            return true;
         });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return super.shutdown()
+                .thenApply(result -> {
+                    if (channelsPin != null) {
+                        channelsPin.unbind();
+                        channelsPin = null;
+                    }
+                    pins.forEach(Pin::unbind);
+                    pins.clear();
+                    return true;
+                });
     }
 
     @Override

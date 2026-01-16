@@ -64,6 +64,18 @@ public class WebSocketHandshakeAuthenticationFilter extends BaseFilter {
             return context.getInvokeAction();
         }
 
+        if (context.getConnection().getAttributes() == null) {
+            log.error("WebSocket auth rejected: missing connection attributes");
+            HttpResponsePacket response = HttpResponsePacket.builder(requestOpt.get())
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR_500.getStatusCode())
+                    .protocol(Protocol.HTTP_1_1)
+                    .contentLength(0)
+                    .build();
+            context.write(response);
+            context.getConnection().closeSilently();
+            return context.getStopAction();
+        }
+
         HttpRequestPacket request = requestOpt.get();
         try {
             URI requestUri;

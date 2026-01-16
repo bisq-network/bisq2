@@ -40,11 +40,17 @@ public class MockClient extends Client {
 
     @Override
     public CompletableFuture<SessionToken> sendRequest(PairingRequest request) {
+        long deadlineMs = System.currentTimeMillis() + 10_000; // keep tests bounded
         return CompletableFuture.supplyAsync(() -> {
             while (sessionToken == null) {
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException ignore) {
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while waiting for session token", e);
+                }
+                if (System.currentTimeMillis() > deadlineMs) {
+                    throw new RuntimeException("Timed out waiting for session token");
                 }
             }
             return sessionToken;

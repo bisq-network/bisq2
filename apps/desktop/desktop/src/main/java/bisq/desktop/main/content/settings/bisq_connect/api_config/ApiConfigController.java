@@ -17,6 +17,10 @@
 
 package bisq.desktop.main.content.settings.bisq_connect.api_config;
 
+import bisq.api.ApiConfig;
+import bisq.api.ApiService;
+import bisq.api.access.transport.ApiAccessTransportService;
+import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
 import bisq.application.TypesafeConfigUtils;
@@ -28,10 +32,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.api.ApiConfig;
-import bisq.api.ApiService;
-import bisq.api.access.transport.ApiAccessTransportService;
-import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import com.typesafe.config.Config;
@@ -122,14 +122,18 @@ public class ApiConfigController implements Controller {
                         this::handleEnableOrTransportChange),
                 future -> {
                     future.whenComplete((wasApplied, throwable) -> {
-                        log.info("wasApplied {}", wasApplied);
+                        if (throwable != null) {
+                            log.error("Error handling enable/transport change", throwable);
+                        } else {
+                            log.info("wasApplied {}", wasApplied);
+                        }
                     });
                 }
         ));
 
         subscriptions.add(EasyBind.subscribe(
                 EasyBind.combine(model.getDetectedLanHost(), model.getBindHost(),
-                        (detectedLanHost, bindPort) -> detectedLanHost != null && detectedLanHost.equals(bindPort)),
+                        (detectedLanHost, bindHost) -> detectedLanHost != null && detectedLanHost.equals(bindHost)),
                 isEquals -> {
                     model.getDetectedLanHostApplied().set(isEquals);
                 }
@@ -208,6 +212,15 @@ public class ApiConfigController implements Controller {
                                     model.getOnionServiceUrlHelp().set(null);
                                     future.complete(true);
                                 });
+                            })
+                            .exceptionally(throwable -> {
+                                log.error("Failed to publish Tor address", throwable);
+                                UIThread.run(() -> {
+                                    model.getOnionServiceUrlPrompt().set(Res.get("settings.bisqConnect.apiConfig.onionService.url.prompt.na"));
+                                    new Popup().error(throwable).show();
+                                });
+                                future.complete(false);
+                                return null;
                             });
                 } else {
                     future.complete(false);
@@ -222,6 +235,7 @@ public class ApiConfigController implements Controller {
                     future.complete(false);
                 }
             }
+            case I2P -> throw new RuntimeException("I2P not supported yet");
         }
         return future;
     }
@@ -238,7 +252,7 @@ public class ApiConfigController implements Controller {
                 .resolve();
     }
 
-    private void writeConfig() {
+    private boolean writeConfig() {
         Path appDataDirPath = appConfig.getAppDataDirPath();
         Config newConfig = ConfigFactory.parseMap(Map.of(
                 "application.api.accessTransportType", model.getApiAccessTransportType().get().name(),
@@ -259,9 +273,11 @@ public class ApiConfigController implements Controller {
         Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         try {
             FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            return true;
         } catch (IOException e) {
             log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             new Popup().error(e).show();
+            return false;
         }
     }
 
@@ -274,6 +290,7 @@ public class ApiConfigController implements Controller {
         ApiConfig apiConfig = model.getApiConfig();
         boolean noChange = apiConfig.isWebsocketEnabled() == model.getWebsocketEnabled().get() &&
                 apiConfig.isRestEnabled() == model.getRestEnabled().get() &&
+                apiConfig.getApiAccessTransportType() == model.getApiAccessTransportType().get() &&
                 apiConfig.getBindHost().equals(model.getBindHost().get()) &&
                 apiConfig.getBindPort() == model.getBindPort().get();
         model.getApplyButtonDisabled().set(noChange || !isValid());
@@ -283,8 +300,10 @@ public class ApiConfigController implements Controller {
         new Popup().confirmation(Res.get("settings.bisqConnect.restart.confirm"))
                 .actionButtonText(Res.get("action.shutDown"))
                 .onAction(() -> {
-                    writeConfig();
-                    shutDownHandler.shutdown();
+                    boolean succeeded = writeConfig();
+                    if (succeeded) {
+                        shutDownHandler.shutdown();
+                    }
                 })
                 .show();
     }

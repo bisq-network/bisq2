@@ -228,8 +228,7 @@ public class ApiService implements Service {
                 })
                 .exceptionally(throwable -> {
                     log.error("Failed to initialize ApiService. We call shutdown.", throwable);
-                    shutdown();
-                    return false;
+                    return shutdown().handle((result, ex) -> false).join();
                 });
     }
 

@@ -23,6 +23,7 @@ import bisq.api.access.http.dto.PairingResponseDto;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.session.SessionToken;
 import bisq.common.json.JsonMapperProvider;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -42,14 +43,19 @@ public class PairingJdkHttpAdapter implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try (exchange) {
+        try {
             if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.getResponseHeaders().set("Allow", "POST");
                 exchange.sendResponseHeaders(405, -1);
                 return;
             }
 
             ObjectMapper objectMapper = JsonMapperProvider.get();
-            PairingRequestDto dto = objectMapper.readValue(exchange.getRequestBody(), PairingRequestDto.class);
+            PairingRequestDto dto;
+            try (var in = exchange.getRequestBody()) {
+                dto = objectMapper.readValue(in, PairingRequestDto.class);
+            }
+
             PairingRequest pairingRequest = PairingRequestMapper.toBisq2Model(dto);
             SessionToken sessionToken = pairingRequestHandler.handle(pairingRequest);
 
@@ -57,13 +63,21 @@ public class PairingJdkHttpAdapter implements HttpHandler {
             byte[] responseBytes = objectMapper.writeValueAsBytes(pairingResponseDto);
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, responseBytes.length);
-            exchange.getResponseBody().write(responseBytes);
+
+            try (var out = exchange.getResponseBody()) {
+                out.write(responseBytes);
+            }
+        } catch (JsonProcessingException e) {
+            log.warn("Invalid pairing request JSON: {}", e.getOriginalMessage());
+            exchange.sendResponseHeaders(400, -1);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid pairing request: {}", e.getMessage());
             exchange.sendResponseHeaders(400, -1);
         } catch (Exception e) {
             log.error("Pairing request failed", e);
             exchange.sendResponseHeaders(500, -1);
+        } finally {
+            exchange.close();
         }
     }
 }

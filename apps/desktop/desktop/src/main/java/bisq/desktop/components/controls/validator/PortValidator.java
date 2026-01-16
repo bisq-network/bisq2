@@ -33,7 +33,7 @@ public class PortValidator extends ValidatorBase {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String portValue = textField.getText();
         if (StringUtils.isEmpty(portValue)) {
-            setMessage("No port is set");
+            setMessage(Res.get("validation.emptyPort"));
             hasErrors.set(true);
             return;
         }
@@ -41,13 +41,13 @@ public class PortValidator extends ValidatorBase {
         try {
             int port = Integer.parseInt(portValue);
             if (!NetworkPortValidation.isValid(port)) {
-                setMessage("Port is invalid");
+                setMessage(Res.get("validation.invalidPort"));
                 hasErrors.set(true);
                 return;
             }
             hasErrors.set(false);
         } catch (NumberFormatException e) {
-            setMessage("Input is not a number");
+            setMessage(Res.get("validation.portNotANumber"));
             hasErrors.set(true);
         } catch (Exception e) {
             setMessage(ExceptionUtil.getMessageOrToString(e));

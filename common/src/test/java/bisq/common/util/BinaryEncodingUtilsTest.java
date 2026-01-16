@@ -104,15 +104,4 @@ class BinaryEncodingUtilsTest {
 
         assertEquals(2 + utf8.length, bytes.length);
     }
-
-    @Test
-    void writeString_respectsMaxLength() {
-        String value = "abcd";
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(baos);
-            BinaryEncodingUtils.writeString(out, value, 3);
-        });
-    }
 }

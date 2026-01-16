@@ -25,13 +25,16 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Getter
+
 @EqualsAndHashCode
 public class SessionToken {
     public static final long TTL = TimeUnit.MINUTES.toSeconds(15);
 
+    @Getter
     private final String sessionId;
+    @Getter
     private final UUID deviceId;
+    @Getter
     private final Instant expiresAt;
     private final byte[] hmacKey;
 
@@ -44,5 +47,9 @@ public class SessionToken {
 
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
+    }
+
+    public byte[] getHmacKey() {
+        return hmacKey.clone();
     }
 }

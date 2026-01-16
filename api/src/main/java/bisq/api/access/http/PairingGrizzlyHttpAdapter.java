@@ -17,6 +17,7 @@
 
 package bisq.api.access.http;
 
+import bisq.api.access.http.dto.ErrorResponseDto;
 import bisq.api.access.http.dto.PairingRequestDto;
 import bisq.api.access.http.dto.PairingRequestMapper;
 import bisq.api.access.http.dto.PairingResponseDto;
@@ -24,11 +25,13 @@ import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.session.SessionToken;
 import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 
 // Used with WS server
+@Slf4j
 public class PairingGrizzlyHttpAdapter extends HttpHandler {
 
     private final PairingRequestHandler pairingRequestHandler;
@@ -45,8 +48,8 @@ public class PairingGrizzlyHttpAdapter extends HttpHandler {
             return;
         }
 
+        ObjectMapper objectMapper = JsonMapperProvider.get();
         try {
-            ObjectMapper objectMapper = JsonMapperProvider.get();
             PairingRequestDto dto = objectMapper.readValue(request.getInputStream(), PairingRequestDto.class);
             PairingRequest pairingRequest = PairingRequestMapper.toBisq2Model(dto);
             SessionToken sessionToken = pairingRequestHandler.handle(pairingRequest);
@@ -56,13 +59,16 @@ public class PairingGrizzlyHttpAdapter extends HttpHandler {
             PairingResponseDto pairingResponseDto = new PairingResponseDto(sessionToken.getSessionId(), sessionToken.getExpiresAt().toEpochMilli());
             objectMapper.writeValue(response.getOutputStream(), pairingResponseDto);
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid pairing request", e);
             response.setStatus(400);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid pairing request\"}");
+            objectMapper.writeValue(response.getOutputStream(),
+                    new ErrorResponseDto("Invalid pairing request"));
         } catch (Exception e) {
             response.setStatus(500);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Internal server error\"}");
+            objectMapper.writeValue(response.getOutputStream(),
+                    new ErrorResponseDto("Internal server error"));
         }
     }
 }

@@ -117,12 +117,12 @@ public class WebSocketService implements Service {
 
         setState(State.STARTING);
         return CompletableFuture.supplyAsync(() -> {
-                    String protocol = apiConfig.getWebSocketProtocol();
+                    String httpProtocol = apiConfig.getRestProtocol();
                     String bindHost = apiConfig.getBindHost();
                     int bindPort = apiConfig.getBindPort();
 
                     URI baseUri = UriBuilder
-                            .fromUri(protocol + "://" + bindHost + "/")
+                            .fromUri(httpProtocol + "://" + bindHost + "/")
                             .port(bindPort)
                             .build();
 
@@ -148,7 +148,7 @@ public class WebSocketService implements Service {
                     try {
                         server.start();
                         log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at 'ws://{}:{}/websocket'", bindHost, bindPort);
+                        log.info("WebSocket endpoint available at '{}/websocket'", apiConfig.getWebSocketServerUrl());
                         if (restEnabled) {
                             log.info("Rest API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
                         }
