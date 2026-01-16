@@ -68,8 +68,8 @@ public class RestApiService implements Service {
         }
 
         return CompletableFuture.supplyAsync(() -> {
-            URI uri = URI.create(apiConfig.getRestServerUrl());
-            HttpServer server = JdkHttpServerFactory.createHttpServer(uri, restApiResourceConfig);
+            URI uriWithPath = URI.create(apiConfig.getRestServerApiBasePath());
+            HttpServer server = JdkHttpServerFactory.createHttpServer(uriWithPath, restApiResourceConfig);
             httpServer = Optional.of(server);
 
             // Pairing endpoint (bootstrap)
@@ -79,7 +79,7 @@ public class RestApiService implements Service {
             );
 
             addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
-            log.info("Server started at {}.", apiConfig.getRestServerUrl());
+            log.info("Server started at {}.", apiConfig.getRestServerApiBasePath());
             return true;
         }, commonForkJoinPool());
     }
