@@ -25,7 +25,6 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -317,7 +316,7 @@ public class UpdaterService implements Service {
     static CompletionStage<Void> writeVersionFile(String version, Path appDataDirPath, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                FacadeProvider.getJdkFacade().writeString(version, appDataDirPath.resolve(VERSION_FILE_NAME));
+                FileMutatorUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));
                 return null;
             } catch (Exception e) {
                 e.printStackTrace();

@@ -3,7 +3,6 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.encoding.Csv;
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -59,7 +58,7 @@ public class MuSigOpenTradesUtils {
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {
-                            FacadeProvider.getJdkFacade().writeString(csv, file);
+                            FileMutatorUtils.writeToPath(csv, file);
                         } catch (IOException e) {
                             new Popup().error(e).show();
                         }

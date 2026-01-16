@@ -44,8 +44,29 @@ import java.util.stream.Stream;
 public class FileReaderUtils {
     public static final String FILE_SEP = File.separator;
 
+    private static boolean supportsModernFilesApi = true;
+    private static boolean configured = false;
+
+    /**
+     * Sets platform file capabilities.
+     * Intended to be called once at startup.
+     */
+    public static synchronized void setup(boolean supportsModernFilesApi) {
+        if (configured) {
+            log.warn("FileReaderUtils already configured, ignoring repeated setup call");
+            return;
+        }
+
+        FileReaderUtils.supportsModernFilesApi = supportsModernFilesApi;
+        configured = true;
+    }
+
     public static String readUTF8String(Path path) throws IOException {
-        return Files.readString(path, StandardCharsets.UTF_8);
+        if (supportsModernFilesApi) {
+            return Files.readString(path, StandardCharsets.UTF_8);
+        } else {
+            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        }
     }
 
     /**

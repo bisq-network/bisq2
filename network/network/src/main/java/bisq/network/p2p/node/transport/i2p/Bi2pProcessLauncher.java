@@ -28,6 +28,8 @@ import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Paths;
+
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -156,7 +158,7 @@ public class Bi2pProcessLauncher implements Service {
     private static String getJavaExePath() {
         String javaHome = System.getProperty("java.home");
         String exe = OS.isWindows() ? "java.exe" : "java";
-        return FacadeProvider.getJdkFacade().pathOf(javaHome, "bin", exe).toString();
+        return Paths.get(javaHome, "bin", exe).toString();
     }
 
 }

@@ -30,18 +30,55 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 @Slf4j
 public class FileMutatorUtils {
+
+    private static final boolean IS_POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+
+    private static boolean supportsModernFilesApi = true;
+    private static boolean supportsPosixPermissions = true;
+    private static boolean configured = false;
+
+    private static final Set<PosixFilePermission> OWNER_READ_WRITE_PERMISSIONS =
+            EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+    private static final Set<PosixFilePermission> OWNER_READ_WRITE_EXECUTE_PERMISSIONS =
+            EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE);
+
+    private static final FileAttribute<Set<PosixFilePermission>> OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE =
+            PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_PERMISSIONS);
+    private static final FileAttribute<Set<PosixFilePermission>> OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE =
+            PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE_EXECUTE_PERMISSIONS);
+
+    /**
+     * Sets platform file capabilities.
+     * Intended to be called once at startup.
+     */
+    public static synchronized void setup(boolean supportsModernFilesApi, boolean supportsPosixPermissions) {
+        if (configured) {
+            log.warn("FileMutatorUtils already configured, ignoring repeated setup call");
+            return;
+        }
+
+        FileMutatorUtils.supportsModernFilesApi = supportsModernFilesApi;
+        FileMutatorUtils.supportsPosixPermissions = supportsPosixPermissions;
+        configured = true;
+    }
+
     /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
      * thus leading to a memory leak.
@@ -158,7 +195,23 @@ public class FileMutatorUtils {
      */
     public static void writeToPath(String content, Path path) throws IOException {
         try {
-            Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
+            if (supportsModernFilesApi) {
+                Files.writeString(path, content, StandardCharsets.UTF_8); // uses platform default charset
+                applyDefaultPermissions(path);
+            } else {
+                writeToPath(content.getBytes(StandardCharsets.UTF_8), path);
+            }
+
+        } catch (IOException e) {
+            log.warn("Could not write to file {}", path);
+            throw e;
+        }
+    }
+
+    public static void writeToPath(byte[] bytes, Path path) throws IOException {
+        try {
+            Files.write(path, bytes);
+            applyDefaultPermissions(path);
         } catch (IOException e) {
             log.warn("Could not write to file {}", path);
             throw e;
@@ -206,6 +259,49 @@ public class FileMutatorUtils {
             String newFileName = fileName + "_at_" + timestamp;
             Path targetPath = dirPath.resolve(backupFolderName).resolve(newFileName);
             Files.move(storageFilePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            applyDefaultPermissions(targetPath);
+        }
+    }
+
+    public static OutputStream newOutputStream(Path filePath) throws IOException {
+        if (supportsSettingPosixPermissions()) {
+            if (!Files.exists(filePath)) {
+                Files.createFile(filePath, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
+            } else {
+                try {
+                    applyDefaultPermissions(filePath);
+                } catch (UnsupportedOperationException e) {
+                    // Non-POSIX FS — safe to ignore or log
+                }
+            }
+        }
+        return Files.newOutputStream(filePath);
+    }
+
+    public static void createFile(Path path) throws IOException {
+        if (supportsSettingPosixPermissions()) {
+            Files.createFile(path, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
+            applyDefaultPermissions(path);
+        } else {
+            Files.createFile(path);
+        }
+    }
+
+    public static void createDirectories(Path path) throws IOException {
+        if (supportsSettingPosixPermissions()) {
+            Files.createDirectories(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
+            applyDefaultPermissions(path);
+        } else {
+            Files.createDirectories(path);
+        }
+    }
+
+    public static void createDirectory(Path path) throws IOException {
+        if (supportsSettingPosixPermissions()) {
+            Files.createDirectory(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS_FILE_ATTRIBUTE);
+            applyDefaultPermissions(path);
+        } else {
+            Files.createDirectory(path);
         }
     }
 
@@ -294,5 +390,23 @@ public class FileMutatorUtils {
             connection.disconnect();
         }
         return connection;
+    }
+
+    private static void applyDefaultPermissions(Path path) throws IOException {
+        try {
+            if (supportsSettingPosixPermissions()) {
+                if (Files.isDirectory(path)) {
+                    Files.setPosixFilePermissions(path, OWNER_READ_WRITE_EXECUTE_PERMISSIONS);
+                } else {
+                    Files.setPosixFilePermissions(path, OWNER_READ_WRITE_PERMISSIONS);
+                }
+            }
+        } catch (UnsupportedOperationException e) {
+            // Non-POSIX FS — safe to ignore or log
+        }
+    }
+
+    private static boolean supportsSettingPosixPermissions() {
+        return IS_POSIX && supportsPosixPermissions;
     }
 }

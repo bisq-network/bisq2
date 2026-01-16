@@ -43,13 +43,13 @@
 
 package bisq.common.jvm;
 
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -112,7 +112,7 @@ public class DeleteOnExitHook {
         // Last in first deleted.
         Collections.reverse(toBeDeleted);
         for (String filename : toBeDeleted) {
-            Path path = FacadeProvider.getJdkFacade().pathOf(filename);
+            Path path = Paths.get(filename);
             try {
                 FileMutatorUtils.deleteFileOrDirectory(path);
             } catch (IOException e) {
