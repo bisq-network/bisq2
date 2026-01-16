@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,8 +50,8 @@ public class UpdaterIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        srcBaseDirPath = Path.of("build/resources/test");
-        destinationBaseDirPath = Path.of("temp");
+        srcBaseDirPath = Paths.get("build/resources/test");
+        destinationBaseDirPath = Paths.get("temp");
 
         executorService = ExecutorFactory.newSingleThreadExecutor("DownloadExecutor");
     }
@@ -146,7 +147,7 @@ public class UpdaterIntegrationTest {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
                     FileMutatorUtils.copyFile(
-                            Path.of(localDevTestSrcDir, downloadItem.getSourceFileName()),
+                            Paths.get(localDevTestSrcDir, downloadItem.getSourceFileName()),
                             downloadItem.getDestinationFilePath());
                     downloadItem.getProgress().set(1d);
                 } catch (Exception e) {

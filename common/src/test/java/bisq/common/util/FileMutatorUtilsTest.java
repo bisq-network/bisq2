@@ -24,7 +24,7 @@ public class FileMutatorUtilsTest {
     @Test
     void testDeleteOnExitAndReleaseTempFile(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("deleteOnExit.txt");
-        Files.createFile(path);
+        FileMutatorUtils.createFile(path);
         FileMutatorUtils.deleteOnExit(path);
         FileMutatorUtils.releaseTempFile(path);
         assertThat(path).doesNotExist();
@@ -33,9 +33,9 @@ public class FileMutatorUtilsTest {
     @Test
     void testDeleteFileOrDirectory(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("dir");
-        Files.createDirectory(dirPath);
+        FileMutatorUtils.createDirectory(dirPath);
         Path filePath = dirPath.resolve("file.txt");
-        Files.createFile(filePath);
+        FileMutatorUtils.createFile(filePath);
         FileMutatorUtils.deleteFileOrDirectory(dirPath);
         assertThat(filePath).doesNotExist();
     }
@@ -45,18 +45,18 @@ public class FileMutatorUtilsTest {
         // Setup complex nested directories and files
         Path subDirPath1 = tempDirPath.resolve("subDir1");
         Path subDirPath2 = tempDirPath.resolve("subDir2");
-        Files.createDirectories(subDirPath1);
-        Files.createDirectories(subDirPath2);
+        FileMutatorUtils.createDirectories(subDirPath1);
+        FileMutatorUtils.createDirectories(subDirPath2);
 
         // Create files at multiple levels
-        Files.writeString(tempDirPath.resolve("rootFile.txt"), "root");
-        Files.writeString(subDirPath1.resolve("file1.txt"), "file1");
-        Files.writeString(subDirPath1.resolve("file2.txt"), "file2");
-        Files.writeString(subDirPath2.resolve("file3.txt"), "file3");
+        FileMutatorUtils.writeToPath("root", tempDirPath.resolve("rootFile.txt"));
+        FileMutatorUtils.writeToPath("file1", subDirPath1.resolve("file1.txt"));
+        FileMutatorUtils.writeToPath("file2", subDirPath1.resolve("file2.txt"));
+        FileMutatorUtils.writeToPath("file3", subDirPath2.resolve("file3.txt"));
 
         Path nestedPath = subDirPath2.resolve("nested");
-        Files.createDirectory(nestedPath);
-        Files.writeString(nestedPath.resolve("nestedFile.txt"), "nested");
+        FileMutatorUtils.createDirectory(nestedPath);
+        FileMutatorUtils.writeToPath("nested", nestedPath.resolve("nestedFile.txt"));
 
         // Ensure files exist before deletion
         assertThat(tempDirPath.resolve("rootFile.txt")).exists();
@@ -75,7 +75,7 @@ public class FileMutatorUtilsTest {
     @Test
     void testDeleteFileAndWait(@TempDir Path tempDirPath) throws IOException, InterruptedException {
         Path path = tempDirPath.resolve("wait.txt");
-        Files.createFile(path);
+        FileMutatorUtils.createFile(path);
         FileMutatorUtils.deleteFileAndWait(path, 1000);
         assertThat(path).doesNotExist();
     }
@@ -93,11 +93,11 @@ public class FileMutatorUtilsTest {
     void testRenameFileOverExistingFile(@TempDir Path tempDirPath) throws IOException {
         // Create the source file
         Path sourceFilePath = tempDirPath.resolve("source.txt");
-        Files.writeString(sourceFilePath, "Hello source");
+        FileMutatorUtils.writeToPath("Hello source", sourceFilePath);
 
         // Create the target file that already exists
         Path targetFilePath = tempDirPath.resolve("target.txt");
-        Files.writeString(targetFilePath, "Existing target");
+        FileMutatorUtils.writeToPath("Existing target", targetFilePath);
 
         // Perform the rename (should overwrite existing target)
         boolean success = FileMutatorUtils.renameFile(sourceFilePath, targetFilePath);
@@ -131,7 +131,7 @@ public class FileMutatorUtilsTest {
     void testCopyFile(@TempDir Path tempDirPath) throws IOException {
         Path srcPath = tempDirPath.resolve("src.txt");
         Path destPath = tempDirPath.resolve("dest.txt");
-        Files.write(srcPath, "copy".getBytes());
+        FileMutatorUtils.writeToPath("copy".getBytes(), srcPath);
         FileMutatorUtils.copyFile(srcPath, destPath);
         assertEquals("copy", Files.readString(destPath));
     }
@@ -148,7 +148,7 @@ public class FileMutatorUtilsTest {
     void testRenameFile(@TempDir Path tempDirPath) throws IOException {
         Path oldPath = tempDirPath.resolve("old.txt");
         Path newPath = tempDirPath.resolve("new.txt");
-        Files.write(oldPath, "rename".getBytes());
+        FileMutatorUtils.writeToPath("rename".getBytes(), oldPath);
         assertTrue(FileMutatorUtils.renameFile(oldPath, newPath));
         assertTrue(Files.exists(newPath));
         assertFalse(Files.exists(oldPath));
@@ -157,9 +157,9 @@ public class FileMutatorUtilsTest {
     @Test
     void testBackupCorruptedFile(@TempDir Path tempDirPath) throws IOException {
         Path backupPath = tempDirPath.resolve("backup");
-        Files.createDirectory(backupPath);
+        FileMutatorUtils.createDirectory(backupPath);
         Path corruptPath = backupPath.resolve("corrupt.txt");
-        Files.write(corruptPath, "data".getBytes());
+        FileMutatorUtils.writeToPath("data".getBytes(), corruptPath);
         FileMutatorUtils.backupCorruptedFile(backupPath, corruptPath, "corrupt.txt", "backup");
         Set<String> files = FileReaderUtils.listRegularFiles(backupPath.resolve("backup"));
         assertTrue(files.stream().anyMatch(f -> f.startsWith("corrupt.txt_at_")));
@@ -169,9 +169,9 @@ public class FileMutatorUtilsTest {
     void testCopyDirectoryWithExtensionsToSkip(@TempDir Path tempDirPath) throws IOException {
         Path srcDirPath = tempDirPath.resolve("srcdir2");
         Path destDirPath = tempDirPath.resolve("destdir2");
-        Files.createDirectory(srcDirPath);
-        Files.write(srcDirPath.resolve("file.txt"), "abc".getBytes());
-        Files.write(srcDirPath.resolve("file.skip"), "skip".getBytes());
+        FileMutatorUtils.createDirectory(srcDirPath);
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("file.txt"));
+        FileMutatorUtils.writeToPath("skip".getBytes(), srcDirPath.resolve("file.skip"));
         FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of("skip"));
         assertTrue(Files.exists(destDirPath.resolve("file.txt")));
         assertFalse(Files.exists(destDirPath.resolve("file.skip")));

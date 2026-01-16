@@ -31,6 +31,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -67,7 +68,7 @@ class SoundPlayer implements PreventStandbyMode {
     private void playSound() {
         try {
             String fileName = "prevent-app-nap-silent-sound.aiff";
-            Path soundFilePath = Path.of(baseDirPath, fileName);
+            Path soundFilePath = Paths.get(baseDirPath, fileName);
             if (!Files.exists(soundFilePath)) {
                 FileMutatorUtils.resourceToFile(fileName, soundFilePath);
             }

@@ -90,6 +90,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1015,8 +1016,8 @@ public abstract class Overlay<T extends Overlay<T>> {
                 .ifPresent(directory -> {
                     // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
                     // private data gets leaked in case the user used their real name as their OS user.
-                    Path debugLogPath = Path.of(appDataDirPath + "/tor/").resolve("debug.log");
-                    Path debugLogForZipFilePath = Path.of(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
+                    Path debugLogPath = Paths.get(appDataDirPath + "/tor/").resolve("debug.log");
+                    Path debugLogForZipFilePath = Paths.get(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
                     try {
                         Files.deleteIfExists(debugLogForZipFilePath);
                         FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);

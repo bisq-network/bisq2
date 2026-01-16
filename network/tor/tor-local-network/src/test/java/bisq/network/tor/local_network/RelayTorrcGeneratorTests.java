@@ -17,6 +17,7 @@
 
 package bisq.network.tor.local_network;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +41,7 @@ public class RelayTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDirPath) throws IOException {
         Path relayAPath = tempDirPath.resolve("RELAY_A");
-        Files.createDirectory(relayAPath);
+        FileMutatorUtils.createDirectory(relayAPath);
 
         TorNode firstRelay = spy(
                 TorNode.builder()

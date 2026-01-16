@@ -1,12 +1,12 @@
 package bisq.application.migration;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.InvalidVersionException;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +24,7 @@ public class MigrationServiceTests {
     @Test
     void getInvalidStoredVersion(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
-        Files.writeString(versionFilePath, "2.1-alpha");
+        FileMutatorUtils.writeToPath("2.1-alpha", versionFilePath);
 
         MigrationService migrationService = new MigrationService(appDataDirPath);
         assertThrows(InvalidVersionException.class, migrationService::getStoredVersion);
@@ -33,7 +33,7 @@ public class MigrationServiceTests {
     @Test
     void getStoredVersion(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
-        Files.writeString(versionFilePath, "2.1.34");
+        FileMutatorUtils.writeToPath("2.1.34", versionFilePath);
 
         MigrationService migrationService = new MigrationService(appDataDirPath);
         Version storedVersion = migrationService.getStoredVersion();

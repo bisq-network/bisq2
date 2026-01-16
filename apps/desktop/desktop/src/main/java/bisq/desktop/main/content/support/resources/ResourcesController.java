@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
@@ -96,7 +97,7 @@ public class ResourcesController implements Controller {
         String backupLocation = model.getBackupLocation().get();
         Path path = StringUtils.isEmpty(backupLocation)
                 ? PlatformUtils.getHomeDirectoryPath()
-                : Path.of(backupLocation);
+                : Paths.get(backupLocation);
         String title = Res.get("support.resources.backup.selectLocation");
         FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
                 .ifPresent(directory -> model.getBackupLocation().set(directory.toAbsolutePath().toString()));
@@ -112,8 +113,8 @@ public class ResourcesController implements Controller {
                     if (throwable == null) {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destinationDirName = appName + "_backup_" + dateString;
-                        Path destinationPath = Path.of(model.getBackupLocation().get(), destinationDirName);
-                        if (!Files.exists(Path.of(model.getBackupLocation().get()))) {
+                        Path destinationPath = Paths.get(model.getBackupLocation().get(), destinationDirName);
+                        if (!Files.exists(Paths.get(model.getBackupLocation().get()))) {
                             new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
                             return;
                         }
