@@ -278,12 +278,13 @@ public class FileMutatorUtils {
         return Files.newOutputStream(filePath);
     }
 
-    public static void createFile(Path path) throws IOException {
+    public static Path createFile(Path path) throws IOException {
         if (supportsSettingPosixPermissions()) {
-            Files.createFile(path, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
-            applyDefaultPermissions(path);
+            var createdFile = Files.createFile(path, OWNER_READ_WRITE_PERMISSIONS_FILE_ATTRIBUTE);
+            applyDefaultPermissions(createdFile);
+            return createdFile;
         } else {
-            Files.createFile(path);
+            return Files.createFile(path);
         }
     }
 

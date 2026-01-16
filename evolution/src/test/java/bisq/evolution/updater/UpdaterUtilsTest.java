@@ -17,11 +17,11 @@
 
 package bisq.evolution.updater;
 
+import bisq.common.file.FileMutatorUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -33,7 +33,7 @@ public class UpdaterUtilsTest {
     @Test
     void testReadVersionFromVersionFile(@TempDir Path tempDirPath) throws IOException {
         Path expectedPath = tempDirPath.resolve(UpdaterUtils.VERSION_FILE_NAME);
-        Files.writeString(expectedPath, "12.3.6");
+        FileMutatorUtils.writeToPath("12.3.6", expectedPath);
 
         Optional<String> result = UpdaterUtils.readVersionFromVersionFile(tempDirPath);
 

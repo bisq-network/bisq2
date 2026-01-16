@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SignatureException;
 import java.util.Locale;
 
@@ -43,12 +44,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class PgPUtilsTest {
     @BeforeEach
     void setUp() throws IOException {
-        Files.createDirectories(Path.of("temp"));
+        FileMutatorUtils.createDirectories(Paths.get("temp"));
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        FileMutatorUtils.deleteFileOrDirectory(Path.of("temp"));
+        FileMutatorUtils.deleteFileOrDirectory(Paths.get("temp"));
     }
 
     @Test
@@ -92,7 +93,7 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        Path filePath = Path.of("temp", fileName);
+        Path filePath = Paths.get("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = Files.newOutputStream(filePath)) {
@@ -105,7 +106,7 @@ public class PgPUtilsTest {
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        Path filePath = Path.of("temp", fileName);
+        Path filePath = Paths.get("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = Files.newOutputStream(filePath)) {
@@ -118,7 +119,7 @@ public class PgPUtilsTest {
     }
 
     private Path getDataAsFilePath(String fileName) throws IOException {
-        Path filePath = Path.of("temp", fileName);
+        Path filePath = Paths.get("temp", fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName)) {
                 OutputStream out = Files.newOutputStream(filePath);

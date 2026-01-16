@@ -21,7 +21,7 @@ import bisq.common.util.StringUtils;
 import javafx.scene.control.TextInputControl;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.nio.file.Files.isDirectory;
 
@@ -47,7 +47,7 @@ public class DirectoryPathValidator extends ValidatorBase {
             return;
         }
         try {
-            hasErrors.set(StringUtils.isEmpty(path) || !isDirectory(Path.of(path)));
+            hasErrors.set(StringUtils.isEmpty(path) || !isDirectory(Paths.get(path)));
         } catch (Exception e) {
             log.debug("Exception found while validating directory path. " +
                     "Directory path validation will treat this as directory not valid. ", e);

@@ -3,6 +3,7 @@ package bisq.application.migration;
 import bisq.application.migration.migrations.Migration;
 import bisq.application.migration.migrations.MigrationFailedException;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,7 +21,7 @@ public class MigratorTest {
     void migrationSuccess(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, storedVersion.toString());
+        FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);
 
         Version appVersion = ApplicationVersion.getVersion();
         Migrator migrator = new Migrator(appVersion, appDataDirPath, Collections.emptyList());
@@ -35,7 +36,7 @@ public class MigratorTest {
     void migrationFailure(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
-        Files.writeString(versionFilePath, storedVersion.toString());
+        FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);
 
         Version appVersion = ApplicationVersion.getVersion();
         var migration = new Migration() {

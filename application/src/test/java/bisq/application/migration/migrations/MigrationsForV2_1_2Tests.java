@@ -1,5 +1,6 @@
 package bisq.application.migration.migrations;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -81,7 +82,7 @@ public class MigrationsForV2_1_2Tests {
         createFiles(torPath, torPathFiles);
 
         Path pluggableTransportDirPath = torPath.resolve("pluggable_transports");
-        Files.createDirectories(pluggableTransportDirPath);
+        FileMutatorUtils.createDirectories(pluggableTransportDirPath);
 
         List<String> pluggableTransportFiles = List.of("snowflake-client",
                 "bridges_list.snowflake.txt",
@@ -101,7 +102,7 @@ public class MigrationsForV2_1_2Tests {
         fileNames.forEach(filename -> {
             try {
                 Path filePath = basePath.resolve(filename);
-                Files.writeString(filePath, "ABC");
+                FileMutatorUtils.writeToPath("ABC", filePath);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
