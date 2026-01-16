@@ -23,15 +23,26 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class PairingRequestPayloadEncoder {
+    private static final int MAX_PAIRING_CODE_ID_LENGTH = 36;
+    private static final int MAX_PUBLIC_KEY_BYTES = 128;  // EC pub key has about 90 bytes
+    private static final int MAX_DEVICE_NAME_LENGTH = 128; // 32 chars - 128 chars depending on char
+
     public static byte[] encode(PairingRequestPayload pairingRequestPayload) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
             out.writeByte(PairingRequestPayload.VERSION);
 
-            BinaryEncodingUtils.writeString(out, pairingRequestPayload.getPairingCodeId());
-            BinaryEncodingUtils.writeBytes(out, pairingRequestPayload.getDevicePublicKey().getEncoded());
-            BinaryEncodingUtils.writeString(out, pairingRequestPayload.getDeviceName());
+
+            checkArgument(pairingRequestPayload.getPairingCodeId().length() == 36, "PairingCodeId is expected to be 36 chars long");
+            checkArgument(pairingRequestPayload.getDeviceName().length() >= 4, "DeviceName must have at least 4 chars");
+            checkArgument(pairingRequestPayload.getDeviceName().length() <= 32, "DeviceName must not be longer than 32 chars");
+
+            BinaryEncodingUtils.writeString(out, pairingRequestPayload.getPairingCodeId(), MAX_PAIRING_CODE_ID_LENGTH);
+            BinaryEncodingUtils.writeBytes(out, pairingRequestPayload.getDevicePublicKey().getEncoded(), MAX_PUBLIC_KEY_BYTES);
+            BinaryEncodingUtils.writeString(out, pairingRequestPayload.getDeviceName(), MAX_DEVICE_NAME_LENGTH);
 
             out.writeLong(pairingRequestPayload.getTimestamp().toEpochMilli());
 

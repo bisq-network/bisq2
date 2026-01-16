@@ -58,9 +58,9 @@ public class ApiAccessTransportService implements Service {
     private final boolean isTlsRequired;
     private final boolean isTorClientAuthRequired;
 
-    private Optional<TlsContext> tlsContext = Optional.empty();
+    private volatile Optional<TlsContext> tlsContext = Optional.empty();
     @Getter
-    private Optional<TorContext> torContext = Optional.empty();
+    private volatile Optional<TorContext> torContext = Optional.empty();
 
     public ApiAccessTransportService(ApiConfig apiConfig,
                                      Path appDataDirPath,
@@ -92,7 +92,7 @@ public class ApiAccessTransportService implements Service {
         return Service.super.shutdown();
     }
 
-    public Optional<TlsContext> getOrCreateTlsContext() throws Exception {
+    public synchronized Optional<TlsContext> getOrCreateTlsContext() throws Exception {
         if (isTlsRequired && tlsContext.isEmpty()) {
             tlsContext = Optional.of(createTlsContext());
         }
@@ -100,7 +100,7 @@ public class ApiAccessTransportService implements Service {
     }
 
     private TlsContext createTlsContext() throws Exception {
-        Path keyStorePath = appDataDirPath.resolve("api").resolve("tlskeystore.jks");
+        Path keyStorePath = appDataDirPath.resolve("api").resolve("tls_keystore.p12");
 
         // TODO: check how to handle password
         KeyStore keyStore = TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseGet(() -> {

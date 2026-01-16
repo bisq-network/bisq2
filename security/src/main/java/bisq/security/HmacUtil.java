@@ -23,7 +23,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.security.MessageDigest;
 
 @Slf4j
 public class HmacUtil {
@@ -31,7 +31,7 @@ public class HmacUtil {
 
     public static boolean verifyHmac(byte[] input, SecretKey secretKey, byte[] hmac) throws GeneralSecurityException {
         byte[] hmacTest = createHmac(input, secretKey);
-        return Arrays.equals(hmacTest, hmac);
+        return MessageDigest.isEqual(hmacTest, hmac);
     }
 
     public static byte[] createHmac(byte[] input, SecretKey secretKey) throws GeneralSecurityException {

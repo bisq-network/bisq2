@@ -183,7 +183,6 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     networkService,
                     nodeMonitorService);
 
-            // TODO: is this needed?
             apiAccessTransportService = Optional.of(new ApiAccessTransportService(apiConfig,
                     config.getAppDataDirPath(),
                     networkService,
@@ -271,9 +270,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
-                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::initialize)
+                .thenCompose(result -> httpServerBootstrapService.map(HttpServerBootstrapService::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
-                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::initialize)
+                .thenCompose(result -> apiAccessTransportService.map(ApiAccessTransportService::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())

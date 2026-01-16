@@ -1,10 +1,11 @@
 package bisq.api.access.filter.authz;
 
-import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.Attributes;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import jakarta.annotation.Priority;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
@@ -38,24 +39,27 @@ public class RestApiAuthorizationFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext context) throws IOException {
         URI requestUri = context.getUriInfo().getRequestUri();
         try {
-            String path = requestUri.getPath();
-            httpEndpointValidator.validate(path);
+            httpEndpointValidator.validate(requestUri);
 
-            String deviceId = context.getHeaderString(Headers.DEVICE_ID);
+            String deviceId = (String) context.getProperty(Attributes.DEVICE_ID);
             if (deviceId == null) {
-                throw new AuthorizationException("Missing device ID header");
+                throw new AuthorizationException("Missing authenticated device ID");
             }
             Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(UUID.fromString(deviceId));
             if (optionalPermissionSet.isEmpty()) {
                 throw new AuthorizationException("No permissions found for device " + deviceId);
             }
             Set<Permission> granted = optionalPermissionSet.get();
-            Permission required = permissionService.getPermissionMapping().getRequiredPermission(path, context.getMethod());
+            Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());
             if (!permissionService.hasPermission(granted, required)) {
                 throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s", required.name(), granted));
             }
-        } catch (Exception e) {
+        } catch (AuthorizationException | IllegalArgumentException | ForbiddenException e) {
+            log.warn("REST authz failed: {}", e.getMessage());
             context.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+        } catch (Exception e) {
+            log.warn("REST authz filter failed unexpectedly", e);
+            context.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
     }
 }

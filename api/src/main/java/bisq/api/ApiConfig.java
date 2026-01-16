@@ -86,6 +86,7 @@ public final class ApiConfig {
 
         Config serverConfig = config.getConfig("server");
         Config bindConfig = serverConfig.getConfig("bind");
+        Config torConfig = serverConfig.getConfig("tor");
         Config securityConfig = serverConfig.getConfig("security");
 
         Config restSecurity = securityConfig.getConfig("rest");

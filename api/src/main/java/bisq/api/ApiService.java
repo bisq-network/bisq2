@@ -197,14 +197,18 @@ public class ApiService implements Service {
                         setState(State.RUNNING);
                     } else {
                         log.warn("Api service initialisation did not succeed. We call shutdown.");
-                        shutdown();
                     }
                     return allSucceeded;
                 })
                 .exceptionally(throwable -> {
                     log.error("Failed to initialize ApiService. We call shutdown.", throwable);
-                    shutdown();
-                    return false;
+                    return null; // Signal failure, handled below
+                })
+                .thenCompose(result -> {
+                    if (result == null || !result) {
+                        return shutdown().thenApply(r -> false);
+                    }
+                    return CompletableFuture.completedFuture(true);
                 });
     }
 

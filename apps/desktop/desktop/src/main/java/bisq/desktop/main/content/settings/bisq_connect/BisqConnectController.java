@@ -67,10 +67,6 @@ public class BisqConnectController implements Controller {
         view = new BisqConnectView(model, this, apiConfigController.getView().getRoot());
     }
 
-    private String getServiceUrl(ApiConfig apiConfig) {
-        return apiConfig.getWebSocketProtocol() + "://" + apiConfig.getBindHost() + ":" + apiConfig.getBindPort();
-    }
-
     @Override
     public void onActivate() {
         pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
@@ -117,7 +113,7 @@ public class BisqConnectController implements Controller {
 
 
     /* --------------------------------------------------------------------- */
-    // QR Code
+    // QR code
     /* --------------------------------------------------------------------- */
 
     private void createQrCode(String webSocketUrl) {
@@ -126,8 +122,10 @@ public class BisqConnectController implements Controller {
         try {
             tlsContext = apiAccessTransportService.getOrCreateTlsContext();
         } catch (Exception e) {
-            tlsContext = Optional.empty();
             new Popup().error(e).show();
+            model.getQrCode().set(null);
+            model.getQrCodeImage().set(null);
+            return; // Abort QR code generation if TLS context is unavailable
         }
         String qrCode = PairingQrCodeGenerator.generateQrCode(pairingCode,
                 webSocketUrl,

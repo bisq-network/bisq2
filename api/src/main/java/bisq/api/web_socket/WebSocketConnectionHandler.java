@@ -18,12 +18,13 @@
 package bisq.api.web_socket;
 
 
-import bisq.api.access.filter.Attributes;
+import bisq.api.access.filter.Headers;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.DataFrame;
@@ -70,6 +71,7 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
         // todo use config to check if multiple clients are permitted
         super.onConnect(socket);
         log.info("Client connected: {}", socket);
+
         updateWebsocketClients();
     }
 
@@ -102,8 +104,19 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
                 Optional<String> userAgent = Optional.empty();
                 if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
                     HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
-                    address = getAttribute(request, Attributes.REMOTE_ADDRESS);
-                    userAgent = getAttribute(request, Attributes.USER_AGENT);
+                    if (request != null) {
+                        // Get remote address directly from the request
+                        String remoteAddr = request.getRemoteAddr();
+                        if (StringUtils.isNotEmpty(remoteAddr)) {
+                            address = Optional.of(remoteAddr);
+                        }
+
+                        // Get user-agent from HTTP headers
+                        String userAgentHeader = request.getHeader(Headers.USER_AGENT);
+                        if (StringUtils.isNotEmpty(userAgentHeader)) {
+                            userAgent = Optional.of(userAgentHeader);
+                        }
+                    }
                 }
                 return new WebsocketClient1(address, userAgent);
             }).collect(Collectors.toSet()));

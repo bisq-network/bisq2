@@ -86,7 +86,7 @@ public class ApiConfigModel implements Model {
     private final BooleanProperty applyButtonDisabled = new SimpleBooleanProperty();
 
     // Converters
-    private final LongStringConverter bindPortConverter = new LongStringConverter(bindPort.get(), false);
+    private final LongStringConverter bindPortConverter;
 
     // validators
     private final PortValidator bindPortValidator = new PortValidator();
@@ -106,5 +106,7 @@ public class ApiConfigModel implements Model {
         this.restDenyEndpoints.set(FXCollections.observableArrayList(apiConfig.getRestDenyEndpoints()));
         this.websocketAllowEndpoints.set(apiConfig.getWebsocketAllowEndpoints().map(ArrayList::new));
         this.websocketDenyEndpoints.set(FXCollections.observableArrayList(apiConfig.getWebsocketDenyEndpoints()));
+
+        bindPortConverter = new LongStringConverter(bindPort.get(), false);
     }
 }

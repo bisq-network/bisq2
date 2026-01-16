@@ -27,6 +27,10 @@ import java.time.Instant;
 
 public final class PairingRequestMapper {
     public static PairingRequest toBisq2Model(PairingRequestDto dto) {
+        if (dto == null || dto.payload() == null) {
+            throw new IllegalArgumentException("Missing pairing request payload");
+        }
+
         PairingRequestPayload payload = toBisq2Model(dto.payload());
         return new PairingRequest(
                 payload,

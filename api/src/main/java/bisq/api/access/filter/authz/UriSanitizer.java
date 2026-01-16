@@ -45,7 +45,7 @@ public final class UriSanitizer {
     private void validatePath(String path) {
         checkArgument(path != null, "URI path must not be null");
         checkArgument(path.startsWith("/"), "Path must start with '/'");
-        checkArgument(path.length() < MAX_PATH_LENGTH, "Path exceeds max length");
+        checkArgument(path.length() <= MAX_PATH_LENGTH, "Path exceeds max length");
         checkArgument(!path.contains(".."), "Path traversal is not allowed");
         checkArgument(safePathPattern.matcher(path).matches(), "Path contains unsafe characters");
     }

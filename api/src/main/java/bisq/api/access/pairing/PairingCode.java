@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -34,8 +35,8 @@ public final class PairingCode {
     private final Set<Permission> grantedPermissions;
 
     public PairingCode(String id, Instant expiresAt, Set<Permission> grantedPermissions) {
-        this.id = id;
-        this.expiresAt = expiresAt;
-        this.grantedPermissions = grantedPermissions;
+        this.id = Objects.requireNonNull(id, "id");
+        this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt");
+        this.grantedPermissions = Set.copyOf(Objects.requireNonNull(grantedPermissions, "grantedPermissions"));
     }
 }

@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PairingService {
-    private final static long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
+    private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
     private final PermissionService<? extends PermissionMapping> permissionService;
 
@@ -54,26 +54,29 @@ public class PairingService {
     public PairingCode createPairingCode(Set<Permission> grantedPermissions) {
         Instant expiresAt = Instant.now().plusMillis(PAIRING_CODE_TTL);
         String id = UUID.randomUUID().toString();
-        PairingCode pairingCode = new PairingCode(id, expiresAt, grantedPermissions);
+        PairingCode pairingCode = new PairingCode(id, expiresAt, Set.copyOf(grantedPermissions));
         pairingCodeByIdMap.put(id, pairingCode);
         return pairingCode;
     }
 
     public DeviceProfile pairDevice(PairingRequest request) {
         PairingRequestPayload payload = request.getPairingRequestPayload();
-        PairingCode pairingCode = pairingCodeByIdMap.get(payload.getPairingCodeId());
+        String pairingCodeId = payload.getPairingCodeId();
+        PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
         if (pairingCode == null) {
             throw new SecurityException("Pairing code not found or already used");
         }
 
         if (isExpired(pairingCode)) {
+            pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
             throw new SecurityException("Pairing code is expired");
         }
         if (isSignatureInvalid(request)) {
             throw new SecurityException("Invalid signature");
         }
 
-        markUsed(pairingCode);
+        // Mark used by removing it
+        pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
 
         UUID deviceId = UUID.randomUUID();
         DeviceProfile deviceProfile = new DeviceProfile(deviceId, payload.getDeviceName(), payload.getDevicePublicKey());
@@ -96,18 +99,13 @@ public class PairingService {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
     }
 
-    private void markUsed(PairingCode pairingCode) {
-        pairingCodeByIdMap.remove(pairingCode.getId());
-    }
-
     private boolean isSignatureInvalid(PairingRequest request) {
         PairingRequestPayload payload = request.getPairingRequestPayload();
         byte[] message = PairingRequestPayloadEncoder.encode(payload);
         byte[] signature = request.getSignature();
         PublicKey publicKey = payload.getDevicePublicKey();
         try {
-            SignatureUtil.verify(message, signature, publicKey);
-            return false;
+            return !SignatureUtil.verify(message, signature, publicKey);
         } catch (GeneralSecurityException e) {
             return true;
         }

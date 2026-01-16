@@ -91,7 +91,7 @@ class ApiAccessIntegrationTest {
         // ---------------------------------------------------------------------
         String webSocketUrl = NetworkUtils
                 .findLANHostAddress(Optional.empty())
-                .orElseThrow(() -> new IllegalStateException("No LAN address found"));
+                .orElse("127.0.0.1");
 
         Set<Permission> permissions = Set.of(Permission.values());
 

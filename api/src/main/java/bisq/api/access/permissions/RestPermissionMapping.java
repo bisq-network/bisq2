@@ -47,7 +47,7 @@ public final class RestPermissionMapping implements PermissionMapping {
                 .filter(rule -> rule.matches(path, method))
                 .map(PermissionRule::permission)
                 .findFirst()
-                .orElseThrow(() -> new ForbiddenException("No permission mapping for " + method + " " + path));
+                .orElseThrow(() -> new ForbiddenException("Access denied"));
     }
 }
 

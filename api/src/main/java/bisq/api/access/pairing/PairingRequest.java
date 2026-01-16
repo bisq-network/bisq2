@@ -20,14 +20,21 @@ package bisq.api.access.pairing;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@Getter
+import java.util.Arrays;
+
+
 @EqualsAndHashCode
 public final class PairingRequest {
     private final byte[] signature;
+    @Getter
     private final PairingRequestPayload pairingRequestPayload;
 
     public PairingRequest(PairingRequestPayload pairingRequestPayload, byte[] signature) {
         this.pairingRequestPayload = pairingRequestPayload;
-        this.signature = signature;
+        this.signature = signature == null ? null : Arrays.copyOf(signature, signature.length);
+    }
+
+    public byte[] getSignature() {
+        return signature == null ? null : Arrays.copyOf(signature, signature.length);
     }
 }

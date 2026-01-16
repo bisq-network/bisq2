@@ -59,11 +59,11 @@ public class RestApiAuthenticationFilter implements ContainerRequestFilter {
             context.setProperty(Attributes.IS_AUTHENTICATED, true);
             context.setProperty(Attributes.SESSION_ID, session.getSessionId());
             context.setProperty(Attributes.DEVICE_ID, session.getDeviceId());
-
         } catch (Exception e) {
+            log.warn("Authentication failed", e);
             throw new WebApplicationException(
                     Response.status(Response.Status.UNAUTHORIZED)
-                            .entity(e.getMessage())
+                            .entity("Unauthorized")
                             .build()
             );
         }

@@ -19,7 +19,6 @@ package bisq.api.access.client;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -29,7 +28,6 @@ import java.security.PublicKey;
  */
 @Getter
 @EqualsAndHashCode
-@ToString
 public class ClientIdentity {
     private final String deviceName;
     private final KeyPair keyPair;
