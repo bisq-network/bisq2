@@ -45,12 +45,8 @@ import java.util.List;
 public class WalletDashboardController implements Controller {
     private static final List<Market> AVAILABLE_FIAT_MARKETS_FOR_CURRENCY_CONVERSION =
             new ArrayList<>(MarketRepository.getAllFiatMarkets());
-    private static final List<Market> AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION;
-    static {
-        List<Market> list = new ArrayList<>();
-        list.add(MarketRepository.getXmrBtcMarket());
-        AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION = list;
-    }
+    private static final List<Market> AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION =
+            new ArrayList<>(List.of(MarketRepository.getXmrBtcMarket()));
 
     @Getter
     private final WalletDashboardView view;
@@ -191,12 +187,9 @@ public class WalletDashboardController implements Controller {
             model.getCurrencyConverterListItems().stream()
                     .filter(item -> item instanceof MarketItem marketItem
                             && marketItem.getMarket().equals(selectedMarket))
+                    .map(MarketItem.class::cast)
                     .findAny()
-                    .ifPresent(item -> {
-                        if (item instanceof MarketItem marketItem) {
-                            model.getSelectedMarketItem().set(marketItem);
-                        }
-                    });
+                    .ifPresent(item -> model.getSelectedMarketItem().set(item));
         }
     }
 
