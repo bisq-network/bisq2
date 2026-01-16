@@ -1,6 +1,6 @@
 package bisq.common.util;
 
-import bisq.common.facades.FacadeProvider;
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -8,8 +8,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Scanner;
@@ -34,7 +32,7 @@ public class FileReaderUtilsTest {
     @Test
     void testReadUtf8StringFile(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("test2.txt");
-        Files.write(path, "abc".getBytes());
+        FileMutatorUtils.writeToPath("abc".getBytes(), path);
         assertEquals("abc", FileReaderUtils.readUTF8String(path));
     }
 
@@ -44,7 +42,7 @@ public class FileReaderUtilsTest {
         new Thread(() -> {
             try {
                 Thread.sleep(200);
-                Files.createFile(path);
+                FileMutatorUtils.createFile(path);
             } catch (Exception ignored) {
             }
         }).start();
@@ -55,9 +53,9 @@ public class FileReaderUtilsTest {
     @Test
     void testListRegularFilesInDirectory(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("listdir");
-        Files.createDirectory(dirPath);
-        Files.createFile(dirPath.resolve("a.txt"));
-        Files.createFile(dirPath.resolve("b.txt"));
+        FileMutatorUtils.createDirectory(dirPath);
+        FileMutatorUtils.createFile(dirPath.resolve("a.txt"));
+        FileMutatorUtils.createFile(dirPath.resolve("b.txt"));
         Set<String> files = FileReaderUtils.listFilesInDirectory(dirPath, 1);
         assertTrue(files.contains("a.txt"));
         assertTrue(files.contains("b.txt"));
@@ -66,7 +64,7 @@ public class FileReaderUtilsTest {
     @Test
     void testReadFromFileIfPresent(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("present.txt");
-        Files.write(path, "abc".getBytes());
+        FileMutatorUtils.writeToPath("abc".getBytes(), path);
         Optional<String> result = FileReaderUtils.readFromFileIfPresent(path);
         assertTrue(result.isPresent());
         assertEquals("abc", result.get());
@@ -91,17 +89,17 @@ public class FileReaderUtilsTest {
     @Test
     void testListDirectories(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("listdirs");
-        Files.createDirectory(dirPath);
+        FileMutatorUtils.createDirectory(dirPath);
 
         // Create subdirectories
         Path subPath1 = dirPath.resolve("subdir1");
         Path subPath2 = dirPath.resolve("subdir2");
-        Files.createDirectory(subPath1);
-        Files.createDirectory(subPath2);
+        FileMutatorUtils.createDirectory(subPath1);
+        FileMutatorUtils.createDirectory(subPath2);
 
         // Create a file to ensure it is not included
         Path filePath = dirPath.resolve("file.txt");
-        Files.createFile(filePath);
+        FileMutatorUtils.createFile(filePath);
 
         // Call method under test
         Set<String> dirs = FileReaderUtils.listDirectories(dirPath);

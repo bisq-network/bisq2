@@ -32,6 +32,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
@@ -60,7 +61,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.nio.file.Files;
 import java.util.Comparator;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -214,7 +214,7 @@ public class FiatPaymentAccountsController implements Controller {
         FileChooserUtil.openFile(getView().getRoot().getScene())
                 .ifPresent(path -> {
                     try {
-                        String json = Files.readString(path);
+                        String json = FileReaderUtils.readUTF8String(path);
                         checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
                         accountService.importBisq1AccountData(json);
                     } catch (Exception e) {

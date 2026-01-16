@@ -21,6 +21,7 @@ import bisq.common.data.Pair;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class Main {
@@ -58,7 +59,7 @@ public class Main {
             switch (allArgs[i]) {
                 case "--dataDir":
                     dataDirPath = Optional.of(
-                            Path.of(allArgs[i + 1])
+                            Paths.get(allArgs[i + 1])
                     );
                     break;
 

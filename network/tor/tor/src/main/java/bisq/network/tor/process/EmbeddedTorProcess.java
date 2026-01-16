@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +97,7 @@ public class EmbeddedTorProcess {
         String[] searchPaths = pathEnvironmentVariable.split(":");
 
         for (var path : searchPaths) {
-            Path torBinaryPath = Path.of(path, "tor");
+            Path torBinaryPath = Paths.get(path, "tor");
             if (Files.exists(torBinaryPath)) {
                 return Optional.of(torBinaryPath);
             }

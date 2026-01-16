@@ -17,11 +17,11 @@
 
 package bisq.persistence;
 
+import bisq.common.file.FileMutatorUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
@@ -82,6 +82,6 @@ public class PersistableStoreFileManagerTests {
     }
 
     public static void createEmptyFilePath(Path path) throws IOException {
-        Files.createFile(path);
+        FileMutatorUtils.createFile(path);
     }
 }

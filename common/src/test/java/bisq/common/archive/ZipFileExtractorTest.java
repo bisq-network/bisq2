@@ -17,6 +17,7 @@
 
 package bisq.common.archive;
 
+import bisq.common.file.FileReaderUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,8 +32,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ZipFileExtractorTest {
 
@@ -45,7 +46,7 @@ public class ZipFileExtractorTest {
         }
         Path extractedFilePath = tempDirPath.resolve("test.txt");
         assertTrue(Files.exists(extractedFilePath));
-        assertEquals("Hello World", Files.readString(extractedFilePath));
+        assertEquals("Hello World", FileReaderUtils.readUTF8String(extractedFilePath));
     }
 
     @Test
@@ -57,7 +58,7 @@ public class ZipFileExtractorTest {
         }
         assertTrue(Files.isDirectory(tempDirPath.resolve("dir")));
         assertTrue(Files.exists(tempDirPath.resolve("dir/file.txt")));
-        assertEquals("Data", Files.readString(tempDirPath.resolve("dir/file.txt")));
+        assertEquals("Data", FileReaderUtils.readUTF8String(tempDirPath.resolve("dir/file.txt")));
     }
 
     @Test
