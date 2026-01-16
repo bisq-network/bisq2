@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-public class MarketItem {
+public class MarketItem implements CurrencyConverterListItem {
     @EqualsAndHashCode.Include
     private final Market market;
     private final MarketPriceService marketPriceService;
@@ -67,5 +67,10 @@ public class MarketItem {
     @Override
     public String toString() {
         return market.toString();
+    }
+
+    @Override
+    public String getComparatorValue() {
+        return amountCode;
     }
 }
