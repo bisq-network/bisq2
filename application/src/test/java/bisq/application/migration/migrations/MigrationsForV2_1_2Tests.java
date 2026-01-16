@@ -1,5 +1,6 @@
 package bisq.application.migration.migrations;
 
+import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 

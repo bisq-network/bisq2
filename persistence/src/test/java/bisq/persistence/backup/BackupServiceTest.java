@@ -524,7 +524,6 @@ public class BackupServiceTest {
         assertEquals(2, infos.size());
         assertEquals("test_store.protobuf_2025-12-04_0901", infos.get(0).getPath().getFileName().toString());
         assertEquals("test_store.protobuf_2024-01-01_0000", infos.get(1).getPath().getFileName().toString());
->>>>>>> f7a1fd8d8 (Use fileutils and replace Path.of with Paths.get)
     }
 
     void createBackups() throws IOException {
