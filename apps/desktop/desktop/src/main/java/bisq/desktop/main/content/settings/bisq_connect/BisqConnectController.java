@@ -49,7 +49,7 @@ public class BisqConnectController implements Controller {
     @Getter
     private final BisqConnectView view;
     private final BisqConnectModel model;
-    private final WebSocketService webSocketService;
+    private final Optional<WebSocketService> optionalWebSocketService;
     private final PairingService pairingService;
     private final ApiAccessTransportService apiAccessTransportService;
     private final ApiConfigController apiConfigController;
@@ -58,48 +58,50 @@ public class BisqConnectController implements Controller {
 
     public BisqConnectController(ServiceProvider serviceProvider) {
         ApiService apiService = serviceProvider.getApiService();
-        webSocketService = apiService.getWebSocketService();
+        optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
         apiAccessTransportService = apiService.getApiAccessTransportService();
 
         apiConfigController = new ApiConfigController(serviceProvider);
-        model = new BisqConnectModel(webSocketService.getApiConfig().getWebSocketServerUrl(), 220);
+        model = new BisqConnectModel(apiService.getApiConfig().getWebSocketServerUrl(), 220);
         view = new BisqConnectView(model, this, apiConfigController.getView().getRoot());
     }
 
     @Override
     public void onActivate() {
-        pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
+        optionalWebSocketService.ifPresent(webSocketService -> {
+            pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
 
-        pins.add(webSocketService.getState().addObserver(state -> {
-                    if (state != null) {
-                        UIThread.run(() -> {
-                            boolean isRunning = state == WebSocketService.State.RUNNING;
-                            model.getIsPairingVisible().set(isRunning);
-                            if (isRunning) {
-                                ApiConfig apiConfig = apiConfigController.getApiConfig();
-                                if (apiConfig.useTor()) {
-                                    if (onionAddressSubscription != null) {
-                                        onionAddressSubscription.unsubscribe();
-                                    }
-                                    onionAddressSubscription = EasyBind.subscribe(apiConfigController.getOnionServiceAddress(), address -> {
-                                        if (address != null) {
-                                            createQrCode(apiConfig.getWebSocketProtocol() + "://" + address.getHost() + ":" + address.getPort());
+            pins.add(webSocketService.getState().addObserver(state -> {
+                        if (state != null) {
+                            UIThread.run(() -> {
+                                boolean isRunning = state == WebSocketService.State.RUNNING;
+                                model.getIsPairingVisible().set(isRunning);
+                                if (isRunning) {
+                                    ApiConfig apiConfig = apiConfigController.getApiConfig();
+                                    if (apiConfig.useTor()) {
+                                        if (onionAddressSubscription != null) {
+                                            onionAddressSubscription.unsubscribe();
                                         }
-                                    });
-                                } else {
-                                    createQrCode(apiConfig.getWebSocketServerUrl());
+                                        onionAddressSubscription = EasyBind.subscribe(apiConfigController.getOnionServiceAddress(), address -> {
+                                            if (address != null) {
+                                                createQrCode(apiConfig.getWebSocketProtocol() + "://" + address.getHost() + ":" + address.getPort());
+                                            }
+                                        });
+                                    } else {
+                                        createQrCode(apiConfig.getWebSocketServerUrl());
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
-                }
-        ));
+            ));
 
 
-        //todo list item, binding
-        pins.add(webSocketService.getWebsocketClients().addObserver(() ->
-                UIThread.run(() -> model.getConnectedClients().setAll(webSocketService.getWebsocketClients().getUnmodifiableSet()))));
+            //todo list item, binding
+            pins.add(webSocketService.getWebsocketClients().addObserver(() ->
+                    UIThread.run(() -> model.getConnectedClients().setAll(webSocketService.getWebsocketClients().getUnmodifiableSet()))));
+        });
     }
 
     @Override

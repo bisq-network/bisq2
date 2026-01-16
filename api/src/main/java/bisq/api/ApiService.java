@@ -54,6 +54,7 @@ import bisq.user.UserService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -74,9 +75,10 @@ public class ApiService implements Service {
         TERMINATED
     }
 
+    @Getter
     private final ApiConfig apiConfig;
     @Getter
-    private final WebSocketService webSocketService;
+    private final Optional<WebSocketService> webSocketService;
     @Getter
     private final ApiAccessTransportService apiAccessTransportService;
     @Getter
@@ -144,32 +146,41 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-        var restApiResourceConfig = apiConfig.isRestEnabled() ? new RestApiResourceConfig(apiConfig,
-                permissionService,
-                sessionAuthenticationService,
-                offerbookRestApi,
-                tradeRestApi,
-                tradeChatMessagesRestApi,
-                userIdentityRestApi,
-                marketPriceRestApi,
-                settingsRestApi,
-                explorerRestApi,
-                paymentAccountsRestApi,
-                reputationRestApi,
-                userProfileRestApi) : new RestApiResourceConfig(apiConfig, permissionService, sessionAuthenticationService);
+        Optional<ResourceConfig> restApiResourceConfig;
+        if (apiConfig.isRestEnabled()) {
+            restApiResourceConfig = Optional.of(new RestApiResourceConfig(apiConfig,
+                    permissionService,
+                    sessionAuthenticationService,
+                    offerbookRestApi,
+                    tradeRestApi,
+                    tradeChatMessagesRestApi,
+                    userIdentityRestApi,
+                    marketPriceRestApi,
+                    settingsRestApi,
+                    explorerRestApi,
+                    paymentAccountsRestApi,
+                    reputationRestApi,
+                    userProfileRestApi));
+        } else {
+            restApiResourceConfig = Optional.empty();
+        }
 
-        webSocketService = new WebSocketService(apiConfig,
-                bondedRolesService,
-                chatService,
-                tradeService,
-                userService,
-                bisqEasyService,
-                openTradeItemsService);
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    bondedRolesService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    openTradeItemsService));
+        } else {
+            webSocketService = Optional.empty();
+        }
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
                 apiAccessTransportService,
-                Optional.of(restApiResourceConfig),
-                Optional.of(webSocketService),
+                restApiResourceConfig,
+                webSocketService,
                 pairingRequestHandler,
                 sessionAuthenticationService,
                 permissionService);

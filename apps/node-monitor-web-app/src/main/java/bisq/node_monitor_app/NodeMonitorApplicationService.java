@@ -57,6 +57,7 @@ import bisq.user.UserService;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -177,7 +178,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             SessionService sessionService = new SessionService();
 
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
-            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
+
+            ResourceConfig restApiResourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
                     permissionService,
                     sessionAuthenticationService,
                     networkService,
