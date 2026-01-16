@@ -86,30 +86,30 @@ public class LanguageRepository {
             "en", // English
             "de", // German
             "es", // Spanish
+            "fr", // French
+            "hi", // Hindi (India, Fiji, Nepal and Mauritius)
+            "id", // Indonesian
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
             "pcm-NG", // Nigerian Pidgin
             "ru", // Russian
+            "tr", // Turkish
+            "vi", // Vietnamese
             "af-ZA" // Afrikaans
             /*
             // in preparation:
             "pt-PT", // Portuguese
-            "fr", // French
             "tl", // Tagalog (Philippines)
             "bn", // Bengali (Bangladesh, India)
             "ta", // Tamil (India, Sri Lanka, and Singapore)
             "pl", // Polish
-            "hi", // Hindi (India, Fiji, Nepal and Mauritius)
             "zh-Hans", // Chinese (Simplified)
             "zh-Hant", // Chinese (Traditional)
             "sv", // Swedish
             "th", // Thai
-            "tr", // Turkish
             "ja", // Japanese
             "ko", // Korean
-            "vi", // Vietnamese
-            "id", // Indonesian
             "nl", // Dutch
             "el", // Greek
             "hu", // Hungarian
