@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -292,7 +293,7 @@ public class ApiConfigController implements Controller {
         boolean noChange = apiConfig.isWebsocketEnabled() == model.getWebsocketEnabled().get() &&
                 apiConfig.isRestEnabled() == model.getRestEnabled().get() &&
                 apiConfig.getApiAccessTransportType() == model.getApiAccessTransportType().get() &&
-                apiConfig.getBindHost().equals(model.getBindHost().get()) &&
+                Objects.equals(apiConfig.getBindHost(), model.getBindHost().get()) &&
                 apiConfig.getBindPort() == model.getBindPort().get();
         model.getApplyButtonDisabled().set(noChange || !isValid());
     }

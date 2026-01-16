@@ -41,11 +41,11 @@ public class RestApiAuthorizationFilter implements ContainerRequestFilter {
         try {
             httpEndpointValidator.validate(requestUri);
 
-            String deviceId = (String) context.getProperty(Attributes.DEVICE_ID);
+            UUID deviceId = (UUID) context.getProperty(Attributes.DEVICE_ID);
             if (deviceId == null) {
                 throw new AuthorizationException("Missing authenticated device ID");
             }
-            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(UUID.fromString(deviceId));
+            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(deviceId);
             if (optionalPermissionSet.isEmpty()) {
                 throw new AuthorizationException("No permissions found for device " + deviceId);
             }
