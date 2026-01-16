@@ -109,15 +109,13 @@ public class ApiService implements Service {
         this.apiConfig = apiConfig;
 
         int bindPort = apiConfig.getBindPort();
-        // TODO use config
-        int onionServicePort = 80;
 
         apiAccessTransportService = new ApiAccessTransportService(apiConfig,
                 appDataDirPath,
                 networkService,
                 securityService.getKeyBundleService(),
                 bindPort,
-                onionServicePort);
+                apiConfig.getOnionServicePort());
 
         permissionService = new PermissionService<>(new RestPermissionMapping());
         pairingService = new PairingService(permissionService);

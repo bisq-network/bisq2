@@ -170,7 +170,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-        nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
+        nodeMonitorService = new NodeMonitorService(userService, bondedRolesService);
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         if (apiConfig.isRestEnabled()) {
             PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
@@ -190,7 +190,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     networkService,
                     securityService.getKeyBundleService(),
                     apiConfig.getBindPort(),
-                    80));
+                    apiConfig.getOnionServicePort()));
 
             PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
 
