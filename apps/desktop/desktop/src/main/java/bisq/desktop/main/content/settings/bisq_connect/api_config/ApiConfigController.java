@@ -89,7 +89,7 @@ public class ApiConfigController implements Controller {
         if (networkService.getSupportedTransportTypes().contains(TransportType.TOR)) {
             model.getApiTransportTypes().add(ApiAccessTransportType.TOR);
         }
-        model.getApiTransportTypes().add(ApiAccessTransportType.CLEARNET);
+        model.getApiTransportTypes().add(ApiAccessTransportType.CLEAR);
 
 
         subscriptions.add(EasyBind.subscribe(model.getTlsRequired(), tlsRequired -> {
@@ -171,7 +171,7 @@ public class ApiConfigController implements Controller {
 
     void onApplyDetectedLanHost() {
         String detectedLanHost = model.getDetectedLanHost().get();
-        if (detectedLanHost != null && model.getApiAccessTransportType().get() == ApiAccessTransportType.CLEARNET) {
+        if (detectedLanHost != null && model.getApiAccessTransportType().get() == ApiAccessTransportType.CLEAR) {
             model.getBindHost().set(detectedLanHost);
         }
     }
@@ -213,7 +213,7 @@ public class ApiConfigController implements Controller {
                     future.complete(false);
                 }
             }
-            case CLEARNET -> {
+            case CLEAR -> {
                 if (model.getDetectedLanHost().get() == null) {
                     NetworkUtils.findLANHostAddress(Optional.empty())
                             .ifPresent(value -> UIThread.run(() -> model.getDetectedLanHost().set(value)));
