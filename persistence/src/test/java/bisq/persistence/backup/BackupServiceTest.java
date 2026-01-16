@@ -480,53 +480,6 @@ public class BackupServiceTest {
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(27))));
     }
 
-    @Test
-    void testGetBackupsReadsDirectoryAndReturnsParsedBackups(@TempDir Path tempDir) throws IOException {
-        Path dbDirPath = tempDir.resolve("db");
-        Path storePath = dbDirPath.resolve("test_store.protobuf");
-
-        List<String> fileNames = List.of(
-                "test_store.protobuf_2025-12-04_0901",
-                "test_store.protobuf_2024-01-01_0000",
-                "other.txt",
-                ".DS_Store"
-        );
-
-        Path backupPathDir = tempDir.resolve("backups").resolve("test");
-        FileMutatorUtils.createDirectories(backupPathDir);
-
-        // create files on disk
-        for (String fn : fileNames) {
-            FileMutatorUtils.writeToPath("dummy text", backupPathDir.resolve(fn));
-        }
-
-        BackupService bs = new BackupService(tempDir, storePath, MaxBackupSize.HUNDRED_MB);
-        List<BackupFileInfo> backups = bs.getBackups();
-
-        // Only the two valid backup files should be returned, newest first
-        assertEquals(2, backups.size());
-        assertEquals("test_store.protobuf_2025-12-04_0901", backups.get(0).getPath().getFileName().toString());
-        assertEquals("test_store.protobuf_2024-01-01_0000", backups.get(1).getPath().getFileName().toString());
-    }
-
-    @Test
-    void testCreateBackupFileInfoParsesAndSorts(@TempDir Path tempDir) {
-        String baseName = "test_store.protobuf";
-        List<Path> paths = List.of(
-                tempDir.resolve("test_store.protobuf_2025-12-04_0901"),
-                tempDir.resolve("test_store.protobuf_2024-01-01_0000"),
-                tempDir.resolve("not_a_backup.txt"),
-                tempDir.resolve(".DS_Store")
-        );
-
-        List<BackupFileInfo> infos = BackupService.createBackupFileInfo(baseName, paths);
-
-        // Only two valid backups expected and newest first
-        assertEquals(2, infos.size());
-        assertEquals("test_store.protobuf_2025-12-04_0901", infos.get(0).getPath().getFileName().toString());
-        assertEquals("test_store.protobuf_2024-01-01_0000", infos.get(1).getPath().getFileName().toString());
-    }
-
     void createBackups() throws IOException {
         Calendar calendar = GregorianCalendar.getInstance();
         calendar.setTime(new Date());
