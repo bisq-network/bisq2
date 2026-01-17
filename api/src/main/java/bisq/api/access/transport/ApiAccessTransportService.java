@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -108,7 +109,8 @@ public class ApiAccessTransportService implements Service {
         KeyStore keyStore = TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseGet(() -> {
             log.info("No TLS identity found, generating new self-signed TLS identity for ApiAccessTransportService");
             // TODO: define name properly
-            var tlsCertificateGenerator = TlsCertificateGenerator.create("Bisq2Api");
+            // TODO provide host list
+            var tlsCertificateGenerator = TlsCertificateGenerator.create("Bisq2Api", List.of("127.0.0.1", "192.168.1.10"));
             try {
                 TlsKeyStore.writeTlsIdentity(
                         tlsCertificateGenerator.getKeyPair(), tlsCertificateGenerator.getCertificate(), keyStorePath, "password".toCharArray());
