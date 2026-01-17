@@ -106,15 +106,15 @@ public class ApiAccessTransportService implements Service {
         Path keyStorePath = appDataDirPath.resolve("api").resolve("tls_keystore.p12");
 
         // TODO: check how to handle password
-        KeyStore keyStore = TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseGet(() -> {
+        KeyStore keyStore = TlsKeyStore.readKeyStore(keyStorePath, "password".toCharArray()).orElseGet(() -> {
             log.info("No TLS identity found, generating new self-signed TLS identity for ApiAccessTransportService");
             // TODO: define name properly
             // TODO provide host list
             var tlsCertificateGenerator = TlsCertificateGenerator.create("Bisq2Api", List.of("127.0.0.1", "192.168.1.10"));
             try {
-                TlsKeyStore.writeTlsIdentity(
+                TlsKeyStore.createAndPersistKeyStore(
                         tlsCertificateGenerator.getKeyPair(), tlsCertificateGenerator.getCertificate(), keyStorePath, "password".toCharArray());
-                return TlsKeyStore.readTlsIdentity(keyStorePath, "password".toCharArray()).orElseThrow();
+                return TlsKeyStore.readKeyStore(keyStorePath, "password".toCharArray()).orElseThrow();
             } catch (Exception e) {
                 // TODO avoid Exception wrapping
                 throw new RuntimeException(e);
@@ -122,7 +122,7 @@ public class ApiAccessTransportService implements Service {
         });
 
         return new TlsContext(
-                TlsKeyStore.getPublicKeyFingerprint(keyStore),
+                TlsKeyStore.getCertificateFingerprint(keyStore),
                 TlsKeyStore.createSslContext(keyStore, "password".toCharArray()));
     }
 

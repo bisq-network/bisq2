@@ -17,80 +17,126 @@
 
 package bisq.security.tls;
 
+import bisq.common.encoding.Hex;
 import bisq.common.file.FileMutatorUtils;
+import bisq.security.DigestUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.KeyStore;
-import java.security.MessageDigest;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.HexFormat;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+@Slf4j
 public class TlsKeyStore {
+    private static final String STORE_TYPE = "PKCS12";
+    private static final String KEY_ALIAS = "tls";
+    private static final String PROTOCOL = "TLSv1.3";
 
-    public static void writeTlsIdentity(KeyPair keyPair, X509Certificate certificate,
-                             Path keyStorePath, char[] password) throws Exception {
-        Path parent = keyStorePath.getParent();
-        if (parent != null) {
-            Files.createDirectories(parent);
+    public static void createAndPersistKeyStore(KeyPair keyPair,
+                                                X509Certificate certificate,
+                                                Path keyStorePath,
+                                                char[] password) throws TlsException {
+        Path tmpFilePath = null;
+        try {
+            Path parent = keyStorePath.getParent();
+            checkNotNull(parent, "keyStorePath.getParent() must not be null");
+            FileMutatorUtils.createDirectories(parent);
+
+            String fileName = keyStorePath.getFileName().toString();
+            tmpFilePath = Files.createTempFile(parent, fileName, ".tmp");
+
+            KeyStore keyStore = KeyStore.getInstance(STORE_TYPE);
+            keyStore.load(null, null);
+            keyStore.setKeyEntry(KEY_ALIAS, keyPair.getPrivate(), password, new X509Certificate[]{certificate});
+
+            try (OutputStream os = FileMutatorUtils.newOutputStream(tmpFilePath)) {
+                keyStore.store(os, password);
+            }
+
+            FileMutatorUtils.renameFile(tmpFilePath, keyStorePath);
+        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
+            log.error("writeTlsIdentity failed", e);
+            throw new TlsException("Failed to persist key store", e);
+        } finally {
+            if (tmpFilePath != null) {
+                try {
+                    FileMutatorUtils.releaseTempFile(tmpFilePath);
+                } catch (IOException e) {
+                    log.error("Releasing temp file failed for {}", tmpFilePath, e);
+                }
+            }
         }
+    }
 
-        Path tmpFile = Files.createTempFile(parent != null ? parent : Path.of("."), keyStorePath.getFileName().toString(), ".tmp");
+    public static Optional<KeyStore> readKeyStore(Path keyStorePath, char[] password) throws TlsException {
+        try {
+            if (!Files.exists(keyStorePath)) {
+                return Optional.empty();
+            }
 
-        KeyStore ks = KeyStore.getInstance("PKCS12");
-        ks.load(null, null);
-        ks.setKeyEntry("tls", keyPair.getPrivate(), password, new X509Certificate[]{certificate});
-
-        try (OutputStream os = FileMutatorUtils.newOutputStream(tmpFile)) {
-            ks.store(os, password);
+            KeyStore keyStore = KeyStore.getInstance(STORE_TYPE);
+            try (InputStream is = Files.newInputStream(keyStorePath, StandardOpenOption.READ)) {
+                keyStore.load(is, password);
+            }
+            return Optional.of(keyStore);
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+            throw new TlsException("Failed to compute certificate fingerprint", e);
         }
-
-        // TODO: error handling
-        FileMutatorUtils.renameFile(tmpFile, keyStorePath);
     }
 
-    public static Optional<KeyStore> readTlsIdentity(Path keyStorePath, char[] password) throws Exception {
-        if (!Files.exists(keyStorePath)) {
-            return Optional.empty();
+
+    public static SSLContext createSslContext(KeyStore keyStore, char[] password) throws TlsException {
+        try {
+            var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, password);
+
+            var sslContext = SSLContext.getInstance(PROTOCOL);
+            sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+            return sslContext;
+        } catch (KeyStoreException | NoSuchAlgorithmException |
+                 UnrecoverableKeyException | KeyManagementException e) {
+            throw new TlsException("Failed to create SSL context", e);
         }
+    }
 
-        KeyStore ks = KeyStore.getInstance("PKCS12");
-        try (InputStream is = Files.newInputStream(keyStorePath, StandardOpenOption.READ)) {
-            ks.load(is, password);
+    public static String getCertificateFingerprint(KeyStore keyStore) throws TlsException {
+        try {
+            var certificate = loadCertificate(keyStore);
+            byte[] digest = DigestUtil.sha256(certificate.getEncoded());
+            return Hex.encode(digest);
+        } catch (KeyStoreException | CertificateEncodingException e) {
+            throw new TlsException("Failed to compute certificate fingerprint", e);
         }
-        return Optional.of(ks);
     }
 
-    private static PrivateKey loadPrivateKey(KeyStore keyStore, char[] password) throws Exception {
-        return (PrivateKey) keyStore.getKey("tls", password);
+    private static PrivateKey loadPrivateKey(KeyStore keyStore, char[] password) throws TlsException {
+        try {
+            return (PrivateKey) keyStore.getKey(KEY_ALIAS, password);
+        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+            throw new TlsException("Failed to compute certificate fingerprint", e);
+        }
     }
 
-    private static X509Certificate loadCertificate(KeyStore keyStore) throws Exception {
-        return (X509Certificate) keyStore.getCertificate("tls");
+    private static X509Certificate loadCertificate(KeyStore keyStore) throws KeyStoreException {
+        return (X509Certificate) keyStore.getCertificate(KEY_ALIAS);
     }
 
-    public static SSLContext createSslContext(KeyStore keyStore, char[] password) throws Exception {
-        var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        keyManagerFactory.init(keyStore, password);
-
-        var sslContext = javax.net.ssl.SSLContext.getInstance("TLSv1.3");
-        sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-        return sslContext;
-    }
-
-    public static String getPublicKeyFingerprint(KeyStore keyStore) throws Exception {
-        var certificate = loadCertificate(keyStore);
-
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] digest = md.digest(certificate.getPublicKey().getEncoded());
-        return HexFormat.of().formatHex(digest);
-    }
 }
