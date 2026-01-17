@@ -86,7 +86,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         currencyConverterCodeLabel = currencyConverterBalanceTriple.getThird();
 
         currencyConverterDropdownListMenu = new DropdownListMenu<>("chevron-drop-menu-grey",
-                "chevron-drop-menu-white", false, model.getSortedCurrencyConverterListItems());
+                "chevron-drop-menu-white", false, model.getSortedCurrencyConverterListItems(),
+                controller::applySearchPredicate);
         currencyConverterDropdownListMenu.setContent(currencyConverterBalanceHBox);
         currencyConverterDropdownListMenu.setMaxWidth(Region.USE_PREF_SIZE);
         currencyConverterDropdownListMenu.getTableView().setPrefWidth(CURRENCY_CONVERTER_MENU_WIDTH);

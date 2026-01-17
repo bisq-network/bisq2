@@ -78,9 +78,11 @@ public class WalletDashboardModel implements Model {
     private final SortedList<CurrencyConverterListItem> sortedCurrencyConverterListItems = new SortedList<>(filteredCurrencyConverterListItems,
             Comparator.comparing(CurrencyConverterListItem::getComparatorValue));
     private final Predicate<CurrencyConverterListItem> currencyConverterListItemsPredicate = item ->
-            item instanceof HeaderItem || getMarketPricePredicate().test(item);
+            item instanceof HeaderItem || (getMarketPricePredicate().test(item) && getSearchStringPredicate().test(item));
     @Setter
     private Predicate<CurrencyConverterListItem> marketPricePredicate = item -> true;
+    @Setter
+    private Predicate<CurrencyConverterListItem> searchStringPredicate = item -> true;
 
     public WalletDashboardModel() {
     }

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.wallet.dashboard;
 
 import bisq.common.market.MarketRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
@@ -136,6 +137,19 @@ public class WalletDashboardController implements Controller {
 
     void onSelectMarket(MarketItem marketItem) {
         model.getSelectedMarketItem().set(marketItem);
+    }
+
+    void applySearchPredicate(String searchText) {
+        String string = searchText == null ? "" : searchText.toLowerCase();
+        model.setSearchStringPredicate(item -> {
+                    if (!(item instanceof MarketItem marketItem)) {
+                        return true;
+                    }
+                    return StringUtils.isEmpty(string)
+                            || marketItem.getAmountCode().toLowerCase().contains(string)
+                            || marketItem.getMarket().getMarketDisplayName().toLowerCase().contains(string);
+                });
+        updateFilteredMarketListItems();
     }
 
     private void updateCurrencyConverterBalance() {
