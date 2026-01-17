@@ -37,7 +37,11 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -48,9 +52,9 @@ public class TlsKeyStore {
     private static final String PROTOCOL = "TLSv1.3";
 
     public static KeyStore createAndPersistKeyStore(KeyPair keyPair,
-                                                X509Certificate certificate,
-                                                Path keyStorePath,
-                                                char[] password) throws TlsException {
+                                                    X509Certificate certificate,
+                                                    Path keyStorePath,
+                                                    char[] password) throws TlsException {
         Path tmpFilePath = null;
         try {
             Path parent = keyStorePath.getParent();
@@ -84,7 +88,9 @@ public class TlsKeyStore {
         }
     }
 
-    public static Optional<KeyStore> readKeyStore(Path keyStorePath, char[] password) throws TlsException {
+    public static Optional<KeyStore> readKeyStore(Path keyStorePath,
+                                                  char[] password,
+                                                  List<String> tlsKeyStoreSan) throws TlsException {
         try {
             if (!Files.exists(keyStorePath)) {
                 return Optional.empty();
@@ -93,9 +99,29 @@ public class TlsKeyStore {
             KeyStore keyStore = KeyStore.getInstance(STORE_TYPE);
             try (InputStream is = Files.newInputStream(keyStorePath, StandardOpenOption.READ)) {
                 keyStore.load(is, password);
+
+                Set<String> persisted = SanUtils.readSanDnsNames(keyStore, KEY_ALIAS).stream()
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toCollection(TreeSet::new));
+
+                Set<String> current = tlsKeyStoreSan.stream()
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toCollection(TreeSet::new));
+
+                if (!persisted.equals(current)) {
+                    log.warn(
+                            "Persisted key store had different SAN list.\nPersisted SAN list: {}\nNew SAN list: {}",
+                            persisted,
+                            current
+                    );
+                    return Optional.empty();
+                }
             }
             return Optional.of(keyStore);
-        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+        } catch (IOException e) {
+            log.warn("Could not read key store.", e);
+            return Optional.empty();
+        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
             throw new TlsException("Failed to compute certificate fingerprint", e);
         }
     }

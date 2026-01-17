@@ -17,12 +17,13 @@
 
 package bisq.desktop.main.content.settings.bisq_connect.api_config;
 
+import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -43,12 +44,11 @@ import java.util.Set;
 public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigController> {
     private final Switch websocketEnabled;
     private final AutoCompleteComboBox<ApiAccessTransportType> apiAccessTransportTypes;
-    private final MaterialTextField bindHost, bindPort, serverUrl,
-            onionServiceUrl,
-            detectedLanHost;
+    private final MaterialTextField bindHost, bindPort, serverUrl, onionServiceUrl, detectedLanHost;
     private final Button applyDetectedLanHostButton, applyButton;
-    private final VBox onionServiceVBox, detectedLanHostVbox;
+    private final VBox onionServiceVBox, detectedLanHostVbox, tlsVbox;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final MaterialPasswordField tlsKeyStorePassword;
 
     ApiConfigView(ApiConfigModel model, ApiConfigController controller) {
         super(new VBox(25), model, controller);
@@ -101,11 +101,19 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         detectedLanHost = getHostField(Res.get("settings.bisqConnect.apiConfig.lan.detectedHost"));
         detectedLanHost.setEditable(false);
         applyDetectedLanHostButton = new Button(Res.get("settings.bisqConnect.apiConfig.lan.apply"));
-        applyDetectedLanHostButton.setDefaultButton(true);
+        applyDetectedLanHostButton.getStyleClass().add("outlined-button");
 
         HBox detectedLanHostHbox = new HBox(10, detectedLanHost, applyDetectedLanHostButton);
         detectedLanHostHbox.setAlignment(Pos.CENTER_LEFT);
         detectedLanHostVbox = new VBox(5, detectedLanHostHeadline, detectedLanHostHbox);
+
+        // TLS
+        Label tlsHeadline = getHeadline(Res.get("settings.bisqConnect.apiConfig.tls.headline"));
+        tlsKeyStorePassword = new MaterialPasswordField(Res.get("settings.bisqConnect.apiConfig.tls.password"),
+                Res.get("settings.bisqConnect.apiConfig.tls.password.prompt"));
+        tlsKeyStorePassword.setValidators(model.getPwdMinLengthValidator(), model.getPwdRequiredFieldValidator());
+
+        tlsVbox = new VBox(5, tlsHeadline, tlsKeyStorePassword);
 
         applyButton = new Button(Res.get("settings.bisqConnect.applyButton"));
         applyButton.setDefaultButton(true);
@@ -120,6 +128,7 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
                 serverBox,
                 onionServiceVBox,
                 detectedLanHostVbox,
+                tlsVbox,
 
                 applyButton);
     }
@@ -143,6 +152,8 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
             onionServiceVBox.setManaged(type == ApiAccessTransportType.TOR);
             detectedLanHostVbox.setVisible(type == ApiAccessTransportType.CLEAR);
             detectedLanHostVbox.setManaged(type == ApiAccessTransportType.CLEAR);
+            tlsVbox.setVisible(type == ApiAccessTransportType.CLEAR);
+            tlsVbox.setManaged(type == ApiAccessTransportType.CLEAR);
         }));
 
         // server
@@ -163,6 +174,10 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         detectedLanHost.textProperty().bind(model.getDetectedLanHost());
         applyDetectedLanHostButton.setOnAction(e -> controller.onApplyDetectedLanHost());
         applyDetectedLanHostButton.disableProperty().bind(model.getDetectedLanHostApplied());
+
+        // TLS
+        tlsKeyStorePassword.textProperty().bindBidirectional(model.getTlsKeyStorePassword());
+        tlsKeyStorePassword.validate();
 
         applyButton.disableProperty().bind(model.getApplyButtonDisabled());
         applyButton.setOnAction(e -> controller.onApply());
@@ -190,6 +205,8 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         detectedLanHost.textProperty().unbind();
         applyDetectedLanHostButton.disableProperty().unbind();
         applyDetectedLanHostButton.setOnAction(null);
+
+        tlsKeyStorePassword.textProperty().unbindBidirectional(model.getTlsKeyStorePassword());
 
         applyButton.disableProperty().unbind();
         applyButton.setOnAction(null);

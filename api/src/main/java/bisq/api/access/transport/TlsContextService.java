@@ -32,7 +32,8 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,12 +78,12 @@ public class TlsContextService {
             checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
 
             KeyStore keyStore;
-            Optional<KeyStore> optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
+            Optional<KeyStore> optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, tlsKeyStoreSan);
             if (optionalKeyStore.isPresent()) {
                 keyStore = optionalKeyStore.get();
             } else {
                 try {
-                    Instant expiryDate = Instant.now().plus(1, ChronoUnit.YEARS);
+                    Instant expiryDate = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
                     var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
                     KeyPair keyPair = tlsIdentity.getKeyPair();
                     X509Certificate certificate = tlsIdentity.getCertificate();

@@ -25,7 +25,8 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
@@ -38,7 +39,7 @@ public class TLsIdentity {
     private final X509Certificate certificate;
 
     public TLsIdentity(String commonName, List<String> hosts) throws TlsException {
-        this(commonName, hosts, Instant.now().plus(10, ChronoUnit.YEARS));
+        this(commonName, hosts, ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant());
     }
 
     public TLsIdentity(String commonName,

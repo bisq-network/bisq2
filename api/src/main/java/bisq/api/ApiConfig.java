@@ -39,15 +39,17 @@ public final class ApiConfig {
     private final String bindHost;
     private final int bindPort;
 
-    //  api.tor.onionServicePort
+    //  api.server.tor
     private final int onionServicePort;
+    private final boolean torClientAuthRequired;
 
-    // api.server.security.*
-    private final boolean authRequired;
+    // api.server.tls.*
     private final boolean tlsRequired;
     private final String tlsKeyStorePassword;
     private final List<String> tlsKeyStoreSan;
-    private final boolean torClientAuthRequired;
+
+    // api.server.security.*
+    private final boolean authRequired;
 
     // api.server.security.rest.*
     private final Optional<List<String>> restAllowEndpoints;

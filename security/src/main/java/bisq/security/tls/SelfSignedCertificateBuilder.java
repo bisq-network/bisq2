@@ -30,6 +30,8 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -38,8 +40,8 @@ public final class SelfSignedCertificateBuilder {
     private X500Name subject = new X500Name("CN=Bisq2");
     private GeneralNames subjectAltNames = SanUtils.toGeneralNames(List.of("127.0.0.1"));
     // Add some tolerance in case client clock is not in sync
-    private Instant notBefore = Instant.now().minus(1, ChronoUnit.DAYS);
-    private Instant notAfter = Instant.now().plus(10, ChronoUnit.YEARS);
+    private final Instant notBefore = Instant.now().minus(1, ChronoUnit.DAYS);
+    private Instant notAfter = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
 
     public SelfSignedCertificateBuilder commonName(String commonName) {
         this.subject = new X500Name("CN=" + commonName);
