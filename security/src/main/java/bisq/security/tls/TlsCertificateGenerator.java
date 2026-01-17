@@ -27,12 +27,9 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.security.spec.ECGenParameterSpec;
 import java.util.Date;
 
 @Slf4j
@@ -44,7 +41,7 @@ public class TlsCertificateGenerator {
     private final X509Certificate certificate;
 
     private TlsCertificateGenerator(String commonName) {
-        this.keyPair = generateKeyPair();
+        this.keyPair = TlsKeyPairGenerator.generateKeyPair();
         this.certificate = buildSelfSignedCertificate(commonName, keyPair);
     }
 
@@ -79,16 +76,6 @@ public class TlsCertificateGenerator {
             return new JcaX509CertificateConverter().getCertificate(certHolder);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to generate self-signed certificate", e);
-        }
-    }
-
-    private static KeyPair generateKeyPair() {
-        try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-            keyGen.initialize(new ECGenParameterSpec("secp256r1"), new SecureRandom());
-            return keyGen.generateKeyPair();
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("Failed to generate TLS key pair", e);
         }
     }
 }
