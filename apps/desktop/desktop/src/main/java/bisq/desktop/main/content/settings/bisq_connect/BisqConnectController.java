@@ -25,6 +25,7 @@ import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContext;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -54,12 +55,14 @@ public class BisqConnectController implements Controller {
     private final ApiAccessTransportService apiAccessTransportService;
     private final ApiConfigController apiConfigController;
     private final Set<Pin> pins = new HashSet<>();
+    private final TlsContextService tlsContextService;
     private Subscription onionAddressSubscription;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
         ApiService apiService = serviceProvider.getApiService();
         optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
+        tlsContextService = apiService.getTlsContextService();
         apiAccessTransportService = apiService.getApiAccessTransportService();
 
         apiConfigController = new ApiConfigController(serviceProvider);
@@ -122,7 +125,7 @@ public class BisqConnectController implements Controller {
         PairingCode pairingCode = pairingService.createPairingCode(Set.of(Permission.values()));
         Optional<TlsContext> tlsContext;
         try {
-            tlsContext = apiAccessTransportService.getOrCreateTlsContext();
+            tlsContext = tlsContextService.getOrCreateTlsContext();
         } catch (Exception e) {
             new Popup().error(e).show();
             model.getQrCode().set(null);

@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.net.ssl.SSLContext;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -35,8 +36,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class TlsContextService {
+    public final static int MIN_PASSWORD_LENGTH = 8;
+
     private final ApiConfig apiConfig;
     private final Path keyStorePath;
     private final boolean isTlsRequired;
@@ -46,7 +52,7 @@ public class TlsContextService {
 
     public TlsContextService(ApiConfig apiConfig, Path appDataDirPath) {
         this.apiConfig = apiConfig;
-        keyStorePath = appDataDirPath.resolve("api").resolve("tls_keystore.p12");
+        keyStorePath = appDataDirPath.resolve(Paths.get("db", "private")).resolve("tls_keystore.p12");
         isTlsRequired = apiConfig.isTlsRequired();
     }
 
@@ -59,30 +65,44 @@ public class TlsContextService {
     }
 
     private TlsContext createTlsContext() throws TlsException {
-        char[] password = apiConfig.getTlsKeyStorePassword().toCharArray();
-        List<String> hosts = apiConfig.getTlsKeyStoreSan();
-        KeyStore keyStore;
-        Optional<KeyStore> optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
-        if (optionalKeyStore.isPresent()) {
-            keyStore = optionalKeyStore.get();
-        } else {
-            try {
-                Instant expiryDate = Instant.now().plus(10, ChronoUnit.YEARS);
-                var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", hosts, expiryDate);
-                KeyPair keyPair = tlsIdentity.getKeyPair();
-                X509Certificate certificate = tlsIdentity.getCertificate();
-                keyStore = TlsKeyStore.createAndPersistKeyStore(
-                        keyPair,
-                        certificate,
-                        keyStorePath,
-                        password);
-            } catch (TlsException e) {
-                log.error("Failed to create TlsKeyStore", e);
-                throw e;
+        try {
+            String tlsKeyStorePassword = apiConfig.getTlsKeyStorePassword();
+            checkNotNull(tlsKeyStorePassword, "TLS password must not be null");
+            checkArgument(tlsKeyStorePassword.length() >= MIN_PASSWORD_LENGTH,
+                    "TLS password does not have required min. length of " + MIN_PASSWORD_LENGTH);
+            char[] password = tlsKeyStorePassword.toCharArray();
+
+            List<String> tlsKeyStoreSan = apiConfig.getTlsKeyStoreSan();
+            checkNotNull(tlsKeyStoreSan, "tlsKeyStoreSan must not be null");
+            checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
+
+            KeyStore keyStore;
+            Optional<KeyStore> optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
+            if (optionalKeyStore.isPresent()) {
+                keyStore = optionalKeyStore.get();
+            } else {
+                try {
+                    Instant expiryDate = Instant.now().plus(1, ChronoUnit.YEARS);
+                    var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
+                    KeyPair keyPair = tlsIdentity.getKeyPair();
+                    X509Certificate certificate = tlsIdentity.getCertificate();
+                    keyStore = TlsKeyStore.createAndPersistKeyStore(
+                            keyPair,
+                            certificate,
+                            keyStorePath,
+                            password);
+                } catch (TlsException e) {
+                    log.error("Failed to create TlsKeyStore", e);
+                    throw e;
+                }
             }
+            SSLContext sslContext = SslContextFactory.fromKeyStore(keyStore, password);
+            String certificateFingerprint = TlsKeyStore.getCertificateFingerprint(keyStore);
+            return new TlsContext(certificateFingerprint, sslContext);
+        } catch (TlsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new TlsException(e);
         }
-        SSLContext sslContext = SslContextFactory.fromKeyStore(keyStore, password);
-        String certificateFingerprint = TlsKeyStore.getCertificateFingerprint(keyStore);
-        return new TlsContext(certificateFingerprint, sslContext);
     }
 }
