@@ -207,6 +207,7 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         applyDetectedLanHostButton.setOnAction(null);
 
         tlsKeyStorePassword.textProperty().unbindBidirectional(model.getTlsKeyStorePassword());
+        tlsKeyStorePassword.resetValidation();
 
         applyButton.disableProperty().unbind();
         applyButton.setOnAction(null);

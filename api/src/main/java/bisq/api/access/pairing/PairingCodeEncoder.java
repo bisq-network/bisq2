@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
-public final class PairingQrEncoder {
+public final class PairingCodeEncoder {
     public static byte[] encode(PairingCode code) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {

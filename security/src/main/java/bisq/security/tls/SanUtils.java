@@ -18,10 +18,11 @@
 package bisq.security.tls;
 
 import bisq.common.util.StringUtils;
+import com.google.common.net.InetAddresses;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 
-import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
@@ -33,7 +34,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
+@Slf4j
 public final class SanUtils {
     public static GeneralNames toGeneralNames(List<String> hosts) {
         List<GeneralName> result = new ArrayList<>();
@@ -43,7 +47,7 @@ public final class SanUtils {
                 continue;
             }
 
-            if (isIp(host)) {
+            if (InetAddresses.isInetAddress(host)) {
                 result.add(new GeneralName(GeneralName.iPAddress, host));
             } else {
                 result.add(new GeneralName(GeneralName.dNSName, host));
@@ -90,11 +94,25 @@ public final class SanUtils {
         return result;
     }
 
-    private static boolean isIp(String value) {
+    public static boolean isMatchingPersistedSan(KeyStore keyStore, List<String> tlsKeyStoreSan) {
         try {
-            InetAddress.getByName(value);
+            Set<String> persisted = readSanDnsNames(keyStore, TlsKeyStore.KEY_ALIAS).stream()
+                    .map(s -> s.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toCollection(TreeSet::new));
+
+            Set<String> current = tlsKeyStoreSan.stream()
+                    .map(s -> s.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toCollection(TreeSet::new));
+
+            if (!persisted.equals(current)) {
+                log.info("Persisted key store had different SAN list.\nPersisted SAN list: {}\nNew SAN list: {}",
+                        persisted,
+                        current);
+                return false;
+            }
             return true;
-        } catch (Exception e) {
+        } catch (TlsException e) {
+            log.warn(e.getMessage(), e);
             return false;
         }
     }

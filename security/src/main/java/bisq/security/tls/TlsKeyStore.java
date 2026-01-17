@@ -39,17 +39,14 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TlsKeyStore {
-    private static final String STORE_TYPE = "PKCS12";
-    private static final String KEY_ALIAS = "tls";
-    private static final String PROTOCOL = "TLSv1.3";
+    public static final String STORE_TYPE = "PKCS12";
+    public static final String KEY_ALIAS = "tls";
+    public static final String PROTOCOL = "TLSv1.3";
 
     public static KeyStore createAndPersistKeyStore(KeyPair keyPair,
                                                     X509Certificate certificate,
@@ -90,7 +87,7 @@ public class TlsKeyStore {
 
     public static Optional<KeyStore> readKeyStore(Path keyStorePath,
                                                   char[] password,
-                                                  List<String> tlsKeyStoreSan) throws TlsException {
+                                                  List<String> tlsKeyStoreSan) throws TlsException, TlsPasswordException {
         try {
             if (!Files.exists(keyStorePath)) {
                 return Optional.empty();
@@ -99,36 +96,25 @@ public class TlsKeyStore {
             KeyStore keyStore = KeyStore.getInstance(STORE_TYPE);
             try (InputStream is = Files.newInputStream(keyStorePath, StandardOpenOption.READ)) {
                 keyStore.load(is, password);
-
-                Set<String> persisted = SanUtils.readSanDnsNames(keyStore, KEY_ALIAS).stream()
-                        .map(String::toLowerCase)
-                        .collect(Collectors.toCollection(TreeSet::new));
-
-                Set<String> current = tlsKeyStoreSan.stream()
-                        .map(String::toLowerCase)
-                        .collect(Collectors.toCollection(TreeSet::new));
-
-                if (!persisted.equals(current)) {
-                    log.warn(
-                            "Persisted key store had different SAN list.\nPersisted SAN list: {}\nNew SAN list: {}",
-                            persisted,
-                            current
-                    );
-                    return Optional.empty();
-                }
             }
             return Optional.of(keyStore);
         } catch (IOException e) {
-            log.warn("Could not read key store.", e);
-            return Optional.empty();
+            if (e.getCause() instanceof UnrecoverableKeyException) {
+                throw new TlsPasswordException("Could not decrypt key store with given password.", e);
+            } else {
+                throw new TlsException("Failed to read TLS key store", e);
+            }
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            throw new TlsException("Failed to compute certificate fingerprint", e);
+            throw new TlsException("Failed to read TLS key store", e);
         }
     }
 
     public static String getCertificateFingerprint(KeyStore keyStore) throws TlsException {
         try {
-            var certificate = loadCertificate(keyStore);
+            X509Certificate certificate = loadCertificate(keyStore);
+            if (certificate == null) {
+                throw new TlsException("TLS certificate entry missing for alias " + KEY_ALIAS);
+            }
             byte[] digest = DigestUtil.sha256(certificate.getEncoded());
             return Hex.encode(digest);
         } catch (KeyStoreException | CertificateEncodingException e) {
@@ -140,7 +126,7 @@ public class TlsKeyStore {
         try {
             return (PrivateKey) keyStore.getKey(KEY_ALIAS, password);
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
-            throw new TlsException("Failed to compute certificate fingerprint", e);
+            throw new TlsException("Failed to load private key", e);
         }
     }
 

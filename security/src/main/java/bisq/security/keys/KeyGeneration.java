@@ -55,6 +55,7 @@ public class KeyGeneration {
     }
 
     public static KeyPair generateDefaultEcKeyPair() {
+        //TODO should be EC -> test if it would break anything
         return generateKeyPair(CURVE, ECDH);
     }
 

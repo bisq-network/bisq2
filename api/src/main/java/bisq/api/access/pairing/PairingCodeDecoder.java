@@ -28,7 +28,7 @@ import java.util.Base64;
 import java.util.EnumSet;
 import java.util.Set;
 
-public final class PairingQrDecoder {
+public final class PairingCodeDecoder {
 
     public static PairingCode decode(String base64) {
         byte[] bytes = Base64.getUrlDecoder().decode(base64);

@@ -25,11 +25,10 @@ import java.security.KeyStore;
 public class SslContextFactory {
     public static SSLContext fromKeyStore(KeyStore keyStore, char[] keyPassword) throws TlsException {
         try {
-            KeyManagerFactory kmf =
-                    KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(keyStore, keyPassword);
 
-            SSLContext context = SSLContext.getInstance("TLS");
+            SSLContext context = SSLContext.getInstance(TlsKeyStore.PROTOCOL);
             context.init(kmf.getKeyManagers(), null, null);
             return context;
 

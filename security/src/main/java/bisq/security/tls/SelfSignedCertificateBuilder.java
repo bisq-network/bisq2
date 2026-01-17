@@ -62,11 +62,14 @@ public final class SelfSignedCertificateBuilder {
         if (subject == null) {
             throw new IllegalStateException("Subject must be set");
         }
-        if (subjectAltNames == null) {
-            throw new IllegalStateException("SAN must be set");
+        if (subjectAltNames == null || subjectAltNames.getNames().length == 0) {
+            throw new IllegalStateException("SAN must contain at least one entry");
         }
         if (notBefore == null || notAfter == null) {
             throw new IllegalStateException("Validity date must be set");
+        }
+        if (!notAfter.isAfter(notBefore)) {
+            throw new IllegalStateException("notAfter must be after notBefore");
         }
 
         try {

@@ -18,7 +18,7 @@
 package bisq.api.access.pairing.qr;
 
 import bisq.api.access.pairing.PairingCode;
-import bisq.api.access.pairing.PairingQrDecoder;
+import bisq.api.access.pairing.PairingCodeDecoder;
 import bisq.common.util.BinaryDecodingUtils;
 
 import java.io.ByteArrayInputStream;
@@ -45,7 +45,7 @@ public final class PairingQrCodeDecoder {
 
             // ---- PairingCode ----
             byte[] pairingCodeBytes = BinaryDecodingUtils.readBytes(in, PairingQrCodeFormat.MAX_PAIRING_CODE_BYTES);
-            PairingCode pairingCode = PairingQrDecoder.decode(pairingCodeBytes);
+            PairingCode pairingCode = PairingCodeDecoder.decode(pairingCodeBytes);
 
             // ---- Address ----
             String webSocketUrl = BinaryDecodingUtils.readString(in, PairingQrCodeFormat.MAX_WS_URL_BYTES);

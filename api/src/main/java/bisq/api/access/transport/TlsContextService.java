@@ -18,10 +18,12 @@
 package bisq.api.access.transport;
 
 import bisq.api.ApiConfig;
+import bisq.security.tls.SanUtils;
 import bisq.security.tls.SslContextFactory;
 import bisq.security.tls.TLsIdentity;
 import bisq.security.tls.TlsException;
 import bisq.security.tls.TlsKeyStore;
+import bisq.security.tls.TlsPasswordException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,24 +80,21 @@ public class TlsContextService {
             checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
 
             KeyStore keyStore;
-            Optional<KeyStore> optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, tlsKeyStoreSan);
-            if (optionalKeyStore.isPresent()) {
-                keyStore = optionalKeyStore.get();
-            } else {
-                try {
-                    Instant expiryDate = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
-                    var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
-                    KeyPair keyPair = tlsIdentity.getKeyPair();
-                    X509Certificate certificate = tlsIdentity.getCertificate();
-                    keyStore = TlsKeyStore.createAndPersistKeyStore(
-                            keyPair,
-                            certificate,
-                            keyStorePath,
-                            password);
-                } catch (TlsException e) {
-                    log.error("Failed to create TlsKeyStore", e);
-                    throw e;
+            Optional<KeyStore> optionalKeyStore;
+            try {
+                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, tlsKeyStoreSan);
+                if (optionalKeyStore.isPresent()) {
+                    keyStore = optionalKeyStore.get();
+                    if (!SanUtils.isMatchingPersistedSan(keyStore, tlsKeyStoreSan)) {
+                        log.info("Persisted key store had different SAN list. We create a new key store.");
+                        keyStore = createNewKeyStore(tlsKeyStoreSan, password);
+                    }
+                } else {
+                    keyStore = createNewKeyStore(tlsKeyStoreSan, password);
                 }
+            } catch (TlsPasswordException e) {
+                log.info("Could not decrypt key store with given password. Probably password has been changed.", e);
+                keyStore = createNewKeyStore(tlsKeyStoreSan, password);
             }
             SSLContext sslContext = SslContextFactory.fromKeyStore(keyStore, password);
             String certificateFingerprint = TlsKeyStore.getCertificateFingerprint(keyStore);
@@ -104,6 +103,23 @@ public class TlsContextService {
             throw e;
         } catch (Exception e) {
             throw new TlsException(e);
+        }
+    }
+
+    private KeyStore createNewKeyStore(List<String> tlsKeyStoreSan, char[] password) throws TlsException {
+        try {
+            Instant expiryDate = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
+            var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
+            KeyPair keyPair = tlsIdentity.getKeyPair();
+            X509Certificate certificate = tlsIdentity.getCertificate();
+            return TlsKeyStore.createAndPersistKeyStore(
+                    keyPair,
+                    certificate,
+                    keyStorePath,
+                    password);
+        } catch (TlsException e) {
+            log.error("Failed to create TlsKeyStore", e);
+            throw e;
         }
     }
 }
