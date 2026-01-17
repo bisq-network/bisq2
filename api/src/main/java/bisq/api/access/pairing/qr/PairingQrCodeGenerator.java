@@ -32,7 +32,7 @@ public class PairingQrCodeGenerator {
                                  String webSocketUrl,
                                  Optional<TlsContext> tlsContext,
                                  Optional<TorContext> torContext) {
-        PairingQrCodeData pairingQrCodeData = new PairingQrCodeData(PairingQrCodeFormat.VERSION,
+        PairingQrCode pairingQrCodeData = new PairingQrCode(PairingQrCodeFormat.VERSION,
                 pairingCode,
                 webSocketUrl,
                 tlsContext.map(TlsContext::getTlsFingerprint),

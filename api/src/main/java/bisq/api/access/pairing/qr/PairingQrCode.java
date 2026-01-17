@@ -25,18 +25,18 @@ import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode
-public final class PairingQrCodeData {
+public final class PairingQrCode {
     private final byte version;
     private final PairingCode pairingCode;
     private final String webSocketUrl;
     private final Optional<String> tlsFingerprint;
     private final Optional<String> torClientAuthSecret;
 
-    public PairingQrCodeData(byte version,
-                             PairingCode pairingCode,
-                             String webSocketUrl,
-                             Optional<String> tlsFingerprint,
-                             Optional<String> torClientAuthSecret) {
+    public PairingQrCode(byte version,
+                         PairingCode pairingCode,
+                         String webSocketUrl,
+                         Optional<String> tlsFingerprint,
+                         Optional<String> torClientAuthSecret) {
         this.version = version;
         this.pairingCode = pairingCode;
         this.webSocketUrl = webSocketUrl;

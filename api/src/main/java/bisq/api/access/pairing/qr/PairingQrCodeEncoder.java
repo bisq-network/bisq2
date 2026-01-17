@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public final class PairingQrCodeEncoder {
-    public static byte[] encode(PairingQrCodeData data) {
+    public static byte[] encode(PairingQrCode data) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
 

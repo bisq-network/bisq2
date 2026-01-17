@@ -28,12 +28,12 @@ import java.util.Base64;
 import java.util.Optional;
 
 public final class PairingQrCodeDecoder {
-    public static PairingQrCodeData decode(String qrCodeAsBase64) {
+    public static PairingQrCode decode(String qrCodeAsBase64) {
         byte[] bytes = Base64.getUrlDecoder().decode(qrCodeAsBase64);
         return decode(bytes);
     }
 
-    public static PairingQrCodeData decode(byte[] qrCodeBytes) {
+    public static PairingQrCode decode(byte[] qrCodeBytes) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(qrCodeBytes))) {
 
             // ---- Version ----
@@ -65,7 +65,7 @@ public final class PairingQrCodeDecoder {
                 torClientAuthSecret = Optional.of(BinaryDecodingUtils.readString(in, PairingQrCodeFormat.MAX_TOR_SECRET_BYTES));
             }
 
-            return new PairingQrCodeData(version,
+            return new PairingQrCode(version,
                     pairingCode,
                     webSocketUrl,
                     tlsFingerprint,
