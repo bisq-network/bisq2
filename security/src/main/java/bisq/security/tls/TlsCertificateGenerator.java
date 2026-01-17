@@ -17,6 +17,7 @@
 
 package bisq.security.tls;
 
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -30,6 +31,8 @@ import java.util.List;
 
 @Slf4j
 public class TlsCertificateGenerator {
+    private static final String CURVE = "secp256r1";
+
     public static TlsCertificateGenerator create(String commonName, List<String> hosts) {
         return new TlsCertificateGenerator(commonName, hosts);
     }
@@ -40,7 +43,7 @@ public class TlsCertificateGenerator {
     private final X509Certificate certificate;
 
     private TlsCertificateGenerator(String commonName, List<String> hosts) {
-        keyPair = TlsKeyPairGenerator.generateKeyPair();
+        keyPair =  KeyGeneration.generateKeyPair(CURVE, KeyGeneration.EC);
 
         GeneralNames sans = SanUtils.toGeneralNames(hosts);
 
