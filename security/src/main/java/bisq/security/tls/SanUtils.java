@@ -19,13 +19,14 @@ package bisq.security.tls;
 
 import bisq.common.util.StringUtils;
 import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class SanUtils {
-    public static GeneralName[] toGeneralNames(List<String> hosts) {
+    public static GeneralNames toGeneralNames(List<String> hosts) {
         List<GeneralName> result = new ArrayList<>();
 
         for (String host : hosts) {
@@ -40,7 +41,7 @@ public final class SanUtils {
             }
         }
 
-        return result.toArray(new GeneralName[0]);
+        return new GeneralNames(result.toArray(new GeneralName[0]));
     }
 
     private static boolean isIp(String value) {

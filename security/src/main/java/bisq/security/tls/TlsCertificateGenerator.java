@@ -21,17 +21,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.GeneralNames;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -47,41 +41,19 @@ public class TlsCertificateGenerator {
 
     private TlsCertificateGenerator(String commonName, List<String> hosts) {
         keyPair = TlsKeyPairGenerator.generateKeyPair();
-        GeneralNames subjectAltNames = new GeneralNames(SanUtils.toGeneralNames(hosts));
-        certificate = buildSelfSignedCertificate(commonName, keyPair, subjectAltNames);
-    }
 
-    private static X509Certificate buildSelfSignedCertificate(String commonName,
-                                                              KeyPair keyPair,
-                                                              GeneralNames subjectAltNames) {
-        try {
-            long now = System.currentTimeMillis();
-            Date notBefore = new Date(now);
-            Date notAfter = new Date(now + 365L * 24 * 60 * 60 * 1000);
+        GeneralNames sans = SanUtils.toGeneralNames(hosts);
 
-            X500Name subject = new X500Name("CN=" + commonName);
-            BigInteger serial = new BigInteger(64, new SecureRandom());
+        Instant now = Instant.now();
+        Instant notBefore = now.minus(1, ChronoUnit.HOURS);
+        Instant notAfter = now.plus(10, ChronoUnit.YEARS);
 
-            JcaX509v3CertificateBuilder certBuilder =
-                    new JcaX509v3CertificateBuilder(
-                            subject,
-                            serial,
-                            notBefore,
-                            notAfter,
-                            subject,
-                            keyPair.getPublic()
-                    );
+        X500Name subject = new X500Name("CN=" + commonName);
 
-            CertificateExtensions.addServerExtensions(certBuilder, subjectAltNames);
-
-            ContentSigner signer = new JcaContentSignerBuilder("SHA256withECDSA")
-                    .build(keyPair.getPrivate());
-
-            X509CertificateHolder certHolder = certBuilder.build(signer);
-
-            return new JcaX509CertificateConverter().getCertificate(certHolder);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to generate self-signed certificate", e);
-        }
+        certificate = new SelfSignedCertificateBuilder()
+                .subject(subject)
+                .subjectAltNames(sans)
+                .validity(notBefore, notAfter)
+                .build(keyPair);
     }
 }
