@@ -15,32 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.security.tls;
 
-import bisq.security.keys.KeyGeneration;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
-
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
+import java.security.KeyStore;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-@Slf4j
-public class SignatureTest {
-
-    @Test
-    public void testSignature() {
-        byte[] message = "hello".getBytes();
+public class SslContextFactory {
+    public static SSLContext fromKeyStore(KeyStore keyStore, char[] keyPassword) throws TlsException {
         try {
-            KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate());
-            boolean result = SignatureUtil.verify(message, signature, keyPair.getPublic());
-            assertTrue(result);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(keyStore, keyPassword);
+
+            SSLContext context = SSLContext.getInstance(TlsKeyStore.PROTOCOL);
+            context.init(kmf.getKeyManagers(), null, null);
+            return context;
+
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            fail();
+            throw new TlsException("Failed to create SSLContext", e);
         }
     }
 }

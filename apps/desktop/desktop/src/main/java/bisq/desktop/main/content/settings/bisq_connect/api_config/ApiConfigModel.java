@@ -17,13 +17,18 @@
 
 package bisq.desktop.main.content.settings.bisq_connect.api_config;
 
+import bisq.api.ApiConfig;
+import bisq.api.access.transport.ApiAccessTransportType;
+import bisq.api.access.transport.TlsContextService;
 import bisq.common.network.Address;
 import bisq.desktop.common.converters.LongStringConverter;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.controls.validator.HostValidator;
 import bisq.desktop.components.controls.validator.PortValidator;
-import bisq.api.ApiConfig;
-import bisq.api.access.transport.ApiAccessTransportType;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
+import bisq.desktop.components.controls.validator.TextMinLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
@@ -60,8 +65,11 @@ public class ApiConfigModel implements Model {
     private final StringProperty bindHost = new SimpleStringProperty();
     private final IntegerProperty bindPort = new SimpleIntegerProperty();
 
-    // --- security ---
+    // --- TLS ---
     private final BooleanProperty tlsRequired = new SimpleBooleanProperty();
+    private final StringProperty tlsKeyStorePassword = new SimpleStringProperty();
+
+    // --- security ---
     private final BooleanProperty torClientAuthRequired = new SimpleBooleanProperty();
 
     // --- security.rest ---
@@ -91,6 +99,8 @@ public class ApiConfigModel implements Model {
     // validators
     private final PortValidator bindPortValidator = new PortValidator();
     private final HostValidator bindHostValidator = new HostValidator();
+    private final ValidatorBase pwdRequiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase pwdMinLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"), TlsContextService.MIN_PASSWORD_LENGTH);
 
     // --- constructor from ApiConfig ---
     public ApiConfigModel(ApiConfig apiConfig) {

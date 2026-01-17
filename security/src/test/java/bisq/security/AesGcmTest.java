@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 public class AesGcmTest {
     @Test
     void encryptAndDecryptTest() throws GeneralSecurityException {
-        KeyPair aliceKeyPair = KeyGeneration.generateKeyPair();
-        KeyPair bobKeyPair = KeyGeneration.generateKeyPair();
+        KeyPair aliceKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        KeyPair bobKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
         // Alice sends to Bob
         SecretKey sharedAesKey = AesGcm.generateSharedAesSecretKey(aliceKeyPair.getPrivate(), bobKeyPair.getPublic());

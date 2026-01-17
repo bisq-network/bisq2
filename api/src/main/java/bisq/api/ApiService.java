@@ -25,6 +25,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.domain.explorer.ExplorerRestApi;
@@ -89,6 +90,8 @@ public class ApiService implements Service {
     private final SessionService sessionService;
     @Getter
     private final HttpServerBootstrapService httpServerBootstrapService;
+    @Getter
+    private final TlsContextService tlsContextService;
 
     private final Observable<State> state = new Observable<>(State.NEW);
 
@@ -120,6 +123,7 @@ public class ApiService implements Service {
         permissionService = new PermissionService<>(new RestPermissionMapping());
         pairingService = new PairingService(permissionService);
         sessionService = new SessionService();
+        tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
 
         PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
@@ -176,12 +180,12 @@ public class ApiService implements Service {
         }
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
-                apiAccessTransportService,
                 restApiResourceConfig,
                 webSocketService,
                 pairingRequestHandler,
                 sessionAuthenticationService,
-                permissionService);
+                permissionService,
+                tlsContextService);
     }
 
     @Override

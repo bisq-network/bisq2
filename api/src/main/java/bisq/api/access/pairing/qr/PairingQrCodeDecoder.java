@@ -18,7 +18,7 @@
 package bisq.api.access.pairing.qr;
 
 import bisq.api.access.pairing.PairingCode;
-import bisq.api.access.pairing.PairingQrDecoder;
+import bisq.api.access.pairing.PairingCodeDecoder;
 import bisq.common.util.BinaryDecodingUtils;
 
 import java.io.ByteArrayInputStream;
@@ -28,12 +28,12 @@ import java.util.Base64;
 import java.util.Optional;
 
 public final class PairingQrCodeDecoder {
-    public static PairingQrCodeData decode(String qrCodeAsBase64) {
+    public static PairingQrCode decode(String qrCodeAsBase64) {
         byte[] bytes = Base64.getUrlDecoder().decode(qrCodeAsBase64);
         return decode(bytes);
     }
 
-    public static PairingQrCodeData decode(byte[] qrCodeBytes) {
+    public static PairingQrCode decode(byte[] qrCodeBytes) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(qrCodeBytes))) {
 
             // ---- Version ----
@@ -45,7 +45,7 @@ public final class PairingQrCodeDecoder {
 
             // ---- PairingCode ----
             byte[] pairingCodeBytes = BinaryDecodingUtils.readBytes(in, PairingQrCodeFormat.MAX_PAIRING_CODE_BYTES);
-            PairingCode pairingCode = PairingQrDecoder.decode(pairingCodeBytes);
+            PairingCode pairingCode = PairingCodeDecoder.decode(pairingCodeBytes);
 
             // ---- Address ----
             String webSocketUrl = BinaryDecodingUtils.readString(in, PairingQrCodeFormat.MAX_WS_URL_BYTES);
@@ -65,7 +65,7 @@ public final class PairingQrCodeDecoder {
                 torClientAuthSecret = Optional.of(BinaryDecodingUtils.readString(in, PairingQrCodeFormat.MAX_TOR_SECRET_BYTES));
             }
 
-            return new PairingQrCodeData(version,
+            return new PairingQrCode(version,
                     pairingCode,
                     webSocketUrl,
                     tlsFingerprint,

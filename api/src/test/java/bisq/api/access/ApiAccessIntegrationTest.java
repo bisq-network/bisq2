@@ -22,7 +22,7 @@ import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingService;
-import bisq.api.access.pairing.qr.PairingQrCodeData;
+import bisq.api.access.pairing.qr.PairingQrCode;
 import bisq.api.access.pairing.qr.PairingQrCodeDecoder;
 import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.permissions.Permission;
@@ -115,7 +115,7 @@ class ApiAccessIntegrationTest {
                 ClientIdentity clientIdentity = client.createClientIdentity("Alice phone");
 
                 // Decode QR code contents
-                PairingQrCodeData qrData = PairingQrCodeDecoder.decode(scannedQrCode);
+                PairingQrCode qrData = PairingQrCodeDecoder.decode(scannedQrCode);
 
                 // Apply qrData.getWebSocketUrl();
 

@@ -8,6 +8,7 @@ dependencies {
 
     implementation(libs.bouncycastle)
     implementation(libs.bouncycastle.pg)
+    implementation(libs.bouncycastle.pkix)
     implementation(libs.typesafe.config)
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.i2p)

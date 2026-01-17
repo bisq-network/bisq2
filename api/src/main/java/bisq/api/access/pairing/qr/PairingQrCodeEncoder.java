@@ -17,7 +17,7 @@
 
 package bisq.api.access.pairing.qr;
 
-import bisq.api.access.pairing.PairingQrEncoder;
+import bisq.api.access.pairing.PairingCodeEncoder;
 import bisq.common.util.BinaryEncodingUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public final class PairingQrCodeEncoder {
-    public static byte[] encode(PairingQrCodeData data) {
+    public static byte[] encode(PairingQrCode data) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
 
@@ -41,7 +41,7 @@ public final class PairingQrCodeEncoder {
 
             // ---- PairingCode ----
 
-            BinaryEncodingUtils.writeBytes(out, PairingQrEncoder.encode(data.getPairingCode()), PairingQrCodeFormat.MAX_PAIRING_CODE_BYTES);
+            BinaryEncodingUtils.writeBytes(out, PairingCodeEncoder.encode(data.getPairingCode()), PairingQrCodeFormat.MAX_PAIRING_CODE_BYTES);
 
             // ---- WS URL ----
             BinaryEncodingUtils.writeBytes(out, data.getWebSocketUrl().getBytes(StandardCharsets.UTF_8), PairingQrCodeFormat.MAX_WS_URL_BYTES);

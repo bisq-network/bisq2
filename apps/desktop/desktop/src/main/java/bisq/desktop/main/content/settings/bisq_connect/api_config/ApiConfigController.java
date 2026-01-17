@@ -46,6 +46,7 @@ import org.fxmisc.easybind.Subscription;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -74,8 +75,7 @@ public class ApiConfigController implements Controller {
         appConfig = serviceProvider.getConfig();
         shutDownHandler = serviceProvider.getShutDownHandler();
 
-        Config config = readConfig();
-        apiConfig = ApiConfig.from(config.getConfig("application.api"));
+        apiConfig = ApiConfig.from(serviceProvider.getConfig().getRootConfig().getConfig("application.api"));
         model = new ApiConfigModel(apiConfig);
         view = new ApiConfigView(model, this);
     }
@@ -95,6 +95,10 @@ public class ApiConfigController implements Controller {
 
         subscriptions.add(EasyBind.subscribe(model.getTlsRequired(), tlsRequired -> {
             model.getProtocol().set(tlsRequired ? "wss" : "ws");
+            updateApplyButton();
+        }));
+
+        subscriptions.add(EasyBind.subscribe(model.getTlsKeyStorePassword(), password -> {
             updateApplyButton();
         }));
 
@@ -140,12 +144,15 @@ public class ApiConfigController implements Controller {
                     model.getDetectedLanHostApplied().set(isEquals);
                 }
         ));
+
+        model.getTlsKeyStorePassword().set(apiConfig.getTlsKeyStorePassword());
     }
 
     @Override
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        model.getTlsKeyStorePassword().set("");
     }
 
 
@@ -203,6 +210,8 @@ public class ApiConfigController implements Controller {
                     return CompletableFuture.completedFuture(false);
                 }
 
+                model.getTlsRequired().set(false);
+
                 if (model.getOnionServiceUrl().get() == null) {
                     model.getOnionServiceUrlPrompt().set(Res.get("settings.bisqConnect.apiConfig.onionService.url.prompt.publishing"));
                     apiAccessTransportService.publishAndGetTorAddress()
@@ -229,6 +238,8 @@ public class ApiConfigController implements Controller {
                 }
             }
             case CLEAR -> {
+                model.getTlsRequired().set(true);
+
                 if (model.getDetectedLanHost().get() == null) {
                     Optional<String> lanHostAddress = NetworkUtils.findLANHostAddress(Optional.empty());
                     lanHostAddress.ifPresent(value -> UIThread.run(() -> model.getDetectedLanHost().set(value)));
@@ -247,21 +258,20 @@ public class ApiConfigController implements Controller {
     // Config
     /* --------------------------------------------------------------------- */
 
-    private Config readConfig() {
-        return TypesafeConfigUtils.resolveCustomConfig(appConfig.getAppDataDirPath())
-                .orElse(ConfigFactory.empty())
-                .withFallback(appConfig.getRootConfig())
-                .resolve();
-    }
-
     private boolean writeConfig() {
         Path appDataDirPath = appConfig.getAppDataDirPath();
+        boolean tlsRequired = model.getTlsRequired().get();
+        String tlsKeyStorePassword = tlsRequired ? model.getTlsKeyStorePassword().get() : "";
+        List<String> tlsKeyStoreSan = resolveTlsKeyStoreSan();
         Config newConfig = ConfigFactory.parseMap(Map.of(
                 "application.api.accessTransportType", model.getApiAccessTransportType().get().name(),
                 "application.api.server.websocketEnabled", model.getWebsocketEnabled().get(),
                 "application.api.server.restEnabled", model.getRestEnabled().get(),
                 "application.api.server.bind.host", model.getBindHost().get(),
-                "application.api.server.bind.port", model.getBindPort().get()
+                "application.api.server.bind.port", model.getBindPort().get(),
+                "application.api.server.tls.required", tlsRequired,
+                "application.api.server.tls.keystore.password", tlsKeyStorePassword,
+                "application.api.server.tls.certificate.san", tlsKeyStoreSan
         ));
 
         Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
@@ -283,18 +293,20 @@ public class ApiConfigController implements Controller {
         }
     }
 
-
     /* --------------------------------------------------------------------- */
     // Misc
     /* --------------------------------------------------------------------- */
 
     private void updateApplyButton() {
         ApiConfig apiConfig = model.getApiConfig();
+        boolean tlsKeyStorePasswordNotChanged = !model.getTlsRequired().get() ||
+                Objects.equals(model.getTlsKeyStorePassword().get(), apiConfig.getTlsKeyStorePassword());
         boolean noChange = apiConfig.isWebsocketEnabled() == model.getWebsocketEnabled().get() &&
                 apiConfig.isRestEnabled() == model.getRestEnabled().get() &&
                 apiConfig.getApiAccessTransportType() == model.getApiAccessTransportType().get() &&
                 Objects.equals(apiConfig.getBindHost(), model.getBindHost().get()) &&
-                apiConfig.getBindPort() == model.getBindPort().get();
+                apiConfig.getBindPort() == model.getBindPort().get() &&
+                tlsKeyStorePasswordNotChanged;
         model.getApplyButtonDisabled().set(noChange || !isValid());
     }
 
@@ -311,6 +323,21 @@ public class ApiConfigController implements Controller {
     }
 
     private boolean isValid() {
-        return model.getBindHostValidator().validateAndGet() && model.getBindPortValidator().validateAndGet();
+        boolean tlsPasswordValid = !model.getTlsRequired().get() ||
+                (model.getPwdMinLengthValidator().validateAndGet() &&
+                        model.getPwdRequiredFieldValidator().validateAndGet());
+        return model.getBindHostValidator().validateAndGet() &&
+                model.getBindPortValidator().validateAndGet() &&
+                tlsPasswordValid;
+    }
+
+    private List<String> resolveTlsKeyStoreSan() {
+        if (model.getApiAccessTransportType().get() == ApiAccessTransportType.CLEAR) {
+            return List.of(model.getBindHost().get());
+        } else if (!apiConfig.getTlsKeyStoreSan().isEmpty()) {
+            return apiConfig.getTlsKeyStoreSan();
+        } else {
+            return List.of("127.0.0.1");
+        }
     }
 }

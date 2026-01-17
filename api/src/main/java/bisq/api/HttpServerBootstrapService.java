@@ -23,8 +23,8 @@ import bisq.api.access.http.PairingHttpHandler;
 import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
-import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContext;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.BaseResourceConfig;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
@@ -62,32 +62,32 @@ public class HttpServerBootstrapService implements Service {
     }
 
     private final ApiConfig apiConfig;
-    private final ApiAccessTransportService apiAccessTransportService;
     private final Optional<ResourceConfig> restApiResourceConfig;
     private final Optional<WebSocketService> webSocketService;
     private final PairingRequestHandler pairingRequestHandler;
     private final SessionAuthenticationService sessionAuthenticationService;
     private final PermissionService<RestPermissionMapping> permissionService;
+    private final TlsContextService tlsContextService;
 
     private Optional<HttpServer> httpServer = Optional.empty();
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public HttpServerBootstrapService(ApiConfig apiConfig,
-                                      ApiAccessTransportService apiAccessTransportService,
                                       Optional<ResourceConfig> restApiResourceConfig,
                                       Optional<WebSocketService> webSocketService,
                                       PairingRequestHandler pairingRequestHandler,
                                       SessionAuthenticationService sessionAuthenticationService,
-                                      PermissionService<RestPermissionMapping> permissionService
+                                      PermissionService<RestPermissionMapping> permissionService,
+                                      TlsContextService tlsContextService
     ) {
         this.apiConfig = apiConfig;
-        this.apiAccessTransportService = apiAccessTransportService;
         this.restApiResourceConfig = restApiResourceConfig;
         this.webSocketService = webSocketService;
         this.pairingRequestHandler = pairingRequestHandler;
         this.sessionAuthenticationService = sessionAuthenticationService;
         this.permissionService = permissionService;
+        this.tlsContextService = tlsContextService;
     }
 
     @Override
@@ -137,7 +137,7 @@ public class HttpServerBootstrapService implements Service {
                     if (apiConfig.isTlsRequired()) {
                         Optional<TlsContext> tlsContext;
                         try {
-                            tlsContext = apiAccessTransportService.getOrCreateTlsContext();
+                            tlsContext = tlsContextService.getOrCreateTlsContext();
                         } catch (Exception e) {
                             log.error("Could not create TLS context", e);
                             return false;

@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 public class HybridEncryptionTest {
 
-    private final KeyPair keyPairSender = KeyGeneration.generateKeyPair();
-    private final KeyPair keyPairReceiver = KeyGeneration.generateKeyPair();
+    private final KeyPair keyPairSender = KeyGeneration.generateDefaultEcKeyPair();
+    private final KeyPair keyPairReceiver = KeyGeneration.generateDefaultEcKeyPair();
 
     public HybridEncryptionTest() throws GeneralSecurityException {
     }
@@ -55,7 +55,7 @@ public class HybridEncryptionTest {
         byte[] iv = confidentialData.getIv();
         byte[] cypherText = confidentialData.getCipherText();
 
-        KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
+        KeyPair fakeKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         byte[] fakeSignature = SignatureUtil.sign(cypherText, fakeKeyPair.getPrivate());
         ConfidentialData withFakeSigAndPubKey = new ConfidentialData(encodedSenderPublicKey, iv, cypherText, fakeSignature);
         //noinspection CatchMayIgnoreException

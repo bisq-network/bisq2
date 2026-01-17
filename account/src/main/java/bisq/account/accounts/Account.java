@@ -63,7 +63,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 creationDate,
                 accountName,
                 accountPayload,
-                KeyGeneration.generateKeyPair(),
+                KeyGeneration.generateDefaultEcKeyPair(),
                 KeyGeneration.EC);
     }
 

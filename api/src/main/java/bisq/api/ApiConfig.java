@@ -39,13 +39,17 @@ public final class ApiConfig {
     private final String bindHost;
     private final int bindPort;
 
-    //  api.tor.onionServicePort
+    //  api.server.tor
     private final int onionServicePort;
+    private final boolean torClientAuthRequired;
+
+    // api.server.tls.*
+    private final boolean tlsRequired;
+    private final String tlsKeyStorePassword;
+    private final List<String> tlsKeyStoreSan;
 
     // api.server.security.*
     private final boolean authRequired;
-    private final boolean tlsRequired;
-    private final boolean torClientAuthRequired;
 
     // api.server.security.rest.*
     private final Optional<List<String>> restAllowEndpoints;
@@ -64,6 +68,8 @@ public final class ApiConfig {
             int onionServicePort,
             boolean authRequired,
             boolean tlsRequired,
+            String tlsKeyStorePassword,
+            List<String> tlsKeyStoreSan,
             boolean torClientAuthRequired,
             Optional<List<String>> restAllowEndpoints,
             List<String> restDenyEndpoints,
@@ -78,6 +84,8 @@ public final class ApiConfig {
         this.onionServicePort = onionServicePort;
         this.authRequired = authRequired;
         this.tlsRequired = tlsRequired;
+        this.tlsKeyStorePassword = tlsKeyStorePassword;
+        this.tlsKeyStoreSan = tlsKeyStoreSan;
         this.torClientAuthRequired = torClientAuthRequired;
         this.restAllowEndpoints = restAllowEndpoints;
         this.restDenyEndpoints = restDenyEndpoints;
@@ -93,6 +101,10 @@ public final class ApiConfig {
         Config bindConfig = serverConfig.getConfig("bind");
         Config torConfig = serverConfig.getConfig("tor");
         Config securityConfig = serverConfig.getConfig("security");
+
+        Config tlsConfig = serverConfig.getConfig("tls");
+        Config keystoreConfig = tlsConfig.getConfig("keystore");
+        Config certificateConfig = tlsConfig.getConfig("certificate");
 
         Config restSecurity = securityConfig.getConfig("rest");
         Config websocketSecurity = securityConfig.getConfig("websocket");
@@ -124,8 +136,12 @@ public final class ApiConfig {
                 torConfig.getInt("onionServicePort"),
 
                 securityConfig.getBoolean("authRequired"),
-                securityConfig.getBoolean("tlsRequired"),
-                securityConfig.getBoolean("torClientAuthRequired"),
+
+                tlsConfig.getBoolean("required"),
+                keystoreConfig.getString("password"),
+                certificateConfig.getStringList("san"),
+
+                torConfig.getBoolean("clientAuthRequired"),
 
                 restAllow,
                 restDeny,
