@@ -30,6 +30,8 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
+import bisq.security.tls.TlsCertificateGenerator;
+import bisq.security.tls.TlsKeyStore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

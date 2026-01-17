@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.transport;
+package bisq.security.tls;
 
 import bisq.common.file.FileMutatorUtils;
 
