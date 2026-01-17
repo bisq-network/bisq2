@@ -79,7 +79,7 @@ public class PairingService {
         pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
 
         UUID deviceId = UUID.randomUUID();
-        DeviceProfile deviceProfile = new DeviceProfile(deviceId, payload.getDeviceName(), payload.getDevicePublicKey());
+        DeviceProfile deviceProfile = new DeviceProfile(deviceId, payload.getDeviceName(), payload.getClientPublicKey());
         deviceProfileByIdMap.put(deviceId, deviceProfile);
 
         permissionService.setDevicePermissions(deviceId, pairingCode.getGrantedPermissions());
@@ -103,7 +103,7 @@ public class PairingService {
         PairingRequestPayload payload = request.getPairingRequestPayload();
         byte[] message = PairingRequestPayloadEncoder.encode(payload);
         byte[] signature = request.getSignature();
-        PublicKey publicKey = payload.getDevicePublicKey();
+        PublicKey publicKey = payload.getClientPublicKey();
         try {
             return !SignatureUtil.verify(message, signature, publicKey);
         } catch (GeneralSecurityException e) {
