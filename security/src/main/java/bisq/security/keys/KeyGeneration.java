@@ -54,15 +54,19 @@ public class KeyGeneration {
         }
     }
 
-    public static KeyPair generateKeyPair() {
+    public static KeyPair generateDefaultEcKeyPair() {
+        return generateKeyPair(CURVE, ECDH);
+    }
+
+    public static KeyPair generateKeyPair(String curve, String algorithm) {
         try {
-            ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
-            KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
+            ECGenParameterSpec ecSpec = new ECGenParameterSpec(curve);
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm, "BC");
             generator.initialize(ecSpec, new SecureRandom());
             return generator.generateKeyPair();
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(
-                    "Failed to generate ECDH key pair (curve=" + CURVE + ", provider=BC)", e);
+                    "Failed to generate " + algorithm + " key pair (curve=" + curve + ", provider=BC)", e);
         }
     }
 

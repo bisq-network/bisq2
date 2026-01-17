@@ -164,7 +164,7 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
     }
 
     public KeyPair generateKeyPair() {
-        return KeyGeneration.generateKeyPair();
+        return KeyGeneration.generateDefaultEcKeyPair();
     }
 
     public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) {
@@ -207,7 +207,7 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
         return CompletableFuture.supplyAsync(() -> {
             KeyPair defaultKeyPair = defaultPrivateKey.map(KeyPairUtils::fromPrivateKey)
                     .orElseGet(() -> existingBundle.map(KeyBundle::getKeyPair)
-                            .orElseGet(KeyGeneration::generateKeyPair));
+                            .orElseGet(KeyGeneration::generateDefaultEcKeyPair));
             if (writeDefaultPrivateKeyToFile) {
                 KeyPairUtils.writePrivateKey(defaultKeyPair, defaultKeyStoragePath, DEFAULT_TAG);
             }
@@ -248,7 +248,7 @@ public class KeyBundleService extends RateLimitedPersistenceClient<KeyBundleStor
 
     private KeyBundle createKeyBundle(String keyId) {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
-        KeyPair keyPair = KeyGeneration.generateKeyPair();
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
         I2PKeyPair i2pKeyPair = I2PKeyGeneration.generateKeyPair();
         return new KeyBundle(keyId, keyPair, torKeyPair, i2pKeyPair);

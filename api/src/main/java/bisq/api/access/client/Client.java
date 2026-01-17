@@ -43,7 +43,7 @@ public abstract class Client {
     protected Set<Permission> grantedPermissions;
 
     public ClientIdentity createClientIdentity(String deviceName) {
-        KeyPair keyPair = KeyGeneration.generateKeyPair();
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         // TODO on Mobile client: Allow user to set device name, store ClientIdentity
         return new ClientIdentity(deviceName, keyPair);
     }
