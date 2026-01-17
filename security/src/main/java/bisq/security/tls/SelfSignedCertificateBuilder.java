@@ -41,8 +41,8 @@ public final class SelfSignedCertificateBuilder {
     private Instant notBefore = Instant.now().minus(1, ChronoUnit.DAYS);
     private Instant notAfter = Instant.now().plus(10, ChronoUnit.YEARS);
 
-    public SelfSignedCertificateBuilder subject(X500Name subject) {
-        this.subject = subject;
+    public SelfSignedCertificateBuilder commonName(String commonName) {
+        this.subject = new X500Name("CN=" + commonName);
         return this;
     }
 
@@ -51,8 +51,7 @@ public final class SelfSignedCertificateBuilder {
         return this;
     }
 
-    public SelfSignedCertificateBuilder validity(Instant notBefore, Instant notAfter) {
-        this.notBefore = notBefore;
+    public SelfSignedCertificateBuilder expiry(Instant notAfter) {
         this.notAfter = notAfter;
         return this;
     }

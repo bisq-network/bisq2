@@ -20,7 +20,6 @@ package bisq.security.tls;
 import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.GeneralNames;
 
 import java.security.KeyPair;
@@ -30,33 +29,32 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
-public class TlsCertificateGenerator {
+public class TLsIdentity {
     private static final String CURVE = "secp256r1";
-
-    public static TlsCertificateGenerator create(String commonName, List<String> hosts) {
-        return new TlsCertificateGenerator(commonName, hosts);
-    }
 
     @Getter
     private final KeyPair keyPair;
     @Getter
     private final X509Certificate certificate;
 
-    private TlsCertificateGenerator(String commonName, List<String> hosts) {
-        keyPair =  KeyGeneration.generateKeyPair(CURVE, KeyGeneration.EC);
+    public TLsIdentity(String commonName, List<String> hosts) throws TlsException {
+        this(commonName, hosts, Instant.now().plus(10, ChronoUnit.YEARS));
+    }
 
-        GeneralNames sans = SanUtils.toGeneralNames(hosts);
+    public TLsIdentity(String commonName,
+                       List<String> hosts,
+                       Instant expiryDate) throws TlsException {
+        try {
+            keyPair = KeyGeneration.generateKeyPair(CURVE, KeyGeneration.EC);
+            GeneralNames sans = SanUtils.toGeneralNames(hosts);
 
-        Instant now = Instant.now();
-        Instant notBefore = now.minus(1, ChronoUnit.HOURS);
-        Instant notAfter = now.plus(10, ChronoUnit.YEARS);
-
-        X500Name subject = new X500Name("CN=" + commonName);
-
-        certificate = new SelfSignedCertificateBuilder()
-                .subject(subject)
-                .subjectAltNames(sans)
-                .validity(notBefore, notAfter)
-                .build(keyPair);
+            certificate = new SelfSignedCertificateBuilder()
+                    .commonName(commonName)
+                    .subjectAltNames(sans)
+                    .expiry(expiryDate)
+                    .build(keyPair);
+        } catch (Exception e) {
+            throw new TlsException(e);
+        }
     }
 }

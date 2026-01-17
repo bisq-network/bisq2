@@ -22,15 +22,12 @@ import bisq.common.file.FileMutatorUtils;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -50,7 +47,7 @@ public class TlsKeyStore {
     private static final String KEY_ALIAS = "tls";
     private static final String PROTOCOL = "TLSv1.3";
 
-    public static void createAndPersistKeyStore(KeyPair keyPair,
+    public static KeyStore createAndPersistKeyStore(KeyPair keyPair,
                                                 X509Certificate certificate,
                                                 Path keyStorePath,
                                                 char[] password) throws TlsException {
@@ -72,6 +69,7 @@ public class TlsKeyStore {
             }
 
             FileMutatorUtils.renameFile(tmpFilePath, keyStorePath);
+            return keyStore;
         } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
             log.error("writeTlsIdentity failed", e);
             throw new TlsException("Failed to persist key store", e);
@@ -99,21 +97,6 @@ public class TlsKeyStore {
             return Optional.of(keyStore);
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
             throw new TlsException("Failed to compute certificate fingerprint", e);
-        }
-    }
-
-
-    public static SSLContext createSslContext(KeyStore keyStore, char[] password) throws TlsException {
-        try {
-            var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keyStore, password);
-
-            var sslContext = SSLContext.getInstance(PROTOCOL);
-            sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-            return sslContext;
-        } catch (KeyStoreException | NoSuchAlgorithmException |
-                 UnrecoverableKeyException | KeyManagementException e) {
-            throw new TlsException("Failed to create SSL context", e);
         }
     }
 
