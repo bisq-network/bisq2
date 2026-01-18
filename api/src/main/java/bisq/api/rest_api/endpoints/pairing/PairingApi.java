@@ -22,10 +22,10 @@ import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingRequestHandler;
 import bisq.api.access.session.SessionToken;
-import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.pairing.PairingRequestDto;
 import bisq.api.dto.pairing.PairingResponseDto;
+import bisq.api.rest_api.endpoints.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -80,6 +80,7 @@ public class PairingApi extends RestApiBase {
             )
     )
     @ApiResponse(responseCode = "401", description = "Pairing request failed")
+    @ApiResponse(responseCode = "400", description = "Invalid pairing request payload")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response requestPairing(PairingRequestDto request) {
         try {
@@ -88,12 +89,15 @@ public class PairingApi extends RestApiBase {
             long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
             String sessionId = sessionToken.getSessionId();
             PairingResponseDto response = new PairingResponseDto(sessionId, expiresAt);
-            return buildOkResponse(response);
+            return buildResponse(Response.Status.CREATED, response);
         } catch (InvalidPairingRequestException e) {
-            log.error("Pairing request failed", e);
+            log.warn("Pairing request failed", e);
             return buildErrorResponse(Response.Status.UNAUTHORIZED, "Pairing request failed");
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid pairing request payload", e);
+            return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid pairing request payload");
         } catch (Exception e) {
-            log.error("Pairing request failed", e);
+            log.warn("Pairing request failed", e);
             return buildErrorResponse("Pairing request failed");
         }
     }
