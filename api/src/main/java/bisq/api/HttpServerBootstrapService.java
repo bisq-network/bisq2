@@ -118,10 +118,7 @@ public class HttpServerBootstrapService implements Service {
 
                     serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
 
-                    boolean authRequired = apiConfig.isAuthRequired();
-                    if (authRequired) {
-                        networkListener.registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
-                    }
+                    networkListener.registerAddOn(new AccessFilterAddOn(apiConfig, permissionService, sessionAuthenticationService));
 
                     if (apiConfig.isTlsRequired()) {
                         Optional<TlsContext> tlsContext;

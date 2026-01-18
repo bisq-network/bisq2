@@ -27,35 +27,62 @@ The API module is configured via a type-safe `api` object:
 
 ```hocon
 api = {
-    accessTransportType = "CLEAR" // Options: CLEAR | TOR | I2P
+    accessTransportType = "CLEAR"   # One of: CLEAR | TOR | I2P
 
     server = {
-        restEnabled = true
-        websocketEnabled = true
-        // grpcEnabled = false
+        restEnabled = false
+        websocketEnabled = false
+        # grpcEnabled = false
 
         bind = {
             host = "127.0.0.1"
             port = 8090
         }
 
+        tor = {
+            onionServicePort = 80    # external virtual port
+            clientAuthRequired = false
+        }
+
+        tls = {
+            required = false
+
+            keystore = {
+                password = ""
+            }
+
+            certificate = {
+                san = ["127.0.0.1" ]
+            }
+        }
+
         security = {
-            authRequired = true
-            tlsRequired = false
-            torClientAuthRequired = false
+            signatureBasedAuthenticationRequired = false
+            authorizationRequired = true
 
             rest = {
+                # List of allowed/denied API paths (regex patterns)
+                # allowEndpoints omitted → allow all
+                # allowEndpoints empty → deny all
+                # denyEndpoints must be present
+                # denyEndpoints empty → deny nothing
+                # E.g.
+                # allowEndpoints = ["/api/v1/report/address-list", "/api/v1/user-identity.*"]
                 denyEndpoints = []
             }
 
             websocket = {
+                # allowEndpoints = []
                 denyEndpoints = []
             }
 
-            // grpc = {
-            //     allowServices = ["bisq.trade.TradeService"]
-            //     denyMethods = []
-            // }
+            # grpc = {
+                # allowServices = [
+                #     "bisq.trade.TradeService"
+                # ]
+
+                # denyMethods = []
+            # }
         }
     }
 }
@@ -123,7 +150,7 @@ Transport-level filters are protocol-specific, while API-level filters are **tra
 
 ### Authentication
 
-If `authRequired = true`, clients must complete a **pairing protocol**:
+If `authorizationRequired = true`, clients must complete a **pairing protocol**:
 
 1. **Server address detection** – LAN or Tor address
 2. **QR code generation** – Encodes `pairingCode`, `webSocketUrl`, and TLS/Tor context

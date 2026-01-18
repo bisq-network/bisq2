@@ -17,6 +17,7 @@
 
 package bisq.api.access.filter;
 
+import bisq.api.ApiConfig;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.filter.authn.WebSocketHandshakeAuthenticationFilter;
 import bisq.api.access.filter.meta.WebSocketHandshakeMetaDataEnrichment;
@@ -28,11 +29,14 @@ import org.glassfish.grizzly.http.server.HttpServerFilter;
 import org.glassfish.grizzly.http.server.NetworkListener;
 
 public class AccessFilterAddOn implements AddOn {
+    private final ApiConfig apiConfig;
     private final PermissionService<RestPermissionMapping> permissionService;
     private final SessionAuthenticationService sessionAuthenticationService;
 
-    public AccessFilterAddOn(PermissionService<RestPermissionMapping> permissionService,
+    public AccessFilterAddOn(ApiConfig apiConfig,
+                             PermissionService<RestPermissionMapping> permissionService,
                              SessionAuthenticationService sessionAuthenticationService) {
+        this.apiConfig = apiConfig;
         this.permissionService = permissionService;
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
@@ -47,7 +51,9 @@ public class AccessFilterAddOn implements AddOn {
 
         // Any filter that reads HTTP headers must be placed strictly after HttpServerFilter
         builder.add(++index, new WebSocketHandshakeMetaDataEnrichment());
+        // if (apiConfig.isSignatureBasedAuthenticationRequired()) {
         builder.add(++index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
+        // }
     }
 }
 
