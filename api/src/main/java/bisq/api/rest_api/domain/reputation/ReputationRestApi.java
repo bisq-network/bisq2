@@ -17,8 +17,8 @@
 
 package bisq.api.rest_api.domain.reputation;
 
-import bisq.dto.DtoMappings;
-import bisq.dto.user.reputation.ReputationScoreDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.user.reputation.ReputationScoreDto;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;

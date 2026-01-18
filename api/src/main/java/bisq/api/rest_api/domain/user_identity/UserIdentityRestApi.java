@@ -19,10 +19,10 @@ package bisq.api.rest_api.domain.user_identity;
 
 import bisq.bisq_easy.BisqEasyService;
 import bisq.common.encoding.Hex;
-import bisq.dto.DtoMappings;
-import bisq.dto.security.keys.KeyPairDto;
-import bisq.dto.security.pow.ProofOfWorkDto;
-import bisq.dto.user.profile.UserProfileDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.security.keys.KeyPairDto;
+import bisq.api.dto.security.pow.ProofOfWorkDto;
+import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.security.DigestUtil;
 import bisq.security.SecurityService;

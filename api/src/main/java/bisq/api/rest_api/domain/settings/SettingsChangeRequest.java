@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.domain.settings;
 
-import bisq.dto.common.currency.MarketDto;
+import bisq.api.dto.common.currency.MarketDto;
 
 import javax.annotation.Nullable;
 import java.util.Set;

@@ -26,8 +26,8 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.dto.DtoMappings;
-import bisq.dto.common.monetary.PriceQuoteDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.common.monetary.PriceQuoteDto;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

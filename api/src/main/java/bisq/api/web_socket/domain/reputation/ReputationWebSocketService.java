@@ -22,8 +22,8 @@ import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.dto.DtoMappings;
-import bisq.dto.user.reputation.ReputationScoreDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.user.reputation.ReputationScoreDto;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 

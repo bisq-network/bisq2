@@ -18,7 +18,7 @@
 package bisq.api.rest_api.domain.chat.trade;
 
 
-import bisq.dto.chat.CitationDto;
+import bisq.api.dto.chat.CitationDto;
 
 import javax.annotation.Nullable;
 

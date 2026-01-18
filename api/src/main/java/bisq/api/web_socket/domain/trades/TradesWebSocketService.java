@@ -23,7 +23,7 @@ import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
+import bisq.api.dto.presentation.open_trades.TradeItemPresentationDto;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;

@@ -17,8 +17,8 @@
 
 package bisq.api.rest_api.domain.user_profile;
 
-import bisq.dto.DtoMappings;
-import bisq.dto.user.profile.UserProfileDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.support.moderator.ModerationRequestService;
 import bisq.user.RepublishUserProfileService;

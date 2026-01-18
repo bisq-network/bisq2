@@ -17,10 +17,10 @@
 
 package bisq.api.rest_api.domain.offers;
 
-import bisq.dto.common.currency.MarketDto;
-import bisq.dto.offer.DirectionDto;
-import bisq.dto.offer.amount.spec.AmountSpecDto;
-import bisq.dto.offer.price.spec.PriceSpecDto;
+import bisq.api.dto.common.currency.MarketDto;
+import bisq.api.dto.offer.DirectionDto;
+import bisq.api.dto.offer.amount.spec.AmountSpecDto;
+import bisq.api.dto.offer.price.spec.PriceSpecDto;
 
 import java.util.Set;
 

@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.domain.user_identity;
 
-import bisq.dto.user.profile.UserProfileDto;
+import bisq.api.dto.user.profile.UserProfileDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

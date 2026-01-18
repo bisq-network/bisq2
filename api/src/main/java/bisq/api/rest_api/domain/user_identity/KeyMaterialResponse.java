@@ -17,8 +17,8 @@
 
 package bisq.api.rest_api.domain.user_identity;
 
-import bisq.dto.security.keys.KeyPairDto;
-import bisq.dto.security.pow.ProofOfWorkDto;
+import bisq.api.dto.security.keys.KeyPairDto;
+import bisq.api.dto.security.pow.ProofOfWorkDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 

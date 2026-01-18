@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.domain.market_price;
 
-import bisq.dto.common.monetary.PriceQuoteDto;
+import bisq.api.dto.common.monetary.PriceQuoteDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;

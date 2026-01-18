@@ -19,9 +19,9 @@ package bisq.api.rest_api.domain.settings;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.dto.DtoMappings;
-import bisq.dto.settings.SettingsApiVersionDto;
-import bisq.dto.settings.SettingsDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.settings.SettingsApiVersionDto;
+import bisq.api.dto.settings.SettingsDto;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.settings.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;

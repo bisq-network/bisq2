@@ -22,7 +22,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.reactions.Reaction;
 import bisq.common.util.StringUtils;
-import bisq.dto.DtoMappings;
+import bisq.api.dto.DtoMappings;
 import bisq.api.rest_api.domain.RestApiBase;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
