@@ -59,20 +59,20 @@ public class PairingService {
         return pairingCode;
     }
 
-    public DeviceProfile pairDevice(PairingRequest request) {
+    public DeviceProfile pairDevice(PairingRequest request) throws InvalidPairingRequestException {
         PairingRequestPayload payload = request.getPairingRequestPayload();
         String pairingCodeId = payload.getPairingCodeId();
         PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
         if (pairingCode == null) {
-            throw new SecurityException("Pairing code not found or already used");
+            throw new InvalidPairingRequestException("Pairing code not found or already used");
         }
 
         if (isExpired(pairingCode)) {
             pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
-            throw new SecurityException("Pairing code is expired");
+            throw new InvalidPairingRequestException("Pairing code is expired");
         }
         if (isSignatureInvalid(request)) {
-            throw new SecurityException("Invalid signature");
+            throw new InvalidPairingRequestException("Invalid signature");
         }
 
         // Mark used by removing it

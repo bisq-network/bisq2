@@ -15,11 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.http;
+package bisq.api.access.pairing;
 
 import bisq.api.access.identity.DeviceProfile;
-import bisq.api.access.pairing.PairingRequest;
-import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.session.SessionToken;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +34,7 @@ public class PairingRequestHandler {
         this.sessionService = sessionService;
     }
 
-    public SessionToken handle(PairingRequest request) {
+    public SessionToken handle(PairingRequest request) throws InvalidPairingRequestException {
         DeviceProfile deviceProfile = pairingService.pairDevice(request);
         return sessionService.createSession(deviceProfile.getDeviceId());
     }

@@ -19,7 +19,7 @@ package bisq.api;
 
 import bisq.account.AccountService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.http.PairingRequestHandler;
+import bisq.api.access.pairing.PairingRequestHandler;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -37,6 +37,7 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.api.rest_api.pairing.PairingApi;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
@@ -125,8 +126,10 @@ public class ApiService implements Service {
         sessionService = new SessionService();
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
 
-        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
+
+        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
+        PairingApi pairingApi = new PairingApi(pairingRequestHandler);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
@@ -153,6 +156,7 @@ public class ApiService implements Service {
             restApiResourceConfig = Optional.of(new RestApiResourceConfig(apiConfig,
                     permissionService,
                     sessionAuthenticationService,
+                    pairingApi,
                     offerbookRestApi,
                     tradeRestApi,
                     tradeChatMessagesRestApi,
@@ -182,7 +186,6 @@ public class ApiService implements Service {
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
                 restApiResourceConfig,
                 webSocketService,
-                pairingRequestHandler,
                 sessionAuthenticationService,
                 permissionService,
                 tlsContextService);

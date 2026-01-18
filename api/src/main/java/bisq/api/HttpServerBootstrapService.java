@@ -19,8 +19,6 @@ package bisq.api;
 
 import bisq.api.access.filter.AccessFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.http.PairingHttpHandler;
-import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.TlsContext;
@@ -64,7 +62,6 @@ public class HttpServerBootstrapService implements Service {
     private final ApiConfig apiConfig;
     private final Optional<ResourceConfig> restApiResourceConfig;
     private final Optional<WebSocketService> webSocketService;
-    private final PairingRequestHandler pairingRequestHandler;
     private final SessionAuthenticationService sessionAuthenticationService;
     private final PermissionService<RestPermissionMapping> permissionService;
     private final TlsContextService tlsContextService;
@@ -76,7 +73,6 @@ public class HttpServerBootstrapService implements Service {
     public HttpServerBootstrapService(ApiConfig apiConfig,
                                       Optional<ResourceConfig> restApiResourceConfig,
                                       Optional<WebSocketService> webSocketService,
-                                      PairingRequestHandler pairingRequestHandler,
                                       SessionAuthenticationService sessionAuthenticationService,
                                       PermissionService<RestPermissionMapping> permissionService,
                                       TlsContextService tlsContextService
@@ -84,7 +80,6 @@ public class HttpServerBootstrapService implements Service {
         this.apiConfig = apiConfig;
         this.restApiResourceConfig = restApiResourceConfig;
         this.webSocketService = webSocketService;
-        this.pairingRequestHandler = pairingRequestHandler;
         this.sessionAuthenticationService = sessionAuthenticationService;
         this.permissionService = permissionService;
         this.tlsContextService = tlsContextService;
@@ -131,7 +126,6 @@ public class HttpServerBootstrapService implements Service {
                     boolean authRequired = apiConfig.isAuthRequired();
                     if (authRequired) {
                         networkListener.registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
-                        serverConfiguration.addHttpHandler(new PairingHttpHandler(pairingRequestHandler), "/pair");
                     }
 
                     if (apiConfig.isTlsRequired()) {

@@ -14,6 +14,7 @@ import bisq.api.rest_api.domain.settings.SettingsRestApi;
 import bisq.api.rest_api.domain.trades.TradeRestApi;
 import bisq.api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.api.rest_api.pairing.PairingApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -24,6 +25,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
                                  PermissionService<RestPermissionMapping> permissionService,
                                  SessionAuthenticationService sessionAuthenticationService,
+                                 PairingApi pairingApi,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatMessagesRestApi tradeChatMessagesRestApi,
@@ -39,6 +41,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
+
+        register(PairingApi.class);
         register(OfferbookRestApi.class);
         register(TradeRestApi.class);
         register(TradeChatMessagesRestApi.class);
@@ -53,6 +57,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
+                bind(pairingApi).to(PairingApi.class);
                 bind(offerbookRestApi).to(OfferbookRestApi.class);
                 bind(tradeRestApi).to(TradeRestApi.class);
                 bind(tradeChatMessagesRestApi).to(TradeChatMessagesRestApi.class);

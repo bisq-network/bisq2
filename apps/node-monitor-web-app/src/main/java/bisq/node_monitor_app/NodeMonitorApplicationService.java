@@ -21,7 +21,6 @@ import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -194,12 +193,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     apiConfig.getBindPort(),
                     apiConfig.getOnionServicePort()));
 
-            PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
-
             httpServerBootstrapService = Optional.of(new HttpServerBootstrapService(apiConfig,
                     Optional.of(restApiResourceConfig),
                     Optional.empty(),
-                    pairingRequestHandler,
                     sessionAuthenticationService,
                     permissionService,
                     tlsContextService));

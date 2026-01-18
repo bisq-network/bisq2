@@ -15,24 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.http.dto;
+package bisq.api.access.pairing;
 
-import java.util.Base64;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-public record PairingRequestDto(
-        PairingRequestPayloadDto payload,
-        String signatureBase64
-) {
-
-    public byte[] signatureBytes() {
-        checkNotNull(signatureBase64, "signatureBase64 must not be null");
-        try {
-            return Base64.getDecoder().decode(signatureBase64);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("signatureBase64 is not valid Base64", e);
-        }
+public class InvalidPairingRequestException extends Exception {
+    public InvalidPairingRequestException(String message) {
+        super(message);
     }
 }
-

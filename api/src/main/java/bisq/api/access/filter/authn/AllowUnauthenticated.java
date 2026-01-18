@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.http.dto;
+package bisq.api.access.filter.authn;
 
-public record PairingRequestPayloadDto(
-        byte version,
-        String pairingCodeId,
-        String devicePublicKeyBase64,
-        String deviceName,
-        long timestampEpochMillis
-) {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface AllowUnauthenticated {
 }

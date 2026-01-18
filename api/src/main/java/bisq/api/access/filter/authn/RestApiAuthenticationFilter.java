@@ -19,11 +19,11 @@ package bisq.api.access.filter.authn;
 
 import bisq.api.access.filter.Attributes;
 import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.RestApiFilter;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +33,7 @@ import java.util.Optional;
 @Slf4j
 @Priority(Priorities.AUTHENTICATION)
 // @Provider omitted as we do manual registration
-public class RestApiAuthenticationFilter implements ContainerRequestFilter {
+public class RestApiAuthenticationFilter extends RestApiFilter {
     private final SessionAuthenticationService sessionAuthenticationService;
 
     public RestApiAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
@@ -41,7 +41,7 @@ public class RestApiAuthenticationFilter implements ContainerRequestFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext context) {
+    public void doFilter(ContainerRequestContext context) {
         try {
             URI requestUri = context.getUriInfo().getRequestUri();
             String bodySha256Hex = AuthUtils.getBodySha256Hex(context);
