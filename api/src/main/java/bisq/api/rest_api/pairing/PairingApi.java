@@ -22,7 +22,7 @@ import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingRequestHandler;
 import bisq.api.access.session.SessionToken;
-import bisq.api.rest_api.domain.RestApiBase;
+import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.pairing.PairingRequestDto;
 import bisq.api.dto.pairing.PairingResponseDto;
