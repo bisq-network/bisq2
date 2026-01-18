@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.wallet.dashboard;
 
 import bisq.common.market.MarketRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.observable.Pin;
@@ -138,6 +139,19 @@ public class WalletDashboardController implements Controller {
         model.getSelectedMarketItem().set(marketItem);
     }
 
+    void applySearchPredicate(String searchText) {
+        String string = searchText == null ? "" : searchText.toLowerCase();
+        model.setSearchStringPredicate(item -> {
+                    if (!(item instanceof MarketItem marketItem)) {
+                        return true;
+                    }
+                    return StringUtils.isEmpty(string)
+                            || marketItem.getAmountCode().toLowerCase().contains(string)
+                            || marketItem.getMarket().getMarketDisplayName().toLowerCase().contains(string);
+                });
+        updateFilteredMarketListItems();
+    }
+
     private void updateCurrencyConverterBalance() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
         if (btcBalance == null) {
@@ -177,8 +191,10 @@ public class WalletDashboardController implements Controller {
     }
 
     private void updateFilteredMarketListItems() {
+        model.getFilteredMarketListItems().setPredicate(null);
+        model.getFilteredMarketListItems().setPredicate(model.getMarketListItemsPredicate());
         model.getFilteredCurrencyConverterListItems().setPredicate(null);
-        model.getFilteredCurrencyConverterListItems().setPredicate(model.getCurrencyConverterListItemsPredicate());
+        model.getFilteredCurrencyConverterListItems().setPredicate(model.getHeaderPredicate());
     }
 
     private void setSelectedMarket() {
@@ -201,11 +217,11 @@ public class WalletDashboardController implements Controller {
 
     private void addCurrencyConverterListItems() {
         model.getCurrencyConverterListItems().clear();
-        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.cryptoCurrencies")));
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.cryptoCurrencies"), true));
         model.getCurrencyConverterListItems().addAll(AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION.stream()
                 .map(market -> new MarketItem(market, marketPriceService))
                 .toList());
-        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.fiatCurrencies")));
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.fiatCurrencies"), false));
         model.getCurrencyConverterListItems().addAll(AVAILABLE_FIAT_MARKETS_FOR_CURRENCY_CONVERSION.stream()
                 .map(market -> new MarketItem(market, marketPriceService))
                 .toList());

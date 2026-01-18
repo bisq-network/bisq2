@@ -74,13 +74,26 @@ public class WalletDashboardModel implements Model {
     private final ObjectProperty<MarketItem> selectedMarketItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObservableList<CurrencyConverterListItem> currencyConverterListItems = FXCollections.observableArrayList();
-    private final FilteredList<CurrencyConverterListItem> filteredCurrencyConverterListItems = new FilteredList<>(currencyConverterListItems);
+    private final FilteredList<CurrencyConverterListItem> filteredMarketListItems = new FilteredList<>(currencyConverterListItems);
+    private final FilteredList<CurrencyConverterListItem> filteredCurrencyConverterListItems = new FilteredList<>(filteredMarketListItems);
     private final SortedList<CurrencyConverterListItem> sortedCurrencyConverterListItems = new SortedList<>(filteredCurrencyConverterListItems,
             Comparator.comparing(CurrencyConverterListItem::getComparatorValue));
-    private final Predicate<CurrencyConverterListItem> currencyConverterListItemsPredicate = item ->
-            item instanceof HeaderItem || getMarketPricePredicate().test(item);
+    private final Predicate<CurrencyConverterListItem> marketListItemsPredicate = item ->
+            item instanceof HeaderItem || (getMarketPricePredicate().test(item) && getSearchStringPredicate().test(item));
+    private final Predicate<CurrencyConverterListItem> headerListItemsPredicate = item ->
+            item instanceof MarketItem || getHeaderPredicate().test(item);
     @Setter
     private Predicate<CurrencyConverterListItem> marketPricePredicate = item -> true;
+    @Setter
+    private Predicate<CurrencyConverterListItem> searchStringPredicate = item -> true;
+    private final Predicate<CurrencyConverterListItem> headerPredicate = item -> {
+        if (!(item instanceof HeaderItem headerItem)) {
+            return true;
+        }
+        return getFilteredMarketListItems().stream()
+                .anyMatch(listItem -> listItem instanceof MarketItem marketItem
+                        && (headerItem.isCrypto() ? marketItem.getMarket().isXmr() : marketItem.getMarket().isBtcFiatMarket()));
+    };
 
     public WalletDashboardModel() {
     }

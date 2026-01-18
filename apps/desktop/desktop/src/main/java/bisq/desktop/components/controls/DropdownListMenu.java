@@ -24,6 +24,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -35,6 +36,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.PopupWindow;
 import lombok.Getter;
 import lombok.Setter;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
+import java.util.function.Consumer;
 
 public class DropdownListMenu<T> extends HBox {
     @Getter
@@ -44,28 +50,56 @@ public class DropdownListMenu<T> extends HBox {
     private final BisqPopup popup = new BisqPopup();
     @Getter
     private final BisqTableView<T> tableView;
+    private final Optional<Consumer<String>> searchTextHandler;
+    private final SearchBox searchBox;
     @Setter
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
     private ImageView defaultIcon, activeIcon, buttonIcon;
+    private Subscription searchTextPin;
 
     public DropdownListMenu(String defaultIconId,
                             String activeIconId,
                             boolean useIconOnly,
                             SortedList<T> sortedList) {
+        this(defaultIconId, activeIconId, useIconOnly, sortedList, Optional.empty());
+    }
+
+    public DropdownListMenu(String defaultIconId,
+                            String activeIconId,
+                            boolean useIconOnly,
+                            SortedList<T> sortedList,
+                            Consumer<String> searchTextHandler) {
+        this(defaultIconId, activeIconId, useIconOnly, sortedList, Optional.of(searchTextHandler));
+    }
+
+    public DropdownListMenu(String defaultIconId,
+                            String activeIconId,
+                            boolean useIconOnly,
+                            SortedList<T> sortedList,
+                            Optional<Consumer<String>> searchTextHandler) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
         activeIcon = ImageUtil.getImageViewById(activeIconId);
         buttonIcon = defaultIcon;
+        this.searchTextHandler = searchTextHandler;
 
         getChildren().addAll(hBox, buttonIcon);
         hBox.getStyleClass().add("dropdown-menu-content-hbox");
         hBox.setAlignment(Pos.BASELINE_LEFT);
 
+        searchBox = new SearchBox();
+        searchBox.setMaxHeight(50);
+        searchBox.setMinHeight(50);
+        searchBox.setManaged(searchTextHandler.isPresent());
+        searchBox.setVisible(searchBox.isManaged());
+        VBox.setMargin(searchBox, new Insets(0, 0, 10, 0));
+
         tableView = new BisqTableView<>(sortedList);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        popup.setContentNode(tableView);
+        VBox content = new VBox(searchBox, tableView);
+        popup.setContentNode(content);
         popup.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
         popup.getStyleClass().add("dropdown-menu-popup");
 
@@ -86,6 +120,8 @@ public class DropdownListMenu<T> extends HBox {
     public void initialize() {
         tableView.initialize();
 
+        searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
+
         setOnMouseClicked(e -> togglePopup());
         setOnMouseExited(e -> updateIcon(popup.isShowing() ? activeIcon : defaultIcon));
         setOnMouseEntered(e -> updateIcon(activeIcon));
@@ -98,12 +134,18 @@ public class DropdownListMenu<T> extends HBox {
             getStyleClass().remove("dropdown-menu-active");
             updateIcon(isHover() ? activeIcon : defaultIcon);
             isMenuShowing.setValue(false);
+            resetSearchBox();
         });
         tableView.setOnMouseClicked(e -> popup.hide());
     }
 
     public void dispose() {
         tableView.dispose();
+
+        if (searchTextPin != null) {
+            searchTextPin.unsubscribe();
+        }
+        resetSearchBox();
 
         setOnMouseClicked(null);
         setOnMouseExited(null);
@@ -182,6 +224,14 @@ public class DropdownListMenu<T> extends HBox {
             return openToTheRight
                     ? PopupWindow.AnchorLocation.WINDOW_BOTTOM_LEFT
                     : PopupWindow.AnchorLocation.WINDOW_BOTTOM_RIGHT;
+        }
+    }
+
+    private void resetSearchBox() {
+        searchBox.clear();
+        Node parent = searchBox.getParent();
+        if (parent != null) {
+            parent.requestFocus();
         }
     }
 }
