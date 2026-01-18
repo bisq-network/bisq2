@@ -37,7 +37,7 @@ import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
-import bisq.api.rest_api.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;

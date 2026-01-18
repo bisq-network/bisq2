@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest_api.pairing;
+package bisq.api.rest_api.endpoints.pairing;
 
 import bisq.api.access.filter.authn.AllowUnauthenticated;
 import bisq.api.access.pairing.InvalidPairingRequestException;
