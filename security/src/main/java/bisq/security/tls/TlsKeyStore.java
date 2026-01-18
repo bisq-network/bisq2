@@ -17,7 +17,7 @@
 
 package bisq.security.tls;
 
-import bisq.common.encoding.Hex;
+import bisq.common.encoding.Base64;
 import bisq.common.file.FileMutatorUtils;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +116,7 @@ public class TlsKeyStore {
                 throw new TlsException("TLS certificate entry missing for alias " + KEY_ALIAS);
             }
             byte[] digest = DigestUtil.sha256(certificate.getEncoded());
-            return Hex.encode(digest);
+            return Base64.encode(digest);
         } catch (KeyStoreException | CertificateEncodingException e) {
             throw new TlsException("Failed to compute certificate fingerprint", e);
         }
