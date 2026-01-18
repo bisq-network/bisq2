@@ -17,7 +17,7 @@
 
 package bisq.api.access.filter;
 
-import bisq.api.access.filter.authn.AllowUnauthenticated;
+import bisq.api.access.AllowUnauthenticated;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;

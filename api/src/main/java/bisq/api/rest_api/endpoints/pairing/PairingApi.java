@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.endpoints.pairing;
 
-import bisq.api.access.filter.authn.AllowUnauthenticated;
+import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingRequestHandler;

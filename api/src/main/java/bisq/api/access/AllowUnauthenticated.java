@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.filter.authn;
+package bisq.api.access;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
