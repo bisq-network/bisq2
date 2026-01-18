@@ -17,9 +17,9 @@
 
 package bisq.api.web_socket.domain.trades;
 
-import bisq.dto.contract.RoleDto;
-import bisq.dto.trade.TradeProtocolFailureDto;
-import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
+import bisq.api.dto.contract.RoleDto;
+import bisq.api.dto.trade.TradeProtocolFailureDto;
+import bisq.api.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -25,9 +25,9 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.DtoMappings;
-import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessageDto;
-import bisq.dto.user.profile.UserProfileDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessageDto;
+import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 

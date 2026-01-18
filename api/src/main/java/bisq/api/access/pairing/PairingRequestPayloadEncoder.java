@@ -41,7 +41,7 @@ public class PairingRequestPayloadEncoder {
             checkArgument(pairingRequestPayload.getDeviceName().length() <= 32, "DeviceName must not be longer than 32 chars");
 
             BinaryEncodingUtils.writeString(out, pairingRequestPayload.getPairingCodeId(), MAX_PAIRING_CODE_ID_LENGTH);
-            BinaryEncodingUtils.writeBytes(out, pairingRequestPayload.getDevicePublicKey().getEncoded(), MAX_PUBLIC_KEY_BYTES);
+            BinaryEncodingUtils.writeBytes(out, pairingRequestPayload.getClientPublicKey().getEncoded(), MAX_PUBLIC_KEY_BYTES);
             BinaryEncodingUtils.writeString(out, pairingRequestPayload.getDeviceName(), MAX_DEVICE_NAME_LENGTH);
 
             out.writeLong(pairingRequestPayload.getTimestamp().toEpochMilli());

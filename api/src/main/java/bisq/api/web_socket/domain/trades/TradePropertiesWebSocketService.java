@@ -22,7 +22,7 @@ import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.DtoMappings;
+import bisq.api.dto.DtoMappings;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;

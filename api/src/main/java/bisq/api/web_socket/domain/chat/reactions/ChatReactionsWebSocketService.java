@@ -26,8 +26,8 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.DtoMappings;
-import bisq.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;

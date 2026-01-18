@@ -18,9 +18,9 @@
 package bisq.api.access;
 
 import bisq.api.access.client.ClientIdentity;
-import bisq.api.access.http.PairingRequestHandler;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingRequest;
+import bisq.api.access.pairing.PairingRequestHandler;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.pairing.qr.PairingQrCode;
 import bisq.api.access.pairing.qr.PairingQrCodeDecoder;
@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * Integration-style test covering the full API access bootstrap flow:
  *
@@ -78,7 +79,7 @@ class ApiAccessIntegrationTest {
         PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
 
         PairingService pairingService = new PairingService(permissionService);
-        PairingRequestHandler apiAccessService = new PairingRequestHandler(pairingService, sessionService);
+        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
 
         // ---------------------------------------------------------------------
         // Given: Client protocol (simulated)
@@ -132,7 +133,7 @@ class ApiAccessIntegrationTest {
                 // -----------------------------------------------------------------
                 // When: Server handles pairing request
                 // -----------------------------------------------------------------
-                SessionToken sessionToken = apiAccessService.handle(pairingRequest);
+                SessionToken sessionToken = pairingRequestHandler.handle(pairingRequest);
 
                 // -----------------------------------------------------------------
                 // Then: Client receives session token (simulated HTTP cookie)
@@ -140,7 +141,6 @@ class ApiAccessIntegrationTest {
                 client.setSessionToken(sessionToken);
 
                 pairingCompleted.countDown();
-
             } catch (Exception e) {
                 log.error("Pairing flow failed", e);
                 throw new RuntimeException(e);
@@ -159,6 +159,6 @@ class ApiAccessIntegrationTest {
         //
         assertNotNull(client.getSessionToken());
         assertFalse(client.getSessionToken().isExpired());
-         assertEquals(permissions, client.getGrantedPermissions());
+        assertEquals(permissions, client.getGrantedPermissions());
     }
 }

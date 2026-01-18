@@ -1,6 +1,7 @@
 package bisq.api.access.filter.authz;
 
 import bisq.api.access.filter.Attributes;
+import bisq.api.access.filter.RestApiFilter;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -8,12 +9,10 @@ import jakarta.annotation.Priority;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +23,7 @@ import java.util.UUID;
 @Slf4j
 @Provider
 @Priority(Priorities.AUTHORIZATION)
-public class RestApiAuthorizationFilter implements ContainerRequestFilter {
+public class RestApiAuthorizationFilter extends RestApiFilter {
     private final HttpEndpointValidator httpEndpointValidator;
     private final PermissionService<RestPermissionMapping> permissionService;
 
@@ -36,7 +35,7 @@ public class RestApiAuthorizationFilter implements ContainerRequestFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext context) throws IOException {
+    public void doFilter(ContainerRequestContext context) {
         URI requestUri = context.getUriInfo().getRequestUri();
         try {
             httpEndpointValidator.validate(requestUri);
