@@ -191,8 +191,10 @@ public class WalletDashboardController implements Controller {
     }
 
     private void updateFilteredMarketListItems() {
+        model.getFilteredMarketListItems().setPredicate(null);
+        model.getFilteredMarketListItems().setPredicate(model.getMarketListItemsPredicate());
         model.getFilteredCurrencyConverterListItems().setPredicate(null);
-        model.getFilteredCurrencyConverterListItems().setPredicate(model.getCurrencyConverterListItemsPredicate());
+        model.getFilteredCurrencyConverterListItems().setPredicate(model.getHeaderPredicate());
     }
 
     private void setSelectedMarket() {
@@ -215,11 +217,11 @@ public class WalletDashboardController implements Controller {
 
     private void addCurrencyConverterListItems() {
         model.getCurrencyConverterListItems().clear();
-        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.cryptoCurrencies")));
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.cryptoCurrencies"), true));
         model.getCurrencyConverterListItems().addAll(AVAILABLE_CRYPTO_MARKETS_FOR_CURRENCY_CONVERSION.stream()
                 .map(market -> new MarketItem(market, marketPriceService))
                 .toList());
-        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.fiatCurrencies")));
+        model.getCurrencyConverterListItems().add(new HeaderItem(Res.get("wallet.dashboard.currencyConverterMenu.fiatCurrencies"), false));
         model.getCurrencyConverterListItems().addAll(AVAILABLE_FIAT_MARKETS_FOR_CURRENCY_CONVERSION.stream()
                 .map(market -> new MarketItem(market, marketPriceService))
                 .toList());

@@ -62,7 +62,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private Subscription selectedMarketPin;
+    private Subscription selectedMarketPin, isMenuShowingPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -175,6 +175,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
+        isMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
@@ -199,6 +200,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().unbind();
 
         selectedMarketPin.unsubscribe();
+        isMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
@@ -328,6 +330,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 .left()
                 .setCellFactory(getMarketCellFactory())
                 .build());
+        currencyConverterDropdownListMenu.getTableView().setPlaceholderText(Res.get("wallet.dashboard.currencyConverterMenu.noResults"));
     }
 
     private void updateTableViewSelectionToMarketItem() {
@@ -381,7 +384,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                         amount.textProperty().bind(marketItem.getFormattedConvertedAmount());
                         displayBox.setOnMouseClicked(e -> controller.onSelectMarket(marketItem));
                         setGraphic(displayBox);
-                    } else if (item instanceof HeaderItem(String headerTitle)) {
+                    } else if (item instanceof HeaderItem(String headerTitle, boolean isCrypto)) {
                         title.setText(headerTitle);
                         disableItem();
                         setUpRowHoverListener();

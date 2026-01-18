@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.wallet.dashboard;
 
-public record HeaderItem(String headerTitle) implements CurrencyConverterListItem {
+public record HeaderItem(String headerTitle, boolean isCrypto) implements CurrencyConverterListItem {
     @Override
     public String getComparatorValue() {
         // Make sure headers are always on top
