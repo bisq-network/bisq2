@@ -6,14 +6,16 @@ import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.filter.authz.RestApiAuthorizationFilter;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.api.rest_api.util.SwaggerResolution;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
-public abstract class BaseRestApiResourceConfig extends BaseResourceConfig {
-    public BaseRestApiResourceConfig(ApiConfig apiConfig,
+public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig {
+    public RestApiBaseResourceConfig(ApiConfig apiConfig,
+                                     PairingApi pairingApi,
                                      PermissionService<RestPermissionMapping> permissionService,
                                      SessionAuthenticationService sessionAuthenticationService) {
-        super();
+        super(pairingApi);
 
         if (apiConfig.isAuthRequired()) {
             register(new RestApiAuthenticationFilter(sessionAuthenticationService));

@@ -26,18 +26,19 @@ import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
+import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
+import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
@@ -151,9 +152,9 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-        Optional<ResourceConfig> restApiResourceConfig;
+        ResourceConfig resourceConfig ;
         if (apiConfig.isRestEnabled()) {
-            restApiResourceConfig = Optional.of(new RestApiResourceConfig(apiConfig,
+            resourceConfig =new RestApiResourceConfig(apiConfig,
                     permissionService,
                     sessionAuthenticationService,
                     pairingApi,
@@ -166,9 +167,9 @@ public class ApiService implements Service {
                     explorerRestApi,
                     paymentAccountsRestApi,
                     reputationRestApi,
-                    userProfileRestApi));
+                    userProfileRestApi);
         } else {
-            restApiResourceConfig = Optional.empty();
+            resourceConfig = new PairingApiResourceConfig(pairingApi);
         }
 
         if (apiConfig.isWebsocketEnabled()) {
@@ -184,7 +185,7 @@ public class ApiService implements Service {
         }
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
-                restApiResourceConfig,
+                resourceConfig,
                 webSocketService,
                 sessionAuthenticationService,
                 permissionService,

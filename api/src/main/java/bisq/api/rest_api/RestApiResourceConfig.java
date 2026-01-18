@@ -21,7 +21,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 @Slf4j
 @ApplicationPath("/api/v1")
-public class RestApiResourceConfig extends BaseRestApiResourceConfig {
+public class RestApiResourceConfig extends RestApiBaseResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
                                  PermissionService<RestPermissionMapping> permissionService,
                                  SessionAuthenticationService sessionAuthenticationService,
@@ -36,13 +36,12 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi) {
-        super(apiConfig, permissionService, sessionAuthenticationService);
+        super(apiConfig, pairingApi, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
 
-        register(PairingApi.class);
         register(OfferbookRestApi.class);
         register(TradeRestApi.class);
         register(TradeChatMessagesRestApi.class);
@@ -57,7 +56,6 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(pairingApi).to(PairingApi.class);
                 bind(offerbookRestApi).to(OfferbookRestApi.class);
                 bind(tradeRestApi).to(TradeRestApi.class);
                 bind(tradeChatMessagesRestApi).to(TradeChatMessagesRestApi.class);

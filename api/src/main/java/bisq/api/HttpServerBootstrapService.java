@@ -23,7 +23,6 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
-import bisq.api.rest_api.BaseResourceConfig;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
@@ -60,7 +59,7 @@ public class HttpServerBootstrapService implements Service {
     }
 
     private final ApiConfig apiConfig;
-    private final Optional<ResourceConfig> restApiResourceConfig;
+    private final ResourceConfig resourceConfig;
     private final Optional<WebSocketService> webSocketService;
     private final SessionAuthenticationService sessionAuthenticationService;
     private final PermissionService<RestPermissionMapping> permissionService;
@@ -71,14 +70,14 @@ public class HttpServerBootstrapService implements Service {
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public HttpServerBootstrapService(ApiConfig apiConfig,
-                                      Optional<ResourceConfig> restApiResourceConfig,
+                                      ResourceConfig resourceConfig,
                                       Optional<WebSocketService> webSocketService,
                                       SessionAuthenticationService sessionAuthenticationService,
                                       PermissionService<RestPermissionMapping> permissionService,
                                       TlsContextService tlsContextService
     ) {
         this.apiConfig = apiConfig;
-        this.restApiResourceConfig = restApiResourceConfig;
+        this.resourceConfig = resourceConfig;
         this.webSocketService = webSocketService;
         this.sessionAuthenticationService = sessionAuthenticationService;
         this.permissionService = permissionService;
@@ -105,7 +104,7 @@ public class HttpServerBootstrapService implements Service {
                             .build();
 
                     // In case we do not use the rest api we still provide the ResourceConfig with basic JsonMapper config
-                    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig.orElseGet(BaseResourceConfig::new), false);
+                    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
                     httpServer = Optional.of(server);
                     NetworkListener networkListener = server.getListener("grizzly");
                     ServerConfiguration serverConfiguration = server.getServerConfiguration();
@@ -117,11 +116,7 @@ public class HttpServerBootstrapService implements Service {
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
-                    boolean restEnabled = apiConfig.isRestEnabled();
-                    if (restEnabled) {
-                        checkArgument(restApiResourceConfig.isPresent(), "If restEnabled is true we expect that restApiResourceConfig is present");
-                        serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
-                    }
+                    serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
 
                     boolean authRequired = apiConfig.isAuthRequired();
                     if (authRequired) {
@@ -156,8 +151,11 @@ public class HttpServerBootstrapService implements Service {
                         server.start();
                         log.info("Server started at {}", baseUri);
                         log.info("WebSocket endpoint available at '{}://{}:{}/websocket'", apiConfig.getWebSocketProtocol(), bindHost, bindPort);
-                        if (restEnabled) {
+                        if (apiConfig.isRestEnabled()) {
                             log.info("Rest API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
+                        } else {
+                            log.info("Rest API is disabled but pairing endpoint is available at '{}/pairing'",
+                                    apiConfig.getRestServerApiBasePath());
                         }
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
