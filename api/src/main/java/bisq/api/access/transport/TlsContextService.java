@@ -59,8 +59,7 @@ public class TlsContextService {
         isTlsRequired = apiConfig.isTlsRequired();
     }
 
-
-    public synchronized Optional<TlsContext> getOrCreateTlsContext() throws Exception {
+    public synchronized Optional<TlsContext> getOrCreateTlsContext() throws TlsException {
         if (isTlsRequired && tlsContext.isEmpty()) {
             tlsContext = Optional.of(createTlsContext());
         }

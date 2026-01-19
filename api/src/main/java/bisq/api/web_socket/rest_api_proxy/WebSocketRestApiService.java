@@ -18,8 +18,11 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.application.Service;
+import bisq.security.tls.TlsException;
+import bisq.security.tls.TlsTrustManager;
 import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,10 +30,16 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -42,16 +51,17 @@ import java.util.stream.Stream;
 public class WebSocketRestApiService implements Service {
     private final ApiConfig apiConfig;
     private final String restServerUrl;
+    private final TlsContextService tlsContextService;
     private Optional<HttpClient> httpClient = Optional.empty();
 
-    public WebSocketRestApiService(ApiConfig apiConfig) {
+    public WebSocketRestApiService(ApiConfig apiConfig, TlsContextService tlsContextService) {
         this.apiConfig = apiConfig;
         this.restServerUrl = apiConfig.getRestServerUrl();
+        this.tlsContextService = tlsContextService;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        httpClient = Optional.of(HttpClient.newHttpClient());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -96,7 +106,8 @@ public class WebSocketRestApiService implements Service {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
             // Blocking send
-            HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            HttpClient httpClient = getOrCreateHttpClient();
+            HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             log.info("httpResponse {}", httpResponse);
             return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
@@ -104,5 +115,31 @@ public class WebSocketRestApiService implements Service {
             log.error(errorMessage, e);
             return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMessage);
         }
+    }
+
+    private HttpClient getOrCreateHttpClient() {
+        if (httpClient.isEmpty()) {
+            HttpClient.Builder builder = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10));
+            if (apiConfig.isTlsRequired()) {
+                try {
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    String fingerprint = tlsContextService.getOrCreateTlsContext().orElseThrow().getTlsFingerprint();
+                    sslContext.init(
+                            null,
+                            new TrustManager[]{new TlsTrustManager(fingerprint)},
+                            new SecureRandom()
+                    );
+                    builder.sslContext(sslContext);
+                } catch (NoSuchAlgorithmException | TlsException | KeyManagementException e) {
+                    log.error("Could not apply SSL context", e);
+                    throw new RuntimeException(e);
+                }
+            }
+            HttpClient client = builder.build();
+            httpClient = Optional.of(client);
+        }
+
+        return httpClient.get();
     }
 }

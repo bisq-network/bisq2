@@ -152,9 +152,9 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-        ResourceConfig resourceConfig ;
+        ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled()) {
-            resourceConfig =new RestApiResourceConfig(apiConfig,
+            resourceConfig = new RestApiResourceConfig(apiConfig,
                     permissionService,
                     sessionAuthenticationService,
                     pairingApi,
@@ -174,6 +174,7 @@ public class ApiService implements Service {
 
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
                     bondedRolesService,
                     chatService,
                     tradeService,
