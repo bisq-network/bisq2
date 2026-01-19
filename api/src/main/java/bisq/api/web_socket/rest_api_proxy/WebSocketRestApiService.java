@@ -20,7 +20,6 @@ package bisq.api.web_socket.rest_api_proxy;
 import bisq.api.ApiConfig;
 import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.application.Service;
-import bisq.common.network.Address;
 import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,9 +44,9 @@ public class WebSocketRestApiService implements Service {
     private final String restServerUrl;
     private Optional<HttpClient> httpClient = Optional.empty();
 
-    public WebSocketRestApiService(ApiConfig apiConfig, String restServerUrl) {
+    public WebSocketRestApiService(ApiConfig apiConfig) {
         this.apiConfig = apiConfig;
-        this.restServerUrl = restServerUrl;
+        this.restServerUrl = apiConfig.getRestServerUrl();
     }
 
     @Override
@@ -76,25 +75,24 @@ public class WebSocketRestApiService implements Service {
     }
 
     private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
-        if (!Address.fromFullAddress(restServerUrl).getHost().equals("127.0.0.1")) {
-            log.warn("Host of restApiAddress is expected to be 127.0.0.1 when used for wrapped requests from a WebSocket connection");
-        }
-
         String url = restServerUrl + request.getPath();
         String method = request.getMethod();
         String body = request.getBody();
-
-        // We get the SESSION_ID, NONCE, TIMESTAMP and SIGNATURE headers by the client sent inside the request.headers map.
-        String[] headers = request.getHeaders().entrySet().stream()
-                .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
-                .toArray(String[]::new);
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .headers(headers)
-                .method(method, body == null
-                        ? HttpRequest.BodyPublishers.noBody()
-                        : HttpRequest.BodyPublishers.ofString(body));
         try {
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .method(method, body == null
+                            ? HttpRequest.BodyPublishers.noBody()
+                            : HttpRequest.BodyPublishers.ofString(body));
+
+            // We get the SESSION_ID, NONCE, TIMESTAMP and SIGNATURE headers by the client sent inside the request.headers map.
+            String[] headers = request.getHeaders().entrySet().stream()
+                    .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
+                    .toArray(String[]::new);
+            if (headers.length > 0) {
+                requestBuilder.headers(headers);
+            }
+
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
             // Blocking send

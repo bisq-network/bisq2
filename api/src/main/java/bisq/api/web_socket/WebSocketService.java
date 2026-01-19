@@ -70,7 +70,7 @@ public class WebSocketService implements Service {
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
-        webSocketRestApiService = new WebSocketRestApiService(apiConfig, apiConfig.getRestServerUrl());
+        webSocketRestApiService = new WebSocketRestApiService(apiConfig);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
     }
 
