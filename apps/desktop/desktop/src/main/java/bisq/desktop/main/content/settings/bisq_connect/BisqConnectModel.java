@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.desktop.common.view.Model;
-import bisq.api.web_socket.WebsocketClient1;
+import bisq.api.web_socket.WebsocketClient;
 import bisq.api.web_socket.WebSocketService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -43,7 +43,7 @@ public class BisqConnectModel implements Model {
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrCode = new SimpleStringProperty();
 
-    private final ObservableList<WebsocketClient1> connectedClients = FXCollections.observableArrayList();
+    private final ObservableList<WebsocketClient> connectedClients = FXCollections.observableArrayList();
 
     BisqConnectModel(String webSocketServerUrl, int qrCodeSize) {
         this.webSocketServerUrl = webSocketServerUrl;
