@@ -1154,6 +1154,7 @@
 
 .dropdown-list-menu .dropdown-menu-popup {
     -fx-background-color: -bisq-dark-grey-40;
+    -fx-padding: 8 8 15 8 !important;
 }
 
 .dropdown-list-menu .table-view.table-view .column-header-background,
@@ -1211,6 +1212,18 @@
 
 .dropdown-list-menu .table-view .table-row-cell:hover {
     -fx-cursor: hand;
+}
+
+.dropdown-list-menu {
+    -fx-padding: 5 15 5 15;
+}
+
+.dropdown-list-menu .search-box,
+.dropdown-list-menu .search-box-active {
+    -fx-background-color: transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -fx-mid-text-color;
+    -fx-border-radius: 0;
 }
 
 

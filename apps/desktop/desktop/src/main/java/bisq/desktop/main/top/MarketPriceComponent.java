@@ -25,42 +25,46 @@ import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.ComboBoxWithSearch;
+import bisq.desktop.components.controls.DropdownListMenu;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
+import bisq.desktop.components.table.BisqTableColumn;
 import bisq.i18n.Res;
 import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -118,6 +122,7 @@ public class MarketPriceComponent {
                                 }
                             }));
                     }));
+            applyFilteredListItems();
         }
 
         @Override
@@ -133,30 +138,47 @@ public class MarketPriceComponent {
                 marketPriceService.setSelectedMarket(selectedItem.marketPrice.getMarket());
             }
         }
+
+        private void applySearchPredicate(String searchText) {
+            String string = searchText == null ? "" : searchText.toLowerCase();
+            model.setSearchStringPredicate(item -> item.getCodes().toLowerCase().contains(string));
+            applyFilteredListItems();
+        }
+
+        private void applyFilteredListItems() {
+            model.filteredItems.setPredicate(null);
+            model.filteredItems.setPredicate(model.searchStringPredicate);
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObservableList<MarketPriceComponent.ListItem> items = FXCollections.observableArrayList();
-        private final ObjectProperty<MarketPriceComponent.ListItem> selected = new SimpleObjectProperty<>();
+        private final ObservableList<ListItem> items = FXCollections.observableArrayList();
+        private final FilteredList<ListItem> filteredItems = new FilteredList<>(items);
+        private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
         private final StringProperty codes = new SimpleStringProperty();
         private final StringProperty price = new SimpleStringProperty();
+        @Setter
+        private Predicate<ListItem> searchStringPredicate = item -> true;
 
         private Model() {
         }
     }
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private static final double LIST_MENU_CELL_HEIGHT = 50;
+
         private final Label codes, price;
         private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
         private final Tooltip tooltip;
         private final Label staleIcon;
+        private final DropdownListMenu<ListItem> listMenu;
         private Subscription pricePin;
         private UIScheduler updateScheduler;
 
         private View(Model model, Controller controller) {
-            super(new HBox(7), model, controller);
+            super(new VBox(), model, controller);
 
             root.setAlignment(Pos.CENTER);
             root.setCursor(Cursor.HAND);
@@ -179,19 +201,28 @@ public class MarketPriceComponent {
             tooltip = new BisqTooltip();
             Tooltip.install(root, tooltip);
 
-            staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "14");
-            staleIcon.getStyleClass().add("bisq-text-yellow");
+            ImageView icon = ImageUtil.getImageViewById("undelivered-message-grey");
+            staleIcon = new Label();
+            staleIcon.setGraphic(icon);
             staleIcon.setManaged(false);
             staleIcon.setVisible(false);
 
-            HBox.setMargin(progressBarWithLabel, new Insets(2.5, 0, 0, 0));
-            HBox.setMargin(codes, new Insets(0, 5, 0, 0));
-            HBox.setMargin(staleIcon, new Insets(0, 3, 0, 0));
-            root.getChildren().addAll(staleIcon, codes, price, arrow, progressBarWithLabel);
+            listMenu = new DropdownListMenu<>("chevron-drop-menu-grey",
+                    "chevron-drop-menu-white", false, model.filteredItems,
+                    controller::applySearchPredicate);
+            HBox menu = new HBox(5, staleIcon, codes, price, progressBarWithLabel);
+            menu.setAlignment(Pos.CENTER);
+            listMenu.setContent(menu);
+            listMenu.getTableView().setFixedCellSize(LIST_MENU_CELL_HEIGHT);
+            configTableView();
+
+            root.getStyleClass().add("market-price-component");
+            root.getChildren().add(listMenu);
         }
 
         @Override
         protected void onViewAttached() {
+            listMenu.initialize();
             codes.textProperty().bind(model.codes);
             pricePin = EasyBind.subscribe(model.price, priceValue -> {
                 boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
@@ -201,20 +232,6 @@ public class MarketPriceComponent {
                 progressBarWithLabel.setManaged(!isPriceSet);
                 progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
                 price.setText(isPriceSet ? priceValue : "");
-            });
-
-            root.setOnMouseClicked(e -> {
-                if (model.items.isEmpty()) {
-                    return;
-                }
-                new ComboBoxWithSearch<>(root,
-                        model.items,
-                        c -> getListCell(),
-                        controller::onSelected,
-                        Res.get("action.search"),
-                        null,
-                        250, 30, 20, 125)
-                        .show();
             });
             updateScheduler = UIScheduler.run(() -> {
                         ListItem item = model.selected.get();
@@ -236,15 +253,22 @@ public class MarketPriceComponent {
 
         @Override
         protected void onViewDetached() {
+            listMenu.dispose();
             codes.textProperty().unbind();
             pricePin.unsubscribe();
             Tooltip.uninstall(root, tooltip);
-            root.setOnMouseClicked(null);
             updateScheduler.stop();
         }
 
-        private ListCell<ListItem> getListCell() {
-            return new ListCell<>() {
+        private void configTableView() {
+            listMenu.getTableView().getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                    .left()
+                    .setCellFactory(getListCell())
+                    .build());
+        }
+
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getListCell() {
+            return column -> new TableCell<>() {
                 private final Label price, codes;
                 private final HBox hBox;
                 private final Tooltip tooltip;
@@ -255,20 +279,18 @@ public class MarketPriceComponent {
 
                     codes = new Label();
                     codes.setMouseTransparent(true);
-                    codes.getStyleClass().add("bisq-text-18");
-                    HBox.setMargin(codes, new Insets(0, 0, 0, -10));
+                    codes.setStyle("-fx-text-fill: -fx-mid-text-color;");
 
                     price = new Label();
                     price.setMouseTransparent(true);
-                    price.setId("bisq-text-20");
+                    price.setStyle("-fx-text-fill: -fx-light-text-color;");
 
-                    staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "12");
-                    staleIcon.getStyleClass().add("bisq-text-yellow");
-                    staleIcon.setManaged(false);
+                    ImageView icon = ImageUtil.getImageViewById("undelivered-message-grey");
+                    staleIcon = new Label();
+                    staleIcon.setGraphic(icon);
                     staleIcon.setVisible(false);
 
-                    HBox.setMargin(staleIcon, new Insets(0, 6, 0, -8));
-                    hBox = new HBox(12, staleIcon, codes, price);
+                    hBox = new HBox(10, staleIcon, codes, price);
                     hBox.setAlignment(Pos.CENTER_LEFT);
 
                     tooltip = new BisqTooltip();
@@ -283,13 +305,14 @@ public class MarketPriceComponent {
                         codes.setText(item.codes);
 
                         boolean isStale = item.isStale();
-                        staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
                         tooltip.setText(item.getTooltipText());
                         Tooltip.install(hBox, tooltip);
+                        setOnMouseClicked(e -> controller.onSelected(item));
                         setGraphic(hBox);
                     } else {
                         Tooltip.uninstall(hBox, tooltip);
+                        setOnMouseClicked(null);
                         setGraphic(null);
                     }
                 }
