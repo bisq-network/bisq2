@@ -141,7 +141,7 @@ public class MarketPriceComponent {
 
         private void applySearchPredicate(String searchText) {
             String string = searchText == null ? "" : searchText.toLowerCase();
-            model.setSearchStringPredicate(item -> item.getCodes().toLowerCase().contains(string.toLowerCase()));
+            model.setSearchStringPredicate(item -> item.getCodes().toLowerCase().contains(string));
             applyFilteredListItems();
         }
 
