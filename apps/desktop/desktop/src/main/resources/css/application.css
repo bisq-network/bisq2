@@ -552,18 +552,6 @@
     -fx-background-color: -bisq-dark-grey-40;
 }
 
-.wallet-dashboard .dropdown-menu {
-    -fx-padding: 5 15 5 15;
-}
-
-.wallet-dashboard .dropdown-menu .search-box,
-.wallet-dashboard .dropdown-menu .search-box-active {
-    -fx-background-color: transparent;
-    -fx-border-width: 0 0 1 0;
-    -fx-border-color: -fx-mid-text-color;
-    -fx-border-radius: 0;
-}
-
 
 /*******************************************************************************
  * Support                                                                  *
@@ -581,4 +569,18 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.1em;
+}
+
+
+/*******************************************************************************
+ * MarketPriceComponent                                                        *
+ ******************************************************************************/
+
+.market-price-component .dropdown-menu {
+    -fx-alignment: center;
+    -fx-min-height: 45;
+}
+
+.market-price-component .dropdown-menu .dropdown-menu-content-hbox {
+    -fx-alignment: center;
 }

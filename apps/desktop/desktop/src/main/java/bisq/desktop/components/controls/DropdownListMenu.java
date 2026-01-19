@@ -22,7 +22,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableView;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.transformation.SortedList;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -62,22 +62,22 @@ public class DropdownListMenu<T> extends HBox {
     public DropdownListMenu(String defaultIconId,
                             String activeIconId,
                             boolean useIconOnly,
-                            SortedList<T> sortedList) {
-        this(defaultIconId, activeIconId, useIconOnly, sortedList, Optional.empty());
+                            ObservableList<T> observableList) {
+        this(defaultIconId, activeIconId, useIconOnly, observableList, Optional.empty());
     }
 
     public DropdownListMenu(String defaultIconId,
                             String activeIconId,
                             boolean useIconOnly,
-                            SortedList<T> sortedList,
+                            ObservableList<T> observableList,
                             Consumer<String> searchTextHandler) {
-        this(defaultIconId, activeIconId, useIconOnly, sortedList, Optional.of(searchTextHandler));
+        this(defaultIconId, activeIconId, useIconOnly, observableList, Optional.of(searchTextHandler));
     }
 
     public DropdownListMenu(String defaultIconId,
                             String activeIconId,
                             boolean useIconOnly,
-                            SortedList<T> sortedList,
+                            ObservableList<T> observableList,
                             Optional<Consumer<String>> searchTextHandler) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
         activeIcon = ImageUtil.getImageViewById(activeIconId);
@@ -93,9 +93,9 @@ public class DropdownListMenu<T> extends HBox {
         searchBox.setMinHeight(50);
         searchBox.setManaged(searchTextHandler.isPresent());
         searchBox.setVisible(searchBox.isManaged());
-        VBox.setMargin(searchBox, new Insets(0, 0, 10, 0));
+        VBox.setMargin(searchBox, new Insets(0, 0, 15, 0));
 
-        tableView = new BisqTableView<>(sortedList);
+        tableView = new BisqTableView<>(observableList);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         VBox content = new VBox(searchBox, tableView);
