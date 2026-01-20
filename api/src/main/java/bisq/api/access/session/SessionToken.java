@@ -32,12 +32,12 @@ public class SessionToken {
     @Getter
     private final String sessionId;
     @Getter
-    private final UUID deviceId;
+    private final String deviceId;
     @Getter
     private final Instant expiresAt;
     private final byte[] hmacKey;
 
-    public SessionToken(UUID deviceId) {
+    public SessionToken(String deviceId) {
         this.sessionId = UUID.randomUUID().toString();
         this.deviceId = deviceId;
         this.expiresAt = Instant.now().plusSeconds(TTL);

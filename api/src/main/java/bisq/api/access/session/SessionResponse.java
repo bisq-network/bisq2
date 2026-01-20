@@ -17,23 +17,18 @@
 
 package bisq.api.access.session;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
-public class SessionService {
-    private final Map<String, SessionToken> sessionTokenBySessionIdMap = new ConcurrentHashMap<>();
+@EqualsAndHashCode
+@Getter
+public final class SessionResponse {
+    private final String sessionId;
+    private final long expiresAt;
 
-    public SessionToken createSession(String deviceId) {
-        SessionToken token = new SessionToken(deviceId);
-        sessionTokenBySessionIdMap.put(token.getSessionId(), token);
-        return token;
-    }
-
-    public Optional<SessionToken> find(String sessionId) {
-        return Optional.ofNullable(sessionTokenBySessionIdMap.get(sessionId));
+    public SessionResponse(String sessionId, long expiresAt) {
+        this.sessionId = sessionId;
+        this.expiresAt = expiresAt;
     }
 }

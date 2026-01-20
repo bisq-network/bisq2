@@ -15,25 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.session;
+package bisq.api.dto.access.session;
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-@Slf4j
-public class SessionService {
-    private final Map<String, SessionToken> sessionTokenBySessionIdMap = new ConcurrentHashMap<>();
-
-    public SessionToken createSession(String deviceId) {
-        SessionToken token = new SessionToken(deviceId);
-        sessionTokenBySessionIdMap.put(token.getSessionId(), token);
-        return token;
-    }
-
-    public Optional<SessionToken> find(String sessionId) {
-        return Optional.ofNullable(sessionTokenBySessionIdMap.get(sessionId));
-    }
+public record SessionResponseDto(
+        String sessionId,
+        long expiresAt
+) {
 }
+
