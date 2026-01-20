@@ -5,7 +5,7 @@ import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.rest_api.RestApiBaseResourceConfig;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.network.NetworkService;
 import bisq.node_monitor.NodeMonitorRestApi;
 import bisq.node_monitor.NodeMonitorService;
@@ -15,7 +15,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 @Slf4j
 public class NodeMonitorRestApiResourceConfig extends RestApiBaseResourceConfig {
     public NodeMonitorRestApiResourceConfig(ApiConfig apiConfig,
-                                            PairingApi pairingApi,
+                                            AccessApi pairingApi,
                                             PermissionService<RestPermissionMapping> permissionService,
                                             SessionAuthenticationService sessionAuthenticationService,
                                             NetworkService networkService,

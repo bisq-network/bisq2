@@ -20,4 +20,5 @@ public final class Headers {
     public static final String NONCE = "Bisq-Nonce";
     public static final String SIGNATURE = "Bisq-Signature";
     public static final String DEVICE_ID = "Bisq-Device-Id";
+    public static final String CLIENT_SECRET = "Bisq-Client-Secret";
 }

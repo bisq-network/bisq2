@@ -19,7 +19,7 @@ package bisq.api;
 
 import bisq.account.AccountService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.pairing.PairingRequestHandler;
+import bisq.api.access.ApiAccessService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -32,7 +32,7 @@ import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
@@ -129,8 +129,8 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
-        PairingApi pairingApi = new PairingApi(pairingRequestHandler);
+        ApiAccessService pairingRequestHandler = new ApiAccessService(pairingService, sessionService);
+        AccessApi pairingApi = new AccessApi(pairingRequestHandler);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),

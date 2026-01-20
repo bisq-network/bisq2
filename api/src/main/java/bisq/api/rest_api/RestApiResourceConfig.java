@@ -14,7 +14,7 @@ import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -25,7 +25,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
                                  PermissionService<RestPermissionMapping> permissionService,
                                  SessionAuthenticationService sessionAuthenticationService,
-                                 PairingApi pairingApi,
+                                 AccessApi pairingApi,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatMessagesRestApi tradeChatMessagesRestApi,

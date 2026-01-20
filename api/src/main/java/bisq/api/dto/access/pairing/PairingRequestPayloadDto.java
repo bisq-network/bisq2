@@ -15,25 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.identity;
+package bisq.api.dto.access.pairing;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
-import java.security.PublicKey;
-
-@Getter
-@EqualsAndHashCode
-public class DeviceProfile {
-    private final String deviceId;
-    private final String deviceSecret;
-    private final String deviceName;
-    private final PublicKey publicKey;
-
-    public DeviceProfile(String deviceId, String deviceSecret, String deviceName, PublicKey publicKey) {
-        this.deviceId = deviceId;
-        this.deviceSecret = deviceSecret;
-        this.deviceName = deviceName;
-        this.publicKey = publicKey;
-    }
+public record PairingRequestPayloadDto(
+        byte version,
+        String pairingCodeId,
+        String clientPublicKeyBase64,
+        String deviceName,
+        long timestampEpochMillis
+) {
 }

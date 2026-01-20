@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PermissionService<T extends PermissionMapping> {
     @Getter
     private final T permissionMapping;
-    private final Map<UUID, Set<Permission>> permissionsByDeviceId = new ConcurrentHashMap<>();
+    private final Map<String, Set<Permission>> permissionsByDeviceId = new ConcurrentHashMap<>();
 
     public PermissionService(T permissionMapping) {
         this.permissionMapping = permissionMapping;
@@ -39,7 +39,7 @@ public class PermissionService<T extends PermissionMapping> {
         return granted.contains(required);
     }
 
-    public void setDevicePermissions(UUID deviceId, Set<Permission> permissions) {
+    public void setDevicePermissions(String deviceId, Set<Permission> permissions) {
         permissionsByDeviceId.put(deviceId, permissions);
     }
 

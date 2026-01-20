@@ -21,14 +21,14 @@ import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.pairing.PairingRequestHandler;
+import bisq.api.access.ApiAccessService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -181,8 +181,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-            PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
-            PairingApi pairingApi = new PairingApi(pairingRequestHandler);
+            ApiAccessService pairingRequestHandler = new ApiAccessService(pairingService, sessionService);
+            AccessApi pairingApi = new AccessApi(pairingRequestHandler);
 
             ResourceConfig resourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
                     pairingApi,

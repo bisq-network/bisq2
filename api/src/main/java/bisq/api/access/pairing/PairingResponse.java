@@ -15,24 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.pairing;
+package bisq.api.access.pairing;
 
-import java.util.Base64;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+@Getter
+@EqualsAndHashCode
+public final class PairingResponse {
+    private final String deviceSecret;
+    private final String sessionId;
+    private final long expiresAt;
 
-public record PairingRequestDto(
-        PairingRequestPayloadDto payload,
-        String signatureBase64
-) {
-
-    public byte[] signatureBytes() {
-        checkNotNull(signatureBase64, "signatureBase64 must not be null");
-        try {
-            return Base64.getDecoder().decode(signatureBase64);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("signatureBase64 is not valid Base64", e);
-        }
+    public PairingResponse(String deviceSecret, String sessionId, long expiresAt) {
+        this.deviceSecret = deviceSecret;
+        this.sessionId = sessionId;
+        this.expiresAt = expiresAt;
     }
 }
-

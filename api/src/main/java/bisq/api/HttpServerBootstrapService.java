@@ -41,6 +41,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -154,7 +155,13 @@ public class HttpServerBootstrapService implements Service {
                             log.info("Rest API is disabled but pairing endpoint is available at '{}/pairing'",
                                     apiConfig.getRestServerApiBasePath());
                         }
-                    } catch (IOException e) {
+                    } catch (BindException e) {
+                        log.error("Failed to start websocket server", e);
+                        server.shutdownNow();
+                        errorMessage.set(e.getMessage());
+                        // TODO clear custom api config
+                        return true;
+                    }catch (IOException e) {
                         log.error("Failed to start websocket server", e);
                         server.shutdownNow();
                         errorMessage.set(e.getMessage());

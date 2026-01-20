@@ -21,12 +21,14 @@ import bisq.api.access.identity.DeviceProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
+import bisq.common.util.ByteArrayUtils;
 import bisq.security.SignatureUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -41,7 +43,7 @@ public class PairingService {
     private final PermissionService<? extends PermissionMapping> permissionService;
 
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
-    private final Map<UUID, DeviceProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
+    private final Map<String, DeviceProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
 
     public PairingService(PermissionService<? extends PermissionMapping> permissionService) {
         this.permissionService = permissionService;
@@ -76,10 +78,15 @@ public class PairingService {
         }
 
         // Mark used by removing it
-        pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
+        //pairingCodeByIdMap.remove(pairingCodeId, pairingCode);  //todo
 
-        UUID deviceId = UUID.randomUUID();
-        DeviceProfile deviceProfile = new DeviceProfile(deviceId, payload.getDeviceName(), payload.getClientPublicKey());
+        String deviceId = UUID.randomUUID().toString();
+        byte[] secret = ByteArrayUtils.getRandomBytes(32);
+        String deviceSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
+        DeviceProfile deviceProfile = new DeviceProfile(deviceId,
+                deviceSecret,
+                payload.getDeviceName(),
+                payload.getClientPublicKey());
         deviceProfileByIdMap.put(deviceId, deviceProfile);
 
         permissionService.setDevicePermissions(deviceId, pairingCode.getGrantedPermissions());
@@ -91,7 +98,7 @@ public class PairingService {
         return Optional.ofNullable(pairingCodeByIdMap.get(id));
     }
 
-    public Optional<DeviceProfile> findDeviceProfile(UUID id) {
+    public Optional<DeviceProfile> findDeviceProfile(String id) {
         return Optional.ofNullable(deviceProfileByIdMap.get(id));
     }
 

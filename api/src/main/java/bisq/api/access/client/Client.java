@@ -21,7 +21,6 @@ import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingRequestPayload;
 import bisq.api.access.pairing.PairingRequestPayloadEncoder;
 import bisq.api.access.permissions.Permission;
-import bisq.api.access.session.SessionToken;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
@@ -39,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public abstract class Client {
     protected String qrCode;
-    protected SessionToken sessionToken;
+    protected String sessionId;
     protected Set<Permission> grantedPermissions;
 
     public ClientIdentity createClientIdentity(String deviceName) {
@@ -67,5 +66,5 @@ public abstract class Client {
     }
 
     // TODO on Mobile client: implement sending of request
-    public abstract CompletableFuture<SessionToken> sendRequest(PairingRequest request);
+    public abstract CompletableFuture<String> sendRequest(PairingRequest request);
 }

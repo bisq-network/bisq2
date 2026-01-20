@@ -15,13 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.pairing;
+package bisq.api.dto.access.pairing;
 
-public record PairingRequestPayloadDto(
-        byte version,
-        String pairingCodeId,
-        String clientPublicKeyBase64,
-        String deviceName,
-        long timestampEpochMillis
-) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+@Getter
+@EqualsAndHashCode
+public final class PairingResponseDto {
+    private final String deviceSecret;
+    private final String sessionId;
+    private final long expiresAt;
+
+    public PairingResponseDto(String deviceSecret, String sessionId, long expiresAt) {
+        this.deviceSecret = deviceSecret;
+        this.sessionId = sessionId;
+        this.expiresAt = expiresAt;
+    }
 }
