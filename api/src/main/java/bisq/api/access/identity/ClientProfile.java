@@ -24,16 +24,16 @@ import java.security.PublicKey;
 
 @Getter
 @EqualsAndHashCode
-public class DeviceProfile {
-    private final String deviceId;
-    private final String deviceSecret;
-    private final String deviceName;
+public class ClientProfile {
+    private final String clientId;
+    private final String clientSecret;
+    private final String clientName;
     private final PublicKey publicKey;
 
-    public DeviceProfile(String deviceId, String deviceSecret, String deviceName, PublicKey publicKey) {
-        this.deviceId = deviceId;
-        this.deviceSecret = deviceSecret;
-        this.deviceName = deviceName;
+    public ClientProfile(String clientId, String clientSecret, String clientName, PublicKey publicKey) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.clientName = clientName;
         this.publicKey = publicKey;
     }
 }

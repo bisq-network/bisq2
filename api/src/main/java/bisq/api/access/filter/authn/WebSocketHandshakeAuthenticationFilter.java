@@ -105,7 +105,7 @@ public class WebSocketHandshakeAuthenticationFilter extends BaseFilter {
 
             HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.IS_AUTHENTICATED, true);
             HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.SESSION_ID, session.getSessionId());
-            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.DEVICE_ID, session.getDeviceId());
+            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, session.getClientId());
 
             return context.getInvokeAction();
 

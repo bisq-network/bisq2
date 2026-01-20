@@ -23,13 +23,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PermissionService<T extends PermissionMapping> {
     @Getter
     private final T permissionMapping;
-    private final Map<String, Set<Permission>> permissionsByDeviceId = new ConcurrentHashMap<>();
+    private final Map<String, Set<Permission>> permissionsByClientId = new ConcurrentHashMap<>();
 
     public PermissionService(T permissionMapping) {
         this.permissionMapping = permissionMapping;
@@ -39,12 +38,12 @@ public class PermissionService<T extends PermissionMapping> {
         return granted.contains(required);
     }
 
-    public void setDevicePermissions(String deviceId, Set<Permission> permissions) {
-        permissionsByDeviceId.put(deviceId, permissions);
+    public void setPermissions(String clientId, Set<Permission> permissions) {
+        permissionsByClientId.put(clientId, permissions);
     }
 
-    public Optional<Set<Permission>> findPermissions(UUID deviceId) {
-        return Optional.ofNullable(permissionsByDeviceId.get(deviceId))
+    public Optional<Set<Permission>> findPermissions(String clientId) {
+        return Optional.ofNullable(permissionsByClientId.get(clientId))
                 .map(Collections::unmodifiableSet);
     }
 }

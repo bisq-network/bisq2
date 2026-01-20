@@ -58,7 +58,7 @@ public class RestApiAuthenticationFilter extends RestApiFilter {
 
             context.setProperty(Attributes.IS_AUTHENTICATED, true);
             context.setProperty(Attributes.SESSION_ID, session.getSessionId());
-            context.setProperty(Attributes.DEVICE_ID, session.getDeviceId());
+            context.setProperty(Attributes.CLIENT_ID, session.getClientId());
         } catch (Exception e) {
             log.warn("Authentication failed", e);
             throw new WebApplicationException(

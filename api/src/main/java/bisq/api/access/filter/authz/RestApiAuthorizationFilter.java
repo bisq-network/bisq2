@@ -17,7 +17,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 // TODO
 @Slf4j
@@ -40,13 +39,13 @@ public class RestApiAuthorizationFilter extends RestApiFilter {
         try {
             httpEndpointValidator.validate(requestUri);
 
-            UUID deviceId = (UUID) context.getProperty(Attributes.DEVICE_ID);
-            if (deviceId == null) {
+            String clientId = (String) context.getProperty(Attributes.CLIENT_ID);
+            if (clientId == null) {
                 throw new AuthorizationException("Missing authenticated device ID");
             }
-            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(deviceId);
+            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(clientId);
             if (optionalPermissionSet.isEmpty()) {
-                throw new AuthorizationException("No permissions found for device " + deviceId);
+                throw new AuthorizationException("No permissions found for device " + clientId);
             }
             Set<Permission> granted = optionalPermissionSet.get();
             Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());

@@ -17,7 +17,7 @@
 
 package bisq.api.access.pairing;
 
-import bisq.api.access.identity.DeviceProfile;
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
@@ -43,7 +43,7 @@ public class PairingService {
     private final PermissionService<? extends PermissionMapping> permissionService;
 
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
-    private final Map<String, DeviceProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
+    private final Map<String, ClientProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
 
     public PairingService(PermissionService<? extends PermissionMapping> permissionService) {
         this.permissionService = permissionService;
@@ -61,7 +61,7 @@ public class PairingService {
         return pairingCode;
     }
 
-    public DeviceProfile pairDevice(PairingRequest request) throws InvalidPairingRequestException {
+    public ClientProfile pairDevice(PairingRequest request) throws InvalidPairingRequestException {
         PairingRequestPayload payload = request.getPairingRequestPayload();
         String pairingCodeId = payload.getPairingCodeId();
         PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
@@ -80,25 +80,25 @@ public class PairingService {
         // Mark used by removing it
         //pairingCodeByIdMap.remove(pairingCodeId, pairingCode);  //todo
 
-        String deviceId = UUID.randomUUID().toString();
+        String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
-        String deviceSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
-        DeviceProfile deviceProfile = new DeviceProfile(deviceId,
-                deviceSecret,
+        String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
+        ClientProfile clientProfile = new ClientProfile(clientId,
+                clientSecret,
                 payload.getDeviceName(),
                 payload.getClientPublicKey());
-        deviceProfileByIdMap.put(deviceId, deviceProfile);
+        deviceProfileByIdMap.put(clientId, clientProfile);
 
-        permissionService.setDevicePermissions(deviceId, pairingCode.getGrantedPermissions());
+        permissionService.setPermissions(clientId, pairingCode.getGrantedPermissions());
 
-        return deviceProfile;
+        return clientProfile;
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
         return Optional.ofNullable(pairingCodeByIdMap.get(id));
     }
 
-    public Optional<DeviceProfile> findDeviceProfile(String id) {
+    public Optional<ClientProfile> findDeviceProfile(String id) {
         return Optional.ofNullable(deviceProfileByIdMap.get(id));
     }
 

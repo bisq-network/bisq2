@@ -17,7 +17,7 @@
 
 package bisq.api.access;
 
-import bisq.api.access.identity.DeviceProfile;
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingResponse;
@@ -42,18 +42,18 @@ public class ApiAccessService {
     }
 
     public PairingResponse handlePairingRequest(PairingRequest request) throws InvalidPairingRequestException {
-        DeviceProfile deviceProfile = pairingService.pairDevice(request);
-        String deviceSecret = deviceProfile.getDeviceSecret();
-        SessionToken sessionToken = sessionService.createSession(deviceProfile.getDeviceId());
+        ClientProfile deviceProfile = pairingService.pairDevice(request);
+        String deviceSecret = deviceProfile.getClientSecret();
+        SessionToken sessionToken = sessionService.createSession(deviceProfile.getClientId());
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new PairingResponse(deviceSecret, sessionToken.getSessionId(), expiresAt);
     }
 
     public SessionResponse handleSessionRequest(SessionRequest request) throws InvalidSessionRequestException {
         String clientId = request.getClientId();
-        DeviceProfile deviceProfile = pairingService.findDeviceProfile(clientId)
+        ClientProfile deviceProfile = pairingService.findDeviceProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
-        String deviceSecret = deviceProfile.getDeviceSecret();
+        String deviceSecret = deviceProfile.getClientSecret();
 
         if (!deviceSecret.equals(request.getClientSecret())) {
             throw new InvalidSessionRequestException("Client secret is not matching");

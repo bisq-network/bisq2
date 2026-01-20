@@ -40,7 +40,7 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String method;
     private String body;
     private Map<String, String> headers;
-    private String deviceId;
+    private String clientId;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&
@@ -48,7 +48,7 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
                 message.contains("method") &&
                 message.contains("body") &&
                 message.contains("headers") &&
-                message.contains("deviceId");
+                message.contains("clientId");
     }
 
     public static Optional<WebSocketRestApiRequest> fromJson(String json) {

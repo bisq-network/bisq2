@@ -17,7 +17,7 @@
 
 package bisq.api.access.filter.authn;
 
-import bisq.api.access.identity.DeviceProfile;
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.session.SessionToken;
@@ -88,7 +88,7 @@ public final class SessionAuthenticationService {
                 throw new AuthenticationException("Session expired");
             }
 
-            DeviceProfile deviceProfile = pairingService.findDeviceProfile(session.getDeviceId())
+            ClientProfile deviceProfile = pairingService.findDeviceProfile(session.getClientId())
                     .orElseThrow(() -> new AuthenticationException("Unknown device"));
 
             String signedMessage = buildCanonicalRequest(
@@ -109,7 +109,7 @@ public final class SessionAuthenticationService {
 
             return new AuthenticatedSession(
                     session.getSessionId(),
-                    session.getDeviceId()
+                    session.getClientId()
             );
         } catch (Exception e) {
             throw new AuthenticationException(e.getMessage(), e);
