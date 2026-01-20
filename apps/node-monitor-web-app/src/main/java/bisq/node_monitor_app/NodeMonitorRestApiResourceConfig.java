@@ -9,10 +9,12 @@ import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.network.NetworkService;
 import bisq.node_monitor.NodeMonitorRestApi;
 import bisq.node_monitor.NodeMonitorService;
+import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 @Slf4j
+@ApplicationPath("/api/v1")
 public class NodeMonitorRestApiResourceConfig extends RestApiBaseResourceConfig {
     public NodeMonitorRestApiResourceConfig(ApiConfig apiConfig,
                                             PairingApi pairingApi,

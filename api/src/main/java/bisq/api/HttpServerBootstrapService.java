@@ -23,6 +23,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
+import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.api.web_socket.WebSocketService;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
@@ -33,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
-import org.glassfish.grizzly.http.server.StaticHttpHandler;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
@@ -209,7 +209,7 @@ public class HttpServerBootstrapService implements Service {
 
     public void addStaticFileHandler(String path, String context) {
         httpServer.ifPresentOrElse(httpServer ->
-                        httpServer.getServerConfiguration().addHttpHandler(new StaticHttpHandler(context), path),
+                        httpServer.getServerConfiguration().addHttpHandler(new StaticFileHandler(context), path),
                 () -> log.error("addStaticFileHandler called before httpServer is set."));
     }
 
