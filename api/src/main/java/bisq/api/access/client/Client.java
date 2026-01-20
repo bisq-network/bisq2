@@ -41,10 +41,10 @@ public abstract class Client {
     protected String sessionId;
     protected Set<Permission> grantedPermissions;
 
-    public ClientIdentity createClientIdentity(String deviceName) {
+    public ClientIdentity createClientIdentity(String clientName) {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         // TODO on Mobile client: Allow user to set device name, store ClientIdentity
-        return new ClientIdentity(deviceName, keyPair);
+        return new ClientIdentity(clientName, keyPair);
     }
 
     // TODO on Mobile client: implement reader
@@ -54,7 +54,7 @@ public abstract class Client {
                                                ClientIdentity clientIdentity) throws GeneralSecurityException {
         PairingRequestPayload payload = new PairingRequestPayload(pairingCodeId,
                 clientIdentity.getPublicKey(),
-                clientIdentity.getDeviceName(),
+                clientIdentity.getClientName(),
                 Instant.now());
         byte[] signature = sign(payload, clientIdentity.getKeyPair().getPrivate());
         return new PairingRequest(payload, signature);

@@ -23,12 +23,17 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public final class PairingResponseDto {
-    private final String deviceSecret;
+    private final String clientId;
+    private final String clientSecret;
     private final String sessionId;
     private final long expiresAt;
 
-    public PairingResponseDto(String deviceSecret, String sessionId, long expiresAt) {
-        this.deviceSecret = deviceSecret;
+    public PairingResponseDto(String clientId,
+                              String clientSecret,
+                              String sessionId,
+                              long expiresAt) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
         this.sessionId = sessionId;
         this.expiresAt = expiresAt;
     }

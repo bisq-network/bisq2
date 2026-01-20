@@ -43,19 +43,20 @@ public class ApiAccessService {
 
     public PairingResponse handlePairingRequest(PairingRequest request) throws InvalidPairingRequestException {
         ClientProfile deviceProfile = pairingService.pairDevice(request);
-        String deviceSecret = deviceProfile.getClientSecret();
-        SessionToken sessionToken = sessionService.createSession(deviceProfile.getClientId());
+        String clientSecret = deviceProfile.getClientSecret();
+        String clientId = deviceProfile.getClientId();
+        SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
-        return new PairingResponse(deviceSecret, sessionToken.getSessionId(), expiresAt);
+        return new PairingResponse(clientId,clientSecret, sessionToken.getSessionId(), expiresAt);
     }
 
     public SessionResponse handleSessionRequest(SessionRequest request) throws InvalidSessionRequestException {
         String clientId = request.getClientId();
         ClientProfile deviceProfile = pairingService.findDeviceProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
-        String deviceSecret = deviceProfile.getClientSecret();
+        String clientSecret = deviceProfile.getClientSecret();
 
-        if (!deviceSecret.equals(request.getClientSecret())) {
+        if (!clientSecret.equals(request.getClientSecret())) {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 

@@ -21,7 +21,7 @@ public record PairingRequestPayloadDto(
         byte version,
         String pairingCodeId,
         String clientPublicKeyBase64,
-        String deviceName,
+        String clientName,
         long timestampEpochMillis
 ) {
 }

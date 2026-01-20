@@ -19,7 +19,6 @@ package bisq.api.rest_api.endpoints.access;
 
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.ApiAccessService;
-import bisq.api.access.filter.Headers;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingResponse;
@@ -29,6 +28,7 @@ import bisq.api.access.session.SessionResponse;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.access.pairing.PairingRequestDto;
 import bisq.api.dto.access.pairing.PairingResponseDto;
+import bisq.api.dto.access.session.SessionRequestDto;
 import bisq.api.dto.access.session.SessionResponseDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,12 +38,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +51,8 @@ import lombok.extern.slf4j.Slf4j;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(
         name = "Access",
-        description = "Endpoints for pairing a client device and establishing authenticated sessions"
+        description = "Endpoints for pairing a client device and establishing " +
+                "authenticated sessions"
 )
 public class AccessApi extends RestApiBase {
 
@@ -71,13 +69,13 @@ public class AccessApi extends RestApiBase {
             summary = "Request device pairing",
             description = """
                     Performs cryptographic pairing of a client device.
-
+                    
                     The client submits a signed pairing request containing:
                     - pairing code identifier
                     - device public key
                     - device name
                     - timestamp
-
+                    
                     On success, a short-lived session ID is created and returned.
                     """
     )
@@ -94,9 +92,9 @@ public class AccessApi extends RestApiBase {
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response requestPairing(
             @RequestBody(required = true)
-            PairingRequestDto request,
-            @Context HttpHeaders headers
+            PairingRequestDto request
     ) {
+        log.error("requestPairing {}",request);
         try {
             PairingRequest pairingRequest =
                     DtoMappings.PairingRequestMapper.toBisq2Model(request);
@@ -107,15 +105,18 @@ public class AccessApi extends RestApiBase {
             PairingResponseDto response =
                     DtoMappings.PairingResponseMapper.fromBisq2Model(pairingResponse);
 
+            log.error("requestPairing was successful: {}",response);
             return buildResponse(Response.Status.CREATED, response);
 
         } catch (InvalidPairingRequestException e) {
             log.warn("Pairing request rejected", e);
-            return buildErrorResponse(Response.Status.UNAUTHORIZED, "Pairing request failed");
+            return buildErrorResponse(Response.Status.UNAUTHORIZED,
+                    "Pairing request failed");
 
         } catch (IllegalArgumentException e) {
             log.warn("Invalid pairing request payload", e);
-            return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid pairing request payload");
+            return buildErrorResponse(Response.Status.BAD_REQUEST,
+                    "Invalid pairing request payload");
 
         } catch (Exception e) {
             log.error("Unexpected error during pairing request", e);
@@ -131,10 +132,10 @@ public class AccessApi extends RestApiBase {
             description = """
                     Creates a new short-lived session for a client device using a
                     client identifier and shared device secret.
-
+                    
                     This endpoint is intentionally unauthenticated and is used during
                     initial client bootstrap or re-sessioning.
-
+                    
                     If the credentials are valid, a new session ID is issued together
                     with its expiration timestamp. The session ID must be supplied in
                     subsequent authenticated requests.
@@ -151,17 +152,18 @@ public class AccessApi extends RestApiBase {
     @ApiResponse(responseCode = "401", description = "Session request rejected")
     @ApiResponse(responseCode = "400", description = "Invalid session request payload")
     @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
-    public Response requestNewSession(
-            @HeaderParam(Headers.DEVICE_ID) String clientId,
-            @HeaderParam(Headers.CLIENT_SECRET) String clientSecret
-    ) {
+    public Response requestSession(
+            SessionRequestDto request
+    ) { log.error("requestSession {}",request);
         try {
-            if (clientId == null || clientSecret == null) {
+            if (request == null ||
+                    request.clientId() == null ||
+                    request.clientSecret() == null) {
                 throw new IllegalArgumentException("Missing client credentials");
             }
 
             SessionRequest sessionRequest =
-                    new SessionRequest(clientId, clientSecret);
+                    new SessionRequest(request.clientId(), request.clientSecret());
 
             SessionResponse sessionResponse =
                     apiAccessService.handleSessionRequest(sessionRequest);
@@ -171,16 +173,18 @@ public class AccessApi extends RestApiBase {
                             sessionResponse.getSessionId(),
                             sessionResponse.getExpiresAt()
                     );
-
+            log.error("requestSession was successful: {}",response);
             return buildResponse(Response.Status.CREATED, response);
 
         } catch (InvalidSessionRequestException e) {
             log.warn("Session request rejected", e);
-            return buildErrorResponse(Response.Status.UNAUTHORIZED, "Session request failed");
+            return buildErrorResponse(Response.Status.UNAUTHORIZED,
+                    "Session request failed");
 
         } catch (IllegalArgumentException e) {
             log.warn("Invalid session request payload", e);
-            return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid session request payload");
+            return buildErrorResponse(Response.Status.BAD_REQUEST,
+                    "Invalid session request payload");
 
         } catch (Exception e) {
             log.error("Unexpected error during session request", e);

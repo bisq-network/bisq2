@@ -32,16 +32,16 @@ public final class PairingRequestPayload {
 
     private final String pairingCodeId;
     private final PublicKey clientPublicKey;
-    private final String deviceName;
+    private final String clientName;
     private final Instant timestamp;
 
     public PairingRequestPayload(String pairingCodeId,
                                  PublicKey clientPublicKey,
-                                 String deviceName,
+                                 String clientName,
                                  Instant timestamp) {
         this.pairingCodeId = pairingCodeId;
         this.clientPublicKey = clientPublicKey;
-        this.deviceName = deviceName;
+        this.clientName = clientName;
         this.timestamp = timestamp;
     }
 }

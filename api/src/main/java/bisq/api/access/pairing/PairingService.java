@@ -85,7 +85,7 @@ public class PairingService {
         String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
         ClientProfile clientProfile = new ClientProfile(clientId,
                 clientSecret,
-                payload.getDeviceName(),
+                payload.getClientName(),
                 payload.getClientPublicKey());
         deviceProfileByIdMap.put(clientId, clientProfile);
 

@@ -176,7 +176,7 @@ public class DtoMappings {
             return new PairingRequestPayload(
                     dto.pairingCodeId(),
                     KeyGeneration.generatePublic(bisq.common.encoding.Base64.decode(dto.clientPublicKeyBase64()), KeyGeneration.EC),
-                    dto.deviceName(),
+                    dto.clientName(),
                     Instant.ofEpochMilli(dto.timestampEpochMillis())
             );
         }
@@ -196,7 +196,7 @@ public class DtoMappings {
                     PairingRequestPayload.VERSION,
                     payload.getPairingCodeId(),
                     bisq.common.encoding.Base64.encode(payload.getClientPublicKey().getEncoded()),
-                    payload.getDeviceName(),
+                    payload.getClientName(),
                     payload.getTimestamp().toEpochMilli()
             );
         }
@@ -204,12 +204,12 @@ public class DtoMappings {
 
 
     public static class PairingResponseMapper {
-        public static PairingResponse toBisq2Model(PairingResponseDto dto) throws GeneralSecurityException {
+        public static PairingResponse toBisq2Model(PairingResponseDto dto) {
             if (dto == null) {
                 throw new IllegalArgumentException("Missing pairing request payload");
             }
 
-            return new PairingResponse(dto.getDeviceSecret(), dto.getSessionId(), dto.getExpiresAt());
+            return new PairingResponse(dto.getClientId(), dto.getClientSecret(), dto.getSessionId(), dto.getExpiresAt());
         }
 
         public static PairingResponseDto fromBisq2Model(PairingResponse model) {
@@ -217,7 +217,7 @@ public class DtoMappings {
                 throw new IllegalArgumentException("Missing pairing request");
             }
 
-            return new PairingResponseDto(model.getDeviceSecret(), model.getSessionId(), model.getExpiresAt());
+            return new PairingResponseDto(model.getClientId(), model.getClientSecret(), model.getSessionId(), model.getExpiresAt());
         }
     }
 
