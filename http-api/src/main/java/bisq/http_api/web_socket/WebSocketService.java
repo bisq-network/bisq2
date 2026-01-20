@@ -31,6 +31,7 @@ import bisq.http_api.ApiTorOnionService;
 import bisq.http_api.auth.AuthenticationAddOn;
 import bisq.http_api.auth.WebSocketMetadataAddOn;
 import bisq.http_api.config.CommonApiConfig;
+import bisq.http_api.push_notification.PushNotificationService;
 import bisq.http_api.validator.WebSocketRequestValidator;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
@@ -123,7 +124,8 @@ public class WebSocketService implements Service {
                             TradeService tradeService,
                             UserService userService,
                             BisqEasyService bisqEasyService,
-                            OpenTradeItemsService openTradeItemsService) {
+                            OpenTradeItemsService openTradeItemsService,
+                            Optional<PushNotificationService> pushNotificationService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
         ObjectMapper objectMapper = new ObjectMapper();
@@ -137,7 +139,8 @@ public class WebSocketService implements Service {
                 tradeService,
                 userService,
                 bisqEasyService,
-                openTradeItemsService);
+                openTradeItemsService,
+                pushNotificationService);
         WebSocketRequestValidator requestValidator = WebSocketRequestValidator.from(config);
         webSocketRestApiService = new WebSocketRestApiService(objectMapper, config.getRestApiBaseAddress(), requestValidator);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);

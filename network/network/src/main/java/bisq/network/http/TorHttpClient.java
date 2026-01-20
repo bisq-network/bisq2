@@ -25,16 +25,20 @@ import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -111,9 +115,28 @@ public class TorHttpClient extends BaseHttpClient {
                             .build()) // Timeout waiting for response
                     .build());
             var uri = URI.create(baseUrl);
-            var request = new HttpGet("/" + param);
+
+            // Create the appropriate HTTP request based on the method
+            // Following the same pattern as ClearNetHttpClient:
+            // - For GET: param is the URL path/query, appended to baseUrl
+            // - For POST: param is the request body, baseUrl includes the full path
+            HttpUriRequestBase request;
+            if (httpMethod == HttpMethod.POST) {
+                // For POST, use the full URI path from baseUrl
+                String path = uri.getPath();
+                if (path == null || path.isEmpty()) {
+                    path = "/";
+                }
+                HttpPost postRequest = new HttpPost(path);
+                postRequest.setEntity(new StringEntity(param, StandardCharsets.UTF_8));
+                request = postRequest;
+            } else {
+                // For GET, append param to the path
+                request = new HttpGet("/" + param);
+            }
+
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
-            var target = new HttpHost(uri.getScheme(), uri.getHost());
+            var target = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
             return closeableHttpClient.execute(target, request, response -> {
                 String responseString = inputStreamToString(response.getEntity().getContent());
                 int statusCode = response.getCode();

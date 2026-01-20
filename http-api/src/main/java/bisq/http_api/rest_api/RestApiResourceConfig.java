@@ -2,6 +2,7 @@ package bisq.http_api.rest_api;
 
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
+import bisq.http_api.rest_api.domain.devices.DevicesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
@@ -28,7 +29,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  ExplorerRestApi explorerRestApi,
                                  FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
-                                 UserProfileRestApi userProfileRestApi) {
+                                 UserProfileRestApi userProfileRestApi,
+                                 DevicesRestApi devicesRestApi) {
         super(config);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
@@ -46,6 +48,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(FiatPaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
+        register(DevicesRestApi.class);
 
         register(new AbstractBinder() {
             @Override
@@ -60,6 +63,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(fiatPaymentAccountsRestApi).to(FiatPaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
+                bind(devicesRestApi).to(DevicesRestApi.class);
             }
         });
     }

@@ -20,6 +20,7 @@ package bisq.http_api.web_socket.domain.trades;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
+import bisq.http_api.push_notification.PushNotificationService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.subscription.ModificationType;
@@ -38,15 +39,18 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADES;
 @Slf4j
 public class TradesWebSocketService extends BaseWebSocketService {
     private final OpenTradeItemsService openTradeItemsService;
+    private final Optional<PushNotificationService> pushNotificationService;
     @Nullable
     private Pin tradesPin;
 
     public TradesWebSocketService(ObjectMapper objectMapper,
                                   SubscriberRepository subscriberRepository,
-                                  OpenTradeItemsService openTradeItemsService) {
+                                  OpenTradeItemsService openTradeItemsService,
+                                  Optional<PushNotificationService> pushNotificationService) {
         super(objectMapper, subscriberRepository, TRADES);
 
         this.openTradeItemsService = openTradeItemsService;
+        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -56,18 +60,34 @@ public class TradesWebSocketService extends BaseWebSocketService {
             @Override
             public void add(TradeItemPresentationDto item) {
                 send(item, ModificationType.ADDED);
+                // Note: Push notifications for new trades are handled by TradePropertiesWebSocketService
+                // which observes trade state changes. This avoids duplicate notifications.
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof TradeItemPresentationDto item) {
                     send(item, ModificationType.REMOVED);
+                    // Clean up notification records for this trade
+                    pushNotificationService.ifPresent(service -> {
+                        String tradeId = item.channel().tradeId();
+                        service.removeNotificationsForTrade(tradeId);
+                        log.debug("Cleaned up notification records for removed trade {}", tradeId);
+                    });
                 }
             }
 
             @Override
             public void clear() {
                 send(openTradeItemsService.getItems().getList(), ModificationType.REMOVED);
+                // Clean up notification records for all trades being cleared
+                pushNotificationService.ifPresent(service -> {
+                    openTradeItemsService.getItems().getList().forEach(item -> {
+                        String tradeId = item.channel().tradeId();
+                        service.removeNotificationsForTrade(tradeId);
+                    });
+                    log.debug("Cleaned up notification records for all cleared trades");
+                });
             }
         });
         return CompletableFuture.completedFuture(true);

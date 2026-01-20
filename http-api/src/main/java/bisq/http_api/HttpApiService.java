@@ -25,7 +25,11 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.push_notification.DeviceRegistrationService;
+import bisq.http_api.push_notification.PushNotificationConfig;
+import bisq.http_api.push_notification.PushNotificationService;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
+import bisq.http_api.rest_api.domain.devices.DevicesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
@@ -62,9 +66,12 @@ public class HttpApiService implements Service {
     private final Optional<RestApiService> restApiService;
     @Getter
     private final Optional<WebSocketService> webSocketService;
+    private final Optional<DeviceRegistrationService> deviceRegistrationService;
+    private final Optional<PushNotificationService> pushNotificationService;
 
     public HttpApiService(RestApiService.Config restApiConfig,
                           WebSocketService.Config webSocketConfig,
+                          PushNotificationConfig pushNotificationConfig,
                           Path appDataDirPath,
                           SecurityService securityService,
                           NetworkService networkService,
@@ -81,6 +88,20 @@ public class HttpApiService implements Service {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
+            // Initialize device registration service for push notifications
+            deviceRegistrationService = Optional.of(new DeviceRegistrationService(appDataDirPath));
+            // Initialize push notification service if enabled
+            if (pushNotificationConfig.isEnabled()) {
+                pushNotificationService = Optional.of(new PushNotificationService(
+                        deviceRegistrationService.get(),
+                        pushNotificationConfig.getBisqRelayUrl(),
+                        Optional.of(networkService),
+                        appDataDirPath));
+                log.info("Push notification service enabled with Bisq Relay URL: {}", pushNotificationConfig.getBisqRelayUrl());
+            } else {
+                pushNotificationService = Optional.empty();
+                log.info("Push notification service disabled");
+            }
             OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                     bondedRolesService.getMarketPriceService(),
                     userService);
@@ -100,6 +121,7 @@ public class HttpApiService implements Service {
                     userService.getRepublishUserProfileService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
+            DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService.get());
 
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig,
@@ -112,7 +134,8 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         fiatPaymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi);
+                        userProfileRestApi,
+                        devicesRestApi);
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
@@ -129,7 +152,8 @@ public class HttpApiService implements Service {
                         explorerRestApi,
                         fiatPaymentAccountsRestApi,
                         reputationRestApi,
-                        userProfileRestApi);
+                        userProfileRestApi,
+                        devicesRestApi);
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketResourceConfig,
                         appDataDirPath,
@@ -140,7 +164,8 @@ public class HttpApiService implements Service {
                         tradeService,
                         userService,
                         bisqEasyService,
-                        openTradeItemsService));
+                        openTradeItemsService,
+                        pushNotificationService));
             } else {
                 webSocketService = Optional.empty();
             }
@@ -148,12 +173,18 @@ public class HttpApiService implements Service {
         } else {
             restApiService = Optional.empty();
             webSocketService = Optional.empty();
+            deviceRegistrationService = Optional.empty();
+            pushNotificationService = Optional.empty();
         }
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return CompletableFutureUtils.allOf(
+                        deviceRegistrationService.map(DeviceRegistrationService::initialize)
+                                .orElse(CompletableFuture.completedFuture(true)),
+                        pushNotificationService.map(PushNotificationService::initialize)
+                                .orElse(CompletableFuture.completedFuture(true)),
                         restApiService.map(RestApiService::initialize)
                                 .orElse(CompletableFuture.completedFuture(true)),
                         webSocketService.map(WebSocketService::initialize)
@@ -165,6 +196,10 @@ public class HttpApiService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFutureUtils.allOf(
+                        deviceRegistrationService.map(DeviceRegistrationService::shutdown)
+                                .orElse(CompletableFuture.completedFuture(true)),
+                        pushNotificationService.map(PushNotificationService::shutdown)
+                                .orElse(CompletableFuture.completedFuture(true)),
                         restApiService.map(RestApiService::shutdown)
                                 .orElse(CompletableFuture.completedFuture(true)),
                         webSocketService.map(WebSocketService::shutdown)

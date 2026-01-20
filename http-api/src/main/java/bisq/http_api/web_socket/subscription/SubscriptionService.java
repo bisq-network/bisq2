@@ -22,6 +22,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.http_api.push_notification.PushNotificationService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
@@ -63,15 +64,16 @@ public class SubscriptionService implements Service {
                                TradeService tradeService,
                                UserService userService,
                                BisqEasyService bisqEasyService,
-                               OpenTradeItemsService openTradeItemsService) {
+                               OpenTradeItemsService openTradeItemsService,
+                               Optional<PushNotificationService> pushNotificationService) {
         this.objectMapper = objectMapper;
         subscriberRepository = new SubscriberRepository();
 
         marketPriceWebSocketService = new MarketPriceWebSocketService(objectMapper, subscriberRepository, bondedRolesService);
         numOffersWebSocketService = new NumOffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bisqEasyService);
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
-        tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
-        tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
+        tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService, pushNotificationService);
+        tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService, chatService.getBisqEasyOpenTradeChannelService(), userService.getUserProfileService(), pushNotificationService);
         tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(objectMapper,
                 subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService(),
