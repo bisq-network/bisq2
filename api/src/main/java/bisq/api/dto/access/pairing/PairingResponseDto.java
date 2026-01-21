@@ -27,17 +27,17 @@ public final class PairingResponseDto {
     private final String clientId;
     private final String clientSecret;
     private final String sessionId;
-    private final long expiresAt;
+    private final long sessionExpiryDate;
 
     public PairingResponseDto(byte version,
                               String clientId,
                               String clientSecret,
                               String sessionId,
-                              long expiresAt) {
+                              long sessionExpiryDate) {
         this.version = version;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.sessionId = sessionId;
-        this.expiresAt = expiresAt;
+        this.sessionExpiryDate = sessionExpiryDate;
     }
 }

@@ -58,7 +58,6 @@ public class PairingService {
         return pairingCode;
     }
 
-
     public ClientProfile pairDevice(byte version,
                                     String pairingCodeId,
                                     String clientName) throws InvalidPairingRequestException {

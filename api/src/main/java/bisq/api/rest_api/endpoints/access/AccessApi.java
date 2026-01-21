@@ -102,7 +102,7 @@ public class AccessApi extends RestApiBase {
                             pairingResponse.getClientId(),
                             pairingResponse.getClientSecret(),
                             pairingResponse.getSessionId(),
-                            pairingResponse.getExpiresAt());
+                            pairingResponse.getSessionExpiryDate());
 
             log.error("requestPairing was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);

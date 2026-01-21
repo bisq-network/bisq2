@@ -1,3 +1,5 @@
+// TODO needs update with recent changes
+
 # API architecture
 
 The API module provides a **unified, transport-agnostic interface** for interacting with the server via **REST**, **WebSocket**, or a combination of both. It is fully configurable, supports optional authentication, TLS, Tor client authentication and is designed to allow future protocols (e.g., gRPC) to be added with minimal impact.
