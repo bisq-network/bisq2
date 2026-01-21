@@ -50,4 +50,8 @@ public class WalletMarketUtil {
             throw new IllegalStateException("Market not supported for conversion. market=" + market);
         }
     }
+
+    static String getSortingPrefix(boolean isCryptoMarket) {
+        return isCryptoMarket ? "0_" : "1_";
+    }
 }
