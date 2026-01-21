@@ -71,6 +71,6 @@ public class MarketItem implements CurrencyConverterListItem {
 
     @Override
     public String getComparatorValue() {
-        return amountCode;
+        return WalletMarketUtil.getSortingPrefix(market.isCrypto()) + amountCode;
     }
 }

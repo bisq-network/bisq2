@@ -21,6 +21,6 @@ public record HeaderItem(String headerTitle, boolean isCrypto) implements Curren
     @Override
     public String getComparatorValue() {
         // Make sure headers are always on top
-        return "AAA";
+        return WalletMarketUtil.getSortingPrefix(isCrypto) + "AAA";
     }
 }
