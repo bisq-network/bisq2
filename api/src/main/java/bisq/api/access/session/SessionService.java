@@ -27,6 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionService {
     private final Map<String, SessionToken> sessionTokenBySessionIdMap = new ConcurrentHashMap<>();
 
+    public SessionService() {
+    }
+
     public SessionToken createSession(String clientId) {
         SessionToken token = new SessionToken(clientId);
         sessionTokenBySessionIdMap.put(token.getSessionId(), token);

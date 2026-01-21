@@ -28,7 +28,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.util.Optional;
 
 @Slf4j
 @Priority(Priorities.AUTHENTICATION)
@@ -47,13 +46,8 @@ public class RestApiAuthenticationFilter extends RestApiFilter {
             String bodySha256Hex = AuthUtils.getBodySha256Hex(context);
 
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
-                    context.getHeaderString(Headers.SESSION_ID),
-                    context.getMethod(),
-                    requestUri,
-                    context.getHeaderString(Headers.NONCE),
-                    context.getHeaderString(Headers.TIMESTAMP),
-                    context.getHeaderString(Headers.SIGNATURE),
-                    Optional.ofNullable(bodySha256Hex)
+                    context.getHeaderString(Headers.CLIENT_ID),
+                    context.getHeaderString(Headers.SESSION_ID)
             );
 
             context.setProperty(Attributes.IS_AUTHENTICATED, true);

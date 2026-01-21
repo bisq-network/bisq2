@@ -17,9 +17,7 @@ public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig
                                      SessionAuthenticationService sessionAuthenticationService) {
         super(pairingApi);
 
-        if (apiConfig.isSignatureBasedAuthenticationRequired()) {
-            register(new RestApiAuthenticationFilter(sessionAuthenticationService));
-        }
+        register(new RestApiAuthenticationFilter(sessionAuthenticationService));
         if (apiConfig.isAuthorizationRequired()) {
             register(new RestApiAuthorizationFilter(permissionService,
                     apiConfig.getRestAllowEndpoints(),

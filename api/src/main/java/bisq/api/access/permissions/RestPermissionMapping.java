@@ -18,10 +18,12 @@
 package bisq.api.access.permissions;
 
 import jakarta.ws.rs.ForbiddenException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public final class RestPermissionMapping implements PermissionMapping {
     private final List<PermissionRule> rules;
 
@@ -37,17 +39,18 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identity(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),
-                new PermissionRule("^/user-profile(/.*)?$", Optional.empty(), Permission.USER_PROFILES)
+                new PermissionRule("^/user-profiles(/.*)?$", Optional.empty(), Permission.USER_PROFILES)
         );
     }
 
     @Override
     public Permission getRequiredPermission(String path, String method) {
+        String normalizedPath = path.replace("/api/v1","");
         return rules.stream()
-                .filter(rule -> rule.matches(path, method))
+                .filter(rule -> rule.matches(normalizedPath, method))
                 .map(PermissionRule::permission)
                 .findFirst()
-                .orElseThrow(() -> new ForbiddenException("Access denied"));
+                .orElseThrow(() -> new ForbiddenException("Required permissions not granted"));
     }
 }
 

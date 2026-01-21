@@ -29,7 +29,6 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.http.Protocol;
 import org.glassfish.grizzly.http.util.HttpStatus;
 
-import java.net.URI;
 import java.util.Optional;
 
 @Slf4j
@@ -75,32 +74,11 @@ public class WebSocketHandshakeAuthenticationFilter extends BaseFilter {
             context.getConnection().closeSilently();
             return context.getStopAction();
         }
-
         HttpRequestPacket request = requestOpt.get();
         try {
-            URI requestUri;
-            try {
-                requestUri = URI.create(request.getRequestURI());
-            } catch (IllegalArgumentException e) {
-                log.warn("WebSocket auth rejected: malformed URI: {}", request.getRequestURI());
-                HttpResponsePacket response = HttpResponsePacket.builder(request)
-                        .status(HttpStatus.BAD_REQUEST_400.getStatusCode())
-                        .protocol(Protocol.HTTP_1_1)
-                        .contentLength(0)
-                        .build();
-                context.write(response);
-                context.getConnection().closeSilently();
-                return context.getStopAction();
-            }
-
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
-                    request.getHeader(Headers.SESSION_ID),
-                    request.getMethod().getMethodString(),
-                    requestUri,
-                    request.getHeader(Headers.NONCE),
-                    request.getHeader(Headers.TIMESTAMP),
-                    request.getHeader(Headers.SIGNATURE),
-                    Optional.empty()
+                    request.getHeader(Headers.CLIENT_ID),
+                    request.getHeader(Headers.SESSION_ID)
             );
 
             HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.IS_AUTHENTICATED, true);
