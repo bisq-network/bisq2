@@ -169,7 +169,6 @@ public class MarketPriceComponent {
         private static final double LIST_MENU_CELL_HEIGHT = 50;
 
         private final Label codes, price;
-        private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
         private final Tooltip tooltip;
         private final Label staleIcon;
@@ -192,11 +191,6 @@ public class MarketPriceComponent {
             price.getStyleClass().add("bisq-text-19");
 
             progressBarWithLabel = new ProgressBarWithLabel(Res.get("component.marketPrice.requesting"));
-
-            arrow = ImageUtil.getImageViewById("arrow-down");
-            arrow.setMouseTransparent(true);
-            arrow.setVisible(false);
-            arrow.setManaged(false);
 
             tooltip = new BisqTooltip();
             Tooltip.install(root, tooltip);
@@ -226,8 +220,6 @@ public class MarketPriceComponent {
             codes.textProperty().bind(model.codes);
             pricePin = EasyBind.subscribe(model.price, priceValue -> {
                 boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
-                arrow.setVisible(isPriceSet);
-                arrow.setManaged(isPriceSet);
                 progressBarWithLabel.setVisible(!isPriceSet);
                 progressBarWithLabel.setManaged(!isPriceSet);
                 progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
