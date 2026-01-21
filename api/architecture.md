@@ -57,7 +57,7 @@ api = {
         }
 
         security = {
-            signatureBasedAuthenticationRequired = false
+            supportSessionHandling = true
             authorizationRequired = true
 
             rest = {

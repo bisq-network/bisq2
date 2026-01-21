@@ -49,7 +49,7 @@ public final class ApiConfig {
     private final List<String> tlsKeyStoreSan;
 
     // api.server.security.*
-    private final boolean signatureBasedAuthenticationRequired;
+    private final boolean supportSessionHandling;
     private final boolean authorizationRequired;
 
     // api.server.security.rest.*
@@ -67,7 +67,7 @@ public final class ApiConfig {
             String bindHost,
             int bindPort,
             int onionServicePort,
-            boolean signatureBasedAuthenticationRequired,
+            boolean supportSessionHandling,
             boolean authorizationRequired,
             boolean tlsRequired,
             String tlsKeyStorePassword,
@@ -84,7 +84,7 @@ public final class ApiConfig {
         this.bindHost = bindHost;
         this.bindPort = bindPort;
         this.onionServicePort = onionServicePort;
-        this.signatureBasedAuthenticationRequired = signatureBasedAuthenticationRequired;
+        this.supportSessionHandling = supportSessionHandling;
         this.authorizationRequired = authorizationRequired;
         this.tlsRequired = tlsRequired;
         this.tlsKeyStorePassword = tlsKeyStorePassword;
@@ -138,7 +138,7 @@ public final class ApiConfig {
 
                 torConfig.getInt("onionServicePort"),
 
-                securityConfig.getBoolean("signatureBasedAuthenticationRequired"),
+                securityConfig.getBoolean("supportSessionHandling"),
                 securityConfig.getBoolean("authorizationRequired"),
 
                 tlsConfig.getBoolean("required"),
