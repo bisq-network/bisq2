@@ -81,6 +81,7 @@ public class WebSocketHandshakeMetaDataEnrichment extends BaseFilter {
                         }
 
                     }
+                    HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, request.getHeader(Headers.CLIENT_ID));
                 });
 
 

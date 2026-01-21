@@ -1,6 +1,6 @@
 package bisq.api.access.filter.authz;
 
-import bisq.api.access.filter.Attributes;
+import bisq.api.access.filter.Headers;
 import bisq.api.access.filter.RestApiFilter;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
@@ -39,13 +39,13 @@ public class RestApiAuthorizationFilter extends RestApiFilter {
         try {
             httpEndpointValidator.validate(requestUri);
 
-            String clientId = (String) context.getProperty(Attributes.CLIENT_ID);
+            String clientId = context.getHeaderString(Headers.CLIENT_ID);
             if (clientId == null) {
-                throw new AuthorizationException("Missing authenticated device ID");
+                throw new AuthorizationException("Missing clientId");
             }
             Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(clientId);
             if (optionalPermissionSet.isEmpty()) {
-                throw new AuthorizationException("No permissions found for device " + clientId);
+                throw new AuthorizationException("No permissions found for client " + clientId);
             }
             Set<Permission> granted = optionalPermissionSet.get();
             Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());

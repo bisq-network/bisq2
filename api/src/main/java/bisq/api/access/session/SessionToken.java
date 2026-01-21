@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 public class SessionToken {
-    public static final long TTL = TimeUnit.MINUTES.toSeconds(15);
+    public static final long TTL = TimeUnit.MINUTES.toSeconds(60);
 
     @Getter
     private final String sessionId;
