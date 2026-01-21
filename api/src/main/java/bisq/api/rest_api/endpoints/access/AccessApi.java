@@ -20,12 +20,10 @@ package bisq.api.rest_api.endpoints.access;
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.ApiAccessService;
 import bisq.api.access.pairing.InvalidPairingRequestException;
-import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingResponse;
+import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.InvalidSessionRequestException;
-import bisq.api.access.session.SessionRequest;
 import bisq.api.access.session.SessionResponse;
-import bisq.api.dto.DtoMappings;
 import bisq.api.dto.access.pairing.PairingRequestDto;
 import bisq.api.dto.access.pairing.PairingResponseDto;
 import bisq.api.dto.access.session.SessionRequestDto;
@@ -94,18 +92,19 @@ public class AccessApi extends RestApiBase {
             @RequestBody(required = true)
             PairingRequestDto request
     ) {
-        log.error("requestPairing {}",request);
+        log.error("requestPairing {}", request);
         try {
-            PairingRequest pairingRequest =
-                    DtoMappings.PairingRequestMapper.toBisq2Model(request);
-
             PairingResponse pairingResponse =
-                    apiAccessService.handlePairingRequest(pairingRequest);
+                    apiAccessService.requestPairing(request.version(), request.pairingCodeId(), request.clientName());
 
             PairingResponseDto response =
-                    DtoMappings.PairingResponseMapper.fromBisq2Model(pairingResponse);
+                    new PairingResponseDto(PairingService.VERSION,
+                            pairingResponse.getClientId(),
+                            pairingResponse.getClientSecret(),
+                            pairingResponse.getSessionId(),
+                            pairingResponse.getExpiresAt());
 
-            log.error("requestPairing was successful: {}",response);
+            log.error("requestPairing was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);
 
         } catch (InvalidPairingRequestException e) {
@@ -154,7 +153,8 @@ public class AccessApi extends RestApiBase {
     @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
     public Response requestSession(
             SessionRequestDto request
-    ) { log.error("requestSession {}",request);
+    ) {
+        log.error("requestSession {}", request);
         try {
             if (request == null ||
                     request.clientId() == null ||
@@ -162,18 +162,15 @@ public class AccessApi extends RestApiBase {
                 throw new IllegalArgumentException("Missing client credentials");
             }
 
-            SessionRequest sessionRequest =
-                    new SessionRequest(request.clientId(), request.clientSecret());
-
             SessionResponse sessionResponse =
-                    apiAccessService.handleSessionRequest(sessionRequest);
+                    apiAccessService.requestSession( request.clientId(), request.clientSecret());
 
             SessionResponseDto response =
                     new SessionResponseDto(
                             sessionResponse.getSessionId(),
                             sessionResponse.getExpiresAt()
                     );
-            log.error("requestSession was successful: {}",response);
+            log.error("requestSession was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);
 
         } catch (InvalidSessionRequestException e) {

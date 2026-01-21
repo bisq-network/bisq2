@@ -17,18 +17,11 @@
 
 package bisq.api.access.client;
 
-import bisq.api.access.pairing.PairingRequest;
-import bisq.api.access.pairing.PairingRequestPayload;
-import bisq.api.access.pairing.PairingRequestPayloadEncoder;
 import bisq.api.access.permissions.Permission;
-import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -49,22 +42,4 @@ public abstract class Client {
 
     // TODO on Mobile client: implement reader
     public abstract CompletableFuture<String> readQrCode();
-
-    public PairingRequest createPairingRequest(String pairingCodeId,
-                                               ClientIdentity clientIdentity) throws GeneralSecurityException {
-        PairingRequestPayload payload = new PairingRequestPayload(pairingCodeId,
-                clientIdentity.getPublicKey(),
-                clientIdentity.getClientName(),
-                Instant.now());
-        byte[] signature = sign(payload, clientIdentity.getKeyPair().getPrivate());
-        return new PairingRequest(payload, signature);
-    }
-
-    private byte[] sign(PairingRequestPayload payload, PrivateKey privateKey) throws GeneralSecurityException {
-        byte[] message = PairingRequestPayloadEncoder.encode(payload);
-        return SignatureUtil.sign(message, privateKey);
-    }
-
-    // TODO on Mobile client: implement sending of request
-    public abstract CompletableFuture<String> sendRequest(PairingRequest request);
 }

@@ -19,7 +19,6 @@ package bisq.api.access;
 
 import bisq.api.access.client.ClientIdentity;
 import bisq.api.access.pairing.PairingCode;
-import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.pairing.qr.PairingQrCode;
@@ -77,7 +76,7 @@ class ApiAccessIntegrationTest {
         PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
 
         PairingService pairingService = new PairingService(permissionService);
-        ApiAccessService pairingRequestHandler = new ApiAccessService(pairingService, sessionService);
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
 
         // ---------------------------------------------------------------------
         // Given: Client protocol (simulated)
@@ -121,17 +120,12 @@ class ApiAccessIntegrationTest {
                 PairingCode decodedPairingCode = qrData.getPairingCode();
                 client.setGrantedPermissions(decodedPairingCode.getGrantedPermissions());
 
-                // Create pairing request
-                PairingRequest pairingRequest =
-                        client.createPairingRequest(
-                                decodedPairingCode.getId(),
-                                clientIdentity
-                        );
-
                 // -----------------------------------------------------------------
                 // When: Server handles pairing request
                 // -----------------------------------------------------------------
-                PairingResponse pairingResponse= pairingRequestHandler.handlePairingRequest(pairingRequest);
+                PairingResponse pairingResponse = apiAccessService.requestPairing(PairingService.VERSION,
+                        decodedPairingCode.getId(),
+                        clientIdentity.getClientName());
                 String sessionId = pairingResponse.getSessionId();
 
                 // -----------------------------------------------------------------

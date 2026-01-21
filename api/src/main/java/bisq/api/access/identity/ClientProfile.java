@@ -20,20 +20,16 @@ package bisq.api.access.identity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.security.PublicKey;
-
 @Getter
 @EqualsAndHashCode
 public class ClientProfile {
     private final String clientId;
     private final String clientSecret;
     private final String clientName;
-    private final PublicKey publicKey;
 
-    public ClientProfile(String clientId, String clientSecret, String clientName, PublicKey publicKey) {
+    public ClientProfile(String clientId, String clientSecret, String clientName) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.clientName = clientName;
-        this.publicKey = publicKey;
     }
 }

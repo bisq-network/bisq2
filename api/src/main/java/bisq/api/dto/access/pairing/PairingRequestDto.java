@@ -17,22 +17,10 @@
 
 package bisq.api.dto.access.pairing;
 
-import java.util.Base64;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public record PairingRequestDto(
-        PairingRequestPayloadDto payload,
-        String signatureBase64
+        byte version,
+        String pairingCodeId,
+        String clientName
 ) {
-
-    public byte[] signatureBytes() {
-        checkNotNull(signatureBase64, "signatureBase64 must not be null");
-        try {
-            return Base64.getDecoder().decode(signatureBase64);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("signatureBase64 is not valid Base64", e);
-        }
-    }
 }
 

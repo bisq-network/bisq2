@@ -18,7 +18,6 @@
 package bisq.api.access;
 
 import bisq.api.access.client.Client;
-import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.permissions.Permission;
 import lombok.Getter;
 
@@ -34,25 +33,6 @@ public class MockClient extends Client {
             } catch (InterruptedException ignore) {
             }
             return qrCode;
-        });
-    }
-
-    @Override
-    public CompletableFuture<String> sendRequest(PairingRequest request) {
-        long deadlineMs = System.currentTimeMillis() + 3_000; // keep tests bounded
-        return CompletableFuture.supplyAsync(() -> {
-            while (sessionId == null) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted while waiting for session token", e);
-                }
-                if (System.currentTimeMillis() > deadlineMs) {
-                    throw new RuntimeException("Timed out waiting for session token");
-                }
-            }
-            return sessionId;
         });
     }
 

@@ -25,12 +25,6 @@ import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.api.access.pairing.PairingRequest;
-import bisq.api.access.pairing.PairingRequestPayload;
-import bisq.api.access.pairing.PairingResponse;
-import bisq.api.dto.access.pairing.PairingRequestDto;
-import bisq.api.dto.access.pairing.PairingRequestPayloadDto;
-import bisq.api.dto.access.pairing.PairingResponseDto;
 import bisq.api.dto.account.UserDefinedFiatAccountDto;
 import bisq.api.dto.account.UserDefinedFiatAccountPayloadDto;
 import bisq.api.dto.account.protocol_type.TradeProtocolTypeDto;
@@ -146,82 +140,14 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DtoMappings {
-
-    // bisq.api.access.pairing
-
-    public static class PairingRequestMapper {
-        public static PairingRequest toBisq2Model(PairingRequestDto dto) throws GeneralSecurityException {
-            if (dto == null || dto.payload() == null) {
-                throw new IllegalArgumentException("Missing pairing request payload");
-            }
-
-            PairingRequestPayload payload = toBisq2Model(dto.payload());
-            return new PairingRequest(
-                    payload,
-                    dto.signatureBytes()
-            );
-        }
-
-        private static PairingRequestPayload toBisq2Model(PairingRequestPayloadDto dto) throws GeneralSecurityException {
-            return new PairingRequestPayload(
-                    dto.pairingCodeId(),
-                    KeyGeneration.generatePublic(bisq.common.encoding.Base64.decode(dto.clientPublicKeyBase64()), KeyGeneration.EC),
-                    dto.clientName(),
-                    Instant.ofEpochMilli(dto.timestampEpochMillis())
-            );
-        }
-
-        public static PairingRequestDto fromBisq2Model(PairingRequest model) {
-            if (model == null || model.getPairingRequestPayload() == null) {
-                throw new IllegalArgumentException("Missing pairing request");
-            }
-
-            return new PairingRequestDto(
-                    fromBisq2Model(model.getPairingRequestPayload()),
-                    bisq.common.encoding.Base64.encode(model.getSignature()));
-        }
-
-        private static PairingRequestPayloadDto fromBisq2Model(PairingRequestPayload payload) {
-            return new PairingRequestPayloadDto(
-                    PairingRequestPayload.VERSION,
-                    payload.getPairingCodeId(),
-                    bisq.common.encoding.Base64.encode(payload.getClientPublicKey().getEncoded()),
-                    payload.getClientName(),
-                    payload.getTimestamp().toEpochMilli()
-            );
-        }
-    }
-
-
-    public static class PairingResponseMapper {
-        public static PairingResponse toBisq2Model(PairingResponseDto dto) {
-            if (dto == null) {
-                throw new IllegalArgumentException("Missing pairing request payload");
-            }
-
-            return new PairingResponse(dto.getClientId(), dto.getClientSecret(), dto.getSessionId(), dto.getExpiresAt());
-        }
-
-        public static PairingResponseDto fromBisq2Model(PairingResponse model) {
-            if (model == null) {
-                throw new IllegalArgumentException("Missing pairing request");
-            }
-
-            return new PairingResponseDto(model.getClientId(), model.getClientSecret(), model.getSessionId(), model.getExpiresAt());
-        }
-    }
-
-
     // account.protocol_type
 
     public static class TradeProtocolTypeMapping {

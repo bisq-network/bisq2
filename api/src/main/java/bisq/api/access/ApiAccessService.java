@@ -19,11 +19,9 @@ package bisq.api.access;
 
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.InvalidPairingRequestException;
-import bisq.api.access.pairing.PairingRequest;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.InvalidSessionRequestException;
-import bisq.api.access.session.SessionRequest;
 import bisq.api.access.session.SessionResponse;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.session.SessionToken;
@@ -41,22 +39,22 @@ public class ApiAccessService {
         this.sessionService = sessionService;
     }
 
-    public PairingResponse handlePairingRequest(PairingRequest request) throws InvalidPairingRequestException {
-        ClientProfile deviceProfile = pairingService.pairDevice(request);
+    public PairingResponse requestPairing(byte version,
+                                          String pairingCodeId,
+                                          String clientName) throws InvalidPairingRequestException {
+        ClientProfile deviceProfile = pairingService.pairDevice(version, pairingCodeId, clientName);
         String clientSecret = deviceProfile.getClientSecret();
         String clientId = deviceProfile.getClientId();
         SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
-        return new PairingResponse(clientId,clientSecret, sessionToken.getSessionId(), expiresAt);
+        return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
     }
 
-    public SessionResponse handleSessionRequest(SessionRequest request) throws InvalidSessionRequestException {
-        String clientId = request.getClientId();
+    public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
         ClientProfile deviceProfile = pairingService.findDeviceProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
-        String clientSecret = deviceProfile.getClientSecret();
 
-        if (!clientSecret.equals(request.getClientSecret())) {
+        if (!clientSecret.equals(deviceProfile.getClientSecret())) {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 

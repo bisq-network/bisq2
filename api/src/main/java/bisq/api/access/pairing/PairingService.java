@@ -22,11 +22,8 @@ import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
 import bisq.common.util.ByteArrayUtils;
-import bisq.security.SignatureUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
@@ -38,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PairingService {
+    public static final byte VERSION = 1;
     private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
     private final PermissionService<? extends PermissionMapping> permissionService;
@@ -61,9 +59,9 @@ public class PairingService {
         return pairingCode;
     }
 
-    public ClientProfile pairDevice(PairingRequest request) throws InvalidPairingRequestException {
-        PairingRequestPayload payload = request.getPairingRequestPayload();
-        String pairingCodeId = payload.getPairingCodeId();
+    public ClientProfile pairDevice(byte version,
+                                    String pairingCodeId,
+                                    String clientName) throws InvalidPairingRequestException {
         PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
@@ -72,9 +70,6 @@ public class PairingService {
         if (isExpired(pairingCode)) {
             pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
             throw new InvalidPairingRequestException("Pairing code is expired");
-        }
-        if (isSignatureInvalid(request)) {
-            throw new InvalidPairingRequestException("Invalid signature");
         }
 
         // Mark used by removing it
@@ -85,8 +80,7 @@ public class PairingService {
         String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
         ClientProfile clientProfile = new ClientProfile(clientId,
                 clientSecret,
-                payload.getClientName(),
-                payload.getClientPublicKey());
+                clientName);
         deviceProfileByIdMap.put(clientId, clientProfile);
 
         permissionService.setPermissions(clientId, pairingCode.getGrantedPermissions());
@@ -104,17 +98,5 @@ public class PairingService {
 
     private boolean isExpired(PairingCode pairingCode) {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
-    }
-
-    private boolean isSignatureInvalid(PairingRequest request) {
-        PairingRequestPayload payload = request.getPairingRequestPayload();
-        byte[] message = PairingRequestPayloadEncoder.encode(payload);
-        byte[] signature = request.getSignature();
-        PublicKey publicKey = payload.getClientPublicKey();
-        try {
-            return !SignatureUtil.verify(message, signature, publicKey);
-        } catch (GeneralSecurityException e) {
-            return true;
-        }
     }
 }
