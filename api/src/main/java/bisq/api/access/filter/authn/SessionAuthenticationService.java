@@ -52,9 +52,9 @@ public final class SessionAuthenticationService {
             SessionToken session = sessionService.find(sessionId)
                     .orElseThrow(() -> new AuthenticationException("Invalid session"));
 
-           /* if (session.isExpired()) {
+            if (session.isExpired()) {
                 throw new AuthenticationException("Session expired");
-            }*/
+            }
 
             checkArgument(clientId.equals(session.getClientId()),
                     "ClientId from header not matching client ID from session");

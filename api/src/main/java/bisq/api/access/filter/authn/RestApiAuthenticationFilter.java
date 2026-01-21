@@ -41,8 +41,9 @@ public class RestApiAuthenticationFilter extends RestApiFilter {
 
     @Override
     public void doFilter(ContainerRequestContext context) {
+        URI requestUri = null;
         try {
-            URI requestUri = context.getUriInfo().getRequestUri();
+            requestUri = context.getUriInfo().getRequestUri();
             String bodySha256Hex = AuthUtils.getBodySha256Hex(context);
 
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
@@ -54,7 +55,7 @@ public class RestApiAuthenticationFilter extends RestApiFilter {
             context.setProperty(Attributes.SESSION_ID, session.getSessionId());
             context.setProperty(Attributes.CLIENT_ID, session.getClientId());
         } catch (Exception e) {
-            log.warn("Authentication failed", e);
+            log.warn("Authentication failed. requestUri={}", requestUri, e);
             throw new WebApplicationException(
                     Response.status(Response.Status.UNAUTHORIZED)
                             .entity("Unauthorized")

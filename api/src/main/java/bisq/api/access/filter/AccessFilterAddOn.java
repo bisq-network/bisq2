@@ -28,6 +28,7 @@ import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.HttpServerFilter;
 import org.glassfish.grizzly.http.server.NetworkListener;
 
+//TODO Filters not called
 public class AccessFilterAddOn implements AddOn {
     private final ApiConfig apiConfig;
     private final PermissionService<RestPermissionMapping> permissionService;
@@ -50,10 +51,8 @@ public class AccessFilterAddOn implements AddOn {
         }
 
         // Any filter that reads HTTP headers must be placed strictly after HttpServerFilter
-        builder.add(++index, new WebSocketHandshakeMetaDataEnrichment());
-        // if (apiConfig.isSignatureBasedAuthenticationRequired()) {
         builder.add(++index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
-        // }
+        builder.add(++index, new WebSocketHandshakeMetaDataEnrichment());
     }
 }
 

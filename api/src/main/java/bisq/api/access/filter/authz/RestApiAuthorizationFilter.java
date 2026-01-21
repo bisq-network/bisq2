@@ -50,13 +50,14 @@ public class RestApiAuthorizationFilter extends RestApiFilter {
             Set<Permission> granted = optionalPermissionSet.get();
             Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());
             if (!permissionService.hasPermission(granted, required)) {
-                throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s", required.name(), granted));
+                throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s",
+                        required.name(), granted));
             }
         } catch (AuthorizationException | IllegalArgumentException | ForbiddenException e) {
-            log.warn("REST authz failed: {}", e.getMessage());
+            log.warn("REST authz failed. requestUri={}", requestUri, e);
             context.abortWith(Response.status(Response.Status.FORBIDDEN).build());
         } catch (Exception e) {
-            log.warn("REST authz filter failed unexpectedly", e);
+            log.warn("REST authz failed unexpectedly. requestUri={}", requestUri, e);
             context.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
     }

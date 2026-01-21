@@ -106,7 +106,6 @@ public class AccessApi extends RestApiBase {
 
             log.error("requestPairing was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);
-
         } catch (InvalidPairingRequestException e) {
             log.warn("Pairing request rejected", e);
             return buildErrorResponse(Response.Status.UNAUTHORIZED,

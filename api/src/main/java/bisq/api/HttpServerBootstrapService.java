@@ -119,6 +119,7 @@ public class HttpServerBootstrapService implements Service {
 
                     serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
 
+                    // todo filters not called
                     networkListener.registerAddOn(new AccessFilterAddOn(apiConfig, permissionService, sessionAuthenticationService));
 
                     if (apiConfig.isTlsRequired()) {

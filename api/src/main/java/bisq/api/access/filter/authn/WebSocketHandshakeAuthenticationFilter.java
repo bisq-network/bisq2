@@ -86,7 +86,6 @@ public class WebSocketHandshakeAuthenticationFilter extends BaseFilter {
             HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, session.getClientId());
 
             return context.getInvokeAction();
-
         } catch (AuthenticationException e) {
             log.warn("WebSocket auth rejected: {}", e.getMessage());
 
