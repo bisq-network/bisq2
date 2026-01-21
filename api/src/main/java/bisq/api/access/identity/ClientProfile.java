@@ -17,12 +17,13 @@
 
 package bisq.api.access.identity;
 
+import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class ClientProfile {
+public class ClientProfile implements PersistableProto {
     private final String clientId;
     private final String clientSecret;
     private final String clientName;
@@ -31,5 +32,24 @@ public class ClientProfile {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.clientName = clientName;
+    }
+
+    @Override
+    public bisq.api.protobuf.ClientProfile toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.api.protobuf.ClientProfile.Builder getBuilder(boolean serializeForHash) {
+        return bisq.api.protobuf.ClientProfile.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setClientName(clientName);
+    }
+
+    public static ClientProfile fromProto(bisq.api.protobuf.ClientProfile proto) {
+        return new ClientProfile(proto.getClientId(),
+                proto.getClientSecret(),
+                proto.getClientName());
     }
 }

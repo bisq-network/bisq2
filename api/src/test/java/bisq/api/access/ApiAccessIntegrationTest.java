@@ -73,9 +73,11 @@ class ApiAccessIntegrationTest {
         // ---------------------------------------------------------------------
         SessionService sessionService = new SessionService();
 
-        PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
+        ApiAccessStoreService apiAccessStoreService = new MockApiAccessStoreService();
 
-        PairingService pairingService = new PairingService(permissionService);
+        PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+
+        PairingService pairingService = new PairingService(apiAccessStoreService, permissionService);
         ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
 
         // ---------------------------------------------------------------------

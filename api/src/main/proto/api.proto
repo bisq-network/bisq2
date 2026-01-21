@@ -1,0 +1,59 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package api;
+option java_package = "bisq.api.protobuf";
+option java_multiple_files = true;
+
+enum Permission {
+  PERMISSION_UNSPECIFIED = 0;
+  PERMISSION_TRADE_CHAT_CHANNELS = 1;
+  PERMISSION_EXPLORER = 2;
+  PERMISSION_MARKET_PRICE = 3;
+  PERMISSION_OFFERBOOK = 4;
+  PERMISSION_PAYMENT_ACCOUNTS = 5;
+  PERMISSION_REPUTATION = 6;
+  PERMISSION_SETTINGS = 7;
+  PERMISSION_TRADES = 8;
+  PERMISSION_USER_IDENTITIES = 9;
+  PERMISSION_USER_PROFILES = 10;
+}
+
+message PermissionSet {
+  repeated Permission permissions = 1;
+}
+
+message PairingCode {
+  string id = 1;
+  uint64 expiresAt = 2;
+  repeated Permission grantedPermissions = 3;
+}
+
+message ClientProfile {
+  string clientId = 1;
+  string clientSecret = 2;
+  string clientName = 3;
+}
+
+
+message ApiAccessStore {
+  map<string, PairingCode>  pairingCodeByIdMap = 1;
+  map<string, ClientProfile> clientProfileByIdMap = 2;
+  map<string, PermissionSet> permissionsByClientId = 3;
+}

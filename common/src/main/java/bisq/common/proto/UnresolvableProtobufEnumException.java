@@ -15,24 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.i2p.grpc.messages;
+package bisq.common.proto;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.proto.ProtobufUtils;
-import bisq.common.proto.UnresolvableProtobufEnumException;
+import lombok.extern.slf4j.Slf4j;
 
-public enum Topic implements ProtoEnum {
-    PROCESS_STATE,
-    NETWORK_STATE,
-    ROUTER_STATE,
-    TUNNEL_INFO;
-
-    @Override
-    public bisq.bi2p.protobuf.Topic toProtoEnum() {
-        return bisq.bi2p.protobuf.Topic.valueOf(getProtobufEnumPrefix() + name());
+@Slf4j
+public class UnresolvableProtobufEnumException extends Exception {
+    public UnresolvableProtobufEnumException(Throwable cause) {
+        super(cause);
     }
 
-    public static Topic fromProto(bisq.bi2p.protobuf.Topic proto) throws UnresolvableProtobufEnumException {
-        return ProtobufUtils.enumFromProto(Topic.class, proto.name());
+    public UnresolvableProtobufEnumException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

@@ -17,20 +17,20 @@
 
 package bisq.api.access.permissions;
 
+import bisq.api.access.ApiAccessStoreService;
 import lombok.Getter;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PermissionService<T extends PermissionMapping> {
+    private final ApiAccessStoreService apiAccessStoreService;
     @Getter
     private final T permissionMapping;
-    private final Map<String, Set<Permission>> permissionsByClientId = new ConcurrentHashMap<>();
 
-    public PermissionService(T permissionMapping) {
+    public PermissionService(ApiAccessStoreService apiAccessStoreService, T permissionMapping) {
+        this.apiAccessStoreService = apiAccessStoreService;
         this.permissionMapping = permissionMapping;
     }
 
@@ -39,11 +39,11 @@ public class PermissionService<T extends PermissionMapping> {
     }
 
     public void setPermissions(String clientId, Set<Permission> permissions) {
-        permissionsByClientId.put(clientId, permissions);
+        apiAccessStoreService.putPermissions(clientId, permissions);
     }
 
     public Optional<Set<Permission>> findPermissions(String clientId) {
-        return Optional.ofNullable(permissionsByClientId.get(clientId))
+        return Optional.ofNullable(apiAccessStoreService.getPermissionsByClientId().get(clientId))
                 .map(Collections::unmodifiableSet);
     }
 }

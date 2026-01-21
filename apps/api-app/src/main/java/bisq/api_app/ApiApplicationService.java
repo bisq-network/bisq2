@@ -166,6 +166,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         apiService = new ApiService(apiConfig,
                 config.getAppDataDirPath(),
+                persistenceService,
                 securityService,
                 networkService,
                 userService,

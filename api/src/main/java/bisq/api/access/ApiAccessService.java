@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 
 public class ApiAccessService {
+
     private final PairingService pairingService;
     private final SessionService sessionService;
 

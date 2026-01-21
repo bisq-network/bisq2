@@ -17,6 +17,7 @@
 
 package bisq.api.access.pairing;
 
+import bisq.api.access.ApiAccessStoreService;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
@@ -26,11 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -38,12 +37,12 @@ public class PairingService {
     public static final byte VERSION = 1;
     private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
+    private final ApiAccessStoreService apiAccessStoreService;
     private final PermissionService<? extends PermissionMapping> permissionService;
 
-    private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
-    private final Map<String, ClientProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
-
-    public PairingService(PermissionService<? extends PermissionMapping> permissionService) {
+    public PairingService(ApiAccessStoreService apiAccessStoreService,
+                          PermissionService<? extends PermissionMapping> permissionService) {
+        this.apiAccessStoreService = apiAccessStoreService;
         this.permissionService = permissionService;
     }
 
@@ -55,25 +54,26 @@ public class PairingService {
         Instant expiresAt = Instant.now().plusMillis(PAIRING_CODE_TTL);
         String id = UUID.randomUUID().toString();
         PairingCode pairingCode = new PairingCode(id, expiresAt, Set.copyOf(grantedPermissions));
-        pairingCodeByIdMap.put(id, pairingCode);
+        apiAccessStoreService.putPairingCode(id, pairingCode);
         return pairingCode;
     }
+
 
     public ClientProfile pairDevice(byte version,
                                     String pairingCodeId,
                                     String clientName) throws InvalidPairingRequestException {
-        PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
+        PairingCode pairingCode = apiAccessStoreService.getPairingCodeByIdMap().get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
         }
 
         if (isExpired(pairingCode)) {
-            pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
+            apiAccessStoreService.removePairingCode(pairingCodeId, pairingCode);
             throw new InvalidPairingRequestException("Pairing code is expired");
         }
 
         // Mark used by removing it
-        //pairingCodeByIdMap.remove(pairingCodeId, pairingCode);  //todo
+        //persistableStore.getPairingCodeByIdMap().remove(pairingCodeId, pairingCode);  //todo
 
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
@@ -81,7 +81,7 @@ public class PairingService {
         ClientProfile clientProfile = new ClientProfile(clientId,
                 clientSecret,
                 clientName);
-        deviceProfileByIdMap.put(clientId, clientProfile);
+        apiAccessStoreService.putClientProfile(clientId, clientProfile);
 
         permissionService.setPermissions(clientId, pairingCode.getGrantedPermissions());
 
@@ -89,11 +89,11 @@ public class PairingService {
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
-        return Optional.ofNullable(pairingCodeByIdMap.get(id));
+        return Optional.ofNullable(apiAccessStoreService.getPairingCodeByIdMap().get(id));
     }
 
     public Optional<ClientProfile> findDeviceProfile(String id) {
-        return Optional.ofNullable(deviceProfileByIdMap.get(id));
+        return Optional.ofNullable(apiAccessStoreService.getClientProfileByIdMap().get(id));
     }
 
     private boolean isExpired(PairingCode pairingCode) {
