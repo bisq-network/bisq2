@@ -25,8 +25,8 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.http.server.AddOn;
-import org.glassfish.grizzly.http.server.HttpServerFilter;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.websockets.WebSocketFilter;
 
 //TODO Filters not called
 public class AccessFilterAddOn implements AddOn {
@@ -44,14 +44,17 @@ public class AccessFilterAddOn implements AddOn {
 
     @Override
     public void setup(NetworkListener listener, FilterChainBuilder builder) {
-        int index = builder.indexOfType(HttpServerFilter.class);
+        int index = builder.indexOfType(WebSocketFilter.class);
 
         if (index < 0) {
-            throw new IllegalStateException("HttpServerFilter not found. API security cannot be installed safely.");
+            throw new IllegalStateException("WebSocketFilter not found. API security cannot be installed.");
         }
 
-        // Any filter that reads HTTP headers must be placed strictly after HttpServerFilter
-        builder.add(++index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
+        // To intercept Websocket handshake we must place our filter before WebSocketFilter
+
+        if (apiConfig.isSupportSessionHandling()) {
+            builder.add(index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
+        }
         builder.add(++index, new WebSocketHandshakeMetaDataEnrichment());
     }
 }

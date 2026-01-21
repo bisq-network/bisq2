@@ -45,10 +45,6 @@ public final class SessionAuthenticationService {
             checkNotNull(sessionId, "Missing sessionId");
             checkNotNull(clientId, "Missing clientId");
 
-            //todo
-            if (sessionService.find(sessionId).isEmpty()) {
-                sessionService.createSession(clientId);
-            }
             SessionToken session = sessionService.find(sessionId)
                     .orElseThrow(() -> new AuthenticationException("Invalid session"));
 
