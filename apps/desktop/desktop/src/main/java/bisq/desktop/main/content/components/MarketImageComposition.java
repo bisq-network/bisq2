@@ -47,7 +47,7 @@ import java.util.stream.Stream;
 public class MarketImageComposition {
     private static final List<String> CRYPTO_MARKETS_WITH_LOGO = List.of("bsq", "btc", "xmr");
     private static final Set<String> FIAT_MARKETS_WITH_LOGO = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
-                    "awg", "azn", "bam", "bbd", "bdt", "bgn", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
+                    "awg", "azn", "bam", "bbd", "bdt", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
                     "byn", "bzd", "cad", "chf", "clp", "cny", "cop", "crc", "cup", "cve", "czk", "djf", "dkk", "dop", "dzd",
                     "egp", "ern", "etb", "eur", "fjd", "fkp", "gbp", "gel", "ghs", "gip", "gmd", "gnf", "gtq", "gyd", "hkd",
                     "hnl", "htg", "huf", "idr", "ils", "inr", "iqd", "irr", "isk", "jmd", "jod", "jpy", "kes", "kgs", "khr",
