@@ -1,7 +1,7 @@
 package bisq.api.rest_api;
 
 import bisq.api.ApiConfig;
-import bisq.api.access.filter.authn.RestApiAuthenticationFilter;
+import bisq.api.access.filter.authn.RestApiSessionAuthenticationFilter;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.filter.authz.RestApiAuthorizationFilter;
 import bisq.api.access.permissions.PermissionService;
@@ -19,7 +19,7 @@ public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig
 
 
         if (apiConfig.isSupportSessionHandling()) {
-            register(new RestApiAuthenticationFilter(sessionAuthenticationService));
+            register(new RestApiSessionAuthenticationFilter(sessionAuthenticationService));
         }
         if (apiConfig.isAuthorizationRequired()) {
             register(new RestApiAuthorizationFilter(permissionService));

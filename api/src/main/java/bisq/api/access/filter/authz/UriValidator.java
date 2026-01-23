@@ -58,10 +58,9 @@ public final class UriValidator {
      * Validates a parsed URI.
      * Throws {@link AuthorizationException} on failure.
      */
-    public void validate(URI uri) throws AuthorizationException {
+    public void validate(URI uri) throws AuthorizationException, NullPointerException {
+        checkNotNull(uri, "uri must not be null");
         try {
-            checkNotNull(uri, "uri must not be null");
-
             validatePath(uri.getPath());
             validateQuery(uri.getQuery());
         } catch (Exception e) {

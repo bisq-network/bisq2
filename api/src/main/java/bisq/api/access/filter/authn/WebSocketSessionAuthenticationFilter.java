@@ -32,10 +32,10 @@ import org.glassfish.grizzly.http.util.HttpStatus;
 import java.util.Optional;
 
 @Slf4j
-public class WebSocketHandshakeAuthenticationFilter extends BaseFilter {
+public class WebSocketSessionAuthenticationFilter extends BaseFilter {
     private final SessionAuthenticationService sessionAuthenticationService;
 
-    public WebSocketHandshakeAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
+    public WebSocketSessionAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
 

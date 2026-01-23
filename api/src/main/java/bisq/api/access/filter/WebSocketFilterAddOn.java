@@ -19,7 +19,7 @@ package bisq.api.access.filter;
 
 import bisq.api.ApiConfig;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.filter.authn.WebSocketHandshakeAuthenticationFilter;
+import bisq.api.access.filter.authn.WebSocketSessionAuthenticationFilter;
 import bisq.api.access.filter.meta.WebSocketHandshakeMetaDataEnrichment;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.http.server.AddOn;
@@ -47,7 +47,7 @@ public class WebSocketFilterAddOn implements AddOn {
         // To intercept Websocket handshake we must place our filter before WebSocketFilter
 
         if (apiConfig.isSupportSessionHandling()) {
-            builder.add(index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
+            builder.add(index, new WebSocketSessionAuthenticationFilter(sessionAuthenticationService));
             index++;
         }
         builder.add(index, new WebSocketHandshakeMetaDataEnrichment());

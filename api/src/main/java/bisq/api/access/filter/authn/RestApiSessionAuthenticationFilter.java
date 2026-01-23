@@ -32,10 +32,10 @@ import java.net.URI;
 @Slf4j
 @Priority(Priorities.AUTHENTICATION)
 // @Provider omitted as we do manual registration
-public class RestApiAuthenticationFilter extends RestApiFilter {
+public class RestApiSessionAuthenticationFilter extends RestApiFilter {
     private final SessionAuthenticationService sessionAuthenticationService;
 
-    public RestApiAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
+    public RestApiSessionAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
 
@@ -44,7 +44,6 @@ public class RestApiAuthenticationFilter extends RestApiFilter {
         URI requestUri = null;
         try {
             requestUri = context.getUriInfo().getRequestUri();
-            String bodySha256Hex = AuthUtils.getBodySha256Hex(context);
 
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
                     context.getHeaderString(Headers.CLIENT_ID),

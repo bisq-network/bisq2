@@ -22,19 +22,19 @@ import java.util.Set;
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class RestApiAuthorizationFilter extends RestApiFilter {
-    private final UriValidator httpEndpointValidator;
+    private final UriValidator uriValidator;
     private final PermissionService<RestPermissionMapping> permissionService;
 
     public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService) {
         this.permissionService = permissionService;
-        this.httpEndpointValidator = new UriValidator();
+        this.uriValidator = new UriValidator();
     }
 
     @Override
     public void doFilter(ContainerRequestContext context) {
         URI requestUri = context.getUriInfo().getRequestUri();
         try {
-            httpEndpointValidator.validate(requestUri);
+            uriValidator.validate(requestUri);
 
             String clientId = context.getHeaderString(Headers.CLIENT_ID);
             if (clientId == null) {

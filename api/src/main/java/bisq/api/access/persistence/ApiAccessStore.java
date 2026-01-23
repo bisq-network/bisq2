@@ -98,6 +98,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
 
     @Override
     public void applyPersisted(ApiAccessStore persisted) {
+        clientProfileByIdMap.clear();
+        permissionsByClientId.clear();
         clientProfileByIdMap.putAll(persisted.getClientProfileByIdMap());
         permissionsByClientId.putAll(persisted.getPermissionsByClientId());
     }

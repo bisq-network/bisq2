@@ -183,8 +183,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-            ApiAccessService pairingRequestHandler = new ApiAccessService(pairingService, sessionService);
-            AccessApi accessApi = new AccessApi(pairingRequestHandler);
+            ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+            AccessApi accessApi = new AccessApi(apiAccessService);
 
             ResourceConfig resourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
                     accessApi,
