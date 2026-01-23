@@ -17,7 +17,6 @@
 
 package bisq.api.access.session;
 
-import bisq.common.util.ByteArrayUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -35,20 +34,14 @@ public class SessionToken {
     private final String clientId;
     @Getter
     private final Instant expiresAt;
-    private final byte[] hmacKey;
 
     public SessionToken(String clientId) {
         this.sessionId = UUID.randomUUID().toString();
         this.clientId = clientId;
         this.expiresAt = Instant.now().plusSeconds(TTL);
-        hmacKey = ByteArrayUtils.getRandomBytes(32); // 256-bit
     }
 
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
-    }
-
-    public byte[] getHmacKey() {
-        return hmacKey.clone();
     }
 }

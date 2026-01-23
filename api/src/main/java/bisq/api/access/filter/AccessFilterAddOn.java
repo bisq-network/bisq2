@@ -21,8 +21,6 @@ import bisq.api.ApiConfig;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.filter.authn.WebSocketHandshakeAuthenticationFilter;
 import bisq.api.access.filter.meta.WebSocketHandshakeMetaDataEnrichment;
-import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.NetworkListener;
@@ -30,14 +28,11 @@ import org.glassfish.grizzly.websockets.WebSocketFilter;
 
 public class AccessFilterAddOn implements AddOn {
     private final ApiConfig apiConfig;
-    private final PermissionService<RestPermissionMapping> permissionService;
     private final SessionAuthenticationService sessionAuthenticationService;
 
     public AccessFilterAddOn(ApiConfig apiConfig,
-                             PermissionService<RestPermissionMapping> permissionService,
                              SessionAuthenticationService sessionAuthenticationService) {
         this.apiConfig = apiConfig;
-        this.permissionService = permissionService;
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
 
