@@ -281,7 +281,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getAutoAddToContactsList(),
                 proto.getMuSigLastSelectedMarketByBaseCurrencyMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))),
-                Market.fromProto(proto.getSelectedWalletMarket()));
+                proto.hasSelectedWalletMarket() ? Market.fromProto(proto.getSelectedWalletMarket()) : MarketRepository.getDefaultBtcFiatMarket());
     }
 
     @Override
