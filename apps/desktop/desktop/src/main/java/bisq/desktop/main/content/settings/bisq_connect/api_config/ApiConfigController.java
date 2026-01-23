@@ -23,8 +23,6 @@ import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
-import bisq.application.TypesafeConfigUtils;
-import bisq.common.file.FileMutatorUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.util.NetworkUtils;
@@ -36,7 +34,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -141,7 +138,7 @@ public class ApiConfigController implements Controller {
                 EasyBind.combine(model.getDetectedLanHost(), model.getBindHost(),
                         (detectedLanHost, bindHost) -> detectedLanHost != null && detectedLanHost.equals(bindHost)),
                 isEquals -> {
-                    model.getDetectedLanHostApplied().set(isEquals);
+                    model.getDetectedLanHostEqualToHost().set(isEquals);
                 }
         ));
 
@@ -259,7 +256,6 @@ public class ApiConfigController implements Controller {
     /* --------------------------------------------------------------------- */
 
     private boolean writeConfig() {
-        Path appDataDirPath = appConfig.getAppDataDirPath();
         boolean tlsRequired = model.getTlsRequired().get();
         String tlsKeyStorePassword = tlsRequired ? model.getTlsKeyStorePassword().get() : "";
         List<String> tlsKeyStoreSan = resolveTlsKeyStoreSan();
@@ -273,20 +269,11 @@ public class ApiConfigController implements Controller {
                 "application.api.server.tls.keystore.password", tlsKeyStorePassword,
                 "application.api.server.tls.certificate.san", tlsKeyStoreSan
         ));
-
-        Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
-        Config config = newConfig.withFallback(customConfig).resolve();
-
-        String rendered = config.root().render(ConfigRenderOptions.defaults()
-                .setOriginComments(false)
-                .setJson(false)
-                .setFormatted(true));
-
-        Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         try {
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            appConfig.writeCustomConfig(newConfig);
             return true;
         } catch (IOException e) {
+            Path customConfigFilePath = appConfig.getAppDataDirPath().resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
             log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             new Popup().error(e).show();
             return false;

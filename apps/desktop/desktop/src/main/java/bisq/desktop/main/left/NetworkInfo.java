@@ -17,10 +17,13 @@
 
 package bisq.desktop.main.left;
 
+import bisq.api.ApiService;
+import bisq.api.web_socket.WebSocketService;
 import bisq.common.data.Triple;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -37,7 +40,9 @@ import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -47,13 +52,17 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -74,12 +83,15 @@ public class NetworkInfo {
         private final View view;
         private final Consumer<NavigationTarget> onNavigationTargetSelectedHandler;
         private final NetworkService networkService;
-        private Optional<Pin> useExternalTorPin = Optional.empty();
+        private final Optional<WebSocketService> optionalWebSocketService;
+        private final Set<Pin> pins = new HashSet<>();
 
         public Controller(ServiceProvider serviceProvider,
                           Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
             this.onNavigationTargetSelectedHandler = onNavigationTargetSelectedHandler;
             networkService = serviceProvider.getNetworkService();
+            ApiService apiService = serviceProvider.getApiService();
+            optionalWebSocketService = apiService.getWebSocketService();
             model = new Model();
             view = new View(model, this);
         }
@@ -90,11 +102,12 @@ public class NetworkInfo {
             model.setTorEnabled(networkService.isTransportTypeSupported(TransportType.TOR));
             model.setI2pEnabled(networkService.isTransportTypeSupported(TransportType.I2P));
 
-            useExternalTorPin = networkService.getServiceNodesByTransport()
+            networkService.getServiceNodesByTransport()
                     .findServiceNode(TransportType.TOR)
                     .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
                     .map(TorTransportService::getUseExternalTor)
-                    .map(useExternalTor -> useExternalTor.addObserver(model.getUseExternalTor()::set));
+                    .map(useExternalTor -> useExternalTor.addObserver(model.getUseExternalTor()::set))
+                    .ifPresent(pins::add);
 
             networkService.getSupportedTransportTypes().forEach(type ->
                     networkService.getServiceNodesByTransport().findServiceNode(type)
@@ -103,12 +116,16 @@ public class NetworkInfo {
                                         applyNumTargetConnections(type, peerGroupManager);
                                         applyNumConnections(type, serviceNode);
                                     })));
+
+            optionalWebSocketService.ifPresent(webSocketService -> {
+                pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
+            });
         }
 
         @Override
         public void onDeactivate() {
-            useExternalTorPin.ifPresent(Pin::unbind);
-            useExternalTorPin = Optional.empty();
+            pins.forEach(Pin::unbind);
+            pins.clear();
         }
 
         private void applyNumTargetConnections(TransportType type, PeerGroupManager peerGroupManager) {
@@ -188,14 +205,18 @@ public class NetworkInfo {
         private final StringProperty torNumConnections = new SimpleStringProperty("0");
         private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
         private final BooleanProperty useExternalTor = new SimpleBooleanProperty();
+        private final ObjectProperty<WebSocketService.State> webSocketServiceState = new SimpleObjectProperty<>(null);
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final HBox clearNetHBox, torHBox, i2pHBox;
         private final Triple<Label, Label, ImageView> clearNetTriple, torTriple, i2pTriple;
         private final BisqTooltip clearNetTooltip, torTooltip, i2pTooltip;
+        private final Label webSocketServerStateLabel;
+        private final Circle webSocketServerStateIcon;
+        private final HBox websocketServerStateBox;
         private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, useExternalTorPin,
-                i2pNumConnectionsPin;
+                i2pNumConnectionsPin, webSocketServiceStatePin;
 
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
@@ -218,7 +239,16 @@ public class NetworkInfo {
             i2pTooltip = i2p.getSecond();
             i2pTriple = i2p.getThird();
 
-            root.getChildren().addAll(clearNetHBox, torHBox, i2pHBox);
+            webSocketServerStateIcon = new Circle(5.5);
+            webSocketServerStateIcon.setFill(Color.GRAY);
+            webSocketServerStateLabel = new Label();
+            webSocketServerStateLabel.getStyleClass().add("bisq-smaller-dimmed-label");
+            webSocketServerStateLabel.setMinWidth(Label.USE_PREF_SIZE);
+            HBox.setMargin(webSocketServerStateIcon, new Insets(0, 0, 0, 2));
+            websocketServerStateBox = new HBox(5, webSocketServerStateIcon, webSocketServerStateLabel);
+            websocketServerStateBox.setAlignment(Pos.CENTER_LEFT);
+
+            root.getChildren().addAll(clearNetHBox, torHBox, i2pHBox, websocketServerStateBox);
         }
 
         @Override
@@ -275,6 +305,23 @@ public class NetworkInfo {
                 }
             });
 
+            webSocketServiceStatePin = EasyBind.subscribe(model.getWebSocketServiceState(), state -> {
+                boolean isActivated = state != null;
+                websocketServerStateBox.setVisible(isActivated);
+                websocketServerStateBox.setManaged(isActivated);
+
+                if (state != null) {
+                    webSocketServerStateLabel.setText(Res.get("settings.bisqConnect.webSocketServerState." + state.name()));
+                    switch (state) {
+                        case NEW -> webSocketServerStateIcon.setFill(Color.valueOf("#d23246"));
+                        case STARTING -> webSocketServerStateIcon.setFill(Color.valueOf("#d0831f"));
+                        case RUNNING -> webSocketServerStateIcon.setFill(Color.valueOf("#56ae48"));
+                        case STOPPING -> webSocketServerStateIcon.setFill(Color.valueOf("#68410f"));
+                        case TERMINATED -> webSocketServerStateIcon.setFill(Color.valueOf("#d23246"));
+                    }
+                }
+            });
+
             root.setOnMouseClicked(e -> controller.onNavigateToNetworkInfo());
         }
 
@@ -284,6 +331,7 @@ public class NetworkInfo {
             torNumConnectionsPin.unsubscribe();
             useExternalTorPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
+            webSocketServiceStatePin.unsubscribe();
 
             root.setOnMouseClicked(null);
         }

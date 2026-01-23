@@ -1,6 +1,6 @@
 package bisq.api.rest_api;
 
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.error.CustomExceptionMapper;
 import bisq.api.rest_api.error.RestApiException;
 import bisq.common.json.JsonMapperProvider;
@@ -9,7 +9,7 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonP
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class PairingApiResourceConfig extends ResourceConfig {
-    public PairingApiResourceConfig(PairingApi pairingApi) {
+    public PairingApiResourceConfig(AccessApi accessApi) {
         super();
         JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider(JsonMapperProvider.get(),
                 JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
@@ -17,11 +17,11 @@ public class PairingApiResourceConfig extends ResourceConfig {
                 .register(RestApiException.Mapper.class)
                 .register(provider);
 
-        register(PairingApi.class);
+        register(AccessApi.class);
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(pairingApi).to(PairingApi.class);
+                bind(accessApi).to(AccessApi.class);
             }
         });
     }

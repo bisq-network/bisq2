@@ -18,8 +18,9 @@
 package bisq.api;
 
 import bisq.account.AccountService;
+import bisq.api.access.ApiAccessService;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.pairing.PairingRequestHandler;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -28,11 +29,11 @@ import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
@@ -49,6 +50,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -99,6 +101,7 @@ public class ApiService implements Service {
 
     public ApiService(ApiConfig apiConfig,
                       Path appDataDirPath,
+                      PersistenceService persistenceService,
                       SecurityService securityService,
                       NetworkService networkService,
                       UserService userService,
@@ -122,15 +125,16 @@ public class ApiService implements Service {
                 bindPort,
                 apiConfig.getOnionServicePort());
 
-        permissionService = new PermissionService<>(new RestPermissionMapping());
-        pairingService = new PairingService(permissionService);
-        sessionService = new SessionService();
+        ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
+        permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+        pairingService = new PairingService(apiAccessStoreService, permissionService);
+        sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
-        PairingApi pairingApi = new PairingApi(pairingRequestHandler);
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+        AccessApi accessApi = new AccessApi(apiAccessService);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
@@ -152,12 +156,12 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
 
-        ResourceConfig resourceConfig ;
+        ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled()) {
-            resourceConfig =new RestApiResourceConfig(apiConfig,
+            resourceConfig = new RestApiResourceConfig(apiConfig,
                     permissionService,
                     sessionAuthenticationService,
-                    pairingApi,
+                    accessApi,
                     offerbookRestApi,
                     tradeRestApi,
                     tradeChatMessagesRestApi,
@@ -169,11 +173,12 @@ public class ApiService implements Service {
                     reputationRestApi,
                     userProfileRestApi);
         } else {
-            resourceConfig = new PairingApiResourceConfig(pairingApi);
+            resourceConfig = new PairingApiResourceConfig(accessApi);
         }
 
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
                     bondedRolesService,
                     chatService,
                     tradeService,

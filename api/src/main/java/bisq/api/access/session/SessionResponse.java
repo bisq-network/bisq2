@@ -15,23 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.identity;
+package bisq.api.access.session;
 
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import java.security.PublicKey;
-import java.util.UUID;
 
-@Getter
 @EqualsAndHashCode
-public class DeviceProfile {
-    private final UUID deviceId;
-    private final String deviceName;
-    private final PublicKey publicKey;
+@Getter
+public final class SessionResponse {
+    private final String sessionId;
+    private final long expiresAt;
 
-    public DeviceProfile(UUID deviceId, String deviceName, PublicKey publicKey) {
-        this.deviceId = deviceId;
-        this.deviceName = deviceName;
-        this.publicKey = publicKey;
+    public SessionResponse(String sessionId, long expiresAt) {
+        this.sessionId = sessionId;
+        this.expiresAt = expiresAt;
     }
 }

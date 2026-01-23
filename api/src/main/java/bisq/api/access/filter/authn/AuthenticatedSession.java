@@ -19,18 +19,16 @@ package bisq.api.access.filter.authn;
 
 import lombok.Getter;
 
-import java.util.UUID;
-
 @Getter
 public class AuthenticatedSession {
     private final String sessionId;
-    private final UUID deviceId;
+    private final String clientId;
 
     public AuthenticatedSession(
             String sessionId,
-            UUID deviceId
+            String clientId
     ) {
         this.sessionId = sessionId;
-        this.deviceId = deviceId;
+        this.clientId = clientId;
     }
 }

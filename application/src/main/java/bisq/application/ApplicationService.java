@@ -33,6 +33,7 @@ import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -116,6 +117,29 @@ public abstract class ApplicationService implements Service {
             this.memoryReportIntervalSec = memoryReportIntervalSec;
             this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
             this.checkInstanceLock = checkInstanceLock;
+        }
+
+        public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
+            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
+            String rendered = config.root().render(ConfigRenderOptions.defaults()
+                    .setOriginComments(false)
+                    .setJson(false)
+                    .setFormatted(true));
+            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            return true;
+        }
+
+        public void removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
+            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config newConfig = customConfig.withoutPath(nodePathToRemove);
+            String rendered = newConfig.root().render(ConfigRenderOptions.defaults()
+                    .setOriginComments(false)
+                    .setJson(false)
+                    .setFormatted(true));
+            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
         }
     }
 

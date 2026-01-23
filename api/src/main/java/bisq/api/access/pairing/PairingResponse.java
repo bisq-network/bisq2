@@ -15,23 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket;
+package bisq.api.access.pairing;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.Optional;
-import java.util.UUID;
-
 @Getter
 @EqualsAndHashCode
-public class WebsocketClient1 {
-    private final String id = UUID.randomUUID().toString();
-    private final Optional<String> address;
-    private final Optional<String> userAgent;
+public final class PairingResponse {
+    private final String clientId;
+    private final String clientSecret;
+    private final String sessionId;
+    private final long sessionExpiryDate;
 
-    public WebsocketClient1(Optional<String> address, Optional<String> userAgent) {
-        this.address = address;
-        this.userAgent = userAgent;
+    public PairingResponse(String clientId,
+                           String clientSecret,
+                           String sessionId,
+                           long sessionExpiryDate) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.sessionId = sessionId;
+        this.sessionExpiryDate = sessionExpiryDate;
     }
 }

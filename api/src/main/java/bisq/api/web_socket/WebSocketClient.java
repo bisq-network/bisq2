@@ -15,13 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.pairing;
+package bisq.api.web_socket;
 
-public record PairingRequestPayloadDto(
-        byte version,
-        String pairingCodeId,
-        String clientPublicKeyBase64,
-        String deviceName,
-        long timestampEpochMillis
-) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Getter
+@EqualsAndHashCode
+public class WebSocketClient {
+    private final String id = UUID.randomUUID().toString();
+    private final Optional<String> address;
+    private final Optional<String> userAgent;
+
+    public WebSocketClient(Optional<String> address, Optional<String> userAgent) {
+        this.address = address;
+        this.userAgent = userAgent;
+    }
 }

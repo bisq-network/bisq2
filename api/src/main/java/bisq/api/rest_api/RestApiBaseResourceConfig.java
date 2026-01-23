@@ -1,27 +1,28 @@
 package bisq.api.rest_api;
 
 import bisq.api.ApiConfig;
-import bisq.api.access.filter.authn.RestApiAuthenticationFilter;
+import bisq.api.access.filter.authn.RestApiSessionAuthenticationFilter;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.filter.authz.RestApiAuthorizationFilter;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.util.SwaggerResolution;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig {
     public RestApiBaseResourceConfig(ApiConfig apiConfig,
-                                     PairingApi pairingApi,
+                                     AccessApi accessApi,
                                      PermissionService<RestPermissionMapping> permissionService,
                                      SessionAuthenticationService sessionAuthenticationService) {
-        super(pairingApi);
+        super(accessApi);
 
-        if (apiConfig.isAuthRequired()) {
-            register(new RestApiAuthenticationFilter(sessionAuthenticationService));
-            register(new RestApiAuthorizationFilter(permissionService,
-                    apiConfig.getRestAllowEndpoints(),
-                    apiConfig.getRestDenyEndpoints()));
+
+        if (apiConfig.isSupportSessionHandling()) {
+            register(new RestApiSessionAuthenticationFilter(sessionAuthenticationService));
+        }
+        if (apiConfig.isAuthorizationRequired()) {
+            register(new RestApiAuthorizationFilter(permissionService));
         }
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.

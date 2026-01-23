@@ -23,7 +23,8 @@ public final class Attributes {
     public static final String SESSION_ID = "bisq.authn.session_id";
 
     // Authorization
-    public static final String DEVICE_ID = "bisq.authz.device_id";
+    public static final String CLIENT_ID = "bisq.authz.client_id";
+    public static final String CLIENT_SECRET = "bisq.authz.client_secret";
     public static final String PERMISSIONS = "bisq.authz.permissions";
 
     // Metadata

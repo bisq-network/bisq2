@@ -17,12 +17,15 @@
 
 package bisq.api.access.permissions;
 
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufEnumException;
 import lombok.Getter;
 
 /**
  * The id must not be changed as it is used for the serialisation.
  */
-public enum Permission {
+public enum Permission implements ProtoEnum {
     TRADE_CHAT_CHANNELS(0),
     EXPLORER(1),
     MARKET_PRICE(2),
@@ -41,10 +44,20 @@ public enum Permission {
         this.id = id;
     }
 
+    @Override
+    public bisq.api.protobuf.Permission toProtoEnum() {
+        return bisq.api.protobuf.Permission.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static Permission fromProto(bisq.api.protobuf.Permission proto) throws UnresolvableProtobufEnumException {
+        return ProtobufUtils.enumFromProto(Permission.class, proto.name());
+    }
+
     public static Permission fromId(int id) {
         for (Permission permission : values()) {
             if (permission.id == id) return permission;
         }
         throw new IllegalArgumentException("No permission found for id " + id);
     }
+
 }

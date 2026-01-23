@@ -15,33 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.pairing;
+package bisq.api.dto.access.pairing;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
-
-import java.security.PublicKey;
-import java.time.Instant;
 
 @Getter
 @EqualsAndHashCode
-@ToString
-public final class PairingRequestPayload {
-    public static final byte VERSION = 1;
+public final class PairingResponseDto {
+    private final byte version;
+    private final String clientId;
+    private final String clientSecret;
+    private final String sessionId;
+    private final long sessionExpiryDate;
 
-    private final String pairingCodeId;
-    private final PublicKey clientPublicKey;
-    private final String deviceName;
-    private final Instant timestamp;
-
-    public PairingRequestPayload(String pairingCodeId,
-                                 PublicKey clientPublicKey,
-                                 String deviceName,
-                                 Instant timestamp) {
-        this.pairingCodeId = pairingCodeId;
-        this.clientPublicKey = clientPublicKey;
-        this.deviceName = deviceName;
-        this.timestamp = timestamp;
+    public PairingResponseDto(byte version,
+                              String clientId,
+                              String clientSecret,
+                              String sessionId,
+                              long sessionExpiryDate) {
+        this.version = version;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.sessionId = sessionId;
+        this.sessionExpiryDate = sessionExpiryDate;
     }
 }

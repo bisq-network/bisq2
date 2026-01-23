@@ -15,19 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.pairing;
+package bisq.common.proto;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-@EqualsAndHashCode
-public final class PairingResponseDto {
-    private final String sessionId;
-    private final long expiresAt;
+@Slf4j
+public class UnresolvableProtobufEnumException extends Exception {
+    public UnresolvableProtobufEnumException(Throwable cause) {
+        super(cause);
+    }
 
-    public PairingResponseDto(String sessionId, long expiresAt) {
-        this.sessionId = sessionId;
-        this.expiresAt = expiresAt;
+    public UnresolvableProtobufEnumException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

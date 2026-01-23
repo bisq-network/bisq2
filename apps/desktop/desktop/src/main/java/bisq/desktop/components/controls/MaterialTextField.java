@@ -53,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 
@@ -209,7 +208,7 @@ public class MaterialTextField extends Pane {
     }
 
     public void setValidators(ValidatorBase... validators) {
-        Stream.of(validators).forEach(this::setValidator);
+        validationControl.setValidators(validators);
     }
 
     public void setValidator(ValidatorBase validator) {

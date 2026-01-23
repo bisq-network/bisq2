@@ -17,7 +17,7 @@
 
 package bisq.api;
 
-import bisq.api.access.filter.AccessFilterAddOn;
+import bisq.api.access.filter.WebSocketFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -113,15 +113,11 @@ public class HttpServerBootstrapService implements Service {
                     if (websocketEnabled) {
                         checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
                         networkListener.registerAddOn(new WebSocketAddOn());
+                        networkListener.registerAddOn(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
                     serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
-
-                    boolean authRequired = apiConfig.isAuthRequired();
-                    if (authRequired) {
-                        networkListener.registerAddOn(new AccessFilterAddOn(permissionService, sessionAuthenticationService));
-                    }
 
                     if (apiConfig.isTlsRequired()) {
                         Optional<TlsContext> tlsContext;
@@ -157,29 +153,35 @@ public class HttpServerBootstrapService implements Service {
                             log.info("Rest API is disabled but pairing endpoint is available at '{}/pairing'",
                                     apiConfig.getRestServerApiBasePath());
                         }
+                        return true;
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
-                        server.shutdownNow();
                         errorMessage.set(e.getMessage());
+                        server.shutdownNow();
+                        httpServer = Optional.empty();
                         return false;
                     }
-                    return true;
                 }, commonForkJoinPool())
-                .thenCompose(result -> {
-                    if (!result) {
-                        return CompletableFuture.completedFuture(false);
-                    } else {
+                .thenCompose(isSuccess -> {
+                    if (isSuccess) {
                         return webSocketService.map(WebSocketService::initialize)
                                 .orElse(CompletableFuture.completedFuture(true));
+                    } else {
+                        // We do not let the app startup fail, but let the app observe the error message and
+                        // react (e.g. tell user to reset config).
+                        return CompletableFuture.completedFuture(true);
                     }
                 })
                 .whenComplete((result, throwable) -> {
+                    String existingErrorMessage = Optional.ofNullable(errorMessage.get())
+                            .map(e -> e + "\n")
+                            .orElse("");
                     if (throwable != null) {
-                        errorMessage.set(throwable.getMessage());
-                    } else if (result != null && result) {
+                        errorMessage.set(existingErrorMessage + throwable.getMessage());
+                    } else if (result != null && result && httpServer.isPresent()) {
                         setState(State.RUNNING);
                     } else {
-                        errorMessage.set("Initialization completed without success state");
+                        errorMessage.set(existingErrorMessage + "Initialization completed without success state");
                     }
                 });
     }

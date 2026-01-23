@@ -17,38 +17,31 @@
 
 package bisq.api.access.session;
 
-import bisq.common.util.ByteArrayUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 public class SessionToken {
-    public static final long TTL = TimeUnit.MINUTES.toSeconds(15);
+    private final long ttlInMinutes;
 
     @Getter
     private final String sessionId;
     @Getter
-    private final UUID deviceId;
+    private final String clientId;
     @Getter
     private final Instant expiresAt;
-    private final byte[] hmacKey;
 
-    public SessionToken(UUID deviceId) {
+    public SessionToken(int ttlInMinutes, String clientId) {
+        this.ttlInMinutes = ttlInMinutes;
         this.sessionId = UUID.randomUUID().toString();
-        this.deviceId = deviceId;
-        this.expiresAt = Instant.now().plusSeconds(TTL);
-        hmacKey = ByteArrayUtils.getRandomBytes(32); // 256-bit
+        this.clientId = clientId;
+        this.expiresAt = Instant.now().plusSeconds(ttlInMinutes * 60L);
     }
 
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
-    }
-
-    public byte[] getHmacKey() {
-        return hmacKey.clone();
     }
 }

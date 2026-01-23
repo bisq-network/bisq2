@@ -19,8 +19,7 @@ package bisq.api.access;
 
 import bisq.api.access.client.ClientIdentity;
 import bisq.api.access.pairing.PairingCode;
-import bisq.api.access.pairing.PairingRequest;
-import bisq.api.access.pairing.PairingRequestHandler;
+import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.pairing.qr.PairingQrCode;
 import bisq.api.access.pairing.qr.PairingQrCodeDecoder;
@@ -28,8 +27,8 @@ import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
-import bisq.api.access.session.SessionToken;
 import bisq.common.util.NetworkUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,12 +72,14 @@ class ApiAccessIntegrationTest {
         // ---------------------------------------------------------------------
         // Given: Server-side services
         // ---------------------------------------------------------------------
-        SessionService sessionService = new SessionService();
+        SessionService sessionService = new SessionService(60);
 
-        PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(new RestPermissionMapping());
+        ApiAccessStoreService apiAccessStoreService = new MockApiAccessStoreService();
 
-        PairingService pairingService = new PairingService(permissionService);
-        PairingRequestHandler pairingRequestHandler = new PairingRequestHandler(pairingService, sessionService);
+        PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+
+        PairingService pairingService = new PairingService(apiAccessStoreService, permissionService);
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
 
         // ---------------------------------------------------------------------
         // Given: Client protocol (simulated)
@@ -123,22 +123,18 @@ class ApiAccessIntegrationTest {
                 PairingCode decodedPairingCode = qrData.getPairingCode();
                 client.setGrantedPermissions(decodedPairingCode.getGrantedPermissions());
 
-                // Create pairing request
-                PairingRequest pairingRequest =
-                        client.createPairingRequest(
-                                decodedPairingCode.getId(),
-                                clientIdentity
-                        );
-
                 // -----------------------------------------------------------------
                 // When: Server handles pairing request
                 // -----------------------------------------------------------------
-                SessionToken sessionToken = pairingRequestHandler.handle(pairingRequest);
+                PairingResponse pairingResponse = apiAccessService.requestPairing(PairingService.VERSION,
+                        decodedPairingCode.getId(),
+                        clientIdentity.getClientName());
+                String sessionId = pairingResponse.getSessionId();
 
                 // -----------------------------------------------------------------
-                // Then: Client receives session token (simulated HTTP cookie)
+                // Then: Client receives session ID
                 // -----------------------------------------------------------------
-                client.setSessionToken(sessionToken);
+                client.setSessionId(sessionId);
 
                 pairingCompleted.countDown();
             } catch (Exception e) {
@@ -157,8 +153,7 @@ class ApiAccessIntegrationTest {
 
         // Optional future assertions:
         //
-        assertNotNull(client.getSessionToken());
-        assertFalse(client.getSessionToken().isExpired());
+        assertNotNull(client.getSessionId());
         assertEquals(permissions, client.getGrantedPermissions());
     }
 }

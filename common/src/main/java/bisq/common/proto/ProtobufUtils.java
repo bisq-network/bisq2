@@ -29,20 +29,27 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProtobufUtils {
-    public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
-        String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name;
-        checkNotNull(name, "Enum name must not be null. " + info);
-        checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. " + info);
+    public static <E extends Enum<E>> E enumFromProto(Class<E> enumType,
+                                                      String name) throws UnresolvableProtobufEnumException {
+        try {
 
-        //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
-        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType), "");
-        E result = Enums.getIfPresent(enumType, enumName).orNull();
-        checkNotNull(result, "Enum could not be resolved. " + info);
-        return result;
+            String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name;
+            checkNotNull(name, "Enum name must not be null. " + info);
+            checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. " + info);
+
+            //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
+            String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType), "");
+            E result = Enums.getIfPresent(enumType, enumName).orNull();
+            checkNotNull(result, "Enum could not be resolved. " + info);
+            return result;
+        } catch (Exception e) {
+            throw new UnresolvableProtobufEnumException(e);
+        }
     }
 
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name, E fallBack) {

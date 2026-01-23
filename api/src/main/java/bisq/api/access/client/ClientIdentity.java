@@ -29,11 +29,11 @@ import java.security.PublicKey;
 @Getter
 @EqualsAndHashCode
 public class ClientIdentity {
-    private final String deviceName;
+    private final String clientName;
     private final KeyPair keyPair;
 
-    public ClientIdentity(String deviceName, KeyPair keyPair) {
-        this.deviceName = deviceName;
+    public ClientIdentity(String clientName, KeyPair keyPair) {
+        this.clientName = clientName;
         this.keyPair = keyPair;
     }
 

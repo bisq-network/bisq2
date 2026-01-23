@@ -1,6 +1,6 @@
 package bisq.api.access.filter.authz;
 
-import bisq.api.access.filter.Attributes;
+import bisq.api.access.filter.Headers;
 import bisq.api.access.filter.RestApiFilter;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
@@ -14,50 +14,47 @@ import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 // TODO
 @Slf4j
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class RestApiAuthorizationFilter extends RestApiFilter {
-    private final HttpEndpointValidator httpEndpointValidator;
+    private final UriValidator uriValidator;
     private final PermissionService<RestPermissionMapping> permissionService;
 
-    public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService,
-                                      Optional<List<String>> allowEndpoints,
-                                      List<String> denyEndpoints) {
+    public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService) {
         this.permissionService = permissionService;
-        this.httpEndpointValidator = new HttpEndpointValidator(allowEndpoints, denyEndpoints);
+        this.uriValidator = new UriValidator();
     }
 
     @Override
     public void doFilter(ContainerRequestContext context) {
         URI requestUri = context.getUriInfo().getRequestUri();
         try {
-            httpEndpointValidator.validate(requestUri);
+            uriValidator.validate(requestUri);
 
-            UUID deviceId = (UUID) context.getProperty(Attributes.DEVICE_ID);
-            if (deviceId == null) {
-                throw new AuthorizationException("Missing authenticated device ID");
+            String clientId = context.getHeaderString(Headers.CLIENT_ID);
+            if (clientId == null) {
+                throw new AuthorizationException("Missing clientId");
             }
-            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(deviceId);
+            Optional<Set<Permission>> optionalPermissionSet = permissionService.findPermissions(clientId);
             if (optionalPermissionSet.isEmpty()) {
-                throw new AuthorizationException("No permissions found for device " + deviceId);
+                throw new AuthorizationException("No permissions found for client " + clientId);
             }
             Set<Permission> granted = optionalPermissionSet.get();
             Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());
             if (!permissionService.hasPermission(granted, required)) {
-                throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s", required.name(), granted));
+                throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s",
+                        required.name(), granted));
             }
         } catch (AuthorizationException | IllegalArgumentException | ForbiddenException e) {
-            log.warn("REST authz failed: {}", e.getMessage());
+            log.warn("REST authz failed. requestUri={}", requestUri, e);
             context.abortWith(Response.status(Response.Status.FORBIDDEN).build());
         } catch (Exception e) {
-            log.warn("REST authz filter failed unexpectedly", e);
+            log.warn("REST authz failed unexpectedly. requestUri={}", requestUri, e);
             context.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
         }
     }

@@ -15,9 +15,6 @@ public final class Headers {
     public static final String USER_AGENT = "User-Agent";
 
     // Bisq specific
+    public static final String CLIENT_ID = "Bisq-Client-Id";
     public static final String SESSION_ID = "Bisq-Session-Id";
-    public static final String TIMESTAMP = "Bisq-Timestamp";
-    public static final String NONCE = "Bisq-Nonce";
-    public static final String SIGNATURE = "Bisq-Signature";
-    public static final String DEVICE_ID = "Bisq-Device-Id";
 }

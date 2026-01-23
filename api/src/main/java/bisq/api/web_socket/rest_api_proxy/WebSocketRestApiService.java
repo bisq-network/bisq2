@@ -18,20 +18,27 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.application.Service;
-import bisq.common.network.Address;
-import jakarta.ws.rs.core.Response;
+import bisq.security.tls.TlsException;
+import bisq.security.tls.TlsTrustManager;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -43,22 +50,26 @@ import java.util.stream.Stream;
 public class WebSocketRestApiService implements Service {
     private final ApiConfig apiConfig;
     private final String restServerUrl;
+    private final TlsContextService tlsContextService;
     private Optional<HttpClient> httpClient = Optional.empty();
+    private final Object httpClientLock = new Object();
 
-    public WebSocketRestApiService(ApiConfig apiConfig, String restServerUrl) {
+    public WebSocketRestApiService(ApiConfig apiConfig, TlsContextService tlsContextService) {
         this.apiConfig = apiConfig;
-        this.restServerUrl = restServerUrl;
+        this.restServerUrl = apiConfig.getRestServerUrl();
+        this.tlsContextService = tlsContextService;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        httpClient = Optional.of(HttpClient.newHttpClient());
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        httpClient.ifPresent(HttpClient::close);
+        synchronized (httpClientLock) {
+            httpClient.ifPresent(HttpClient::close);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -67,44 +78,94 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        WebSocketRestApiRequest.fromJson(json)
+        Optional<WebSocketRestApiRequest> webSocketRestApiRequest = WebSocketRestApiRequest.fromJson(json);
+        webSocketRestApiRequest
                 .map(this::sendToRestApiServer)
-                .flatMap(WebSocketRestApiResponse::toJson)
-                .ifPresentOrElse(webSocket::send,
-                        () -> log.warn("Message was not sent to websocket." +
-                                "\nJson={}", json));
+                .ifPresent(future -> {
+                    future.whenComplete((response, throwable) -> {
+                        if (throwable == null) {
+                            response.toJson()
+                                    .ifPresentOrElse(webSocket::send,
+                                            () -> log.warn("Message was not sent to websocket." +
+                                                    "\nJson={}", json));
+                        } else {
+                            log.warn("REST API call failed for request: {}", json, throwable);
+                            String requestId = webSocketRestApiRequest.get().getRequestId();
+                            new WebSocketRestApiResponse(requestId, 500, throwable.getMessage()).toJson()
+                                    .ifPresent(webSocket::send);
+                        }
+                    });
+                });
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
-        if (!Address.fromFullAddress(restServerUrl).getHost().equals("127.0.0.1")) {
-            log.warn("Host of restApiAddress is expected to be 127.0.0.1 when used for wrapped requests from a WebSocket connection");
-        }
-
+    private CompletableFuture<WebSocketRestApiResponse> sendToRestApiServer(WebSocketRestApiRequest request) {
+        CompletableFuture<WebSocketRestApiResponse> future = new CompletableFuture<>();
         String url = restServerUrl + request.getPath();
         String method = request.getMethod();
         String body = request.getBody();
-
-        // We get the SESSION_ID, NONCE, TIMESTAMP and SIGNATURE headers by the client sent inside the request.headers map.
-        String[] headers = request.getHeaders().entrySet().stream()
-                .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
-                .toArray(String[]::new);
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .headers(headers)
-                .method(method, body == null
-                        ? HttpRequest.BodyPublishers.noBody()
-                        : HttpRequest.BodyPublishers.ofString(body));
         try {
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .method(method, body == null
+                            ? HttpRequest.BodyPublishers.noBody()
+                            : HttpRequest.BodyPublishers.ofString(body));
+
+            // Forward client-provided headers (e.g., session/client identifiers) from request.headers.
+            String[] headers = request.getHeaders().entrySet().stream()
+                    .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
+                    .toArray(String[]::new);
+            if (headers.length > 0) {
+                requestBuilder.headers(headers);
+            }
+
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
-            // Blocking send
-            HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
-            log.info("httpResponse {}", httpResponse);
-            return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
+            HttpClient httpClient = getOrCreateHttpClient();
+            httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response ->
+                            new WebSocketRestApiResponse(request.getRequestId(), response.statusCode(), response.body()))
+                    .whenComplete((response, throwable) -> {
+                        if (throwable == null) {
+                            log.info("httpResponse {}", response);
+                            future.complete(response);
+                        } else {
+                            log.warn("Request failed", throwable);
+                            future.completeExceptionally(throwable);
+                        }
+                    });
+            return future;
         } catch (Exception e) {
             String errorMessage = String.format("Error at sending a '%s' request to '%s'. Error: %s", method, url, e.getMessage());
             log.error(errorMessage, e);
-            return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMessage);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    private HttpClient getOrCreateHttpClient() {
+        synchronized (httpClientLock) {
+            if (httpClient.isEmpty()) {
+                HttpClient.Builder builder = HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(10));
+                if (apiConfig.isTlsRequired()) {
+                    try {
+                        SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+                        String fingerprint = tlsContextService.getOrCreateTlsContext().orElseThrow().getTlsFingerprint();
+                        sslContext.init(
+                                null,
+                                new TrustManager[]{new TlsTrustManager(fingerprint)},
+                                new SecureRandom()
+                        );
+                        builder.sslContext(sslContext);
+                    } catch (NoSuchAlgorithmException | TlsException | KeyManagementException e) {
+                        log.error("Could not apply SSL context", e);
+                        throw new RuntimeException(e);
+                    }
+                }
+                HttpClient client = builder.build();
+                httpClient = Optional.of(client);
+            }
+
+            return httpClient.get();
         }
     }
 }

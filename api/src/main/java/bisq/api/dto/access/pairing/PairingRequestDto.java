@@ -15,26 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.access.pairing;
+package bisq.api.dto.access.pairing;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
-import java.util.Arrays;
-
-
-@EqualsAndHashCode
-public final class PairingRequest {
-    private final byte[] signature;
-    @Getter
-    private final PairingRequestPayload pairingRequestPayload;
-
-    public PairingRequest(PairingRequestPayload pairingRequestPayload, byte[] signature) {
-        this.pairingRequestPayload = pairingRequestPayload;
-        this.signature = signature == null ? null : Arrays.copyOf(signature, signature.length);
-    }
-
-    public byte[] getSignature() {
-        return signature == null ? null : Arrays.copyOf(signature, signature.length);
-    }
+public record PairingRequestDto(
+        byte version,
+        String pairingCodeId,
+        String clientName
+) {
 }
+

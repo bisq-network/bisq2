@@ -28,39 +28,33 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.util.Optional;
 
 @Slf4j
 @Priority(Priorities.AUTHENTICATION)
 // @Provider omitted as we do manual registration
-public class RestApiAuthenticationFilter extends RestApiFilter {
+public class RestApiSessionAuthenticationFilter extends RestApiFilter {
     private final SessionAuthenticationService sessionAuthenticationService;
 
-    public RestApiAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
+    public RestApiSessionAuthenticationFilter(SessionAuthenticationService sessionAuthenticationService) {
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
 
     @Override
     public void doFilter(ContainerRequestContext context) {
+        URI requestUri = null;
         try {
-            URI requestUri = context.getUriInfo().getRequestUri();
-            String bodySha256Hex = AuthUtils.getBodySha256Hex(context);
+            requestUri = context.getUriInfo().getRequestUri();
 
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
-                    context.getHeaderString(Headers.SESSION_ID),
-                    context.getMethod(),
-                    requestUri,
-                    context.getHeaderString(Headers.NONCE),
-                    context.getHeaderString(Headers.TIMESTAMP),
-                    context.getHeaderString(Headers.SIGNATURE),
-                    Optional.ofNullable(bodySha256Hex)
+                    context.getHeaderString(Headers.CLIENT_ID),
+                    context.getHeaderString(Headers.SESSION_ID)
             );
 
             context.setProperty(Attributes.IS_AUTHENTICATED, true);
             context.setProperty(Attributes.SESSION_ID, session.getSessionId());
-            context.setProperty(Attributes.DEVICE_ID, session.getDeviceId());
+            context.setProperty(Attributes.CLIENT_ID, session.getClientId());
         } catch (Exception e) {
-            log.warn("Authentication failed", e);
+            log.warn("Authentication failed. requestUri={}", requestUri, e);
             throw new WebApplicationException(
                     Response.status(Response.Status.UNAUTHORIZED)
                             .entity("Unauthorized")

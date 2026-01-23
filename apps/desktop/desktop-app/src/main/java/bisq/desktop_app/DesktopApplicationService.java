@@ -225,6 +225,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         apiService = new ApiService(apiConfig,
                 getConfig().getAppDataDirPath(),
+                persistenceService,
                 securityService,
                 networkService,
                 userService,

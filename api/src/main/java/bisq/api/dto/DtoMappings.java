@@ -25,28 +25,6 @@ import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.api.access.pairing.PairingRequest;
-import bisq.api.access.pairing.PairingRequestPayload;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessageType;
-import bisq.chat.Citation;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
-import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
-import bisq.common.encoding.Hex;
-import bisq.common.market.Market;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.PriceQuote;
-import bisq.common.network.Address;
-import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
-import bisq.contract.ContractSignatureData;
-import bisq.contract.Party;
-import bisq.contract.Role;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.api.dto.account.UserDefinedFiatAccountDto;
 import bisq.api.dto.account.UserDefinedFiatAccountPayloadDto;
 import bisq.api.dto.account.protocol_type.TradeProtocolTypeDto;
@@ -90,8 +68,6 @@ import bisq.api.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.api.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.api.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.api.dto.offer.price.spec.PriceSpecDto;
-import bisq.api.dto.pairing.PairingRequestDto;
-import bisq.api.dto.pairing.PairingRequestPayloadDto;
 import bisq.api.dto.security.keys.I2PKeyPairDto;
 import bisq.api.dto.security.keys.KeyBundleDto;
 import bisq.api.dto.security.keys.KeyPairDto;
@@ -109,6 +85,26 @@ import bisq.api.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 import bisq.api.dto.user.identity.UserIdentityDto;
 import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.api.dto.user.reputation.ReputationScoreDto;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessageType;
+import bisq.chat.Citation;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
+import bisq.common.encoding.Hex;
+import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.Party;
+import bisq.contract.Role;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -144,63 +140,14 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DtoMappings {
-
-    // bisq.api.access.pairing
-
-    public static class PairingRequestMapper {
-        public static PairingRequest toBisq2Model(PairingRequestDto dto) throws GeneralSecurityException {
-            if (dto == null || dto.payload() == null) {
-                throw new IllegalArgumentException("Missing pairing request payload");
-            }
-
-            PairingRequestPayload payload = toBisq2Model(dto.payload());
-            return new PairingRequest(
-                    payload,
-                    dto.signatureBytes()
-            );
-        }
-
-        private static PairingRequestPayload toBisq2Model(PairingRequestPayloadDto dto) throws GeneralSecurityException {
-            return new PairingRequestPayload(
-                    dto.pairingCodeId(),
-                    KeyGeneration.generatePublic(bisq.common.encoding.Base64.decode(dto.clientPublicKeyBase64()), KeyGeneration.EC),
-                    dto.deviceName(),
-                    Instant.ofEpochMilli(dto.timestampEpochMillis())
-            );
-        }
-
-        public static PairingRequestDto fromBisq2Model(PairingRequest model) {
-            if (model == null || model.getPairingRequestPayload() == null) {
-                throw new IllegalArgumentException("Missing pairing request");
-            }
-
-            return new PairingRequestDto(
-                    fromBisq2Model(model.getPairingRequestPayload()),
-                    bisq.common.encoding.Base64.encode(model.getSignature()));
-        }
-
-        private static PairingRequestPayloadDto fromBisq2Model(PairingRequestPayload payload) {
-            return new PairingRequestPayloadDto(
-                    PairingRequestPayload.VERSION,
-                    payload.getPairingCodeId(),
-                    bisq.common.encoding.Base64.encode(payload.getClientPublicKey().getEncoded()),
-                    payload.getDeviceName(),
-                    payload.getTimestamp().toEpochMilli()
-            );
-        }
-    }
-
-
     // account.protocol_type
 
     public static class TradeProtocolTypeMapping {

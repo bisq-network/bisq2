@@ -48,7 +48,7 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
             }
 
             response.setStatus(200);
-            
+
             // Read all bytes to determine content length instead of using Paths which causes a crash in most cases
             byte[] data = inputStream.readAllBytes();
             setContentType(response, resourceName);
@@ -62,7 +62,8 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
 
     /**
      * Sets the content type based on extension of resourceName
-     * @param response to set the content type of
+     *
+     * @param response     to set the content type of
      * @param resourceName to determine the content type of
      */
     private void setContentType(Response response, String resourceName) {

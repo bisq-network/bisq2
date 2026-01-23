@@ -14,7 +14,7 @@ import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
-import bisq.api.rest_api.endpoints.pairing.PairingApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -25,7 +25,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
                                  PermissionService<RestPermissionMapping> permissionService,
                                  SessionAuthenticationService sessionAuthenticationService,
-                                 PairingApi pairingApi,
+                                 AccessApi accessApi,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatMessagesRestApi tradeChatMessagesRestApi,
@@ -36,7 +36,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi) {
-        super(apiConfig, pairingApi, permissionService, sessionAuthenticationService);
+        super(apiConfig, accessApi, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack

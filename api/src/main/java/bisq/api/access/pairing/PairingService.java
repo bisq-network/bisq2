@@ -17,16 +17,16 @@
 
 package bisq.api.access.pairing;
 
-import bisq.api.access.identity.DeviceProfile;
+import bisq.api.access.persistence.ApiAccessStoreService;
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
-import bisq.security.SignatureUtil;
+import bisq.common.util.ByteArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -36,14 +36,16 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PairingService {
+    public static final byte VERSION = 1;
     private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
+    private final ApiAccessStoreService apiAccessStoreService;
     private final PermissionService<? extends PermissionMapping> permissionService;
-
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
-    private final Map<UUID, DeviceProfile> deviceProfileByIdMap = new ConcurrentHashMap<>();
 
-    public PairingService(PermissionService<? extends PermissionMapping> permissionService) {
+    public PairingService(ApiAccessStoreService apiAccessStoreService,
+                          PermissionService<? extends PermissionMapping> permissionService) {
+        this.apiAccessStoreService = apiAccessStoreService;
         this.permissionService = permissionService;
     }
 
@@ -59,9 +61,12 @@ public class PairingService {
         return pairingCode;
     }
 
-    public DeviceProfile pairDevice(PairingRequest request) throws InvalidPairingRequestException {
-        PairingRequestPayload payload = request.getPairingRequestPayload();
-        String pairingCodeId = payload.getPairingCodeId();
+    public ClientProfile requestPairing(byte version,
+                                        String pairingCodeId,
+                                        String clientName) throws InvalidPairingRequestException {
+        if (version != VERSION) {
+            throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
+        }
         PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
@@ -71,43 +76,32 @@ public class PairingService {
             pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
             throw new InvalidPairingRequestException("Pairing code is expired");
         }
-        if (isSignatureInvalid(request)) {
-            throw new InvalidPairingRequestException("Invalid signature");
-        }
 
         // Mark used by removing it
         pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
 
-        UUID deviceId = UUID.randomUUID();
-        DeviceProfile deviceProfile = new DeviceProfile(deviceId, payload.getDeviceName(), payload.getClientPublicKey());
-        deviceProfileByIdMap.put(deviceId, deviceProfile);
+        String clientId = UUID.randomUUID().toString();
+        byte[] secret = ByteArrayUtils.getRandomBytes(32);
+        String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
+        ClientProfile clientProfile = new ClientProfile(clientId,
+                clientSecret,
+                clientName);
+        apiAccessStoreService.putClientProfile(clientId, clientProfile);
 
-        permissionService.setDevicePermissions(deviceId, pairingCode.getGrantedPermissions());
+        permissionService.putPermissions(clientId, pairingCode.getGrantedPermissions());
 
-        return deviceProfile;
+        return clientProfile;
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
         return Optional.ofNullable(pairingCodeByIdMap.get(id));
     }
 
-    public Optional<DeviceProfile> findDeviceProfile(UUID id) {
-        return Optional.ofNullable(deviceProfileByIdMap.get(id));
+    public Optional<ClientProfile> findClientProfile(String id) {
+        return Optional.ofNullable(apiAccessStoreService.getClientProfileByIdMap().get(id));
     }
 
     private boolean isExpired(PairingCode pairingCode) {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
-    }
-
-    private boolean isSignatureInvalid(PairingRequest request) {
-        PairingRequestPayload payload = request.getPairingRequestPayload();
-        byte[] message = PairingRequestPayloadEncoder.encode(payload);
-        byte[] signature = request.getSignature();
-        PublicKey publicKey = payload.getClientPublicKey();
-        try {
-            return !SignatureUtil.verify(message, signature, publicKey);
-        } catch (GeneralSecurityException e) {
-            return true;
-        }
     }
 }

@@ -18,6 +18,7 @@
 package bisq.api.web_socket;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
@@ -57,6 +58,7 @@ public class WebSocketService implements Service {
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public WebSocketService(ApiConfig apiConfig,
+                            TlsContextService tlsContextService,
                             BondedRolesService bondedRolesService,
                             ChatService chatService,
                             TradeService tradeService,
@@ -70,7 +72,7 @@ public class WebSocketService implements Service {
                 userService,
                 bisqEasyService,
                 openTradeItemsService);
-        webSocketRestApiService = new WebSocketRestApiService(apiConfig, apiConfig.getRestServerUrl());
+        webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
     }
 
@@ -97,7 +99,7 @@ public class WebSocketService implements Service {
                 });
     }
 
-    public ObservableSet<WebsocketClient1> getWebsocketClients() {
+    public ObservableSet<WebSocketClient> getWebsocketClients() {
         return webSocketConnectionHandler.getWebsocketClients();
     }
 

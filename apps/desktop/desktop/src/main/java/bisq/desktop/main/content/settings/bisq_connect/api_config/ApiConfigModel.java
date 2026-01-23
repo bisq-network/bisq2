@@ -31,11 +31,9 @@ import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -43,10 +41,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 
@@ -72,15 +66,6 @@ public class ApiConfigModel implements Model {
     // --- security ---
     private final BooleanProperty torClientAuthRequired = new SimpleBooleanProperty();
 
-    // --- security.rest ---
-    private final ObjectProperty<Optional<List<String>>> restAllowEndpoints = new SimpleObjectProperty<>(Optional.empty());
-    private final ListProperty<String> restDenyEndpoints = new SimpleListProperty<>(FXCollections.observableArrayList());
-
-    // --- security.websocket ---
-    private final ObjectProperty<Optional<List<String>>> websocketAllowEndpoints = new SimpleObjectProperty<>(Optional.empty());
-    private final ListProperty<String> websocketDenyEndpoints = new SimpleListProperty<>(FXCollections.observableArrayList());
-
-
     // --- UI specific ---
     private final ObservableList<ApiAccessTransportType> apiTransportTypes = FXCollections.observableArrayList();
     private final StringProperty protocol = new SimpleStringProperty();
@@ -90,7 +75,7 @@ public class ApiConfigModel implements Model {
     private final StringProperty onionServiceUrlPrompt = new SimpleStringProperty();
     private final StringProperty onionServiceUrlHelp = new SimpleStringProperty();
     private final StringProperty detectedLanHost = new SimpleStringProperty();
-    private final BooleanProperty detectedLanHostApplied = new SimpleBooleanProperty();
+    private final BooleanProperty detectedLanHostEqualToHost = new SimpleBooleanProperty();
     private final BooleanProperty applyButtonDisabled = new SimpleBooleanProperty();
 
     // Converters
@@ -112,10 +97,6 @@ public class ApiConfigModel implements Model {
         this.bindPort.set(apiConfig.getBindPort());
         this.tlsRequired.set(apiConfig.isTlsRequired());
         this.torClientAuthRequired.set(apiConfig.isTorClientAuthRequired());
-        this.restAllowEndpoints.set(apiConfig.getRestAllowEndpoints().map(ArrayList::new));
-        this.restDenyEndpoints.set(FXCollections.observableArrayList(apiConfig.getRestDenyEndpoints()));
-        this.websocketAllowEndpoints.set(apiConfig.getWebsocketAllowEndpoints().map(ArrayList::new));
-        this.websocketDenyEndpoints.set(FXCollections.observableArrayList(apiConfig.getWebsocketDenyEndpoints()));
 
         bindPortConverter = new LongStringConverter(bindPort.get(), false);
     }

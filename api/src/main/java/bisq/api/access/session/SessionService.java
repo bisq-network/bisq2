@@ -21,15 +21,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class SessionService {
     private final Map<String, SessionToken> sessionTokenBySessionIdMap = new ConcurrentHashMap<>();
+    private final int ttlInMinutes;
 
-    public SessionToken createSession(UUID deviceId) {
-        SessionToken token = new SessionToken(deviceId);
+    public SessionService(int ttlInMinutes) {
+        this.ttlInMinutes = ttlInMinutes;
+    }
+
+    public SessionToken createSession(String clientId) {
+        SessionToken token = new SessionToken(ttlInMinutes, clientId);
         sessionTokenBySessionIdMap.put(token.getSessionId(), token);
         return token;
     }

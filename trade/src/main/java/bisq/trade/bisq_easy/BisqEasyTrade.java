@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufEnumException;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -119,9 +120,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         return builder;
     }
 
-    public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
+    public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufEnumException {
+        BisqEasyTradeState state = ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState());
         BisqEasyTrade trade = new BisqEasyTrade(BisqEasyContract.fromProto(proto.getContract()),
-                ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+                state,
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),

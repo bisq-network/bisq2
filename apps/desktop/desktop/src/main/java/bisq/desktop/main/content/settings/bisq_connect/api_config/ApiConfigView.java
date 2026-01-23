@@ -78,10 +78,12 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         Label serverHeadline = getHeadline(Res.get("settings.bisqConnect.apiConfig.server"));
 
         // server
-        bindHost = getHostField(Res.get("settings.bisqConnect.apiConfig.server.host"));
+        bindHost = getHostField(Res.get("settings.bisqConnect.apiConfig.server.host"),
+                Res.get("settings.bisqConnect.apiConfig.server.host.prompt"));
         bindHost.setValidator(model.getBindHostValidator());
 
-        bindPort = getPortField(Res.get("settings.bisqConnect.apiConfig.server.port"));
+        bindPort = getPortField(Res.get("settings.bisqConnect.apiConfig.server.port"),
+                Res.get("settings.bisqConnect.apiConfig.server.port.prompt"));
         bindPort.setValidator(model.getBindPortValidator());
 
         serverUrl = getUrlField(Res.get("settings.bisqConnect.apiConfig.server.url"));
@@ -98,7 +100,8 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         // detectedLanHost
         Label detectedLanHostHeadline = getHeadline(Res.get("settings.bisqConnect.apiConfig.lan.detection"));
 
-        detectedLanHost = getHostField(Res.get("settings.bisqConnect.apiConfig.lan.detectedHost"));
+        detectedLanHost = getHostField(Res.get("settings.bisqConnect.apiConfig.lan.detectedHost"),
+                Res.get("settings.bisqConnect.apiConfig.lan.detectedHost.prompt"));
         detectedLanHost.setEditable(false);
         applyDetectedLanHostButton = new Button(Res.get("settings.bisqConnect.apiConfig.lan.apply"));
         applyDetectedLanHostButton.getStyleClass().add("outlined-button");
@@ -111,7 +114,7 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         Label tlsHeadline = getHeadline(Res.get("settings.bisqConnect.apiConfig.tls.headline"));
         tlsKeyStorePassword = new MaterialPasswordField(Res.get("settings.bisqConnect.apiConfig.tls.password"),
                 Res.get("settings.bisqConnect.apiConfig.tls.password.prompt"));
-        tlsKeyStorePassword.setValidators(model.getPwdMinLengthValidator(), model.getPwdRequiredFieldValidator());
+        tlsKeyStorePassword.setValidators(model.getPwdRequiredFieldValidator(), model.getPwdMinLengthValidator());
 
         tlsVbox = new VBox(5, tlsHeadline, tlsKeyStorePassword);
 
@@ -173,7 +176,7 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         // detectedLanHost
         detectedLanHost.textProperty().bind(model.getDetectedLanHost());
         applyDetectedLanHostButton.setOnAction(e -> controller.onApplyDetectedLanHost());
-        applyDetectedLanHostButton.disableProperty().bind(model.getDetectedLanHostApplied());
+        applyDetectedLanHostButton.disableProperty().bind(model.getDetectedLanHostEqualToHost().or(model.getDetectedLanHost().isEmpty()));
 
         // TLS
         tlsKeyStorePassword.textProperty().bindBidirectional(model.getTlsKeyStorePassword());
@@ -230,15 +233,15 @@ public class ApiConfigView extends View<VBox, ApiConfigModel, ApiConfigControlle
         return label;
     }
 
-    private static MaterialTextField getHostField(String description) {
-        MaterialTextField field = new MaterialTextField(description);
+    private static MaterialTextField getHostField(String description, String prompt) {
+        MaterialTextField field = new MaterialTextField(description, prompt);
         field.showCopyIcon();
         field.setMinWidth(300);
         return field;
     }
 
-    private static MaterialTextField getPortField(String description) {
-        MaterialTextField field = new MaterialTextField(description);
+    private static MaterialTextField getPortField(String description, String prompt) {
+        MaterialTextField field = new MaterialTextField(description, prompt);
         field.showCopyIcon();
         field.setMinWidth(100);
         return field;

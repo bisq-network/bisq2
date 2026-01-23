@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
+import bisq.api.web_socket.WebSocketClient;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.api.web_socket.WebsocketClient1;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,11 +39,11 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectController> {
     private final Label webSocketServerStateLabel;
-    private final Circle webSocketServerState;
+    private final Circle webSocketServerStateIcon;
     private final MaterialTextField qrCode;
     private final ImageView qrImageView;
     private final VBox pairingVBox;
-    private final RichTableView<WebsocketClient1> clientsTable;
+    private final RichTableView<WebSocketClient> clientsTable;
     private final MaterialTextField webSocketServerUrl;
     private Subscription webSocketServiceStatePin;
 
@@ -56,8 +56,8 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         Label headline = SettingsViewUtils.getHeadline(Res.get("settings.bisqConnect.headline"));
         Label info = getInfoLabel(Res.get("settings.bisqConnect.info"));
 
-        webSocketServerState = new Circle(8);
-        webSocketServerState.setFill(Color.GRAY);
+        webSocketServerStateIcon = new Circle(7.5);
+        webSocketServerStateIcon.setFill(Color.GRAY);
         webSocketServerStateLabel = new Label();
         webSocketServerStateLabel.getStyleClass().addAll("normal-text", "text-fill-grey-dimmed");
 
@@ -65,7 +65,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         webSocketServerUrl.showCopyIcon();
         webSocketServerUrl.setEditable(false);
 
-        HBox websocketServerStateBox = new HBox(10, webSocketServerState, webSocketServerStateLabel);
+        HBox websocketServerStateBox = new HBox(7.5, webSocketServerStateIcon, webSocketServerStateLabel);
         websocketServerStateBox.setAlignment(Pos.CENTER_LEFT);
 
         // Pairing
@@ -124,11 +124,11 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
             if (state != null) {
                 webSocketServerStateLabel.setText(Res.get("settings.bisqConnect.webSocketServerState." + state.name()));
                 switch (state) {
-                    case NEW -> webSocketServerState.setFill(Color.RED);
-                    case STARTING -> webSocketServerState.setFill(Color.YELLOW);
-                    case RUNNING -> webSocketServerState.setFill(Color.GREEN);
-                    case STOPPING -> webSocketServerState.setFill(Color.ORANGE);
-                    case TERMINATED -> webSocketServerState.setFill(Color.RED);
+                    case NEW -> webSocketServerStateIcon.setFill(Color.valueOf("#d23246"));
+                    case STARTING -> webSocketServerStateIcon.setFill(Color.valueOf("#d0831f"));
+                    case RUNNING -> webSocketServerStateIcon.setFill(Color.valueOf("#56ae48"));
+                    case STOPPING -> webSocketServerStateIcon.setFill(Color.valueOf("#68410f"));
+                    case TERMINATED -> webSocketServerStateIcon.setFill(Color.valueOf("#d23246"));
                 }
             }
         });
@@ -151,13 +151,13 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     }
 
     private void configTable() {
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebsocketClient1>()
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
                 .title(Res.get("settings.bisqConnect.clients.address"))
                 .valueSupplier(info -> info.getAddress().orElse(Res.get("data.na")))
                 .left()
                 .minWidth(200)
                 .build());
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebsocketClient1>()
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
                 .title(Res.get("settings.bisqConnect.clients.userAgent"))
                 .valueSupplier(info -> info.getUserAgent().orElse(Res.get("data.na")))
                 .left()
