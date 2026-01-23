@@ -18,8 +18,6 @@
 package bisq.api.access.pairing;
 
 import bisq.api.access.permissions.Permission;
-import bisq.common.proto.PersistableProto;
-import bisq.common.proto.ProtobufUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -29,7 +27,7 @@ import java.util.Set;
 
 @Getter
 @EqualsAndHashCode
-public final class PairingCode implements PersistableProto {
+public final class PairingCode {
     public static final byte VERSION = 1;
 
     private final String id;
@@ -40,24 +38,5 @@ public final class PairingCode implements PersistableProto {
         this.id = Objects.requireNonNull(id, "id");
         this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt");
         this.grantedPermissions = Set.copyOf(Objects.requireNonNull(grantedPermissions, "grantedPermissions"));
-    }
-
-    @Override
-    public bisq.api.protobuf.PairingCode toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
-    }
-
-    @Override
-    public bisq.api.protobuf.PairingCode.Builder getBuilder(boolean serializeForHash) {
-        return bisq.api.protobuf.PairingCode.newBuilder()
-                .setId(id)
-                .setExpiresAt(expiresAt.toEpochMilli())
-                .addAllGrantedPermissions(grantedPermissions.stream().map(Permission::toProtoEnum).toList());
-    }
-
-    public static PairingCode fromProto(bisq.api.protobuf.PairingCode proto) {
-        return new PairingCode(proto.getId(),
-                Instant.ofEpochMilli(proto.getExpiresAt()),
-                ProtobufUtils.fromProtoEnumSet(Permission.class, proto.getGrantedPermissionsList()));
     }
 }

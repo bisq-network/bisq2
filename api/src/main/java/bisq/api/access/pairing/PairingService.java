@@ -27,9 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -39,6 +41,7 @@ public class PairingService {
 
     private final ApiAccessStoreService apiAccessStoreService;
     private final PermissionService<? extends PermissionMapping> permissionService;
+    private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
 
     public PairingService(ApiAccessStoreService apiAccessStoreService,
                           PermissionService<? extends PermissionMapping> permissionService) {
@@ -54,7 +57,7 @@ public class PairingService {
         Instant expiresAt = Instant.now().plusMillis(PAIRING_CODE_TTL);
         String id = UUID.randomUUID().toString();
         PairingCode pairingCode = new PairingCode(id, expiresAt, Set.copyOf(grantedPermissions));
-        apiAccessStoreService.putPairingCode(id, pairingCode);
+        pairingCodeByIdMap.put(id, pairingCode);
         return pairingCode;
     }
 
@@ -64,18 +67,18 @@ public class PairingService {
         if (version != VERSION) {
             throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
         }
-        PairingCode pairingCode = apiAccessStoreService.getPairingCodeByIdMap().get(pairingCodeId);
+        PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
         }
 
         if (isExpired(pairingCode)) {
-            apiAccessStoreService.removePairingCode(pairingCodeId, pairingCode);
+            pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
             throw new InvalidPairingRequestException("Pairing code is expired");
         }
 
         // Mark used by removing it
-        apiAccessStoreService.removePairingCode(pairingCodeId, pairingCode);
+        pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
 
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
@@ -91,7 +94,7 @@ public class PairingService {
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
-        return Optional.ofNullable(apiAccessStoreService.getPairingCodeByIdMap().get(id));
+        return Optional.ofNullable(pairingCodeByIdMap.get(id));
     }
 
     public Optional<ClientProfile> findClientProfile(String id) {

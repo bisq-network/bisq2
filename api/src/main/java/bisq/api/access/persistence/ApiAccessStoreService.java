@@ -18,7 +18,6 @@
 package bisq.api.access.persistence;
 
 import bisq.api.access.identity.ClientProfile;
-import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.permissions.Permission;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -49,10 +48,6 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         persistence = null;
     }
 
-    public Map<String, PairingCode> getPairingCodeByIdMap() {
-        return Map.copyOf(persistableStore.getPairingCodeByIdMap());
-    }
-
     public Map<String, ClientProfile> getClientProfileByIdMap() {
         return Map.copyOf(persistableStore.getClientProfileByIdMap());
     }
@@ -65,19 +60,8 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
                 ));
     }
 
-
-    public void removePairingCode(String pairingCodeId, PairingCode pairingCode) {
-        persistableStore.getPairingCodeByIdMap().remove(pairingCodeId, pairingCode);
-        persist();
-    }
-
     public void putClientProfile(String clientId, ClientProfile clientProfile) {
         persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
-        persist();
-    }
-
-    public void putPairingCode(String id, PairingCode pairingCode) {
-        persistableStore.getPairingCodeByIdMap().put(id, pairingCode);
         persist();
     }
 

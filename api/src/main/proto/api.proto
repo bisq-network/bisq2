@@ -39,12 +39,6 @@ message PermissionSet {
   repeated Permission permissions = 1;
 }
 
-message PairingCode {
-  string id = 1;
-  uint64 expiresAt = 2;
-  repeated Permission grantedPermissions = 3;
-}
-
 message ClientProfile {
   string clientId = 1;
   string clientSecret = 2;
@@ -53,7 +47,6 @@ message ClientProfile {
 
 
 message ApiAccessStore {
-  map<string, PairingCode>  pairingCodeByIdMap = 1;
   map<string, ClientProfile> clientProfileByIdMap = 2;
   map<string, PermissionSet> permissionsByClientId = 3;
 }

@@ -18,7 +18,6 @@
 package bisq.api.access;
 
 import bisq.api.access.identity.ClientProfile;
-import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import lombok.Getter;
@@ -29,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public class MockApiAccessStoreService extends ApiAccessStoreService {
-    private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
     private final Map<String, ClientProfile> clientProfileByIdMap = new ConcurrentHashMap<>();
     private final Map<String, Set<Permission>> permissionsByClientId = new ConcurrentHashMap<>();
 
@@ -38,19 +36,8 @@ public class MockApiAccessStoreService extends ApiAccessStoreService {
     }
 
     @Override
-    public void removePairingCode(String pairingCodeId, PairingCode pairingCode) {
-        pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
-        persist();
-    }
-
-    @Override
     public void putClientProfile(String clientId, ClientProfile clientProfile) {
         clientProfileByIdMap.put(clientId, clientProfile);
-    }
-
-    @Override
-    public void putPairingCode(String id, PairingCode pairingCode) {
-        pairingCodeByIdMap.put(id, pairingCode);
     }
 
     @Override

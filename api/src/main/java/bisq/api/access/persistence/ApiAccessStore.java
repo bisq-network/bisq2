@@ -18,7 +18,6 @@
 package bisq.api.access.persistence;
 
 import bisq.api.access.identity.ClientProfile;
-import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.common.proto.ProtoResolver;
@@ -38,20 +37,16 @@ import java.util.stream.Collectors;
 @Slf4j
 final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     @Getter(AccessLevel.PACKAGE)
-    private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
-    @Getter(AccessLevel.PACKAGE)
     private final Map<String, ClientProfile> clientProfileByIdMap = new ConcurrentHashMap<>();
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, Set<Permission>> permissionsByClientId = new ConcurrentHashMap<>();
 
     ApiAccessStore() {
-        this(new HashMap<>(), new HashMap<>(), new HashMap<>());
+        this(new HashMap<>(), new HashMap<>());
     }
 
-    private ApiAccessStore(Map<String, PairingCode> pairingCodeByIdMap,
-                           Map<String, ClientProfile> clientProfileByIdMap,
+    private ApiAccessStore(Map<String, ClientProfile> clientProfileByIdMap,
                            Map<String, Set<Permission>> permissionsByClientId) {
-        this.pairingCodeByIdMap.putAll(pairingCodeByIdMap);
         this.clientProfileByIdMap.putAll(clientProfileByIdMap);
         this.permissionsByClientId.putAll(permissionsByClientId);
     }
@@ -59,9 +54,6 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     @Override
     public bisq.api.protobuf.ApiAccessStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.api.protobuf.ApiAccessStore.newBuilder()
-                .putAllPairingCodeByIdMap(pairingCodeByIdMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto(serializeForHash))))
                 .putAllClientProfileByIdMap(clientProfileByIdMap.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> e.getValue().toProto(serializeForHash))))
@@ -76,17 +68,13 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     }
 
     public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {
-        Map<String, PairingCode> pairingCodeByIdMap = proto.getPairingCodeByIdMapMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> PairingCode.fromProto(e.getValue())));
         Map<String, ClientProfile> clientProfileByIdMap = proto.getClientProfileByIdMapMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> ClientProfile.fromProto(e.getValue())));
         Map<String, Set<Permission>> permissionsByClientId = proto.getPermissionsByClientIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         e -> PermissionSet.fromProto(e.getValue()).getPermissions()));
-        return new ApiAccessStore(pairingCodeByIdMap,
-                clientProfileByIdMap,
+        return new ApiAccessStore(clientProfileByIdMap,
                 permissionsByClientId);
     }
 
@@ -103,15 +91,13 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
 
     @Override
     public ApiAccessStore getClone() {
-        return new ApiAccessStore(Map.copyOf(pairingCodeByIdMap),
-                Map.copyOf(clientProfileByIdMap),
+        return new ApiAccessStore(Map.copyOf(clientProfileByIdMap),
                 Map.copyOf(permissionsByClientId)
         );
     }
 
     @Override
     public void applyPersisted(ApiAccessStore persisted) {
-        pairingCodeByIdMap.putAll(persisted.getPairingCodeByIdMap());
         clientProfileByIdMap.putAll(persisted.getClientProfileByIdMap());
         permissionsByClientId.putAll(persisted.getPermissionsByClientId());
     }
