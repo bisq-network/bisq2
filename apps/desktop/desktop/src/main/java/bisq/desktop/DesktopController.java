@@ -17,6 +17,8 @@
 
 package bisq.desktop;
 
+import bisq.api.HttpServerBootstrapService;
+import bisq.application.ApplicationService;
 import bisq.application.State;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
@@ -60,6 +62,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -91,10 +95,11 @@ public class DesktopController extends NavigationController {
     private final PreventStandbyModeService preventStandbyModeService;
     private final RepublishUserProfileService republishUserProfileService;
     private final IdentityService identityService;
+    private final HttpServerBootstrapService httpServerBootstrapService;
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
-    private Pin referenceTimePin;
+    private Pin referenceTimePin, httpServerErrorMessagePin;
     private boolean systemClockDriftWarningDisplayed;
 
     public DesktopController(Observable<State> applicationServiceState,
@@ -115,6 +120,7 @@ public class DesktopController extends NavigationController {
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
         republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
         identityService = serviceProvider.getIdentityService();
+        httpServerBootstrapService = serviceProvider.getApiService().getHttpServerBootstrapService();
     }
 
     public void init() {
@@ -214,11 +220,40 @@ public class DesktopController extends NavigationController {
                 });
             }
         });
+
+        httpServerErrorMessagePin = httpServerBootstrapService.getErrorMessage().addObserver(httpServerErrorMessage -> {
+            if (httpServerErrorMessage != null) {
+                UIThread.run(() -> {
+                    ApplicationService.Config appConfig = serviceProvider.getConfig();
+                    Path appDataDirPath = appConfig.getAppDataDirPath();
+                    new Popup()
+                            .failure(Res.get("settings.bisqConnect.server.failure.header"),
+                                    httpServerErrorMessage,
+                                    Res.get("settings.bisqConnect.server.failure.footer")
+
+                            )
+                            .actionButtonText(Res.get("settings.bisqConnect.server.error.resetConfig"))
+                            .onAction(() -> {
+                                try {
+                                    appConfig.removeNodeFromCustomConfig("application.api");
+                                    serviceProvider.getShutDownHandler().shutdown();
+                                } catch (IOException e) {
+                                    Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+                                    log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
+                                    new Popup().error(e).show();
+                                }
+                            })
+                            .show();
+
+                });
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
         referenceTimePin.unbind();
+        httpServerErrorMessagePin.unbind();
         UIClock.shutdown();
     }
 

@@ -159,10 +159,14 @@ public class HttpServerBootstrapService implements Service {
                     } catch (BindException e) {
                         log.error("Failed to start websocket server", e);
                         server.shutdownNow();
-                        errorMessage.set(e.getMessage());
-                        // TODO clear custom api config
+
+                        errorMessage.set("Could not start API server for URL '" + baseUri + "'.\n\n" +
+                                "Exception error message: " + e.getMessage());
+
+                        // We do not let the app startup fail, but let the app observe the error message and
+                        // react (e.g. tell user to reset config).
                         return true;
-                    }catch (IOException e) {
+                    } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
                         server.shutdownNow();
                         errorMessage.set(e.getMessage());
