@@ -102,6 +102,10 @@ public class FiatCurrencyRepository {
                 return new FiatCurrency("EUR");
             }
 
+            if (countryCode.equals("BG")) {
+                return new FiatCurrency("EUR");
+            }
+
             checkNotNull(locale, "locale must not be null");
             localeLanguage = locale.getLanguage();
             checkNotNull(localeLanguage, "localeLanguage must not be null");
