@@ -78,7 +78,8 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        WebSocketRestApiRequest.fromJson(json)
+        Optional<WebSocketRestApiRequest> webSocketRestApiRequest = WebSocketRestApiRequest.fromJson(json);
+        webSocketRestApiRequest
                 .map(this::sendToRestApiServer)
                 .ifPresent(future -> {
                     future.whenComplete((response, throwable) -> {
@@ -87,6 +88,11 @@ public class WebSocketRestApiService implements Service {
                                     .ifPresentOrElse(webSocket::send,
                                             () -> log.warn("Message was not sent to websocket." +
                                                     "\nJson={}", json));
+                        } else {
+                            log.warn("REST API call failed for request: {}", json, throwable);
+                            String requestId = webSocketRestApiRequest.get().getRequestId();
+                            new WebSocketRestApiResponse(requestId, 500, throwable.getMessage()).toJson()
+                                    .ifPresent(webSocket::send);
                         }
                     });
                 });
