@@ -18,29 +18,26 @@
 package bisq.api.access.filter.authz;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-public final class HttpEndpointValidator {
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class UriValidator {
     private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:=~]*$");
     private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=~]*$");
-    private static final Set<String> METHOD_WHITELIST = Set.of("GET", "POST", "DELETE", "PUT", "PATCH");
+    private static final int MAX_PATH_LENGTH = 2000;
 
-    private final EndpointPolicy endpointPolicy;
-    private final UriSanitizer uriSanitizer;
+    private final Pattern safePathPattern;
+    private final Pattern safeQueryPattern;
 
-    public HttpEndpointValidator(Optional<List<String>> allowEndpoints,
-                                 List<String> denyEndpoints) {
-        this(new EndpointPolicy(allowEndpoints, denyEndpoints),
-                new UriSanitizer(DEFAULT_SAFE_PATH, DEFAULT_SAFE_QUERY));
+    public UriValidator() {
+        this(DEFAULT_SAFE_PATH, DEFAULT_SAFE_QUERY);
     }
 
-    public HttpEndpointValidator(EndpointPolicy endpointPolicy,
-                                 UriSanitizer uriSanitizer) {
-        this.endpointPolicy = endpointPolicy;
-        this.uriSanitizer = uriSanitizer;
+    public UriValidator(Pattern safePathPattern, Pattern safeQueryPattern) {
+        this.safePathPattern = checkNotNull(safePathPattern, "safePathPattern must not be null");
+        this.safeQueryPattern = checkNotNull(safeQueryPattern, "safeQueryPattern must not be null");
     }
 
     /**
@@ -63,12 +60,30 @@ public final class HttpEndpointValidator {
      */
     public void validate(URI uri) throws AuthorizationException {
         try {
-            uriSanitizer.validate(uri);
-            endpointPolicy.validatePathAllowed(uri.getPath());
-        } catch (AuthorizationException e) {
-            throw e;
+            checkNotNull(uri, "uri must not be null");
+
+            validatePath(uri.getPath());
+            validateQuery(uri.getQuery());
         } catch (Exception e) {
             throw new AuthorizationException("Endpoint validation failed: " + uri.getRawPath(), e);
         }
+    }
+
+
+    private void validatePath(String path) {
+        checkArgument(path != null, "URI path must not be null");
+        checkArgument(path.startsWith("/"), "Path must start with '/'");
+        checkArgument(path.length() <= MAX_PATH_LENGTH, "Path exceeds max length");
+        checkArgument(!path.contains(".."), "Path traversal is not allowed");
+        checkArgument(safePathPattern.matcher(path).matches(), "Path contains unsafe characters");
+    }
+
+    private void validateQuery(String query) {
+        if (query == null) {
+            return;
+        }
+
+        checkArgument(!query.contains(".."), "Query contains path traversal");
+        checkArgument(safeQueryPattern.matcher(query).matches(), "Query contains unsafe characters");
     }
 }

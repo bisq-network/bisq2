@@ -38,7 +38,7 @@ public class PermissionService<T extends PermissionMapping> {
         return granted.contains(required);
     }
 
-    public void setPermissions(String clientId, Set<Permission> permissions) {
+    public void putPermissions(String clientId, Set<Permission> permissions) {
         apiAccessStoreService.putPermissions(clientId, permissions);
     }
 

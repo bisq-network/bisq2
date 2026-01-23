@@ -21,9 +21,7 @@ import bisq.api.access.transport.ApiAccessTransportType;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @Getter
 public final class ApiConfig {
@@ -52,14 +50,6 @@ public final class ApiConfig {
     private final boolean supportSessionHandling;
     private final boolean authorizationRequired;
 
-    // api.server.security.rest.*
-    private final Optional<List<String>> restAllowEndpoints;
-    private final List<String> restDenyEndpoints;
-
-    // api.server.security.websocket.*
-    private final Optional<List<String>> websocketAllowEndpoints;
-    private final List<String> websocketDenyEndpoints;
-
     // api.server.security.session.*
     private final int sessionTtlInMinutes;
 
@@ -76,10 +66,6 @@ public final class ApiConfig {
             String tlsKeyStorePassword,
             List<String> tlsKeyStoreSan,
             boolean torClientAuthRequired,
-            Optional<List<String>> restAllowEndpoints,
-            List<String> restDenyEndpoints,
-            Optional<List<String>> websocketAllowEndpoints,
-            List<String> websocketDenyEndpoints,
             int sessionTtlInMinutes
     ) {
         this.apiAccessTransportType = apiAccessTransportType;
@@ -94,10 +80,6 @@ public final class ApiConfig {
         this.tlsKeyStorePassword = tlsKeyStorePassword;
         this.tlsKeyStoreSan = tlsKeyStoreSan;
         this.torClientAuthRequired = torClientAuthRequired;
-        this.restAllowEndpoints = restAllowEndpoints;
-        this.restDenyEndpoints = restDenyEndpoints;
-        this.websocketAllowEndpoints = websocketAllowEndpoints;
-        this.websocketDenyEndpoints = websocketDenyEndpoints;
         this.sessionTtlInMinutes = sessionTtlInMinutes;
     }
 
@@ -114,24 +96,7 @@ public final class ApiConfig {
         Config keystoreConfig = tlsConfig.getConfig("keystore");
         Config certificateConfig = tlsConfig.getConfig("certificate");
 
-        Config restSecurity = securityConfig.getConfig("rest");
-        Config websocketSecurity = securityConfig.getConfig("websocket");
         Config sessionSecurity = securityConfig.getConfig("session");
-
-        // use Optional instead of null
-        Optional<List<String>> restAllow = restSecurity.hasPath("allowEndpoints")
-                ? Optional.of(restSecurity.getStringList("allowEndpoints"))
-                : Optional.empty();
-        List<String> restDeny = restSecurity.hasPath("denyEndpoints")
-                ? restSecurity.getStringList("denyEndpoints")
-                : Collections.emptyList();
-
-        Optional<List<String>> wsAllow = websocketSecurity.hasPath("allowEndpoints")
-                ? Optional.of(websocketSecurity.getStringList("allowEndpoints"))
-                : Optional.empty();
-        List<String> wsDeny = websocketSecurity.hasPath("denyEndpoints")
-                ? websocketSecurity.getStringList("denyEndpoints")
-                : Collections.emptyList();
 
         return new ApiConfig(
                 apiAccessTransportType,
@@ -152,11 +117,6 @@ public final class ApiConfig {
                 certificateConfig.getStringList("san"),
 
                 torConfig.getBoolean("clientAuthRequired"),
-
-                restAllow,
-                restDeny,
-                wsAllow,
-                wsDeny,
 
                 sessionSecurity.getInt("ttlInMinutes")
         );

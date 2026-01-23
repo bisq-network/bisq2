@@ -88,7 +88,7 @@ public class PairingService {
                 clientName);
         apiAccessStoreService.putClientProfile(clientId, clientProfile);
 
-        permissionService.setPermissions(clientId, pairingCode.getGrantedPermissions());
+        permissionService.putPermissions(clientId, pairingCode.getGrantedPermissions());
 
         return clientProfile;
     }

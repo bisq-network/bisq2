@@ -14,7 +14,6 @@ import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -23,14 +22,12 @@ import java.util.Set;
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class RestApiAuthorizationFilter extends RestApiFilter {
-    private final HttpEndpointValidator httpEndpointValidator;
+    private final UriValidator httpEndpointValidator;
     private final PermissionService<RestPermissionMapping> permissionService;
 
-    public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService,
-                                      Optional<List<String>> allowEndpoints,
-                                      List<String> denyEndpoints) {
+    public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService) {
         this.permissionService = permissionService;
-        this.httpEndpointValidator = new HttpEndpointValidator(allowEndpoints, denyEndpoints);
+        this.httpEndpointValidator = new UriValidator();
     }
 
     @Override

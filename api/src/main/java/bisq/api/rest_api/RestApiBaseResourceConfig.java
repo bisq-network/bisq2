@@ -22,9 +22,7 @@ public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig
             register(new RestApiAuthenticationFilter(sessionAuthenticationService));
         }
         if (apiConfig.isAuthorizationRequired()) {
-            register(new RestApiAuthorizationFilter(permissionService,
-                    apiConfig.getRestAllowEndpoints(),
-                    apiConfig.getRestDenyEndpoints()));
+            register(new RestApiAuthorizationFilter(permissionService));
         }
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.

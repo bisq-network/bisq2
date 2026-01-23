@@ -122,7 +122,8 @@ public class BisqConnectController implements Controller {
     /* --------------------------------------------------------------------- */
 
     private void createQrCode(String webSocketUrl) {
-        PairingCode pairingCode = pairingService.createPairingCode(Set.of(Permission.values()));
+        Set<Permission> grantedPermissions = Set.of(Permission.values());
+        PairingCode pairingCode = pairingService.createPairingCode(grantedPermissions);
         Optional<TlsContext> tlsContext;
         try {
             tlsContext = tlsContextService.getOrCreateTlsContext();
