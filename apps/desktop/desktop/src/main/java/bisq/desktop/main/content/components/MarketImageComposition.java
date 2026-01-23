@@ -61,14 +61,18 @@ public class MarketImageComposition {
     private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
     public static StackPane getMarketIcons(Market market) {
-        return getMarketIcons(market, Optional.empty());
+        return getMarketIcons(market, Optional.empty(), false);
     }
 
     public static StackPane getMarketIcons(Market market, Map<String, StackPane> dedicatedCache) {
-        return getMarketIcons(market, Optional.of(dedicatedCache));
+        return getMarketIcons(market, Optional.of(dedicatedCache), false);
     }
 
-    private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
+    public static StackPane getMarketMenuIcons(Market market, Map<String, StackPane> dedicatedCache) {
+        return getMarketIcons(market, Optional.of(dedicatedCache), true);
+    }
+
+    private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache, boolean useMenuLogo) {
         String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase(Locale.ROOT);
         String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase(Locale.ROOT);
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
@@ -83,7 +87,7 @@ public class MarketImageComposition {
             }
         }
 
-        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode);
+        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, useMenuLogo);
 
         if (dedicatedCache.isPresent()) {
             dedicatedCache.get().put(key, pane);
@@ -94,17 +98,29 @@ public class MarketImageComposition {
     }
 
     public static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {
+        return getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, false);
+    }
+
+    public static StackPane getMarketMenuPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {
+       return getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, true);
+    }
+
+    private static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode, boolean useMenuLogo) {
         StackPane pane = new StackPane();
-        pane.setPrefWidth(61);
+        double menuLogoWidth = 42;
+        double regularLogoWidth = 61;
+        pane.setPrefWidth(useMenuLogo ? menuLogoWidth : regularLogoWidth);
         Stream<String> stream = Stream.of(baseCurrencyCode, quoteCurrencyCode);
         stream.forEach(code -> {
             if (quoteCurrencyCode.equals(code)) {
-                double radius = 18;
+                double menuLogoRadius = 12;
+                double regularLogoRadius = 18;
+                double radius = useMenuLogo ? menuLogoRadius : regularLogoRadius;
                 Circle circle = new Circle(radius);
                 circle.getStyleClass().add("quote-currency-market-logo");
                 StackPane.setAlignment(circle, Pos.CENTER);
 
-                Node node = createMarketLogo(code);
+                Node node = useMenuLogo ? createMarketMenuLogo(code) : createMarketLogo(code);
                 StackPane.setAlignment(node, Pos.CENTER);
 
                 StackPane quoteLogo = new StackPane();
@@ -113,7 +129,7 @@ public class MarketImageComposition {
                 StackPane.setAlignment(quoteLogo, Pos.CENTER_RIGHT);
                 pane.getChildren().add(quoteLogo);
             } else {
-                Node node = createMarketLogo(code);
+                Node node = useMenuLogo ? createMarketMenuLogo(code) : createMarketLogo(code);
                 StackPane.setAlignment(node, Pos.CENTER_LEFT);
                 pane.getChildren().add(node);
             }
