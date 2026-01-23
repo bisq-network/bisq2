@@ -165,10 +165,10 @@ public class PushNotificationService implements Service {
         payload.put("timestamp", System.currentTimeMillis());
 
         // Send to all registered devices and wait for all to complete
-        List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+        List<CompletableFuture<NotificationResult>> futures = new ArrayList<>();
         for (DeviceRegistration device : devices) {
             if (device.getPlatform() == DeviceRegistration.Platform.IOS) {
-                CompletableFuture<Boolean> future = bisqRelayClient.sendNotification(
+                CompletableFuture<NotificationResult> future = bisqRelayClient.sendNotification(
                         device.getDeviceToken(),
                         device.getPublicKey(),
                         payload,
@@ -178,13 +178,27 @@ public class PushNotificationService implements Service {
             }
         }
 
-        // Wait for all notifications to complete, then mark as sent only if at least one succeeded
+        // Wait for all notifications to complete, then process results
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .whenComplete((ignored, throwable) -> {
+                    // Process results and auto-unregister bad devices
+                    List<NotificationResult> results = futures.stream()
+                            .map(f -> f.getNow(null))
+                            .filter(r -> r != null)
+                            .toList();
+
+                    // Auto-unregister devices that should be removed
+                    results.stream()
+                            .filter(NotificationResult::isShouldUnregister)
+                            .forEach(result -> {
+                                log.warn("Auto-unregistering invalid device token for user {}: tokenLength={}",
+                                        userProfileId, result.getDeviceToken().length());
+                                deviceRegistrationService.unregisterDevice(userProfileId, result.getDeviceToken());
+                            });
+
                     // Check if at least one notification succeeded
-                    boolean anySuccess = futures.stream()
-                            .map(f -> f.getNow(false))
-                            .anyMatch(success -> success);
+                    boolean anySuccess = results.stream()
+                            .anyMatch(NotificationResult::isSuccess);
 
                     if (anySuccess) {
                         // At least one device received the notification successfully

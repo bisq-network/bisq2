@@ -83,10 +83,10 @@ public class BisqRelayClient {
      * @param publicKeyBase64 The device's public key (Base64 encoded)
      * @param payload        The notification payload to encrypt
      * @param isUrgent       Whether the notification is urgent
-     * @return CompletableFuture that completes when the notification is sent
+     * @return CompletableFuture with NotificationResult indicating success and whether to unregister
      */
-    public CompletableFuture<Boolean> sendNotification(String deviceToken, String publicKeyBase64,
-                                                        Map<String, Object> payload, boolean isUrgent) {
+    public CompletableFuture<NotificationResult> sendNotification(String deviceToken, String publicKeyBase64,
+                                                                   Map<String, Object> payload, boolean isUrgent) {
         // Use dedicated I/O executor instead of common ForkJoinPool for blocking HTTP operations
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -121,12 +121,12 @@ public class BisqRelayClient {
                 }
             } catch (Exception e) {
                 log.error("Error sending push notification to Bisq Relay", e);
-                return false;
+                return NotificationResult.failed(deviceToken);
             }
         }, ioExecutor); // Use dedicated I/O executor for blocking HTTP operations
     }
 
-    private boolean sendViaTor(String endpoint, String requestJson, String deviceToken) {
+    private NotificationResult sendViaTor(String endpoint, String requestJson, String deviceToken) {
         BaseHttpClient httpClient = null;
         try {
             NetworkService ns = networkService.orElseThrow(() ->
@@ -157,11 +157,13 @@ public class BisqRelayClient {
                     deviceToken.substring(0, Math.min(10, deviceToken.length())),
                     response.substring(0, Math.min(100, response.length())));
 
-            return true;
+            return NotificationResult.success(deviceToken);
         } catch (Exception e) {
             log.error("Error sending push notification via Tor to device: {}...",
                     deviceToken.substring(0, Math.min(10, deviceToken.length())), e);
-            return false;
+
+            // Check if this is a BadDeviceToken or isUnregistered error
+            return parseErrorResponse(e, deviceToken);
         } finally {
             // Always shutdown the HTTP client to release resources
             if (httpClient != null) {
@@ -175,7 +177,7 @@ public class BisqRelayClient {
         }
     }
 
-    private boolean sendDirect(String endpoint, String requestJson, String deviceToken) {
+    private NotificationResult sendDirect(String endpoint, String requestJson, String deviceToken) {
         // Fallback to direct connection (for testing with sandbox relay)
         log.warn("Using direct HTTP connection for push notification - this should only be used for testing");
 
@@ -209,12 +211,51 @@ public class BisqRelayClient {
                     response.body().substring(0, Math.min(100, response.body().length())));
 
             // Consider 2xx status codes as success
-            return response.statusCode() >= 200 && response.statusCode() < 300;
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return NotificationResult.success(deviceToken);
+            } else {
+                // Parse error response to check if device should be unregistered
+                return parseErrorResponseBody(response.body(), deviceToken);
+            }
         } catch (Exception e) {
             log.error("Error sending push notification via direct HTTP to device: {}...",
                     deviceToken.substring(0, Math.min(10, deviceToken.length())), e);
-            return false;
+            return parseErrorResponse(e, deviceToken);
         }
+    }
+
+    /**
+     * Parse error response from exception to determine if device should be unregistered.
+     */
+    private NotificationResult parseErrorResponse(Exception e, String deviceToken) {
+        String errorMessage = e.getMessage();
+        if (errorMessage != null) {
+            return parseErrorResponseBody(errorMessage, deviceToken);
+        }
+        return NotificationResult.failed(deviceToken);
+    }
+
+    /**
+     * Parse error response body to check for BadDeviceToken or isUnregistered.
+     * Relay returns JSON like: {"wasAccepted":false,"errorCode":"BadDeviceToken","isUnregistered":true}
+     */
+    private NotificationResult parseErrorResponseBody(String responseBody, String deviceToken) {
+        if (responseBody == null) {
+            return NotificationResult.failed(deviceToken);
+        }
+
+        // Check for BadDeviceToken or isUnregistered indicators
+        boolean isBadDeviceToken = responseBody.contains("\"errorCode\":\"BadDeviceToken\"");
+        boolean isUnregistered = responseBody.contains("\"isUnregistered\":true");
+
+        if (isBadDeviceToken || isUnregistered) {
+            log.warn("Device token is invalid or unregistered, will auto-unregister: {}... Response: {}",
+                    deviceToken.substring(0, Math.min(10, deviceToken.length())),
+                    responseBody.substring(0, Math.min(200, responseBody.length())));
+            return NotificationResult.failedShouldUnregister(deviceToken);
+        }
+
+        return NotificationResult.failed(deviceToken);
     }
 
     /**

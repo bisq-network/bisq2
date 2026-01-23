@@ -87,6 +87,19 @@ public class DevicesRestApi extends RestApiBase {
                 return buildResponse(Response.Status.BAD_REQUEST, "Invalid request: deviceToken is required");
             }
 
+            // Validate device token format (APNs tokens are hex strings, typically 64 chars)
+            if (!request.getDeviceToken().matches("^[a-zA-Z0-9]+$")) {
+                log.warn("Registration failed: deviceToken contains invalid characters (tokenLength: {})",
+                        request.getDeviceToken().length());
+                return buildResponse(Response.Status.BAD_REQUEST,
+                        "Invalid request: deviceToken must contain only alphanumeric characters");
+            }
+
+            // Warn if token length is unusual (APNs tokens are typically 64 hex chars)
+            if (request.getDeviceToken().length() != 64) {
+                log.warn("Unusual device token length: {} (expected 64 for APNs)", request.getDeviceToken().length());
+            }
+
             if (request.getPublicKey() == null || request.getPublicKey().isBlank()) {
                 log.warn("Registration failed: publicKey is null or blank");
                 return buildResponse(Response.Status.BAD_REQUEST, "Invalid request: publicKey is required");
