@@ -22,7 +22,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.api.web_socket.WebsocketClient;
+import bisq.api.web_socket.WebSocketClient;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -43,7 +43,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     private final MaterialTextField qrCode;
     private final ImageView qrImageView;
     private final VBox pairingVBox;
-    private final RichTableView<WebsocketClient> clientsTable;
+    private final RichTableView<WebSocketClient> clientsTable;
     private final MaterialTextField webSocketServerUrl;
     private Subscription webSocketServiceStatePin;
 
@@ -151,13 +151,13 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     }
 
     private void configTable() {
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebsocketClient>()
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
                 .title(Res.get("settings.bisqConnect.clients.address"))
                 .valueSupplier(info -> info.getAddress().orElse(Res.get("data.na")))
                 .left()
                 .minWidth(200)
                 .build());
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebsocketClient>()
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
                 .title(Res.get("settings.bisqConnect.clients.userAgent"))
                 .valueSupplier(info -> info.getUserAgent().orElse(Res.get("data.na")))
                 .left()

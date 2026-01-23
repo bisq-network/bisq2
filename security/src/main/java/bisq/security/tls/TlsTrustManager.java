@@ -61,7 +61,7 @@ public final class TlsTrustManager implements X509TrustManager {
     @Override
     public void checkClientTrusted(X509Certificate[] chain, String authType)
             throws CertificateException {
-        throw new UnsupportedOperationException("Client trust not supported");
+        throw new CertificateException("Client trust not supported");
     }
 
     @Override

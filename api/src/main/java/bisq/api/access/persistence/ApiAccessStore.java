@@ -104,8 +104,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     @Override
     public ApiAccessStore getClone() {
         return new ApiAccessStore(Map.copyOf(pairingCodeByIdMap),
-                Map.copyOf(Map.copyOf(clientProfileByIdMap)),
-                Map.copyOf(Map.copyOf(permissionsByClientId))
+                Map.copyOf(clientProfileByIdMap),
+                Map.copyOf(permissionsByClientId)
         );
     }
 

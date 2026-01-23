@@ -25,12 +25,12 @@ import java.util.UUID;
 
 @Getter
 @EqualsAndHashCode
-public class WebsocketClient {
+public class WebSocketClient {
     private final String id = UUID.randomUUID().toString();
     private final Optional<String> address;
     private final Optional<String> userAgent;
 
-    public WebsocketClient(Optional<String> address, Optional<String> userAgent) {
+    public WebSocketClient(Optional<String> address, Optional<String> userAgent) {
         this.address = address;
         this.userAgent = userAgent;
     }

@@ -99,7 +99,7 @@ public class WebSocketService implements Service {
                 });
     }
 
-    public ObservableSet<WebsocketClient> getWebsocketClients() {
+    public ObservableSet<WebSocketClient> getWebsocketClients() {
         return webSocketConnectionHandler.getWebsocketClients();
     }
 

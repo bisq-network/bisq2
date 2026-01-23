@@ -131,7 +131,7 @@ public abstract class ApplicationService implements Service {
             return true;
         }
 
-        public boolean removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
+        public void removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
             com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
             com.typesafe.config.Config newConfig = customConfig.withoutPath(nodePathToRemove);
             String rendered = newConfig.root().render(ConfigRenderOptions.defaults()
@@ -140,7 +140,6 @@ public abstract class ApplicationService implements Service {
                     .setFormatted(true));
             Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
             FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
-            return true;
         }
     }
 

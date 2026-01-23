@@ -17,7 +17,7 @@
 
 package bisq.api;
 
-import bisq.api.access.filter.AccessFilterAddOn;
+import bisq.api.access.filter.WebSocketFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
@@ -113,12 +113,11 @@ public class HttpServerBootstrapService implements Service {
                     if (websocketEnabled) {
                         checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
                         networkListener.registerAddOn(new WebSocketAddOn());
+                        networkListener.registerAddOn(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
                     serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
-
-                    networkListener.registerAddOn(new AccessFilterAddOn(apiConfig, sessionAuthenticationService));
 
                     if (apiConfig.isTlsRequired()) {
                         Optional<TlsContext> tlsContext;

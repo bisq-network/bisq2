@@ -26,12 +26,12 @@ import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.websockets.WebSocketFilter;
 
-public class AccessFilterAddOn implements AddOn {
+public class WebSocketFilterAddOn implements AddOn {
     private final ApiConfig apiConfig;
     private final SessionAuthenticationService sessionAuthenticationService;
 
-    public AccessFilterAddOn(ApiConfig apiConfig,
-                             SessionAuthenticationService sessionAuthenticationService) {
+    public WebSocketFilterAddOn(ApiConfig apiConfig,
+                                SessionAuthenticationService sessionAuthenticationService) {
         this.apiConfig = apiConfig;
         this.sessionAuthenticationService = sessionAuthenticationService;
     }
@@ -48,8 +48,9 @@ public class AccessFilterAddOn implements AddOn {
 
         if (apiConfig.isSupportSessionHandling()) {
             builder.add(index, new WebSocketHandshakeAuthenticationFilter(sessionAuthenticationService));
+            index++;
         }
-        builder.add(++index, new WebSocketHandshakeMetaDataEnrichment());
+        builder.add(index, new WebSocketHandshakeMetaDataEnrichment());
     }
 }
 

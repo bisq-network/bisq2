@@ -158,7 +158,7 @@ public final class ApiConfig {
                 wsAllow,
                 wsDeny,
 
-                sessionSecurity.getInt("sessionTtlInMinutes")
+                sessionSecurity.getInt("ttlInMinutes")
         );
     }
 

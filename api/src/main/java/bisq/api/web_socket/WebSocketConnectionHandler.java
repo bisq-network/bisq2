@@ -46,7 +46,7 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     private final SubscriptionService subscriptionService;
     private final WebSocketRestApiService webSocketRestApiService;
     @Getter
-    private final ObservableSet<WebsocketClient> websocketClients = new ObservableSet<>();
+    private final ObservableSet<WebSocketClient> websocketClients = new ObservableSet<>();
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService) {
@@ -118,7 +118,7 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
                         }
                     }
                 }
-                return new WebsocketClient(address, userAgent);
+                return new WebSocketClient(address, userAgent);
             }).collect(Collectors.toSet()));
         } catch (Exception t) {
             log.warn("Could not notify clients listeners", t);

@@ -110,7 +110,7 @@ public class WebSocketRestApiService implements Service {
                             ? HttpRequest.BodyPublishers.noBody()
                             : HttpRequest.BodyPublishers.ofString(body));
 
-            // We get the SESSION_ID, NONCE, TIMESTAMP and SIGNATURE headers by the client sent inside the request.headers map.
+            // Forward client-provided headers (e.g., session/client identifiers) from request.headers.
             String[] headers = request.getHeaders().entrySet().stream()
                     .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
                     .toArray(String[]::new);
@@ -120,21 +120,19 @@ public class WebSocketRestApiService implements Service {
 
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
-            synchronized (httpClientLock) {
-                HttpClient httpClient = getOrCreateHttpClient();
-                httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                        .thenApply(response ->
-                                new WebSocketRestApiResponse(request.getRequestId(), response.statusCode(), response.body()))
-                        .whenComplete((response, throwable) -> {
-                            if (throwable == null) {
-                                log.info("httpResponse {}", response);
-                                future.complete(response);
-                            } else {
-                                log.warn("Request failed", throwable);
-                                future.completeExceptionally(throwable);
-                            }
-                        });
-            }
+            HttpClient httpClient = getOrCreateHttpClient();
+            httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response ->
+                            new WebSocketRestApiResponse(request.getRequestId(), response.statusCode(), response.body()))
+                    .whenComplete((response, throwable) -> {
+                        if (throwable == null) {
+                            log.info("httpResponse {}", response);
+                            future.complete(response);
+                        } else {
+                            log.warn("Request failed", throwable);
+                            future.completeExceptionally(throwable);
+                        }
+                    });
             return future;
         } catch (Exception e) {
             String errorMessage = String.format("Error at sending a '%s' request to '%s'. Error: %s", method, url, e.getMessage());
@@ -144,28 +142,30 @@ public class WebSocketRestApiService implements Service {
     }
 
     private HttpClient getOrCreateHttpClient() {
-        if (httpClient.isEmpty()) {
-            HttpClient.Builder builder = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10));
-            if (apiConfig.isTlsRequired()) {
-                try {
-                    SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
-                    String fingerprint = tlsContextService.getOrCreateTlsContext().orElseThrow().getTlsFingerprint();
-                    sslContext.init(
-                            null,
-                            new TrustManager[]{new TlsTrustManager(fingerprint)},
-                            new SecureRandom()
-                    );
-                    builder.sslContext(sslContext);
-                } catch (NoSuchAlgorithmException | TlsException | KeyManagementException e) {
-                    log.error("Could not apply SSL context", e);
-                    throw new RuntimeException(e);
+        synchronized (httpClientLock) {
+            if (httpClient.isEmpty()) {
+                HttpClient.Builder builder = HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(10));
+                if (apiConfig.isTlsRequired()) {
+                    try {
+                        SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+                        String fingerprint = tlsContextService.getOrCreateTlsContext().orElseThrow().getTlsFingerprint();
+                        sslContext.init(
+                                null,
+                                new TrustManager[]{new TlsTrustManager(fingerprint)},
+                                new SecureRandom()
+                        );
+                        builder.sslContext(sslContext);
+                    } catch (NoSuchAlgorithmException | TlsException | KeyManagementException e) {
+                        log.error("Could not apply SSL context", e);
+                        throw new RuntimeException(e);
+                    }
                 }
+                HttpClient client = builder.build();
+                httpClient = Optional.of(client);
             }
-            HttpClient client = builder.build();
-            httpClient = Optional.of(client);
-        }
 
-        return httpClient.get();
+            return httpClient.get();
+        }
     }
 }
