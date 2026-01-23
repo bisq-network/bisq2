@@ -28,7 +28,6 @@ import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
 
 import java.net.SocketAddress;
-import java.util.Objects;
 
 /**
  * Enriches the connection context with metadata extracted from a WebSocket
@@ -71,17 +70,28 @@ public class WebSocketHandshakeMetaDataEnrichment extends BaseFilter {
                     // We apply the attributes only at the Websocket handshake request
                     Connection<?> connection = context.getConnection();
                     AttributeHolder connectionAttributes = connection.getAttributes();
-                    if (connectionAttributes != null && connectionAttributes.getAttribute(Attributes.USER_AGENT) == null) {
-                        String userAgent = request.getHeader(Headers.USER_AGENT);
-                        connectionAttributes.setAttribute(Attributes.USER_AGENT, Objects.requireNonNullElse(userAgent, "-"));
+                    if (connectionAttributes != null) {
+                        if (connectionAttributes.getAttribute(Attributes.USER_AGENT) == null) {
+                            String userAgent = request.getHeader(Headers.USER_AGENT);
+                            if (userAgent != null) {
+                                connectionAttributes.setAttribute(Attributes.USER_AGENT, userAgent);
+                            }
 
-                        Object peer = connection.getPeerAddress();
-                        if (peer instanceof SocketAddress) {
-                            connectionAttributes.setAttribute(Attributes.REMOTE_ADDRESS, peer.toString());
                         }
+                        if (connectionAttributes.getAttribute(Attributes.REMOTE_ADDRESS) == null) {
+                            Object peer = connection.getPeerAddress();
+                            if (peer instanceof SocketAddress) {
+                                connectionAttributes.setAttribute(Attributes.REMOTE_ADDRESS, peer.toString());
+                            }
 
+                        }
                     }
-                    HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, request.getHeader(Headers.CLIENT_ID));
+                    if (!HttpRequestFilterUtils.hasConnectionAttribute(context, Attributes.CLIENT_ID)) {
+                        String clientIdHeader = request.getHeader(Headers.CLIENT_ID);
+                        if (clientIdHeader != null) {
+                            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, clientIdHeader);
+                        }
+                    }
                 });
 
 
