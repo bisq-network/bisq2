@@ -53,6 +53,7 @@ public class WebSocketRestApiService implements Service {
     private final String restServerUrl;
     private final TlsContextService tlsContextService;
     private Optional<HttpClient> httpClient = Optional.empty();
+    private final Object httpClientLock = new Object();
 
     public WebSocketRestApiService(ApiConfig apiConfig, TlsContextService tlsContextService) {
         this.apiConfig = apiConfig;
@@ -67,7 +68,9 @@ public class WebSocketRestApiService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        httpClient.ifPresent(HttpClient::close);
+        synchronized (httpClientLock) {
+            httpClient.ifPresent(HttpClient::close);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -106,8 +109,11 @@ public class WebSocketRestApiService implements Service {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
             // Blocking send
-            HttpClient httpClient = getOrCreateHttpClient();
-            HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> httpResponse;
+            synchronized (httpClientLock) {
+                HttpClient httpClient = getOrCreateHttpClient();
+                httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            }
             log.info("httpResponse {}", httpResponse);
             return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
