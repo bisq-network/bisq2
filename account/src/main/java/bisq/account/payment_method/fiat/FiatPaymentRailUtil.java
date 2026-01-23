@@ -17,7 +17,6 @@
 
 package bisq.account.payment_method.fiat;
 
-import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;
@@ -25,7 +24,6 @@ import bisq.common.locale.CountryRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -451,15 +449,7 @@ public class FiatPaymentRailUtil {
 
     private static List<FiatCurrency> currenciesFromCodes(List<String> currencyCodes) {
         return currencyCodes.stream()
-                .map(FiatCurrencyRepository::getCurrencyByCode)
-                .collect(Collectors.toList());
-    }
-
-    private static List<Asset> toTradeCurrencies(List<String> currencyCodes) {
-        return currencyCodes.stream()
-                .map(FiatCurrencyRepository::getCurrencyByCode)
-                .distinct()
-                .sorted(Comparator.comparingInt(Asset::hashCode))
+                .flatMap(code -> FiatCurrencyRepository.findFiatCurrency(code).stream())
                 .collect(Collectors.toList());
     }
 }

@@ -56,18 +56,16 @@ public class PaymentAccountValidation {
     }
 
     public static void validateCurrencyCodes(List<String> currencyCodes) {
-        try {
-            FiatCurrencyRepository.getCurrencyByCodes(currencyCodes);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid currencyCodes " + currencyCodes);
+        for (var code : currencyCodes) {
+            validateCurrencyCode(code);
         }
     }
 
     public static void validateCurrencyCode(String currencyCode) {
         try {
-            FiatCurrencyRepository.getCurrencyByCode(currencyCode);
+            checkArgument(FiatCurrencyRepository.findFiatCurrency(currencyCode).isPresent());
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid currencyCode " + currencyCode);
+            throw new IllegalArgumentException("No Fiat currency found for " + currencyCode);
         }
     }
 
