@@ -138,7 +138,7 @@ public class ApiConfigController implements Controller {
                 EasyBind.combine(model.getDetectedLanHost(), model.getBindHost(),
                         (detectedLanHost, bindHost) -> detectedLanHost != null && detectedLanHost.equals(bindHost)),
                 isEquals -> {
-                    model.getDetectedLanHostApplied().set(isEquals);
+                    model.getDetectedLanHostEqualToHost().set(isEquals);
                 }
         ));
 

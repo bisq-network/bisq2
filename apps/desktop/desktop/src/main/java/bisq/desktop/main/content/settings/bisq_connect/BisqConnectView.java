@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
+import bisq.api.web_socket.WebSocketClient;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
-import bisq.api.web_socket.WebSocketClient;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

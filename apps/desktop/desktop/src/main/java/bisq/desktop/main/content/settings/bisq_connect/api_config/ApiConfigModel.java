@@ -75,7 +75,7 @@ public class ApiConfigModel implements Model {
     private final StringProperty onionServiceUrlPrompt = new SimpleStringProperty();
     private final StringProperty onionServiceUrlHelp = new SimpleStringProperty();
     private final StringProperty detectedLanHost = new SimpleStringProperty();
-    private final BooleanProperty detectedLanHostApplied = new SimpleBooleanProperty();
+    private final BooleanProperty detectedLanHostEqualToHost = new SimpleBooleanProperty();
     private final BooleanProperty applyButtonDisabled = new SimpleBooleanProperty();
 
     // Converters
