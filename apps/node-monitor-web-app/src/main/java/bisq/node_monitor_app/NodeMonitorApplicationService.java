@@ -21,7 +21,7 @@ import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.ApiAccessService;
-import bisq.api.access.ApiAccessStoreService;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;

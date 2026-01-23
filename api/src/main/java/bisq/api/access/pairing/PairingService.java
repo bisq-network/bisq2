@@ -17,7 +17,7 @@
 
 package bisq.api.access.pairing;
 
-import bisq.api.access.ApiAccessStoreService;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;

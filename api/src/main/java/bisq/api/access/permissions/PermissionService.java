@@ -17,7 +17,7 @@
 
 package bisq.api.access.permissions;
 
-import bisq.api.access.ApiAccessStoreService;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import lombok.Getter;
 
 import java.util.Collections;

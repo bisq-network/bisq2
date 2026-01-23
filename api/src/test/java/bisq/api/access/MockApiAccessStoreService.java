@@ -20,6 +20,7 @@ package bisq.api.access;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.permissions.Permission;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import lombok.Getter;
 
 import java.util.Map;
