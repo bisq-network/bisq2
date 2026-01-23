@@ -41,7 +41,6 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -156,39 +155,35 @@ public class HttpServerBootstrapService implements Service {
                             log.info("Rest API is disabled but pairing endpoint is available at '{}/pairing'",
                                     apiConfig.getRestServerApiBasePath());
                         }
-                    } catch (BindException e) {
-                        log.error("Failed to start websocket server", e);
-                        server.shutdownNow();
-
-                        errorMessage.set("Could not start API server for URL '" + baseUri + "'.\n\n" +
-                                "Exception error message: " + e.getMessage());
-
-                        // We do not let the app startup fail, but let the app observe the error message and
-                        // react (e.g. tell user to reset config).
                         return true;
                     } catch (IOException e) {
                         log.error("Failed to start websocket server", e);
-                        server.shutdownNow();
                         errorMessage.set(e.getMessage());
+                        server.shutdownNow();
+                        httpServer = Optional.empty();
                         return false;
                     }
-                    return true;
                 }, commonForkJoinPool())
-                .thenCompose(result -> {
-                    if (!result) {
-                        return CompletableFuture.completedFuture(false);
-                    } else {
+                .thenCompose(isSuccess -> {
+                    if (isSuccess) {
                         return webSocketService.map(WebSocketService::initialize)
                                 .orElse(CompletableFuture.completedFuture(true));
+                    } else {
+                        // We do not let the app startup fail, but let the app observe the error message and
+                        // react (e.g. tell user to reset config).
+                        return CompletableFuture.completedFuture(true);
                     }
                 })
                 .whenComplete((result, throwable) -> {
+                    String existingErrorMessage = Optional.ofNullable(errorMessage.get())
+                            .map(e -> e + "\n")
+                            .orElse("");
                     if (throwable != null) {
-                        errorMessage.set(throwable.getMessage());
+                        errorMessage.set(existingErrorMessage + throwable.getMessage());
                     } else if (result != null && result) {
                         setState(State.RUNNING);
                     } else {
-                        errorMessage.set("Initialization completed without success state");
+                        errorMessage.set(existingErrorMessage + "Initialization completed without success state");
                     }
                 });
     }
