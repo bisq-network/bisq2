@@ -137,8 +137,11 @@ public class BisqRelayClient {
             // The TorHttpClient will extract the path from the URI
             String fullUrl = relayBaseUrl + endpoint;
 
+            // Redact device token from URL for logging (security: don't log raw device tokens)
+            String redactedUrl = relayBaseUrl + "/<redacted>";
+
             log.info("Sending push notification via Tor to: {} (device: {}...)",
-                    fullUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
+                    redactedUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
 
             httpClient = ns.getHttpClient(
                 fullUrl,
@@ -183,9 +186,11 @@ public class BisqRelayClient {
 
         try {
             String fullUrl = relayBaseUrl + endpoint;
+            // Redact device token from URL for logging (security: don't log raw device tokens)
+            String redactedUrl = relayBaseUrl + "/<redacted>";
 
             log.info("Sending push notification via direct HTTP to: {} (device: {}...)",
-                    fullUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
+                    redactedUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
 
             // Create HTTP client with connect timeout to prevent indefinite blocking
             HttpClient httpClient = HttpClient.newBuilder()
@@ -277,10 +282,18 @@ public class BisqRelayClient {
 
         // Encrypt with ECIES (Elliptic Curve Integrated Encryption Scheme)
         // Using AES-128-CBC with HMAC-SHA1 for MAC (default BouncyCastle ECIES parameters)
-        byte[] derivation = new byte[0];
-        byte[] encoding = new byte[0];
-        // IESParameterSpec(derivation, encoding, macKeySize)
-        IESParameterSpec iesSpec = new IESParameterSpec(derivation, encoding, 128);
+        //
+        // CRITICAL: These IESParameterSpec parameters MUST match exactly on the mobile client side:
+        // - derivation: empty byte[] (not null) - used for KDF derivation parameter
+        // - encoding: empty byte[] (not null) - used for KDF encoding parameter
+        // - macKeySize: 128 bits - selects AES-128-CBC with HMAC-SHA1 per BouncyCastle ECIES defaults
+        //
+        // Mobile teams: Verify your decryption uses identical IESParameterSpec(new byte[0], new byte[0], 128)
+        // Any mismatch in these parameters will cause decryption to fail silently or produce garbage.
+        byte[] derivation = new byte[0];  // Intentionally empty, not null
+        byte[] encoding = new byte[0];    // Intentionally empty, not null
+        int macKeySize = 128;             // 128 bits for AES-128-CBC + HMAC-SHA1
+        IESParameterSpec iesSpec = new IESParameterSpec(derivation, encoding, macKeySize);
 
         Cipher cipher = Cipher.getInstance("ECIES", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey, iesSpec);

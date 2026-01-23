@@ -129,7 +129,7 @@ public class DevicesRestApi extends RestApiBase {
             }
         } catch (Exception e) {
             log.error("✗ Exception during device registration", e);
-            return buildErrorResponse("Failed to register device: " + e.getMessage());
+            return buildErrorResponse("Failed to register device");
         }
     }
 
@@ -169,7 +169,7 @@ public class DevicesRestApi extends RestApiBase {
             }
         } catch (Exception e) {
             log.error("Error unregistering device", e);
-            return buildErrorResponse("Failed to unregister device: " + e.getMessage());
+            return buildErrorResponse("Failed to unregister device");
         }
     }
 }

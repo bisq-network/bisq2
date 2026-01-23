@@ -59,7 +59,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     @Nullable
     private Pin tradesPin;
-    private final Map<String, Set<Pin>> pinsByTradeId = new HashMap<>();
+    // Thread-safe: mutated from observer callbacks (add/remove/clear) and read in shutdown()
+    private final Map<String, Set<Pin>> pinsByTradeId = new ConcurrentHashMap<>();
 
     // Deduplication tracking
     private final Set<String> notifiedPaymentInfo = ConcurrentHashMap.newKeySet();
@@ -86,7 +87,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             @Override
             public void add(BisqEasyTrade bisqEasyTrade) {
                 String tradeId = bisqEasyTrade.getId();
-                pinsByTradeId.computeIfAbsent(tradeId, k -> new HashSet<>());
+                // Use thread-safe set for concurrent access from observer callbacks
+                pinsByTradeId.computeIfAbsent(tradeId, k -> ConcurrentHashMap.newKeySet());
                 Set<Pin> pins = pinsByTradeId.get(tradeId);
                 pins.add(observeTradeState(bisqEasyTrade, tradeId));
                 pins.add(observeInterruptTradeInitiator(bisqEasyTrade, tradeId));
@@ -272,18 +274,20 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 send(Map.of(tradeId, data));
 
                 // Only send push notification if value actually changed and we haven't notified yet
+                // Payment account data is sent by seller, so only notify the buyer (receiver)
                 if (!value.equals(previousValue[0]) && notifiedPaymentInfo.add(tradeId)) {
-                    pushNotificationService.ifPresent(service -> {
-                        String userProfileId = bisqEasyTrade.getMyIdentity().getId();
-                        boolean isSeller = !bisqEasyTrade.isBuyer();
-                        String peerUserName = getPeerUserName(bisqEasyTrade);
+                    boolean isSeller = !bisqEasyTrade.isBuyer();
 
-                        String message = isSeller
-                            ? "You sent payment info to " + peerUserName
-                            : "You received payment info from " + peerUserName;
+                    // Only notify the buyer (receiver), not the seller (sender)
+                    if (!isSeller) {
+                        pushNotificationService.ifPresent(service -> {
+                            String userProfileId = bisqEasyTrade.getMyIdentity().getId();
+                            String peerUserName = getPeerUserName(bisqEasyTrade);
+                            String message = "You received payment info from " + peerUserName;
 
-                        service.sendTradeNotification(userProfileId, tradeId, "PAYMENT_INFO_UPDATED", message, true);
-                    });
+                            service.sendTradeNotification(userProfileId, tradeId, "PAYMENT_INFO_UPDATED", message, true);
+                        });
+                    }
                     previousValue[0] = value;
                 }
             }
@@ -301,19 +305,12 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 send(Map.of(tradeId, data));
 
                 // Only send push notification if value actually changed
+                // Note: Bitcoin payment data can be set by either buyer (BTC address) or seller (BTC txid)
+                // Don't send notification here - trade state changes will handle notifications
+                // This prevents notifying users about their own actions
                 if (!value.equals(previousValue[0])) {
-                    pushNotificationService.ifPresent(service -> {
-                        String userProfileId = bisqEasyTrade.getMyIdentity().getId();
-                        boolean isBuyer = bisqEasyTrade.isBuyer();
-                        String peerUserName = getPeerUserName(bisqEasyTrade);
-
-                        String message = isBuyer
-                            ? "You sent Bitcoin address to " + peerUserName
-                            : "You received Bitcoin address from " + peerUserName;
-
-                        service.sendTradeNotification(userProfileId, tradeId, "BITCOIN_INFO_UPDATED", message, true);
-                    });
                     previousValue[0] = value;
+                    // Notification removed: trade state changes provide better context for BTC info updates
                 }
             }
         });

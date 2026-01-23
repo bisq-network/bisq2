@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for sending push notifications to registered devices.
@@ -46,6 +47,9 @@ public class PushNotificationService implements Service {
     private final Path storePath;
     private final ObjectMapper objectMapper;
     private final Object persistLock = new Object(); // Lock for thread-safe persistence
+
+    // Guard against concurrent sends of the same notification (race between wasNotificationSent and markNotificationAsSent)
+    private final Set<String> inFlightNotifications = ConcurrentHashMap.newKeySet();
 
     public PushNotificationService(DeviceRegistrationService deviceRegistrationService,
                                    String relayBaseUrl,
@@ -139,10 +143,22 @@ public class PushNotificationService implements Service {
      */
     public void sendTradeNotification(String userProfileId, String tradeId, String eventType,
                                        String message, boolean isUrgent) {
+        // Create unique key for this notification
+        String notificationKey = userProfileId + ":" + tradeId + ":" + eventType;
+
+        // Atomically check-and-add to prevent concurrent sends of the same notification
+        // This guards against race between wasNotificationSent and markNotificationAsSent
+        if (!inFlightNotifications.add(notificationKey)) {
+            log.debug("Skipping in-flight notification for user {} trade {} event {}",
+                    userProfileId, tradeId, eventType);
+            return;
+        }
+
         // Check if this notification was already sent
         if (sentNotificationStore.wasNotificationSent(userProfileId, tradeId, eventType)) {
             log.debug("Skipping duplicate notification for user {} trade {} event {}",
                     userProfileId, tradeId, eventType);
+            inFlightNotifications.remove(notificationKey); // Clear guard
             return;
         }
 
@@ -153,6 +169,7 @@ public class PushNotificationService implements Service {
             // Still mark as sent to avoid checking again
             sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
             persist();
+            inFlightNotifications.remove(notificationKey); // Clear guard
             return;
         }
 
@@ -178,38 +195,54 @@ public class PushNotificationService implements Service {
             }
         }
 
+        // Short-circuit if no iOS devices found
+        if (futures.isEmpty()) {
+            log.debug("No iOS devices registered for user {} (has {} non-iOS devices)",
+                    userProfileId, devices.size());
+            // Mark as sent to avoid checking again
+            sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
+            persist();
+            inFlightNotifications.remove(notificationKey); // Clear guard
+            return;
+        }
+
         // Wait for all notifications to complete, then process results
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .whenComplete((ignored, throwable) -> {
-                    // Process results and auto-unregister bad devices
-                    List<NotificationResult> results = futures.stream()
-                            .map(f -> f.getNow(null))
-                            .filter(r -> r != null)
-                            .toList();
+                    try {
+                        // Process results and auto-unregister bad devices
+                        List<NotificationResult> results = futures.stream()
+                                .map(f -> f.getNow(null))
+                                .filter(r -> r != null)
+                                .toList();
 
-                    // Auto-unregister devices that should be removed
-                    results.stream()
-                            .filter(NotificationResult::isShouldUnregister)
-                            .forEach(result -> {
-                                log.warn("Auto-unregistering invalid device token for user {}: tokenLength={}",
-                                        userProfileId, result.getDeviceToken().length());
-                                deviceRegistrationService.unregisterDevice(userProfileId, result.getDeviceToken());
-                            });
+                        // Auto-unregister devices that should be removed
+                        results.stream()
+                                .filter(NotificationResult::isShouldUnregister)
+                                .forEach(result -> {
+                                    log.warn("Auto-unregistering invalid device token for user {}: tokenLength={}",
+                                            userProfileId, result.getDeviceToken().length());
+                                    deviceRegistrationService.unregisterDevice(userProfileId, result.getDeviceToken());
+                                });
 
-                    // Check if at least one notification succeeded
-                    boolean anySuccess = results.stream()
-                            .anyMatch(NotificationResult::isSuccess);
+                        // Check if at least one notification succeeded
+                        boolean anySuccess = results.stream()
+                                .anyMatch(NotificationResult::isSuccess);
 
-                    if (anySuccess) {
-                        // At least one device received the notification successfully
-                        sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
-                        persist();
-                        log.info("✓ Sent trade notification to {} device(s) for user {} trade {} event {} - marked as sent",
-                                devices.size(), userProfileId, tradeId, eventType);
-                    } else {
-                        // All notifications failed - don't mark as sent so it can retry later
-                        log.warn("✗ All notifications failed for user {} trade {} event {} - will retry on next trigger",
-                                userProfileId, tradeId, eventType);
+                        if (anySuccess) {
+                            // At least one device received the notification successfully
+                            sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
+                            persist();
+                            log.info("✓ Sent trade notification to {} device(s) for user {} trade {} event {} - marked as sent",
+                                    devices.size(), userProfileId, tradeId, eventType);
+                        } else {
+                            // All notifications failed - don't mark as sent so it can retry later
+                            log.warn("✗ All notifications failed for user {} trade {} event {} - will retry on next trigger",
+                                    userProfileId, tradeId, eventType);
+                        }
+                    } finally {
+                        // Always clear the in-flight guard, even if an exception occurred
+                        inFlightNotifications.remove(notificationKey);
                     }
                 });
     }
