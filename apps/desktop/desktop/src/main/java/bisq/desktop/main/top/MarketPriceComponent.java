@@ -21,6 +21,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
@@ -32,6 +33,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownListMenu;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
@@ -54,6 +56,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -63,7 +66,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -115,8 +120,9 @@ public class MarketPriceComponent {
                                             .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
                                             .findAny()
                                             .ifPresent(listItem -> {
-                                                model.price.set(listItem.price);
+                                                model.market.set(listItem.market);
                                                 model.codes.set(listItem.codes);
+                                                model.price.set(listItem.price);
                                                 model.selected.set(listItem);
                                             });
                                 }
@@ -155,6 +161,7 @@ public class MarketPriceComponent {
         private final ObservableList<ListItem> items = FXCollections.observableArrayList();
         private final FilteredList<ListItem> filteredItems = new FilteredList<>(items);
         private final ObjectProperty<ListItem> selected = new SimpleObjectProperty<>();
+        private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
         private final StringProperty codes = new SimpleStringProperty();
         private final StringProperty price = new SimpleStringProperty();
         @Setter
@@ -167,14 +174,15 @@ public class MarketPriceComponent {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private static final double LIST_MENU_CELL_HEIGHT = 50;
+        private static final double LIST_MENU_WIDTH = 290;
+        private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
         private final Label codes, price;
-        private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
         private final Tooltip tooltip;
         private final Label staleIcon;
         private final DropdownListMenu<ListItem> listMenu;
-        private Subscription pricePin;
+        private Subscription marketPin, pricePin;
         private UIScheduler updateScheduler;
 
         private View(Model model, Controller controller) {
@@ -185,6 +193,7 @@ public class MarketPriceComponent {
 
             codes = new Label();
             codes.setMouseTransparent(true);
+            codes.setGraphicTextGap(7);
             codes.getStyleClass().add("bisq-text-18");
 
             price = new Label();
@@ -192,11 +201,6 @@ public class MarketPriceComponent {
             price.getStyleClass().add("bisq-text-19");
 
             progressBarWithLabel = new ProgressBarWithLabel(Res.get("component.marketPrice.requesting"));
-
-            arrow = ImageUtil.getImageViewById("arrow-down");
-            arrow.setMouseTransparent(true);
-            arrow.setVisible(false);
-            arrow.setManaged(false);
 
             tooltip = new BisqTooltip();
             Tooltip.install(root, tooltip);
@@ -210,10 +214,11 @@ public class MarketPriceComponent {
             listMenu = new DropdownListMenu<>("chevron-drop-menu-grey",
                     "chevron-drop-menu-white", false, model.filteredItems,
                     controller::applySearchPredicate);
-            HBox menu = new HBox(5, staleIcon, codes, price, progressBarWithLabel);
+            HBox menu = new HBox(5, codes, price, progressBarWithLabel, staleIcon);
             menu.setAlignment(Pos.CENTER);
             listMenu.setContent(menu);
             listMenu.getTableView().setFixedCellSize(LIST_MENU_CELL_HEIGHT);
+            listMenu.getTableView().setPrefWidth(LIST_MENU_WIDTH);
             configTableView();
 
             root.getStyleClass().add("market-price-component");
@@ -223,16 +228,20 @@ public class MarketPriceComponent {
         @Override
         protected void onViewAttached() {
             listMenu.initialize();
+
             codes.textProperty().bind(model.codes);
+
+            marketPin = EasyBind.subscribe(model.market, market ->
+                codes.setGraphic(MarketImageComposition.getMarketMenuPairIcons(
+                        market.getBaseCurrencyCode(), market.getQuoteCurrencyCode())));
             pricePin = EasyBind.subscribe(model.price, priceValue -> {
                 boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
-                arrow.setVisible(isPriceSet);
-                arrow.setManaged(isPriceSet);
                 progressBarWithLabel.setVisible(!isPriceSet);
                 progressBarWithLabel.setManaged(!isPriceSet);
                 progressBarWithLabel.setProgress(isPriceSet ? 0 : -1);
                 price.setText(isPriceSet ? priceValue : "");
             });
+
             updateScheduler = UIScheduler.run(() -> {
                         ListItem item = model.selected.get();
                         if (item == null) {
@@ -254,8 +263,12 @@ public class MarketPriceComponent {
         @Override
         protected void onViewDetached() {
             listMenu.dispose();
+
             codes.textProperty().unbind();
+
+            marketPin.unsubscribe();
             pricePin.unsubscribe();
+
             Tooltip.uninstall(root, tooltip);
             updateScheduler.stop();
         }
@@ -270,7 +283,7 @@ public class MarketPriceComponent {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getListCell() {
             return column -> new TableCell<>() {
                 private final Label price, codes;
-                private final HBox hBox;
+                private final HBox hBox = new HBox(10);
                 private final Tooltip tooltip;
                 private final Label staleIcon;
 
@@ -279,6 +292,7 @@ public class MarketPriceComponent {
 
                     codes = new Label();
                     codes.setMouseTransparent(true);
+                    codes.setGraphicTextGap(10);
                     codes.setStyle("-fx-text-fill: -fx-mid-text-color;");
 
                     price = new Label();
@@ -290,7 +304,7 @@ public class MarketPriceComponent {
                     staleIcon.setGraphic(icon);
                     staleIcon.setVisible(false);
 
-                    hBox = new HBox(10, staleIcon, codes, price);
+                    hBox.getChildren().addAll(codes, price, staleIcon);
                     hBox.setAlignment(Pos.CENTER_LEFT);
 
                     tooltip = new BisqTooltip();
@@ -303,6 +317,9 @@ public class MarketPriceComponent {
                     if (item != null && !empty) {
                         price.setText(item.price);
                         codes.setText(item.codes);
+
+                        StackPane marketsImage = MarketImageComposition.getMarketMenuIcons(item.market, MARKET_IMAGE_CACHE);
+                        codes.setGraphic(marketsImage);
 
                         boolean isStale = item.isStale();
                         staleIcon.setVisible(isStale);
@@ -327,8 +344,9 @@ public class MarketPriceComponent {
         @EqualsAndHashCode.Include
         private final MarketPrice marketPrice;
 
-        private final String price;
+        private final Market market;
         private final String codes;
+        private final String price;
         private final String date;
         private final MarketPriceService marketPriceService;
 
@@ -336,7 +354,8 @@ public class MarketPriceComponent {
             this.marketPrice = marketPrice;
             this.marketPriceService = marketPriceService;
 
-            codes = marketPrice.getMarket().getMarketCodes();
+            market = marketPrice.getMarket();
+            codes = market.getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
         }

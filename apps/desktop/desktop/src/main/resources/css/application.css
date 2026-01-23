@@ -584,3 +584,14 @@
 .market-price-component .dropdown-menu .dropdown-menu-content-hbox {
     -fx-alignment: center;
 }
+
+.market-price-component .table-view .table-row-cell:hover .quote-currency-market-logo,
+.market-price-component .table-view .table-row-cell:selected .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-50 !important;
+}
+
+.market-price-component .dropdown-menu:hover .quote-currency-market-logo,
+.market-price-component .dropdown-menu-active .quote-currency-market-logo,
+.market-price-component .table-view .table-row-cell .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
