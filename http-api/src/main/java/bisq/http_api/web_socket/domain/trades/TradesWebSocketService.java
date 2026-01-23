@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -79,14 +80,19 @@ public class TradesWebSocketService extends BaseWebSocketService {
 
             @Override
             public void clear() {
-                send(openTradeItemsService.getItems().getList(), ModificationType.REMOVED);
+                // Note: Observers are notified BEFORE the collection is cleared,
+                // so we can safely access the items here
+                List<TradeItemPresentationDto> items = openTradeItemsService.getItems().getList();
+
+                send(items, ModificationType.REMOVED);
+
                 // Clean up notification records for all trades being cleared
                 pushNotificationService.ifPresent(service -> {
-                    openTradeItemsService.getItems().getList().forEach(item -> {
+                    items.forEach(item -> {
                         String tradeId = item.channel().tradeId();
                         service.removeNotificationsForTrade(tradeId);
                     });
-                    log.debug("Cleaned up notification records for all cleared trades");
+                    log.debug("Cleaned up notification records for {} cleared trades", items.size());
                 });
             }
         });

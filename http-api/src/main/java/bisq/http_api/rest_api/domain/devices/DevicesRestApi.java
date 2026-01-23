@@ -70,16 +70,12 @@ public class DevicesRestApi extends RestApiBase {
                 return buildResponse(Response.Status.BAD_REQUEST, "Invalid request: request body is required");
             }
 
-            // Log request details (truncate sensitive data)
-            String tokenPreview = request.getDeviceToken() != null && request.getDeviceToken().length() > 10
-                    ? request.getDeviceToken().substring(0, 10) + "..."
-                    : request.getDeviceToken();
-            String publicKeyPreview = request.getPublicKey() != null && request.getPublicKey().length() > 20
-                    ? request.getPublicKey().substring(0, 20) + "..."
-                    : request.getPublicKey();
+            // Log request details (only non-sensitive metadata - never log cryptographic material)
+            int tokenLength = request.getDeviceToken() != null ? request.getDeviceToken().length() : 0;
+            int publicKeyLength = request.getPublicKey() != null ? request.getPublicKey().length() : 0;
 
-            log.info("Registration details - userProfileId: {}, deviceToken: {}, publicKey: {}, platform: {}",
-                    request.getUserProfileId(), tokenPreview, publicKeyPreview, request.getPlatform());
+            log.info("Registration details - userProfileId: {}, deviceTokenLength: {}, publicKeyLength: {}, platform: {}",
+                    request.getUserProfileId(), tokenLength, publicKeyLength, request.getPlatform());
 
             if (request.getUserProfileId() == null || request.getUserProfileId().isBlank()) {
                 log.warn("Registration failed: userProfileId is null or blank");
@@ -110,12 +106,12 @@ public class DevicesRestApi extends RestApiBase {
             );
 
             if (success) {
-                log.info("✓ Device registered successfully for user {} (token: {})",
-                        request.getUserProfileId(), tokenPreview);
+                log.info("✓ Device registered successfully for user {} (platform: {})",
+                        request.getUserProfileId(), request.getPlatform());
                 return buildOkResponse("Device registered successfully");
             } else {
-                log.error("✗ Failed to register device for user {} (token: {})",
-                        request.getUserProfileId(), tokenPreview);
+                log.error("✗ Failed to register device for user {} (platform: {})",
+                        request.getUserProfileId(), request.getPlatform());
                 return buildResponse(Response.Status.INTERNAL_SERVER_ERROR, "Failed to register device");
             }
         } catch (Exception e) {

@@ -31,6 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Stores device registrations mapped by user profile ID.
  * Each user can have multiple devices registered.
+ *
+ * Thread-safety: Uses ConcurrentHashMap for the outer map and thread-safe sets
+ * (ConcurrentHashMap.newKeySet()) for the inner device sets to ensure safe
+ * concurrent access and modifications.
  */
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,17 +50,38 @@ public final class DeviceRegistrationStore implements Serializable {
 
     @JsonCreator
     public DeviceRegistrationStore(@JsonProperty("devicesByUserProfileId") Map<String, Set<DeviceRegistration>> devicesByUserProfileId) {
-        this.devicesByUserProfileId = new ConcurrentHashMap<>(devicesByUserProfileId);
+        // Deep copy: create new ConcurrentHashMap and deep-copy each Set to avoid shared mutable state
+        this.devicesByUserProfileId = new ConcurrentHashMap<>();
+        devicesByUserProfileId.forEach((userId, devices) -> {
+            // Create a new thread-safe set and copy all devices
+            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
+            devicesCopy.addAll(devices);
+            this.devicesByUserProfileId.put(userId, devicesCopy);
+        });
     }
 
     @JsonIgnore
     public DeviceRegistrationStore getClone() {
-        return new DeviceRegistrationStore(new ConcurrentHashMap<>(devicesByUserProfileId));
+        // Deep copy: create new store with deep-copied sets
+        Map<String, Set<DeviceRegistration>> clonedMap = new ConcurrentHashMap<>();
+        devicesByUserProfileId.forEach((userId, devices) -> {
+            // Create a new thread-safe set and copy all devices
+            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
+            devicesCopy.addAll(devices);
+            clonedMap.put(userId, devicesCopy);
+        });
+        return new DeviceRegistrationStore(clonedMap);
     }
 
     public void applyPersisted(DeviceRegistrationStore persisted) {
         devicesByUserProfileId.clear();
-        devicesByUserProfileId.putAll(persisted.devicesByUserProfileId);
+        // Deep copy: don't share Set instances with the persisted store
+        persisted.devicesByUserProfileId.forEach((userId, devices) -> {
+            // Create a new thread-safe set and copy all devices
+            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
+            devicesCopy.addAll(devices);
+            devicesByUserProfileId.put(userId, devicesCopy);
+        });
     }
 }
 

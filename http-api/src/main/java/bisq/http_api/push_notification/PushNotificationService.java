@@ -70,7 +70,7 @@ public class PushNotificationService implements Service {
                 int purged = store.purgeOldNotifications(MAX_NOTIFICATION_AGE_MS);
                 if (purged > 0) {
                     log.info("Purged {} old notification(s) on startup. Remaining: {}", purged, store.size());
-                    persist(); // Save the purged store
+                    persist(store); // Save the purged store
                 }
 
                 return store;
@@ -91,11 +91,21 @@ public class PushNotificationService implements Service {
      * Uses synchronization to prevent concurrent writes that could corrupt the file.
      */
     private void persist() {
+        persist(sentNotificationStore);
+    }
+
+    /**
+     * Thread-safe persistence of the notification store.
+     * Uses synchronization to prevent concurrent writes that could corrupt the file.
+     *
+     * @param store The store instance to persist (allows persisting during initialization)
+     */
+    private void persist(SentNotificationStore store) {
         synchronized (persistLock) {
             try {
                 Files.createDirectories(storePath.getParent());
-                objectMapper.writerWithDefaultPrettyPrinter().writeValue(storePath.toFile(), sentNotificationStore);
-                log.trace("Persisted {} notification records to {}", sentNotificationStore.size(), storePath);
+                objectMapper.writerWithDefaultPrettyPrinter().writeValue(storePath.toFile(), store);
+                log.trace("Persisted {} notification records to {}", store.size(), storePath);
             } catch (IOException e) {
                 log.error("Failed to persist sent notifications to {}", storePath, e);
             }
@@ -112,6 +122,8 @@ public class PushNotificationService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         persist();
+        bisqRelayClient.shutdown();
+        log.info("PushNotificationService shutdown complete");
         return CompletableFuture.completedFuture(true);
     }
 

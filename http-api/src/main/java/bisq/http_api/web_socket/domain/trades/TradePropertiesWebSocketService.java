@@ -167,54 +167,56 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             boolean isUrgent = true;
 
             switch (state) {
-                // Payment related states
-                case BUYER_SENT_FIAT_SENT_CONFIRMATION -> {
-                    message = isBuyer
-                        ? "You confirmed sending payment to " + peerUserName
-                        : peerUserName + " confirmed sending payment to you";
+                // User-initiated states - skip push notification (user is actively using the app)
+                case TAKER_SENT_TAKE_OFFER_REQUEST,
+                     BUYER_SENT_FIAT_SENT_CONFIRMATION,
+                     SELLER_CONFIRMED_FIAT_RECEIPT,
+                     SELLER_SENT_BTC_SENT_CONFIRMATION,
+                     REJECTED,
+                     CANCELLED -> {
+                    // User performed this action themselves, no need to notify
+                    return;
                 }
+
+                // Peer-initiated states - send push notification
                 case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION -> {
+                    // Peer (buyer) confirmed sending payment
                     message = isBuyer
                         ? "Your payment confirmation was received by " + peerUserName
                         : "You received payment confirmation from " + peerUserName;
                 }
-                case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
-                     SELLER_CONFIRMED_FIAT_RECEIPT -> {
+                case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION -> {
+                    // Peer (seller) confirmed receiving payment
                     message = isBuyer
                         ? peerUserName + " confirmed receiving your payment"
-                        : "You confirmed receiving payment from " + peerUserName;
+                        : peerUserName + " confirmed receiving payment";
                 }
 
                 // BTC transfer states
-                case SELLER_SENT_BTC_SENT_CONFIRMATION -> {
-                    message = isBuyer
-                        ? peerUserName + " confirmed sending Bitcoin to you"
-                        : "You confirmed sending Bitcoin to " + peerUserName;
-                }
                 case BUYER_RECEIVED_BTC_SENT_CONFIRMATION -> {
+                    // Peer (seller) confirmed sending Bitcoin
                     message = isBuyer
                         ? "You received Bitcoin confirmation from " + peerUserName
                         : peerUserName + " received your Bitcoin confirmation";
                 }
 
                 // Offer taking states
-                case TAKER_SENT_TAKE_OFFER_REQUEST -> {
-                    message = "Your offer was taken by " + peerUserName;
-                }
                 case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
                      MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA -> {
+                    // Peer (taker) took your offer
                     message = "Your offer was taken by " + peerUserName;
                 }
 
-                // Payment account info exchange states
+                // Payment account info exchange states (peer sent payment info)
                 case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
                      TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
                      MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA -> {
+                    // Peer sent payment info - notify user
                     // Only notify if we haven't already notified for payment info
                     if (notifiedPaymentInfo.add(tradeId)) {
                         message = isBuyer
                             ? "You received payment info from " + peerUserName
-                            : "You sent payment info to " + peerUserName;
+                            : "You received payment info from " + peerUserName;
                     } else {
                         return; // Skip duplicate notification
                     }
@@ -224,16 +226,12 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 case BTC_CONFIRMED -> {
                     message = "Trade completed successfully with " + peerUserName;
                 }
-                case REJECTED -> {
-                    message = "You rejected the trade with " + peerUserName;
-                }
                 case PEER_REJECTED -> {
+                    // Peer rejected the trade
                     message = peerUserName + " rejected the trade";
                 }
-                case CANCELLED -> {
-                    message = "You cancelled the trade with " + peerUserName;
-                }
                 case PEER_CANCELLED -> {
+                    // Peer cancelled the trade
                     message = peerUserName + " cancelled the trade";
                 }
                 case FAILED -> {

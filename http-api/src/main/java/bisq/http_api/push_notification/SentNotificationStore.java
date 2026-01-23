@@ -20,11 +20,11 @@ package bisq.http_api.push_notification;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
+import java.time.Clock;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,8 +43,18 @@ public final class SentNotificationStore implements Serializable {
     @Getter
     private final Map<String, Long> sentNotificationIdsWithTimestamp;
 
+    // Clock for time-based operations (injectable for testing)
+    private final Clock clock;
+
     public SentNotificationStore() {
-        this(new ConcurrentHashMap<>(), null);
+        this(new ConcurrentHashMap<>(), null, Clock.systemUTC());
+    }
+
+    /**
+     * Constructor for testing with a custom clock.
+     */
+    public SentNotificationStore(Clock clock) {
+        this(new ConcurrentHashMap<>(), null, clock);
     }
 
     /**
@@ -55,7 +65,18 @@ public final class SentNotificationStore implements Serializable {
     public SentNotificationStore(
             @JsonProperty("sentNotificationIdsWithTimestamp") Map<String, Long> sentNotificationIdsWithTimestamp,
             @JsonProperty("sentNotificationIds") Set<String> legacySentNotificationIds) {
+        this(sentNotificationIdsWithTimestamp, legacySentNotificationIds, Clock.systemUTC());
+    }
 
+    /**
+     * Internal constructor with clock injection.
+     */
+    private SentNotificationStore(
+            Map<String, Long> sentNotificationIdsWithTimestamp,
+            Set<String> legacySentNotificationIds,
+            Clock clock) {
+
+        this.clock = clock;
         this.sentNotificationIdsWithTimestamp = new ConcurrentHashMap<>();
 
         // Handle new format
@@ -65,7 +86,7 @@ public final class SentNotificationStore implements Serializable {
         }
         // Handle legacy format (backward compatibility)
         else if (legacySentNotificationIds != null) {
-            long now = System.currentTimeMillis();
+            long now = clock.millis();
             legacySentNotificationIds.forEach(id -> this.sentNotificationIdsWithTimestamp.put(id, now));
             log.info("Migrated {} notifications from legacy format to new format", legacySentNotificationIds.size());
         }
@@ -87,11 +108,11 @@ public final class SentNotificationStore implements Serializable {
     }
 
     /**
-     * Mark a notification as sent with current timestamp.
+     * Mark a notification as sent with current timestamp from the clock.
      */
     public void markNotificationAsSent(String userProfileId, String tradeId, String eventType) {
         String notificationId = createNotificationId(userProfileId, tradeId, eventType);
-        sentNotificationIdsWithTimestamp.put(notificationId, System.currentTimeMillis());
+        sentNotificationIdsWithTimestamp.put(notificationId, clock.millis());
     }
 
     /**
@@ -115,7 +136,7 @@ public final class SentNotificationStore implements Serializable {
      * @return Number of notifications removed
      */
     public int purgeOldNotifications(long maxAgeMs) {
-        long cutoffTime = System.currentTimeMillis() - maxAgeMs;
+        long cutoffTime = clock.millis() - maxAgeMs;
         Set<String> toRemove = sentNotificationIdsWithTimestamp.entrySet().stream()
                 .filter(entry -> entry.getValue() < cutoffTime)
                 .map(Map.Entry::getKey)

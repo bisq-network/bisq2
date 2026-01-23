@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -52,29 +55,70 @@ class SentNotificationStoreTest {
     }
 
     @Test
-    void testPurgeOldNotifications() throws InterruptedException {
+    void testPurgeOldNotifications() {
         String userId = "user1";
-        
-        // Mark some notifications as sent
-        store.markNotificationAsSent(userId, "trade1", "EVENT1");
-        store.markNotificationAsSent(userId, "trade2", "EVENT2");
-        
-        assertEquals(2, store.size());
-        
-        // Wait a bit
-        Thread.sleep(100);
-        
-        // Mark another notification
-        store.markNotificationAsSent(userId, "trade3", "EVENT3");
-        
-        assertEquals(3, store.size());
-        
-        // Purge notifications older than 50ms (should remove first 2)
-        int purged = store.purgeOldNotifications(50);
-        
-        assertEquals(2, purged);
-        assertEquals(1, store.size());
-        assertTrue(store.wasNotificationSent(userId, "trade3", "EVENT3"));
+
+        // Create a controllable clock starting at a fixed instant
+        Instant startTime = Instant.parse("2024-01-01T00:00:00Z");
+        TestClock testClock = new TestClock(startTime);
+        SentNotificationStore storeWithClock = new SentNotificationStore(testClock);
+
+        // Mark some notifications as sent at T=0
+        storeWithClock.markNotificationAsSent(userId, "trade1", "EVENT1");
+        storeWithClock.markNotificationAsSent(userId, "trade2", "EVENT2");
+
+        assertEquals(2, storeWithClock.size());
+
+        // Advance clock by 100ms
+        testClock.advance(100);
+
+        // Mark another notification at T=100ms
+        storeWithClock.markNotificationAsSent(userId, "trade3", "EVENT3");
+
+        assertEquals(3, storeWithClock.size());
+
+        // Purge notifications older than 50ms (should remove first 2 which are at T=0)
+        // Current time is T=100ms, so cutoff is T=50ms
+        int purged = storeWithClock.purgeOldNotifications(50);
+
+        assertEquals(2, purged, "Should purge 2 notifications older than 50ms");
+        assertEquals(1, storeWithClock.size(), "Should have 1 notification remaining");
+        assertTrue(storeWithClock.wasNotificationSent(userId, "trade3", "EVENT3"),
+                "EVENT3 should still be present");
+        assertFalse(storeWithClock.wasNotificationSent(userId, "trade1", "EVENT1"),
+                "EVENT1 should be purged");
+        assertFalse(storeWithClock.wasNotificationSent(userId, "trade2", "EVENT2"),
+                "EVENT2 should be purged");
+    }
+
+    /**
+     * Controllable clock for deterministic testing.
+     */
+    private static class TestClock extends Clock {
+        private Instant currentInstant;
+
+        public TestClock(Instant startInstant) {
+            this.currentInstant = startInstant;
+        }
+
+        public void advance(long millis) {
+            currentInstant = currentInstant.plusMillis(millis);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneId.of("UTC");
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return currentInstant;
+        }
     }
 
     @Test

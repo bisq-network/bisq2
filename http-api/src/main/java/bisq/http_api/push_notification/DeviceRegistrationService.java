@@ -27,6 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Service for managing device registrations for push notifications.
@@ -100,6 +103,10 @@ public class DeviceRegistrationService implements Service {
     /**
      * Register a device for a user profile.
      *
+     * This method is thread-safe: it atomically removes any existing registration with
+     * the same device token and adds the new registration, all within a single compute
+     * operation to prevent races with concurrent register/unregister calls.
+     *
      * @param userProfileId The user profile ID
      * @param deviceToken   The APNs device token
      * @param publicKey     The public key for encrypting notifications (Base64 encoded)
@@ -110,12 +117,13 @@ public class DeviceRegistrationService implements Service {
                                    DeviceRegistration.Platform platform) {
         if (userProfileId == null || userProfileId.isBlank() ||
                 deviceToken == null || deviceToken.isBlank() ||
-                publicKey == null || publicKey.isBlank()) {
+                publicKey == null || publicKey.isBlank() ||
+                platform == null) {
             log.warn("Invalid registration parameters - userProfileId: {}, deviceToken: {}, publicKey: {}, platform: {}",
                     userProfileId != null && !userProfileId.isBlank() ? "OK" : "INVALID",
                     deviceToken != null && !deviceToken.isBlank() ? "OK" : "INVALID",
                     publicKey != null && !publicKey.isBlank() ? "OK" : "INVALID",
-                    platform);
+                    platform != null ? platform : "INVALID");
             return false;
         }
 
@@ -126,31 +134,59 @@ public class DeviceRegistrationService implements Service {
                 userProfileId, tokenPreview, publicKeyPreview, platform);
 
         DeviceRegistration registration = new DeviceRegistration(deviceToken, publicKey, platform);
-        Set<DeviceRegistration> devices = persistableStore.getDevicesByUserProfileId()
-                .computeIfAbsent(userProfileId, k -> new HashSet<>());
 
-        int deviceCountBefore = devices.size();
+        // Use AtomicBoolean and AtomicInteger to capture state from inside the compute lambda
+        AtomicBoolean wasAdded = new AtomicBoolean(false);
+        AtomicBoolean hadExisting = new AtomicBoolean(false);
+        AtomicInteger deviceCountBefore = new AtomicInteger(0);
+        AtomicInteger deviceCountAfter = new AtomicInteger(0);
 
-        // Remove any existing registration with the same device token to avoid duplicates
-        boolean hadExisting = devices.removeIf(d -> d.getDeviceToken().equals(deviceToken));
-        if (hadExisting) {
-            log.info("Removed existing registration with same token for user {}", userProfileId);
-        }
+        // Atomically remove existing registration and add new one
+        persistableStore.getDevicesByUserProfileId().compute(userProfileId, (userId, devices) -> {
+            // Create new set if user has no devices yet
+            if (devices == null) {
+                devices = ConcurrentHashMap.newKeySet();
+            }
 
-        boolean added = devices.add(registration);
-        if (added) {
+            deviceCountBefore.set(devices.size());
+
+            // Remove any existing registration with the same device token to avoid duplicates
+            boolean removed = devices.removeIf(d -> d.getDeviceToken().equals(deviceToken));
+            hadExisting.set(removed);
+
+            // Add the new registration
+            boolean added = devices.add(registration);
+            wasAdded.set(added);
+
+            deviceCountAfter.set(devices.size());
+
+            return devices;
+        });
+
+        // Only persist and log if a device was actually added
+        if (wasAdded.get()) {
             persist();
-            log.info("✓ Device registered successfully for user {}: token={}, platform={}, total devices for user: {} (was: {})",
-                    userProfileId, tokenPreview, platform, devices.size(), deviceCountBefore);
+            if (hadExisting.get()) {
+                log.info("✓ Updated device registration for user {}: token={}, platform={}, total devices: {} (was: {})",
+                        userProfileId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
+            } else {
+                log.info("✓ Device registered successfully for user {}: token={}, platform={}, total devices: {} (was: {})",
+                        userProfileId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
+            }
         } else {
             log.warn("✗ Failed to add device registration for user {}: token={}, platform={}",
                     userProfileId, tokenPreview, platform);
         }
-        return added;
+
+        return wasAdded.get();
     }
 
     /**
      * Unregister a device for a user profile.
+     *
+     * This method is thread-safe: it atomically removes the device token from the user's
+     * device set and removes the user entry if no devices remain, all within a single
+     * compute operation to prevent races with concurrent register/unregister calls.
      *
      * @param userProfileId The user profile ID
      * @param deviceToken   The APNs device token to remove
@@ -161,21 +197,37 @@ public class DeviceRegistrationService implements Service {
             return false;
         }
 
-        Set<DeviceRegistration> devices = persistableStore.getDevicesByUserProfileId().get(userProfileId);
-        if (devices == null) {
-            return false;
+        // Use AtomicBoolean to capture whether removal occurred inside the compute lambda
+        AtomicBoolean wasRemoved = new AtomicBoolean(false);
+
+        // Atomically remove the device and clean up empty user entries
+        persistableStore.getDevicesByUserProfileId().compute(userProfileId, (userId, devices) -> {
+            // No devices for this user
+            if (devices == null) {
+                return null;
+            }
+
+            // Attempt to remove the device token
+            boolean removed = devices.removeIf(d -> d.getDeviceToken().equals(deviceToken));
+            wasRemoved.set(removed);
+
+            // If removal occurred and no devices remain, remove the user entry entirely
+            if (removed && devices.isEmpty()) {
+                return null;  // Returning null removes the entry from the map
+            }
+
+            // Return the (possibly modified) device set
+            return devices;
+        });
+
+        // Only persist and log if a device was actually removed
+        if (wasRemoved.get()) {
+            persist();
+            log.info("Unregistered device for user {} (tokenLength: {})",
+                    userProfileId, deviceToken.length());
         }
 
-        boolean removed = devices.removeIf(d -> d.getDeviceToken().equals(deviceToken));
-        if (removed) {
-            if (devices.isEmpty()) {
-                persistableStore.getDevicesByUserProfileId().remove(userProfileId);
-            }
-            persist();
-            log.info("Unregistered device for user {}: token={}",
-                    userProfileId, deviceToken.substring(0, Math.min(10, deviceToken.length())) + "...");
-        }
-        return removed;
+        return wasRemoved.get();
     }
 
     /**

@@ -41,10 +41,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP client for communicating with the Bisq Relay service.
  * Sends encrypted push notifications to iOS devices via APNs.
+ * Uses a dedicated I/O executor to avoid blocking the common ForkJoinPool.
  */
 @Slf4j
 public class BisqRelayClient {
@@ -57,11 +61,19 @@ public class BisqRelayClient {
     private final String relayBaseUrl;
     private final ObjectMapper objectMapper;
     private final Optional<NetworkService> networkService;
+    private final ExecutorService ioExecutor;
 
     public BisqRelayClient(String relayBaseUrl, Optional<NetworkService> networkService) {
         this.relayBaseUrl = relayBaseUrl;
         this.objectMapper = new ObjectMapper();
         this.networkService = networkService;
+        // Create a dedicated cached thread pool for I/O operations
+        // Cached pool is appropriate for I/O-bound tasks with variable concurrency
+        this.ioExecutor = Executors.newCachedThreadPool(r -> {
+            Thread thread = new Thread(r, "bisq-relay-io");
+            thread.setDaemon(true); // Allow JVM to exit even if threads are running
+            return thread;
+        });
     }
 
     /**
@@ -75,6 +87,7 @@ public class BisqRelayClient {
      */
     public CompletableFuture<Boolean> sendNotification(String deviceToken, String publicKeyBase64,
                                                         Map<String, Object> payload, boolean isUrgent) {
+        // Use dedicated I/O executor instead of common ForkJoinPool for blocking HTTP operations
         return CompletableFuture.supplyAsync(() -> {
             try {
                 // Encrypt the payload with the device's public key
@@ -87,7 +100,15 @@ public class BisqRelayClient {
 
                 String requestJson = objectMapper.writeValueAsString(requestBody);
 
+                // Validate device token to prevent path injection attacks
+                // APNs device tokens are hex strings (64 chars for production, 128 for some formats)
+                // Only allow alphanumeric characters to prevent path traversal
+                if (!deviceToken.matches("^[a-zA-Z0-9]+$")) {
+                    throw new IllegalArgumentException("Invalid device token format: contains non-alphanumeric characters");
+                }
+
                 // Send POST request to Bisq Relay via Tor
+                // Device token is already URL-safe (hex string), no encoding needed
                 String endpoint = String.format("/v1/apns/device/%s", deviceToken);
 
                 // Use Tor HTTP client if onion address, otherwise use direct connection
@@ -102,10 +123,11 @@ public class BisqRelayClient {
                 log.error("Error sending push notification to Bisq Relay", e);
                 return false;
             }
-        });
+        }, ioExecutor); // Use dedicated I/O executor for blocking HTTP operations
     }
 
     private boolean sendViaTor(String endpoint, String requestJson, String deviceToken) {
+        BaseHttpClient httpClient = null;
         try {
             NetworkService ns = networkService.orElseThrow(() ->
                 new IllegalStateException("NetworkService is required for Tor connections"));
@@ -118,7 +140,7 @@ public class BisqRelayClient {
             log.info("Sending push notification via Tor to: {} (device: {}...)",
                     fullUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
 
-            BaseHttpClient httpClient = ns.getHttpClient(
+            httpClient = ns.getHttpClient(
                 fullUrl,
                 "Bisq-Push-Notification/1.0",
                 TransportType.TOR
@@ -135,14 +157,21 @@ public class BisqRelayClient {
                     deviceToken.substring(0, Math.min(10, deviceToken.length())),
                     response.substring(0, Math.min(100, response.length())));
 
-            // Shutdown the HTTP client
-            httpClient.shutdown();
-
             return true;
         } catch (Exception e) {
             log.error("Error sending push notification via Tor to device: {}...",
                     deviceToken.substring(0, Math.min(10, deviceToken.length())), e);
             return false;
+        } finally {
+            // Always shutdown the HTTP client to release resources
+            if (httpClient != null) {
+                try {
+                    httpClient.shutdown();
+                } catch (Exception e) {
+                    log.warn("Error shutting down HTTP client for device: {}...",
+                            deviceToken.substring(0, Math.min(10, deviceToken.length())), e);
+                }
+            }
         }
     }
 
@@ -156,14 +185,17 @@ public class BisqRelayClient {
             log.info("Sending push notification via direct HTTP to: {} (device: {}...)",
                     fullUrl, deviceToken.substring(0, Math.min(10, deviceToken.length())));
 
-            // Create HTTP client
-            HttpClient httpClient = HttpClient.newHttpClient();
+            // Create HTTP client with connect timeout to prevent indefinite blocking
+            HttpClient httpClient = HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build();
 
-            // Build the POST request
+            // Build the POST request with request timeout to prevent indefinite blocking
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(fullUrl))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
+                    .timeout(java.time.Duration.ofSeconds(30))  // Overall request timeout
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                     .build();
 
@@ -215,5 +247,27 @@ public class BisqRelayClient {
 
         // Return Base64 encoded encrypted data
         return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    /**
+     * Shutdown the I/O executor and release resources.
+     * Should be called when the BisqRelayClient is no longer needed.
+     */
+    public void shutdown() {
+        log.info("Shutting down BisqRelayClient I/O executor");
+        ioExecutor.shutdown();
+        try {
+            if (!ioExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                log.warn("I/O executor did not terminate within 10 seconds, forcing shutdown");
+                ioExecutor.shutdownNow();
+                if (!ioExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    log.error("I/O executor did not terminate after forced shutdown");
+                }
+            }
+        } catch (InterruptedException e) {
+            log.warn("Interrupted while waiting for I/O executor to terminate", e);
+            ioExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
