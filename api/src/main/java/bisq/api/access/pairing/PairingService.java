@@ -61,6 +61,9 @@ public class PairingService {
     public ClientProfile requestPairing(byte version,
                                         String pairingCodeId,
                                         String clientName) throws InvalidPairingRequestException {
+        if (version != VERSION) {
+            throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
+        }
         PairingCode pairingCode = apiAccessStoreService.getPairingCodeByIdMap().get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");

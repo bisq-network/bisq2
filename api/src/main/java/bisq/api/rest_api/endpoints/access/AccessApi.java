@@ -97,6 +97,10 @@ public class AccessApi extends RestApiBase {
                     request.clientName() == null) {
                 throw new IllegalArgumentException("Missing required pairing fields");
             }
+            if (request.version() != PairingService.VERSION) {
+                throw new IllegalArgumentException("Unsupported pairing protocol version");
+            }
+
             PairingResponse pairingResponse =
                     apiAccessService.requestPairing(request.version(), request.pairingCodeId(), request.clientName());
 
