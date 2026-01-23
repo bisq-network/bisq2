@@ -50,10 +50,6 @@
     -fx-image: url("/images/markets/fiat-logos/market-bdt.png");
 }
 
-#market-bgn {
-    -fx-image: url("/images/markets/fiat-logos/market-bgn.png");
-}
-
 #market-bhd {
     -fx-image: url("/images/markets/fiat-logos/market-bhd.png");
 }
@@ -645,10 +641,6 @@
 
 #bdt-menu {
     -fx-image: url("/images/markets/fiat-menus/bdt-menu.png");
-}
-
-#bgn-menu {
-    -fx-image: url("/images/markets/fiat-menus/bgn-menu.png");
 }
 
 #bhd-menu {

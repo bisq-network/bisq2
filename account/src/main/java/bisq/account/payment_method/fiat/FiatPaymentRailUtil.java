@@ -68,12 +68,12 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<String> getSepaEuroCountries() {
-        return List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
+        return List.of("AT", "BE", "BG", "CY", "DE", "EE", "FI", "FR", "GR", "HR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
     }
 
     public static List<String> getSepaNonEuroCountries() {
-        return List.of("BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
+        return List.of("CZ", "DK", "GB", "HU", "PL", "RO",
                 "SE", "IS", "NO", "LI", "CH", "JE", "GI");
     }
 
@@ -114,7 +114,6 @@ public class FiatPaymentRailUtil {
         return List.of(
                 "AED",
                 "AUD",
-                "BGN",
                 "CAD",
                 "CHF",
                 "CZK",
@@ -157,7 +156,7 @@ public class FiatPaymentRailUtil {
     // https://wise.com/help/articles/2571907/what-currencies-can-i-send-to-and-from?origin=related-article-2571942
     // https://github.com/bisq-network/proposals/issues/243
     public static List<String> getWiseCountryCodes() {
-        List<String> list = new ArrayList<>(List.of("AR", "AU", "BD", "BR", "BG", "CA", "CL", "CN", "CO", "CR", "CZ", "DK", "EG",
+        List<String> list = new ArrayList<>(List.of("AR", "AU", "BD", "BR", "CA", "CL", "CN", "CO", "CR", "CZ", "DK", "EG",
                 "GE", "GH", "HK", "HU", "IN", "ID", "IL", "JP", "KE", "MY", "MX", "MA", "NP", "NZ", "NO",
                 "PK", "PH", "PL", "RO", "SG", "ZA", "KR", "LK", "SE", "CH", "TZ", "TH", "TR", "UG", "UA", "AE",
                 "GB", "US", "UY", "VN", "ZM"));
@@ -176,7 +175,6 @@ public class FiatPaymentRailUtil {
                 "ARS",
                 "AUD",
                 "BDT",
-                "BGN",
                 "BRL",
                 "BWP",
                 "CAD",
@@ -239,18 +237,18 @@ public class FiatPaymentRailUtil {
     public static List<String> getUpholdCountryCodes() {
         List<String> list = new ArrayList<>(List.of(
                 "AD", "AE", "AG", "AI", "AL", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "BB", "BD", "BE",
-                "BF", "BG", "BH", "BI", "BJ", "BN", "BO", "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CK",
-                "CL", "CR", "CW", "CX", "CY", "CZ", "DJ", "DK", "DM", "DO", "DZ", "EE", "ES", "FI", "FJ",
-                "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GG", "GH", "GI", "GL", "GM", "GP", "GQ", "GR",
-                "GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "IE", "IL", "IM", "IS", "IT",
-                "JE", "JM", "JO", "JP", "KE", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LC",
-                "LI", "LK", "LS", "LT", "LU", "LV", "MA", "MC", "MG", "MH", "MK", "ML", "MM", "MO", "MP",
-                "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NF", "NI",
-                "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PE", "PF", "PG", "PH", "PL", "PM", "PN", "PR",
-                "PT", "PW", "PY", "QA", "RE", "RO", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI",
-                "SJ", "SK", "SM", "SN", "SR", "ST", "SV", "SX", "SY", "SZ", "TC", "TF", "TH", "TJ", "TK",
-                "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "US", "UY", "UZ", "VA", "VC", "VG",
-                "VI", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM"
+                "BF", "BH", "BI", "BJ", "BN", "BO", "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CK", "CL",
+                "CR", "CW", "CX", "CY", "CZ", "DJ", "DK", "DM", "DO", "DZ", "EE", "ES", "FI", "FJ", "FK",
+                "FM", "FO", "FR", "GA", "GB", "GD", "GG", "GH", "GI", "GL", "GM", "GP", "GQ", "GR", "GT",
+                "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "IE", "IL", "IM", "IS", "IT", "JE",
+                "JM", "JO", "JP", "KE", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LC", "LI",
+                "LK", "LS", "LT", "LU", "LV", "MA", "MC", "MG", "MH", "MK", "ML", "MM", "MO", "MP", "MQ",
+                "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NF", "NI", "NL",
+                "NO", "NP", "NR", "NU", "NZ", "OM", "PE", "PF", "PG", "PH", "PL", "PM", "PN", "PR", "PT",
+                "PW", "PY", "QA", "RE", "RO", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ",
+                "SK", "SM", "SN", "SR", "ST", "SV", "SX", "SY", "SZ", "TC", "TF", "TH", "TJ", "TK", "TL",
+                "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "US", "UY", "UZ", "VA", "VC", "VG", "VI",
+                "VU", "WF", "WS", "YE", "YT", "ZA", "ZM"
         ));
         list.addAll(getSepaEuroCountries());
         return list;
