@@ -128,7 +128,7 @@ public class ApiService implements Service {
         ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
         permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
         pairingService = new PairingService(apiAccessStoreService, permissionService);
-        sessionService = new SessionService();
+        sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);

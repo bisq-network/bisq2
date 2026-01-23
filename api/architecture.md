@@ -78,6 +78,12 @@ api = {
                 denyEndpoints = []
             }
 
+            session = {
+                    # The time in minutes the session is valid
+                    # To deactivate session expiry handling set value to `-1`
+                    ttlInMinutes = 60
+                }
+
             # grpc = {
                 # allowServices = [
                 #     "bisq.trade.TradeService"

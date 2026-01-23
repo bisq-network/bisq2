@@ -26,9 +26,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class SessionService {
     private final Map<String, SessionToken> sessionTokenBySessionIdMap = new ConcurrentHashMap<>();
+    private final int ttlInMinutes;
+
+    public SessionService(int ttlInMinutes) {
+        this.ttlInMinutes = ttlInMinutes;
+    }
 
     public SessionToken createSession(String clientId) {
-        SessionToken token = new SessionToken(clientId);
+        SessionToken token = new SessionToken(ttlInMinutes, clientId);
         sessionTokenBySessionIdMap.put(token.getSessionId(), token);
         return token;
     }

@@ -60,6 +60,9 @@ public final class ApiConfig {
     private final Optional<List<String>> websocketAllowEndpoints;
     private final List<String> websocketDenyEndpoints;
 
+    // api.server.security.session.*
+    private final int sessionTtlInMinutes;
+
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
             boolean restEnabled,
@@ -76,7 +79,8 @@ public final class ApiConfig {
             Optional<List<String>> restAllowEndpoints,
             List<String> restDenyEndpoints,
             Optional<List<String>> websocketAllowEndpoints,
-            List<String> websocketDenyEndpoints
+            List<String> websocketDenyEndpoints,
+            int sessionTtlInMinutes
     ) {
         this.apiAccessTransportType = apiAccessTransportType;
         this.restEnabled = restEnabled;
@@ -94,6 +98,7 @@ public final class ApiConfig {
         this.restDenyEndpoints = restDenyEndpoints;
         this.websocketAllowEndpoints = websocketAllowEndpoints;
         this.websocketDenyEndpoints = websocketDenyEndpoints;
+        this.sessionTtlInMinutes = sessionTtlInMinutes;
     }
 
     public static ApiConfig from(Config config) {
@@ -111,6 +116,7 @@ public final class ApiConfig {
 
         Config restSecurity = securityConfig.getConfig("rest");
         Config websocketSecurity = securityConfig.getConfig("websocket");
+        Config sessionSecurity = securityConfig.getConfig("session");
 
         // use Optional instead of null
         Optional<List<String>> restAllow = restSecurity.hasPath("allowEndpoints")
@@ -150,7 +156,9 @@ public final class ApiConfig {
                 restAllow,
                 restDeny,
                 wsAllow,
-                wsDeny
+                wsDeny,
+
+                sessionSecurity.getInt("sessionTtlInMinutes")
         );
     }
 

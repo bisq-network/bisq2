@@ -22,11 +22,10 @@ import lombok.Getter;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 public class SessionToken {
-    public static final long TTL = TimeUnit.MINUTES.toSeconds(60);
+    private final long ttlInMinutes;
 
     @Getter
     private final String sessionId;
@@ -35,10 +34,11 @@ public class SessionToken {
     @Getter
     private final Instant expiresAt;
 
-    public SessionToken(String clientId) {
+    public SessionToken(int ttlInMinutes, String clientId) {
+        this.ttlInMinutes = ttlInMinutes;
         this.sessionId = UUID.randomUUID().toString();
         this.clientId = clientId;
-        this.expiresAt = Instant.now().plusSeconds(TTL);
+        this.expiresAt = Instant.now().plusSeconds(ttlInMinutes * 60L);
     }
 
     public boolean isExpired() {

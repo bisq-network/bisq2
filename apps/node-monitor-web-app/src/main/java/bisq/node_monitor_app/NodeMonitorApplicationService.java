@@ -179,7 +179,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
             PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
             PairingService pairingService = new PairingService(apiAccessStoreService, permissionService);
-            SessionService sessionService = new SessionService();
+            SessionService sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 

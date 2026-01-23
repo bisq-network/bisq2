@@ -72,7 +72,7 @@ class ApiAccessIntegrationTest {
         // ---------------------------------------------------------------------
         // Given: Server-side services
         // ---------------------------------------------------------------------
-        SessionService sessionService = new SessionService();
+        SessionService sessionService = new SessionService(60);
 
         ApiAccessStoreService apiAccessStoreService = new MockApiAccessStoreService();
 

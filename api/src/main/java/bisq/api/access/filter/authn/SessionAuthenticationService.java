@@ -45,22 +45,22 @@ public final class SessionAuthenticationService {
             checkNotNull(sessionId, "Missing sessionId");
             checkNotNull(clientId, "Missing clientId");
 
-            SessionToken session = sessionService.find(sessionId)
+            SessionToken sessionToken = sessionService.find(sessionId)
                     .orElseThrow(() -> new AuthenticationException("Invalid session"));
 
-            if (session.isExpired()) {
+            if (sessionToken.isExpired()) {
                 throw new AuthenticationException("Session expired");
             }
 
-            checkArgument(clientId.equals(session.getClientId()),
+            checkArgument(clientId.equals(sessionToken.getClientId()),
                     "ClientId from header not matching client ID from session");
 
-            ClientProfile clientProfile = pairingService.findClientProfile(session.getClientId())
+            ClientProfile clientProfile = pairingService.findClientProfile(sessionToken.getClientId())
                     .orElseThrow(() -> new AuthenticationException("Unknown client profile"));
 
             return new AuthenticatedSession(
-                    session.getSessionId(),
-                    session.getClientId()
+                    sessionToken.getSessionId(),
+                    sessionToken.getClientId()
             );
         } catch (Exception e) {
             throw new AuthenticationException(e.getMessage(), e);
