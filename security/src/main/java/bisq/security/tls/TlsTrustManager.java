@@ -29,9 +29,15 @@ import java.util.Arrays;
 public final class TlsTrustManager implements X509TrustManager {
     private final byte[] fingerprint;
 
-    public TlsTrustManager(String tlsFingerprint) {
-        byte[] asBytes = Base64.decode(tlsFingerprint);
-        this.fingerprint = Arrays.copyOf(asBytes, asBytes.length);
+    public TlsTrustManager(String fingerprintBase64) {
+        if (fingerprintBase64 == null || fingerprintBase64.isEmpty()) {
+            throw new IllegalArgumentException("tlsFingerprint must be a non-empty Base64 string");
+        }
+        byte[] fingerprintBytes = Base64.decode(fingerprintBase64);
+        if (fingerprintBytes.length != 32) {
+            throw new IllegalArgumentException("tlsFingerprint must be a SHA-256 hash (32 bytes)");
+        }
+        this.fingerprint = Arrays.copyOf(fingerprintBytes, fingerprintBytes.length);
     }
 
     @Override
