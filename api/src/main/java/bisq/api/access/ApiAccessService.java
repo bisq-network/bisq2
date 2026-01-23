@@ -27,6 +27,9 @@ import bisq.api.access.session.SessionService;
 import bisq.api.access.session.SessionToken;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 @Slf4j
 
 public class ApiAccessService {
@@ -43,19 +46,21 @@ public class ApiAccessService {
     public PairingResponse requestPairing(byte version,
                                           String pairingCodeId,
                                           String clientName) throws InvalidPairingRequestException {
-        ClientProfile deviceProfile = pairingService.pairDevice(version, pairingCodeId, clientName);
-        String clientSecret = deviceProfile.getClientSecret();
-        String clientId = deviceProfile.getClientId();
+        ClientProfile clientProfile = pairingService.requestPairing(version, pairingCodeId, clientName);
+        String clientSecret = clientProfile.getClientSecret();
+        String clientId = clientProfile.getClientId();
         SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
     }
 
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
-        ClientProfile deviceProfile = pairingService.findDeviceProfile(clientId)
+        ClientProfile clientProfile = pairingService.findClientProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
 
-        if (!clientSecret.equals(deviceProfile.getClientSecret())) {
+        if (!MessageDigest.isEqual(
+                                clientSecret.getBytes(StandardCharsets.UTF_8),
+                                clientProfile.getClientSecret().getBytes(StandardCharsets.UTF_8))) {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 

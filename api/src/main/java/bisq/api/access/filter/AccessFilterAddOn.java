@@ -28,7 +28,6 @@ import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.websockets.WebSocketFilter;
 
-//TODO Filters not called
 public class AccessFilterAddOn implements AddOn {
     private final ApiConfig apiConfig;
     private final PermissionService<RestPermissionMapping> permissionService;

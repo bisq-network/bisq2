@@ -331,6 +331,7 @@ public class NetworkInfo {
             torNumConnectionsPin.unsubscribe();
             useExternalTorPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
+            webSocketServiceStatePin.unsubscribe();
 
             root.setOnMouseClicked(null);
         }

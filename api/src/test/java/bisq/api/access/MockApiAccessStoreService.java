@@ -36,19 +36,23 @@ public class MockApiAccessStoreService extends ApiAccessStoreService {
         super();
     }
 
+    @Override
     public void removePairingCode(String pairingCodeId, PairingCode pairingCode) {
         pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
         persist();
     }
 
+    @Override
     public void putClientProfile(String clientId, ClientProfile clientProfile) {
         clientProfileByIdMap.put(clientId, clientProfile);
     }
 
+    @Override
     public void putPairingCode(String id, PairingCode pairingCode) {
         pairingCodeByIdMap.put(id, pairingCode);
     }
 
+    @Override
     public void putPermissions(String clientId, Set<Permission> permissions) {
         permissionsByClientId.put(clientId, permissions);
     }

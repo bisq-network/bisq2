@@ -184,10 +184,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
             ApiAccessService pairingRequestHandler = new ApiAccessService(pairingService, sessionService);
-            AccessApi pairingApi = new AccessApi(pairingRequestHandler);
+            AccessApi accessApi = new AccessApi(pairingRequestHandler);
 
             ResourceConfig resourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
-                    pairingApi,
+                    accessApi,
                     permissionService,
                     sessionAuthenticationService,
                     networkService,

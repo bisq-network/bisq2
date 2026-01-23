@@ -55,8 +55,8 @@ public final class SessionAuthenticationService {
             checkArgument(clientId.equals(session.getClientId()),
                     "ClientId from header not matching client ID from session");
 
-            ClientProfile deviceProfile = pairingService.findDeviceProfile(session.getClientId())
-                    .orElseThrow(() -> new AuthenticationException("Unknown device"));
+            ClientProfile clientProfile = pairingService.findClientProfile(session.getClientId())
+                    .orElseThrow(() -> new AuthenticationException("Unknown client profile"));
 
             return new AuthenticatedSession(
                     session.getSessionId(),

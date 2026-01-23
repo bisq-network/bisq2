@@ -30,8 +30,8 @@ public final class TlsTrustManager implements X509TrustManager {
     private final byte[] fingerprint;
 
     public TlsTrustManager(String tlsFingerprint) {
-        byte[] fingerprint = Base64.decode(tlsFingerprint);
-        this.fingerprint = Arrays.copyOf(fingerprint, fingerprint.length);
+        byte[] asBytes = Base64.decode(tlsFingerprint);
+        this.fingerprint = Arrays.copyOf(asBytes, asBytes.length);
     }
 
     @Override

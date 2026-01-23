@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(
         name = "Access",
-        description = "Endpoints for pairing a client device and establishing " +
+        description = "Endpoints for pairing a client and establishing " +
                 "authenticated sessions"
 )
 public class AccessApi extends RestApiBase {
@@ -64,17 +64,16 @@ public class AccessApi extends RestApiBase {
     @Path("/pairing")
     @AllowUnauthenticated
     @Operation(
-            summary = "Request device pairing",
+            summary = "Request API client pairing",
             description = """
-                    Performs cryptographic pairing of a client device.
+                    Performs pairing of an API client.
                     
                     The client submits a signed pairing request containing:
-                    - pairing code identifier
-                    - device public key
-                    - device name
-                    - timestamp
+                    - protocol version
+                    - pairing code identifier (from QR code)
+                    - client name
                     
-                    On success, a short-lived session ID is created and returned.
+                    On success, client credentials and a short-lived session ID are returned.
                     """
     )
     @ApiResponse(
@@ -92,8 +91,12 @@ public class AccessApi extends RestApiBase {
             @RequestBody(required = true)
             PairingRequestDto request
     ) {
-        log.error("requestPairing {}", request);
         try {
+            if (request == null ||
+                    request.pairingCodeId() == null ||
+                    request.clientName() == null) {
+                throw new IllegalArgumentException("Missing required pairing fields");
+            }
             PairingResponse pairingResponse =
                     apiAccessService.requestPairing(request.version(), request.pairingCodeId(), request.clientName());
 
@@ -104,7 +107,6 @@ public class AccessApi extends RestApiBase {
                             pairingResponse.getSessionId(),
                             pairingResponse.getSessionExpiryDate());
 
-            log.error("requestPairing was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);
         } catch (InvalidPairingRequestException e) {
             log.warn("Pairing request rejected", e);
@@ -126,10 +128,10 @@ public class AccessApi extends RestApiBase {
     @Path("/session")
     @AllowUnauthenticated
     @Operation(
-            summary = "Create a new device session",
+            summary = "Create a new client session",
             description = """
-                    Creates a new short-lived session for a client device using a
-                    client identifier and shared device secret.
+                    Creates a new short-lived session for a client using a
+                    client identifier and shared client secret.
                     
                     This endpoint is intentionally unauthenticated and is used during
                     initial client bootstrap or re-sessioning.
@@ -153,7 +155,6 @@ public class AccessApi extends RestApiBase {
     public Response requestSession(
             SessionRequestDto request
     ) {
-        log.error("requestSession {}", request);
         try {
             if (request == null ||
                     request.clientId() == null ||
@@ -162,14 +163,13 @@ public class AccessApi extends RestApiBase {
             }
 
             SessionResponse sessionResponse =
-                    apiAccessService.requestSession( request.clientId(), request.clientSecret());
+                    apiAccessService.requestSession(request.clientId(), request.clientSecret());
 
             SessionResponseDto response =
                     new SessionResponseDto(
                             sessionResponse.getSessionId(),
                             sessionResponse.getExpiresAt()
                     );
-            log.error("requestSession was successful: {}", response);
             return buildResponse(Response.Status.CREATED, response);
 
         } catch (InvalidSessionRequestException e) {

@@ -12,10 +12,10 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 public abstract class RestApiBaseResourceConfig extends PairingApiResourceConfig {
     public RestApiBaseResourceConfig(ApiConfig apiConfig,
-                                     AccessApi pairingApi,
+                                     AccessApi accessApi,
                                      PermissionService<RestPermissionMapping> permissionService,
                                      SessionAuthenticationService sessionAuthenticationService) {
-        super(pairingApi);
+        super(accessApi);
 
 
         if (apiConfig.isSupportSessionHandling()) {

@@ -118,7 +118,6 @@ public class HttpServerBootstrapService implements Service {
 
                     serverConfiguration.addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
 
-                    // todo filters not called
                     networkListener.registerAddOn(new AccessFilterAddOn(apiConfig, permissionService, sessionAuthenticationService));
 
                     if (apiConfig.isTlsRequired()) {
@@ -180,7 +179,7 @@ public class HttpServerBootstrapService implements Service {
                             .orElse("");
                     if (throwable != null) {
                         errorMessage.set(existingErrorMessage + throwable.getMessage());
-                    } else if (result != null && result) {
+                    } else if (result != null && result && httpServer.isPresent()) {
                         setState(State.RUNNING);
                     } else {
                         errorMessage.set(existingErrorMessage + "Initialization completed without success state");

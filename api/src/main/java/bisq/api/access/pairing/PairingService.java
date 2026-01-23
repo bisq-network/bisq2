@@ -58,9 +58,9 @@ public class PairingService {
         return pairingCode;
     }
 
-    public ClientProfile pairDevice(byte version,
-                                    String pairingCodeId,
-                                    String clientName) throws InvalidPairingRequestException {
+    public ClientProfile requestPairing(byte version,
+                                        String pairingCodeId,
+                                        String clientName) throws InvalidPairingRequestException {
         PairingCode pairingCode = apiAccessStoreService.getPairingCodeByIdMap().get(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
@@ -72,7 +72,7 @@ public class PairingService {
         }
 
         // Mark used by removing it
-        //persistableStore.getPairingCodeByIdMap().remove(pairingCodeId, pairingCode);  //todo
+        apiAccessStoreService.removePairingCode(pairingCodeId, pairingCode);
 
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
@@ -91,7 +91,7 @@ public class PairingService {
         return Optional.ofNullable(apiAccessStoreService.getPairingCodeByIdMap().get(id));
     }
 
-    public Optional<ClientProfile> findDeviceProfile(String id) {
+    public Optional<ClientProfile> findClientProfile(String id) {
         return Optional.ofNullable(apiAccessStoreService.getClientProfileByIdMap().get(id));
     }
 

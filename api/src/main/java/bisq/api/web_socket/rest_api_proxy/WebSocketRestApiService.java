@@ -123,7 +123,7 @@ public class WebSocketRestApiService implements Service {
                     .connectTimeout(Duration.ofSeconds(10));
             if (apiConfig.isTlsRequired()) {
                 try {
-                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
                     String fingerprint = tlsContextService.getOrCreateTlsContext().orElseThrow().getTlsFingerprint();
                     sslContext.init(
                             null,

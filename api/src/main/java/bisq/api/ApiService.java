@@ -125,7 +125,7 @@ public class ApiService implements Service {
                 bindPort,
                 apiConfig.getOnionServicePort());
 
-        ApiAccessStoreService apiAccessStoreService= new ApiAccessStoreService(persistenceService);
+        ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
         permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
         pairingService = new PairingService(apiAccessStoreService, permissionService);
         sessionService = new SessionService();

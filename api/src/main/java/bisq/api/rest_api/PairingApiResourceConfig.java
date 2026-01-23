@@ -9,7 +9,7 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonP
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class PairingApiResourceConfig extends ResourceConfig {
-    public PairingApiResourceConfig(AccessApi pairingApi) {
+    public PairingApiResourceConfig(AccessApi accessApi) {
         super();
         JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider(JsonMapperProvider.get(),
                 JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
@@ -21,7 +21,7 @@ public class PairingApiResourceConfig extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(pairingApi).to(AccessApi.class);
+                bind(accessApi).to(AccessApi.class);
             }
         });
     }

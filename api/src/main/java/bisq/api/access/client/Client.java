@@ -36,7 +36,7 @@ public abstract class Client {
 
     public ClientIdentity createClientIdentity(String clientName) {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        // TODO on Mobile client: Allow user to set device name, store ClientIdentity
+        // TODO on Mobile client: Allow user to set client name, store ClientIdentity
         return new ClientIdentity(clientName, keyPair);
     }
 

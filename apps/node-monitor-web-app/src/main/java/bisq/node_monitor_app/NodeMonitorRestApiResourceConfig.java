@@ -15,13 +15,13 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 @Slf4j
 public class NodeMonitorRestApiResourceConfig extends RestApiBaseResourceConfig {
     public NodeMonitorRestApiResourceConfig(ApiConfig apiConfig,
-                                            AccessApi pairingApi,
+                                            AccessApi accessApi,
                                             PermissionService<RestPermissionMapping> permissionService,
                                             SessionAuthenticationService sessionAuthenticationService,
                                             NetworkService networkService,
                                             NodeMonitorService nodeMonitorService
     ) {
-        super(apiConfig, pairingApi, permissionService, sessionAuthenticationService);
+        super(apiConfig, accessApi, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
