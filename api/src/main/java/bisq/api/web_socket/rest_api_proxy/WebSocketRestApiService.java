@@ -23,7 +23,6 @@ import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.application.Service;
 import bisq.security.tls.TlsException;
 import bisq.security.tls.TlsTrustManager;
-import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -81,13 +80,20 @@ public class WebSocketRestApiService implements Service {
     public void onMessage(String json, WebSocket webSocket) {
         WebSocketRestApiRequest.fromJson(json)
                 .map(this::sendToRestApiServer)
-                .flatMap(WebSocketRestApiResponse::toJson)
-                .ifPresentOrElse(webSocket::send,
-                        () -> log.warn("Message was not sent to websocket." +
-                                "\nJson={}", json));
+                .ifPresent(future -> {
+                    future.whenComplete((response, throwable) -> {
+                        if (throwable == null) {
+                            response.toJson()
+                                    .ifPresentOrElse(webSocket::send,
+                                            () -> log.warn("Message was not sent to websocket." +
+                                                    "\nJson={}", json));
+                        }
+                    });
+                });
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
+    private CompletableFuture<WebSocketRestApiResponse> sendToRestApiServer(WebSocketRestApiRequest request) {
+        CompletableFuture<WebSocketRestApiResponse> future = new CompletableFuture<>();
         String url = restServerUrl + request.getPath();
         String method = request.getMethod();
         String body = request.getBody();
@@ -108,18 +114,26 @@ public class WebSocketRestApiService implements Service {
 
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
-            // Blocking send
-            HttpResponse<String> httpResponse;
             synchronized (httpClientLock) {
                 HttpClient httpClient = getOrCreateHttpClient();
-                httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                        .thenApply(response ->
+                                new WebSocketRestApiResponse(request.getRequestId(), response.statusCode(), response.body()))
+                        .whenComplete((response, throwable) -> {
+                            if (throwable == null) {
+                                log.info("httpResponse {}", response);
+                                future.complete(response);
+                            } else {
+                                log.warn("Request failed", throwable);
+                                future.completeExceptionally(throwable);
+                            }
+                        });
             }
-            log.info("httpResponse {}", httpResponse);
-            return new WebSocketRestApiResponse(request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
+            return future;
         } catch (Exception e) {
             String errorMessage = String.format("Error at sending a '%s' request to '%s'. Error: %s", method, url, e.getMessage());
             log.error(errorMessage, e);
-            return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMessage);
+            return CompletableFuture.failedFuture(e);
         }
     }
 
