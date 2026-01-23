@@ -138,8 +138,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
 
     private Pin observeTradeState(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        // Track if this is the first emission (current value) or a real change
-        final boolean[] isFirstEmission = {true};
+        // Track previous state to detect actual changes
+        final BisqEasyTradeState[] previousState = {bisqEasyTrade.getTradeState()};
 
         return bisqEasyTrade.tradeStateObservable().addObserver(value -> {
             if (value != null) {
@@ -147,12 +147,11 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 data.tradeState = Optional.of(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(value));
                 send(Map.of(tradeId, data));
 
-                // Only send push notification for actual state changes, not initial value
-                // This prevents notifying users about their own actions
-                if (!isFirstEmission[0]) {
+                // Only send push notification if state actually changed
+                if (previousState[0] != value) {
                     handleTradeStateNotification(bisqEasyTrade, tradeId, value);
+                    previousState[0] = value;
                 }
-                isFirstEmission[0] = false;
             }
         });
     }
@@ -263,8 +262,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     }
 
     private Pin observePaymentAccountData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        // Track if this is the first emission (current value) or a real change
-        final boolean[] isFirstEmission = {true};
+        // Track previous value to detect actual changes
+        final String[] previousValue = {bisqEasyTrade.getPaymentAccountData().get()};
 
         return bisqEasyTrade.getPaymentAccountData().addObserver(value -> {
             if (value != null) {
@@ -272,9 +271,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 data.paymentAccountData = Optional.of(value);
                 send(Map.of(tradeId, data));
 
-                // Only send push notification for actual changes, not initial value
-                // This prevents notifying users about their own actions
-                if (!isFirstEmission[0] && notifiedPaymentInfo.add(tradeId)) {
+                // Only send push notification if value actually changed and we haven't notified yet
+                if (!value.equals(previousValue[0]) && notifiedPaymentInfo.add(tradeId)) {
                     pushNotificationService.ifPresent(service -> {
                         String userProfileId = bisqEasyTrade.getMyIdentity().getId();
                         boolean isSeller = !bisqEasyTrade.isBuyer();
@@ -286,15 +284,15 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
                         service.sendTradeNotification(userProfileId, tradeId, "PAYMENT_INFO_UPDATED", message, true);
                     });
+                    previousValue[0] = value;
                 }
-                isFirstEmission[0] = false;
             }
         });
     }
 
     private Pin observeBitcoinPaymentData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        // Track if this is the first emission (current value) or a real change
-        final boolean[] isFirstEmission = {true};
+        // Track previous value to detect actual changes
+        final String[] previousValue = {bisqEasyTrade.getBitcoinPaymentData().get()};
 
         return bisqEasyTrade.getBitcoinPaymentData().addObserver(value -> {
             if (value != null) {
@@ -302,9 +300,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 data.bitcoinPaymentData = Optional.of(value);
                 send(Map.of(tradeId, data));
 
-                // Only send push notification for actual changes, not initial value
-                // This prevents notifying users about their own actions
-                if (!isFirstEmission[0]) {
+                // Only send push notification if value actually changed
+                if (!value.equals(previousValue[0])) {
                     pushNotificationService.ifPresent(service -> {
                         String userProfileId = bisqEasyTrade.getMyIdentity().getId();
                         boolean isBuyer = bisqEasyTrade.isBuyer();
@@ -316,8 +313,8 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
                         service.sendTradeNotification(userProfileId, tradeId, "BITCOIN_INFO_UPDATED", message, true);
                     });
+                    previousValue[0] = value;
                 }
-                isFirstEmission[0] = false;
             }
         });
     }
