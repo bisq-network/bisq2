@@ -83,8 +83,7 @@ public class FiatCurrencyRepository {
     private static List<FiatCurrency> initMajorCurrencies() {
         List<String> mainCodes = new ArrayList<>(List.of("USD", "EUR", "GBP", "CAD", "AUD", "RUB", "CNY", "INR", "NGN"));
         return mainCodes.stream()
-                .map(code -> currencyByCode.get(code))
-                .filter(Objects::nonNull)
+                .flatMap(code -> FiatCurrencyRepository.findFiatCurrency(code).stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -124,19 +123,33 @@ public class FiatCurrencyRepository {
     }
 
     public static FiatCurrency getCurrencyByCode(String code) {
-        return currencyByCode.get(code);
+        return findFiatCurrency(code)
+                .orElseGet(() -> {
+                    log.error("fiatCurrency is empty for {} at 'getCurrencyByCode(code)'. We fall back to USD to avoid exceptions at call sites", code);
+                    return new FiatCurrency("USD");
+                });
+    }
+
+    public static Optional<FiatCurrency> findFiatCurrency(String code) {
+        Optional<FiatCurrency> fiatCurrency = Optional.ofNullable(currencyByCode.get(code));
+        if (fiatCurrency.isEmpty()) {
+            log.warn("fiatCurrency is empty for {} at 'findFiatCurrency(code)'", code);
+        }
+        return fiatCurrency;
     }
 
     public static List<FiatCurrency> getCurrencyByCodes(List<String> codes) {
-        return codes.stream().map(e -> currencyByCode.get(e)).collect(Collectors.toList());
+        return codes.stream()
+                .flatMap(code -> FiatCurrencyRepository.findFiatCurrency(code).stream())
+                .collect(Collectors.toList());
     }
 
     public static Optional<String> findName(String code) {
-        return Optional.ofNullable(currencyByCode.get(code)).map(Asset::getName);
+        return findFiatCurrency(code).map(Asset::getName);
     }
 
     public static Optional<String> findDisplayName(String code) {
-        return Optional.ofNullable(currencyByCode.get(code)).map(Asset::getDisplayName);
+        return findFiatCurrency(code).map(Asset::getDisplayName);
     }
 
     public static List<String> getAllFiatCurrencyCodes() {
@@ -146,11 +159,15 @@ public class FiatCurrencyRepository {
     }
 
     public static String getDisplayNameAndCode(String currencyCode) {
-        return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getDisplayNameAndCode();
+        return findFiatCurrency(currencyCode)
+                .map(Asset::getDisplayNameAndCode)
+                .orElse(currencyCode);
     }
 
     public static String getCodeAndDisplayName(String currencyCode) {
-        return FiatCurrencyRepository.getCurrencyByCode(currencyCode).getCodeAndDisplayName();
+        return findFiatCurrency(currencyCode)
+                .map(Asset::getCodeAndDisplayName)
+                .orElse(currencyCode);
     }
 
     public static String getDisplayNameAndCodes(List<String> currencyCodes) {
