@@ -21,17 +21,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Getter
 @EqualsAndHashCode
 public class WebSocketClient {
-    private final String id = UUID.randomUUID().toString();
-    private final Optional<String> address;
+    private final Optional<String> clientId;
+    private final Optional<String> clientAddress;
     private final Optional<String> userAgent;
 
-    public WebSocketClient(Optional<String> address, Optional<String> userAgent) {
-        this.address = address;
+    public WebSocketClient(Optional<String> clientId, Optional<String> clientAddress, Optional<String> userAgent) {
+        this.clientId = clientId;
+        this.clientAddress = clientAddress;
         this.userAgent = userAgent;
     }
 }

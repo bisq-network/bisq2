@@ -44,6 +44,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -111,10 +112,14 @@ public class BisqConnectController implements Controller {
                         .show();
             }
 
-
-            //todo list item, binding
             pins.add(webSocketService.getWebsocketClients().addObserver(() ->
-                    UIThread.run(() -> model.getConnectedClients().setAll(webSocketService.getWebsocketClients().getUnmodifiableSet()))));
+                    UIThread.run(() -> {
+                        List<BisqConnectView.ClientListItem> listItems = webSocketService.getWebsocketClients()
+                                .stream()
+                                .map(webSocketClient -> new BisqConnectView.ClientListItem(webSocketClient, pairingService))
+                                .toList();
+                        model.getConnectedClients().setAll(listItems);
+                    })));
         });
     }
 
