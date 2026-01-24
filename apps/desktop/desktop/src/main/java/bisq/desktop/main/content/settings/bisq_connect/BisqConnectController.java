@@ -35,6 +35,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.settings.bisq_connect.api_config.ApiConfigController;
+import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +58,7 @@ public class BisqConnectController implements Controller {
     private final ApiConfigController apiConfigController;
     private final Set<Pin> pins = new HashSet<>();
     private final TlsContextService tlsContextService;
+    private final DontShowAgainService dontShowAgainService;
     private Subscription onionAddressSubscription;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
@@ -64,6 +67,7 @@ public class BisqConnectController implements Controller {
         pairingService = apiService.getPairingService();
         tlsContextService = apiService.getTlsContextService();
         apiAccessTransportService = apiService.getApiAccessTransportService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         apiConfigController = new ApiConfigController(serviceProvider);
         model = new BisqConnectModel(apiService.getApiConfig().getWebSocketServerUrl(), 220);
@@ -99,6 +103,13 @@ public class BisqConnectController implements Controller {
                         }
                     }
             ));
+
+            String dontShowAgainId = "settings.bisqConnect.popup";
+            if (dontShowAgainService.showAgain(dontShowAgainId)) {
+                new Popup().backgroundInfo(Res.get("settings.bisqConnect.popup"))
+                        .dontShowAgainId(dontShowAgainId)
+                        .show();
+            }
 
 
             //todo list item, binding
