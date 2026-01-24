@@ -21,7 +21,6 @@ import bisq.common.proto.NetworkProto;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
@@ -38,7 +37,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 @EqualsAndHashCode
-@ToString
 @Getter
 public final class AddressByTransportTypeMap implements Map<TransportType, Address>, NetworkProto {
     // We use a TreeMap to get deterministic sorting.

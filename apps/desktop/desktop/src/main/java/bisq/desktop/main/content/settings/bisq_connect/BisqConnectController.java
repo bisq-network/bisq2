@@ -105,13 +105,6 @@ public class BisqConnectController implements Controller {
                     }
             ));
 
-            String dontShowAgainId = "settings.bisqConnect.popup";
-            if (dontShowAgainService.showAgain(dontShowAgainId)) {
-                new Popup().backgroundInfo(Res.get("settings.bisqConnect.popup"))
-                        .dontShowAgainId(dontShowAgainId)
-                        .show();
-            }
-
             pins.add(webSocketService.getWebsocketClients().addObserver(() ->
                     UIThread.run(() -> {
                         List<BisqConnectView.ClientListItem> listItems = webSocketService.getWebsocketClients()
@@ -121,6 +114,13 @@ public class BisqConnectController implements Controller {
                         model.getConnectedClients().setAll(listItems);
                     })));
         });
+
+        String dontShowAgainId = "settings.bisqConnect.popup";
+        if (dontShowAgainService.showAgain(dontShowAgainId)) {
+            new Popup().backgroundInfo(Res.get("settings.bisqConnect.popup"))
+                    .dontShowAgainId(dontShowAgainId)
+                    .show();
+        }
     }
 
     @Override
