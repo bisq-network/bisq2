@@ -23,6 +23,7 @@ import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
+import bisq.common.network.Address;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -35,7 +36,6 @@ import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -114,19 +114,19 @@ public class MarketPriceComponent {
                             selectedMarketPin.unbind();
                         }
                         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
-                            UIThread.run(() -> {
-                                if (selectedMarket != null) {
-                                    model.items.stream()
-                                            .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
-                                            .findAny()
-                                            .ifPresent(listItem -> {
-                                                model.market.set(listItem.market);
-                                                model.codes.set(listItem.codes);
-                                                model.price.set(listItem.price);
-                                                model.selected.set(listItem);
-                                            });
-                                }
-                            }));
+                                UIThread.run(() -> {
+                                    if (selectedMarket != null) {
+                                        model.items.stream()
+                                                .filter(item -> item.marketPrice.getMarket().equals(selectedMarket))
+                                                .findAny()
+                                                .ifPresent(listItem -> {
+                                                    model.market.set(listItem.market);
+                                                    model.codes.set(listItem.codes);
+                                                    model.price.set(listItem.price);
+                                                    model.selected.set(listItem);
+                                                });
+                                    }
+                                }));
                     }));
             applyFilteredListItems();
         }
@@ -231,9 +231,13 @@ public class MarketPriceComponent {
 
             codes.textProperty().bind(model.codes);
 
-            marketPin = EasyBind.subscribe(model.market, market ->
-                codes.setGraphic(MarketImageComposition.getMarketMenuPairIcons(
-                        market.getBaseCurrencyCode(), market.getQuoteCurrencyCode())));
+            marketPin = EasyBind.subscribe(model.market, market -> {
+                if (market != null) {
+                    codes.setGraphic(MarketImageComposition.getMarketMenuPairIcons(
+                            market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()));
+                }
+            });
+
             pricePin = EasyBind.subscribe(model.price, priceValue -> {
                 boolean isPriceSet = StringUtils.isNotEmpty(priceValue);
                 progressBarWithLabel.setVisible(!isPriceSet);
