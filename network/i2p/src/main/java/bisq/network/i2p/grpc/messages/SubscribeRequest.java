@@ -19,7 +19,6 @@ package bisq.network.i2p.grpc.messages;
 
 
 import bisq.common.proto.Proto;
-import bisq.common.proto.UnresolvableProtobufEnumException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,8 +51,5 @@ public class SubscribeRequest implements Proto {
                 .setTopic(topic.toProtoEnum());
     }
 
-    // Not used. We still keep it to follow convention.
-    public static SubscribeRequest fromProto(bisq.bi2p.protobuf.SubscribeRequest proto) throws UnresolvableProtobufEnumException {
-        return new SubscribeRequest(Topic.fromProto(proto.getTopic()));
-    }
+    // fromProto is not used
 }
