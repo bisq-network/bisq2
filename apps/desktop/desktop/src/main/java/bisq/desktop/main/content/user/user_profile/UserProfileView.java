@@ -177,7 +177,11 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         catHashImageView.setOnMouseClicked(e -> controller.onOpenProfileCard());
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
-                userIdentity -> comboBox.getSelectionModel().select(userIdentity));
+                userIdentity -> {
+                    if (userIdentity != null) {
+                        comboBox.getSelectionModel().select(userIdentity);
+                    }
+                });
 
         isValidSelectionPin = EasyBind.subscribe(comboBox.getIsValidSelection(), isValidSelection -> UIThread.run(() -> {
             if (!isValidSelection) {

@@ -160,7 +160,11 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
         });
 
         getSelectedSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageTag(),
-                e -> supportedLanguagesComboBox.getSelectionModel().select(e));
+                languageTag -> {
+                    if (languageTag != null) {
+                        supportedLanguagesComboBox.getSelectionModel().select(languageTag);
+                    }
+                });
 
         addLanguageButton.setOnAction(e -> {
             if (supportedLanguagesComboBox.validate()) {
