@@ -84,11 +84,11 @@ public class ApiConfigController implements Controller {
         model.getApplyButtonDisabled().set(true);
 
         // Provide apiAccessTransportTypes
+        model.getApiTransportTypes().clear();
         if (networkService.getSupportedTransportTypes().contains(TransportType.TOR)) {
             model.getApiTransportTypes().add(ApiAccessTransportType.TOR);
         }
         model.getApiTransportTypes().add(ApiAccessTransportType.CLEAR);
-
 
         subscriptions.add(EasyBind.subscribe(model.getTlsRequired(), tlsRequired -> {
             model.getProtocol().set(tlsRequired ? "wss" : "ws");
