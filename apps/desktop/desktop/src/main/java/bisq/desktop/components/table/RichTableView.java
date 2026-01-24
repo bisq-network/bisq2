@@ -200,19 +200,21 @@ public class RichTableView<T> extends VBox {
 
         // Subheader: contains search + filters
         searchBox = new SearchBox();
-        searchBox.setManaged(searchTextHandler.isPresent());
-        searchBox.setVisible(searchBox.isManaged());
+        searchBox.setVisible(searchTextHandler.isPresent());
+        searchBox.setManaged(searchBox.isVisible());
         searchBox.setPrefWidth(200);
 
         filterMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         filterMenu.getStyleClass().add("dropdown-offer-rich-table-filter-menu");
-        filterMenu.setManaged(filterItems.isPresent());
-        filterMenu.setVisible(filterMenu.isManaged());
+        filterMenu.setVisible(filterItems.isPresent());
+        filterMenu.setManaged(filterMenu.isVisible());
         filterItems.ifPresent(filterMenu::addMenuItems);
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
 
         subheaderBox = new HBox(searchBox, Spacer.fillHBox(), filterMenu);
+        subheaderBox.setVisible(searchBox.isVisible() || filterMenu.isVisible());
+        subheaderBox.setManaged(subheaderBox.isVisible());
         subheaderBox.getStyleClass().add("rich-table-subheader");
         subheaderBox.setAlignment(Pos.CENTER);
         subheaderBox.setPadding(new Insets(0, 20, 0, 20));
@@ -240,8 +242,8 @@ public class RichTableView<T> extends VBox {
         filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
         exportButton.setOnAction(ev -> {
-            List<String> headers = csvHeaders.orElseGet(() -> buildCsvHeaders());
-            List<List<String>> data = csvData.orElseGet(() -> buildCsvData());
+            List<String> headers = csvHeaders.orElseGet(this::buildCsvHeaders);
+            List<List<String>> data = csvData.orElseGet(this::buildCsvData);
             String csv = Csv.toCsv(headers, data);
             String initialFileName = headline.orElse("Bisq-table-data") + ".csv";
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
