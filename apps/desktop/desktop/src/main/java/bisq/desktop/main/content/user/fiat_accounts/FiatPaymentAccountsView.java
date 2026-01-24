@@ -102,7 +102,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         deletedButton = new Button(Res.get("paymentAccounts.deleteAccount"));
 
-        importBisq1AccountDataButton= new Button(Res.get("paymentAccounts.importBisq1AccountData"));
+        importBisq1AccountDataButton = new Button(Res.get("paymentAccounts.importBisq1AccountData"));
 
         accountDisplayPane = new StackPane();
 
@@ -114,7 +114,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                new HBox(10, saveButton, deletedButton, importBisq1AccountDataButton));
+                new HBox(10, saveButton, deletedButton/*, importBisq1AccountDataButton*/)); // Not ready for release
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);

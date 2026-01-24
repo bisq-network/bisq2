@@ -62,6 +62,7 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -102,10 +103,11 @@ public class FiatPaymentAccountsController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
-                if (element instanceof Account<? extends PaymentMethod<?>, ?> account) {
+            public void remove(Object key) {
+                if (key instanceof String accountName) {
                     UIThread.run(() -> {
-                        model.getAccounts().remove(account);
+                        findAccount(accountName)
+                                .ifPresent(account -> model.getAccounts().remove(account));
                         maybeSelectFirstAccount();
                         updateNoAccountsState();
                     });
@@ -204,10 +206,7 @@ public class FiatPaymentAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        Account<? extends PaymentMethod<?>, ?> account = model.getSelectedAccount().get();
-        accountService.removePaymentAccount(account);
-        model.getAccounts().remove(account);
-        maybeSelectFirstAccount();
+        accountService.removePaymentAccount(model.getSelectedAccount().get());
     }
 
     void onImportBisq1AccountData() {
@@ -301,5 +300,11 @@ public class FiatPaymentAccountsController implements Controller {
             userDefinedAccountDetailsPin.unsubscribe();
             userDefinedAccountDetailsPin = null;
         }
+    }
+
+    private Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String key) {
+        return model.getAccounts().stream()
+                .filter(account -> account.getAccountName().equals(key))
+                .findAny();
     }
 }
