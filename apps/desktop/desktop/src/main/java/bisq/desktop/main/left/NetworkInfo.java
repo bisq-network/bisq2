@@ -247,6 +247,7 @@ public class NetworkInfo {
             HBox.setMargin(webSocketServerStateIcon, new Insets(0, 0, 0, 2));
             websocketServerStateBox = new HBox(5, webSocketServerStateIcon, webSocketServerStateLabel);
             websocketServerStateBox.setAlignment(Pos.CENTER_LEFT);
+            Tooltip.install(websocketServerStateBox, new BisqTooltip(Res.get("navigation.network.info.webSocketServerState.tooltip")));
 
             root.getChildren().addAll(clearNetHBox, torHBox, i2pHBox, websocketServerStateBox);
         }
