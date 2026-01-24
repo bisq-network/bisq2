@@ -18,8 +18,6 @@
 package bisq.api.access.permissions;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.proto.ProtobufUtils;
-import bisq.common.proto.UnresolvableProtobufEnumException;
 import lombok.Getter;
 
 /**
@@ -49,9 +47,7 @@ public enum Permission implements ProtoEnum {
         return bisq.api.protobuf.Permission.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static Permission fromProto(bisq.api.protobuf.Permission proto) throws UnresolvableProtobufEnumException {
-        return ProtobufUtils.enumFromProto(Permission.class, proto.name());
-    }
+    // fromProto is not used
 
     public static Permission fromId(int id) {
         for (Permission permission : values()) {
