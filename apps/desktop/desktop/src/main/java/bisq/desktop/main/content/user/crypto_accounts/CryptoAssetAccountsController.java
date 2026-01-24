@@ -40,6 +40,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public class CryptoAssetAccountsController implements Controller {
@@ -76,10 +77,11 @@ public class CryptoAssetAccountsController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
-                if (element instanceof Account<? extends PaymentMethod<?>, ?> account) {
+            public void remove(Object key) {
+                if (key instanceof String accountName) {
                     UIThread.run(() -> {
-                        model.getAccounts().remove(account);
+                        findAccount(accountName)
+                                .ifPresent(account -> model.getAccounts().remove(account));
                         handleAccountChange();
                     });
                 }
@@ -123,9 +125,7 @@ public class CryptoAssetAccountsController implements Controller {
     }
 
     void onDeleteAccount() {
-        Account<?, ?> cryptoAssetAccount = model.getSelectedAccount().get();
-        accountService.removePaymentAccount(cryptoAssetAccount);
-        model.getAccounts().remove(cryptoAssetAccount);
+        accountService.removePaymentAccount( model.getSelectedAccount().get());
     }
 
     private void handleAccountChange() {
@@ -154,5 +154,11 @@ public class CryptoAssetAccountsController implements Controller {
         } else {
             throw new UnsupportedOperationException("Unsupported cryptoAssetAccount " + cryptoAssetAccount.getClass().getSimpleName());
         }
+    }
+
+    private Optional<Account<?,?>> findAccount(String key) {
+        return model.getAccounts().stream()
+                .filter(account -> account.getAccountName().equals(key))
+                .findAny();
     }
 }
