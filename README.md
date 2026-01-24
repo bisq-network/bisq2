@@ -24,12 +24,12 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 ### Quick Setup
 
-1. **Clone Bisq 2:**
+1. **Clone and build Bisq 2:**
    ```bash
    git clone https://github.com/bisq-network/bisq2.git
-   ```
-   ```bash
    cd bisq2
+   ./gradlew build
+   ./gradlew apps:desktop:desktop-app:installDist
    ```
 
 2. **Install Dependencies:**
@@ -37,17 +37,20 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 3. **Update to latest GitHub version:**
    ```bash
+   # from inside bisq2 folder
    git pull
+   ./gradlew build
+   ./gradlew apps:desktop:desktop-app:installDist
    ```
 
 4. **Run desktop client:**
    ```bash
-   apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
+   ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
    ```
 
 5. **Run desktop client with custom data directory:**
    ```bash
-   apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
+   ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
    ```
 
 **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
