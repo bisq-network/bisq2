@@ -198,7 +198,13 @@ public class AlertView extends View<VBox, AlertModel, AlertController> {
         requireVersionForTradingCheckBox.selectedProperty().bindBidirectional(model.getRequireVersionForTrading());
 
         selectedAlertTypePin = EasyBind.subscribe(model.getSelectedAlertType(),
-                alertType -> alertTypeSelection.getSelectionModel().select(alertType));
+                alertType -> {
+                    if (alertType != null) {
+                        alertTypeSelection.getSelectionModel().select(alertType);
+                    } else {
+                        alertTypeSelection.getSelectionModel().clearSelection();
+                    }
+                });
         selectedBondedRolListItemPin = EasyBind.subscribe(model.getSelectedBondedRoleListItem(),
                 bondedRole -> {
                     if (bondedRole == null) {
