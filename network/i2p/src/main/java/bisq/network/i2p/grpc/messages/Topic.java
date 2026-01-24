@@ -18,8 +18,6 @@
 package bisq.network.i2p.grpc.messages;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.proto.ProtobufUtils;
-import bisq.common.proto.UnresolvableProtobufEnumException;
 
 public enum Topic implements ProtoEnum {
     PROCESS_STATE,
@@ -32,7 +30,5 @@ public enum Topic implements ProtoEnum {
         return bisq.bi2p.protobuf.Topic.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static Topic fromProto(bisq.bi2p.protobuf.Topic proto) throws UnresolvableProtobufEnumException {
-        return ProtobufUtils.enumFromProto(Topic.class, proto.name());
-    }
+    // fromProto is not used
 }
