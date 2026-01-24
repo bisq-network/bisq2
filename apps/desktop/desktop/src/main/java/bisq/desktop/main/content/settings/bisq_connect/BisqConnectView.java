@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
+import bisq.api.access.identity.ClientProfile;
+import bisq.api.access.pairing.PairingService;
 import bisq.api.web_socket.WebSocketClient;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -32,6 +34,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -43,7 +47,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     private final MaterialTextField qrCode;
     private final ImageView qrImageView;
     private final VBox pairingVBox;
-    private final RichTableView<WebSocketClient> clientsTable;
+    private final RichTableView<ClientListItem> clientsTable;
     private final MaterialTextField webSocketServerUrl;
     private Subscription webSocketServiceStatePin;
 
@@ -103,10 +107,9 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         contentBox.setPadding(new Insets(0, 5, 0, 5));
 
         clientsTable = new RichTableView<>(model.getConnectedClients(), Res.get("settings.bisqConnect.clients.headline"));
-        clientsTable.setMaxHeight(100);
         configTable();
 
-        this.root.getChildren().addAll(contentBox, clientsTable);
+        root.getChildren().addAll(contentBox, clientsTable);
     }
 
     private static Label getInfoLabel(String text) {
@@ -118,6 +121,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
     @Override
     protected void onViewAttached() {
+        clientsTable.initialize();
         webSocketServerUrl.setText(model.getWebSocketServerUrl());
 
         webSocketServiceStatePin = EasyBind.subscribe(model.getWebSocketServiceState(), state -> {
@@ -141,6 +145,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
     @Override
     protected void onViewDetached() {
+        clientsTable.dispose();
         webSocketServiceStatePin.unsubscribe();
 
         pairingVBox.visibleProperty().unbind();
@@ -151,18 +156,40 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
     }
 
     private void configTable() {
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
+        clientsTable.setPrefHeight(200);
+
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<ClientListItem>()
+                .title(Res.get("settings.bisqConnect.clients.clientName"))
+                .valueSupplier(ClientListItem::getClientName)
+                .left()
+                .build());
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<ClientListItem>()
                 .title(Res.get("settings.bisqConnect.clients.address"))
-                .valueSupplier(info -> info.getAddress().orElse(Res.get("data.na")))
-                .left()
-                .minWidth(200)
+                .valueSupplier(ClientListItem::getClientAddress)
                 .build());
-        clientsTable.getColumns().add(new BisqTableColumn.Builder<WebSocketClient>()
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<ClientListItem>()
                 .title(Res.get("settings.bisqConnect.clients.userAgent"))
-                .valueSupplier(info -> info.getUserAgent().orElse(Res.get("data.na")))
-                .left()
-                .minWidth(300)
+                .valueSupplier(ClientListItem::getUserAgent)
                 .build());
+    }
+
+    @Getter
+    @EqualsAndHashCode
+    static class ClientListItem {
+        private final WebSocketClient webSocketClient;
+        private final String clientName;
+        private final String clientAddress;
+        private final String userAgent;
+
+        ClientListItem(WebSocketClient webSocketClient, PairingService pairingService) {
+            this.webSocketClient = webSocketClient;
+            clientName = webSocketClient.getClientId()
+                    .flatMap(pairingService::findClientProfile)
+                    .map(ClientProfile::getClientName)
+                    .orElse(Res.get("data.na"));
+            clientAddress = webSocketClient.getClientAddress().orElse(Res.get("data.na"));
+            userAgent = webSocketClient.getUserAgent().orElse(Res.get("data.na"));
+        }
     }
 
 }

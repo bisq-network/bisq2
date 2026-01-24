@@ -100,25 +100,32 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     private void updateWebsocketClients() {
         try {
             websocketClients.setAll(getWebSockets().stream().map(webSocket -> {
-                Optional<String> address = Optional.empty();
+                Optional<String> clientId = Optional.empty();
+                Optional<String> clientAddress = Optional.empty();
                 Optional<String> userAgent = Optional.empty();
                 if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
                     HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
                     if (request != null) {
-                        // Get remote address directly from the request
-                        String remoteAddr = request.getRemoteAddr();
-                        if (StringUtils.isNotEmpty(remoteAddr)) {
-                            address = Optional.of(remoteAddr);
+                        // Get clientId from HTTP headers
+                        String clientIdHeader = request.getHeader(Headers.CLIENT_ID);
+                        if (StringUtils.isNotEmpty(clientIdHeader)) {
+                            clientId = Optional.of(clientIdHeader);
                         }
 
-                        // Get user-agent from HTTP headers
+                        // Get remote address directly from the request
+                        String clientAddressHeader = request.getRemoteAddr();
+                        if (StringUtils.isNotEmpty(clientAddressHeader)) {
+                            clientAddress = Optional.of(clientAddressHeader);
+                        }
+
+                        // Get userAgent from HTTP headers
                         String userAgentHeader = request.getHeader(Headers.USER_AGENT);
                         if (StringUtils.isNotEmpty(userAgentHeader)) {
                             userAgent = Optional.of(userAgentHeader);
                         }
                     }
                 }
-                return new WebSocketClient(address, userAgent);
+                return new WebSocketClient(clientId, clientAddress, userAgent);
             }).collect(Collectors.toSet()));
         } catch (Exception t) {
             log.warn("Could not notify clients listeners", t);
