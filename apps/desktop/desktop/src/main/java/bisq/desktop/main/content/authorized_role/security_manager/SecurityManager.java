@@ -26,7 +26,6 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 
-// Outer VBox
 public class SecurityManager {
     public static class Controller implements bisq.desktop.common.view.Controller {
         @Getter

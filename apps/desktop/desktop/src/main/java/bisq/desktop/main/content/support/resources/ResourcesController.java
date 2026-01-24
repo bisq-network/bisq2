@@ -142,38 +142,6 @@ public class ResourcesController implements Controller {
                 }));
     }
 
-    private void fillBackupSnapshots() {
-        List<BackupFileInfo> backupSnapshots = persistenceService.getAllBackups();
-
-        var backupSnapshotsByStore = backupSnapshots
-                .stream()
-                .collect(Collectors.groupingBy(
-                        bfi -> bfi.getPath().getParent().getFileName().toString(),
-                        TreeMap::new,
-                        Collectors.toList()));
-
-        var result = backupSnapshotsByStore.entrySet().stream()
-                .map(entry -> new BackupSnapshotStoreItem(
-                        entry.getKey(),
-                        entry.getValue().stream()
-                                .map(bfi -> {
-                                    long timestamp = bfi.getLocalDateTime()
-                                            .atZone(ZoneId.systemDefault())
-                                            .toInstant()
-                                            .toEpochMilli();
-                                    return new BackupSnapshotStoreItem.File(
-                                            bfi.getPath().toString(),
-                                            TimeFormatter.formatAge(Math.max(0, System.currentTimeMillis() - timestamp))
-                                    );
-                                })
-                                .toList()
-                ))
-                .toList();
-
-        model.getBackupSnapshotStoreItems().clear();
-        model.getBackupSnapshotStoreItems().addAll(result);
-    }
-
     void onOpenChatRules() {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
@@ -216,5 +184,37 @@ public class ResourcesController implements Controller {
 
     void onOpenCommunity() {
         Browser.open("https://matrix.to/#/%23bisq:bitcoin.kyoto");
+    }
+
+    private void fillBackupSnapshots() {
+        List<BackupFileInfo> backupSnapshots = persistenceService.getAllBackups();
+
+        var backupSnapshotsByStore = backupSnapshots
+                .stream()
+                .collect(Collectors.groupingBy(
+                        bfi -> bfi.getPath().getParent().getFileName().toString(),
+                        TreeMap::new,
+                        Collectors.toList()));
+
+        var result = backupSnapshotsByStore.entrySet().stream()
+                .map(entry -> new BackupSnapshotStoreItem(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .map(bfi -> {
+                                    long timestamp = bfi.getLocalDateTime()
+                                            .atZone(ZoneId.systemDefault())
+                                            .toInstant()
+                                            .toEpochMilli();
+                                    return new BackupSnapshotStoreItem.File(
+                                            bfi.getPath().toString(),
+                                            TimeFormatter.formatAge(Math.max(0, System.currentTimeMillis() - timestamp))
+                                    );
+                                })
+                                .toList()
+                ))
+                .toList();
+
+        model.getBackupSnapshotStoreItems().clear();
+        model.getBackupSnapshotStoreItems().addAll(result);
     }
 }

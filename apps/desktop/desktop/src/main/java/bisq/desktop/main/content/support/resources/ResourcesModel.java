@@ -39,7 +39,6 @@ public class ResourcesModel implements Model {
     private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
     private final ValidatorBase directoryPathValidator = new DirectoryPathValidator(
             Res.get("support.resources.backup.location.invalid"));
-
     private final ObservableList<ResourcesView.BackupSnapshotStoreItem> backupSnapshotStoreItems = FXCollections.observableArrayList();
     private final SortedList<ResourcesView.BackupSnapshotStoreItem> sortedBackupSnapshotStoreItems = new SortedList<>(backupSnapshotStoreItems);
 }

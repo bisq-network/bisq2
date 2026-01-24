@@ -29,7 +29,6 @@ public class SettingsView extends ContentTabView<SettingsModel, SettingsControll
         addTab(Res.get("settings.notifications"), NavigationTarget.NOTIFICATION_SETTINGS);
         addTab(Res.get("settings.trade"), NavigationTarget.TRADE_SETTINGS);
         addTab(Res.get("settings.network"), NavigationTarget.NETWORK_SETTINGS);
-
         addTab(Res.get("settings.bisqConnect"), NavigationTarget.BISQ_CONNECT_SETTINGS);
         addTab(Res.get("settings.misc"), NavigationTarget.MISC_SETTINGS);
     }

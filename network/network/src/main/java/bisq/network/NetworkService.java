@@ -126,7 +126,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     private final Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport = new HashMap<>();
     @Getter
     private final Map<TransportType, Set<Address>> seedAddressesByTransportFromConfig;
-    private Set<Pin> transportStatePins = new HashSet<>();
+    private final Set<Pin> transportStatePins = new HashSet<>();
     @Getter
     private final Observable<Long> referenceTime = new Observable<>();
 

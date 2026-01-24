@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class JavaSeJdkFacade implements JdkFacade {
-
     @Override
     public String getMyPid() {
         String processName = ManagementFactory.getRuntimeMXBean().getName();

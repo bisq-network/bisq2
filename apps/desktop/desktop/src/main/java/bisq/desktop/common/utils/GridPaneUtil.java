@@ -87,8 +87,6 @@ public class GridPaneUtil {
     public static TextFlow getInfoLabel(String info, String infoLabelStyleClass) {
         Text infoLabelText = new Text(info);
         infoLabelText.getStyleClass().add(infoLabelStyleClass);
-        WrappingText subHeadline = new WrappingText(Res.get("dashboard.protocols.subHeadline"),"trade-protocols-overview-sub-headline");
-
         return new TextFlow(infoLabelText);
     }
 
