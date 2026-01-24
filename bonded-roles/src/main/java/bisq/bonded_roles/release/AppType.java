@@ -22,6 +22,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
 public enum AppType implements ProtoEnum {
+    UNSPECIFIED,
     DESKTOP,
     MOBILE_NODE,
     MOBILE_CLIENT;
@@ -32,10 +33,10 @@ public enum AppType implements ProtoEnum {
     }
 
     public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) {
-        return ProtobufUtils.enumFromProto(AppType.class, proto.name(), AppType.DESKTOP);
+        return ProtobufUtils.enumFromProto(AppType.class, proto.name(), AppType.UNSPECIFIED);
     }
 
     public String getDisplayString() {
-        return Res.get("authorizedRole.releaseManager.appType."+name());
+        return Res.get("authorizedRole.releaseManager.appType." + name());
     }
 }
