@@ -24,6 +24,8 @@ import lombok.ToString;
 @ToString
 @Getter
 public enum MuSigTradeState implements State {
+    UNSPECIFIED,
+
     INIT,
 
     // In the first part the taker/maker role is the relevant aspect
