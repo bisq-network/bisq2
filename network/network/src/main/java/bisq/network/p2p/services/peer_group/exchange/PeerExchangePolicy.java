@@ -192,9 +192,10 @@ class PeerExchangePolicy {
         Set<Peer> connectedPeers = getSortedAllConnectedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
                 .collect(Collectors.toSet());
+        long maxSizeReportedPeers = Math.max(0L, REPORTED_PEERS_LIMIT - connectedPeers.size());
         Set<Peer> reportedPeers = getSortedReportedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
-                .limit(Math.round(REPORTED_PEERS_LIMIT))
+                .limit(maxSizeReportedPeers)
                 .collect(Collectors.toSet());
 
         Set<Peer> peers = new HashSet<>(connectedPeers);

@@ -56,7 +56,10 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
 
     @Override
     public void verify() {
-        checkArgument(peers.size() <= maxNumPeers, "Size of peers (" + peers.size() + ") exceed limit of " + maxNumPeers);
+        // We had a bug at filling the peers at the request not considering the connected peers size, thus we add some
+        // tolerance to not fail.
+        long toleratedMaxNumPeers = maxNumPeers + 30;
+        checkArgument(peers.size() <= toleratedMaxNumPeers, "Size of peers (" + peers.size() + ") exceed limit of " + toleratedMaxNumPeers);
     }
 
     @Override
