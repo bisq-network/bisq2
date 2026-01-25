@@ -40,14 +40,18 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    git pull
    ```
 
-4. **Run desktop client:**
+4. **Create desktop-app script:**
    ```bash
-   apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
+   ./gradlew apps:desktop:desktop-app:installDist
+   ```
+5. **Run desktop client:**
+   ```bash
+   ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
    ```
 
-5. **Run desktop client with custom data directory:**
+6. **Run desktop client with custom data directory:**
    ```bash
-   apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
+   ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
    ```
 
 **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
