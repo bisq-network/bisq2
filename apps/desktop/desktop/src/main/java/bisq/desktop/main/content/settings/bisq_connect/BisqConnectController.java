@@ -17,20 +17,15 @@
 
 package bisq.desktop.main.content.settings.bisq_connect;
 
-import bisq.api.ApiConfig;
 import bisq.api.ApiService;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
-import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
-import bisq.api.access.permissions.Permission;
-import bisq.api.access.transport.ApiAccessTransportService;
-import bisq.api.access.transport.TlsContext;
-import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.qr.QrCodeDisplay;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -40,9 +35,9 @@ import bisq.settings.DontShowAgainService;
 import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -55,22 +50,18 @@ public class BisqConnectController implements Controller {
     private final BisqConnectModel model;
     private final Optional<WebSocketService> optionalWebSocketService;
     private final PairingService pairingService;
-    private final ApiAccessTransportService apiAccessTransportService;
-    private final ApiConfigController apiConfigController;
     private final Set<Pin> pins = new HashSet<>();
-    private final TlsContextService tlsContextService;
     private final DontShowAgainService dontShowAgainService;
+    private final ApiService apiService;
     private Subscription onionAddressSubscription;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
-        ApiService apiService = serviceProvider.getApiService();
+        apiService = serviceProvider.getApiService();
         optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
-        tlsContextService = apiService.getTlsContextService();
-        apiAccessTransportService = apiService.getApiAccessTransportService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
-        apiConfigController = new ApiConfigController(serviceProvider);
+        ApiConfigController apiConfigController = new ApiConfigController(serviceProvider);
         model = new BisqConnectModel(apiService.getApiConfig().getWebSocketServerUrl(), 220);
         view = new BisqConnectView(model, this, apiConfigController.getView().getRoot());
     }
@@ -80,30 +71,11 @@ public class BisqConnectController implements Controller {
         optionalWebSocketService.ifPresent(webSocketService -> {
             pins.add(FxBindings.bind(model.getWebSocketServiceState()).to(webSocketService.getState()));
 
-            pins.add(webSocketService.getState().addObserver(state -> {
-                        if (state != null) {
-                            UIThread.run(() -> {
-                                boolean isRunning = state == WebSocketService.State.RUNNING;
-                                model.getIsPairingVisible().set(isRunning);
-                                if (isRunning) {
-                                    ApiConfig apiConfig = apiConfigController.getApiConfig();
-                                    if (apiConfig.useTor()) {
-                                        if (onionAddressSubscription != null) {
-                                            onionAddressSubscription.unsubscribe();
-                                        }
-                                        onionAddressSubscription = EasyBind.subscribe(apiConfigController.getOnionServiceAddress(), address -> {
-                                            if (address != null) {
-                                                createQrCode(apiConfig.getWebSocketProtocol() + "://" + address.getHost() + ":" + address.getPort());
-                                            }
-                                        });
-                                    } else {
-                                        createQrCode(apiConfig.getWebSocketServerUrl());
-                                    }
-                                }
-                            });
-                        }
-                    }
-            ));
+            pins.add(pairingService.getPairingQrCode().addObserver(pairingQrCode ->
+                    UIThread.run(() -> applyPairingQrCode(pairingQrCode))));
+
+            pins.add(pairingService.getPairingCode().addObserver(pairingCode ->
+                    UIThread.run(() -> applyPairingCode(pairingCode))));
 
             pins.add(webSocketService.getWebsocketClients().addObserver(() ->
                     UIThread.run(() -> {
@@ -132,36 +104,45 @@ public class BisqConnectController implements Controller {
         }
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // QR code
-    /* --------------------------------------------------------------------- */
-
-    private void createQrCode(String webSocketUrl) {
-        Set<Permission> grantedPermissions = Set.of(Permission.values());
-        PairingCode pairingCode = pairingService.createPairingCode(grantedPermissions);
-        Optional<TlsContext> tlsContext;
+    void onReCreatePairingQrCode() {
         try {
-            tlsContext = tlsContextService.getOrCreateTlsContext();
+            apiService.createPairingQrCode();
+
         } catch (Exception e) {
-            new Popup().error(e).show();
+            log.warn("Creating QR code failed", e);
+            model.getIsPairingVisible().set(false);
             model.getQrCode().set(null);
             model.getQrCodeImage().set(null);
-            return; // Abort QR code generation if TLS context is unavailable
-        }
-        String qrCode = PairingQrCodeGenerator.generateQrCode(pairingCode,
-                webSocketUrl,
-                tlsContext,
-                apiAccessTransportService.getTorContext());
-
-        model.getQrCode().set(qrCode);
-        try {
-            Image image = QrCodeDisplay.toImage(qrCode, model.getQrCodeSize());
-            model.getQrCodeImage().set(image);
-        } catch (RuntimeException e) {
-            log.warn("Generating QR code failed", e);
-            model.getQrCodeImage().set(null);
             new Popup().error(e).show();
+        }
+    }
+
+    private void applyPairingCode(PairingCode pairingCode) {
+        if (pairingCode != null) {
+            // TODO We should add a progress bar to see how long code is valid.
+           UIClock.addOnSecondTickListener(() ->
+                   model.getExpiredPairingQrCodeBoxVisible().set(Instant.now().isAfter(pairingCode.getExpiresAt())));
+        }
+    }
+
+    private void applyPairingQrCode(String pairingQrCode) {
+        if (pairingQrCode != null) {
+            model.getIsPairingVisible().set(true);
+            model.getQrCode().set(pairingQrCode);
+            try {
+                Image image = QrCodeDisplay.toImage(pairingQrCode, model.getQrCodeSize());
+                model.getQrCodeImage().set(image);
+            } catch (RuntimeException e) {
+                log.warn("Generating QR code image failed", e);
+                model.getIsPairingVisible().set(false);
+                model.getQrCode().set(null);
+                model.getQrCodeImage().set(null);
+                new Popup().error(e).show();
+            }
+        } else {
+            model.getIsPairingVisible().set(false);
+            model.getQrCode().set(null);
+            model.getQrCodeImage().set(null);
         }
     }
 }
