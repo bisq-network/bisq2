@@ -165,8 +165,10 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
+        var pushNotificationConfig = bisq.http_api.push_notification.PushNotificationConfig.from(getConfig("pushNotification"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                pushNotificationConfig,
                 config.getAppDataDirPath(),
                 securityService,
                 networkService,

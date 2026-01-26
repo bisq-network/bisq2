@@ -20,6 +20,7 @@ package bisq.http_api.web_socket.domain.trades;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
+import bisq.http_api.push_notification.PushNotificationService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.subscription.ModificationType;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,15 +40,18 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADES;
 @Slf4j
 public class TradesWebSocketService extends BaseWebSocketService {
     private final OpenTradeItemsService openTradeItemsService;
+    private final Optional<PushNotificationService> pushNotificationService;
     @Nullable
     private Pin tradesPin;
 
     public TradesWebSocketService(ObjectMapper objectMapper,
                                   SubscriberRepository subscriberRepository,
-                                  OpenTradeItemsService openTradeItemsService) {
+                                  OpenTradeItemsService openTradeItemsService,
+                                  Optional<PushNotificationService> pushNotificationService) {
         super(objectMapper, subscriberRepository, TRADES);
 
         this.openTradeItemsService = openTradeItemsService;
+        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -56,18 +61,39 @@ public class TradesWebSocketService extends BaseWebSocketService {
             @Override
             public void add(TradeItemPresentationDto item) {
                 send(item, ModificationType.ADDED);
+                // Note: Push notifications for new trades are handled by TradePropertiesWebSocketService
+                // which observes trade state changes. This avoids duplicate notifications.
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof TradeItemPresentationDto item) {
                     send(item, ModificationType.REMOVED);
+                    // Clean up notification records for this trade
+                    pushNotificationService.ifPresent(service -> {
+                        String tradeId = item.channel().tradeId();
+                        service.removeNotificationsForTrade(tradeId);
+                        log.debug("Cleaned up notification records for removed trade {}", tradeId);
+                    });
                 }
             }
 
             @Override
             public void clear() {
-                send(openTradeItemsService.getItems().getList(), ModificationType.REMOVED);
+                // Note: Observers are notified BEFORE the collection is cleared,
+                // so we can safely access the items here
+                List<TradeItemPresentationDto> items = openTradeItemsService.getItems().getList();
+
+                send(items, ModificationType.REMOVED);
+
+                // Clean up notification records for all trades being cleared
+                pushNotificationService.ifPresent(service -> {
+                    items.forEach(item -> {
+                        String tradeId = item.channel().tradeId();
+                        service.removeNotificationsForTrade(tradeId);
+                    });
+                    log.debug("Cleaned up notification records for {} cleared trades", items.size());
+                });
             }
         });
         return CompletableFuture.completedFuture(true);

@@ -38,4 +38,7 @@ dependencies {
     implementation(libs.bundles.i2p)
     implementation(libs.bundles.rest.api.libs)
     implementation(libs.bundles.websocket.libs)
+
+    // BouncyCastle for ECIES encryption in push notifications
+    implementation(libs.bouncycastle)
 }

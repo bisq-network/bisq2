@@ -158,7 +158,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
 
     @Override
     public void clear() {
-        collection.clear();
+        // Notify observers BEFORE clearing so they can access the items being cleared
         observers.forEach(observer -> {
             try {
                 observer.clear();
@@ -166,6 +166,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }
         });
+        collection.clear();
     }
 
     @Override
