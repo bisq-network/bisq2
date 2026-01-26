@@ -17,11 +17,13 @@
 
 package bisq.api;
 
+import bisq.api.access.permissions.Permission;
 import bisq.api.access.transport.ApiAccessTransportType;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 public final class ApiConfig {
@@ -52,6 +54,9 @@ public final class ApiConfig {
 
     // api.server.security.session.*
     private final int sessionTtlInMinutes;
+
+    // TODO This should move to typesafe config
+    private final Set<Permission> grantedPermissions = Set.of(Permission.values());
 
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
