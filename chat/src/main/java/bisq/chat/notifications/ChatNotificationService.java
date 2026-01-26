@@ -45,7 +45,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SystemNotificationService;
+import bisq.notifications.system.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;

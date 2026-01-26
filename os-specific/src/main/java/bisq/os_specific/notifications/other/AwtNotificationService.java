@@ -18,7 +18,7 @@
 package bisq.os_specific.notifications.other;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.presentation.notifications.OsSpecificNotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;

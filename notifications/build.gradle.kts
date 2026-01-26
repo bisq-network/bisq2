@@ -5,5 +5,7 @@ plugins {
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
-    implementation(project(":settings"))
+    implementation("network:network")
+
+    implementation(libs.typesafe.config)
 }

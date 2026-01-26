@@ -34,7 +34,7 @@ import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SystemNotificationService;
+import bisq.notifications.system.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;

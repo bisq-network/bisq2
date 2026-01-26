@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.notifications.system;
 
-package presentation;
-option java_package = "bisq.presentation.protobuf";
-option java_multiple_files = true;
+import bisq.common.application.Service;
+
+public interface OsSpecificNotificationService extends Service {
+   void show(String title, String message);
+}

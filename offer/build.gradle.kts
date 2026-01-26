@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":burningman"))
     implementation(project(":account"))
     implementation(project(":presentation"))
+    implementation(project(":notifications"))
     implementation(project(":bonded-roles"))
 
     implementation("network:network:$version")

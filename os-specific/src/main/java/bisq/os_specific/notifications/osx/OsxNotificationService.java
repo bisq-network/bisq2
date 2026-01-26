@@ -22,7 +22,7 @@ import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
 import bisq.os_specific.notifications.osx.foundation.Foundation;
 import bisq.os_specific.notifications.osx.foundation.ID;
-import bisq.presentation.notifications.OsSpecificNotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
