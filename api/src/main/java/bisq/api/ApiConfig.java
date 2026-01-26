@@ -17,18 +17,21 @@
 
 package bisq.api;
 
+import bisq.api.access.permissions.Permission;
 import bisq.api.access.transport.ApiAccessTransportType;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 public final class ApiConfig {
     public static final String REST_API_BASE_PATH = "/api/v1";
 
     private final ApiAccessTransportType apiAccessTransportType;
-
+    private final int pairingCodeTtlInSeconds;
+    private final boolean writePairingQrCodeToDisk;
     // api.server.*
     private final boolean restEnabled;
     private final boolean websocketEnabled;
@@ -53,8 +56,13 @@ public final class ApiConfig {
     // api.server.security.session.*
     private final int sessionTtlInMinutes;
 
+    // TODO This should move to typesafe config
+    private final Set<Permission> grantedPermissions = Set.of(Permission.values());
+
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
+            int pairingCodeTtlInSeconds,
+            boolean writePairingQrCodeToDisk,
             boolean restEnabled,
             boolean websocketEnabled,
             String bindHost,
@@ -69,6 +77,8 @@ public final class ApiConfig {
             int sessionTtlInMinutes
     ) {
         this.apiAccessTransportType = apiAccessTransportType;
+        this.pairingCodeTtlInSeconds = pairingCodeTtlInSeconds;
+        this.writePairingQrCodeToDisk = writePairingQrCodeToDisk;
         this.restEnabled = restEnabled;
         this.websocketEnabled = websocketEnabled;
         this.bindHost = bindHost;
@@ -88,6 +98,7 @@ public final class ApiConfig {
                 config.getString("accessTransportType").toUpperCase());
 
         Config serverConfig = config.getConfig("server");
+        Config pairingConfig = config.getConfig("pairing");
         Config bindConfig = serverConfig.getConfig("bind");
         Config torConfig = serverConfig.getConfig("tor");
         Config securityConfig = serverConfig.getConfig("security");
@@ -100,6 +111,9 @@ public final class ApiConfig {
 
         return new ApiConfig(
                 apiAccessTransportType,
+
+                pairingConfig.getInt("ttlInSeconds"),
+                pairingConfig.getBoolean("writePairingQrCodeToDisk"),
 
                 serverConfig.getBoolean("restEnabled"),
                 serverConfig.getBoolean("websocketEnabled"),
