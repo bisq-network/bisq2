@@ -30,6 +30,7 @@ public final class ApiConfig {
     public static final String REST_API_BASE_PATH = "/api/v1";
 
     private final ApiAccessTransportType apiAccessTransportType;
+    private final int pairingCodeTtlInSeconds;
     private final boolean writePairingQrCodeToDisk;
     // api.server.*
     private final boolean restEnabled;
@@ -60,6 +61,7 @@ public final class ApiConfig {
 
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
+            int pairingCodeTtlInSeconds,
             boolean writePairingQrCodeToDisk,
             boolean restEnabled,
             boolean websocketEnabled,
@@ -75,6 +77,7 @@ public final class ApiConfig {
             int sessionTtlInMinutes
     ) {
         this.apiAccessTransportType = apiAccessTransportType;
+        this.pairingCodeTtlInSeconds = pairingCodeTtlInSeconds;
         this.writePairingQrCodeToDisk = writePairingQrCodeToDisk;
         this.restEnabled = restEnabled;
         this.websocketEnabled = websocketEnabled;
@@ -95,6 +98,7 @@ public final class ApiConfig {
                 config.getString("accessTransportType").toUpperCase());
 
         Config serverConfig = config.getConfig("server");
+        Config pairingConfig = config.getConfig("pairing");
         Config bindConfig = serverConfig.getConfig("bind");
         Config torConfig = serverConfig.getConfig("tor");
         Config securityConfig = serverConfig.getConfig("security");
@@ -108,7 +112,8 @@ public final class ApiConfig {
         return new ApiConfig(
                 apiAccessTransportType,
 
-                config.getBoolean("writePairingQrCodeToDisk"),
+                pairingConfig.getInt("ttlInSeconds"),
+                pairingConfig.getBoolean("writePairingQrCodeToDisk"),
 
                 serverConfig.getBoolean("restEnabled"),
                 serverConfig.getBoolean("websocketEnabled"),

@@ -244,7 +244,7 @@ public class ApiService implements Service {
                         try {
                             createPairingQrCode();
                             return CompletableFuture.completedFuture(true);
-                        } catch (TlsException e) {
+                        } catch (Exception e) {
                             return CompletableFuture.failedFuture(e);
                         }
                     }

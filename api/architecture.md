@@ -31,6 +31,11 @@ The API module is configured via a type-safe `api` object:
 ```hocon
 api = {
     accessTransportType = "TOR"   # CLEAR | TOR | I2P
+    
+    pairing = {
+        ttlInSeconds = 300
+        writePairingQrCodeToDisk = false
+    }
 
     server = {
         restEnabled = true
