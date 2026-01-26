@@ -1,6 +1,6 @@
 package bisq.notifications.system;
 
-public interface Notification {
+public interface SystemNotification {
     String getId();
 
     String getTitle();
