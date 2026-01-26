@@ -39,6 +39,7 @@ public class BisqConnectModel implements Model {
 
     private final ObjectProperty<WebSocketService.State> webSocketServiceState = new SimpleObjectProperty<>(WebSocketService.State.NEW);
     private final BooleanProperty isPairingVisible = new SimpleBooleanProperty();
+    private final BooleanProperty expiredPairingQrCodeBoxVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrCode = new SimpleStringProperty();
 
