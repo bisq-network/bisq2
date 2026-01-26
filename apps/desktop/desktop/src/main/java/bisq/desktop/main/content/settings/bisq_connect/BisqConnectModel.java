@@ -20,8 +20,10 @@ package bisq.desktop.main.content.settings.bisq_connect;
 import bisq.api.web_socket.WebSocketService;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -39,9 +41,11 @@ public class BisqConnectModel implements Model {
 
     private final ObjectProperty<WebSocketService.State> webSocketServiceState = new SimpleObjectProperty<>(WebSocketService.State.NEW);
     private final BooleanProperty isPairingVisible = new SimpleBooleanProperty();
-    private final BooleanProperty expiredPairingQrCodeBoxVisible = new SimpleBooleanProperty();
+    private final BooleanProperty pairingCodeExpired = new SimpleBooleanProperty(false);
     private final ObjectProperty<Image> qrCodeImage = new SimpleObjectProperty<>();
     private final StringProperty qrCode = new SimpleStringProperty();
+    private final DoubleProperty pairingCodeExpiryTime = new SimpleDoubleProperty(-1);
+    private final StringProperty pairingCodeExpiryInfo = new SimpleStringProperty();
 
     private final ObservableList<BisqConnectView.ClientListItem> connectedClients = FXCollections.observableArrayList();
 

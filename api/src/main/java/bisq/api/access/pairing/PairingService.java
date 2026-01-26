@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PairingService {
     public static final byte VERSION = 1;
-    private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
+    public static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
     private final ApiConfig apiConfig;
     private final Path appDataDirPath;
@@ -139,7 +139,7 @@ public class PairingService {
             }
             pairingQrCode.set(qrCode);
         } catch (Exception e) {
-            log.warn("Could not create QR code");
+            log.warn("Could not create QR code", e);
             pairingQrCode.set(null);
         }
     }
@@ -149,7 +149,7 @@ public class PairingService {
             Path path = appDataDirPath.resolve("pairing_qr_code.txt");
             FileMutatorUtils.writeToPath(pairingQrCode, path);
         } catch (IOException e) {
-            log.error("Error at write onionAddress", e);
+            log.error("Error at write pairing QR code to disk", e);
         }
     }
 }

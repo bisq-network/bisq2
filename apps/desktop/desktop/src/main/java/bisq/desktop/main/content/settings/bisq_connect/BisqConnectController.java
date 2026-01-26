@@ -31,6 +31,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.settings.bisq_connect.api_config.ApiConfigController;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.settings.DontShowAgainService;
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -53,6 +54,7 @@ public class BisqConnectController implements Controller {
     private final Set<Pin> pins = new HashSet<>();
     private final DontShowAgainService dontShowAgainService;
     private final ApiService apiService;
+    private Runnable expiredPairingQrCodeListener;
     private Subscription onionAddressSubscription;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
@@ -102,12 +104,15 @@ public class BisqConnectController implements Controller {
         if (onionAddressSubscription != null) {
             onionAddressSubscription.unsubscribe();
         }
+        if (expiredPairingQrCodeListener != null) {
+            UIClock.removeOnSecondTickListener(expiredPairingQrCodeListener);
+            expiredPairingQrCodeListener = null;
+        }
     }
 
     void onReCreatePairingQrCode() {
         try {
             apiService.createPairingQrCode();
-
         } catch (Exception e) {
             log.warn("Creating QR code failed", e);
             model.getIsPairingVisible().set(false);
@@ -119,9 +124,23 @@ public class BisqConnectController implements Controller {
 
     private void applyPairingCode(PairingCode pairingCode) {
         if (pairingCode != null) {
-            // TODO We should add a progress bar to see how long code is valid.
-           UIClock.addOnSecondTickListener(() ->
-                   model.getExpiredPairingQrCodeBoxVisible().set(Instant.now().isAfter(pairingCode.getExpiresAt())));
+            if (expiredPairingQrCodeListener != null) {
+                UIClock.removeOnSecondTickListener(expiredPairingQrCodeListener);
+            }
+            expiredPairingQrCodeListener = () -> {
+                long remainingTime = Math.max(0, pairingCode.getExpiresAt().toEpochMilli() - Instant.now().toEpochMilli());
+                double remaining = remainingTime / (double) PairingService.PAIRING_CODE_TTL;
+                double progress = Math.min(1, 1 - remaining);
+                model.getPairingCodeExpiryTime().setValue(progress);
+                String formattedRemainingTime = TimeFormatter.formatAge(remainingTime);
+                boolean isExpired = remaining == 0;
+                model.getPairingCodeExpiryInfo().set(isExpired
+                        ? Res.get("settings.bisqConnect.qrCode.expired")
+                        : Res.get("settings.bisqConnect.qrCode.expiresIn", formattedRemainingTime));
+                model.getPairingCodeExpired().set(isExpired);
+            };
+
+            UIClock.addOnSecondTickListener(expiredPairingQrCodeListener);
         }
     }
 
