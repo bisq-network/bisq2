@@ -28,7 +28,9 @@ import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -42,14 +44,16 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectController> {
-    private final Label webSocketServerStateLabel;
+    private final Label webSocketServerStateLabel, pairingCodeExpiryInfo;
     private final Circle webSocketServerStateIcon;
     private final MaterialTextField qrCode;
     private final ImageView qrImageView;
     private final VBox pairingVBox;
     private final RichTableView<ClientListItem> clientsTable;
     private final MaterialTextField webSocketServerUrl;
-    private Subscription webSocketServiceStatePin;
+    private final Button reCreatePairingQrCodeButton;
+    private final ProgressBar pairingCodeExpiryTime;
+    private Subscription webSocketServiceStatePin, pairingCodeExpiredPin;
 
     BisqConnectView(BisqConnectModel model, BisqConnectController controller, VBox apiConfigVbox) {
         super(new VBox(35), model, controller);
@@ -85,10 +89,23 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
         qrCode = new MaterialTextField(Res.get("settings.bisqConnect.qrCode.description"));
         qrCode.showCopyIcon();
 
+        pairingCodeExpiryTime = new ProgressBar();
+        pairingCodeExpiryTime.setMinHeight(3);
+        pairingCodeExpiryTime.setMaxHeight(3);
+        pairingCodeExpiryTime.setMaxWidth(Double.MAX_VALUE);
+        pairingCodeExpiryInfo = getInfoLabel("");
+        VBox.setMargin(pairingCodeExpiryInfo, new Insets(0));
+        VBox pairingCodeExpiresBox = new VBox(10, pairingCodeExpiryInfo, pairingCodeExpiryTime);
+        pairingCodeExpiresBox.setAlignment(Pos.CENTER_LEFT);
+
+        reCreatePairingQrCodeButton = new Button(Res.get("settings.bisqConnect.qrCode.generate"));
+
         VBox.setMargin(qrCodeInfo, new Insets(10, 0, -15, 0));
         pairingVBox = new VBox(25, pairingHeadline, SettingsViewUtils.getLineAfterHeadline(30), pairingInfo,
                 qrImageView,
-                qrCodeInfo, qrCode);
+                qrCodeInfo, qrCode,
+                pairingCodeExpiresBox,
+                reCreatePairingQrCodeButton);
 
         VBox.setMargin(websocketServerStateBox, new Insets(-10, 0, 25, 0));
         VBox.setMargin(pairingVBox, new Insets(25, 0, 0, 0));
@@ -98,9 +115,7 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
                 SettingsViewUtils.getLineAfterHeadline(30),
                 info,
                 webSocketServerUrl, websocketServerStateBox,
-
                 apiConfigVbox,
-
                 pairingVBox);
 
         contentBox.getStyleClass().add("bisq-common-bg");
@@ -141,6 +156,22 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
         qrImageView.imageProperty().bind(model.getQrCodeImage());
         qrCode.textProperty().bind(model.getQrCode());
+
+        pairingCodeExpiryTime.progressProperty().bind(model.getPairingCodeExpiryTime());
+        pairingCodeExpiryInfo.textProperty().bind(model.getPairingCodeExpiryInfo());
+
+        pairingCodeExpiredPin = EasyBind.subscribe(model.getPairingCodeExpired(), pairingCodeExpired -> {
+            reCreatePairingQrCodeButton.setDefaultButton(pairingCodeExpired);
+            if (pairingCodeExpired) {
+                pairingCodeExpiryTime.getStyleClass().add("yellow-progress-bar");
+                pairingCodeExpiryInfo.getStyleClass().add("bisq-text-yellow");
+            } else {
+                pairingCodeExpiryTime.getStyleClass().remove("yellow-progress-bar");
+                pairingCodeExpiryInfo.getStyleClass().remove("bisq-text-yellow");
+            }
+        });
+
+        reCreatePairingQrCodeButton.setOnAction(e -> controller.onReCreatePairingQrCode());
     }
 
     @Override
@@ -153,6 +184,12 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
 
         qrImageView.imageProperty().unbind();
         qrCode.textProperty().unbind();
+
+        pairingCodeExpiryTime.progressProperty().unbind();
+        pairingCodeExpiryInfo.textProperty().unbind();
+        pairingCodeExpiredPin.unsubscribe();
+
+        reCreatePairingQrCodeButton.setOnAction(null);
     }
 
     private void configTable() {

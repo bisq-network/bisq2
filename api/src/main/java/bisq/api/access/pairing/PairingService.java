@@ -17,14 +17,23 @@
 
 package bisq.api.access.pairing;
 
-import bisq.api.access.persistence.ApiAccessStoreService;
+import bisq.api.ApiConfig;
 import bisq.api.access.identity.ClientProfile;
+import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.persistence.ApiAccessStoreService;
+import bisq.api.access.transport.TlsContext;
+import bisq.api.access.transport.TorContext;
+import bisq.common.file.FileMutatorUtils;
+import bisq.common.observable.Observable;
 import bisq.common.util.ByteArrayUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
@@ -32,21 +41,33 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PairingService {
     public static final byte VERSION = 1;
-    private static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
+    private final ApiConfig apiConfig;
+    private final Path appDataDirPath;
     private final ApiAccessStoreService apiAccessStoreService;
     private final PermissionService<? extends PermissionMapping> permissionService;
+    @Getter
+    private final int pairingCodeTtlInSeconds;
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
+    @Getter
+    private final Observable<PairingCode> pairingCode = new Observable<>();
+    @Getter
+    private final Observable<String> pairingQrCode = new Observable<>();
 
-    public PairingService(ApiAccessStoreService apiAccessStoreService,
+    public PairingService(ApiConfig apiConfig,
+                          Path appDataDirPath,
+                          ApiAccessStoreService apiAccessStoreService,
                           PermissionService<? extends PermissionMapping> permissionService) {
+        this.apiConfig = apiConfig;
+        this.appDataDirPath = appDataDirPath;
         this.apiAccessStoreService = apiAccessStoreService;
         this.permissionService = permissionService;
+
+        pairingCodeTtlInSeconds = apiConfig.getPairingCodeTtlInSeconds();
     }
 
     public PairingCode createPairingCode(Permission requiredPermissions) {
@@ -54,10 +75,11 @@ public class PairingService {
     }
 
     public PairingCode createPairingCode(Set<Permission> grantedPermissions) {
-        Instant expiresAt = Instant.now().plusMillis(PAIRING_CODE_TTL);
+        Instant expiresAt = Instant.now().plusSeconds(pairingCodeTtlInSeconds);
         String id = UUID.randomUUID().toString();
         PairingCode pairingCode = new PairingCode(id, expiresAt, Set.copyOf(grantedPermissions));
         pairingCodeByIdMap.put(id, pairingCode);
+        this.pairingCode.set(pairingCode);
         return pairingCode;
     }
 
@@ -103,5 +125,33 @@ public class PairingService {
 
     private boolean isExpired(PairingCode pairingCode) {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
+    }
+
+    public void createPairingQrCode(PairingCode pairingCode,
+                                    String webSocketUrl,
+                                    Optional<TlsContext> tlsContext,
+                                    Optional<TorContext> torContext) {
+        try {
+            String qrCode = PairingQrCodeGenerator.generateQrCode(pairingCode,
+                    webSocketUrl,
+                    tlsContext,
+                    torContext);
+            if (apiConfig.isWritePairingQrCodeToDisk()) {
+                writePairingQrCodeToDataDir(qrCode);
+            }
+            pairingQrCode.set(qrCode);
+        } catch (Exception e) {
+            log.warn("Could not create QR code", e);
+            pairingQrCode.set(null);
+        }
+    }
+
+    private void writePairingQrCodeToDataDir(String pairingQrCode) {
+        try {
+            Path path = appDataDirPath.resolve("pairing_qr_code.txt");
+            FileMutatorUtils.writeToPath(pairingQrCode, path);
+        } catch (IOException e) {
+            log.error("Error at write pairing QR code to disk", e);
+        }
     }
 }

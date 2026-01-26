@@ -23,7 +23,6 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,12 +39,6 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
 
     public ApiAccessStoreService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-    }
-
-    // TODO Fix test to not require that hack
-    @VisibleForTesting
-    protected ApiAccessStoreService( ) {
-        persistence = null;
     }
 
     public Map<String, ClientProfile> getClientProfileByIdMap() {

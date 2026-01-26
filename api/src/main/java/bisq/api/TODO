@@ -1,5 +1,0 @@
-Open tasks:
-
-- test all scenarios with server variants and api modes if authn and authz is done
-- separate transport and api level filtering
-- add permissions for WS topics

@@ -19,11 +19,13 @@ package bisq.api;
 
 import bisq.account.AccountService;
 import bisq.api.access.ApiAccessService;
-import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
+import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
@@ -46,12 +48,14 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.network.Address;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
+import bisq.security.tls.TlsException;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -65,7 +69,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
@@ -96,7 +104,6 @@ public class ApiService implements Service {
     private final HttpServerBootstrapService httpServerBootstrapService;
     @Getter
     private final TlsContextService tlsContextService;
-
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public ApiService(ApiConfig apiConfig,
@@ -127,7 +134,7 @@ public class ApiService implements Service {
 
         ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
         permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
-        pairingService = new PairingService(apiAccessStoreService, permissionService);
+        pairingService = new PairingService(apiConfig, appDataDirPath, apiAccessStoreService, permissionService);
         sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
 
@@ -230,10 +237,19 @@ public class ApiService implements Service {
                     if (result == null || !result) {
                         return shutdown().thenApply(r -> false);
                     }
-                    return CompletableFuture.completedFuture(true);
+
+                    if (webSocketService.isEmpty() || !apiConfig.isWebsocketEnabled()) {
+                        return CompletableFuture.completedFuture(true);
+                    } else {
+                        try {
+                            createPairingQrCode();
+                            return CompletableFuture.completedFuture(true);
+                        } catch (Exception e) {
+                            return CompletableFuture.failedFuture(e);
+                        }
+                    }
                 });
     }
-
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
@@ -251,6 +267,29 @@ public class ApiService implements Service {
                     setState(State.TERMINATED);
                     return list.stream().allMatch(e -> e);
                 });
+    }
+
+    public void createPairingQrCode() throws TlsException {
+        checkArgument(webSocketService.isPresent(),
+                "webSocketService must be present");
+
+        checkArgument(webSocketService.get().getState().get() == WebSocketService.State.RUNNING,
+                "webSocketServiceState must be RUNNING");
+
+        String webSocketUrl;
+        if (apiConfig.useTor()) {
+            Address onionAddress = apiAccessTransportService.getOnionAddress().get();
+            checkNotNull(onionAddress, "OnionAddress must not be null");
+            webSocketUrl = apiConfig.getWebSocketProtocol() + "://" + onionAddress.getHost() + ":" + onionAddress.getPort();
+        } else {
+            webSocketUrl = apiConfig.getWebSocketServerUrl();
+        }
+        Set<Permission> grantedPermissions = apiConfig.getGrantedPermissions();
+        PairingCode pairingCode = pairingService.createPairingCode(grantedPermissions);
+        pairingService.createPairingQrCode(pairingCode,
+                webSocketUrl,
+                tlsContextService.getOrCreateTlsContext(),
+                apiAccessTransportService.getTorContext());
     }
 
     public ReadOnlyObservable<State> getState() {
