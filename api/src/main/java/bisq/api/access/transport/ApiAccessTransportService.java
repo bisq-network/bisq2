@@ -51,12 +51,12 @@ public class ApiAccessTransportService implements Service {
     @Getter
     private final int onionServicePort;
     private final boolean useTor;
-
     @Setter
     private ApiAccessTransportType apiAccessTransportType = ApiAccessTransportType.TOR;
-
     @Getter
     private volatile Optional<TorContext> torContext = Optional.empty();
+    @Getter
+    private final Observable<Address> onionAddress = new Observable<>();
 
     public ApiAccessTransportService(ApiConfig apiConfig,
                                      Path appDataDirPath,
@@ -105,9 +105,8 @@ public class ApiAccessTransportService implements Service {
                 .thenApply(onionAddress -> {
                     Address address = Address.from(onionAddress, onionServicePort);
                     log.info("{} published for {}", address, IDENTITY_TAG);
-
                     writeAddressToDataDir(address);
-
+                    this.onionAddress.set(address);
                     return address;
                 });
     }
@@ -120,7 +119,6 @@ public class ApiAccessTransportService implements Service {
             log.error("Error at write onionAddress", e);
         }
     }
-
 
     public void setBindPort(int bindPort) {
         this.bindPort.set(bindPort);
