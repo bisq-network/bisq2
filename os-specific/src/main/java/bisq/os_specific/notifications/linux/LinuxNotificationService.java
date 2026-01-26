@@ -19,7 +19,7 @@ package bisq.os_specific.notifications.linux;
 
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.threading.ExecutorFactory;
-import bisq.presentation.notifications.OsSpecificNotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;

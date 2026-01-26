@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.presentation.notifications;
+package bisq.notifications.system;
 
 
 import bisq.common.application.Service;

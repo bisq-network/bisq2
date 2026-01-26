@@ -36,7 +36,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SystemNotificationService;
+import bisq.notifications.system.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

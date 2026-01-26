@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":presentation"))
+    implementation(project(":notifications"))
     implementation(project(":persistence"))
     implementation(project(":settings"))
 

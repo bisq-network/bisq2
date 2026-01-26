@@ -1,4 +1,4 @@
-package bisq.presentation.notifications;
+package bisq.notifications.system;
 
 public interface Notification {
     String getId();

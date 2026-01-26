@@ -22,7 +22,7 @@ dependencies {
     implementation(project(":user"))
     implementation(project(":chat"))
     implementation(project(":support"))
-    implementation(project(":presentation"))
+    implementation(project(":notifications"))
 
     implementation("network:network:$version")
     implementation("network:network-identity:$version")

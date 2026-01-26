@@ -38,7 +38,7 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SystemNotificationService;
+import bisq.notifications.system.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;

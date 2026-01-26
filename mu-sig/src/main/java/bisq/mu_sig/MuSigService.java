@@ -52,7 +52,7 @@ import bisq.offer.mu_sig.MuSigOfferService;
 import bisq.offer.options.OfferOption;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SystemNotificationService;
+import bisq.notifications.system.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;

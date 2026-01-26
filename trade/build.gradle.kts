@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":settings"))
     implementation(project(":presentation"))
+    implementation(project(":notifications"))
     implementation(project(":bonded-roles"))
 
     implementation("network:network:$version")
