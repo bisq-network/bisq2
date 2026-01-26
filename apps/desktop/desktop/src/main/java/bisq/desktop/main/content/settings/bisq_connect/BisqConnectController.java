@@ -129,7 +129,7 @@ public class BisqConnectController implements Controller {
             }
             expiredPairingQrCodeListener = () -> {
                 long remainingTime = Math.max(0, pairingCode.getExpiresAt().toEpochMilli() - Instant.now().toEpochMilli());
-                double remaining = remainingTime / (double) PairingService.PAIRING_CODE_TTL;
+                double remaining = remainingTime / (1000d * pairingService.getPairingCodeTtlInSeconds());
                 double progress = Math.min(1, 1 - remaining);
                 model.getPairingCodeExpiryTime().setValue(progress);
                 String formattedRemainingTime = TimeFormatter.formatAge(remainingTime);

@@ -41,17 +41,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PairingService {
     public static final byte VERSION = 1;
-    public static final long PAIRING_CODE_TTL = TimeUnit.MINUTES.toMillis(5);
 
     private final ApiConfig apiConfig;
     private final Path appDataDirPath;
     private final ApiAccessStoreService apiAccessStoreService;
     private final PermissionService<? extends PermissionMapping> permissionService;
+    @Getter
+    private final int pairingCodeTtlInSeconds;
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
     @Getter
     private final Observable<PairingCode> pairingCode = new Observable<>();
@@ -66,6 +66,8 @@ public class PairingService {
         this.appDataDirPath = appDataDirPath;
         this.apiAccessStoreService = apiAccessStoreService;
         this.permissionService = permissionService;
+
+        pairingCodeTtlInSeconds = apiConfig.getPairingCodeTtlInSeconds();
     }
 
     public PairingCode createPairingCode(Permission requiredPermissions) {
@@ -73,7 +75,7 @@ public class PairingService {
     }
 
     public PairingCode createPairingCode(Set<Permission> grantedPermissions) {
-        Instant expiresAt = Instant.now().plusMillis(PAIRING_CODE_TTL);
+        Instant expiresAt = Instant.now().plusSeconds(pairingCodeTtlInSeconds);
         String id = UUID.randomUUID().toString();
         PairingCode pairingCode = new PairingCode(id, expiresAt, Set.copyOf(grantedPermissions));
         pairingCodeByIdMap.put(id, pairingCode);
