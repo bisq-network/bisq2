@@ -28,7 +28,7 @@ public final class ApiConfig {
     public static final String REST_API_BASE_PATH = "/api/v1";
 
     private final ApiAccessTransportType apiAccessTransportType;
-
+    private final boolean writePairingQrCodeToDisk;
     // api.server.*
     private final boolean restEnabled;
     private final boolean websocketEnabled;
@@ -55,6 +55,7 @@ public final class ApiConfig {
 
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
+            boolean writePairingQrCodeToDisk,
             boolean restEnabled,
             boolean websocketEnabled,
             String bindHost,
@@ -69,6 +70,7 @@ public final class ApiConfig {
             int sessionTtlInMinutes
     ) {
         this.apiAccessTransportType = apiAccessTransportType;
+        this.writePairingQrCodeToDisk = writePairingQrCodeToDisk;
         this.restEnabled = restEnabled;
         this.websocketEnabled = websocketEnabled;
         this.bindHost = bindHost;
@@ -100,6 +102,8 @@ public final class ApiConfig {
 
         return new ApiConfig(
                 apiAccessTransportType,
+
+                config.getBoolean("writePairingQrCodeToDisk"),
 
                 serverConfig.getBoolean("restEnabled"),
                 serverConfig.getBoolean("websocketEnabled"),
