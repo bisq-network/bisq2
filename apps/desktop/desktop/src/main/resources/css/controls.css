@@ -848,6 +848,11 @@
     -fx-background-insets: 0;
 }
 
+.yellow-progress-bar.progress-bar > .bar,
+.yellow-progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq2-yellow;
+    -fx-padding: 1.5;
+}
 
 /*******************************************************************************
  *                                                                             *

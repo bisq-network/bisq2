@@ -238,7 +238,7 @@ public class ApiService implements Service {
                         return shutdown().thenApply(r -> false);
                     }
 
-                    if (webSocketService.isEmpty()) {
+                    if (webSocketService.isEmpty() || !apiConfig.isWebsocketEnabled()) {
                         return CompletableFuture.completedFuture(true);
                     } else {
                         try {
