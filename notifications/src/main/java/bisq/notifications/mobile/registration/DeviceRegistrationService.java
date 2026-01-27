@@ -48,35 +48,28 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
-    /**
-     * Register a device for a user profile.
-     * <p>
-     * This method is thread-safe: it atomically removes any existing registration with
-     * the same device token and adds the new registration, all within a single compute
-     * operation to prevent races with concurrent register/unregister calls.
-     *
-     * @param userProfileId The user profile ID
-     * @param deviceToken   The APNs device token
-     * @param publicKey     The public key for encrypting notifications (Base64 encoded)
-     * @param platform      The platform (iOS, Android)
-     * @return true if registration was successful
-     */
-    public boolean registerDevice(String userProfileId,
-                                  String deviceToken,
-                                  String publicKey,
-                                  DeviceRegistrationPlatform platform) {
-        checkArgument(StringUtils.isEmpty(userProfileId), "userProfileId must not be null or empty");
+    public boolean register(String deviceId,
+                            String deviceToken,
+                            String publicKeyBase64,
+                            String deviceDescriptor,
+                            MobileDevicePlatform platform) {
+        checkArgument(StringUtils.isEmpty(deviceId), "deviceId must not be null or empty");
         checkArgument(StringUtils.isEmpty(deviceToken), "deviceToken must not be null or empty");
-        checkArgument(StringUtils.isEmpty(publicKey), "publicKey must not be null or empty");
+        checkArgument(StringUtils.isEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
+        checkArgument(StringUtils.isEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
         checkNotNull(platform, "platform must not be null");
 
         String tokenPreview = deviceToken.substring(0, Math.min(10, deviceToken.length())) + "...";
-        String publicKeyPreview = publicKey.substring(0, Math.min(20, publicKey.length())) + "...";
+        String publicKeyPreview = publicKeyBase64.substring(0, Math.min(20, publicKeyBase64.length())) + "...";
 
-        log.info("Registering device - userProfileId: {}, token: {}, publicKey: {}, platform: {}",
-                userProfileId, tokenPreview, publicKeyPreview, platform);
+        log.info("Registering device - deviceId: {}, deviceDescriptor: {}, token: {}, publicKeyBase64: {}, platform: {}",
+                deviceId, deviceDescriptor, tokenPreview, publicKeyPreview, platform);
 
-        DeviceRegistration registration = new DeviceRegistration(deviceToken, publicKey, platform);
+        MobileDeviceProfile registration = new MobileDeviceProfile(deviceId,
+                deviceToken,
+                publicKeyBase64,
+                deviceDescriptor,
+                platform);
 
         // Use AtomicBoolean and AtomicInteger to capture state from inside the compute lambda
         AtomicBoolean wasAdded = new AtomicBoolean(false);
@@ -85,8 +78,8 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         AtomicInteger deviceCountAfter = new AtomicInteger(0);
 
         // Atomically remove existing registration and add new one
-        persistableStore.getDevicesByUserProfileId()
-                .compute(userProfileId, (userId, devices) -> {
+        persistableStore.getDevicesByDeviceId()
+                .compute(deviceToken, (key, devices) -> {
                     // Create new set if user has no devices yet
                     if (devices == null) {
                         devices = ConcurrentHashMap.newKeySet();
@@ -111,48 +104,36 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         if (wasAdded.get()) {
             persist();
             if (hadExisting.get()) {
-                log.info("✓ Updated device registration for user {}: token={}, platform={}, total devices: {} (was: {})",
-                        userProfileId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
+                log.info("✓ Updated device registration for deviceId {}: token={}, platform={}, total devices: {} (was: {})",
+                        deviceId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
             } else {
-                log.info("✓ Device registered successfully for user {}: token={}, platform={}, total devices: {} (was: {})",
-                        userProfileId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
+                log.info("✓ Device registered successfully for deviceId {}: token={}, platform={}, total devices: {} (was: {})",
+                        deviceId, tokenPreview, platform, deviceCountAfter.get(), deviceCountBefore.get());
             }
         } else {
-            log.warn("✗ Failed to add device registration for user {}: token={}, platform={}",
-                    userProfileId, tokenPreview, platform);
+            log.warn("✗ Failed to add device registration for deviceId {}: token={}, platform={}",
+                    deviceId, tokenPreview, platform);
         }
 
         return wasAdded.get();
     }
 
-    /**
-     * Unregister a device for a user profile.
-     * <p>
-     * This method is thread-safe: it atomically removes the device token from the user's
-     * device set and removes the user entry if no devices remain, all within a single
-     * compute operation to prevent races with concurrent register/unregister calls.
-     *
-     * @param userProfileId The user profile ID
-     * @param deviceToken   The APNs device token to remove
-     * @return true if a device was removed
-     */
-    public boolean unregisterDevice(String userProfileId, String deviceToken) {
-        checkArgument(StringUtils.isEmpty(userProfileId), "userProfileId must not be null or empty");
-        checkArgument(StringUtils.isEmpty(deviceToken), "deviceToken must not be null or empty");
+    public boolean unregister(String deviceId) {
+        checkArgument(StringUtils.isEmpty(deviceId), "deviceId must not be null or empty");
 
         // Use AtomicBoolean to capture whether removal occurred inside the compute lambda
         AtomicBoolean wasRemoved = new AtomicBoolean(false);
 
         // Atomically remove the device and clean up empty user entries
-        persistableStore.getDevicesByUserProfileId()
-                .compute(userProfileId, (userId, devices) -> {
+        persistableStore.getDevicesByDeviceId()
+                .compute(deviceId, (userId, devices) -> {
                     // No devices for this user
                     if (devices == null) {
                         return null;
                     }
 
                     // Attempt to remove the device token
-                    boolean removed = devices.removeIf(d -> d.getDeviceToken().equals(deviceToken));
+                    boolean removed = devices.removeIf(d -> d.getDeviceToken().equals(deviceId));
                     wasRemoved.set(removed);
 
                     // If removal occurred and no devices remain, remove the user entry entirely
@@ -167,8 +148,7 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         // Only persist and log if a device was actually removed
         if (wasRemoved.get()) {
             persist();
-            log.info("Unregistered device for user {} (tokenLength: {})",
-                    userProfileId, deviceToken.length());
+            log.info("Unregistered device {}", deviceId);
         }
 
         return wasRemoved.get();
@@ -180,8 +160,8 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
      * @param userProfileId The user profile ID
      * @return Set of device registrations, or empty set if none found
      */
-    public Set<DeviceRegistration> findDeviceRegistrations(String userProfileId) {
-        return Optional.ofNullable(persistableStore.getDevicesByUserProfileId().get(userProfileId))
+    public Set<MobileDeviceProfile> findDeviceRegistrations(String userProfileId) {
+        return Optional.ofNullable(persistableStore.getDevicesByDeviceId().get(userProfileId))
                 .map(Set::copyOf)
                 .orElse(Collections.emptySet());
     }
@@ -192,10 +172,10 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
      * @return Set of user profile IDs that have registered devices
      */
     public Set<String> getAllUserProfileIds() {
-        return Set.copyOf(persistableStore.getDevicesByUserProfileId().keySet());
+        return Set.copyOf(persistableStore.getDevicesByDeviceId().keySet());
     }
 
-    public ReadOnlyObservableMap<String, Set<DeviceRegistration>> getDevicesByUserProfileId() {
-        return persistableStore.getDevicesByUserProfileId();
+    public ReadOnlyObservableMap<String, Set<MobileDeviceProfile>> getDevicesByUserProfileId() {
+        return persistableStore.getDevicesByDeviceId();
     }
 }

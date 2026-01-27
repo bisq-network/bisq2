@@ -26,12 +26,12 @@ enum DeviceRegistrationPlatform {
   DEVICEREGISTRATIONPLATFORM_IOS = 1;
   DEVICEREGISTRATIONPLATFORM_ANDROID = 2;
 }
-
 message DeviceRegistration {
-  string deviceToken = 1;
-  string publicKeyBase64 = 2;
-  DeviceRegistrationPlatform platform = 3;
-  uint64 registrationTimestamp = 4;
+  string deviceId = 1;
+  string deviceToken = 2;
+  string publicKeyBase64 = 3;
+  string deviceDescriptor = 4;
+  DeviceRegistrationPlatform platform = 5;
 }
 
 message DeviceRegistrationSet {
@@ -39,5 +39,5 @@ message DeviceRegistrationSet {
 }
 
 message DeviceRegistrationStore {
-  map<string, DeviceRegistrationSet> devicesByUserProfileId = 1;
+  map<string, DeviceRegistrationSet> devicesByDeviceId = 1;
 }

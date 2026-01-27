@@ -20,7 +20,7 @@ package bisq.notifications.mobile.registration;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 
-public enum DeviceRegistrationPlatform implements ProtoEnum {
+public enum MobileDevicePlatform implements ProtoEnum {
     UNSPECIFIED,
     IOS,
     ANDROID;
@@ -30,7 +30,7 @@ public enum DeviceRegistrationPlatform implements ProtoEnum {
         return bisq.notifications.protobuf.DeviceRegistrationPlatform.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static DeviceRegistrationPlatform fromProto(bisq.notifications.protobuf.DeviceRegistrationPlatform proto) {
-        return ProtobufUtils.enumFromProto(DeviceRegistrationPlatform.class, proto.name(), UNSPECIFIED);
+    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.DeviceRegistrationPlatform proto) {
+        return ProtobufUtils.enumFromProto(MobileDevicePlatform.class, proto.name(), UNSPECIFIED);
     }
 }

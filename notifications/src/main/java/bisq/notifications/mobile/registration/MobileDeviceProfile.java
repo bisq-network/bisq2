@@ -25,24 +25,25 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class DeviceRegistration implements PersistableProto {
+public final class MobileDeviceProfile implements PersistableProto {
+
+    private final String deviceId;
     private final String deviceToken;
-    private final String publicKeyBase64; // Base64 encoded public key for encrypting notifications
-    private final DeviceRegistrationPlatform platform;
-    private final long registrationTimestamp;
+    private final String publicKeyBase64;
+    private final String deviceDescriptor;
+    private final MobileDevicePlatform platform;
 
-    public DeviceRegistration(String deviceToken, String publicKeyBase64, DeviceRegistrationPlatform platform) {
-        this(deviceToken, publicKeyBase64, platform, System.currentTimeMillis());
-    }
-
-    public DeviceRegistration(String deviceToken,
-                              String publicKeyBase64,
-                              DeviceRegistrationPlatform platform,
-                              long registrationTimestamp) {
+    public MobileDeviceProfile(String deviceId,
+                               String deviceToken,
+                               String publicKeyBase64,
+                               String deviceDescriptor,
+                               MobileDevicePlatform platform
+    ) {
+        this.deviceId = deviceId;
         this.deviceToken = deviceToken;
         this.publicKeyBase64 = publicKeyBase64;
+        this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
-        this.registrationTimestamp = registrationTimestamp;
     }
 
     @Override
@@ -53,17 +54,19 @@ public final class DeviceRegistration implements PersistableProto {
     @Override
     public bisq.notifications.protobuf.DeviceRegistration.Builder getBuilder(boolean serializeForHash) {
         return bisq.notifications.protobuf.DeviceRegistration.newBuilder()
+                .setDeviceId(deviceId)
                 .setDeviceToken(deviceToken)
                 .setPublicKeyBase64(publicKeyBase64)
-                .setPlatform(platform.toProtoEnum())
-                .setRegistrationTimestamp(registrationTimestamp);
+                .setDeviceDescriptor(deviceDescriptor)
+                .setPlatform(platform.toProtoEnum());
     }
 
-    public static DeviceRegistration fromProto(bisq.notifications.protobuf.DeviceRegistration proto) {
-        return new DeviceRegistration(proto.getDeviceToken(),
+    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.DeviceRegistration proto) {
+        return new MobileDeviceProfile(proto.getDeviceId(),
+                proto.getDeviceToken(),
                 proto.getPublicKeyBase64(),
-                DeviceRegistrationPlatform.fromProto(proto.getPlatform()),
-                proto.getRegistrationTimestamp());
+                proto.getDeviceDescriptor(),
+                MobileDevicePlatform.fromProto(proto.getPlatform()));
     }
 }
 

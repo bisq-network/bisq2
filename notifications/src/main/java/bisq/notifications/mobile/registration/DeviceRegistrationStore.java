@@ -36,15 +36,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class DeviceRegistrationStore implements PersistableStore<DeviceRegistrationStore> {
     @Getter
-    private final ObservableHashMap<String, Set<DeviceRegistration>> devicesByUserProfileId = new ObservableHashMap<>();
+    private final ObservableHashMap<String, Set<MobileDeviceProfile>> devicesByDeviceId = new ObservableHashMap<>();
 
-    private DeviceRegistrationStore(Map<String, Set<DeviceRegistration>> devicesByUserProfileId) {
-        this.devicesByUserProfileId.putAll(devicesByUserProfileId);
+    private DeviceRegistrationStore(Map<String, Set<MobileDeviceProfile>> devicesByDeviceId) {
+        this.devicesByDeviceId.putAll(devicesByDeviceId);
     }
 
     @Override
     public bisq.notifications.protobuf.DeviceRegistrationStore.Builder getBuilder(boolean serializeForHash) {
-        Map<String, DeviceRegistrationSet> protoMap = devicesByUserProfileId.entrySet().stream()
+        Map<String, DeviceRegistrationSet> protoMap = devicesByDeviceId.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> DeviceRegistrationSet.newBuilder()
                                 .addAllDeviceRegistrationList(entry.getValue().stream()
@@ -52,7 +52,7 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
                                                 deviceRegistration.toProto(serializeForHash)).toList())
                                 .build()));
         return bisq.notifications.protobuf.DeviceRegistrationStore.newBuilder()
-                .putAllDevicesByUserProfileId(protoMap);
+                .putAllDevicesByDeviceId(protoMap);
     }
 
     @Override
@@ -62,11 +62,11 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto) {
         return new DeviceRegistrationStore(
-                proto.getDevicesByUserProfileIdMap().entrySet().stream()
+                proto.getDevicesByDeviceIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 entry ->
                                         entry.getValue().getDeviceRegistrationListList().stream()
-                                                .map(DeviceRegistration::fromProto)
+                                                .map(MobileDeviceProfile::fromProto)
                                                 .collect(Collectors.toSet())
                         )));
     }
@@ -84,12 +84,12 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     @Override
     public DeviceRegistrationStore getClone() {
-        return new DeviceRegistrationStore(Map.copyOf(devicesByUserProfileId));
+        return new DeviceRegistrationStore(Map.copyOf(devicesByDeviceId));
     }
 
     @Override
     public void applyPersisted(DeviceRegistrationStore persisted) {
-        devicesByUserProfileId.clear();
-        devicesByUserProfileId.putAll(persisted.devicesByUserProfileId);
+        devicesByDeviceId.clear();
+        devicesByDeviceId.putAll(persisted.devicesByDeviceId);
     }
 }
