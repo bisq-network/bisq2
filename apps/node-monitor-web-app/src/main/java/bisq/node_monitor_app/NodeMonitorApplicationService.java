@@ -140,7 +140,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService,
+                bondedRolesService.getMobileNotificationRelayClient(),
+                findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 

@@ -18,8 +18,9 @@
 package bisq.notifications;
 
 
+import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
 import bisq.common.application.Service;
-import bisq.notifications.mobile.registration.DeviceRegistrationService;
+import bisq.notifications.mobile.MobileNotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.notifications.system.SystemNotification;
 import bisq.notifications.system.SystemNotificationService;
@@ -35,25 +36,30 @@ public class NotificationService implements Service {
     @Getter
     private final SystemNotificationService systemNotificationService;
     @Getter
-    private final DeviceRegistrationService deviceRegistrationService;
+    private final MobileNotificationService mobileNotificationService;
 
-    public NotificationService(PersistenceService persistenceService, Optional<OsSpecificNotificationService> systemNotificationDelegate) {
+    public NotificationService(PersistenceService persistenceService,
+                               MobileNotificationRelayClient mobileNotificationRelayClient,
+                               Optional<OsSpecificNotificationService> systemNotificationDelegate) {
         systemNotificationService = new SystemNotificationService(systemNotificationDelegate);
-        deviceRegistrationService = new DeviceRegistrationService(persistenceService);
+        mobileNotificationService = new MobileNotificationService(persistenceService, mobileNotificationRelayClient);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return systemNotificationService.initialize();
+        return systemNotificationService.initialize()
+                .thenCompose(e -> mobileNotificationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return systemNotificationService.shutdown();
+        return systemNotificationService.shutdown()
+                .thenCompose(e -> mobileNotificationService.shutdown());
     }
 
 
     public void show(SystemNotification notification) {
         systemNotificationService.show(notification);
+        mobileNotificationService.show(notification);
     }
 }

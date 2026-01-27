@@ -35,6 +35,7 @@ import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.notifications.mobile.MobileNotificationService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
@@ -128,7 +129,9 @@ public class ApiApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService,
+                bondedRolesService.getMobileNotificationRelayClient(),
+                findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -179,7 +182,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 openTradeItemsService,
                 accountService,
                 userService.getReputationService(),
-                notificationService.getDeviceRegistrationService());
+                notificationService.getMobileNotificationService().getDeviceRegistrationService());
     }
 
     @Override

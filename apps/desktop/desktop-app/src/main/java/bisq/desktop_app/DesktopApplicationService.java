@@ -18,6 +18,9 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
+import bisq.api.ApiConfig;
+import bisq.api.ApiService;
+import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
@@ -33,20 +36,18 @@ import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
-import bisq.api.ApiConfig;
-import bisq.api.ApiService;
-import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.notifications.NotificationService;
+import bisq.notifications.mobile.MobileNotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
-import bisq.notifications.system.OsSpecificNotificationService;
-import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -155,7 +156,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
 
-        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService,
+                bondedRolesService.getMobileNotificationRelayClient(),
+                findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -238,7 +241,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 openTradeItemsService,
                 accountService,
                 userService.getReputationService(),
-                notificationService.getDeviceRegistrationService());
+                notificationService.getMobileNotificationService().getDeviceRegistrationService());
 
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,

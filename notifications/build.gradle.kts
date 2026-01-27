@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
+    implementation(project(":bonded-roles"))
     implementation("network:network")
 
     implementation(libs.typesafe.config)
