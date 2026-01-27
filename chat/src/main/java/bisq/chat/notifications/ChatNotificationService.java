@@ -45,7 +45,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.notifications.system.SystemNotificationService;
+import bisq.notifications.NotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -82,7 +82,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     @Getter
     private final Persistence<ChatNotificationsStore> persistence;
     private final ChatService chatService;
-    private final SystemNotificationService systemNotificationService;
+    private final NotificationService notificationService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
@@ -104,13 +104,13 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     public ChatNotificationService(PersistenceService persistenceService,
                                    NetworkService networkService,
                                    ChatService chatService,
-                                   SystemNotificationService systemNotificationService,
+                                   NotificationService notificationService,
                                    SettingsService settingsService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         this.chatService = chatService;
-        this.systemNotificationService = systemNotificationService;
+        this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
@@ -545,7 +545,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (!isApplicationFocussed &&
                 isReceivedAfterStartUp(chatNotification) &&
                 testChatChannelDomainPredicate(chatNotification)) {
-            systemNotificationService.show(chatNotification);
+            notificationService.show(chatNotification);
         }
         getNotConsumedNotifications(chatNotification.getChatChannelDomain(), chatNotification.getChatChannelId());
     }

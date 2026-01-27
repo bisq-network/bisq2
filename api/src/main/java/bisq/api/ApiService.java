@@ -33,6 +33,7 @@ import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
+import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
@@ -53,6 +54,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.tls.TlsException;
@@ -120,7 +122,8 @@ public class ApiService implements Service {
                       BisqEasyService bisqEasyService,
                       OpenTradeItemsService openTradeItemsService,
                       AccountService accountService,
-                      ReputationService reputationService) {
+                      ReputationService reputationService,
+                      DeviceRegistrationService deviceRegistrationService) {
         this.apiConfig = apiConfig;
 
         int bindPort = apiConfig.getBindPort();
@@ -162,6 +165,7 @@ public class ApiService implements Service {
                 userService.getRepublishUserProfileService());
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
+        DevicesRestApi devicesRestApi= new DevicesRestApi(deviceRegistrationService);
 
         ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled()) {
@@ -178,7 +182,8 @@ public class ApiService implements Service {
                     explorerRestApi,
                     paymentAccountsRestApi,
                     reputationRestApi,
-                    userProfileRestApi);
+                    userProfileRestApi,
+                    devicesRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }

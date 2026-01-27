@@ -17,9 +17,6 @@
 
 package bisq.notifications.mobile_push.registration;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,7 +28,6 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-@JsonIgnoreProperties(ignoreUnknown = true)
 public final class DeviceRegistration {
     public enum Platform {
         IOS,
@@ -48,11 +44,10 @@ public final class DeviceRegistration {
         this(deviceToken, publicKey, platform, System.currentTimeMillis());
     }
 
-    @JsonCreator
-    public DeviceRegistration(@JsonProperty("deviceToken") String deviceToken,
-                              @JsonProperty("publicKey") String publicKey,
-                              @JsonProperty("platform") Platform platform,
-                              @JsonProperty("registrationTimestamp") long registrationTimestamp) {
+    public DeviceRegistration(String deviceToken,
+                              String publicKey,
+                              Platform platform,
+                              long registrationTimestamp) {
         this.deviceToken = deviceToken;
         this.publicKey = publicKey;
         this.platform = platform;
