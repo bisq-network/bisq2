@@ -22,7 +22,7 @@ import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient
 import bisq.bonded_roles.mobile_notification_relay.PushNotificationResult;
 import bisq.common.application.Service;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
-import bisq.notifications.system.SystemNotification;
+import bisq.notifications.Notification;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class MobileNotificationService implements Service {
                 .thenCompose(e -> mobileNotificationRelayClient.shutdown());
     }
 
-    public void show(SystemNotification notification) {
+    public void show(Notification notification) {
         //todo
         String encryptedPayload = "todo";
         String deviceId = "todo";

@@ -19,6 +19,7 @@ package bisq.notifications.system;
 
 
 import bisq.common.application.Service;
+import bisq.notifications.Notification;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -55,7 +56,7 @@ public class SystemNotificationService implements Service {
     }
 
 
-    public void show(SystemNotification notification) {
+    public void show(Notification notification) {
         if (isInitialized) {
             systemNotificationDelegate.ifPresent(service -> service.show(notification.getTitle(), notification.getMessage()));
         }

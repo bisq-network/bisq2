@@ -22,7 +22,6 @@ import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient
 import bisq.common.application.Service;
 import bisq.notifications.mobile.MobileNotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
-import bisq.notifications.system.SystemNotification;
 import bisq.notifications.system.SystemNotificationService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -58,7 +57,7 @@ public class NotificationService implements Service {
     }
 
 
-    public void show(SystemNotification notification) {
+    public void show(Notification notification) {
         systemNotificationService.show(notification);
         mobileNotificationService.show(notification);
     }
