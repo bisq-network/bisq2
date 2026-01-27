@@ -19,8 +19,8 @@ package bisq.api.rest_api.endpoints.devices;
 
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.common.util.StringUtils;
-import bisq.notifications.mobile_push.registration.DeviceRegistration;
 import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
+import bisq.notifications.mobile_push.registration.DeviceRegistrationPlatform;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -78,7 +78,7 @@ public class DevicesRestApi extends RestApiBase {
         String userProfileId = request.getUserProfileId();
         String deviceToken = request.getDeviceToken();
         String publicKey = request.getPublicKey();
-        DeviceRegistration.Platform platform = request.getPlatform();
+        DeviceRegistrationPlatform platform = request.getPlatform();
 
         log.debug("Register device request: userProfileId={}, tokenLength={}, platform={}",
                 userProfileId, deviceToken.length(), platform);
@@ -87,7 +87,7 @@ public class DevicesRestApi extends RestApiBase {
             return buildResponse(Response.Status.BAD_REQUEST, "deviceToken must be alphanumeric");
         }
 
-        if (platform == DeviceRegistration.Platform.IOS && deviceToken.length() != APNS_TOKEN_LENGTH) {
+        if (platform == DeviceRegistrationPlatform.IOS && deviceToken.length() != APNS_TOKEN_LENGTH) {
             log.warn("Unexpected APNs token length: {}", deviceToken.length());
         }
 

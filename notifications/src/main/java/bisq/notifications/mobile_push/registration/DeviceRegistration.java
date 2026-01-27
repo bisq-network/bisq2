@@ -17,41 +17,53 @@
 
 package bisq.notifications.mobile_push.registration;
 
+import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-/**
- * Represents a registered device for push notifications.
- * Stores the device token, public key for encryption, and platform type.
- */
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class DeviceRegistration {
-    public enum Platform {
-        IOS,
-        ANDROID // For future use
-    }
-
+public final class DeviceRegistration implements PersistableProto {
     private final String deviceToken;
-    private final String publicKey; // Base64 encoded public key for encrypting notifications
-    private final Platform platform;
+    private final String publicKeyBase64; // Base64 encoded public key for encrypting notifications
+    private final DeviceRegistrationPlatform platform;
     private final long registrationTimestamp;
 
-
-    public DeviceRegistration(String deviceToken, String publicKey, Platform platform) {
-        this(deviceToken, publicKey, platform, System.currentTimeMillis());
+    public DeviceRegistration(String deviceToken, String publicKeyBase64, DeviceRegistrationPlatform platform) {
+        this(deviceToken, publicKeyBase64, platform, System.currentTimeMillis());
     }
 
     public DeviceRegistration(String deviceToken,
-                              String publicKey,
-                              Platform platform,
+                              String publicKeyBase64,
+                              DeviceRegistrationPlatform platform,
                               long registrationTimestamp) {
         this.deviceToken = deviceToken;
-        this.publicKey = publicKey;
+        this.publicKeyBase64 = publicKeyBase64;
         this.platform = platform;
         this.registrationTimestamp = registrationTimestamp;
+    }
+
+    @Override
+    public bisq.notifications.protobuf.DeviceRegistration toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.notifications.protobuf.DeviceRegistration.Builder getBuilder(boolean serializeForHash) {
+        return bisq.notifications.protobuf.DeviceRegistration.newBuilder()
+                .setDeviceToken(deviceToken)
+                .setPublicKeyBase64(publicKeyBase64)
+                .setPlatform(platform.toProtoEnum())
+                .setRegistrationTimestamp(registrationTimestamp);
+    }
+
+    public static DeviceRegistration fromProto(bisq.notifications.protobuf.DeviceRegistration proto) {
+        return new DeviceRegistration(proto.getDeviceToken(),
+                proto.getPublicKeyBase64(),
+                DeviceRegistrationPlatform.fromProto(proto.getPlatform()),
+                proto.getRegistrationTimestamp());
     }
 }
 

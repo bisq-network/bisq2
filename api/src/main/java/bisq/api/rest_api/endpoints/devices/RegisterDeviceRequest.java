@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.endpoints.devices;
 
-import bisq.notifications.mobile_push.registration.DeviceRegistration;
+import bisq.notifications.mobile_push.registration.DeviceRegistrationPlatform;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -61,14 +61,14 @@ public class RegisterDeviceRequest {
             required = true,
             example = "IOS"
     )
-    private final DeviceRegistration.Platform platform;
+    private final DeviceRegistrationPlatform platform;
 
     @JsonCreator
     public RegisterDeviceRequest(
             @JsonProperty("userProfileId") String userProfileId,
             @JsonProperty("deviceToken") String deviceToken,
             @JsonProperty("publicKey") String publicKey,
-            @JsonProperty("platform") DeviceRegistration.Platform platform
+            @JsonProperty("platform") DeviceRegistrationPlatform platform
     ) {
         this.userProfileId = userProfileId;
         this.deviceToken = deviceToken;

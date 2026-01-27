@@ -45,12 +45,12 @@ import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.node_monitor.NodeMonitorService;
+import bisq.notifications.NotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
-import bisq.notifications.system.OsSpecificNotificationService;
-import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
@@ -140,7 +140,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationService = new NotificationService(findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 

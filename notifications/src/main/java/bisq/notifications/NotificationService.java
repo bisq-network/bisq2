@@ -23,6 +23,7 @@ import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.notifications.system.SystemNotification;
 import bisq.notifications.system.SystemNotificationService;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +37,9 @@ public class NotificationService implements Service {
     @Getter
     private final DeviceRegistrationService deviceRegistrationService;
 
-    public NotificationService(Optional<OsSpecificNotificationService> systemNotificationDelegate) {
+    public NotificationService(PersistenceService persistenceService, Optional<OsSpecificNotificationService> systemNotificationDelegate) {
         systemNotificationService = new SystemNotificationService(systemNotificationDelegate);
-        deviceRegistrationService = new DeviceRegistrationService();
+        deviceRegistrationService = new DeviceRegistrationService(persistenceService);
     }
 
     public CompletableFuture<Boolean> initialize() {

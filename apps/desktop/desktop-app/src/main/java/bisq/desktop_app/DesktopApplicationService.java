@@ -155,7 +155,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
 
-        notificationService = new NotificationService(findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 

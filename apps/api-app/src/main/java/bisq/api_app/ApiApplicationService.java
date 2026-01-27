@@ -128,7 +128,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationService = new NotificationService(findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService, findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
