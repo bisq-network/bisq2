@@ -36,8 +36,8 @@ public class MobileNotificationEncryption {
     /**
      * Encrypt the message using the device's public key (ECIES for EC keys).
      *
-     * @param message         The message to encrypt
      * @param publicKeyBase64 The Base64 encoded public key
+     * @param message         The message to encrypt
      * @return Base64 encoded encrypted message
      */
     public static String encrypt(String publicKeyBase64, String message) throws GeneralSecurityException {
@@ -59,15 +59,8 @@ public class MobileNotificationEncryption {
             // Any mismatch in these parameters will cause decryption to fail silently or produce garbage.
             byte[] derivation = new byte[0];  // Intentionally empty, not null
             byte[] encoding = new byte[0];    // Intentionally empty, not null
-
-            // Size (in bits) of the symmetric encryption key derived via ECIES KDF.
-            // 128 bits → AES-128-CBC is used internally by Bouncy Castle ECIES.
-            // The MAC key (HMAC-SHA1) is derived alongside it.
-            // NOTE: This value MUST match exactly on all platforms.
             int macKeySize = 128;
-
             IESParameterSpec iesSpec = new IESParameterSpec(derivation, encoding, macKeySize);
-
             Cipher cipher = Cipher.getInstance("ECIES", BouncyCastleProvider.PROVIDER_NAME);
             cipher.init(Cipher.ENCRYPT_MODE, publicKey, iesSpec);
             byte[] encryptedBytes = cipher.doFinal(message.getBytes(StandardCharsets.UTF_8));

@@ -42,7 +42,7 @@ public abstract class RestApiBase {
      * @return The HTTP response.
      */
     protected Response buildNoContentResponse( ) {
-        return buildResponse(Response.Status.NO_CONTENT, "");
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     protected Response buildNotFoundResponse(String message) {

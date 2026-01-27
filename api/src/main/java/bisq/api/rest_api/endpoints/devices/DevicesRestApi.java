@@ -49,9 +49,7 @@ import lombok.extern.slf4j.Slf4j;
         description = "API for registering and unregistering mobile devices for push notifications"
 )
 public class DevicesRestApi extends RestApiBase {
-
-    private static final int APNS_TOKEN_LENGTH = 64;
-    private static final String ALPHANUMERIC_REGEX = "^[a-zA-Z0-9]+$";
+    private static final String APNS_HEX_REGEX = "^[0-9a-fA-F]+$";
 
     private final DeviceRegistrationService deviceRegistrationService;
 
@@ -92,20 +90,16 @@ public class DevicesRestApi extends RestApiBase {
                 deviceId, deviceDescriptor, deviceToken.length(), platform
         );
 
-        // Basic structural validation only; platform-specific rules belong in the service
-        if (!deviceToken.matches(ALPHANUMERIC_REGEX)) {
+        // Platform-specific token validation
+        if (platform == MobileDevicePlatform.IOS && !deviceToken.matches(APNS_HEX_REGEX)) {
             return buildResponse(
                     Response.Status.BAD_REQUEST,
-                    "deviceToken must contain only alphanumeric characters"
+                    "APNs device token must be a hex-encoded string"
             );
         }
 
-        if (platform == MobileDevicePlatform.IOS && deviceToken.length() != APNS_TOKEN_LENGTH) {
-            log.warn("Unexpected APNs token length: {}", deviceToken.length());
-        }
-
         try {
-           deviceRegistrationService.register(
+            deviceRegistrationService.register(
                     deviceId,
                     deviceToken,
                     publicKeyBase64,
@@ -157,10 +151,10 @@ public class DevicesRestApi extends RestApiBase {
 
     private boolean isValid(RegisterDeviceRequest request) {
         return request != null
-                && !StringUtils.isEmpty(request.getDeviceId())
-                && !StringUtils.isEmpty(request.getDeviceToken())
-                && !StringUtils.isEmpty(request.getPublicKeyBase64())
-                && !StringUtils.isEmpty(request.getDeviceDescriptor())
+                && StringUtils.isNotEmpty(request.getDeviceId())
+                && StringUtils.isNotEmpty(request.getDeviceToken())
+                && StringUtils.isNotEmpty(request.getPublicKeyBase64())
+                && StringUtils.isNotEmpty(request.getDeviceDescriptor())
                 && request.getPlatform() != null;
     }
 }

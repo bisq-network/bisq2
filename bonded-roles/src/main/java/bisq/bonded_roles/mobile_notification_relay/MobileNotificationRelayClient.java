@@ -93,13 +93,20 @@ public class MobileNotificationRelayClient implements Service {
         }
 
         private static TransportType getTransportTypeFromUrl(String url) {
-            if (url.endsWith(".i2p")) {
-                return TransportType.I2P;
-            } else if (url.endsWith(".onion")) {
-                return TransportType.TOR;
-            } else {
-                return TransportType.CLEAR;
+            try {
+                java.net.URI uri = java.net.URI.create(url);
+                String host = uri.getHost();
+                if (host != null) {
+                    if (host.endsWith(".i2p")) {
+                        return TransportType.I2P;
+                    } else if (host.endsWith(".onion")) {
+                        return TransportType.TOR;
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                log.warn("Failed to parse URL for transport type detection: {}", url);
             }
+            return TransportType.CLEAR;
         }
 
         private final Set<Provider> providers;
@@ -214,7 +221,7 @@ public class MobileNotificationRelayClient implements Service {
                                                          String encryptedMessageHex,
                                                          AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
-            return CompletableFuture.failedFuture(new RuntimeException("No block explorer provider available"));
+            return CompletableFuture.failedFuture(new RuntimeException("No mobile notification relay provider available"));
         }
         if (shutdownStarted) {
             return CompletableFuture.failedFuture(new RuntimeException("Shutdown has already started"));
@@ -235,7 +242,7 @@ public class MobileNotificationRelayClient implements Service {
                             Pair<String, String> header = new Pair<>("User-Agent", userAgent);
                             String result = client.get(param, Optional.of(header));
 
-                            log.info("Received response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
+                            log.info("Received response from {}/{} after {} ms", client.getBaseUrl(), ENDPOINT, System.currentTimeMillis() - ts);
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
                             return result.equals(SUCCESS);

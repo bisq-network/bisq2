@@ -47,29 +47,28 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
                          String publicKeyBase64,
                          String deviceDescriptor,
                          MobileDevicePlatform platform) {
-        checkArgument(StringUtils.isEmpty(deviceId), "deviceId must not be null or empty");
-        checkArgument(StringUtils.isEmpty(deviceToken), "deviceToken must not be null or empty");
-        checkArgument(StringUtils.isEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
-        checkArgument(StringUtils.isEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(deviceToken), "deviceToken must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
         checkNotNull(platform, "platform must not be null");
 
-        String tokenPreview = deviceToken.substring(0, Math.min(10, deviceToken.length())) + "...";
-        String publicKeyPreview = publicKeyBase64.substring(0, Math.min(20, publicKeyBase64.length())) + "...";
-
-        log.info("Registering device - deviceId: {}, deviceDescriptor: {}, token: {}, publicKeyBase64: {}, platform: {}",
-                deviceId, deviceDescriptor, tokenPreview, publicKeyPreview, platform);
+        log.info("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}",
+                deviceId, deviceDescriptor, platform);
 
         MobileDeviceProfile mobileDeviceProfile = new MobileDeviceProfile(deviceId,
                 deviceToken,
                 publicKeyBase64,
                 deviceDescriptor,
                 platform);
-        persistableStore.getDeviceByDeviceId().putIfAbsent(deviceId, mobileDeviceProfile);
-        persist();
+        MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
+        if (previous == null || !previous.equals(mobileDeviceProfile)) {
+            persist();
+        }
     }
 
     public boolean unregister(String deviceId) {
-        checkArgument(StringUtils.isEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
 
         MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().remove(deviceId);
         boolean hadValue = previous != null;
