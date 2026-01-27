@@ -499,7 +499,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            maybeShowSystemNotification(chatNotification);
+            maybeDispatchNotification(chatNotification);
         } else {
             consumeNotification(chatNotification);
         }
@@ -541,11 +541,11 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 senderUserProfile);
     }
 
-    private void maybeShowSystemNotification(ChatNotification chatNotification) {
+    private void maybeDispatchNotification(ChatNotification chatNotification) {
         if (!isApplicationFocussed &&
                 isReceivedAfterStartUp(chatNotification) &&
                 testChatChannelDomainPredicate(chatNotification)) {
-            notificationService.show(chatNotification);
+            notificationService.dispatchNotification(chatNotification);
         }
         getNotConsumedNotifications(chatNotification.getChatChannelDomain(), chatNotification.getChatChannelId());
     }

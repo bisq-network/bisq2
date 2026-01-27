@@ -56,9 +56,8 @@ public class NotificationService implements Service {
                 .thenCompose(e -> mobileNotificationService.shutdown());
     }
 
-
-    public void show(Notification notification) {
-        systemNotificationService.show(notification);
-        mobileNotificationService.show(notification);
+    public void dispatchNotification(Notification notification) {
+        systemNotificationService.dispatchNotification(notification);
+        mobileNotificationService.dispatchNotification(notification);
     }
 }

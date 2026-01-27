@@ -56,9 +56,9 @@ public class SystemNotificationService implements Service {
     }
 
 
-    public void show(Notification notification) {
+    public void dispatchNotification(Notification notification) {
         if (isInitialized) {
-            systemNotificationDelegate.ifPresent(service -> service.show(notification.getTitle(), notification.getMessage()));
+            systemNotificationDelegate.ifPresent(service -> service.dispatchNotification(notification.getTitle(), notification.getMessage()));
         }
     }
 }

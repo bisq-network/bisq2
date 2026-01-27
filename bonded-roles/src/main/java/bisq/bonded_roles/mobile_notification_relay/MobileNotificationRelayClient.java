@@ -186,20 +186,20 @@ public class MobileNotificationRelayClient implements Service {
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
-    public CompletableFuture<PushNotificationResult> sendNotification(String encryptedPayload,
-                                                                      String deviceId,
-                                                                      boolean isUrgent) {
+    public CompletableFuture<PushNotificationResult> sendToRelayServer(String encryptedPayload,
+                                                                       String deviceId,
+                                                                       boolean isUrgent) {
         try {
-            return sendNotification(encryptedPayload,
+            return sendToRelayServer(encryptedPayload,
                     isUrgent,
                     new AtomicInteger(0))
                     .exceptionallyCompose(throwable -> {
                         if (throwable instanceof RetryException retryException) {
-                            return sendNotification(encryptedPayload,
+                            return sendToRelayServer(encryptedPayload,
                                     isUrgent,
                                     retryException.getRecursionDepth());
                         } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
-                            return sendNotification(encryptedPayload,
+                            return sendToRelayServer(encryptedPayload,
                                     isUrgent,
                                     retryException.getRecursionDepth());
                         } else {
@@ -215,9 +215,9 @@ public class MobileNotificationRelayClient implements Service {
         return Optional.ofNullable(selectedProvider.get()).map(MobileNotificationRelayClient.Provider::getBaseUrl).orElse(Res.get("data.na"));
     }
 
-    private CompletableFuture<PushNotificationResult> sendNotification(String encryptedPayload,
-                                                                       boolean isUrgent,
-                                                                       AtomicInteger recursionDepth) {
+    private CompletableFuture<PushNotificationResult> sendToRelayServer(String encryptedPayload,
+                                                                        boolean isUrgent,
+                                                                        AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             return CompletableFuture.failedFuture(new RuntimeException("No block explorer provider available"));
         }

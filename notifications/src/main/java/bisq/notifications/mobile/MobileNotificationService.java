@@ -53,12 +53,12 @@ public class MobileNotificationService implements Service {
                 .thenCompose(e -> mobileNotificationRelayClient.shutdown());
     }
 
-    public void show(Notification notification) {
+    public void dispatchNotification(Notification notification) {
         //todo
         String encryptedPayload = "todo";
         String deviceId = "todo";
         boolean isUrgent = true;
-        CompletableFuture<PushNotificationResult> result = mobileNotificationRelayClient.sendNotification(encryptedPayload, deviceId, isUrgent);
+        CompletableFuture<PushNotificationResult> result = mobileNotificationRelayClient.sendToRelayServer(encryptedPayload, deviceId, isUrgent);
     }
 
 }

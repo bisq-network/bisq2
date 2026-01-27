@@ -54,7 +54,7 @@ public class OsxNotificationService implements OsSpecificNotificationService {
     }
 
     @Override
-    public void show(String title, String message) {
+    public void dispatchNotification(String title, String message) {
         if (isSupported) {
             ID notification = Foundation.invoke(Foundation.getObjcClass("NSUserNotification"), "new");
             Foundation.invoke(notification, "setTitle:",

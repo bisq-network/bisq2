@@ -20,5 +20,5 @@ package bisq.notifications.system;
 import bisq.common.application.Service;
 
 public interface OsSpecificNotificationService extends Service {
-   void show(String title, String message);
+   void dispatchNotification(String title, String message);
 }
