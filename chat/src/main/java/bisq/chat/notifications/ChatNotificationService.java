@@ -547,7 +547,6 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 testChatChannelDomainPredicate(chatNotification)) {
             notificationService.dispatchNotification(chatNotification);
         }
-        getNotConsumedNotifications(chatNotification.getChatChannelDomain(), chatNotification.getChatChannelId());
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {
