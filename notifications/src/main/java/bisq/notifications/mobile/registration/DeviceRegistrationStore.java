@@ -20,7 +20,6 @@ package bisq.notifications.mobile.registration;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.notifications.protobuf.DeviceRegistrationSet;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
@@ -29,30 +28,24 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 public final class DeviceRegistrationStore implements PersistableStore<DeviceRegistrationStore> {
     @Getter
-    private final ObservableHashMap<String, Set<MobileDeviceProfile>> devicesByDeviceId = new ObservableHashMap<>();
+    private final ObservableHashMap<String, MobileDeviceProfile> deviceByDeviceId = new ObservableHashMap<>();
 
-    private DeviceRegistrationStore(Map<String, Set<MobileDeviceProfile>> devicesByDeviceId) {
-        this.devicesByDeviceId.putAll(devicesByDeviceId);
+    private DeviceRegistrationStore(Map<String, MobileDeviceProfile> deviceByDeviceId) {
+        this.deviceByDeviceId.putAll(deviceByDeviceId);
     }
 
     @Override
     public bisq.notifications.protobuf.DeviceRegistrationStore.Builder getBuilder(boolean serializeForHash) {
-        Map<String, DeviceRegistrationSet> protoMap = devicesByDeviceId.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> DeviceRegistrationSet.newBuilder()
-                                .addAllDeviceRegistrationList(entry.getValue().stream()
-                                        .map(deviceRegistration ->
-                                                deviceRegistration.toProto(serializeForHash)).toList())
-                                .build()));
         return bisq.notifications.protobuf.DeviceRegistrationStore.newBuilder()
-                .putAllDevicesByDeviceId(protoMap);
+                .putAllDeviceByDeviceId(deviceByDeviceId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().toProto(serializeForHash))));
     }
 
     @Override
@@ -62,12 +55,9 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto) {
         return new DeviceRegistrationStore(
-                proto.getDevicesByDeviceIdMap().entrySet().stream()
+                proto.getDeviceByDeviceIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                entry ->
-                                        entry.getValue().getDeviceRegistrationListList().stream()
-                                                .map(MobileDeviceProfile::fromProto)
-                                                .collect(Collectors.toSet())
+                                e -> MobileDeviceProfile.fromProto(e.getValue())
                         )));
     }
 
@@ -84,12 +74,12 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     @Override
     public DeviceRegistrationStore getClone() {
-        return new DeviceRegistrationStore(Map.copyOf(devicesByDeviceId));
+        return new DeviceRegistrationStore(Map.copyOf(deviceByDeviceId));
     }
 
     @Override
     public void applyPersisted(DeviceRegistrationStore persisted) {
-        devicesByDeviceId.clear();
-        devicesByDeviceId.putAll(persisted.devicesByDeviceId);
+        deviceByDeviceId.clear();
+        deviceByDeviceId.putAll(persisted.deviceByDeviceId);
     }
 }

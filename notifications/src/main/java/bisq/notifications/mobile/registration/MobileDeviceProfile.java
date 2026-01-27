@@ -26,7 +26,6 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class MobileDeviceProfile implements PersistableProto {
-
     private final String deviceId;
     private final String deviceToken;
     private final String publicKeyBase64;
@@ -47,13 +46,13 @@ public final class MobileDeviceProfile implements PersistableProto {
     }
 
     @Override
-    public bisq.notifications.protobuf.DeviceRegistration toProto(boolean serializeForHash) {
+    public bisq.notifications.protobuf.MobileDeviceProfile toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
     @Override
-    public bisq.notifications.protobuf.DeviceRegistration.Builder getBuilder(boolean serializeForHash) {
-        return bisq.notifications.protobuf.DeviceRegistration.newBuilder()
+    public bisq.notifications.protobuf.MobileDeviceProfile.Builder getBuilder(boolean serializeForHash) {
+        return bisq.notifications.protobuf.MobileDeviceProfile.newBuilder()
                 .setDeviceId(deviceId)
                 .setDeviceToken(deviceToken)
                 .setPublicKeyBase64(publicKeyBase64)
@@ -61,7 +60,7 @@ public final class MobileDeviceProfile implements PersistableProto {
                 .setPlatform(platform.toProtoEnum());
     }
 
-    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.DeviceRegistration proto) {
+    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto) {
         return new MobileDeviceProfile(proto.getDeviceId(),
                 proto.getDeviceToken(),
                 proto.getPublicKeyBase64(),

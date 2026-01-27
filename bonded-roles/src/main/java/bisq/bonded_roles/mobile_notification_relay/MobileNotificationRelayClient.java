@@ -20,7 +20,6 @@ package bisq.bonded_roles.mobile_notification_relay;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
-import bisq.common.json.JsonMapperProvider;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -35,9 +34,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -55,6 +52,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MobileNotificationRelayClient implements Service {
+    private static final String SUCCESS = "success";
+    private static final String ENDPOINT = "relay";
+
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("MobileNotificationsService", 1, 5, 60);
 
     private static class RetryException extends RuntimeException {
@@ -119,21 +119,13 @@ public class MobileNotificationRelayClient implements Service {
     public static final class Provider {
         private final String baseUrl;
         private final String operator;
-        private final String apiPath;
         private final TransportType transportType;
-
-        // String endpoint = String.format("/v1/apns/device/%s", deviceToken);
-        public Provider(String baseUrl, String operator, TransportType transportType) {
-            this(baseUrl, operator, "/v1/apns/device/", transportType);
-        }
 
         public Provider(String baseUrl,
                         String operator,
-                        String apiPath,
                         TransportType transportType) {
             this.baseUrl = baseUrl;
             this.operator = operator;
-            this.apiPath = apiPath;
             this.transportType = transportType;
         }
     }
@@ -156,7 +148,6 @@ public class MobileNotificationRelayClient implements Service {
         this.conf = conf;
         this.networkService = networkService;
         userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
-
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         conf.providers.stream()
                 .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
@@ -186,21 +177,24 @@ public class MobileNotificationRelayClient implements Service {
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
-    public CompletableFuture<PushNotificationResult> sendToRelayServer(String encryptedPayload,
-                                                                       String deviceId,
-                                                                       boolean isUrgent) {
+    public CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
+                                                        String deviceTokenHex,
+                                                        String encryptedMessageHex) {
         try {
-            return sendToRelayServer(encryptedPayload,
-                    isUrgent,
+            return sendToRelayServer(isAndroid,
+                    deviceTokenHex,
+                    encryptedMessageHex,
                     new AtomicInteger(0))
                     .exceptionallyCompose(throwable -> {
                         if (throwable instanceof RetryException retryException) {
-                            return sendToRelayServer(encryptedPayload,
-                                    isUrgent,
+                            return sendToRelayServer(isAndroid,
+                                    deviceTokenHex,
+                                    encryptedMessageHex,
                                     retryException.getRecursionDepth());
                         } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
-                            return sendToRelayServer(encryptedPayload,
-                                    isUrgent,
+                            return sendToRelayServer(isAndroid,
+                                    deviceTokenHex,
+                                    encryptedMessageHex,
                                     retryException.getRecursionDepth());
                         } else {
                             return CompletableFuture.failedFuture(throwable);
@@ -215,9 +209,10 @@ public class MobileNotificationRelayClient implements Service {
         return Optional.ofNullable(selectedProvider.get()).map(MobileNotificationRelayClient.Provider::getBaseUrl).orElse(Res.get("data.na"));
     }
 
-    private CompletableFuture<PushNotificationResult> sendToRelayServer(String encryptedPayload,
-                                                                        boolean isUrgent,
-                                                                        AtomicInteger recursionDepth) {
+    private CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
+                                                         String deviceTokenHex,
+                                                         String encryptedMessageHex,
+                                                         AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             return CompletableFuture.failedFuture(new RuntimeException("No block explorer provider available"));
         }
@@ -231,22 +226,19 @@ public class MobileNotificationRelayClient implements Service {
                         BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                         httpClient = Optional.of(client);
                         long ts = System.currentTimeMillis();
-
-                        Map<String, Object> requestBody = new HashMap<>();
-                        requestBody.put("encrypted", encryptedPayload);
-                        requestBody.put("isUrgent", isUrgent);
-
                         try {
-                            String requestJson = JsonMapperProvider.get().writeValueAsString(requestBody);
+                            String param = ENDPOINT + "?" +
+                                    "isAndroid=" + isAndroid +
+                                    "&token=" + deviceTokenHex +
+                                    "&msg=" + encryptedMessageHex;
 
-                            String param = provider.getApiPath() ;
-                          //  String param = provider.getApiPath() + provider.getTxPath() + txId;
-                            // log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
-                            String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                            log.info("Received tx lookup response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
+                            Pair<String, String> header = new Pair<>("User-Agent", userAgent);
+                            String result = client.get(param, Optional.of(header));
+
+                            log.info("Received response from {}/{} after {} ms", client.getBaseUrl(), param, System.currentTimeMillis() - ts);
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
-                            return JsonMapperProvider.get().readValue(json, PushNotificationResult.class);
+                            return result.equals(SUCCESS);
                         } catch (Exception e) {
                             shutdownHttpClient(client);
                             if (shutdownStarted) {
@@ -254,7 +246,7 @@ public class MobileNotificationRelayClient implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                           // log.warn("Encountered exception for TxId={} from provider {}", txId, provider.getBaseUrl(), rootCause);
+                            log.warn("Encountered exception from provider {}", provider.getBaseUrl(), rootCause);
 
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
@@ -279,14 +271,14 @@ public class MobileNotificationRelayClient implements Service {
                         }
                     }, POOL)
                     .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
-                    .thenCompose(tx -> {
-                        if (tx == null) {
+                    .thenCompose(result -> {
+                        if (result == null) {
                             return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
                         }
-                        return CompletableFuture.completedFuture(tx);
+                        return CompletableFuture.completedFuture(result);
                     });
         } catch (RejectedExecutionException e) {
-          //  log.error("Executor rejected requestTx task. TxId={}", txId, e);
+            log.error("Executor rejected task.", e);
             return CompletableFuture.failedFuture(e);
         }
     }

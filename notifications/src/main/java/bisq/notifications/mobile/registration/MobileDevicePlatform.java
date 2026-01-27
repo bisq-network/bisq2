@@ -26,11 +26,11 @@ public enum MobileDevicePlatform implements ProtoEnum {
     ANDROID;
 
     @Override
-    public bisq.notifications.protobuf.DeviceRegistrationPlatform toProtoEnum() {
-        return bisq.notifications.protobuf.DeviceRegistrationPlatform.valueOf(getProtobufEnumPrefix() + name());
+    public bisq.notifications.protobuf.MobileDevicePlatform toProtoEnum() {
+        return bisq.notifications.protobuf.MobileDevicePlatform.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.DeviceRegistrationPlatform proto) {
+    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.MobileDevicePlatform proto) {
         return ProtobufUtils.enumFromProto(MobileDevicePlatform.class, proto.name(), UNSPECIFIED);
     }
 }

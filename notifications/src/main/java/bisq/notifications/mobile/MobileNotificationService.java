@@ -19,11 +19,13 @@ package bisq.notifications.mobile;
 
 
 import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
-import bisq.bonded_roles.mobile_notification_relay.PushNotificationResult;
 import bisq.common.application.Service;
-import bisq.notifications.mobile.registration.DeviceRegistrationService;
+import bisq.common.json.JsonMapperProvider;
 import bisq.notifications.Notification;
+import bisq.notifications.mobile.registration.DeviceRegistrationService;
+import bisq.notifications.mobile.registration.MobileDevicePlatform;
 import bisq.persistence.PersistenceService;
+import bisq.security.mobile_notifications.MobileNotificationEncryption;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,11 +56,22 @@ public class MobileNotificationService implements Service {
     }
 
     public void dispatchNotification(Notification notification) {
-        //todo
-        String encryptedPayload = "todo";
-        String deviceId = "todo";
-        boolean isUrgent = true;
-        CompletableFuture<PushNotificationResult> result = mobileNotificationRelayClient.sendToRelayServer(encryptedPayload, deviceId, isUrgent);
+        deviceRegistrationService.getMobileDeviceProfiles()
+                .forEach(mobileDeviceProfile -> {
+                    boolean isAndroid = mobileDeviceProfile.getPlatform() == MobileDevicePlatform.ANDROID;
+                    String deviceTokenHex = mobileDeviceProfile.getDeviceToken();
+                    MobileNotificationPayload payload = new MobileNotificationPayload(notification.getId(),
+                            notification.getTitle(),
+                            notification.getMessage());
+                    try {
+                        String json = JsonMapperProvider.get().writeValueAsString(payload);
+                        String encryptedMessageHex = MobileNotificationEncryption.encrypt(mobileDeviceProfile.getPublicKeyBase64(), json);
+                        mobileNotificationRelayClient.sendToRelayServer(isAndroid,
+                                deviceTokenHex,
+                                encryptedMessageHex);
+                    } catch (Exception e) {
+                        log.error("Could not send notification to relay server", e);
+                    }
+                });
     }
-
 }

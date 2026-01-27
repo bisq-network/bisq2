@@ -105,18 +105,13 @@ public class DevicesRestApi extends RestApiBase {
         }
 
         try {
-            boolean registered = deviceRegistrationService.register(
+           deviceRegistrationService.register(
                     deviceId,
                     deviceToken,
                     publicKeyBase64,
                     deviceDescriptor,
                     platform
             );
-
-            if (!registered) {
-                log.error("Device registration failed: deviceId={}", deviceId);
-                return buildResponse(Response.Status.INTERNAL_SERVER_ERROR, "Failed to register device");
-            }
 
             log.info("Device registered: deviceId={}, platform={}", deviceId, platform);
             return buildOkResponse("Device registered successfully");
@@ -145,9 +140,9 @@ public class DevicesRestApi extends RestApiBase {
         }
 
         try {
-            boolean removed = deviceRegistrationService.unregister(deviceId);
+            boolean hadValue = deviceRegistrationService.unregister(deviceId);
 
-            if (!removed) {
+            if (!hadValue) {
                 return buildResponse(Response.Status.NOT_FOUND, "Device not found");
             }
 

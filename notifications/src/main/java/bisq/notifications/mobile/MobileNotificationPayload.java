@@ -15,25 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.notifications.mobile;
 
-package notifications;
-option java_package = "bisq.notifications.protobuf";
-option java_multiple_files = true;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-enum MobileDevicePlatform {
-  DEVICEREGISTRATIONPLATFORM_UNSPECIFIED = 0;
-  DEVICEREGISTRATIONPLATFORM_IOS = 1;
-  DEVICEREGISTRATIONPLATFORM_ANDROID = 2;
-}
-message MobileDeviceProfile {
-  string deviceId = 1;
-  string deviceToken = 2;
-  string publicKeyBase64 = 3;
-  string deviceDescriptor = 4;
-  MobileDevicePlatform platform = 5;
-}
+@Getter
+@EqualsAndHashCode
+public class MobileNotificationPayload {
+    private final String id;
+    private final String title;
+    private final String message;
 
-message DeviceRegistrationStore {
-  map<string, MobileDeviceProfile> deviceByDeviceId = 1;
+    @JsonCreator
+    public MobileNotificationPayload(
+            @JsonProperty("id") String id,
+            @JsonProperty("title") String title,
+            @JsonProperty("message") String message
+    ) {
+        this.id = id;
+        this.title = title;
+        this.message = message;
+    }
 }
