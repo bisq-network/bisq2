@@ -54,7 +54,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
-import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
+import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.tls.TlsException;

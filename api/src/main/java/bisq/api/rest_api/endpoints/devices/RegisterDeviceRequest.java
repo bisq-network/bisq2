@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.endpoints.devices;
 
-import bisq.notifications.mobile_push.registration.DeviceRegistrationPlatform;
+import bisq.notifications.mobile.registration.DeviceRegistrationPlatform;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

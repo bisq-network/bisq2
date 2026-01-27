@@ -19,8 +19,8 @@ package bisq.api.rest_api.endpoints.devices;
 
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.common.util.StringUtils;
-import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
-import bisq.notifications.mobile_push.registration.DeviceRegistrationPlatform;
+import bisq.notifications.mobile.registration.DeviceRegistrationService;
+import bisq.notifications.mobile.registration.DeviceRegistrationPlatform;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

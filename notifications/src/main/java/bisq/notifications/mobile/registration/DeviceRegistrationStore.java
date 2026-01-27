@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.notifications.mobile_push.registration;
+package bisq.notifications.mobile.registration;
 
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;

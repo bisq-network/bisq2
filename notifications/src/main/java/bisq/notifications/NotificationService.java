@@ -19,7 +19,7 @@ package bisq.notifications;
 
 
 import bisq.common.application.Service;
-import bisq.notifications.mobile_push.registration.DeviceRegistrationService;
+import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.notifications.system.SystemNotification;
 import bisq.notifications.system.SystemNotificationService;
