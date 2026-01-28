@@ -46,10 +46,12 @@ import java.util.stream.Collectors;
 public interface Proto {
     Message.Builder getBuilder(boolean serializeForHash);
 
-    Message toProto(boolean serializeForHash);
-
     default Message completeProto() {
         return toProto(false);
+    }
+
+    default Message toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     // TODO We should avoid the unchecked cast as it relies only on convention that the caller
@@ -57,7 +59,7 @@ public interface Proto {
     // Only solution would be to either do the cast at the caller, or add the class type as parameter.
     // Both increase boiler plate code...
     default <T extends Message> T unsafeToProto(boolean serializeForHash) {
-        Message message = resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+        Message message = resolveProto(serializeForHash);
         try {
             // noinspection unchecked
             return (T) message;
@@ -68,20 +70,24 @@ public interface Proto {
         }
     }
 
+    default Message resolveProto(boolean serializeForHash) {
+        return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+    }
+
     default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
         return serializeForHash ? clearAnnotatedFields(builder) : builder;
     }
 
     default byte[] serialize() {
-        return unsafeToProto(false).toByteArray();
+        return resolveProto(false).toByteArray();
     }
 
     default byte[] serializeForHash() {
-        return unsafeToProto(true).toByteArray();
+        return resolveProto(true).toByteArray();
     }
 
     default int getSerializedSize() {
-        return unsafeToProto(false).getSerializedSize();
+        return resolveProto(false).getSerializedSize();
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {
