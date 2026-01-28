@@ -124,7 +124,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public bisq.user.protobuf.AuthorizedProofOfBurnData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {

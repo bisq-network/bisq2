@@ -135,7 +135,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) {

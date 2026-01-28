@@ -52,7 +52,7 @@ public final class ContactListStore implements PersistableStore<ContactListStore
 
     @Override
     public bisq.user.protobuf.ContactListStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ContactListStore fromProto(bisq.user.protobuf.ContactListStore proto) {

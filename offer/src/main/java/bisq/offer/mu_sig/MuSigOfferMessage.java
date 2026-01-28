@@ -55,7 +55,7 @@ public final class MuSigOfferMessage implements DistributedData {
 
     @Override
     public bisq.offer.protobuf.MuSigOfferMessage toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto) {

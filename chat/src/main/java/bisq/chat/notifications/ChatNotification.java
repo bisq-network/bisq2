@@ -119,7 +119,7 @@ public class ChatNotification implements SystemNotification, PersistableProto {
 
     @Override
     public bisq.chat.protobuf.ChatNotification toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto) {

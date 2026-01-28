@@ -60,7 +60,7 @@ public final class TxDto implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.TxDto toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static TxDto fromProto(bisq.bridge.protobuf.TxDto proto) {

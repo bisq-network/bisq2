@@ -71,7 +71,7 @@ public final class MarketPrice implements NetworkProto {
 
     @Override
     public bisq.bonded_roles.protobuf.MarketPrice toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {

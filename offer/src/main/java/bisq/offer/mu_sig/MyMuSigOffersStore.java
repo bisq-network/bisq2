@@ -75,7 +75,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
 
     @Override
     public bisq.offer.protobuf.MyMuSigOffersStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MyMuSigOffersStore fromProto(bisq.offer.protobuf.MyMuSigOffersStore proto) {

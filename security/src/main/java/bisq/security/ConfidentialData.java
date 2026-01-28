@@ -65,7 +65,7 @@ public final class ConfidentialData implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.ConfidentialData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

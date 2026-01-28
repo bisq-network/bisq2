@@ -79,7 +79,7 @@ public final class ContactListEntry implements PersistableProto {
 
     @Override
     public bisq.user.protobuf.ContactListEntry toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto) {

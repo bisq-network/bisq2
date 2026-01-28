@@ -48,7 +48,7 @@ public final class SwapTxSignatureRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.SwapTxSignatureRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static SwapTxSignatureRequest fromProto(bisq.trade.protobuf.SwapTxSignatureRequest proto) {

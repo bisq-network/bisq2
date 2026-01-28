@@ -49,7 +49,7 @@ public final class TxConfirmationStatus implements Proto {
 
     @Override
     public bisq.trade.protobuf.TxConfirmationStatus toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static TxConfirmationStatus fromProto(bisq.trade.protobuf.TxConfirmationStatus proto) {

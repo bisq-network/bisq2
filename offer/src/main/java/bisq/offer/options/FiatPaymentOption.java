@@ -56,7 +56,7 @@ public final class FiatPaymentOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto) {

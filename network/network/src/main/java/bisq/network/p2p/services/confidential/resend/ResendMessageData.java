@@ -96,7 +96,7 @@ public final class ResendMessageData implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.ResendMessageData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

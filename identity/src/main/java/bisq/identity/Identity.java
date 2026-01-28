@@ -55,7 +55,7 @@ public final class Identity implements PersistableProto {
 
     @Override
     public bisq.identity.protobuf.Identity toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {

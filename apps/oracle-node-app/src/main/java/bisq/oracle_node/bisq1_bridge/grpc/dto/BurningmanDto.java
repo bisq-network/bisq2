@@ -50,7 +50,7 @@ public final class BurningmanDto implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BurningmanDto toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BurningmanDto fromProto(bisq.bridge.protobuf.BurningmanDto proto) {

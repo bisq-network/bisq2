@@ -49,7 +49,7 @@ public class MuSigOpenTradeChannelStore implements PersistableStore<MuSigOpenTra
 
     @Override
     public bisq.chat.protobuf.MuSigOpenTradeChannelStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MuSigOpenTradeChannelStore fromProto(bisq.chat.protobuf.MuSigOpenTradeChannelStore proto) {

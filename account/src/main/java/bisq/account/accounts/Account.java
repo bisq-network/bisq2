@@ -83,7 +83,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     @Override
     public bisq.account.protobuf.Account toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {

@@ -112,7 +112,7 @@ public final class NonceSharesMessage implements Proto {
 
     @Override
     public bisq.trade.protobuf.NonceSharesMessage toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto) {

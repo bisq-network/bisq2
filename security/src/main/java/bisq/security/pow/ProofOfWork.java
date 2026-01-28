@@ -79,7 +79,7 @@ public final class ProofOfWork implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.ProofOfWork toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

@@ -64,7 +64,7 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
 
     @Override
     public bisq.trade.protobuf.MuSigTradeStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto) {

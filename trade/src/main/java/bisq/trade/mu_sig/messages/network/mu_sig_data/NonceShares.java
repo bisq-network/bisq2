@@ -114,7 +114,7 @@ public final class NonceShares implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.NonceShares toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static NonceShares fromProto(bisq.trade.protobuf.NonceShares proto) {

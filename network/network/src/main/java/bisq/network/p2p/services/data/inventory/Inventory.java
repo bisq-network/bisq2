@@ -77,7 +77,7 @@ public final class Inventory implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.Inventory toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

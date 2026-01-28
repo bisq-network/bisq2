@@ -49,7 +49,7 @@ public final class ReputationOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {

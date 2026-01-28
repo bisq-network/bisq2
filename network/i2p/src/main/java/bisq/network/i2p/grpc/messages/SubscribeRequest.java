@@ -42,7 +42,7 @@ public final class SubscribeRequest implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.SubscribeRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

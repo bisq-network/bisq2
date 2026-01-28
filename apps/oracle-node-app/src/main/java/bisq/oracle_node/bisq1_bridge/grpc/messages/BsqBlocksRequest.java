@@ -45,7 +45,7 @@ public final class BsqBlocksRequest implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BsqBlocksRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

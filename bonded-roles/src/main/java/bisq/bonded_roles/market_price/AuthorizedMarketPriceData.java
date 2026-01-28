@@ -97,7 +97,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedMarketPriceData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto) {

@@ -98,7 +98,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
 
     @Override
     public bisq.user.protobuf.AuthorizedTimestampData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {

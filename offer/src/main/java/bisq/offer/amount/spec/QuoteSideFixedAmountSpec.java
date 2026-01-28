@@ -48,7 +48,7 @@ public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements Q
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {

@@ -48,7 +48,7 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
 
     @Override
     public bisq.chat.protobuf.CommonPublicChatChannelStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto) {

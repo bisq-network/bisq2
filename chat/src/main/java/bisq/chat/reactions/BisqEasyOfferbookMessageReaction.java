@@ -56,7 +56,7 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
 
     @Override
     public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

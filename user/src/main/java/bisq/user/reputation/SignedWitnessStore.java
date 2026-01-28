@@ -53,7 +53,7 @@ final class SignedWitnessStore implements PersistableStore<SignedWitnessStore> {
 
     @Override
     public bisq.user.protobuf.SignedWitnessStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static SignedWitnessStore fromProto(bisq.user.protobuf.SignedWitnessStore proto) {

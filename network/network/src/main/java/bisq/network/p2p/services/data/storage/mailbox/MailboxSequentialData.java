@@ -97,7 +97,7 @@ public final class MailboxSequentialData implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.MailboxSequentialData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

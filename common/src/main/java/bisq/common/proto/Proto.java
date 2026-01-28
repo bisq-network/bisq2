@@ -56,7 +56,7 @@ public interface Proto {
     // has defined the correct type. As we do not have the type as method input we cannot infer the type with generics.
     // Only solution would be to either do the cast at the caller, or add the class type as parameter.
     // Both increase boiler plate code...
-    default <T extends Message> T resolveProto(boolean serializeForHash) {
+    default <T extends Message> T unsafeToProto(boolean serializeForHash) {
         Message message = resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
         try {
             // noinspection unchecked
@@ -73,15 +73,15 @@ public interface Proto {
     }
 
     default byte[] serialize() {
-        return resolveProto(false).toByteArray();
+        return unsafeToProto(false).toByteArray();
     }
 
     default byte[] serializeForHash() {
-        return resolveProto(true).toByteArray();
+        return unsafeToProto(true).toByteArray();
     }
 
     default int getSerializedSize() {
-        return resolveProto(false).getSerializedSize();
+        return unsafeToProto(false).getSerializedSize();
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {

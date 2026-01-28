@@ -103,7 +103,7 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
 
     @Override
     public bisq.burningman.protobuf.AuthorizedBurningmanListByBlock toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedBurningmanListByBlock fromProto(bisq.burningman.protobuf.AuthorizedBurningmanListByBlock proto) {

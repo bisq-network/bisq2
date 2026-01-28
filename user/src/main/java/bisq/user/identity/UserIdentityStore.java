@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -120,7 +119,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
 
     @Override
     public bisq.user.protobuf.UserIdentityStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {

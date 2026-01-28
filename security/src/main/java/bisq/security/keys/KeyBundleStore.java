@@ -62,7 +62,7 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
 
     @Override
     public bisq.security.protobuf.KeyBundleStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

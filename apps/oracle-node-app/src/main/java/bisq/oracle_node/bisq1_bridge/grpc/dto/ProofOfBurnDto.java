@@ -50,7 +50,7 @@ public final class ProofOfBurnDto implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.ProofOfBurnDto toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ProofOfBurnDto fromProto(bisq.bridge.protobuf.ProofOfBurnDto proto) {

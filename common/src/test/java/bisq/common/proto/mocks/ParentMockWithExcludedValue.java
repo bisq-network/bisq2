@@ -35,7 +35,7 @@ public final class ParentMockWithExcludedValue implements Parent {
 
     @Override
     public bisq.common.test.protobuf.Parent toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

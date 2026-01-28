@@ -45,7 +45,7 @@ public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements Ba
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {

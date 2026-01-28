@@ -49,7 +49,7 @@ public final class CloseTradeRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.CloseTradeRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static CloseTradeRequest fromProto(bisq.trade.protobuf.CloseTradeRequest proto) {

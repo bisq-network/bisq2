@@ -81,7 +81,7 @@ public final class AccountOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto) {

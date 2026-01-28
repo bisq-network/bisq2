@@ -157,7 +157,7 @@ public final class Coin extends Monetary {
 
     @Override
     public bisq.common.protobuf.Monetary toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

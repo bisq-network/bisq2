@@ -98,7 +98,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     @Override
     public bisq.user.protobuf.AuthorizedAccountAgeData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto) {

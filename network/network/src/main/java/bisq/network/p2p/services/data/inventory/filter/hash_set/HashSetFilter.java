@@ -69,7 +69,7 @@ public final class HashSetFilter extends InventoryFilter {
 
     @Override
     public bisq.network.protobuf.InventoryFilter toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

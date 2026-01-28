@@ -69,7 +69,7 @@ public final class BondedReputationDto implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BondedReputationDto toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {

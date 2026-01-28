@@ -70,7 +70,7 @@ public final class FeeOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {

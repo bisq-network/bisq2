@@ -53,7 +53,7 @@ public final class UserIdentity implements PersistableProto {
 
     @Override
     public bisq.user.protobuf.UserIdentity toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static UserIdentity fromProto(bisq.user.protobuf.UserIdentity proto) {

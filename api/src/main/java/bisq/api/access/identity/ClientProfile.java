@@ -36,7 +36,7 @@ public final class ClientProfile implements PersistableProto {
 
     @Override
     public bisq.api.protobuf.ClientProfile toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

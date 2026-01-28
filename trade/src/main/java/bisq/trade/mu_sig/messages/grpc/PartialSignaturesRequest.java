@@ -55,7 +55,7 @@ public final class PartialSignaturesRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.PartialSignaturesRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto) {
