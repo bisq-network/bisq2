@@ -70,7 +70,7 @@ public interface Proto {
         }
     }
 
-    default Message resolveProto(boolean serializeForHash) {
+    private Message resolveProto(boolean serializeForHash) {
         return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
@@ -94,7 +94,7 @@ public interface Proto {
         completeProto().writeDelimitedTo(outputStream);
     }
 
-    default Set<String> getExcludedFields() {
+    private Set<String> getExcludedFields() {
         return Arrays.stream(getAllDeclaredFields(getClass()))
                 .peek(field -> field.setAccessible(true))
                 .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
@@ -117,7 +117,7 @@ public interface Proto {
      * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
-    default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
+    private <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
         /*if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
