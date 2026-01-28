@@ -29,7 +29,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class RouterInfoResponse implements Proto {
+public final class RouterInfoResponse implements Proto {
 
     private final ProcessState processState;
     private final NetworkState networkState;
@@ -53,7 +53,7 @@ public class RouterInfoResponse implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.RouterInfoResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -47,7 +47,7 @@ public final class PubKeySharesResponse implements Proto {
 
     @Override
     public bisq.trade.protobuf.PubKeySharesResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static PubKeySharesResponse fromProto(bisq.trade.protobuf.PubKeySharesResponse proto) {

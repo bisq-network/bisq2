@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class SubscribeRequest implements Proto {
+public final class SubscribeRequest implements Proto {
     @Getter
     private final Topic topic;
 
@@ -42,7 +42,7 @@ public class SubscribeRequest implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.SubscribeRequest toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

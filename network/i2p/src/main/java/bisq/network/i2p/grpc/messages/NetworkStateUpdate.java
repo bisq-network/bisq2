@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class NetworkStateUpdate implements Proto {
+public final class NetworkStateUpdate implements Proto {
     @Getter
     private final NetworkState value;
 
@@ -43,7 +43,7 @@ public class NetworkStateUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.NetworkStateUpdate toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

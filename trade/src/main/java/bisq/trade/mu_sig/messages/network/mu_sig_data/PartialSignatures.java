@@ -101,7 +101,7 @@ public final class PartialSignatures implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.PartialSignatures toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto) {

@@ -11,7 +11,7 @@ import java.util.Objects;
 
 @Slf4j
 @ToString
-public class TorKeyPair implements PersistableProto {
+public final class TorKeyPair implements PersistableProto {
     @ToString.Exclude
     private final byte[] privateKey;
     @ToString.Exclude

@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class TunnelInfoUpdate implements Proto {
+public final class TunnelInfoUpdate implements Proto {
     @Getter
     private final TunnelInfo value;
 
@@ -43,7 +43,7 @@ public class TunnelInfoUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.TunnelInfoUpdate toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class ClientProfile implements PersistableProto {
+public final class ClientProfile implements PersistableProto {
     private final String clientId;
     private final String clientSecret;
     private final String clientName;

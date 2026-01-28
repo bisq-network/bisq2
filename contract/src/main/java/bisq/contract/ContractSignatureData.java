@@ -32,7 +32,7 @@ import java.util.Objects;
 
 @Slf4j
 @Getter
-public class ContractSignatureData implements NetworkProto {
+public final class ContractSignatureData implements NetworkProto {
     private final byte[] contractHash;
     private final byte[] signature;
     private final PublicKey publicKey;

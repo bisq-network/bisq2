@@ -43,7 +43,7 @@ public final class SignedWitnessDateResponse implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.SignedWitnessDateResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static SignedWitnessDateResponse fromProto(bisq.bridge.protobuf.SignedWitnessDateResponse proto) {

@@ -68,7 +68,7 @@ public final class NonceSharesRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.NonceSharesRequest toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static NonceSharesRequest fromProto(bisq.trade.protobuf.NonceSharesRequest proto) {

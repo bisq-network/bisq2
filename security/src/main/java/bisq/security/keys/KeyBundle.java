@@ -12,7 +12,7 @@ import java.util.Objects;
 @Slf4j
 @ToString
 @Getter
-public class KeyBundle implements PersistableProto {
+public final class KeyBundle implements PersistableProto {
     @ToString.Exclude
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;

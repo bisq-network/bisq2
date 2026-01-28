@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class ResendMessageData implements NetworkProto {
+public final class ResendMessageData implements NetworkProto {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(2);
 
     public static ResendMessageData from(ResendMessageData data, MessageDeliveryStatus messageDeliveryStatus) {

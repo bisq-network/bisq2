@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class ProcessStateUpdate implements Proto {
+public final class ProcessStateUpdate implements Proto {
     @Getter
     private final ProcessState value;
 
@@ -43,7 +43,7 @@ public class ProcessStateUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.ProcessStateUpdate toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -44,7 +44,7 @@ public final class DepositPsbt implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.DepositPsbt toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) {

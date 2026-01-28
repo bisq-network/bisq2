@@ -44,7 +44,7 @@ public final class BurningmanBlocksRequest implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BurningmanBlocksRequest toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

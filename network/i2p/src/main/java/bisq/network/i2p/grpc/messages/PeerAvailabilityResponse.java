@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class PeerAvailabilityResponse implements Proto {
+public final class PeerAvailabilityResponse implements Proto {
 
     private final boolean wasUnreachable;
     private final boolean isEstablished;
@@ -44,7 +44,7 @@ public class PeerAvailabilityResponse implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.PeerAvailabilityResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

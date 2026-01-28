@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class TunnelInfo implements Proto {
+public final class TunnelInfo implements Proto {
     private final int inboundClientTunnelCount;
     private final int outboundTunnelCount;
     private final int outboundClientTunnelCount;
@@ -47,7 +47,7 @@ public class TunnelInfo implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.TunnelInfo toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

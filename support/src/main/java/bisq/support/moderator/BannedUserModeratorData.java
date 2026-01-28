@@ -57,7 +57,7 @@ public final class BannedUserModeratorData implements PersistableProto {
 
     @Override
     public bisq.support.protobuf.BannedUserModeratorData toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static BannedUserModeratorData fromProto(bisq.support.protobuf.BannedUserModeratorData proto) {

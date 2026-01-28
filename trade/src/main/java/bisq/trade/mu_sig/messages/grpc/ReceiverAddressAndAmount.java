@@ -41,7 +41,7 @@ public final class ReceiverAddressAndAmount implements Proto {
 
     @Override
     public bisq.trade.protobuf.ReceiverAddressAndAmount toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static ReceiverAddressAndAmount fromProto(bisq.trade.protobuf.ReceiverAddressAndAmount proto) {
