@@ -67,7 +67,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long marketPrice) {
         this(takeOfferDate,
                 offer,
-                TradeProtocolType.BISQ_EASY,
+                TradeProtocolType.MU_SIG,
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
