@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 @Slf4j
-public class I2PKeyPair implements PersistableProto {
+public final class I2PKeyPair implements PersistableProto {
     // fullKeyMaterial only contains private and public key material
     private final byte[] identityBytes;
 

@@ -24,7 +24,7 @@ import lombok.Getter;
 import java.util.Set;
 
 // Just a wrapper for easier proto handling of a map with a hashset as value
-public class PermissionSet implements PersistableProto {
+public final class PermissionSet implements PersistableProto {
     @Getter
     private final Set<Permission> permissions;
 

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class PeerAvailabilityResponse implements Proto {
+public final class PeerAvailabilityResponse implements Proto {
 
     private final boolean wasUnreachable;
     private final boolean isEstablished;

@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class TunnelInfoUpdate implements Proto {
+public final class TunnelInfoUpdate implements Proto {
     @Getter
     private final TunnelInfo value;
 

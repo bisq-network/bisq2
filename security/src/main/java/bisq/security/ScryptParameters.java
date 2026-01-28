@@ -28,7 +28,7 @@ import java.util.Arrays;
 @Slf4j
 @Getter
 @ToString
-public class ScryptParameters implements PersistableProto {
+public final class ScryptParameters implements PersistableProto {
     public static final int KEY_LENGTH = 32; // 256 bits.
 
     private final byte[] salt;

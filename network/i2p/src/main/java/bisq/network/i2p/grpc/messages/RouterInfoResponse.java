@@ -29,7 +29,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class RouterInfoResponse implements Proto {
+public final class RouterInfoResponse implements Proto {
 
     private final ProcessState processState;
     private final NetworkState networkState;

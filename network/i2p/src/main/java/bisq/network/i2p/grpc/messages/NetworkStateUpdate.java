@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public class NetworkStateUpdate implements Proto {
+public final class NetworkStateUpdate implements Proto {
     @Getter
     private final NetworkState value;
 

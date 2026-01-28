@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class TunnelInfo implements Proto {
+public final class TunnelInfo implements Proto {
     private final int inboundClientTunnelCount;
     private final int outboundTunnelCount;
     private final int outboundClientTunnelCount;
