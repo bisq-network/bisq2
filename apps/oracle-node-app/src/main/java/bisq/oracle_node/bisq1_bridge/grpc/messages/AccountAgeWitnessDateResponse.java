@@ -42,7 +42,7 @@ public final class AccountAgeWitnessDateResponse implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.AccountAgeWitnessDateResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static AccountAgeWitnessDateResponse fromProto(bisq.bridge.protobuf.AccountAgeWitnessDateResponse proto) {

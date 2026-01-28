@@ -47,7 +47,7 @@ public class TunnelInfo implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.TunnelInfo toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

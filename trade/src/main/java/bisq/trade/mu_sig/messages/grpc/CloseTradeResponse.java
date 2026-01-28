@@ -39,7 +39,7 @@ public final class CloseTradeResponse implements Proto {
 
     @Override
     public bisq.trade.protobuf.CloseTradeResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto) {

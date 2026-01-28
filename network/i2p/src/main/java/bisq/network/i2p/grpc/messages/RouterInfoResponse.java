@@ -53,7 +53,7 @@ public class RouterInfoResponse implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.RouterInfoResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

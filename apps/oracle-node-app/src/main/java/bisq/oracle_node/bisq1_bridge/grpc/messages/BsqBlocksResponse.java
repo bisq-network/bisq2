@@ -52,7 +52,7 @@ public final class BsqBlocksResponse implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BsqBlocksResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static BsqBlocksResponse fromProto(bisq.bridge.protobuf.BsqBlocksResponse proto) {

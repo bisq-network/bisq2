@@ -55,7 +55,7 @@ public final class SwapTxSignature implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.SwapTxSignature toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     public static SwapTxSignature fromProto(bisq.trade.protobuf.SwapTxSignature proto) {

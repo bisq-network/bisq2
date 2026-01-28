@@ -43,7 +43,7 @@ public class NetworkStateUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.NetworkStateUpdate toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override

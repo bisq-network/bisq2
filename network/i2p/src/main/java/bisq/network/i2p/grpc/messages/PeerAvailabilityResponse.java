@@ -44,7 +44,7 @@ public class PeerAvailabilityResponse implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.PeerAvailabilityResponse toProto(boolean serializeForHash) {
-        return getBuilder(serializeForHash).build();
+        return resolveProto(serializeForHash);
     }
 
     @Override
