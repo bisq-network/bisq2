@@ -20,7 +20,10 @@ package bisq.desktop.main.content.authorized_role.mediator;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
@@ -79,7 +82,8 @@ public class MediationCaseHeader {
         @Getter
         private final View view;
         private final Model model;
-        private final BisqEasyOpenTradeChannelService channelService;
+        private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+        private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
         private final MediatorService mediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
@@ -90,7 +94,8 @@ public class MediationCaseHeader {
             this.onCloseHandler = onCloseHandler;
             this.onReOpenHandler = onReOpenHandler;
             ChatService chatService = serviceProvider.getChatService();
-            channelService = chatService.getBisqEasyOpenTradeChannelService();
+            bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+            muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
             mediatorService = serviceProvider.getSupportService().getMediatorService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
@@ -171,7 +176,7 @@ public class MediationCaseHeader {
         private void doLeave() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                PrivateGroupChatChannel<?> channel = listItem.getChannel();
                 if (channel != null) {
                     leavePrivateChatManager.leaveChannel(channel);
                 }
@@ -181,9 +186,13 @@ public class MediationCaseHeader {
         private void doClose() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                PrivateGroupChatChannel<?> channel = listItem.getChannel();
                 if (channel != null) {
-                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
+                    if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+                        bisqEasyOpenTradeChannelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), bisqEasyOpenTradeChannel);
+                    } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+                        muSigOpenTradeChannelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), muSigOpenTradeChannel);
+                    }
                 }
                 mediatorService.closeMediationCase(listItem.getMediationCase());
                 onCloseHandler.run();
@@ -193,9 +202,14 @@ public class MediationCaseHeader {
         private void doReOpen() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                PrivateGroupChatChannel<?> channel = listItem.getChannel();
                 if (channel != null) {
-                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
+                    if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+                        bisqEasyOpenTradeChannelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), bisqEasyOpenTradeChannel);
+                    } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+                        muSigOpenTradeChannelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), muSigOpenTradeChannel);
+                    }
+
                 }
                 mediatorService.reOpenMediationCase(listItem.getMediationCase());
                 onReOpenHandler.run();

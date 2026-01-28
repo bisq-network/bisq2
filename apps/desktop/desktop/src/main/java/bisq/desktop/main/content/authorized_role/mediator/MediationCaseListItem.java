@@ -18,22 +18,28 @@
 package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Pin;
+import bisq.contract.Contract;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.table.ActivatableTableItem;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.Offer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.MediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -54,7 +60,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
     @EqualsAndHashCode.Include
     private final MediationCase mediationCase;
     @EqualsAndHashCode.Include
-    private final BisqEasyOpenTradeChannel channel;
+    private final PrivateGroupChatChannel<?> channel;
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
 
@@ -72,15 +78,25 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
     MediationCaseListItem(ServiceProvider serviceProvider,
                           MediationCase mediationCase,
-                          BisqEasyOpenTradeChannel channel) {
+                          PrivateGroupChatChannel<?> channel) {
         this.mediationCase = mediationCase;
         this.channel = channel;
 
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        BisqEasyContract contract = mediationCase.getMediationRequest().getContract();
-        BisqEasyOffer offer = contract.getOffer();
-        List<UserProfile> traders = new ArrayList<>(channel.getTraders());
+        Contract<?> contract = mediationCase.getMediationRequest().getContract();
+        Offer<?, ?> offer = contract.getOffer();
+        List<UserProfile> traders;
+        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            traders = new ArrayList<>(bisqEasyOpenTradeChannel.getTraders());
+            tradeId = bisqEasyOpenTradeChannel.getTradeId();
+        } else if (channel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            traders = new ArrayList<>(muSigOpenTradeChannel.getTraders());
+            tradeId = muSigOpenTradeChannel.getTradeId();
+        } else {
+            throw new IllegalArgumentException("Unsupported channel type: " + channel.getClass().getName());
+        }
+
         offer.getMakerNetworkId().getId();
 
         Trader trader1 = new Trader(traders.get(0), reputationService);
@@ -94,20 +110,37 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         }
         isMakerRequester = mediationCase.getMediationRequest().getRequester().equals(maker.userProfile);
 
-        tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
         directionalTitle = offer.getDirection().getDirectionalTitle();
         date = contract.getTakeOfferDate();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = offer.getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(contract).getValue();
-        priceString = BisqEasyTradeFormatter.formatPriceWithCode(contract);
-        baseAmount = contract.getBaseSideAmount();
-        baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(contract);
-        quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(contract);
-        paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+        if (contract instanceof BisqEasyContract bisqEasyContract) {
+            price = BisqEasyTradeUtils.getPriceQuote(bisqEasyContract).getValue();
+            priceString = BisqEasyTradeFormatter.formatPriceWithCode(bisqEasyContract);
+            baseAmount = bisqEasyContract.getBaseSideAmount();
+            baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(bisqEasyContract);
+            quoteAmount = bisqEasyContract.getQuoteSideAmount();
+            quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(bisqEasyContract);
+            paymentMethod = bisqEasyContract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+        } else if (contract instanceof MuSigContract muSigContract) {
+            price = MuSigTradeUtils.getPriceQuote(muSigContract).getValue();
+            priceString = MuSigTradeFormatter.formatPriceWithCode(muSigContract);
+            baseAmount = muSigContract.getBaseSideAmount();
+            baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(muSigContract);
+            quoteAmount = muSigContract.getQuoteSideAmount();
+            quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(muSigContract);
+            paymentMethod = muSigContract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+        } else {
+            price = 0L;
+            priceString = Res.get("data.na");
+            baseAmount = 0L;
+            baseAmountString = Res.get("data.na");
+            quoteAmount = 0L;
+            quoteAmountString = Res.get("data.na");
+            paymentMethod = Res.get("data.na");
+        }
 
         onActivate();
     }

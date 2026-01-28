@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
@@ -46,16 +48,22 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     private final VBox centerVBox, chatVBox;
     private final Button toggleChatWindowButton;
     private final MediationTableView mediationTableView;
-    private Subscription noOpenCasesPin, chatWindowPin;
+    private Subscription noOpenCasesPin, chatWindowPin, selectedItemPin;
+
+    private final VBox bisqEasyChatMessagesComponent;
+    private final VBox muSigChatMessagesComponent;
 
     public MediatorView(MediatorModel model,
                         MediatorController controller,
                         HBox mediationCaseHeader,
-                        VBox chatMessagesComponent) {
+                        VBox bisqEasyChatMessagesComponent,
+                        VBox muSigChatMessagesComponent) {
 
         super(new ScrollPane(), model, controller);
 
         mediationTableView = new MediationTableView(model, controller);
+        this.bisqEasyChatMessagesComponent = bisqEasyChatMessagesComponent;
+        this.muSigChatMessagesComponent = muSigChatMessagesComponent;
 
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
@@ -64,12 +72,12 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         toggleChatWindowButton.setStyle("-fx-padding: 5 16 5 16");
         mediationCaseHeader.getChildren().add(toggleChatWindowButton);
 
-        chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
+        bisqEasyChatMessagesComponent.setMinHeight(200);
+        bisqEasyChatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
 
-        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatVBox = new VBox(mediationCaseHeader, Layout.hLine(), chatMessagesComponent);
+        VBox.setMargin(bisqEasyChatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(bisqEasyChatMessagesComponent, Priority.ALWAYS);
+        chatVBox = new VBox(mediationCaseHeader, Layout.hLine());//, bisqEasyChatMessagesComponent);
         chatVBox.setAlignment(Pos.CENTER);
         chatVBox.getStyleClass().add("bisq-easy-container");
 
@@ -94,6 +102,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         });
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
         toggleChatWindowButton.setOnAction(e -> controller.onToggleChatWindow());
+
+        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
     }
 
     @Override
@@ -101,7 +111,32 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         mediationTableView.dispose();
         noOpenCasesPin.unsubscribe();
         chatWindowPin.unsubscribe();
+        selectedItemPin.unsubscribe();
         toggleChatWindowButton.setOnAction(null);
+    }
+
+    private void selectedItemChanged(MediationCaseListItem selectedItem) {
+        if (selectedItem == null) {
+            centerVBox.getChildren().remove(bisqEasyChatMessagesComponent);
+            centerVBox.getChildren().remove(muSigChatMessagesComponent);
+            return;
+        }
+        if (selectedItem.getChannel() instanceof BisqEasyOpenTradeChannel) {
+            log.info("Selected mediation case is Bisq Easy Open Trade Channel");
+            if (!chatVBox.getChildren().contains(bisqEasyChatMessagesComponent)) {
+                chatVBox.getChildren().add(bisqEasyChatMessagesComponent);
+            }
+            chatVBox.getChildren().remove(muSigChatMessagesComponent);
+        } else if (selectedItem.getChannel() instanceof MuSigOpenTradeChannel) {
+            log.info("Selected mediation case is MuSig Open Trade Channel");
+            if (!chatVBox.getChildren().contains(muSigChatMessagesComponent)) {
+                chatVBox.getChildren().add(muSigChatMessagesComponent);
+            }
+            chatVBox.getChildren().remove(bisqEasyChatMessagesComponent);
+        } else {
+            centerVBox.getChildren().remove(bisqEasyChatMessagesComponent);
+            centerVBox.getChildren().remove(muSigChatMessagesComponent);
+        }
     }
 
     private void chatWindowChanged(Stage chatWindow) {

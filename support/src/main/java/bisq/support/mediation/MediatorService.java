@@ -24,9 +24,13 @@ import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
@@ -34,8 +38,8 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -61,6 +65,7 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
     private final NetworkService networkService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
 
@@ -75,6 +80,7 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
         bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
     }
 
 
@@ -160,42 +166,88 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
             log.warn("Message ignored as sender is banned");
             return;
         }
-        BisqEasyContract contract = mediationRequest.getContract();
-        findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
-            String tradeId = mediationRequest.getTradeId();
-            UserProfile peer = mediationRequest.getPeer();
-            List<BisqEasyOpenTradeMessage> chatMessages = mediationRequest.getChatMessages();
-            BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
-                    tradeId,
-                    contract.getOffer(),
-                    myUserIdentity,
-                    requester,
-                    peer
-            );
 
-            bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
+        if (mediationRequest.getContract() instanceof BisqEasyContract contract) {
+            findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
+                String tradeId = mediationRequest.getTradeId();
+                UserProfile peer = mediationRequest.getPeer();
+                List<BisqEasyOpenTradeMessage> chatMessages = mediationRequest.getChatMessages().stream()
+                        .filter(BisqEasyOpenTradeMessage.class::isInstance)
+                        .map(BisqEasyOpenTradeMessage.class::cast)
+                        .toList();
+                BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
+                        tradeId,
+                        contract.getOffer(),
+                        myUserIdentity,
+                        requester,
+                        peer
+                );
 
-            chatMessages.forEach(chatMessage ->
-                    bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
+                bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
 
-            // We apply the mediationCase after the channel is set up as clients will expect a channel.
-            MediationCase mediationCase = new MediationCase(mediationRequest);
-            addNewMediationCase(mediationCase);
+                chatMessages.forEach(chatMessage ->
+                        bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
-            NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+                // We apply the mediationCase after the channel is set up as clients will expect a channel.
+                MediationCase mediationCase = new MediationCase(mediationRequest);
+                addNewMediationCase(mediationCase);
 
-            // Send to requester
-            networkService.confidentialSend(new MediatorsResponse(tradeId),
-                    requester.getNetworkId(),
-                    networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
+                NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
 
-            // Send to peer
-            networkService.confidentialSend(new MediatorsResponse(tradeId),
-                    peer.getNetworkId(),
-                    networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
-        });
+                // Send to requester
+                networkService.confidentialSend(new MediatorsResponse(tradeId),
+                        requester.getNetworkId(),
+                        networkIdWithKeyPair);
+                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
+
+                // Send to peer
+                networkService.confidentialSend(new MediatorsResponse(tradeId),
+                        peer.getNetworkId(),
+                        networkIdWithKeyPair);
+                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
+            });
+
+        } else if (mediationRequest.getContract() instanceof MuSigContract contract) {
+            findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
+                String tradeId = mediationRequest.getTradeId();
+                UserProfile peer = mediationRequest.getPeer();
+                List<MuSigOpenTradeMessage> chatMessages = mediationRequest.getChatMessages().stream()
+                        .filter(MuSigOpenTradeMessage.class::isInstance)
+                        .map(MuSigOpenTradeMessage.class::cast)
+                        .toList();
+                MuSigOpenTradeChannel channel = muSigOpenTradeChannelService.mediatorFindOrCreatesChannel(
+                        tradeId,
+                        myUserIdentity,
+                        requester,
+                        peer
+                );
+
+                muSigOpenTradeChannelService.setIsInMediation(channel, true);
+
+                chatMessages.forEach(chatMessage ->
+                        muSigOpenTradeChannelService.addMessage(chatMessage, channel));
+
+                // We apply the mediationCase after the channel is set up as clients will expect a channel.
+                MediationCase mediationCase = new MediationCase(mediationRequest);
+                addNewMediationCase(mediationCase);
+
+                NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+
+                // Send to requester
+                networkService.confidentialSend(new MediatorsResponse(tradeId),
+                        requester.getNetworkId(),
+                        networkIdWithKeyPair);
+                muSigOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
+
+                // Send to peer
+                networkService.confidentialSend(new MediatorsResponse(tradeId),
+                        peer.getNetworkId(),
+                        networkIdWithKeyPair);
+                muSigOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
+            });
+        } else {
+            log.warn("Mediation request with unsupported contract type received: {}", mediationRequest.getContract().getClass().getName());
+        }
     }
 
     private void addNewMediationCase(MediationCase mediationCase) {

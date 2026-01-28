@@ -17,17 +17,18 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.details;
 
-import bisq.desktop.navigation.NavigationTarget;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.contract.Contract;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.authorized_role.mediator.MediationCaseListItem;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.Offer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -36,6 +37,8 @@ import bisq.support.mediation.MediationCase;
 import bisq.support.mediation.MediationRequest;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -77,11 +80,10 @@ public class MediationCaseDetailsController extends NavigationController impleme
     @Override
     public void onActivate() {
         MediationCaseListItem mediationCaseListItem = model.getMediationCaseListItem();
-        BisqEasyOpenTradeChannel channel = mediationCaseListItem.getChannel();
         MediationCase mediationCase = mediationCaseListItem.getMediationCase();
         MediationRequest mediationRequest = mediationCase.getMediationRequest();
-        BisqEasyContract contract = mediationRequest.getContract();
-        BisqEasyOffer offer = contract.getOffer();
+        Contract<?> contract = mediationRequest.getContract();
+        Offer<?, ?> offer = contract.getOffer();
         String tradeId = mediationRequest.getTradeId();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
@@ -91,16 +93,12 @@ public class MediationCaseDetailsController extends NavigationController impleme
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
                 offer.getMarket().getQuoteCurrencyCode()));
-        model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(contract));
         model.setFiatCurrency(offer.getMarket().getQuoteCurrencyCode());
-        model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(contract));
-        model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
         model.setPriceCodes(offer.getMarket().getMarketCodes());
         model.setPriceSpec(offer.getPriceSpec() instanceof FixPriceSpec
                 ? ""
                 : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(offer.getPriceSpec(), true)));
-        model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
-        model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
+        setTradeProtocolSpecificFields(contract, model);
         model.setTradeId(tradeId);
 
         MediationCaseListItem.Trader maker = mediationCaseListItem.getMaker();
@@ -120,6 +118,23 @@ public class MediationCaseDetailsController extends NavigationController impleme
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return Optional.empty();
+    }
+
+    private static void setTradeProtocolSpecificFields(Contract<?> genericContract, MediationCaseDetailsModel model) {
+        if (genericContract instanceof BisqEasyContract contract) {
+            model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(contract));
+            model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(contract));
+            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
+            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
+        } else if (genericContract instanceof MuSigContract contract) {
+            model.setFiatAmount(MuSigTradeFormatter.formatQuoteSideAmount(contract));
+            model.setBtcAmount(MuSigTradeFormatter.formatBaseSideAmount(contract));
+            model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract)));
+            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
+        }
+        // No-op for now, as we only support Bisq Easy and Mu Sig trades in mediation
     }
 
     void onClose() {
