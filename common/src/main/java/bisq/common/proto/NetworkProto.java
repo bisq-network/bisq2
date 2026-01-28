@@ -18,9 +18,8 @@
 package bisq.common.proto;
 
 /**
- * Interface Proto implementations which are used for network messages.
- * We need to ensure that data received from the network is verified.
- * All data need to have an upper bound of the max. size.
+ * Interface used for network messages.
+ * As this data is untrusted we need to verify the data.
  */
 public interface NetworkProto extends Proto {
     void verify();
