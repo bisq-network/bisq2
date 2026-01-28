@@ -70,10 +70,6 @@ public interface Proto {
         }
     }
 
-    private Message resolveProto(boolean serializeForHash) {
-        return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
-    }
-
     default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
         return serializeForHash ? clearAnnotatedFields(builder) : builder;
     }
@@ -94,6 +90,19 @@ public interface Proto {
         completeProto().writeDelimitedTo(outputStream);
     }
 
+    default int getVersion() {
+        return 0;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Private
+    /* --------------------------------------------------------------------- */
+
+    private Message resolveProto(boolean serializeForHash) {
+        return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+    }
+
     private Set<String> getExcludedFields() {
         return Arrays.stream(getAllDeclaredFields(getClass()))
                 .peek(field -> field.setAccessible(true))
@@ -105,10 +114,6 @@ public interface Proto {
                 })
                 .map(Field::getName)
                 .collect(Collectors.toSet());
-    }
-
-    default int getVersion() {
-        return 0;
     }
 
     /**
