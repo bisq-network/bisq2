@@ -33,6 +33,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.http_api.HttpApiService;
+import bisq.http_api.push_notification.PushNotificationConfig;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -223,8 +224,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
+        var pushNotificationConfig = PushNotificationConfig.from(getConfig("pushNotification"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
+                pushNotificationConfig,
                 getConfig().getAppDataDirPath(),
                 securityService,
                 networkService,
