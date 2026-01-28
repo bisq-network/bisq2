@@ -27,8 +27,7 @@ public class ClassUtils {
     public static <T> Optional<T> safeCast(Object object, Class<T> clazz) {
         if (clazz.isInstance(object)) {
             try {
-                //noinspection unchecked
-                T casted = (T) object;
+                T casted = clazz.cast(object);
                 return Optional.of(casted);
             } catch (ClassCastException t) {
                 log.error("Could not cast object {} to class {}", object, clazz);
