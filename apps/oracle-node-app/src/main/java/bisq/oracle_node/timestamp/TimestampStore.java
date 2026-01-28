@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -53,7 +52,7 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
 
     @Override
     public bisq.oracle_node.protobuf.TimestampStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto) {

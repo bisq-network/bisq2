@@ -53,7 +53,7 @@ final class BannedUserStore implements PersistableStore<BannedUserStore> {
 
     @Override
     public bisq.user.protobuf.BannedUserStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto) {

@@ -31,7 +31,7 @@ public final class TorKeyPair implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.TorKeyPair toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

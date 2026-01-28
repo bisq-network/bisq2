@@ -146,7 +146,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {

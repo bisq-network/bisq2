@@ -61,7 +61,7 @@ public final class PubKey implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.PubKey toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

@@ -44,7 +44,7 @@ final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
 
     @Override
     public bisq.network.protobuf.NetworkIdStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

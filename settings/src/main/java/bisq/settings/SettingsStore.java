@@ -226,7 +226,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
 
     @Override
     public bisq.settings.protobuf.SettingsStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @SuppressWarnings("deprecation")

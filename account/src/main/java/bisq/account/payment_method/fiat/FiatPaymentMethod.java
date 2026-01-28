@@ -67,7 +67,7 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
 
     @Override
     public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {

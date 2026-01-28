@@ -104,7 +104,7 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto) {

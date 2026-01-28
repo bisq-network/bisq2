@@ -119,7 +119,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
 
     @Override
     public bisq.offer.protobuf.Offer toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {

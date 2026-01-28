@@ -42,7 +42,7 @@ public final class EncryptedData implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.EncryptedData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

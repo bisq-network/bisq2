@@ -51,7 +51,7 @@ public final class StableCoinPaymentMethodSpec extends PaymentMethodSpec<StableC
 
     @Override
     public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static StableCoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {

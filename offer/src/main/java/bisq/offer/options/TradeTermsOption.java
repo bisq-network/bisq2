@@ -50,7 +50,7 @@ public final class TradeTermsOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto) {

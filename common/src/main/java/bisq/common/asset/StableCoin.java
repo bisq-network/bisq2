@@ -67,7 +67,7 @@ public final class StableCoin extends DigitalAsset {
 
     @Override
     public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) {

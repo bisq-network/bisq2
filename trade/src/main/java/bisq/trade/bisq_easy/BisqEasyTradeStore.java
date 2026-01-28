@@ -66,7 +66,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     @Override
     public bisq.trade.protobuf.BisqEasyTradeStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {

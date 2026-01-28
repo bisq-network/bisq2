@@ -97,7 +97,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     @Override
     public bisq.trade.protobuf.Trade toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     private bisq.trade.protobuf.MuSigTrade toMuSigTradeProto(boolean serializeForHash) {

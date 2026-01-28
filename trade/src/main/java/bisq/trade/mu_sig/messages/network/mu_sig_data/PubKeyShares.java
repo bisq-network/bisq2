@@ -56,7 +56,7 @@ public final class PubKeyShares implements NetworkProto {
 
     @Override
     public bisq.trade.protobuf.PubKeyShares toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) {

@@ -62,7 +62,7 @@ public final class NetworkLoad implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.NetworkLoad toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

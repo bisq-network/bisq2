@@ -56,7 +56,7 @@ public final class HashCashToken extends AuthorizationToken {
 
     @Override
     public bisq.network.protobuf.AuthorizationToken toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

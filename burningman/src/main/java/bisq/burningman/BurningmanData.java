@@ -59,7 +59,7 @@ public final class BurningmanData implements NetworkProto {
 
     @Override
     public bisq.burningman.protobuf.BurningmanData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BurningmanData fromProto(bisq.burningman.protobuf.BurningmanData proto) {

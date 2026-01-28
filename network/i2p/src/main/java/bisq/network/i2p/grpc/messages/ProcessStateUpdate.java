@@ -43,7 +43,7 @@ public final class ProcessStateUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.ProcessStateUpdate toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

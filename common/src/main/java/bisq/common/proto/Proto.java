@@ -46,15 +46,28 @@ import java.util.stream.Collectors;
 public interface Proto {
     Message.Builder getBuilder(boolean serializeForHash);
 
-    Message toProto(boolean serializeForHash);
-
     default Message completeProto() {
         return toProto(false);
     }
 
-    default <T extends Message> T resolveProto(boolean serializeForHash) {
-        //noinspection unchecked
-        return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+    default Message toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    // TODO We should avoid the unchecked cast as it relies only on convention that the caller
+    // has defined the correct type. As we do not have the type as method input we cannot infer the type with generics.
+    // Only solution would be to either do the cast at the caller, or add the class type as parameter.
+    // Both increase boiler plate code...
+    default <T extends Message> T unsafeToProto(boolean serializeForHash) {
+        Message message = resolveProto(serializeForHash);
+        try {
+            // noinspection unchecked
+            return (T) message;
+        } catch (ClassCastException e) {
+            getLogger().error("Invalid proto type resolution. Built {} but caller expected a different Message type.",
+                    message.getClass().getName(), e);
+            throw e;
+        }
     }
 
     default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
@@ -77,7 +90,20 @@ public interface Proto {
         completeProto().writeDelimitedTo(outputStream);
     }
 
-    default Set<String> getExcludedFields() {
+    default int getVersion() {
+        return 0;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Private
+    /* --------------------------------------------------------------------- */
+
+    private Message resolveProto(boolean serializeForHash) {
+        return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private Set<String> getExcludedFields() {
         return Arrays.stream(getAllDeclaredFields(getClass()))
                 .peek(field -> field.setAccessible(true))
                 .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
@@ -90,17 +116,13 @@ public interface Proto {
                 .collect(Collectors.toSet());
     }
 
-    default int getVersion() {
-        return 0;
-    }
-
     /**
      * Requires that the name of the java fields is the same as the name of the proto definition.
      *
      * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
-    default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
+    private <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
         /*if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);

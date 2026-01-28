@@ -121,7 +121,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedOracleNode toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {

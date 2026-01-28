@@ -77,7 +77,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     @Override
     public bisq.common.protobuf.Market toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static Market fromProto(bisq.common.protobuf.Market proto) {

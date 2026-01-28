@@ -34,7 +34,7 @@ public final class PermissionSet implements PersistableProto {
 
     @Override
     public bisq.api.protobuf.PermissionSet toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

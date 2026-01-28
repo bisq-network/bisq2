@@ -43,7 +43,7 @@ public final class RouterStateUpdate implements Proto {
 
     @Override
     public bisq.bi2p.protobuf.RouterStateUpdate toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

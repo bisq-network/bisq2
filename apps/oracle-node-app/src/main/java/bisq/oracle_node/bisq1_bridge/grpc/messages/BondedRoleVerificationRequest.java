@@ -64,7 +64,7 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BondedRoleVerificationRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto) {

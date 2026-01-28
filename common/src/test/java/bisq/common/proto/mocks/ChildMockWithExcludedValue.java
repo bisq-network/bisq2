@@ -16,7 +16,7 @@ public class ChildMockWithExcludedValue implements Child {
 
     @Override
     public bisq.common.test.protobuf.Child toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

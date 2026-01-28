@@ -57,7 +57,7 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     // We are part of other proto messages via DistributedData thus, toProto and getBuilder are our entry points
     @Override
     public bisq.chat.protobuf.ChatMessage toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);

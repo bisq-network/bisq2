@@ -54,7 +54,7 @@ public class CryptoAsset extends DigitalAsset {
 
     @Override
     public bisq.common.protobuf.Asset toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) {

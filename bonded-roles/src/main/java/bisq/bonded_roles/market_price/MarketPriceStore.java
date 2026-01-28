@@ -30,7 +30,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -57,7 +56,7 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
 
     @Override
     public bisq.bonded_roles.protobuf.MarketPriceStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto) {

@@ -64,7 +64,7 @@ public final class Report implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.Report toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

@@ -44,7 +44,7 @@ public final class SignedWitnessDateRequest implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.SignedWitnessDateRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

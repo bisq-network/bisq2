@@ -51,7 +51,7 @@ public final class CryptoPaymentMethodSpec extends PaymentMethodSpec<CryptoPayme
 
     @Override
     public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static CryptoPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {

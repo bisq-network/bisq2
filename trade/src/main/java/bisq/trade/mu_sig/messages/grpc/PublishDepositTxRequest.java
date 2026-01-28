@@ -42,7 +42,7 @@ public final class PublishDepositTxRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.PublishDepositTxRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static PublishDepositTxRequest fromProto(bisq.trade.protobuf.PublishDepositTxRequest proto) {

@@ -80,7 +80,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     @Override
     public bisq.account.protobuf.AccountPayload toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {

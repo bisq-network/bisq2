@@ -170,7 +170,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
 
     @Override
     public bisq.user.protobuf.UserProfile toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {

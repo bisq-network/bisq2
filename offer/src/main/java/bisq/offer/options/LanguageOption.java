@@ -55,7 +55,7 @@ public final class LanguageOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static LanguageOption fromProto(bisq.offer.protobuf.LanguageOption proto) {

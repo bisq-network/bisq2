@@ -65,7 +65,7 @@ public final class Citation implements NetworkProto {
 
     @Override
     public bisq.chat.protobuf.Citation toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) {

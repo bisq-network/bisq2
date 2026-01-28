@@ -98,7 +98,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
 
     @Override
     public bisq.user.protobuf.AuthorizedSignedWitnessData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto) {

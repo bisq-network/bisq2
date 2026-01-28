@@ -51,7 +51,7 @@ public final class CbdcPaymentMethodSpec extends PaymentMethodSpec<CbdcPaymentMe
 
     @Override
     public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static CbdcPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {

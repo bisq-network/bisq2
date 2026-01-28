@@ -50,7 +50,7 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
 
     @Override
     public bisq.account.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BitcoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {

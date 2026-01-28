@@ -104,7 +104,7 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
 
     @Override
     public bisq.common.protobuf.Address toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

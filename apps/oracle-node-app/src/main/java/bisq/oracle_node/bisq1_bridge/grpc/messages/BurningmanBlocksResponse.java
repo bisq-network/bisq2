@@ -52,7 +52,7 @@ public final class BurningmanBlocksResponse implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BurningmanBlocksResponse toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BurningmanBlocksResponse fromProto(bisq.bridge.protobuf.BurningmanBlocksResponse proto) {

@@ -57,7 +57,7 @@ public final class BsqBlockDto implements NetworkProto {
 
     @Override
     public bisq.bridge.protobuf.BsqBlockDto toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BsqBlockDto fromProto(bisq.bridge.protobuf.BsqBlockDto proto) {

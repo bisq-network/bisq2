@@ -64,7 +64,7 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
 
     @Override
     public bisq.api.protobuf.ApiAccessStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {

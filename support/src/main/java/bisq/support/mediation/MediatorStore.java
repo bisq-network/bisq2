@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
 
     @Override
     public bisq.support.protobuf.MediatorStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto) {

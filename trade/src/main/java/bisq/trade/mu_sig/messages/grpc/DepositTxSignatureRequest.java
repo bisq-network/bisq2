@@ -42,7 +42,7 @@ public final class DepositTxSignatureRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.DepositTxSignatureRequest toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static DepositTxSignatureRequest fromProto(bisq.trade.protobuf.DepositTxSignatureRequest proto) {

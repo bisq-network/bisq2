@@ -87,7 +87,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
 
     @Override
     public bisq.user.protobuf.BannedUserProfileData toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {

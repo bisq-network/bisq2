@@ -54,7 +54,7 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
 
     @Override
     public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override
