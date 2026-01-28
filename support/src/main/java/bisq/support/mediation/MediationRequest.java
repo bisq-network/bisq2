@@ -17,11 +17,13 @@
 
 package bisq.support.mediation;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.ChatMessage;
+import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.Contract;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
@@ -39,7 +41,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -51,10 +54,9 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         return MediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
-    private final BisqEasyContract contract;
+    private final Contract<?> contract;
     private final String tradeId;
 
     @EqualsAndHashCode.Exclude
@@ -62,15 +64,15 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
     @EqualsAndHashCode.Exclude
     private final UserProfile peer;
     @EqualsAndHashCode.Exclude
-    private final List<BisqEasyOpenTradeMessage> chatMessages;
+    private final List<PrivateChatMessage<? extends PrivateChatMessageReaction>> chatMessages;
     @EqualsAndHashCode.Exclude
     private final Optional<NetworkId> mediatorNetworkId;
 
     public MediationRequest(String tradeId,
-                            BisqEasyContract contract,
+                            Contract<?> contract,
                             UserProfile requester,
                             UserProfile peer,
-                            List<BisqEasyOpenTradeMessage> chatMessages,
+                            List<PrivateChatMessage<? extends PrivateChatMessageReaction>> chatMessages,
                             Optional<NetworkId> mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
@@ -110,19 +112,20 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
+    @SuppressWarnings("unchecked")
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
         return new MediationRequest(proto.getTradeId(),
-                BisqEasyContract.fromProto(proto.getContract()),
+                Contract.fromProto(proto.getContract()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
+                        .map(ChatMessage::fromProto)
+                        .map(m -> (PrivateChatMessage<? extends PrivateChatMessageReaction>) m)
                         .collect(Collectors.toList()),
                 proto.hasMediatorNetworkId()
                         ? Optional.of(NetworkId.fromProto(proto.getMediatorNetworkId()))
                         : Optional.empty());
     }
-
 
     /* --------------------------------------------------------------------- */
     // AckRequestingMessage implementation
@@ -165,9 +168,10 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         return getCostFactor(0.25, 0.5);
     }
 
-    private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
+    private List<PrivateChatMessage<? extends PrivateChatMessageReaction>> maybePrune(
+            List<PrivateChatMessage<? extends PrivateChatMessageReaction>> chatMessages) {
         StringBuilder sb = new StringBuilder();
-        List<BisqEasyOpenTradeMessage> result = chatMessages.stream()
+        List<PrivateChatMessage<? extends PrivateChatMessageReaction>> result = chatMessages.stream()
                 .filter(message -> {
                     sb.append(message.getTextOrNA());
                     return sb.toString().length() < 10_000;
