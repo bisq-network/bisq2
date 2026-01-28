@@ -15,10 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.notifications.system;
+package bisq.notifications.mobile;
 
-import bisq.common.application.Service;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public interface OsSpecificNotificationService extends Service {
-   void dispatchNotification(String title, String message);
+@Getter
+@EqualsAndHashCode
+public class MobileNotificationPayload {
+    private final String id;
+    private final String title;
+    private final String message;
+
+    @JsonCreator
+    public MobileNotificationPayload(
+            @JsonProperty("id") String id,
+            @JsonProperty("title") String title,
+            @JsonProperty("message") String message
+    ) {
+        this.id = id;
+        this.title = title;
+        this.message = message;
+    }
 }

@@ -77,7 +77,7 @@ public class AwtNotificationService implements OsSpecificNotificationService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public void show(String title, String message) {
+    public void dispatchNotification(String title, String message) {
         if (isSupported) {
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
         }

@@ -15,10 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.notifications.system;
+package bisq.notifications.mobile.registration;
 
-import bisq.common.application.Service;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
 
-public interface OsSpecificNotificationService extends Service {
-   void dispatchNotification(String title, String message);
+public enum MobileDevicePlatform implements ProtoEnum {
+    UNSPECIFIED,
+    IOS,
+    ANDROID;
+
+    @Override
+    public bisq.notifications.protobuf.MobileDevicePlatform toProtoEnum() {
+        return bisq.notifications.protobuf.MobileDevicePlatform.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.MobileDevicePlatform proto) {
+        return ProtobufUtils.enumFromProto(MobileDevicePlatform.class, proto.name(), UNSPECIFIED);
+    }
 }

@@ -4,7 +4,9 @@ import bisq.api.ApiConfig;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
+import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
@@ -14,7 +16,6 @@ import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
-import bisq.api.rest_api.endpoints.access.AccessApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -35,7 +36,8 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
-                                 UserProfileRestApi userProfileRestApi) {
+                                 UserProfileRestApi userProfileRestApi,
+                                 DevicesRestApi devicesRestApi) {
         super(apiConfig, accessApi, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
@@ -52,6 +54,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(PaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
+        register(DevicesRestApi.class);
 
         register(new AbstractBinder() {
             @Override
@@ -66,6 +69,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
+                bind(devicesRestApi).to(DevicesRestApi.class);
             }
         });
     }

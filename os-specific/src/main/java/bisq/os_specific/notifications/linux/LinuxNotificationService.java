@@ -88,7 +88,7 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
     }
 
     @Override
-    public void show(String title, String message) {
+    public void dispatchNotification(String title, String message) {
         if (isSupported) {
             Boolean useTransientNotifications = settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS)
                     .orElse(true);
