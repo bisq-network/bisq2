@@ -52,9 +52,20 @@ public interface Proto {
         return toProto(false);
     }
 
+    // TODO We should avoid the unchecked cast as it relies only on convention that the caller
+    // has defined the correct type. As we do not have the type as method input we cannot infer the type with generics.
+    // Only solution would be to either do the cast at the caller, or add the class type as parameter.
+    // Both increase boiler plate code...
     default <T extends Message> T resolveProto(boolean serializeForHash) {
-        //noinspection unchecked
-        return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+        Message message = resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
+        try {
+            // noinspection unchecked
+            return (T) message;
+        } catch (ClassCastException e) {
+            getLogger().error("Invalid proto type resolution. Built {} but caller expected a different Message type.",
+                    message.getClass().getName(), e);
+            throw e;
+        }
     }
 
     default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
