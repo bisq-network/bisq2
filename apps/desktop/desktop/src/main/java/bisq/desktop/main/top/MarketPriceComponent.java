@@ -48,6 +48,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -323,6 +324,8 @@ public class MarketPriceComponent {
                         codes.setText(item.codes);
 
                         StackPane marketsImage = MarketImageComposition.getMarketMenuIcons(item.market, MARKET_IMAGE_CACHE);
+                        marketsImage.setCache(true);
+                        marketsImage.setCacheHint(CacheHint.SPEED);
                         codes.setGraphic(marketsImage);
 
                         boolean isStale = item.isStale();
