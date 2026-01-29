@@ -24,6 +24,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.http_api.access.ApiAccessService;
 import bisq.http_api.access.pairing.PairingCode;
 import bisq.http_api.access.pairing.PairingService;
 import bisq.http_api.access.permissions.Permission;
@@ -49,6 +50,7 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.http_api.rest_api.endpoints.access.AccessApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
@@ -88,6 +90,7 @@ public class HttpApiService implements Service {
     private final Path appDataDirPath;
     private final Optional<PairingService> pairingService;
     private final Optional<SessionService> sessionService;
+    private final Optional<ApiAccessService> apiAccessService;
 
     public HttpApiService(RestApiService.Config restApiConfig,
                           WebSocketService.Config webSocketConfig,
@@ -124,10 +127,12 @@ public class HttpApiService implements Service {
                     permissionService
             ));
             sessionService = Optional.of(new SessionService(pairingConfig.getSessionTtlInMinutes()));
+            apiAccessService = Optional.of(new ApiAccessService(pairingService.get(), sessionService.get()));
             log.info("Pairing service enabled (writeToDisk: {})", pairingConfig.isWritePairingQrCodeToDisk());
         } else {
             pairingService = Optional.empty();
             sessionService = Optional.empty();
+            apiAccessService = Optional.empty();
             log.info("Pairing service disabled");
         }
 
@@ -169,6 +174,9 @@ public class HttpApiService implements Service {
             ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
             DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService.get());
 
+            // Create AccessApi if pairing is enabled
+            AccessApi accessApi = apiAccessService.map(AccessApi::new).orElse(null);
+
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig,
                         offerbookRestApi,
@@ -181,7 +189,8 @@ public class HttpApiService implements Service {
                         fiatPaymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi,
-                        devicesRestApi);
+                        devicesRestApi,
+                        Optional.ofNullable(accessApi));
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
@@ -199,7 +208,8 @@ public class HttpApiService implements Service {
                         fiatPaymentAccountsRestApi,
                         reputationRestApi,
                         userProfileRestApi,
-                        devicesRestApi);
+                        devicesRestApi,
+                        Optional.ofNullable(accessApi));
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketResourceConfig,
                         appDataDirPath,

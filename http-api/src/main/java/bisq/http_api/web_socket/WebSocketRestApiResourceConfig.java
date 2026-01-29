@@ -13,8 +13,11 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.http_api.rest_api.endpoints.access.AccessApi;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 @ApplicationPath("/api/v1")
@@ -30,7 +33,8 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
                                           ReputationRestApi reputationRestApi,
                                           UserProfileRestApi userProfileRestApi,
-                                          DevicesRestApi devicesRestApi) {
-        super(config, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, fiatPaymentAccountsRestApi, reputationRestApi, userProfileRestApi, devicesRestApi);
+                                          DevicesRestApi devicesRestApi,
+                                          Optional<AccessApi> accessApi) {
+        super(config, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, fiatPaymentAccountsRestApi, reputationRestApi, userProfileRestApi, devicesRestApi, accessApi);
     }
 }

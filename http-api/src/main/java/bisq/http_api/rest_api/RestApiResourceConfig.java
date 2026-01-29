@@ -12,9 +12,12 @@ import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.rest_api.domain.user_profile.UserProfileRestApi;
+import bisq.http_api.rest_api.endpoints.access.AccessApi;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -30,7 +33,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
-                                 DevicesRestApi devicesRestApi) {
+                                 DevicesRestApi devicesRestApi,
+                                 Optional<AccessApi> accessApi) {
         super(config);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
@@ -50,6 +54,9 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         register(UserProfileRestApi.class);
         register(DevicesRestApi.class);
 
+        // Register AccessApi if pairing is enabled
+        accessApi.ifPresent(api -> register(AccessApi.class));
+
         register(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -64,6 +71,9 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
                 bind(devicesRestApi).to(DevicesRestApi.class);
+
+                // Bind AccessApi if present
+                accessApi.ifPresent(api -> bind(api).to(AccessApi.class));
             }
         });
     }
