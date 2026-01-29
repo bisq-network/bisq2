@@ -30,7 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
-import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
+import bisq.desktop.main.content.authorized_role.mediator.Mediator;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
 import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManager;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManager;
@@ -89,7 +89,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case MEDIATOR -> Optional.of(new MediatorController(serviceProvider));
+            case MEDIATOR -> Optional.of(new Mediator.Controller(serviceProvider));
             case MODERATOR -> Optional.of(new ModeratorController(serviceProvider));
             case SECURITY_MANAGER -> Optional.of(new SecurityManager.Controller(serviceProvider));
             case RELEASE_MANAGER -> Optional.of(new ReleaseManager.Controller(serviceProvider));

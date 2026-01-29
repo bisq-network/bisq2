@@ -21,6 +21,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -51,6 +52,9 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
 
     void onTabSelected(NavigationTarget navigationTarget) {
         findTabButton(navigationTarget).ifPresent(tabButton -> {
+            if (Objects.equals(model.getSelectedTabButton().get(), tabButton)) {
+                return;
+            }
             model.getSelectedTabButton().set(tabButton);
             Navigation.navigateTo(navigationTarget);
         });

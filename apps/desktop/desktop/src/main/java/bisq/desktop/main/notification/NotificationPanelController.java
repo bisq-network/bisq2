@@ -74,7 +74,7 @@ public class NotificationPanelController implements Controller {
 
     void onNavigateToTarget() {
         Navigation.navigateTo(model.isMediationNotification()
-                ? NavigationTarget.MEDIATOR
+                ? NavigationTarget.BISQ_EASY_MEDIATOR
                 : NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 
