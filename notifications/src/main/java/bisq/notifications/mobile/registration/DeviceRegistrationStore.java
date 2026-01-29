@@ -50,7 +50,7 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     @Override
     public bisq.notifications.protobuf.DeviceRegistrationStore toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto) {

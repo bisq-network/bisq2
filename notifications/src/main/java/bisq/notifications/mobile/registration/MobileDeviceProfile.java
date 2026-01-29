@@ -47,7 +47,7 @@ public final class MobileDeviceProfile implements PersistableProto {
 
     @Override
     public bisq.notifications.protobuf.MobileDeviceProfile toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+        return unsafeToProto(serializeForHash);
     }
 
     @Override

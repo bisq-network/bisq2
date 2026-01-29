@@ -91,11 +91,23 @@ public class DevicesRestApi extends RestApiBase {
         );
 
         // Platform-specific token validation
-        if (platform == MobileDevicePlatform.IOS && !deviceToken.matches(APNS_HEX_REGEX)) {
-            return buildResponse(
-                    Response.Status.BAD_REQUEST,
-                    "APNs device token must be a hex-encoded string"
-            );
+        if (platform == MobileDevicePlatform.IOS) {
+            // APNs tokens are 64-character hex strings (32 bytes)
+            if (!deviceToken.matches(APNS_HEX_REGEX) || deviceToken.length() != 64) {
+                return buildResponse(
+                        Response.Status.BAD_REQUEST,
+                        "APNs device token must be a 64-character hex-encoded string"
+                );
+            }
+        } else if (platform == MobileDevicePlatform.ANDROID) {
+            // FCM tokens are opaque strings, typically 152+ characters
+            // Just validate it's not empty and has reasonable length
+            if (deviceToken.length() < 100 || deviceToken.length() > 300) {
+                return buildResponse(
+                        Response.Status.BAD_REQUEST,
+                        "FCM device token has invalid length (expected 100-300 characters)"
+                );
+            }
         }
 
         try {

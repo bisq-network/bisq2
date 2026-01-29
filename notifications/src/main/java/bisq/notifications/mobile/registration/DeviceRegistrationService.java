@@ -53,8 +53,12 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         checkArgument(StringUtils.isNotEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
         checkNotNull(platform, "platform must not be null");
 
-        log.info("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}",
+        // Log at DEBUG level to avoid exposing sensitive device identifiers
+        log.debug("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}",
                 deviceId, deviceDescriptor, platform);
+        // Log minimal info at INFO level for monitoring
+        log.info("Device registration: platform={}, deviceIdLength={}, descriptorLength={}",
+                platform, deviceId.length(), deviceDescriptor.length());
 
         MobileDeviceProfile mobileDeviceProfile = new MobileDeviceProfile(deviceId,
                 deviceToken,
