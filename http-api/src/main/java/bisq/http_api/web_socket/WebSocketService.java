@@ -244,6 +244,14 @@ public class WebSocketService implements Service {
         return apiTorOnionService.isPublishOnionService();
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
+    public ApiTorOnionService getApiTorOnionService() {
+        return apiTorOnionService;
+    }
+
     public Pin addInitObserver(Consumer<Boolean> observer) {
         return initializedObservable.addObserver(observer);
     }
