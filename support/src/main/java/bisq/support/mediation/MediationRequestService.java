@@ -25,6 +25,7 @@ import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -66,13 +67,18 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
     private final Set<MediatorsResponse> pendingMediatorsResponseMessages = new CopyOnWriteArraySet<>();
     @Nullable
-    private Pin channeldPin;
+    private Pin bisqEasyOpenTradeChanneldPin;
     @Nullable
-    private Scheduler throttleUpdatesScheduler;
+    private Scheduler muSigOpenTradeThrottleUpdatesScheduler;
+    @Nullable
+    private Pin muSigOpenTradeChanneldPin;
+    @Nullable
+    private Scheduler bisqEasyOpenTradeThrottleUpdatesScheduler;
 
     public MediationRequestService(NetworkService networkService,
                                    ChatService chatService,
@@ -83,8 +89,8 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
         bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
     }
-
 
     /* --------------------------------------------------------------------- */
     // Service
@@ -102,18 +108,25 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
-        if (channeldPin != null) {
-            channeldPin.unbind();
-            channeldPin = null;
+        if (bisqEasyOpenTradeChanneldPin != null) {
+            bisqEasyOpenTradeChanneldPin.unbind();
+            bisqEasyOpenTradeChanneldPin = null;
         }
-        if (throttleUpdatesScheduler != null) {
-            throttleUpdatesScheduler.stop();
-            throttleUpdatesScheduler = null;
+        if (bisqEasyOpenTradeThrottleUpdatesScheduler != null) {
+            bisqEasyOpenTradeThrottleUpdatesScheduler.stop();
+            bisqEasyOpenTradeThrottleUpdatesScheduler = null;
+        }
+        if (muSigOpenTradeChanneldPin != null) {
+            muSigOpenTradeChanneldPin.unbind();
+            muSigOpenTradeChanneldPin = null;
+        }
+        if (muSigOpenTradeThrottleUpdatesScheduler != null) {
+            muSigOpenTradeThrottleUpdatesScheduler.stop();
+            muSigOpenTradeThrottleUpdatesScheduler = null;
         }
         pendingMediatorsResponseMessages.clear();
         return CompletableFuture.completedFuture(true);
     }
-
 
     /* --------------------------------------------------------------------- */
     // ConfidentialMessageService.Listener
@@ -125,7 +138,6 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
             processMediationResponse((MediatorsResponse) envelopePayloadMessage);
         }
     }
-
 
     /* --------------------------------------------------------------------- */
     // API
@@ -150,17 +162,18 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
     }
+
     public void requestMediation(MuSigOpenTradeChannel channel,
                                  MuSigContract contract) {
-       // checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
+        // TODO: check why channel does not offer getMuSigOffer()
+//         checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         UserProfile peer = channel.getPeer();
         UserProfile mediator = channel.getMediator().orElseThrow();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
-        //todo
-       /* MediationRequest mediationRequest = new MediationRequest(channel.getTradeId(),
+        MediationRequest mediationRequest = new MediationRequest(channel.getTradeId(),
                 contract,
                 myUserIdentity.getUserProfile(),
                 peer,
@@ -168,7 +181,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                 Optional.of(mediatorNetworkId));
         networkService.confidentialSend(mediationRequest,
                 mediatorNetworkId,
-                myUserIdentity.getNetworkIdWithKeyPair());*/
+                myUserIdentity.getNetworkIdWithKeyPair());
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId,
@@ -227,53 +240,103 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     private void processMediationResponse(MediatorsResponse mediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(mediatorsResponse.getTradeId())
                 .ifPresentOrElse(channel -> {
-                            // Requester had it activated at request time
-                            if (channel.isInMediation()) {
-                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
-                            } else {
-                                bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
-                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
-
-                                //todo (Critical) - check if we do sent from both peers
-                                // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
-                            }
+                            processBisqEasyOpenTradeMediationResponse(channel);
                             pendingMediatorsResponseMessages.remove(mediatorsResponse);
                         },
                         () -> {
-                            // This handles an edge case that the MediatorsResponse arrives before the take offer request was
-                            // processed (in case we are the maker and have been offline at take offer).
-                            log.warn("We received a MediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
-                                            "We add it to the pendingMediatorsResponseMessages set and reprocess it once a new trade channel has been added.",
-                                    mediatorsResponse.getTradeId());
-                            pendingMediatorsResponseMessages.add(mediatorsResponse);
-                            if (channeldPin == null) {
-                                channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
-                                    @Override
-                                    public void add(BisqEasyOpenTradeChannel element) {
-                                        // Delay and ignore too frequent updates
-                                        if (throttleUpdatesScheduler == null) {
-                                            throttleUpdatesScheduler = Scheduler.run(() -> {
-                                                        maybeProcessPendingMediatorsResponseMessages();
-                                                        throttleUpdatesScheduler = null;
-                                                    })
-                                                    .after(1000);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void remove(Object element) {
-                                    }
-
-                                    @Override
-                                    public void clear() {
-                                    }
-                                });
-                            }
+                            muSigOpenTradeChannelService.findChannelByTradeId(mediatorsResponse.getTradeId())
+                                    .ifPresentOrElse(channel -> {
+                                                processMuSigOpenTradeMediationResponse(channel);
+                                                pendingMediatorsResponseMessages.remove(mediatorsResponse);
+                                            },
+                                            () -> {
+                                                handleNoMatchingChannelForTradeId(mediatorsResponse);
+                                            });
                         });
     }
 
     private void maybeProcessPendingMediatorsResponseMessages() {
         new HashSet<>(pendingMediatorsResponseMessages).forEach(this::processMediationResponse);
+    }
+
+    private void processBisqEasyOpenTradeMediationResponse(BisqEasyOpenTradeChannel channel) {
+        // Requester had it activated at request time
+        if (channel.isInMediation()) {
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
+        } else {
+            bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
+            //todo (Critical) - check if we do sent from both peers
+            // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
+        }
+
+    }
+
+    private void processMuSigOpenTradeMediationResponse(MuSigOpenTradeChannel channel) {
+        // Requester had it activated at request time
+        if (channel.isInMediation()) {
+            muSigOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
+        } else {
+            muSigOpenTradeChannelService.setIsInMediation(channel, true);
+            muSigOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
+            //todo (Critical) - check if we do sent from both peers
+            // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
+        }
+    }
+
+    private void handleNoMatchingChannelForTradeId(MediatorsResponse mediatorsResponse) {
+        // This handles an edge case that the MediatorsResponse arrives before the take offer request was
+        // processed (in case we are the maker and have been offline at take offer).
+        log.warn("We received a MediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
+                        "We add it to the pendingMediatorsResponseMessages set and reprocess it once a new trade channel has been added.",
+                mediatorsResponse.getTradeId());
+        pendingMediatorsResponseMessages.add(mediatorsResponse);
+        if (bisqEasyOpenTradeChanneldPin == null) {
+            bisqEasyOpenTradeChanneldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+                @Override
+                public void add(BisqEasyOpenTradeChannel element) {
+                    // Delay and ignore too frequent updates
+                    if (bisqEasyOpenTradeThrottleUpdatesScheduler == null) {
+                        bisqEasyOpenTradeThrottleUpdatesScheduler = Scheduler.run(() -> {
+                                    maybeProcessPendingMediatorsResponseMessages();
+                                    bisqEasyOpenTradeThrottleUpdatesScheduler = null;
+                                })
+                                .after(1000);
+                    }
+                }
+
+                @Override
+                public void remove(Object element) {
+                }
+
+                @Override
+                public void clear() {
+                }
+            });
+        }
+        if (muSigOpenTradeChanneldPin == null) {
+            muSigOpenTradeChanneldPin = muSigOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+                @Override
+                public void add(MuSigOpenTradeChannel element) {
+                    // Delay and ignore too frequent updates
+                    if (muSigOpenTradeThrottleUpdatesScheduler == null) {
+                        muSigOpenTradeThrottleUpdatesScheduler = Scheduler.run(() -> {
+                                    maybeProcessPendingMediatorsResponseMessages();
+                                    muSigOpenTradeThrottleUpdatesScheduler = null;
+                                })
+                                .after(1000);
+                    }
+                }
+
+                @Override
+                public void remove(Object element) {
+                }
+
+                @Override
+                public void clear() {
+                }
+            });
+        }
     }
 }
 
