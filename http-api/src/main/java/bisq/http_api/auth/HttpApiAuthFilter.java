@@ -65,6 +65,7 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
 
     private boolean isUnauthenticatedEndpoint() {
         if (resourceInfo == null) {
+            log.warn("ResourceInfo is null - cannot check for @AllowUnauthenticated annotation. This is likely a JAX-RS context injection issue.");
             return false;
         }
 
@@ -72,8 +73,15 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         Class<?> resourceClass = resourceInfo.getResourceClass();
 
         // Check if method or class is annotated with @AllowUnauthenticated
-        return (resourceMethod != null && resourceMethod.isAnnotationPresent(AllowUnauthenticated.class)) ||
+        boolean isUnauthenticated = (resourceMethod != null && resourceMethod.isAnnotationPresent(AllowUnauthenticated.class)) ||
                (resourceClass != null && resourceClass.isAnnotationPresent(AllowUnauthenticated.class));
+
+        if (isUnauthenticated) {
+            log.info("Endpoint {} is marked as @AllowUnauthenticated",
+                    resourceMethod != null ? resourceMethod.getName() : resourceClass != null ? resourceClass.getSimpleName() : "unknown");
+        }
+
+        return isUnauthenticated;
     }
 
     @Nullable

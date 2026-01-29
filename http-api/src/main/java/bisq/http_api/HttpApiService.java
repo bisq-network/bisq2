@@ -34,6 +34,7 @@ import bisq.http_api.access.persistence.ApiAccessStoreService;
 import bisq.http_api.access.session.SessionService;
 import bisq.http_api.access.transport.TlsContext;
 import bisq.http_api.access.transport.TorContext;
+import bisq.common.timer.Scheduler;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.push_notification.DeviceRegistrationService;
@@ -70,6 +71,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -91,6 +93,7 @@ public class HttpApiService implements Service {
     private final Optional<PairingService> pairingService;
     private final Optional<SessionService> sessionService;
     private final Optional<ApiAccessService> apiAccessService;
+    private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
 
     public HttpApiService(RestApiService.Config restApiConfig,
                           WebSocketService.Config webSocketConfig,
@@ -251,6 +254,12 @@ public class HttpApiService implements Service {
                     if (result && pairingConfig.isEnabled() && webSocketService.isPresent()) {
                         try {
                             createPairingQrCode();
+                            // Schedule periodic regeneration every 4 minutes (before 5-minute TTL expires)
+                            pairingCodeScheduler = Optional.of(Scheduler.run(this::createPairingQrCode)
+                                    .host(this)
+                                    .runnableName("regeneratePairingCode")
+                                    .periodically(4, TimeUnit.MINUTES));
+                            log.info("Pairing code will be regenerated every 4 minutes");
                         } catch (Exception e) {
                             log.error("Failed to create pairing QR code", e);
                         }
@@ -283,7 +292,8 @@ public class HttpApiService implements Service {
         // Generate and write QR code
         pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, tlsContext, torContext);
 
-        log.info("Pairing QR code created for WebSocket URL: {}", webSocketUrl);
+        log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
+                webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());
     }
 
     private String getWebSocketUrl() {
@@ -328,6 +338,7 @@ public class HttpApiService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        pairingCodeScheduler.ifPresent(Scheduler::stop);
         return CompletableFutureUtils.allOf(
                         deviceRegistrationService.map(DeviceRegistrationService::shutdown)
                                 .orElse(CompletableFuture.completedFuture(true)),
