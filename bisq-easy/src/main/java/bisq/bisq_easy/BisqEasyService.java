@@ -36,7 +36,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.notifications.system.SystemNotificationService;
+import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -72,7 +72,7 @@ public class BisqEasyService implements Service {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SystemNotificationService systemNotificationService;
+    private final NotificationService notificationService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
@@ -98,7 +98,7 @@ public class BisqEasyService implements Service {
                            ChatService chatService,
                            SettingsService settingsService,
                            SupportService supportService,
-                           SystemNotificationService systemNotificationService,
+                           NotificationService notificationService,
                            TradeService tradeService) {
         this.persistenceService = persistenceService;
         this.securityService = securityService;
@@ -113,7 +113,7 @@ public class BisqEasyService implements Service {
         this.chatService = chatService;
         this.settingsService = settingsService;
         this.supportService = supportService;
-        this.systemNotificationService = systemNotificationService;
+        this.notificationService = notificationService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
         alertService = bondedRolesService.getAlertService();

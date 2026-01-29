@@ -20,6 +20,7 @@ package bisq.bonded_roles;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
@@ -37,21 +38,25 @@ import java.util.concurrent.CompletableFuture;
 public class BondedRolesService implements Service {
     @Getter
     public static class Config {
-        private final com.typesafe.config.Config blockchainExplorer;
-        private final boolean ignoreSecurityManager;
         private final com.typesafe.config.Config marketPrice;
+        private final com.typesafe.config.Config blockchainExplorer;
+        private final com.typesafe.config.Config mobileNotifications;
+        private final boolean ignoreSecurityManager;
 
         public Config(com.typesafe.config.Config marketPrice,
                       com.typesafe.config.Config blockchainExplorer,
+                      com.typesafe.config.Config mobileNotifications,
                       boolean ignoreSecurityManager) {
             this.marketPrice = marketPrice;
             this.blockchainExplorer = blockchainExplorer;
+            this.mobileNotifications = mobileNotifications;
             this.ignoreSecurityManager = ignoreSecurityManager;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getConfig("marketPrice"),
                     config.getConfig("blockchainExplorer"),
+                    config.getConfig("mobileNotifications"),
                     config.getBoolean("ignoreSecurityManager"));
         }
     }
@@ -63,6 +68,7 @@ public class BondedRolesService implements Service {
     private final AlertService alertService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final ReleaseNotificationsService releaseNotificationsService;
+    private final MobileNotificationRelayClient mobileNotificationRelayClient;
 
     public BondedRolesService(Config config,
                               PersistenceService persistenceService,
@@ -74,6 +80,7 @@ public class BondedRolesService implements Service {
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
+        mobileNotificationRelayClient = new MobileNotificationRelayClient(MobileNotificationRelayClient.Config.from(config.getMobileNotifications()), networkService);
     }
 
     /* --------------------------------------------------------------------- */
@@ -87,6 +94,7 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> bondedRoleRegistrationService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> explorerService.initialize())
+                .thenCompose(result -> mobileNotificationRelayClient.initialize())
                 .thenCompose(result -> releaseNotificationsService.initialize())
                 .thenCompose(result -> authorizedBondedRolesService.initialize());
     }
@@ -99,6 +107,7 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> bondedRoleRegistrationService.shutdown())
                 .thenCompose(result -> marketPriceService.shutdown())
                 .thenCompose(result -> explorerService.shutdown())
+                .thenCompose(result -> mobileNotificationRelayClient.shutdown())
                 .thenCompose(result -> releaseNotificationsService.shutdown());
     }
 }

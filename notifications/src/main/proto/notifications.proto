@@ -15,10 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.notifications.system;
+syntax = "proto3";
 
-import bisq.common.application.Service;
+package notifications;
+option java_package = "bisq.notifications.protobuf";
+option java_multiple_files = true;
 
-public interface OsSpecificNotificationService extends Service {
-   void dispatchNotification(String title, String message);
+enum MobileDevicePlatform {
+  DEVICEREGISTRATIONPLATFORM_UNSPECIFIED = 0;
+  DEVICEREGISTRATIONPLATFORM_IOS = 1;
+  DEVICEREGISTRATIONPLATFORM_ANDROID = 2;
+}
+message MobileDeviceProfile {
+  string deviceId = 1;
+  string deviceToken = 2;
+  string publicKeyBase64 = 3;
+  string deviceDescriptor = 4;
+  MobileDevicePlatform platform = 5;
+}
+
+message DeviceRegistrationStore {
+  map<string, MobileDeviceProfile> deviceByDeviceId = 1;
 }

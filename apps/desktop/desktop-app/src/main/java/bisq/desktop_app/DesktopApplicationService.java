@@ -18,6 +18,9 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
+import bisq.api.ApiConfig;
+import bisq.api.ApiService;
+import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
@@ -33,20 +36,18 @@ import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
-import bisq.api.ApiConfig;
-import bisq.api.ApiService;
-import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.notifications.NotificationService;
+import bisq.notifications.mobile.MobileNotificationService;
+import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
-import bisq.notifications.system.OsSpecificNotificationService;
-import bisq.notifications.system.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -98,7 +99,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SystemNotificationService systemNotificationService;
+    private final NotificationService notificationService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
@@ -155,7 +156,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         burningmanService = new BurningmanService(bondedRolesService.getAuthorizedBondedRolesService());
 
-        systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
+        notificationService = new NotificationService(persistenceService,
+                bondedRolesService.getMobileNotificationRelayClient(),
+                findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -163,7 +166,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                systemNotificationService);
+                notificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService,
@@ -195,7 +198,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                systemNotificationService,
+                notificationService,
                 tradeService);
 
         muSigService = new MuSigService(persistenceService,
@@ -210,7 +213,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                systemNotificationService,
+                notificationService,
                 tradeService);
 
         alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService(), AppType.DESKTOP);
@@ -237,7 +240,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 bisqEasyService,
                 openTradeItemsService,
                 accountService,
-                userService.getReputationService());
+                userService.getReputationService(),
+                notificationService.getMobileNotificationService().getDeviceRegistrationService());
 
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
@@ -255,7 +259,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                systemNotificationService,
+                notificationService,
                 tradeService,
                 updaterService,
                 bisqEasyService,
@@ -295,7 +299,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
-                .thenCompose(result -> systemNotificationService.initialize())
+                .thenCompose(result -> notificationService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
@@ -346,7 +350,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> supportService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> notificationService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> burningmanService.shutdown().exceptionally(this::logError))

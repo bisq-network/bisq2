@@ -52,7 +52,7 @@ import bisq.offer.mu_sig.MuSigOfferService;
 import bisq.offer.options.OfferOption;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
-import bisq.notifications.system.SystemNotificationService;
+import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -96,7 +96,7 @@ public class MuSigService extends LifecycleService {
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SystemNotificationService systemNotificationService;
+    private final NotificationService notificationService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final MarketPriceService marketPriceService;
@@ -126,7 +126,7 @@ public class MuSigService extends LifecycleService {
                         ChatService chatService,
                         SettingsService settingsService,
                         SupportService supportService,
-                        SystemNotificationService systemNotificationService,
+                        NotificationService notificationService,
                         TradeService tradeService) {
         this.persistenceService = persistenceService;
         this.securityService = securityService;
@@ -143,7 +143,7 @@ public class MuSigService extends LifecycleService {
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         this.settingsService = settingsService;
         this.supportService = supportService;
-        this.systemNotificationService = systemNotificationService;
+        this.notificationService = notificationService;
         this.tradeService = tradeService;
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
