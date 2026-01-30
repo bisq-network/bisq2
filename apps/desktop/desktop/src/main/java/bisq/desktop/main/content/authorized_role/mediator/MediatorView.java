@@ -76,7 +76,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
         VBox.setMargin(mediationTableView, new Insets(0, 0, 10, 0));
         centerVBox = new VBox(mediationTableView, chatVBox);
-        centerVBox.setPadding(new Insets(0, 40, 0, 40));
+        centerVBox.setPadding(new Insets(25, 0, 0, 0));
 
         VBox.setVgrow(centerVBox, Priority.ALWAYS);
         root.setContent(centerVBox);
