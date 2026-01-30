@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
@@ -62,7 +62,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Service used by traders to select mediators, request mediation and process MediationResponses
  */
 @Slf4j
-public class MediationRequestService implements Service, ConfidentialMessageService.Listener {
+public class BisqEasyMediationRequestService implements Service, ConfidentialMessageService.Listener {
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
@@ -74,10 +74,10 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     @Nullable
     private Scheduler throttleUpdatesScheduler;
 
-    public MediationRequestService(NetworkService networkService,
-                                   ChatService chatService,
-                                   UserService userService,
-                                   BondedRolesService bondedRolesService) {
+    public BisqEasyMediationRequestService(NetworkService networkService,
+                                           ChatService chatService,
+                                           UserService userService,
+                                           BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         userProfileService = userService.getUserProfileService();
         bannedUserService = userService.getBannedUserService();

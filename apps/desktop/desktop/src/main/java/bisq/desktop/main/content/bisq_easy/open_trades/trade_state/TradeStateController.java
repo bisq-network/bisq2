@@ -57,8 +57,8 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
-import bisq.support.mediation.MediationRequest;
-import bisq.support.mediation.MediationRequestService;
+import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
@@ -84,7 +84,7 @@ public class TradeStateController implements Controller {
     private final NetworkService networkService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
-    private final MediationRequestService mediationRequestService;
+    private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
@@ -99,7 +99,7 @@ public class TradeStateController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
-        mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
+        bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
@@ -313,7 +313,7 @@ public class TradeStateController implements Controller {
     void onRequestMediation() {
         OpenTradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
-                mediationRequestService, channelService);
+                bisqEasyMediationRequestService, channelService);
     }
 
     public void onResendMediationRequest() {

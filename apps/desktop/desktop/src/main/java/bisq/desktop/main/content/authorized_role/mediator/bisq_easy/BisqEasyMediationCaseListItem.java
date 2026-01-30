@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.mediation.MediationCase;
+import bisq.support.mediation.bisq_easy.MediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;

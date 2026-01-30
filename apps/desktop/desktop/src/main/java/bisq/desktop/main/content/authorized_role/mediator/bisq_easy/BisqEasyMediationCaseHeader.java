@@ -31,7 +31,7 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
-import bisq.support.mediation.MediatorService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -80,7 +80,7 @@ public class BisqEasyMediationCaseHeader {
         private final View view;
         private final Model model;
         private final BisqEasyOpenTradeChannelService channelService;
-        private final MediatorService mediatorService;
+        private final BisqEasyMediatorService bisqEasyMediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
         private final LeavePrivateChatManager leavePrivateChatManager;
@@ -92,7 +92,7 @@ public class BisqEasyMediationCaseHeader {
             ChatService chatService = serviceProvider.getChatService();
             channelService = chatService.getBisqEasyOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
-            mediatorService = serviceProvider.getSupportService().getMediatorService();
+            bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
 
             model = new Model();
@@ -164,7 +164,7 @@ public class BisqEasyMediationCaseHeader {
             if (listItem != null) {
                 doClose();
                 doLeave();
-                mediatorService.removeMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.removeMediationCase(listItem.getMediationCase());
             }
         }
 
@@ -185,7 +185,7 @@ public class BisqEasyMediationCaseHeader {
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
                 }
-                mediatorService.closeMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.closeMediationCase(listItem.getMediationCase());
                 onCloseHandler.run();
             }
         }
@@ -197,7 +197,7 @@ public class BisqEasyMediationCaseHeader {
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
                 }
-                mediatorService.reOpenMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.reOpenMediationCase(listItem.getMediationCase());
                 onReOpenHandler.run();
             }
         }

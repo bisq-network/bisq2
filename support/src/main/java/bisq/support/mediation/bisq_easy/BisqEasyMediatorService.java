@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * Service used by mediators
  */
 @Slf4j
-public class MediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
+public class BisqEasyMediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter
@@ -64,11 +64,11 @@ public class MediatorService extends RateLimitedPersistenceClient<MediatorStore>
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
 
-    public MediatorService(PersistenceService persistenceService,
-                           NetworkService networkService,
-                           ChatService chatService,
-                           UserService userService,
-                           BondedRolesService bondedRolesService) {
+    public BisqEasyMediatorService(PersistenceService persistenceService,
+                                   NetworkService networkService,
+                                   ChatService chatService,
+                                   UserService userService,
+                                   BondedRolesService bondedRolesService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();

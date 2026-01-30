@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;

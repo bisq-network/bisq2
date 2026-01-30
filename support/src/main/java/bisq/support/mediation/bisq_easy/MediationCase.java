@@ -1,4 +1,4 @@
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;

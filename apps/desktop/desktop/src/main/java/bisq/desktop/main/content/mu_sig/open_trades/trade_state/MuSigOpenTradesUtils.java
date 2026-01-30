@@ -11,7 +11,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.support.mediation.MediationRequestService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
@@ -70,7 +70,7 @@ public class MuSigOpenTradesUtils {
 
     public static void requestMediation(MuSigOpenTradeChannel channel,
                                         MuSigContract contract,
-                                        MediationRequestService mediationRequestService,
+                                        BisqEasyMediationRequestService bisqEasyMediationRequestService,
                                         MuSigOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
@@ -82,7 +82,7 @@ public class MuSigOpenTradesUtils {
                         channelService.sendTradeLogMessage(encoded, channel);
                         channel.setIsInMediation(true);
                         channelService.persist();
-                        mediationRequestService.requestMediation(channel, contract);
+                        bisqEasyMediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
                                 .show();

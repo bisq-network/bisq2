@@ -119,7 +119,7 @@ public class BisqEasyService implements Service {
         alertService = bondedRolesService.getAlertService();
 
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
-                supportService.getMediatorService(),
+                supportService.getBisqEasyMediatorService(),
                 chatService.getBisqEasyOfferbookChannelService(),
                 settingsService,
                 tradeService.getBisqEasyTradeService(),

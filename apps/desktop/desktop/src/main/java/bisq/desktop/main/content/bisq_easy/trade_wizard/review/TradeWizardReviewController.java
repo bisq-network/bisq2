@@ -66,7 +66,7 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
-import bisq.support.mediation.MediationRequestService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
@@ -107,7 +107,7 @@ public class TradeWizardReviewController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final SettingsService settingsService;
     private final ReviewDataDisplay reviewDataDisplay;
-    private final MediationRequestService mediationRequestService;
+    private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
 
@@ -125,7 +125,7 @@ public class TradeWizardReviewController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         settingsService = serviceProvider.getSettingsService();
-        mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
+        bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         reviewDataDisplay = new ReviewDataDisplay();
@@ -443,7 +443,7 @@ public class TradeWizardReviewController implements Controller {
             // If taker is banned we don't need to show them a popup
             return;
         }
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+        Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
                 takerIdentity.getId(),
                 bisqEasyOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {

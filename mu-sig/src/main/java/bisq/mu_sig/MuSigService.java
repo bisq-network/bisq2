@@ -56,8 +56,8 @@ import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
-import bisq.support.mediation.MediationRequestService;
-import bisq.support.mediation.NoMediatorAvailableException;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
+import bisq.support.mediation.bisq_easy.NoBisqEasyMediatorAvailableException;
 import bisq.trade.TradeService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
@@ -108,7 +108,7 @@ public class MuSigService extends LifecycleService {
     private final Observable<Boolean> muSigActivated = new Observable<>(false);
     @Getter
     private final Observable<MuSigOffer> selectedMuSigOffer = new Observable<>();
-    private final MediationRequestService mediationRequestService;
+    private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
     private final MuSigTradeService muSigTradeService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final UserProfileService userProfileService;
@@ -147,7 +147,7 @@ public class MuSigService extends LifecycleService {
         this.tradeService = tradeService;
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
-        mediationRequestService = supportService.getMediationRequestService();
+        bisqEasyMediationRequestService = supportService.getBisqEasyMediationRequestService();
         alertService = bondedRolesService.getAlertService();
         bannedUserService = userService.getBannedUserService();
         muSigTradeService = tradeService.getMuSigTradeService();
@@ -261,7 +261,7 @@ public class MuSigService extends LifecycleService {
                                               Monetary takersQuoteSideAmount,
                                               PaymentMethodSpec<?> fiatPaymentMethodSpec,
                                               Account<?, ?> takersAccount)
-            throws UserProfileBannedException, NoMediatorAvailableException,
+            throws UserProfileBannedException, NoBisqEasyMediatorAvailableException,
             NoMarketPriceAvailableException, RateLimitExceededException {
 
         checkArgument(isActivated());
@@ -269,11 +269,11 @@ public class MuSigService extends LifecycleService {
         validateUserProfile(makersUserProfileId);
         validateUserProfile(takerIdentity.getId());
 
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(makersUserProfileId,
+        Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(makersUserProfileId,
                 takerIdentity.getId(),
                 muSigOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
-            throw new NoMediatorAvailableException();
+            throw new NoBisqEasyMediatorAvailableException();
         }
 
         return takerCreatesProtocol(takerIdentity,

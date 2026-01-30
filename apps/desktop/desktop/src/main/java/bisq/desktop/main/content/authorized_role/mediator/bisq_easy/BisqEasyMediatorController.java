@@ -30,9 +30,9 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
-import bisq.support.mediation.MediationCase;
-import bisq.support.mediation.MediationRequest;
-import bisq.support.mediation.MediatorService;
+import bisq.support.mediation.bisq_easy.MediationCase;
+import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -64,7 +64,7 @@ public class BisqEasyMediatorController implements Controller {
 
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final BisqEasyMediationCaseHeader bisqEasyMediationCaseHeader;
-    private final MediatorService mediatorService;
+    private final BisqEasyMediatorService bisqEasyMediatorService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final InvalidationListener itemListener;
     private Pin mediationCaseListItemPin, selectedChannelPin;
@@ -77,7 +77,7 @@ public class BisqEasyMediatorController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         BisqEasyOpenTradeChannelService channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
-        mediatorService = serviceProvider.getSupportService().getMediatorService();
+        bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider, BISQ_EASY_OPEN_TRADES, e -> {
@@ -112,7 +112,7 @@ public class BisqEasyMediatorController implements Controller {
                     if (mediatorFromContract.isEmpty()) {
                         return false;
                     }
-                    Optional<UserIdentity> myOptionalUserIdentity = mediatorService.findMyMediatorUserIdentity(mediatorFromContract);
+                    Optional<UserIdentity> myOptionalUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(mediatorFromContract);
                     if (myOptionalUserIdentity.isEmpty()) {
                         return false;
                     }
@@ -135,11 +135,11 @@ public class BisqEasyMediatorController implements Controller {
                 })
                 .map(mediationCase -> {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
-                    UserIdentity myUserIdentity = mediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
+                    UserIdentity myUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
                     BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
                     return new BisqEasyMediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
-                .to(mediatorService.getMediationCases());
+                .to(bisqEasyMediatorService.getMediationCases());
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
