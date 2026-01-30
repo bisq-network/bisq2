@@ -18,6 +18,7 @@
 package bisq.http_api.web_socket.rest_api_proxy;
 
 import bisq.http_api.web_socket.WebSocketMessage;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
@@ -25,12 +26,14 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WebSocketRestApiRequest implements WebSocketMessage {
     // Client side full qualified class name for response class required for polymorphism support
     private String responseClassName;
@@ -38,9 +41,14 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String path;
     private String method;
     private String body;
+
+    // Legacy authentication fields (for backward compatibility)
     private String authToken;
     private String authTs;
     private String authNonce;
+
+    // New authentication via headers (session-based)
+    private Map<String, String> headers;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&
