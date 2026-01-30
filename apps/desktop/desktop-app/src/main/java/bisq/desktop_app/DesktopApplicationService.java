@@ -225,10 +225,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         var pushNotificationConfig = PushNotificationConfig.from(getConfig("pushNotification"));
+        var pairingConfig = bisq.http_api.PairingConfig.from(getConfig("pairing"));
         httpApiService = new HttpApiService(restApiConfig,
                 websocketConfig,
                 pushNotificationConfig,
+                pairingConfig,
                 getConfig().getAppDataDirPath(),
+                persistenceService,
                 securityService,
                 networkService,
                 userService,
