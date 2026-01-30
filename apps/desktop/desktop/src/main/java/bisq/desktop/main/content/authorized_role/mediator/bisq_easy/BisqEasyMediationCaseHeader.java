@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
@@ -26,7 +26,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
+import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details.BisqEasyMediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -55,10 +55,10 @@ import static bisq.settings.DontShowAgainKey.MEDIATOR_CLOSE_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVE_CHANNEL_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVE_CASE_WARNING;
 
-public class MediationCaseHeader {
+public class BisqEasyMediationCaseHeader {
     private final Controller controller;
 
-    public MediationCaseHeader(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
+    public BisqEasyMediationCaseHeader(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
         controller = new Controller(serviceProvider, onCloseHandler, onReOpenHandler);
     }
 
@@ -66,7 +66,7 @@ public class MediationCaseHeader {
         return controller.view.getRoot();
     }
 
-    public void setMediationCaseListItem(MediationCaseListItem item) {
+    public void setMediationCaseListItem(BisqEasyMediationCaseListItem item) {
         controller.setMediationCaseListItem(item);
     }
 
@@ -99,7 +99,7 @@ public class MediationCaseHeader {
             view = new View(model, this);
         }
 
-        private void setMediationCaseListItem(MediationCaseListItem item) {
+        private void setMediationCaseListItem(BisqEasyMediationCaseListItem item) {
             model.getMediationCaseListItem().set(item);
         }
 
@@ -155,12 +155,12 @@ public class MediationCaseHeader {
         }
 
         void onShowDetails() {
-            MediationCaseListItem item = model.getMediationCaseListItem().get();
-            Navigation.navigateTo(NavigationTarget.MEDIATION_CASE_DETAILS, new MediationCaseDetailsController.InitData(item));
+            BisqEasyMediationCaseListItem item = model.getMediationCaseListItem().get();
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_MEDIATION_CASE_DETAILS, new BisqEasyMediationCaseDetailsController.InitData(item));
         }
 
         private void deRemoveCase() {
-            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
                 doClose();
                 doLeave();
@@ -169,7 +169,7 @@ public class MediationCaseHeader {
         }
 
         private void doLeave() {
-            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
                 BisqEasyOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
@@ -179,7 +179,7 @@ public class MediationCaseHeader {
         }
 
         private void doClose() {
-            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
                 BisqEasyOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
@@ -191,7 +191,7 @@ public class MediationCaseHeader {
         }
 
         private void doReOpen() {
-            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
                 BisqEasyOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
@@ -206,7 +206,7 @@ public class MediationCaseHeader {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<MediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<BisqEasyMediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
         private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     }
 

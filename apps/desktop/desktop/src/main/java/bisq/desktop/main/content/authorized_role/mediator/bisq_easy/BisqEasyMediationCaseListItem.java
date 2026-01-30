@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
@@ -50,7 +50,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class MediationCaseListItem implements ActivatableTableItem, DateTableItem {
+public class BisqEasyMediationCaseListItem implements ActivatableTableItem, DateTableItem {
     @EqualsAndHashCode.Include
     private final MediationCase mediationCase;
     @EqualsAndHashCode.Include
@@ -70,9 +70,9 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
     private String closeCaseDateString = "";
     private String closeCaseTimeString = "";
 
-    MediationCaseListItem(ServiceProvider serviceProvider,
-                          MediationCase mediationCase,
-                          BisqEasyOpenTradeChannel channel) {
+    BisqEasyMediationCaseListItem(ServiceProvider serviceProvider,
+                                  MediationCase mediationCase,
+                                  BisqEasyOpenTradeChannel channel) {
         this.mediationCase = mediationCase;
         this.channel = channel;
 

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.details;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details;
 
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.NavigationView;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MediationCaseDetailsView extends NavigationView<VBox, MediationCaseDetailsModel, MediationCaseDetailsController> {
+public class BisqEasyMediationCaseDetailsView extends NavigationView<VBox, BisqEasyMediationCaseDetailsModel, BisqEasyMediationCaseDetailsController> {
     private final Button closeButton;
     private final Label tradeDateLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
@@ -47,7 +47,7 @@ public class MediationCaseDetailsView extends NavigationView<VBox, MediationCase
     private final BisqMenuItem tradeIdCopyButton, buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton,
             buyerUserNameCopyButton, sellerUserNameCopyButton;
 
-    public MediationCaseDetailsView(MediationCaseDetailsModel model, MediationCaseDetailsController controller) {
+    public BisqEasyMediationCaseDetailsView(BisqEasyMediationCaseDetailsModel model, BisqEasyMediationCaseDetailsController controller) {
         super(new VBox(), model, controller);
 
         closeButton = BisqIconButton.createIconButton("close");

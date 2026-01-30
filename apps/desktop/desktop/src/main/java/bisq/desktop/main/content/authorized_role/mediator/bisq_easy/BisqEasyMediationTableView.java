@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileMutatorUtils;
@@ -44,21 +44,21 @@ import java.util.stream.Stream;
  */
 @Slf4j
 @Getter
-class MediationTableView extends VBox {
-    private final MediatorModel model;
-    private final MediatorController controller;
+class BisqEasyMediationTableView extends VBox {
+    private final BisqEasyMediatorModel model;
+    private final BisqEasyMediatorController controller;
 
     private final Switch showClosedCasesSwitch;
     private final SearchBox searchBox;
-    private final BisqTableView<MediationCaseListItem> tableView;
-    private BisqTableColumn<MediationCaseListItem> closeCaseDateColumn;
+    private final BisqTableView<BisqEasyMediationCaseListItem> tableView;
+    private BisqTableColumn<BisqEasyMediationCaseListItem> closeCaseDateColumn;
     private final Hyperlink exportHyperlink;
     private final Label numEntriesLabel;
-    private final ListChangeListener<MediationCaseListItem> listChangeListener;
+    private final ListChangeListener<BisqEasyMediationCaseListItem> listChangeListener;
     private Subscription searchTextPin;
     private Subscription showClosedCasesPin, selectedModelItemPin, tableViewSelectionPin, noOpenCasesPin, chatWindowPin;
 
-    MediationTableView(MediatorModel model, MediatorController controller) {
+    BisqEasyMediationTableView(BisqEasyMediatorModel model, BisqEasyMediatorController controller) {
         this.model = model;
         this.controller = controller;
 
@@ -178,12 +178,12 @@ class MediationTableView extends VBox {
         searchBox.clear();
     }
 
-    private Stream<BisqTableColumn<MediationCaseListItem>> getBisqTableColumnsForCsv() {
+    private Stream<BisqTableColumn<BisqEasyMediationCaseListItem>> getBisqTableColumnsForCsv() {
         return tableView.getColumns().stream()
                 .filter(column -> column instanceof BisqTableColumn)
                 .map(column -> {
                     @SuppressWarnings("unchecked")
-                    BisqTableColumn<MediationCaseListItem> bisqTableColumn = (BisqTableColumn) column;
+                    BisqTableColumn<BisqEasyMediationCaseListItem> bisqTableColumn = (BisqTableColumn) column;
                     return bisqTableColumn;
                 })
                 .filter(TableColumnBase::isVisible)
@@ -252,7 +252,7 @@ class MediationTableView extends VBox {
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.maker"))
                 .minWidth(120)
                 .left()
@@ -260,13 +260,13 @@ class MediationTableView extends VBox {
                 .setCellFactory(getMakerCellFactory())
                 .valueSupplier(item -> item.getMaker().getUserName())// For csv export
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .minWidth(95)
-                .comparator(Comparator.comparing(MediationCaseListItem::getDirectionalTitle))
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getDirectionalTitle))
                 .setCellFactory(getDirectionCellFactory())
                 .includeForCsv(false)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.taker"))
                 .minWidth(120)
                 .left()
@@ -277,44 +277,44 @@ class MediationTableView extends VBox {
 
         tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
                 .minWidth(85)
-                .comparator(Comparator.comparing(MediationCaseListItem::getTradeId))
-                .valueSupplier(MediationCaseListItem::getShortTradeId)
-                .tooltipSupplier(MediationCaseListItem::getTradeId)
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getTradeId))
+                .valueSupplier(BisqEasyMediationCaseListItem::getShortTradeId)
+                .tooltipSupplier(BisqEasyMediationCaseListItem::getTradeId)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MediationCaseListItem::getQuoteAmount))
-                .valueSupplier(MediationCaseListItem::getQuoteAmountString)
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getQuoteAmount))
+                .valueSupplier(BisqEasyMediationCaseListItem::getQuoteAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MediationCaseListItem::getBaseAmount))
-                .valueSupplier(MediationCaseListItem::getBaseAmountString)
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getBaseAmount))
+                .valueSupplier(BisqEasyMediationCaseListItem::getBaseAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
                 .fixWidth(170)
-                .comparator(Comparator.comparing(MediationCaseListItem::getPrice))
-                .valueSupplier(MediationCaseListItem::getPriceString)
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getPrice))
+                .valueSupplier(BisqEasyMediationCaseListItem::getPriceString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(130)
                 .right()
-                .comparator(Comparator.comparing(MediationCaseListItem::getPaymentMethod))
-                .valueSupplier(MediationCaseListItem::getPaymentMethod)
-                .tooltipSupplier(MediationCaseListItem::getPaymentMethod)
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getPaymentMethod))
+                .valueSupplier(BisqEasyMediationCaseListItem::getPaymentMethod)
+                .tooltipSupplier(BisqEasyMediationCaseListItem::getPaymentMethod)
                 .build());
-        closeCaseDateColumn = new BisqTableColumn.Builder<MediationCaseListItem>()
+        closeCaseDateColumn = new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.header.closeCaseDate"))
                 .minWidth(130)
                 .right()
-                .comparator(Comparator.comparing(MediationCaseListItem::getCloseCaseDate))
+                .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getCloseCaseDate))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getCloseDateCellFactory())
                 .valueSupplier(item -> item.getCloseCaseDateString() + " " + item.getCloseCaseTimeString())
@@ -322,14 +322,14 @@ class MediationTableView extends VBox {
         tableView.getColumns().add(closeCaseDateColumn);
     }
 
-    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
-            TableCell<MediationCaseListItem, MediationCaseListItem>> getCloseDateCellFactory() {
+    private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
+            TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getCloseDateCellFactory() {
         return column -> new TableCell<>() {
 
             private final Label label = new Label();
 
             @Override
-            protected void updateItem(MediationCaseListItem item, boolean empty) {
+            protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -348,14 +348,14 @@ class MediationTableView extends VBox {
         };
     }
 
-    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
-            TableCell<MediationCaseListItem, MediationCaseListItem>> getDirectionCellFactory() {
+    private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
+            TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getDirectionCellFactory() {
         return column -> new TableCell<>() {
 
             private final Label label = new Label();
 
             @Override
-            protected void updateItem(MediationCaseListItem item, boolean empty) {
+            protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -369,14 +369,14 @@ class MediationTableView extends VBox {
         };
     }
 
-    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
-            TableCell<MediationCaseListItem, MediationCaseListItem>> getMakerCellFactory() {
+    private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
+            TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getMakerCellFactory() {
         return column -> new TableCell<>() {
 
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            protected void updateItem(MediationCaseListItem item, boolean empty) {
+            protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -392,14 +392,14 @@ class MediationTableView extends VBox {
         };
     }
 
-    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
-            TableCell<MediationCaseListItem, MediationCaseListItem>> getTakerCellFactory() {
+    private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
+            TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getTakerCellFactory() {
         return column -> new TableCell<>() {
 
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            protected void updateItem(MediationCaseListItem item, boolean empty) {
+            protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -415,10 +415,10 @@ class MediationTableView extends VBox {
         };
     }
 
-    private static UserProfileDisplay applyTraderToTableCell(TableCell<MediationCaseListItem, MediationCaseListItem> tableCell,
-                                                             MediationCaseListItem item,
+    private static UserProfileDisplay applyTraderToTableCell(TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem> tableCell,
+                                                             BisqEasyMediationCaseListItem item,
                                                              boolean isRequester,
-                                                             MediationCaseListItem.Trader trader) {
+                                                             BisqEasyMediationCaseListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile(), false);
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");

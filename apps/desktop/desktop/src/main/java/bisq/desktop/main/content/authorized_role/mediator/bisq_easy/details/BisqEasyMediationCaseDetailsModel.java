@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.details;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.main.content.authorized_role.mediator.MediationCaseListItem;
+import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediationCaseListItem;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class MediationCaseDetailsModel extends NavigationModel {
-    private MediationCaseListItem mediationCaseListItem;
+public class BisqEasyMediationCaseDetailsModel extends NavigationModel {
+    private BisqEasyMediationCaseListItem bisqEasyMediationCaseListItem;
     private String tradeDate;
     private String offerType;
     private String market;
@@ -48,6 +48,6 @@ public class MediationCaseDetailsModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MEDIATION_CASE_DETAILS;
+        return NavigationTarget.BISQ_EASY_MEDIATION_CASE_DETAILS;
     }
 }
