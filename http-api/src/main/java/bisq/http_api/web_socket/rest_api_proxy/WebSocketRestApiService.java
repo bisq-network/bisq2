@@ -73,17 +73,14 @@ public class WebSocketRestApiService implements Service {
 
     public void onMessage(String json, WebSocket webSocket) {
         WebSocketRestApiRequest.fromJson(objectMapper, json)
-                .map(request -> sendToRestApiServer(request, request.getAuthToken(), request.getAuthTs(), request.getAuthNonce()))
+                .map(this::sendToRestApiServer)
                 .flatMap(response -> response.toJson(objectMapper))
                 .ifPresentOrElse(webSocket::send,
                         () -> log.warn("Message was not sent to websocket." +
                                 "\nJson={}", json));
     }
 
-    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request,
-                                                         @Nullable String authToken,
-                                                         @Nullable String authTs,
-                                                         @Nullable String authNonce) {
+    private WebSocketRestApiResponse sendToRestApiServer(WebSocketRestApiRequest request) {
         String errorMessage = requestValidator.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
@@ -98,10 +95,18 @@ public class WebSocketRestApiService implements Service {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .method(method, HttpRequest.BodyPublishers.ofString(body));
-        if (authToken != null && authTs != null && authNonce != null) {
-            requestBuilder.header(AuthUtils.AUTH_HEADER, authToken);
-            requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, authTs);
-            requestBuilder.header(AuthUtils.AUTH_NONCE_HEADER, authNonce);
+
+        // Support both old authentication (authToken, authTs, authNonce) and new authentication (headers)
+        if (request.getHeaders() != null && !request.getHeaders().isEmpty()) {
+            // New authentication format - forward all headers
+            request.getHeaders().forEach(requestBuilder::header);
+            log.debug("Using new authentication format with headers: {}", request.getHeaders().keySet());
+        } else if (request.getAuthToken() != null && request.getAuthTs() != null && request.getAuthNonce() != null) {
+            // Legacy authentication format
+            requestBuilder.header(AuthUtils.AUTH_HEADER, request.getAuthToken());
+            requestBuilder.header(AuthUtils.AUTH_TIMESTAMP_HEADER, request.getAuthTs());
+            requestBuilder.header(AuthUtils.AUTH_NONCE_HEADER, request.getAuthNonce());
+            log.debug("Using legacy authentication format");
         }
         try {
             HttpRequest httpRequest = requestBuilder.build();
