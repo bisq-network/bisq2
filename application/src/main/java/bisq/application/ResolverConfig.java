@@ -43,8 +43,8 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.mu_sig.MuSigOfferMessage;
-import bisq.support.mediation.bisq_easy.MediationRequest;
-import bisq.support.mediation.bisq_easy.MediatorsResponse;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorsResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
@@ -115,8 +115,10 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("user.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MediatorsResponse", MediatorsResponse.getNetworkMessageResolver());
+        // Keep proto name for backward compatibility
+        NetworkMessageResolver.addResolver("support.MediationRequest", BisqEasyMediationRequest.getNetworkMessageResolver());
+        // Keep proto name for backward compatibility
+        NetworkMessageResolver.addResolver("support.MediatorsResponse", BisqEasyMediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
 
 

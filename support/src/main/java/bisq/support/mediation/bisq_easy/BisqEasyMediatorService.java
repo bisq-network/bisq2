@@ -104,8 +104,8 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof MediationRequest) {
-            processMediationRequest((MediationRequest) envelopePayloadMessage);
+        if (envelopePayloadMessage instanceof BisqEasyMediationRequest) {
+            processMediationRequest((BisqEasyMediationRequest) envelopePayloadMessage);
         }
     }
 
@@ -114,25 +114,25 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // API
     /* --------------------------------------------------------------------- */
 
-    public void closeMediationCase(MediationCase mediationCase) {
-        if (mediationCase.setClosed(true)) {
+    public void closeMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
+        if (bisqEasyMediationCase.setClosed(true)) {
             persist();
         }
     }
 
-    public void removeMediationCase(MediationCase mediationCase) {
-        getMediationCases().remove(mediationCase);
+    public void removeMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
+        getMediationCases().remove(bisqEasyMediationCase);
         persist();
     }
 
-    public void reOpenMediationCase(MediationCase mediationCase) {
-        if (mediationCase.setClosed(false)) {
+    public void reOpenMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
+        if (bisqEasyMediationCase.setClosed(false)) {
             persist();
         }
     }
 
-    public ObservableSet<MediationCase> getMediationCases() {
-        return persistableStore.getMediationCases();
+    public ObservableSet<BisqEasyMediationCase> getMediationCases() {
+        return persistableStore.getBisqEasyMediationCases();
     }
 
     public Optional<UserIdentity> findMyMediatorUserIdentity(Optional<UserProfile> mediator) {
@@ -154,17 +154,17 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void processMediationRequest(MediationRequest mediationRequest) {
-        UserProfile requester = mediationRequest.getRequester();
+    private void processMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest) {
+        UserProfile requester = bisqEasyMediationRequest.getRequester();
         if (bannedUserService.isUserProfileBanned(requester)) {
             log.warn("Message ignored as sender is banned");
             return;
         }
-        BisqEasyContract contract = mediationRequest.getContract();
+        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
-            String tradeId = mediationRequest.getTradeId();
-            UserProfile peer = mediationRequest.getPeer();
-            List<BisqEasyOpenTradeMessage> chatMessages = mediationRequest.getChatMessages();
+            String tradeId = bisqEasyMediationRequest.getTradeId();
+            UserProfile peer = bisqEasyMediationRequest.getPeer();
+            List<BisqEasyOpenTradeMessage> chatMessages = bisqEasyMediationRequest.getChatMessages();
             BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                     tradeId,
                     contract.getOffer(),
@@ -178,28 +178,28 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             chatMessages.forEach(chatMessage ->
                     bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
-            // We apply the mediationCase after the channel is set up as clients will expect a channel.
-            MediationCase mediationCase = new MediationCase(mediationRequest);
-            addNewMediationCase(mediationCase);
+            // We apply the bisqEasyMediationCase after the channel is set up as clients will expect a channel.
+            BisqEasyMediationCase bisqEasyMediationCase = new BisqEasyMediationCase(bisqEasyMediationRequest);
+            addNewMediationCase(bisqEasyMediationCase);
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
 
             // Send to requester
-            networkService.confidentialSend(new MediatorsResponse(tradeId),
+            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId),
                     requester.getNetworkId(),
                     networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
 
             // Send to peer
-            networkService.confidentialSend(new MediatorsResponse(tradeId),
+            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId),
                     peer.getNetworkId(),
                     networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
         });
     }
 
-    private void addNewMediationCase(MediationCase mediationCase) {
-        getMediationCases().add(mediationCase);
+    private void addNewMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
+        getMediationCases().add(bisqEasyMediationCase);
         persist();
     }
 }

@@ -32,8 +32,8 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.support.mediation.bisq_easy.MediationCase;
-import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import lombok.EqualsAndHashCode;
@@ -78,11 +78,11 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
     public void onActivate() {
         BisqEasyMediationCaseListItem bisqEasyMediationCaseListItem = model.getBisqEasyMediationCaseListItem();
         BisqEasyOpenTradeChannel channel = bisqEasyMediationCaseListItem.getChannel();
-        MediationCase mediationCase = bisqEasyMediationCaseListItem.getMediationCase();
-        MediationRequest mediationRequest = mediationCase.getMediationRequest();
-        BisqEasyContract contract = mediationRequest.getContract();
+        BisqEasyMediationCase bisqEasyMediationCase = bisqEasyMediationCaseListItem.getBisqEasyMediationCase();
+        BisqEasyMediationRequest bisqEasyMediationRequest = bisqEasyMediationCase.getBisqEasyMediationRequest();
+        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         BisqEasyOffer offer = contract.getOffer();
-        String tradeId = mediationRequest.getTradeId();
+        String tradeId = bisqEasyMediationRequest.getTradeId();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 

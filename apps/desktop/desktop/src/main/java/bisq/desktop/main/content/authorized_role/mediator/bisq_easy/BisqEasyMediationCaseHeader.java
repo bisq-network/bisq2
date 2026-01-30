@@ -164,7 +164,7 @@ public class BisqEasyMediationCaseHeader {
             if (listItem != null) {
                 doClose();
                 doLeave();
-                bisqEasyMediatorService.removeMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.removeMediationCase(listItem.getBisqEasyMediationCase());
             }
         }
 
@@ -185,7 +185,7 @@ public class BisqEasyMediationCaseHeader {
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
                 }
-                bisqEasyMediatorService.closeMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.closeMediationCase(listItem.getBisqEasyMediationCase());
                 onCloseHandler.run();
             }
         }
@@ -197,7 +197,7 @@ public class BisqEasyMediationCaseHeader {
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
                 }
-                bisqEasyMediatorService.reOpenMediationCase(listItem.getMediationCase());
+                bisqEasyMediatorService.reOpenMediationCase(listItem.getBisqEasyMediationCase());
                 onReOpenHandler.run();
             }
         }

@@ -57,7 +57,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
-import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -319,7 +319,7 @@ public class TradeStateController implements Controller {
     public void onResendMediationRequest() {
         BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade().get();
         if (bisqEasyTrade != null) {
-            String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+            String mediationRequestId = BisqEasyMediationRequest.createMessageId(bisqEasyTrade.getId());
             resendMessageService.ifPresent(service -> service.manuallyResendMessage(mediationRequestId));
         }
     }
@@ -337,7 +337,7 @@ public class TradeStateController implements Controller {
         if (bisqEasyTrade == null) {
             return;
         }
-        String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+        String mediationRequestId = BisqEasyMediationRequest.createMessageId(bisqEasyTrade.getId());
         if (!mediationRequestId.equals(messageId)) {
             return;
         }

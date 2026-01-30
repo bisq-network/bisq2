@@ -46,7 +46,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.settings.DontShowAgainService;
-import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
@@ -244,7 +244,7 @@ public class MuSigTradeStateController implements Controller {
     public void onResendMediationRequest() {
         MuSigTrade trade = model.getTrade().get();
         if (trade != null) {
-            String mediationRequestId = MediationRequest.createMessageId(trade.getId());
+            String mediationRequestId = BisqEasyMediationRequest.createMessageId(trade.getId());
             resendMessageService.ifPresent(service -> service.manuallyResendMessage(mediationRequestId));
         }
     }
@@ -258,7 +258,7 @@ public class MuSigTradeStateController implements Controller {
         if (trade == null) {
             return;
         }
-        String mediationRequestId = MediationRequest.createMessageId(trade.getId());
+        String mediationRequestId = BisqEasyMediationRequest.createMessageId(trade.getId());
         if (!mediationRequestId.equals(messageId)) {
             return;
         }

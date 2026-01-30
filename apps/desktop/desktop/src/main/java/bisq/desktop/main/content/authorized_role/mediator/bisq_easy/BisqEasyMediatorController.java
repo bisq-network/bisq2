@@ -30,8 +30,8 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
-import bisq.support.mediation.bisq_easy.MediationCase;
-import bisq.support.mediation.bisq_easy.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -104,10 +104,10 @@ public class BisqEasyMediatorController implements Controller {
     public void onActivate() {
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<MediationCase, BisqEasyMediationCaseListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<BisqEasyMediationCase, BisqEasyMediationCaseListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
-                    MediationRequest mediationRequest = mediationCase.getMediationRequest();
-                    BisqEasyContract contract = mediationRequest.getContract();
+                    BisqEasyMediationRequest bisqEasyMediationRequest = mediationCase.getBisqEasyMediationRequest();
+                    BisqEasyContract contract = bisqEasyMediationRequest.getContract();
                     Optional<UserProfile> mediatorFromContract = contract.getMediator();
                     if (mediatorFromContract.isEmpty()) {
                         return false;
@@ -117,7 +117,7 @@ public class BisqEasyMediatorController implements Controller {
                         return false;
                     }
 
-                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myOptionalUserIdentity.get());
+                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(bisqEasyMediationRequest, myOptionalUserIdentity.get());
                     if (channel.getMediator().isEmpty()) {
                         // In case we found an existing channel at mediatorFindOrCreatesChannel the mediator field could be empty
                         return false;
@@ -134,9 +134,9 @@ public class BisqEasyMediatorController implements Controller {
                     return true;
                 })
                 .map(mediationCase -> {
-                    MediationRequest mediationRequest = mediationCase.getMediationRequest();
-                    UserIdentity myUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
-                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
+                    BisqEasyMediationRequest bisqEasyMediationRequest = mediationCase.getBisqEasyMediationRequest();
+                    UserIdentity myUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(bisqEasyMediationRequest.getContract().getMediator()).orElseThrow();
+                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(bisqEasyMediationRequest, myUserIdentity);
                     return new BisqEasyMediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(bisqEasyMediatorService.getMediationCases());
@@ -243,9 +243,9 @@ public class BisqEasyMediatorController implements Controller {
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getClosedCasesPredicate().set(item -> item.getMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getBisqEasyMediationCase().getIsClosed().get());
         } else {
-            model.getClosedCasesPredicate().set(item -> !item.getMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> !item.getBisqEasyMediationCase().getIsClosed().get());
         }
     }
 
@@ -270,14 +270,14 @@ public class BisqEasyMediatorController implements Controller {
         });
     }
 
-    private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest,
+    private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,
                                                          UserIdentity myUserIdentity) {
-        BisqEasyContract contract = mediationRequest.getContract();
+        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         return bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
-                mediationRequest.getTradeId(),
+                bisqEasyMediationRequest.getTradeId(),
                 contract.getOffer(),
                 myUserIdentity,
-                mediationRequest.getRequester(),
-                mediationRequest.getPeer());
+                bisqEasyMediationRequest.getRequester(),
+                bisqEasyMediationRequest.getPeer());
     }
 }
