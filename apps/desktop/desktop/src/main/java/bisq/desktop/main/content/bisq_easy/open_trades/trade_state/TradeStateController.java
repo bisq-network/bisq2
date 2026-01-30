@@ -176,30 +176,57 @@ public class TradeStateController implements Controller {
                     }
             );
             peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
-                        if (peersErrorMessage != null) {
-                            String key = "peersErrorMessage_" + trade.getId();
-                            if (dontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> {
-                                    if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
-                                        String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
-                                        new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
-                                                        peersErrorMessage,
-                                                        errorStackTrace))
-                                                .dontShowAgainId(key)
-                                                .show();
-                                    } else {
-                                        new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
-                                                .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
-                                                        peersErrorMessage,
-                                                        Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
-                                                .dontShowAgainId(key)
-                                                .show();
-                                    }
-                                });
-                            }
+
+                
+                if (peersErrorMessage == null) {
+
+                    return;
+                }
+
+                String key = "peersErrorMessage_" + trade.getId();
+                if (!dontShowAgainService.showAgain(key)) {
+                    return;
+                }
+
+                UIThread.run(() -> {
+                    String displayPeersErrorMessage = peersErrorMessage;
+
+                    if (StringUtils.isBlank(displayPeersErrorMessage)) {
+                        displayPeersErrorMessage = Res.get(
+                            
+                                "bisqEasy.openTrades.failure.popup.message.noDetails"
+                            );
                         }
-                    }
-            );
+
+                    if (trade.getPeersTradeProtocolFailure() == null ||
+                            trade.getPeersTradeProtocolFailure().isUnexpected()) {
+
+                            String errorStackTrace = trade.getPeersErrorStackTrace() != null
+                                ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000)
+                                    : "";
+
+                            new Popup()
+                                    .error(Res.get(
+                                            "bisqEasy.openTrades.failedAtPeer.errorPopup.message",
+                                            displayPeersErrorMessage,
+                                            errorStackTrace))
+                                    .dontShowAgainId(key)
+                                    .show();
+
+                        } else {
+                            new Popup()
+                                    .headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
+                                    .failure(
+                                            Res.get("bisqEasy.openTrades.failure.popup.message.header"),
+                                            displayPeersErrorMessage,
+                                            Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
+                                    .dontShowAgainId(key)
+                                    .show();
+                        }
+                    });
+            });
+
+            
 
             hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
@@ -489,10 +516,19 @@ public class TradeStateController implements Controller {
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer.errorMessage",
-                        model.getBisqEasyTrade().get().getPeersErrorMessage()));
-                break;
 
+                String peersErrorMessage = model.getBisqEasyTrade().get().getPeersErrorMessage();
+                if (StringUtils.isBlank(peersErrorMessage)) {
+                    peersErrorMessage = Res.get(
+                    "bisqEasy.openTrades.failure.popup.message.noDetails"
+                 );
+                }
+
+                model.getErrorMessage().set(Res.get(
+                   "bisqEasy.openTrades.failedAtPeer.errorMessage",
+                   peersErrorMessage));
+            break;
+                
             default:
                 log.error("State {} not handled", state.name());
         }
