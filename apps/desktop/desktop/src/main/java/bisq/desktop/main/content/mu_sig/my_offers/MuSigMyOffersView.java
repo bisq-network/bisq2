@@ -70,6 +70,57 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
         root.getChildren().addAll(muSigMyOffersListView);
     }
 
+    @Override
+    protected void onViewAttached() {
+        muSigMyOffersListView.initialize();
+        muSigMyOffersListView.resetSearch();
+        muSigMyOffersListView.sort();
+        myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
+
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+
+        List<String> csvHeaders = muSigMyOffersListView.buildCsvHeaders();
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.market").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.myProfile").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.baseAmount").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.price").toUpperCase());
+        csvHeaders.add(Res.get("muSig.myOffers.table.header.paymentMethods").toUpperCase());
+        muSigMyOffersListView.setCsvHeaders(Optional.of(csvHeaders));
+
+        List<List<String>> csvData = muSigMyOffersListView.getItems().stream()
+                .map(item -> {
+                    List<String> cellDataInRow = muSigMyOffersListView.getBisqTableColumnsForCsv()
+                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
+                            .collect(Collectors.toList());
+
+                    // Add market
+                    cellDataInRow.add(item.getMarket().getMarketDisplayName());
+
+                    // Add my profile
+                    cellDataInRow.add(item.getMakerUserProfile().getUserName());
+
+                    // Add base amount
+                    cellDataInRow.add(item.getBaseAmountWithSymbol());
+
+                    // Add price
+                    cellDataInRow.add(item.getOfferPriceWithSpec());
+
+                    // Add payment methods
+                    cellDataInRow.add(item.getPaymentMethodsAsString());
+
+                    return cellDataInRow;
+                })
+                .collect(Collectors.toList());
+        muSigMyOffersListView.setCsvData(Optional.of(csvData));
+    }
+
+    @Override
+    protected void onViewDetached() {
+        muSigMyOffersListView.dispose();
+
+        createOfferButton.setOnAction(null);
+    }
+
     private void configMuSigMyOffersListView() {
         muSigMyOffersListView.getColumns().add(muSigMyOffersListView.getTableView().getSelectionMarkerColumn());
 
@@ -167,57 +218,6 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .minWidth(150)
                 .includeForCsv(false)
                 .build());
-    }
-
-    @Override
-    protected void onViewAttached() {
-        muSigMyOffersListView.initialize();
-        muSigMyOffersListView.resetSearch();
-        muSigMyOffersListView.sort();
-        myProfileColumn.visibleProperty().set(model.isShouldShowMyProfileColumn());
-
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
-
-        List<String> csvHeaders = muSigMyOffersListView.buildCsvHeaders();
-        csvHeaders.add(Res.get("muSig.myOffers.table.header.market").toUpperCase());
-        csvHeaders.add(Res.get("muSig.myOffers.table.header.myProfile").toUpperCase());
-        csvHeaders.add(Res.get("muSig.myOffers.table.header.baseAmount").toUpperCase());
-        csvHeaders.add(Res.get("muSig.myOffers.table.header.price").toUpperCase());
-        csvHeaders.add(Res.get("muSig.myOffers.table.header.paymentMethods").toUpperCase());
-        muSigMyOffersListView.setCsvHeaders(Optional.of(csvHeaders));
-
-        List<List<String>> csvData = muSigMyOffersListView.getItems().stream()
-                .map(item -> {
-                    List<String> cellDataInRow = muSigMyOffersListView.getBisqTableColumnsForCsv()
-                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
-                            .collect(Collectors.toList());
-
-                    // Add market
-                    cellDataInRow.add(item.getMarket().getMarketDisplayName());
-
-                    // Add my profile
-                    cellDataInRow.add(item.getMakerUserProfile().getUserName());
-
-                    // Add base amount
-                    cellDataInRow.add(item.getBaseAmountWithSymbol());
-
-                    // Add price
-                    cellDataInRow.add(item.getOfferPriceWithSpec());
-
-                    // Add payment methods
-                    cellDataInRow.add(item.getPaymentMethodsAsString());
-
-                    return cellDataInRow;
-                })
-                .collect(Collectors.toList());
-        muSigMyOffersListView.setCsvData(Optional.of(csvData));
-    }
-
-    @Override
-    protected void onViewDetached() {
-        muSigMyOffersListView.dispose();
-
-        createOfferButton.setOnAction(null);
     }
 
     private Callback<TableColumn<MuSigOfferListItem, MuSigOfferListItem>, TableCell<MuSigOfferListItem, MuSigOfferListItem>> getActionButtonsCellFactory() {
