@@ -17,10 +17,15 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
+import bisq.desktop.main.content.bisq_easy.history.BisqEasyHistoryView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
+import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,5 +37,11 @@ public class BisqEasyView extends ContentTabView<BisqEasyModel, BisqEasyControll
         addTab(Res.get("bisqEasy.offerbook"), NavigationTarget.BISQ_EASY_OFFERBOOK);
         TabButton openTrades = addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
         openTrades.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+        addTab(Res.get("bisqEasy.history"), NavigationTarget.BISQ_EASY_HISTORY);
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof BisqEasyHistoryView;
     }
 }
