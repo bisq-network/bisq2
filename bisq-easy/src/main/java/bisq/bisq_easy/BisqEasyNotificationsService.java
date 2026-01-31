@@ -30,7 +30,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.support.mediation.MediatorService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentity;
 import lombok.Getter;
@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class BisqEasyNotificationsService implements Service {
     private final ChatNotificationService chatNotificationService;
-    private final MediatorService mediatorService;
+    private final BisqEasyMediatorService bisqEasyMediatorService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final SettingsService settingsService;
@@ -67,13 +67,13 @@ public class BisqEasyNotificationsService implements Service {
     private final Set<ChatNotification> orphanedNotifications = new CopyOnWriteArraySet<>();
 
     public BisqEasyNotificationsService(ChatNotificationService chatNotificationService,
-                                        MediatorService mediatorService,
+                                        BisqEasyMediatorService bisqEasyMediatorService,
                                         BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService,
                                         SettingsService settingsService,
                                         BisqEasyTradeService bisqEasyTradeService,
                                         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
         this.chatNotificationService = chatNotificationService;
-        this.mediatorService = mediatorService;
+        this.bisqEasyMediatorService = bisqEasyMediatorService;
         this.bisqEasyOfferbookChannelService = bisqEasyOfferbookChannelService;
         this.settingsService = settingsService;
         this.bisqEasyTradeService = bisqEasyTradeService;
@@ -129,7 +129,7 @@ public class BisqEasyNotificationsService implements Service {
 
     public boolean isMediatorsNotification(ChatNotification notification) {
         if (notification != null && notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
-            Optional<UserIdentity> myMediatorUserIdentity = mediatorService.findMyMediatorUserIdentity(notification.getMediator());
+            Optional<UserIdentity> myMediatorUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(notification.getMediator());
             return myMediatorUserIdentity.isPresent();
         } else {
             return false;

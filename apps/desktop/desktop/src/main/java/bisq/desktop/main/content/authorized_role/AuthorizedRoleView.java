@@ -25,7 +25,7 @@ import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.ContentTabView;
-import bisq.desktop.main.content.authorized_role.mediator.MediatorView;
+import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediatorView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
@@ -114,6 +114,6 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
 
     @Override
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
-        return childView instanceof MediatorView;
+        return childView instanceof BisqEasyMediatorView;
     }
 }

@@ -105,7 +105,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()),
                 "QuoteSidePaymentMethodSpec from takers contract must be present in the offers quoteSidePaymentMethodSpecs");
 
-        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
+        Optional<UserProfile> mediator = serviceProvider.getSupportService().getBisqEasyMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(),
                         trade.getTaker().getNetworkId().getId(),
                         trade.getOffer().getId());

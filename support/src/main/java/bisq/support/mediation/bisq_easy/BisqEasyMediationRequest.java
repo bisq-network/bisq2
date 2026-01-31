@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
@@ -46,11 +46,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+public final class BisqEasyMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
     public static String createMessageId(String tradeId) {
-        return MediationRequest.class.getSimpleName() + "." + tradeId;
+        // Keep name without BisqEasy prefix for backward compatibility
+        return "MediationRequest" + "." + tradeId;
     }
-
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
@@ -66,12 +66,12 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
     @EqualsAndHashCode.Exclude
     private final Optional<NetworkId> mediatorNetworkId;
 
-    public MediationRequest(String tradeId,
-                            BisqEasyContract contract,
-                            UserProfile requester,
-                            UserProfile peer,
-                            List<BisqEasyOpenTradeMessage> chatMessages,
-                            Optional<NetworkId> mediatorNetworkId) {
+    public BisqEasyMediationRequest(String tradeId,
+                                    BisqEasyContract contract,
+                                    UserProfile requester,
+                                    UserProfile peer,
+                                    List<BisqEasyOpenTradeMessage> chatMessages,
+                                    Optional<NetworkId> mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
         this.requester = requester;
@@ -90,6 +90,10 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         NetworkDataValidation.validateTradeId(tradeId);
         checkArgument(chatMessages.size() < 1000);
     }
+
+    /**
+     * Keep proto name for backward compatibility
+     */
 
     @Override
     public bisq.support.protobuf.MediationRequest.Builder getValueBuilder(boolean serializeForHash) {
@@ -110,8 +114,8 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new MediationRequest(proto.getTradeId(),
+    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
+        return new BisqEasyMediationRequest(proto.getTradeId(),
                 BisqEasyContract.fromProto(proto.getContract()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
@@ -153,7 +157,7 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         return any -> {
             try {
                 bisq.support.protobuf.MediationRequest proto = any.unpack(bisq.support.protobuf.MediationRequest.class);
-                return MediationRequest.fromProto(proto);
+                return BisqEasyMediationRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

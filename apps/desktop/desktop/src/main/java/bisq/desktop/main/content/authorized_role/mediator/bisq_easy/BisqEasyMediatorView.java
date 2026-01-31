@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
@@ -42,20 +42,20 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class MediatorView extends View<ScrollPane, MediatorModel, MediatorController> {
+public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel, BisqEasyMediatorController> {
     private final VBox centerVBox, chatVBox;
     private final Button toggleChatWindowButton;
-    private final MediationTableView mediationTableView;
+    private final BisqEasyMediationTableView bisqEasyMediationTableView;
     private Subscription noOpenCasesPin, chatWindowPin;
 
-    public MediatorView(MediatorModel model,
-                        MediatorController controller,
-                        HBox mediationCaseHeader,
-                        VBox chatMessagesComponent) {
+    public BisqEasyMediatorView(BisqEasyMediatorModel model,
+                                BisqEasyMediatorController controller,
+                                HBox mediationCaseHeader,
+                                VBox chatMessagesComponent) {
 
         super(new ScrollPane(), model, controller);
 
-        mediationTableView = new MediationTableView(model, controller);
+        bisqEasyMediationTableView = new BisqEasyMediationTableView(model, controller);
 
         toggleChatWindowButton = new Button();
         toggleChatWindowButton.setGraphicTextGap(10);
@@ -74,8 +74,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         chatVBox.getStyleClass().add("bisq-easy-container");
 
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        VBox.setMargin(mediationTableView, new Insets(0, 0, 10, 0));
-        centerVBox = new VBox(mediationTableView, chatVBox);
+        VBox.setMargin(bisqEasyMediationTableView, new Insets(0, 0, 10, 0));
+        centerVBox = new VBox(bisqEasyMediationTableView, chatVBox);
         centerVBox.setPadding(new Insets(25, 0, 0, 0));
 
         VBox.setVgrow(centerVBox, Priority.ALWAYS);
@@ -87,7 +87,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
     @Override
     protected void onViewAttached() {
-        mediationTableView.initialize();
+        bisqEasyMediationTableView.initialize();
         noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
             chatVBox.setVisible(!noOpenCases);
             chatVBox.setManaged(!noOpenCases);
@@ -98,7 +98,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
     @Override
     protected void onViewDetached() {
-        mediationTableView.dispose();
+        bisqEasyMediationTableView.dispose();
         noOpenCasesPin.unsubscribe();
         chatWindowPin.unsubscribe();
         toggleChatWindowButton.setOnAction(null);

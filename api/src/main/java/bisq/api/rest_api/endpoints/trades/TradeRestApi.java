@@ -43,7 +43,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.SupportService;
-import bisq.support.mediation.MediationRequestService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -88,7 +88,7 @@ public class TradeRestApi extends RestApiBase {
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
-    private final MediationRequestService mediationRequestService;
+    private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final LeavePrivateChatManager leavePrivateChatManager;
@@ -106,7 +106,7 @@ public class TradeRestApi extends RestApiBase {
         this.marketPriceService = marketPriceService;
         userIdentityService = userService.getUserIdentityService();
         bannedUserService = userService.getBannedUserService();
-        mediationRequestService = supportedService.getMediationRequestService();
+        bisqEasyMediationRequestService = supportedService.getBisqEasyMediationRequestService();
         bisqEasyTradeService = tradeService.getBisqEasyTradeService();
     }
 
@@ -148,7 +148,7 @@ public class TradeRestApi extends RestApiBase {
             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(bitcoinPaymentMethod);
             FiatPaymentMethod fiatPaymentMethod = PaymentMethodSpecUtil.getFiatPaymentMethod(request.fiatPaymentMethod());
             FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(fiatPaymentMethod);
-            Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+            Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
                     takerIdentity.getId(),
                     bisqEasyOffer.getId());
             PriceSpec makersPriceSpec = bisqEasyOffer.getPriceSpec();
@@ -406,7 +406,7 @@ public class TradeRestApi extends RestApiBase {
             BisqEasyOpenTradeChannel channel = optionalChannel.get();
             BisqEasyContract contract = trade.getContract();
 
-            mediationRequestService.requestMediation(channel, contract);
+            bisqEasyMediationRequestService.requestMediation(channel, contract);
 
             asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (NoSuchElementException e) {

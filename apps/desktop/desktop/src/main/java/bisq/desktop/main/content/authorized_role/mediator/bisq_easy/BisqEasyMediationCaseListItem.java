@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.mediation.MediationCase;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -50,9 +50,9 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class MediationCaseListItem implements ActivatableTableItem, DateTableItem {
+public class BisqEasyMediationCaseListItem implements ActivatableTableItem, DateTableItem {
     @EqualsAndHashCode.Include
-    private final MediationCase mediationCase;
+    private final BisqEasyMediationCase bisqEasyMediationCase;
     @EqualsAndHashCode.Include
     private final BisqEasyOpenTradeChannel channel;
     private final ChatNotificationService chatNotificationService;
@@ -70,15 +70,15 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
     private String closeCaseDateString = "";
     private String closeCaseTimeString = "";
 
-    MediationCaseListItem(ServiceProvider serviceProvider,
-                          MediationCase mediationCase,
-                          BisqEasyOpenTradeChannel channel) {
-        this.mediationCase = mediationCase;
+    BisqEasyMediationCaseListItem(ServiceProvider serviceProvider,
+                                  BisqEasyMediationCase bisqEasyMediationCase,
+                                  BisqEasyOpenTradeChannel channel) {
+        this.bisqEasyMediationCase = bisqEasyMediationCase;
         this.channel = channel;
 
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        BisqEasyContract contract = mediationCase.getMediationRequest().getContract();
+        BisqEasyContract contract = bisqEasyMediationCase.getBisqEasyMediationRequest().getContract();
         BisqEasyOffer offer = contract.getOffer();
         List<UserProfile> traders = new ArrayList<>(channel.getTraders());
         offer.getMakerNetworkId().getId();
@@ -92,7 +92,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
             maker = trader2;
             taker = trader1;
         }
-        isMakerRequester = mediationCase.getMediationRequest().getRequester().equals(maker.userProfile);
+        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().equals(maker.userProfile);
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
@@ -114,7 +114,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
     @Override
     public void onActivate() {
-        Optional<Long> optionalCloseCaseDate = mediationCase.getCloseCaseDate();
+        Optional<Long> optionalCloseCaseDate = bisqEasyMediationCase.getCloseCaseDate();
         closeCaseDate = optionalCloseCaseDate.orElse(0L);
         closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
         closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");

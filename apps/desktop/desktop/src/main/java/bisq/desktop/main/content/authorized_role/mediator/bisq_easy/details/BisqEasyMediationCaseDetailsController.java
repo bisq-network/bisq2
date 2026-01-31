@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.details;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
@@ -24,7 +24,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.authorized_role.mediator.MediationCaseListItem;
+import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediationCaseListItem;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -32,8 +32,8 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.support.mediation.MediationCase;
-import bisq.support.mediation.MediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
+import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import lombok.EqualsAndHashCode;
@@ -44,45 +44,45 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class MediationCaseDetailsController extends NavigationController implements InitWithDataController<MediationCaseDetailsController.InitData> {
+public class BisqEasyMediationCaseDetailsController extends NavigationController implements InitWithDataController<BisqEasyMediationCaseDetailsController.InitData> {
     @Getter
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final MediationCaseListItem mediationCaseListItem;
+        private final BisqEasyMediationCaseListItem bisqEasyMediationCaseListItem;
 
-        public InitData(MediationCaseListItem mediationCaseListItem) {
-            this.mediationCaseListItem = mediationCaseListItem;
+        public InitData(BisqEasyMediationCaseListItem bisqEasyMediationCaseListItem) {
+            this.bisqEasyMediationCaseListItem = bisqEasyMediationCaseListItem;
         }
     }
 
     @Getter
-    private final MediationCaseDetailsModel model;
+    private final BisqEasyMediationCaseDetailsModel model;
     @Getter
-    private final MediationCaseDetailsView view;
+    private final BisqEasyMediationCaseDetailsView view;
 
 
-    public MediationCaseDetailsController(ServiceProvider serviceProvider) {
-        super(NavigationTarget.MEDIATION_CASE_DETAILS);
+    public BisqEasyMediationCaseDetailsController(ServiceProvider serviceProvider) {
+        super(NavigationTarget.BISQ_EASY_MEDIATION_CASE_DETAILS);
 
-        model = new MediationCaseDetailsModel();
-        view = new MediationCaseDetailsView(model, this);
+        model = new BisqEasyMediationCaseDetailsModel();
+        view = new BisqEasyMediationCaseDetailsView(model, this);
     }
 
     @Override
     public void initWithData(InitData initData) {
-        model.setMediationCaseListItem(initData.mediationCaseListItem);
+        model.setBisqEasyMediationCaseListItem(initData.bisqEasyMediationCaseListItem);
     }
 
     @Override
     public void onActivate() {
-        MediationCaseListItem mediationCaseListItem = model.getMediationCaseListItem();
-        BisqEasyOpenTradeChannel channel = mediationCaseListItem.getChannel();
-        MediationCase mediationCase = mediationCaseListItem.getMediationCase();
-        MediationRequest mediationRequest = mediationCase.getMediationRequest();
-        BisqEasyContract contract = mediationRequest.getContract();
+        BisqEasyMediationCaseListItem bisqEasyMediationCaseListItem = model.getBisqEasyMediationCaseListItem();
+        BisqEasyOpenTradeChannel channel = bisqEasyMediationCaseListItem.getChannel();
+        BisqEasyMediationCase bisqEasyMediationCase = bisqEasyMediationCaseListItem.getBisqEasyMediationCase();
+        BisqEasyMediationRequest bisqEasyMediationRequest = bisqEasyMediationCase.getBisqEasyMediationRequest();
+        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         BisqEasyOffer offer = contract.getOffer();
-        String tradeId = mediationRequest.getTradeId();
+        String tradeId = bisqEasyMediationRequest.getTradeId();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
@@ -103,10 +103,10 @@ public class MediationCaseDetailsController extends NavigationController impleme
         model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.setTradeId(tradeId);
 
-        MediationCaseListItem.Trader maker = mediationCaseListItem.getMaker();
-        MediationCaseListItem.Trader taker = mediationCaseListItem.getTaker();
-        MediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
-        MediationCaseListItem.Trader seller = offer.getDirection().isSell() ? maker : taker;
+        BisqEasyMediationCaseListItem.Trader maker = bisqEasyMediationCaseListItem.getMaker();
+        BisqEasyMediationCaseListItem.Trader taker = bisqEasyMediationCaseListItem.getTaker();
+        BisqEasyMediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
+        BisqEasyMediationCaseListItem.Trader seller = offer.getDirection().isSell() ? maker : taker;
         model.setBuyerUserName(buyer.getUserName());
         model.setSellerUserName(seller.getUserName());
         model.setBuyerNetworkAddress(buyer.getUserProfile().getAddressByTransportDisplayString(50));

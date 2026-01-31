@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator;
+package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.table.TableList;
@@ -28,17 +28,17 @@ import java.util.function.Predicate;
 
 @Slf4j
 @Getter
-public class MediatorModel implements Model {
+public class BisqEasyMediatorModel implements Model {
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
-    private final TableList<MediationCaseListItem> listItems = new TableList<>();
-    private final ObjectProperty<MediationCaseListItem> selectedItem = new SimpleObjectProperty<>();
+    private final TableList<BisqEasyMediationCaseListItem> listItems = new TableList<>();
+    private final ObjectProperty<BisqEasyMediationCaseListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
-    private final ObjectProperty<Predicate<MediationCaseListItem>> searchPredicate = new SimpleObjectProperty<>(item -> true);
-    private final ObjectProperty<Predicate<MediationCaseListItem>> closedCasesPredicate = new SimpleObjectProperty<>(item -> true);
+    private final ObjectProperty<Predicate<BisqEasyMediationCaseListItem>> searchPredicate = new SimpleObjectProperty<>(item -> true);
+    private final ObjectProperty<Predicate<BisqEasyMediationCaseListItem>> closedCasesPredicate = new SimpleObjectProperty<>(item -> true);
 
-    public MediatorModel() {
+    public BisqEasyMediatorModel() {
     }
 
     public void reset() {

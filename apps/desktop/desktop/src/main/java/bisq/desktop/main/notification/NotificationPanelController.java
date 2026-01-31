@@ -92,8 +92,8 @@ public class NotificationPanelController implements Controller {
             if (tradeIdsOfNotifications.size() == 1) {
                 String tradeId = tradeIdsOfNotifications.iterator().next();
                 if (hasMediatorNotConsumedNotifications) {
-                    model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.single", tradeId));
-                    model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
+                    model.getHeadline().set(Res.get("notificationPanel.bisqEasyMediationCases.headline.single", tradeId));
+                    model.getButtonText().set(Res.get("notificationPanel.bisqEasyMediationCases.button"));
                 } else {
                     model.getHeadline().set(Res.get("notificationPanel.trades.headline.single", tradeId));
                     model.getButtonText().set(Res.get("notificationPanel.trades.button"));
@@ -101,8 +101,8 @@ public class NotificationPanelController implements Controller {
             } else if (tradeIdsOfNotifications.size() > 1) {
                 String tradeIds = StringUtils.truncate(Joiner.on(", ").join(tradeIdsOfNotifications));
                 if (hasMediatorNotConsumedNotifications) {
-                    model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.multiple", tradeIds));
-                    model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
+                    model.getHeadline().set(Res.get("notificationPanel.bisqEasyMediationCases.headline.multiple", tradeIds));
+                    model.getButtonText().set(Res.get("notificationPanel.bisqEasyMediationCases.button"));
                 } else {
                     model.getHeadline().set(Res.get("notificationPanel.trades.headline.multiple", tradeIds));
                     model.getButtonText().set(Res.get("notificationPanel.trades.button"));

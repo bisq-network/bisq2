@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -36,12 +36,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
+public final class BisqEasyMediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String tradeId;
 
-    public MediatorsResponse(String tradeId) {
+    public BisqEasyMediatorsResponse(String tradeId) {
         this.tradeId = tradeId;
 
         verify();
@@ -52,21 +52,25 @@ public final class MediatorsResponse implements MailboxMessage, ExternalNetworkM
         NetworkDataValidation.validateTradeId(tradeId);
     }
 
+    /**
+     * Keep proto name for backward compatibility
+     */
+
     @Override
     public bisq.support.protobuf.MediatorsResponse.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediatorsResponse.newBuilder()
                 .setTradeId(tradeId);
     }
 
-    public static MediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
-        return new MediatorsResponse(proto.getTradeId());
+    public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
+        return new BisqEasyMediatorsResponse(proto.getTradeId());
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.support.protobuf.MediatorsResponse proto = any.unpack(bisq.support.protobuf.MediatorsResponse.class);
-                return MediatorsResponse.fromProto(proto);
+                return BisqEasyMediatorsResponse.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -34,16 +34,16 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class MediatorStore implements PersistableStore<MediatorStore> {
-    private final ObservableSet<MediationCase> mediationCases = new ObservableSet<>();
+    private final ObservableSet<BisqEasyMediationCase> bisqEasyMediationCases = new ObservableSet<>();
 
-    private MediatorStore(Set<MediationCase> mediationCases) {
-        this.mediationCases.setAll(mediationCases);
+    private MediatorStore(Set<BisqEasyMediationCase> bisqEasyMediationCases) {
+        this.bisqEasyMediationCases.setAll(bisqEasyMediationCases);
     }
 
     @Override
     public bisq.support.protobuf.MediatorStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediatorStore.newBuilder()
-                .addAllMediationCases(mediationCases.stream()
+                .addAllMediationCases(bisqEasyMediationCases.stream()
                         .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toSet()));
     }
@@ -55,7 +55,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
 
     public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto) {
         return new MediatorStore(proto.getMediationCasesList()
-                .stream().map(MediationCase::fromProto)
+                .stream().map(BisqEasyMediationCase::fromProto)
                 .collect(Collectors.toSet()));
     }
 
@@ -63,6 +63,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
+                var a = any.is(bisq.support.protobuf.MediatorStore.class);
                 return fromProto(any.unpack(bisq.support.protobuf.MediatorStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
@@ -72,11 +73,11 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
 
     @Override
     public MediatorStore getClone() {
-        return new MediatorStore(Set.copyOf(mediationCases));
+        return new MediatorStore(Set.copyOf(bisqEasyMediationCases));
     }
 
     @Override
     public void applyPersisted(MediatorStore persisted) {
-        mediationCases.setAll(persisted.getMediationCases());
+        bisqEasyMediationCases.setAll(persisted.getBisqEasyMediationCases());
     }
 }

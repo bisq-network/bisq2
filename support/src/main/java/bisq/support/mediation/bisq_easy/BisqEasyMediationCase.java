@@ -1,4 +1,4 @@
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
@@ -9,31 +9,35 @@ import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class MediationCase implements PersistableProto {
+public class BisqEasyMediationCase implements PersistableProto {
     @EqualsAndHashCode.Include
-    private final MediationRequest mediationRequest;
+    private final BisqEasyMediationRequest bisqEasyMediationRequest;
     private final long requestDate;
     private final Observable<Boolean> isClosed = new Observable<>();
     private Optional<Long> closeCaseDate;
 
-    public MediationCase(MediationRequest mediationRequest) {
-        this(mediationRequest, System.currentTimeMillis(), false, Optional.empty());
+    public BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest) {
+        this(bisqEasyMediationRequest, System.currentTimeMillis(), false, Optional.empty());
     }
 
-    private MediationCase(MediationRequest mediationRequest,
-                          long requestDate,
-                          boolean isClosed,
-                          Optional<Long> closeCaseDate) {
-        this.mediationRequest = mediationRequest;
+    private BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                  long requestDate,
+                                  boolean isClosed,
+                                  Optional<Long> closeCaseDate) {
+        this.bisqEasyMediationRequest = bisqEasyMediationRequest;
         this.requestDate = requestDate;
         this.isClosed.set(isClosed);
         this.closeCaseDate = closeCaseDate;
     }
 
+    /**
+     * Keep proto name for backward compatibility
+     */
+
     @Override
     public bisq.support.protobuf.MediationCase.Builder getBuilder(boolean serializeForHash) {
         bisq.support.protobuf.MediationCase.Builder builder = bisq.support.protobuf.MediationCase.newBuilder()
-                .setMediationRequest(mediationRequest.toValueProto(serializeForHash))
+                .setMediationRequest(bisqEasyMediationRequest.toValueProto(serializeForHash))
                 .setRequestDate(requestDate)
                 .setIsClosed(isClosed.get());
         closeCaseDate.ifPresent(builder::setCloseCaseDate);
@@ -46,8 +50,8 @@ public class MediationCase implements PersistableProto {
     }
 
 
-    public static MediationCase fromProto(bisq.support.protobuf.MediationCase proto) {
-        return new MediationCase(MediationRequest.fromProto(proto.getMediationRequest()),
+    public static BisqEasyMediationCase fromProto(bisq.support.protobuf.MediationCase proto) {
+        return new BisqEasyMediationCase(BisqEasyMediationRequest.fromProto(proto.getMediationRequest()),
                 proto.getRequestDate(),
                 proto.getIsClosed(),
                 proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());

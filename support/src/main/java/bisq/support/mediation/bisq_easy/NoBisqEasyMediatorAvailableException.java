@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation;
+package bisq.support.mediation.bisq_easy;
 
 import lombok.Getter;
 
 @Getter
-public class NoMediatorAvailableException extends Exception {
+public class NoBisqEasyMediatorAvailableException extends Exception {
 
-    public NoMediatorAvailableException() {
+    public NoBisqEasyMediatorAvailableException() {
         super("No mediator is available");
     }
 }
