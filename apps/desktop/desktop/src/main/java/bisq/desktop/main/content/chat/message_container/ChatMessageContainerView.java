@@ -36,6 +36,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -89,6 +90,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     @Override
     protected void onViewAttached() {
+        // Consume mouse pressed events on the root to prevent them from propagating to underlying layers
+        root.setOnMousePressed(MouseEvent::consume);
+
         userProfileSelectionRoot.visibleProperty().bind(model.getShouldShowUserProfileSelection());
         userProfileSelectionRoot.managedProperty().bind(model.getShouldShowUserProfileSelection());
         myProfileCatHashImageView.visibleProperty().bind(model.getShouldShowUserProfile());
@@ -152,6 +156,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         inputField.removeEventFilter(KEY_PRESSED, keyPressedHandler);
         sendButton.setOnAction(null);
         userMentionPopup.cleanup();
+        root.setOnMousePressed(null);
     }
 
     private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
@@ -255,6 +260,14 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                     keyEvent.consume();
                     inputField.positionCaret(0);
                 }
+            }
+        } else if (keyEvent.getCode() == KeyCode.PAGE_UP) {
+            if (controller.onPageUpKeyPressed()) {
+                keyEvent.consume();
+            }
+        } else if (keyEvent.getCode() == KeyCode.PAGE_DOWN) {
+            if (controller.onPageDownKeyPressed()) {
+                keyEvent.consume();
             }
         }
     }
