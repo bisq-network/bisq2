@@ -137,7 +137,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getChatMessageIds().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOfferbookMessage offerbookMessage) {
+            public void onAdded(BisqEasyOfferbookMessage offerbookMessage) {
                 UIThread.runOnNextRenderFrame(() -> {
                     if (!model.getChatMessageIds().contains(offerbookMessage.getId()) &&
                             offerbookMessage.hasBisqEasyOffer()) {
@@ -157,7 +157,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 UIThread.runOnNextRenderFrame(() -> {
                     if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
                         BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
@@ -174,7 +174,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.runOnNextRenderFrame(() -> {
                     disposeAndClearOfferbookListItems();
                     model.getChatMessageIds().clear();

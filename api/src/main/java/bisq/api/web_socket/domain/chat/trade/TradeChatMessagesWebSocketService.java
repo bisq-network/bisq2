@@ -66,7 +66,7 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> initialize() {
         channelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOpenTradeChannel channel) {
+            public void onAdded(BisqEasyOpenTradeChannel channel) {
                 String channelId = channel.getId();
                 // Atomic operation
                 messagesByChannelIdPins.compute(channelId, (key, oldPin) -> {
@@ -76,17 +76,17 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
 
                     return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                         @Override
-                        public void add(BisqEasyOpenTradeMessage message) {
+                        public void onAdded(BisqEasyOpenTradeMessage message) {
                             handleAddedMessage(message, channelId);
                         }
 
                         @Override
-                        public void remove(Object element) {
+                        public void onRemoved(Object element) {
                             // BisqEasyOpenTradeMessages cannot be removed
                         }
 
                         @Override
-                        public void clear() {
+                        public void onCleared() {
                             // BisqEasyOpenTradeMessages cannot be removed
                         }
                     });
@@ -94,7 +94,7 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BisqEasyOpenTradeChannel channel) {
                     String channelId = channel.getId();
                     // Atomic operation
@@ -106,7 +106,7 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
 
             }

@@ -52,19 +52,19 @@ public class TradesWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> initialize() {
         tradesPin = openTradeItemsService.getItems().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(TradeItemPresentationDto item) {
+            public void onAdded(TradeItemPresentationDto item) {
                 send(item, ModificationType.ADDED);
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof TradeItemPresentationDto item) {
                     send(item, ModificationType.REMOVED);
                 }
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 send(openTradeItemsService.getItems().getList(), ModificationType.REMOVED);
             }
         });

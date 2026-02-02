@@ -141,7 +141,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
+            public void onAdded(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
                     if (authorizedAlertData.isHaltTrading()) {
                         haltTrading = true;
@@ -154,7 +154,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
                         if (authorizedAlertData.isHaltTrading()) {
@@ -169,7 +169,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 haltTrading = false;
                 requireVersionForTrading = false;
                 minRequiredVersionForTrading = Optional.empty();

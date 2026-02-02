@@ -415,7 +415,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         // Subscribe to changes
         userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(ChatMessageReaction element) {
+            public void onAdded(ChatMessageReaction element) {
                 Reaction reaction = getReactionFromOrdinal(element.getReactionId());
                 UIThread.run(() -> {
                     if (userReactions.containsKey(reaction)) {
@@ -427,7 +427,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
                 UIThread.run(() -> {
@@ -439,7 +439,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(userReactions::clear);
             }
         }));

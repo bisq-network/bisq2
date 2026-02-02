@@ -78,14 +78,14 @@ public class OffersWebSocketService extends BaseWebSocketService {
             String quoteCurrencyCode = channel.getMarket().getQuoteCurrencyCode();
             pins.add(channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
-                public void add(BisqEasyOfferbookMessage message) {
+                public void onAdded(BisqEasyOfferbookMessage message) {
                     if (message.hasBisqEasyOffer()) {
                         send(quoteCurrencyCode, message, ModificationType.ADDED);
                     }
                 }
 
                 @Override
-                public void remove(Object element) {
+                public void onRemoved(Object element) {
                     if (element instanceof BisqEasyOfferbookMessage message) {
                         if (message.hasBisqEasyOffer()) {
                             send(quoteCurrencyCode, message, ModificationType.REMOVED);
@@ -94,7 +94,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 }
 
                 @Override
-                public void clear() {
+                public void onCleared() {
                     throw new NotImplementedException("Clear channel.getChatMessages() is not expected to be used");
                 }
             }));

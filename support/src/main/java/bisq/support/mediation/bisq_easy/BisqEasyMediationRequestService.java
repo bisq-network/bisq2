@@ -249,7 +249,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                             if (channeldPin == null) {
                                 channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
                                     @Override
-                                    public void add(BisqEasyOpenTradeChannel element) {
+                                    public void onAdded(BisqEasyOpenTradeChannel element) {
                                         // Delay and ignore too frequent updates
                                         if (throttleUpdatesScheduler == null) {
                                             throttleUpdatesScheduler = Scheduler.run(() -> {
@@ -261,11 +261,11 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                                     }
 
                                     @Override
-                                    public void remove(Object element) {
+                                    public void onRemoved(Object element) {
                                     }
 
                                     @Override
-                                    public void clear() {
+                                    public void onCleared() {
                                     }
                                 });
                             }

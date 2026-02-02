@@ -732,7 +732,7 @@ public class ChatMessagesListController implements Controller {
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(M chatMessage) {
+            public void onAdded(M chatMessage) {
                 UIThread.run(() -> {
                     // Avoid to add already existing items
                     if (model.getChatMessageIds().contains(chatMessage.getId())) {
@@ -765,7 +765,7 @@ public class ChatMessagesListController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 UIThread.run(() -> {
                     if (element instanceof ChatMessage chatMessage) {
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
@@ -783,7 +783,7 @@ public class ChatMessagesListController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();

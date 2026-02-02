@@ -38,7 +38,7 @@ final class SimpleCollectionObserver<S> implements CollectionObserver<S> {
         this.observer = observer;
     }
 
-    void onChange() {
+    void onChanged() {
         try {
             observer.run();
         } catch (Exception e) {
@@ -48,32 +48,32 @@ final class SimpleCollectionObserver<S> implements CollectionObserver<S> {
     }
 
     @Override
-    public void add(S element) {
-        onChange();
+    public void onAdded(S element) {
+        onChanged();
     }
 
     @Override
-    public void addAll(Collection<? extends S> values) {
-        onChange();
+    public void onAllAdded(Collection<? extends S> values) {
+        onChanged();
     }
 
     @Override
-    public void setAll(Collection<? extends S> values) {
-        onChange();
+    public void onAllSet(Collection<? extends S> values) {
+        onChanged();
     }
 
     @Override
-    public void remove(Object element) {
-        onChange();
+    public void onRemoved(Object element) {
+        onChanged();
     }
 
     @Override
-    public void removeAll(Collection<?> values) {
-        onChange();
+    public void onAllRemoved(Collection<?> values) {
+        onChanged();
     }
 
     @Override
-    public void clear() {
-        onChange();
+    public void onCleared() {
+        onChanged();
     }
 }

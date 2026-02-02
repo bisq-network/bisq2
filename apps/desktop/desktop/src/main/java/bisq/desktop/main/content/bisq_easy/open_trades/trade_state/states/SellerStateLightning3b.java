@@ -96,7 +96,7 @@ public class SellerStateLightning3b extends BaseState {
                     }
                     chatMessagesPin = bisqEasyOpenTradeChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                         @Override
-                        public void add(BisqEasyOpenTradeMessage message) {
+                        public void onAdded(BisqEasyOpenTradeMessage message) {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 // The peersUserName is set to the nickName if it is unique within the user's current
                                 // view of the network data. If multiple user profiles have identical nickNames, we
@@ -121,11 +121,11 @@ public class SellerStateLightning3b extends BaseState {
                         }
 
                         @Override
-                        public void remove(Object element) {
+                        public void onRemoved(Object element) {
                         }
 
                         @Override
-                        public void clear() {
+                        public void onCleared() {
                         }
                     });
                 }

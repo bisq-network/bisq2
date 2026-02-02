@@ -60,7 +60,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
     public Pin addObserver(CollectionObserver<S> observer) {
         observers.add(observer);
         try {
-            observer.addAll(collection);
+            observer.onAllAdded(collection);
         } catch (Exception e) {
             log.error("Observer {} caused an exception at handling update.", observer, e);
         }
@@ -70,7 +70,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
     public Pin addObserver(Runnable observer) {
         SimpleCollectionObserver<S> simpleCollectionObserver = new SimpleCollectionObserver<>(observer);
         observers.add(simpleCollectionObserver);
-        simpleCollectionObserver.onChange();
+        simpleCollectionObserver.onChanged();
         return () -> observers.remove(simpleCollectionObserver);
     }
 
@@ -79,7 +79,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
                                              Function<S, T> mapFunction,
                                              Consumer<Runnable> executor) {
         CollectionChangeMapper<S, T> collectionChangeMapper = new CollectionChangeMapper<>(collection, filterFunction, mapFunction, executor);
-        collectionChangeMapper.setAll(this);
+        collectionChangeMapper.onAllSet(this);
         observers.add(collectionChangeMapper);
         return () -> observers.remove(collectionChangeMapper);
     }
@@ -90,7 +90,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         if (changed) {
             observers.forEach(observer -> {
                 try {
-                    observer.add(element);
+                    observer.onAdded(element);
                 } catch (Exception e) {
                     log.error("Observer {} caused an exception at handling update.", observer, e);
                 }
@@ -105,7 +105,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         if (changed) {
             observers.forEach(observer -> {
                 try {
-                    observer.addAll(values);
+                    observer.onAllAdded(values);
                 } catch (Exception e) {
                     log.error("Observer {} caused an exception at handling update.", observer, e);
                 }
@@ -119,7 +119,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         collection.addAll(values);
         observers.forEach(observer -> {
             try {
-                observer.setAll(values);
+                observer.onAllSet(values);
             } catch (Exception e) {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }
@@ -132,7 +132,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         if (changed) {
             observers.forEach(observer -> {
                 try {
-                    observer.remove(element);
+                    observer.onRemoved(element);
                 } catch (Exception e) {
                     log.error("Observer {} caused an exception at handling update.", observer, e);
                 }
@@ -147,7 +147,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         if (changed) {
             observers.forEach(observer -> {
                 try {
-                    observer.removeAll(values);
+                    observer.onAllRemoved(values);
                 } catch (Exception e) {
                     log.error("Observer {} caused an exception at handling update.", observer, e);
                 }
@@ -161,7 +161,7 @@ public abstract class ObservableCollection<S> implements Collection<S>, ReadOnly
         collection.clear();
         observers.forEach(observer -> {
             try {
-                observer.clear();
+                observer.onCleared();
             } catch (Exception e) {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }

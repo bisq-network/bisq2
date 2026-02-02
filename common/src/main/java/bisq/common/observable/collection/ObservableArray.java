@@ -82,7 +82,7 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
         if (result) {
             observers.forEach(observer -> {
                 try {
-                    observer.addAll(values);
+                    observer.onAllAdded(values);
                 } catch (Exception e) {
                     log.error("Observer {} caused an exception at handling update.", observer, e);
                 }
@@ -96,7 +96,7 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
         S previous = getList().set(index, element);
         observers.forEach(observer -> {
             try {
-                observer.add(element);
+                observer.onAdded(element);
             } catch (Exception e) {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }
@@ -109,7 +109,7 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
         getList().add(index, element);
         observers.forEach(observer -> {
             try {
-                observer.add(element);
+                observer.onAdded(element);
             } catch (Exception e) {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }
@@ -121,7 +121,7 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
         S removedElement = getList().remove(index);
         observers.forEach(observer -> {
             try {
-                observer.remove(removedElement);
+                observer.onRemoved(removedElement);
             } catch (Exception e) {
                 log.error("Observer {} caused an exception at handling update.", observer, e);
             }

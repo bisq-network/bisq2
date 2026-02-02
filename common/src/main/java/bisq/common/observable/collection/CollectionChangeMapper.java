@@ -54,7 +54,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void add(S sourceItem) {
+    public void onAdded(S sourceItem) {
         executor.accept(() -> {
             if (filterFunction.apply(sourceItem)) {
                 T item = mapFunction.apply(sourceItem);
@@ -66,7 +66,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void addAll(Collection<? extends S> sourceItems) {
+    public void onAllAdded(Collection<? extends S> sourceItems) {
         executor.accept(() -> targetCollection.addAll(sourceItems.stream()
                 .filter(filterFunction::apply)
                 .map(mapFunction)
@@ -75,7 +75,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void setAll(Collection<? extends S> sourceItems) {
+    public void onAllSet(Collection<? extends S> sourceItems) {
         executor.accept(() -> {
             targetCollection.clear();
             targetCollection.addAll(sourceItems.stream()
@@ -86,7 +86,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void remove(Object sourceItem) {
+    public void onRemoved(Object sourceItem) {
         executor.accept(() -> {
             //noinspection unchecked
             S sourceItemCasted = (S) sourceItem;
@@ -98,7 +98,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void removeAll(Collection<?> sourceItems) {
+    public void onAllRemoved(Collection<?> sourceItems) {
         executor.accept(() -> targetCollection.removeAll(sourceItems.stream()
                 .map(element -> {
                     //noinspection unchecked
@@ -109,7 +109,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void clear() {
+    public void onCleared() {
         executor.accept(targetCollection::clear);
     }
 }

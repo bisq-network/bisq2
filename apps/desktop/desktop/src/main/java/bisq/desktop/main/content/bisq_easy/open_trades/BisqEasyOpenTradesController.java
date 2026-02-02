@@ -98,38 +98,38 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyTrade trade) {
+            public void onAdded(BisqEasyTrade trade) {
                 handleTradeAdded(trade);
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BisqEasyTrade) {
                     handleTradeRemoved((BisqEasyTrade) element);
                 }
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 handleTradesCleared();
             }
         });
 
         channelsPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOpenTradeChannel channel) {
+            public void onAdded(BisqEasyOpenTradeChannel channel) {
                 handleChannelAdded(channel);
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BisqEasyOpenTradeChannel) {
                     handleChannelRemoved((BisqEasyOpenTradeChannel) element);
                 }
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 handleChannelsCleared();
             }
         });

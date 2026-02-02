@@ -53,20 +53,20 @@ public class FeeReceiverService implements Service {
         log.info("initialize");
         authorizedBurningmanDataSetPin = burningmanService.getAuthorizedBurningmanListByBlockSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedBurningmanListByBlock data) {
+            public void onAdded(AuthorizedBurningmanListByBlock data) {
                 authorizedBurningmanListByBlockList.add(data);
                 authorizedBurningmanListByBlockList.sort(Comparator.comparing(AuthorizedBurningmanListByBlock::getBlockHeight));
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof AuthorizedBurningmanListByBlock data) {
                     authorizedBurningmanListByBlockList.remove(data);
                 }
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 authorizedBurningmanListByBlockList.clear();
             }
         });

@@ -156,14 +156,14 @@ public class BisqEasyService implements Service {
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
+            public void onAdded(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData.getAlertType() == AlertType.BANNED_ACCOUNT_DATA) {
                     authorizedAlertData.getBannedAccountData().ifPresent(BisqEasyService.this.bannedAccountDataSet::add);
                 }
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAlertType() == AlertType.BANNED_ACCOUNT_DATA) {
                         authorizedAlertData.getBannedAccountData().ifPresent(BisqEasyService.this.bannedAccountDataSet::remove);
@@ -172,7 +172,7 @@ public class BisqEasyService implements Service {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 BisqEasyService.this.bannedAccountDataSet.clear();
             }
         });

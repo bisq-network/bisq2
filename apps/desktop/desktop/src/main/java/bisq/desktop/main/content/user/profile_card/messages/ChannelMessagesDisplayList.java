@@ -126,7 +126,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
             publicMessagesPin = publicChatChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
-                public void add(M element) {
+                public void onAdded(M element) {
                     boolean isBisqEasyOffer = element instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage
                             && bisqEasyOfferbookMessage.hasBisqEasyOffer();
                     boolean isAuthor = element.getAuthorUserProfileId().equals(userProfile.getId());
@@ -149,7 +149,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 }
 
                 @Override
-                public void remove(Object element) {
+                public void onRemoved(Object element) {
                     if (element instanceof PublicChatMessage && ((PublicChatMessage) element).getChatMessageType() == ChatMessageType.TEXT) {
                         UIThread.runOnNextRenderFrame(() -> {
                             PublicChatMessage publicChatMessage = (PublicChatMessage) element;
@@ -166,7 +166,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 }
 
                 @Override
-                public void clear() {
+                public void onCleared() {
                     UIThread.runOnNextRenderFrame(() -> {
                         model.getChannelMessageItems().forEach(ChannelMessageItem::dispose);
                         model.getChannelMessageItems().clear();

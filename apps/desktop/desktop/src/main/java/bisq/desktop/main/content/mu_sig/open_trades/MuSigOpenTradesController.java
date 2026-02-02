@@ -118,19 +118,19 @@ public final class MuSigOpenTradesController extends ChatController<MuSigOpenTra
 
         channelsPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(MuSigOpenTradeChannel channel) {
+            public void onAdded(MuSigOpenTradeChannel channel) {
                 handleChannelAdded(channel);
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof MuSigOpenTradeChannel channel) {
                     handleChannelRemoved(channel);
                 }
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 handleChannelsCleared();
             }
         });

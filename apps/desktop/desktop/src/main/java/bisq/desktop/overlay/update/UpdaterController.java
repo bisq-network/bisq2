@@ -112,7 +112,7 @@ public class UpdaterController implements Controller {
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
+            public void onAdded(AuthorizedAlertData authorizedAlertData) {
                 UIThread.run(() -> {
                     if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
                             authorizedAlertData.isRequireVersionForTrading() &&
@@ -125,7 +125,7 @@ public class UpdaterController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 UIThread.run(() -> {
                     if (element instanceof AuthorizedAlertData authorizedAlertData) {
                         if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
@@ -140,7 +140,7 @@ public class UpdaterController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.setRequireVersionForTrading(false);
                     model.setMinRequiredVersionForTrading(Optional.empty());
