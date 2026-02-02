@@ -37,6 +37,7 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
+import bisq.api.rest_api.endpoints.payment_accounts.FiatPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
@@ -159,6 +160,7 @@ public class ApiService implements Service {
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
         PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
+        FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi = new FiatPaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
                 userService.getUserProfileService(),
                 supportedService.getModerationRequestService(),
@@ -181,6 +183,7 @@ public class ApiService implements Service {
                     settingsRestApi,
                     explorerRestApi,
                     paymentAccountsRestApi,
+                    fiatPaymentAccountsRestApi,
                     reputationRestApi,
                     userProfileRestApi,
                     devicesRestApi);
