@@ -58,10 +58,7 @@ public class NotificationsSettingsController implements Controller {
                 .to(settingsService.getChatNotificationType(), settingsService::setChatNotificationType);
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
-                value -> {
-                    settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value);
-                    updaterService.reapplyAllReleaseNotifications();
-                });
+                value -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value));
 
         // Currently we support transient notifications only for Linux
         if (OS.isLinux()) {

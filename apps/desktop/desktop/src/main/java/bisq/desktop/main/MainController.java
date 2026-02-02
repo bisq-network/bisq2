@@ -152,7 +152,7 @@ public class MainController extends NavigationController {
     private void maybeShowUpdatePopup() {
         Boolean isNewReleaseAvailable = updaterService.getIsNewReleaseAvailable().get();
         Observable<Boolean> ignoreNewRelease = updaterService.getIgnoreNewRelease();
-        ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
+        ReleaseNotification releaseNotification = updaterService.getMostRelevantReleaseNotification().get();
         if (isNewReleaseAvailable == null ||
                 !isNewReleaseAvailable ||
                 releaseNotification == null ||
