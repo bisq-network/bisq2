@@ -137,7 +137,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         createOfferSuccessOverlay = new WizardOverlay(root)
                 .info()
                 .headline("bisqEasy.tradeWizard.review.createOfferSuccess.headline")
-                .description("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle")
+                .descriptionFromI18nKey("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle")
                 .buttons(createOfferSuccessButton)
                 .build();
 
