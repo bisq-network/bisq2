@@ -15,24 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
+package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeSelectionService;
 import bisq.common.observable.Pin;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
-import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
-import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
-import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
+import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.support.mediation.mu_sig.MuSigMediationRequest;
+import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -47,45 +47,45 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
+import static bisq.chat.ChatChannelDomain.MU_SIG_OPEN_TRADES;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyMediatorController implements Controller {
+public class MuSigMediatorController implements Controller {
     @Getter
-    protected final BisqEasyMediatorModel model;
+    protected final MuSigMediatorModel model;
     @Getter
-    protected final BisqEasyMediatorView view;
+    protected final MuSigMediatorView view;
     protected final ServiceProvider serviceProvider;
     protected final ChatService chatService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChatMessageContainerController chatMessageContainerController;
 
-    private final BisqEasyOpenTradeSelectionService selectionService;
-    private final BisqEasyMediationCaseHeader bisqEasyMediationCaseHeader;
-    private final BisqEasyMediatorService bisqEasyMediatorService;
-    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final MuSigOpenTradeSelectionService selectionService;
+    private final MuSigMediationCaseHeader muSigMediationCaseHeader;
+    private final MuSigMediatorService muSigMediatorService;
+    private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final InvalidationListener itemListener;
     private Pin mediationCaseListItemPin, selectedChannelPin;
     private Subscription searchPredicatePin, closedCasesPredicatePin;
 
-    public BisqEasyMediatorController(ServiceProvider serviceProvider) {
+    public MuSigMediatorController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        BisqEasyOpenTradeChannelService channelService = chatService.getBisqEasyOpenTradeChannelService();
-        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
-        bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
-        bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        MuSigOpenTradeChannelService channelService = chatService.getMuSigOpenTradeChannelService();
+        selectionService = chatService.getMuSigOpenTradesSelectionService();
+        muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
+        muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
 
-        chatMessageContainerController = new ChatMessageContainerController(serviceProvider, BISQ_EASY_OPEN_TRADES, e -> {
+        chatMessageContainerController = new ChatMessageContainerController(serviceProvider, MU_SIG_OPEN_TRADES, e -> {
         });
-        bisqEasyMediationCaseHeader = new BisqEasyMediationCaseHeader(serviceProvider, this::closeCaseHandler, this::reOpenCaseHandler);
+        muSigMediationCaseHeader = new MuSigMediationCaseHeader(serviceProvider, this::closeCaseHandler, this::reOpenCaseHandler);
 
-        model = new BisqEasyMediatorModel();
-        view = new BisqEasyMediatorView(model, this, bisqEasyMediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
+        model = new MuSigMediatorModel();
+        view = new MuSigMediatorView(model, this, muSigMediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
 
         itemListener = observable -> {
             // We need to set predicate when a new item gets added.
@@ -104,27 +104,28 @@ public class BisqEasyMediatorController implements Controller {
     public void onActivate() {
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<BisqEasyMediationCase, BisqEasyMediationCaseListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<MuSigMediationCase, MuSigMediationCaseListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
-                    BisqEasyMediationRequest bisqEasyMediationRequest = mediationCase.getBisqEasyMediationRequest();
-                    BisqEasyContract contract = bisqEasyMediationRequest.getContract();
+                    MuSigMediationRequest muSigMediationRequest = mediationCase.getMuSigMediationRequest();
+                    MuSigContract contract = muSigMediationRequest.getContract();
                     Optional<UserProfile> mediatorFromContract = contract.getMediator();
                     if (mediatorFromContract.isEmpty()) {
                         return false;
                     }
-                    Optional<UserIdentity> myOptionalUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(mediatorFromContract);
+                    Optional<UserIdentity> myOptionalUserIdentity = muSigMediatorService.findMyMediatorUserIdentity(mediatorFromContract);
                     if (myOptionalUserIdentity.isEmpty()) {
                         return false;
                     }
 
-                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(bisqEasyMediationRequest, myOptionalUserIdentity.get());
+                    MuSigOpenTradeChannel channel = findOrCreateChannel(muSigMediationRequest, myOptionalUserIdentity.get());
                     if (channel.getMediator().isEmpty()) {
                         // In case we found an existing channel at mediatorFindOrCreatesChannel the mediator field could be empty
                         return false;
                     }
                     try {
                         checkArgument(channel.getTraders().size() == 2);
-                        checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
+                        // TODO: check whether this is needed or not
+//                        checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
                         checkArgument(channel.getMediator().orElseThrow().equals(contract.getMediator().orElseThrow()));
                     } catch (IllegalArgumentException e) {
                         log.error("Validation of channel properties and contract properties failed. " +
@@ -134,12 +135,12 @@ public class BisqEasyMediatorController implements Controller {
                     return true;
                 })
                 .map(mediationCase -> {
-                    BisqEasyMediationRequest bisqEasyMediationRequest = mediationCase.getBisqEasyMediationRequest();
-                    UserIdentity myUserIdentity = bisqEasyMediatorService.findMyMediatorUserIdentity(bisqEasyMediationRequest.getContract().getMediator()).orElseThrow();
-                    BisqEasyOpenTradeChannel channel = findOrCreateChannel(bisqEasyMediationRequest, myUserIdentity);
-                    return new BisqEasyMediationCaseListItem(serviceProvider, mediationCase, channel);
+                    MuSigMediationRequest muSigMediationRequest = mediationCase.getMuSigMediationRequest();
+                    UserIdentity myUserIdentity = muSigMediatorService.findMyMediatorUserIdentity(muSigMediationRequest.getContract().getMediator()).orElseThrow();
+                    MuSigOpenTradeChannel channel = findOrCreateChannel(muSigMediationRequest, myUserIdentity);
+                    return new MuSigMediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
-                .to(bisqEasyMediatorService.getMediationCases());
+                .to(muSigMediatorService.getMediationCases());
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
@@ -165,7 +166,7 @@ public class BisqEasyMediatorController implements Controller {
         closedCasesPredicatePin.unsubscribe();
     }
 
-    void onSelectItem(BisqEasyMediationCaseListItem item) {
+    void onSelectItem(MuSigMediationCaseListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
@@ -210,25 +211,25 @@ public class BisqEasyMediatorController implements Controller {
         UIThread.run(() -> {
             if (chatChannel == null) {
                 model.getSelectedItem().set(null);
-                bisqEasyMediationCaseHeader.setMediationCaseListItem(null);
-                bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                muSigMediationCaseHeader.setMediationCaseListItem(null);
+                muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
                 maybeSelectFirst();
                 updateEmptyState();
-            } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
+            } else if (chatChannel instanceof MuSigOpenTradeChannel tradeChannel) {
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
                         .findAny()
                         .ifPresent(item -> {
                             model.getSelectedItem().set(item);
-                            bisqEasyMediationCaseHeader.setMediationCaseListItem(item);
-                            bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                            muSigMediationCaseHeader.setMediationCaseListItem(item);
+                            muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
                         });
             }
         });
     }
 
     private void applyShowClosedCasesChange() {
-        bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+        muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
         // Need a predicate change to trigger a list update
         applyFilteredListPredicate(!model.getShowClosedCases().get());
         applyFilteredListPredicate(model.getShowClosedCases().get());
@@ -243,22 +244,22 @@ public class BisqEasyMediatorController implements Controller {
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getClosedCasesPredicate().set(item -> item.getBisqEasyMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getIsClosed().get());
         } else {
-            model.getClosedCasesPredicate().set(item -> !item.getBisqEasyMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> !item.getMuSigMediationCase().getIsClosed().get());
         }
     }
 
     private void updateEmptyState() {
         // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
-        SortedList<BisqEasyMediationCaseListItem> sortedList = model.getListItems().getSortedList();
+        SortedList<MuSigMediationCaseListItem> sortedList = model.getListItems().getSortedList();
         boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
         if (isEmpty) {
             selectionService.getSelectedChannel().set(null);
-            bisqEasyMediationCaseHeader.setMediationCaseListItem(null);
+            muSigMediationCaseHeader.setMediationCaseListItem(null);
         } else {
-            bisqEasyMediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
+            muSigMediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
         }
     }
 
@@ -270,14 +271,14 @@ public class BisqEasyMediatorController implements Controller {
         });
     }
 
-    private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                                         UserIdentity myUserIdentity) {
-        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
-        return bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
-                bisqEasyMediationRequest.getTradeId(),
-                contract.getOffer(),
+    private MuSigOpenTradeChannel findOrCreateChannel(MuSigMediationRequest muSigMediationRequest,
+                                                      UserIdentity myUserIdentity) {
+        MuSigContract contract = muSigMediationRequest.getContract();
+        return muSigOpenTradeChannelService.mediatorFindOrCreatesChannel(
+                muSigMediationRequest.getTradeId(),
+//                contract.getOffer(),
                 myUserIdentity,
-                bisqEasyMediationRequest.getRequester(),
-                bisqEasyMediationRequest.getPeer());
+                muSigMediationRequest.getRequester(),
+                muSigMediationRequest.getPeer());
     }
 }

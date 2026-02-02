@@ -112,6 +112,7 @@ public enum NavigationTarget {
     MU_SIG_TRADE_DETAILS(OVERLAY, false),
 
     BISQ_EASY_MEDIATION_CASE_DETAILS(OVERLAY, false),
+    MU_SIG_MEDIATION_CASE_DETAILS(OVERLAY, false),
 
     SHOW_TABLE_INFO(OVERLAY, false),
 

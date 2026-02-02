@@ -178,8 +178,10 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                 })
                 .collect(Collectors.toList());
         if (result.size() != chatMessages.size()) {
-            log.warn("chatMessages have been pruned as total text size exceeded 10 000 characters. ");
-            log.warn("chatMessages={}", chatMessages);
+            log.warn("chatMessages pruned for trade {}: kept={}, dropped={}, maxTotalChars=10000",
+                    tradeId,
+                    result.size(),
+                    chatMessages.size() - result.size());
         }
         return result;
     }

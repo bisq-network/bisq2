@@ -42,7 +42,6 @@ import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.notifications.NotificationService;
-import bisq.notifications.mobile.MobileNotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
@@ -124,7 +123,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         walletService = walletCfg.isEnabled()
                 ? Optional.of(new MockWalletService(walletCfg))
                 : Optional.empty();
-
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network")),
