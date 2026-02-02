@@ -26,6 +26,7 @@ import "account.proto";
 import "network_identity.proto";
 import "offer.proto";
 import "rpc.proto";
+import "user.proto";
 
 option java_package = "bisq.trade.protobuf";
 option java_multiple_files = true;
@@ -94,6 +95,11 @@ message TradeMessage {
     MuSigTradeMessage muSigTradeMessage = 21;
   }
 }
+message BisqEasyClosedTrade {
+  Trade trade = 1;
+  user.UserProfile myUserProfile = 2;
+  user.UserProfile peerUserProfile = 3;
+}
 
 // BisqEasy
 message BisqEasyTradeParty {
@@ -110,6 +116,7 @@ message BisqEasyTrade {
 message BisqEasyTradeStore {
   repeated Trade trades = 1;
   repeated string tradeIds = 2;
+  repeated BisqEasyClosedTrade bisqEasyClosedTrades = 3;
 }
 
 // BisqEasy messages

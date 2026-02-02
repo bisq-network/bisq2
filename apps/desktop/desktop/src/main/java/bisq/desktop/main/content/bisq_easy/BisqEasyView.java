@@ -21,6 +21,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.bisq_easy.history.BisqEasyHistoryView;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookView;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabView;
@@ -42,6 +43,7 @@ public class BisqEasyView extends ContentTabView<BisqEasyModel, BisqEasyControll
 
     @Override
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
-        return childView instanceof BisqEasyHistoryView;
+        return childView instanceof BisqEasyHistoryView
+                || childView instanceof BisqEasyOfferbookView;
     }
 }

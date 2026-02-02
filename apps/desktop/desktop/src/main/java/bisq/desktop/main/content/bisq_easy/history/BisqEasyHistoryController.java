@@ -17,27 +17,67 @@
 
 package bisq.desktop.main.content.bisq_easy.history;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
+
+import java.util.Optional;
 
 public class BisqEasyHistoryController implements Controller {
     @Getter
     private final BisqEasyHistoryView view;
     private final BisqEasyHistoryModel model;
+    private final BisqEasyTradeService bisqEasyTradeService;
+    private final ReputationService reputationService;
+    private final MarketPriceService marketPriceService;
+    private Pin closedTradesPin;
 
     public BisqEasyHistoryController(ServiceProvider serviceProvider) {
         model = new BisqEasyHistoryModel();
         view = new BisqEasyHistoryView(model, this);
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        marketPriceService = serviceProvider.getBisqEasyService().getMarketPriceService();
     }
 
     @Override
     public void onActivate() {
+        closedTradesPin = bisqEasyTradeService.getClosedTrades().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(BisqEasyClosedTrade closedTrade) {
+                if (findListItem(closedTrade.trade().getId()).isEmpty()) {
+                    model.getBisqEasyTradeHistoryListItems().add(
+                            new BisqEasyTradeHistoryListItem(closedTrade, reputationService, marketPriceService));
+                }
+            }
 
+            @Override
+            public void onRemoved(Object element) {
+                if (element instanceof BisqEasyTrade trade) {
+                    model.getBisqEasyTradeHistoryListItems().stream()
+                            .filter(item -> item.getTrade().equals(trade))
+                            .findFirst()
+                            .ifPresent(item -> model.getBisqEasyTradeHistoryListItems().remove(item));
+                }
+            }
+
+            @Override
+            public void onCleared() {
+                model.getBisqEasyTradeHistoryListItems().clear();
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        closedTradesPin.unbind();
     }
 
     void applySearchPredicate(String searchText) {
@@ -58,5 +98,11 @@ public class BisqEasyHistoryController implements Controller {
     private void applyPredicates() {
         model.getFilteredBisqEasyTradeHistoryListItems().setPredicate(null);
         model.getFilteredBisqEasyTradeHistoryListItems().setPredicate(model.getBisqEasyTradeHistoryListItemsPredicate());
+    }
+
+    private Optional<BisqEasyTradeHistoryListItem> findListItem(String tradeId) {
+        return model.getBisqEasyTradeHistoryListItems().stream()
+                .filter(item -> item.getTrade().getId().equals(tradeId))
+                .findAny();
     }
 }

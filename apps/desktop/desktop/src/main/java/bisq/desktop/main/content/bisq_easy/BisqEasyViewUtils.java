@@ -35,6 +35,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 
 public class BisqEasyViewUtils {
@@ -79,6 +80,12 @@ public class BisqEasyViewUtils {
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
         stackPane.setAlignment(Pos.CENTER);
         return stackPane;
+    }
+
+    public static HBox getPaymentAndSettlementMethodsBox(FiatPaymentMethod paymentMethod,
+                                                         BitcoinPaymentMethod settlementMethod) {
+        return getPaymentAndSettlementMethodsBox(Collections.singletonList(paymentMethod),
+                Collections.singletonList(settlementMethod));
     }
 
     public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,
