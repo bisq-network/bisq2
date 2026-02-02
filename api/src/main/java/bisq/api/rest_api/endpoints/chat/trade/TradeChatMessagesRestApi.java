@@ -91,7 +91,7 @@ public class TradeChatMessagesRestApi extends RestApiBase {
                         Optional<Citation> citation = Optional.ofNullable(request.citation())
                                 .map(DtoMappings.CitationMapping::toBisq2Model);
                         bisqEasyOpenTradeChannelService.sendTextMessage(request.text(), citation, channel);
-                        asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+                        asyncResponse.resume(buildNoContentResponse());
                     }, () -> {
                         asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND,
                                 "No channel found for channel ID " + channelId));
@@ -173,7 +173,7 @@ public class TradeChatMessagesRestApi extends RestApiBase {
                     .orElse(false);
 
             if (wasSent) {
-                asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+                asyncResponse.resume(buildNoContentResponse());
             } else {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND,
                         "No message found for message ID: " + messageId));
