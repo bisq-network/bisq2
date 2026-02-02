@@ -32,6 +32,29 @@ message MediatorStore {
   repeated MediationCase mediationCases = 1;
 }
 
+message MuSigMediationRequest {
+  string tradeId = 1;
+  contract.Contract contract = 2;
+  user.UserProfile requester = 3;
+  user.UserProfile peer = 4;
+  repeated chat.ChatMessage chatMessages = 5;
+  optional network.identity.NetworkId mediatorNetworkId = 6;
+}
+
+message MuSigMediatorsResponse {
+  string tradeId = 1;
+}
+
+message MuSigMediationCase {
+  MuSigMediationRequest muSigMediationRequest = 1;
+  sint64 requestDate = 2;
+  bool isClosed = 3;
+  optional sint64 closeCaseDate = 4;
+}
+message MuSigMediatorStore {
+  repeated MuSigMediationCase muSigMediationCases = 1;
+}
+
 message ReportToModeratorMessage {
   sint64 date = 1;
   string reporterUserProfileId = 2;
