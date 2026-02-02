@@ -311,40 +311,37 @@ public class AlertView extends View<VBox, AlertModel, AlertController> {
     }
 
     private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getDataCellFactory() {
-        return column -> {
+        return column -> new TableCell<>() {
+            private final Label label = new Label();
+            private final BisqIconButton copyButton = new BisqIconButton();
+            private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
+            private final BisqTooltip tooltip = new BisqTooltip();
 
-            return new TableCell<>() {
-                private final Label label = new Label();
-                private final BisqIconButton copyButton = new BisqIconButton();
-                private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
-                private final BisqTooltip tooltip = new BisqTooltip();
+            {
+                copyButton.setIcon(AwesomeIcon.COPY);
+                copyButton.setAlignment(Pos.TOP_RIGHT);
+                copyButton.setOpacity(0.8);
+                label.setAlignment(Pos.CENTER_LEFT);
+                hBox.setAlignment(Pos.CENTER_LEFT);
+            }
 
-                {
-                    copyButton.setIcon(AwesomeIcon.COPY);
-                    copyButton.setAlignment(Pos.TOP_RIGHT);
-                    copyButton.setOpacity(0.8);
-                    label.setAlignment(Pos.CENTER_LEFT);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
+            @Override
+            protected void updateItem(AlertListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String data = item.getData();
+                    label.setText(StringUtils.truncate(data, 25));
+                    tooltip.setText(data);
+                    label.setTooltip(tooltip);
+                    copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(data));
+                    setGraphic(hBox);
+                } else {
+                    label.setTooltip(null);
+                    copyButton.setOnAction(null);
+                    setGraphic(null);
                 }
-
-                @Override
-                protected void updateItem(AlertListItem item, boolean empty) {
-                    super.updateItem(item, empty);
-
-                    if (item != null && !empty) {
-                        String data = item.getData();
-                        label.setText(StringUtils.truncate(data, 25));
-                        tooltip.setText(data);
-                        label.setTooltip(tooltip);
-                        copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(data));
-                        setGraphic(hBox);
-                    } else {
-                        label.setTooltip(null);
-                        copyButton.setOnAction(null);
-                        setGraphic(null);
-                    }
-                }
-            };
+            }
         };
     }
 
