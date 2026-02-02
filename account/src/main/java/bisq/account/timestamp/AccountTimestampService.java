@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.age_witness;
+package bisq.account.timestamp;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
@@ -24,7 +24,6 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Result;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
@@ -43,23 +42,20 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
-public class AccountAgeWitnessService implements Service, DataService.Listener {
+public class AccountTimestampService implements Service, DataService.Listener {
     private final NetworkService networkService;
     private final UserIdentityService userIdentityService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     @Getter
-    private final ObservableHashMap<ByteArray, AccountAgeWitness> accountAgeWitnessByHash = new ObservableHashMap<>();
+    private final ObservableHashMap<ByteArray, AccountTimestamp> accountAgeWitnessByHash = new ObservableHashMap<>();
 
-    public AccountAgeWitnessService(NetworkService networkService,
-                                    UserService userService,
-                                    BondedRolesService bondedRolesService) {
+    public AccountTimestampService(NetworkService networkService,
+                                   UserService userService,
+                                   BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         this.authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
@@ -73,14 +69,14 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
-        String storageKey = AuthorizedAccountAgeWitness.class.getSimpleName();
+        String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         networkService.getDataService()
                 .stream() // turns Optional<DataService> into Stream<DataService>
                 .flatMap(dataService ->
                         dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
                                 .map(AuthenticatedData::getDistributedData)
-                                .filter(AuthorizedAccountAgeWitness.class::isInstance)
-                                .map(AuthorizedAccountAgeWitness.class::cast)
+                                .filter(AuthorizedAccountTimestamp.class::isInstance)
+                                .map(AuthorizedAccountTimestamp.class::cast)
                 ).map(e -> e)
                 .forEach(this::handleAuthorizedAccountAgeWitnessAdded);
         return CompletableFuture.completedFuture(true);
@@ -98,15 +94,15 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
-            handleAuthorizedAccountAgeWitnessAdded(authorizedAccountAgeWitness);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+            handleAuthorizedAccountAgeWitnessAdded(authorizedAccountTimestamp);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
-            handleAuthorizedAccountAgeWitnessRemoved(authorizedAccountAgeWitness);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+            handleAuthorizedAccountAgeWitnessRemoved(authorizedAccountTimestamp);
         }
     }
 
@@ -123,22 +119,23 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
 
     public void registerAccountAgeWitness(Account<?, ?> account) {
         long now = System.currentTimeMillis();
-        AccountPayload<?> accountPayload = account.getAccountPayload();
-        byte[] blindedAgeWitnessInputData = getBlindedAgeWitnessInputData(accountPayload);
         KeyPair keyPair = account.getKeyPair();
         PublicKey publicKey = keyPair.getPublic();
-        byte[] publicKeyBytes = publicKey.getEncoded();
-        byte[] bytes = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
-        byte[] hash = DigestUtil.hash(bytes);
+        byte[] publicKeyEncoded = publicKey.getEncoded();
         KeyAlgorithm keyAlgorithm = account.getKeyAlgorithm();
+        AccountPayload<?> accountPayload = account.getAccountPayload();
 
-        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(hash, System.currentTimeMillis());
-        byte[] message = accountAgeWitness.toProto(true).toByteArray();
+        byte[] saltedFingerprint = getSaltedFingerprint(accountPayload);
+        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
+        byte[] hash = DigestUtil.hash(preimage);
+
+        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, System.currentTimeMillis());
+        byte[] message = accountTimestamp.toProto(true).toByteArray();
         try {
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), keyAlgorithm.getAlgorithm());
-            AuthorizeAccountAgeWitnessRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountAgeWitnessRequest(accountAgeWitness,
-                    blindedAgeWitnessInputData,
-                    publicKeyBytes,
+            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
+            AuthorizeAccountTimestampRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountTimestampRequest(accountTimestamp,
+                    saltedFingerprint,
+                    publicKeyEncoded,
                     signature,
                     keyAlgorithm,
                     now);
@@ -153,7 +150,7 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
         }
     }
 
-    public Result<Void> verifyAccountAgeWitness(AccountAgeWitness accountAgeWitness,
+  /*  public Result<Void> verifyAccountAgeWitness(AccountTimestamp accountTimestamp,
                                                 AccountPayload<?> accountPayload,
                                                 long peersCurrentTimeMillis,
                                                 PublicKey publicKey,
@@ -164,10 +161,13 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
             // Check if peers clock is in a tolerance range of 1 day
             checkArgument(Math.abs(peersCurrentTimeMillis - System.currentTimeMillis()) <= TimeUnit.DAYS.toMillis(1),
                     "Peers clock is more then 1 day off from our clock");
-            byte[] signaturePubKeyBytes = publicKey.getEncoded();
-            byte[] blindedAgeWitnessInputData = getBlindedAgeWitnessInputData(accountPayload);
-            byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, signaturePubKeyBytes);
-            checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
+            byte[] publicKeyEncoded = publicKey.getEncoded();
+
+            byte[] saltedFingerprint = getSaltedFingerprint(accountPayload);
+            byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
+            byte[] hash = DigestUtil.hash(preimage);
+
+            checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
                     "AgeWitnessHash not matching hashFromAccountPayload");
             checkArgument(SignatureUtil.verify(message, signature, publicKey, keyAlgorithm.getAlgorithm()), "Signature verification failed");
             return Result.success(null);
@@ -175,49 +175,49 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
             return Result.failure(e);
         }
     }
-
+*/
 
 
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void handleAuthorizedAccountAgeWitnessAdded(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
+    private void handleAuthorizedAccountAgeWitnessAdded(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
         accountAgeWitnessByHash.putIfAbsent(getAccountAgeWitnessHash(authorizedAccountAgeWitness),
-                authorizedAccountAgeWitness.getAccountAgeWitness());
+                authorizedAccountAgeWitness.getAccountTimestamp());
     }
 
-    private void handleAuthorizedAccountAgeWitnessRemoved(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
+    private void handleAuthorizedAccountAgeWitnessRemoved(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
         accountAgeWitnessByHash.remove(getAccountAgeWitnessHash(authorizedAccountAgeWitness));
     }
 
-    private static ByteArray getAccountAgeWitnessHash(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
-        return new ByteArray(authorizedAccountAgeWitness.getAccountAgeWitness().getHash());
+    private static ByteArray getAccountAgeWitnessHash(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
+        return new ByteArray(authorizedAccountAgeWitness.getAccountTimestamp().getHash());
     }
 
 
     private boolean requireRegistration(Account<? extends PaymentMethod<?>, ?> account) {
         byte[] hash = createHash(account);
         return findAuthorizedAccountAgeWitness(hash)
-                .map(AccountAgeWitnessService::isHalfExpired)
+                .map(AccountTimestampService::isHalfExpired)
                 .findAny()
                 .orElse(true);
     }
 
-    private static byte[] getBlindedAgeWitnessInputData(AccountPayload<?> accountPayload) {
+    private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {
         byte[] salt = accountPayload.getSalt();
-        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
-        return ByteArrayUtils.concat(ageWitnessInputData, salt);
+        byte[] preimage = accountPayload.getFingerprint();
+        return ByteArrayUtils.concat(preimage, salt);
     }
 
-    public Optional<AccountAgeWitness> findAccountAgeWitness(ByteArray hash) {
+    public Optional<AccountTimestamp> findAccountAgeWitness(ByteArray hash) {
         return Optional.ofNullable(accountAgeWitnessByHash.get(hash));
     }
 
     private byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
         AccountPayload<?> accountPayload = account.getAccountPayload();
         byte[] salt = accountPayload.getSalt();
-        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
+        byte[] ageWitnessInputData = accountPayload.getFingerprint();
         byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
         KeyPair keyPair = account.getKeyPair();
         PublicKey publicKey = keyPair.getPublic();
@@ -225,23 +225,23 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
         return ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
     }
 
-    private static boolean isHalfExpired(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
+    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
         long ttl = authorizedAccountAgeWitness.getMetaData().getTtl();
         long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
         return authorizedAccountAgeWitness.getPublishDate() <= halfExpiryDate;
     }
 
-    private Stream<AuthorizedAccountAgeWitness> findAuthorizedAccountAgeWitness(byte[] hash) {
-        String storageKey = AuthorizedAccountAgeWitness.class.getSimpleName();
+    private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountAgeWitness(byte[] hash) {
+        String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         return networkService.getDataService()
                 .stream()
                 .flatMap(dataService ->
                         dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
                                 .map(AuthenticatedData::getDistributedData)
-                                .filter(AuthorizedAccountAgeWitness.class::isInstance)
-                                .map(AuthorizedAccountAgeWitness.class::cast)
+                                .filter(AuthorizedAccountTimestamp.class::isInstance)
+                                .map(AuthorizedAccountTimestamp.class::cast)
                 )
-                .filter(e -> Arrays.equals(hash, e.getAccountAgeWitness().getHash()));
+                .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
 }

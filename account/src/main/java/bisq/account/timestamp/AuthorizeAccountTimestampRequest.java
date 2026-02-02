@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.age_witness;
+package bisq.account.timestamp;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -37,25 +37,25 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, ExternalNetworkMessage {
+public final class AuthorizeAccountTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
-    private final AccountAgeWitness accountAgeWitness;
-    private final byte[] blindedAgeWitnessInputData; //64 bytes
+    private final AccountTimestamp accountTimestamp;
+    private final byte[] saltedFingerprint; //64 bytes
     private final byte[] publicKey; // 443 bytes
     private final byte[] signature; // 46 bytes
     private final KeyAlgorithm keyAlgorithm; // DSA
     private final long creationDate;
 
-    public AuthorizeAccountAgeWitnessRequest(AccountAgeWitness accountAgeWitness,
-                                             byte[] blindedAgeWitnessInputData,
-                                             byte[] publicKey,
-                                             byte[] signature,
-                                             KeyAlgorithm keyAlgorithm,
-                                             long creationDate) {
-        this.accountAgeWitness = accountAgeWitness;
-        this.blindedAgeWitnessInputData = blindedAgeWitnessInputData;
+    public AuthorizeAccountTimestampRequest(AccountTimestamp accountTimestamp,
+                                            byte[] saltedFingerprint,
+                                            byte[] publicKey,
+                                            byte[] signature,
+                                            KeyAlgorithm keyAlgorithm,
+                                            long creationDate) {
+        this.accountTimestamp = accountTimestamp;
+        this.saltedFingerprint = saltedFingerprint;
         this.publicKey = publicKey;
         this.signature = signature;
         this.keyAlgorithm = keyAlgorithm;
@@ -69,16 +69,16 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
     @Override
     public void verify() {
         //todo
-        NetworkDataValidation.validateByteArray(blindedAgeWitnessInputData, 1000);
+        NetworkDataValidation.validateByteArray(saltedFingerprint, 1000);
         NetworkDataValidation.validateByteArray(publicKey, 1000);
         NetworkDataValidation.validateByteArray(signature, 100);
     }
 
     @Override
-    public bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.Builder getValueBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.newBuilder()
-                .setAccountAgeWitness(accountAgeWitness.toProto(serializeForHash))
-                .setBlindedAgeWitnessInputData(ByteString.copyFrom(blindedAgeWitnessInputData))
+    public bisq.account.protobuf.AuthorizeAccountTimestampRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AuthorizeAccountTimestampRequest.newBuilder()
+                .setAccountTimestamp(accountTimestamp.toProto(serializeForHash))
+                .setSaltedFingerprint(ByteString.copyFrom(saltedFingerprint))
                 .setPublicKey(ByteString.copyFrom(publicKey))
                 .setSignature(ByteString.copyFrom(signature))
                 .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
@@ -86,14 +86,14 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
     }
 
     @Override
-    public bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest toValueProto(boolean serializeForHash) {
+    public bisq.account.protobuf.AuthorizeAccountTimestampRequest toValueProto(boolean serializeForHash) {
         return resolveValueProto(serializeForHash);
     }
 
-    public static AuthorizeAccountAgeWitnessRequest fromProto(bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest proto) {
-        return new AuthorizeAccountAgeWitnessRequest(
-                AccountAgeWitness.fromProto(proto.getAccountAgeWitness()),
-                proto.getBlindedAgeWitnessInputData().toByteArray(),
+    public static AuthorizeAccountTimestampRequest fromProto(bisq.account.protobuf.AuthorizeAccountTimestampRequest proto) {
+        return new AuthorizeAccountTimestampRequest(
+                AccountTimestamp.fromProto(proto.getAccountTimestamp()),
+                proto.getSaltedFingerprint().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getSignature().toByteArray(),
                 KeyAlgorithm.fromProto(proto.getKeyAlgorithm()),
@@ -104,8 +104,8 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest proto = any.unpack(bisq.account.protobuf.AuthorizeAccountAgeWitnessRequest.class);
-                return AuthorizeAccountAgeWitnessRequest.fromProto(proto);
+                bisq.account.protobuf.AuthorizeAccountTimestampRequest proto = any.unpack(bisq.account.protobuf.AuthorizeAccountTimestampRequest.class);
+                return AuthorizeAccountTimestampRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

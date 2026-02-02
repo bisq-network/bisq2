@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.age_witness;
+package bisq.account.timestamp;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
@@ -40,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedData, PublishDateAware {
+public final class AuthorizedAccountTimestamp implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
@@ -48,7 +48,7 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
-    private final AccountAgeWitness accountAgeWitness;
+    private final AccountTimestamp accountTimestamp;
 
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
@@ -58,18 +58,18 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
     @Setter
     private transient long publishDate;
 
-    public AuthorizedAccountAgeWitness(AccountAgeWitness accountAgeWitness,
-                                       boolean staticPublicKeysProvided) {
+    public AuthorizedAccountTimestamp(AccountTimestamp accountTimestamp,
+                                      boolean staticPublicKeysProvided) {
         this(VERSION,
-                accountAgeWitness,
+                accountTimestamp,
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedAccountAgeWitness(int version,
-                                        AccountAgeWitness accountAgeWitness,
-                                        boolean staticPublicKeysProvided) {
+    private AuthorizedAccountTimestamp(int version,
+                                       AccountTimestamp accountTimestamp,
+                                       boolean staticPublicKeysProvided) {
         this.version = version;
-        this.accountAgeWitness = accountAgeWitness;
+        this.accountTimestamp = accountTimestamp;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
@@ -80,22 +80,22 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
     }
 
     @Override
-    public bisq.account.protobuf.AuthorizedAccountAgeWitness.Builder getBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.AuthorizedAccountAgeWitness.newBuilder()
-                .setAccountAgeWitness(accountAgeWitness.toProto(serializeForHash))
+    public bisq.account.protobuf.AuthorizedAccountTimestamp.Builder getBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AuthorizedAccountTimestamp.newBuilder()
+                .setAccountTimestamp(accountTimestamp.toProto(serializeForHash))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
                 .setVersion(version);
     }
 
     @Override
-    public bisq.account.protobuf.AuthorizedAccountAgeWitness toProto(boolean serializeForHash) {
+    public bisq.account.protobuf.AuthorizedAccountTimestamp toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedAccountAgeWitness fromProto(bisq.account.protobuf.AuthorizedAccountAgeWitness proto) {
-        return new AuthorizedAccountAgeWitness(
+    public static AuthorizedAccountTimestamp fromProto(bisq.account.protobuf.AuthorizedAccountTimestamp proto) {
+        return new AuthorizedAccountTimestamp(
                 proto.getVersion(),
-                AccountAgeWitness.fromProto(proto.getAccountAgeWitness()),
+                AccountTimestamp.fromProto(proto.getAccountTimestamp()),
                 proto.getStaticPublicKeysProvided()
         );
     }
@@ -103,7 +103,7 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.account.protobuf.AuthorizedAccountAgeWitness.class));
+                return fromProto(any.unpack(bisq.account.protobuf.AuthorizedAccountTimestamp.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -136,8 +136,8 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
 
     @Override
     public String toString() {
-        return "AuthorizedAccountAgeWitness{" +
-                ",\r\n                    accountAgeWitness=" + accountAgeWitness +
+        return "AuthorizedAccountTimestamp{" +
+                ",\r\n                    accountTimestamp=" + accountTimestamp +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

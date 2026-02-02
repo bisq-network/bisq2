@@ -347,9 +347,9 @@ message BizumAccountPayload {
 
 // Account
 enum KeyAlgorithm{
-  KEYALGOIYHM_UNSPECIFIED = 0;
-  KEYALGOIYHM_DSA = 1;
-  KEYALGOIYHM_EC = 2;
+  KEYALGORITHM_UNSPECIFIED = 0;
+  KEYALGORITHM_DSA = 1;
+  KEYALGORITHM_ECDH = 2;
 }
 
 message Account {
@@ -504,22 +504,22 @@ message AccountStore {
   optional Account selectedAccount = 2;
 }
 
-message AccountAgeWitness {
+message AccountTimestamp {
   bytes hash = 1;
   sint64 date = 2;
 }
 
-message AuthorizeAccountAgeWitnessRequest {
-  AccountAgeWitness accountAgeWitness = 1;
-  bytes blindedAgeWitnessInputData = 2;
+message AuthorizeAccountTimestampRequest {
+  AccountTimestamp accountTimestamp = 1;
+  bytes saltedFingerprint = 2;
   bytes publicKey = 3;
   bytes signature = 4;
   KeyAlgorithm keyAlgorithm = 5;
   uint64 creationDate = 6;
 }
 
-message AuthorizedAccountAgeWitness {
-  AccountAgeWitness accountAgeWitness = 1;
+message AuthorizedAccountTimestamp {
+  AccountTimestamp accountTimestamp = 1;
   bool staticPublicKeysProvided = 2;
   sint32 version = 3;
 }

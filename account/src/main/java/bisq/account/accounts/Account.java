@@ -27,10 +27,11 @@ import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.ZelleAccount;
-import bisq.account.age_witness.KeyAlgorithm;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -120,5 +121,15 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     public List<String> getSupportedCurrencyCodes() {
         return getPaymentMethod().getSupportedCurrencyCodes();
+    }
+
+    public String getSignatureAlgorithm() {
+        return getSignatureAlgorithm(keyAlgorithm);
+    }
+
+    public static String getSignatureAlgorithm(KeyAlgorithm keyAlgorithm) {
+        return keyAlgorithm == KeyAlgorithm.EC
+                ? SignatureUtil.SHA256withECDSA
+                : SignatureUtil.SHA256withDSA;
     }
 }

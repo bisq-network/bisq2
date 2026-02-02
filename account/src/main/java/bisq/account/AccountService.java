@@ -20,7 +20,7 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.age_witness.AccountAgeWitnessService;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
@@ -51,7 +51,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     private final Persistence<AccountStore> persistence;
     private final NetworkService networkService;
     private final ImportBisq1AccountService importBisq1AccountService;
-    private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountTimestampService accountTimestampService;
 
     public AccountService(PersistenceService persistenceService,
                           NetworkService networkService,
@@ -60,7 +60,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.networkService = networkService;
         importBisq1AccountService = new ImportBisq1AccountService();
-        accountAgeWitnessService = new AccountAgeWitnessService(networkService, userService, bondedRolesService);
+        accountTimestampService = new AccountTimestampService(networkService, userService, bondedRolesService);
     }
 
 
@@ -69,12 +69,12 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     /* --------------------------------------------------------------------- */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return accountAgeWitnessService.initialize()
+        return accountTimestampService.initialize()
                 .thenApply(result -> {
                     persistableStore.getAccountByName().addObserver(new HashMapObserver<String, Account<? extends PaymentMethod<?>, ?>>() {
                         @Override
                         public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
-                            accountAgeWitnessService.handleAddedAccount(account);
+                            accountTimestampService.handleAddedAccount(account);
                         }
                     });
                     return result;
@@ -83,7 +83,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return accountAgeWitnessService.shutdown();
+        return accountTimestampService.shutdown();
     }
 
 

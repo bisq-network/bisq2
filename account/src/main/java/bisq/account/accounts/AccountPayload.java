@@ -68,7 +68,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     // public abstract byte[] getAgeWitnessInputData();
     //todo
-    public byte[] getAgeWitnessInputData() {
+    public byte[] getFingerprint() {
         return id.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -107,7 +107,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         };
     }
 
-    protected byte[] getAgeWitnessInputData(byte[] data) {
+    protected byte[] getFingerprint(byte[] data) {
         return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 

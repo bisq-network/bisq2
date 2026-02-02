@@ -17,10 +17,11 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.account.age_witness.AccountAgeWitness;
-import bisq.account.age_witness.AuthorizeAccountAgeWitnessRequest;
-import bisq.account.age_witness.AuthorizedAccountAgeWitness;
-import bisq.account.age_witness.KeyAlgorithm;
+import bisq.account.accounts.Account;
+import bisq.account.timestamp.AccountTimestamp;
+import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
+import bisq.account.timestamp.AuthorizedAccountTimestamp;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -45,6 +46,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
@@ -157,8 +159,8 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             processAuthorizeAccountAgeRequest(request);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
             processAuthorizeSignedWitnessRequest(request);
-        } else if (envelopePayloadMessage instanceof AuthorizeAccountAgeWitnessRequest request) {
-            processAuthorizeAccountAgeWitnessRequest(request);
+        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampRequest request) {
+            processAuthorizeAccountTimestampRequest(request);
         }
     }
 
@@ -204,38 +206,41 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         }, executor);
     }
 
-    private void processAuthorizeAccountAgeWitnessRequest(AuthorizeAccountAgeWitnessRequest request) {
+    private void processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
         CompletableFuture.runAsync(() -> {
             try {
-                AccountAgeWitness accountAgeWitness = request.getAccountAgeWitness();
+                AccountTimestamp accountTimestamp = request.getAccountTimestamp();
                 if (request.getKeyAlgorithm() == KeyAlgorithm.DSA) {
                     // todo grpc request to bisq 1
                     //long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
                 } else {
-                    long date = accountAgeWitness.getDate();
+                    long date = accountTimestamp.getDate();
                     if (Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(2)) {
                         log.warn("Date in request is outside tolerance. Date= {}", new Date(date));
                         return;
                     }
 
                     // Check if pubkey is matching the one in the hash
-                    byte[] blindedAgeWitnessInputData = request.getBlindedAgeWitnessInputData();
+                    byte[] saltedFingerprint = request.getSaltedFingerprint();
                     byte[] publicKeyBytes = request.getPublicKey();
-                    byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
-                    checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
-                            "AgeWitnessHash not matching hashFromAccountPayload");
+                    byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
+                    byte[] hash = DigestUtil.hash(preimage);
+
+                    checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
+                            "accountTimestamp hash not matching hash from preimage");
 
                     KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
                     PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, keyAlgorithm.getAlgorithm());
-                    byte[] message = accountAgeWitness.toProto(true).toByteArray();
-                    SignatureUtil.verify(message, request.getSignature(), publicKey, keyAlgorithm.getAlgorithm());
+                    byte[] message = accountTimestamp.toProto(true).toByteArray();
+
+                    SignatureUtil.verify(message, request.getSignature(), publicKey, Account.getSignatureAlgorithm(keyAlgorithm));
                 }
 
                 //todo persist
                 //   persistableStore.getAccountAgeRequests().add(request);
                 persist();
 
-                publishAuthorizedData(new AuthorizedAccountAgeWitness(accountAgeWitness, staticPublicKeysProvided));
+                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
             } catch (Exception e) {
                 log.error("processAuthorizeAccountAgeRequest failed", e);
             }

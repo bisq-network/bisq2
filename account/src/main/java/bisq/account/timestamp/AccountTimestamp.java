@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.age_witness;
+package bisq.account.timestamp;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
@@ -36,17 +36,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @ToString
 @Getter
 @EqualsAndHashCode
-public final class AccountAgeWitness implements DistributedData {
+public final class AccountTimestamp implements DistributedData {
     private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
 
     private final byte[] hash;
 
     // We exclude the date so that the hash is the only input for the hash in the storage map. This ensures that only
-    // one entry can exist for a given AccountAgeWitness and changes of date would be ignored.
+    // one entry can exist for a given AccountTimestamp and changes of date would be ignored.
     @ExcludeForHash
     private final long date;
 
-    public AccountAgeWitness(byte[] hash, long date) {
+    public AccountTimestamp(byte[] hash, long date) {
         this.hash = hash;
         this.date = date;
 
@@ -59,25 +59,25 @@ public final class AccountAgeWitness implements DistributedData {
     }
 
     @Override
-    public bisq.account.protobuf.AccountAgeWitness.Builder getBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.AccountAgeWitness.newBuilder()
+    public bisq.account.protobuf.AccountTimestamp.Builder getBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AccountTimestamp.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
                 .setDate(date);
     }
 
     @Override
-    public bisq.account.protobuf.AccountAgeWitness toProto(boolean serializeForHash) {
+    public bisq.account.protobuf.AccountTimestamp toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountAgeWitness fromProto(bisq.account.protobuf.AccountAgeWitness proto) {
-        return new AccountAgeWitness(proto.getHash().toByteArray(), proto.getDate());
+    public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto) {
+        return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return AccountAgeWitness.fromProto(any.unpack(bisq.account.protobuf.AccountAgeWitness.class));
+                return AccountTimestamp.fromProto(any.unpack(bisq.account.protobuf.AccountTimestamp.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

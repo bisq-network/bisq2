@@ -23,7 +23,7 @@ import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
-import bisq.account.age_witness.KeyAlgorithm;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.json.JsonMapperProvider;
