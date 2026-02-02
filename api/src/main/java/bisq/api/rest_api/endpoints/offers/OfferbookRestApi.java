@@ -130,7 +130,7 @@ public class OfferbookRestApi extends RestApiBase {
 
             UserIdentity userIdentity = optionalUserIdentity.get();
             bisqEasyOfferbookChannelService.deleteChatMessage(offerbookMessage, userIdentity.getNetworkIdWithKeyPair()).get();
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            asyncResponse.resume(buildNoContentResponse());
         } catch (InterruptedException e) {
             log.warn("Thread got interrupted at deleteOffer method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state

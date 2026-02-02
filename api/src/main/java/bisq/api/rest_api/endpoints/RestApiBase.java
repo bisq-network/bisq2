@@ -41,7 +41,7 @@ public abstract class RestApiBase {
      *
      * @return The HTTP response.
      */
-    protected Response buildNoContentResponse( ) {
+    protected Response buildNoContentResponse() {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 

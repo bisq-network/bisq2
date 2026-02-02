@@ -108,11 +108,11 @@ public class PaymentAccountsRestApi extends RestApiBase {
                     UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
                     return buildOkResponse(userAccount);
                 } else {
-                    return buildResponse(Response.Status.NO_CONTENT, "");
+                    return buildNoContentResponse();
                 }
             }
 
-            return buildResponse(Response.Status.NO_CONTENT, "");
+            return buildNoContentResponse();
         } catch (Exception e) {
             log.error("Failed to retrieve payment accounts", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
@@ -171,7 +171,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
             if (result.isPresent()) {
                 Account<? extends PaymentMethod<?>, ?> toRemove = result.get();
                 accountService.removePaymentAccount(toRemove);
-                asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+                asyncResponse.resume(buildNoContentResponse());
             } else {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found"));
             }
