@@ -173,7 +173,7 @@ public class MuSigMyOffersController implements Controller {
                         || item.getMarket().getMarketDisplayName().toLowerCase().contains(string)
                         || item.getMakerUserProfile().getUserName().toLowerCase().contains(string)
                         || item.getOfferId().toLowerCase().contains(string)
-                        || item.getOfferDate().toLowerCase().contains(string)
+                        || item.getOfferDateString().toLowerCase().contains(string)
                         || item.getBaseAmountAsString().contains(string)
                         || item.getQuoteAmountAsString().contains(string)
                         || item.getPrice().contains(string)

@@ -71,14 +71,14 @@ public class MuSigOfferListItem {
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
             maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText, offerId,
-            offerDate, deposit;
+            offerDateString, deposit;
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
     private final Market market;
     private final Direction direction;
     private final List<PaymentMethod<?>> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
-    private final long totalScore;
+    private final long offerDate, totalScore;
     private final boolean hasFixPrice;
     private final Map<PaymentMethod<?>, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
@@ -128,7 +128,8 @@ public class MuSigOfferListItem {
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
         offerId = offer.getShortId().toUpperCase(Locale.ROOT);
-        offerDate = DateFormatter.formatDateTime(offer.getDate());
+        offerDate = offer.getDate();
+        offerDateString = DateFormatter.formatDateTime(offerDate);
         deposit = "15%";
 
         paymentMethodsAsString = Joiner.on("\n")

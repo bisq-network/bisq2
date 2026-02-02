@@ -156,8 +156,8 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .left()
                 .minWidth(160)
                 .comparator(Comparator.comparing(MuSigOfferListItem::getOfferDate))
-                .valueSupplier(MuSigOfferListItem::getOfferDate)
-                .sortType(TableColumn.SortType.DESCENDING)
+                .valueSupplier(MuSigOfferListItem::getOfferDateString)
+                .sortType(TableColumn.SortType.ASCENDING)
                 .build();
         muSigMyOffersListView.getColumns().add(dateColumn);
         muSigMyOffersListView.getSortOrder().add(dateColumn);
