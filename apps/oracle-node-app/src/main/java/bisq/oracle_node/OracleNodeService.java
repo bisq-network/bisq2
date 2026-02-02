@@ -228,11 +228,11 @@ public class OracleNodeService implements Service {
 
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BondedRole element) {
+            public void onAdded(BondedRole element) {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BondedRole bondedRole) {
                     networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
                             keyPair,
@@ -241,7 +241,7 @@ public class OracleNodeService implements Service {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
             }
         });
 

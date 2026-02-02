@@ -56,7 +56,7 @@ public class AlertNotificationsService implements Service {
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
+            public void onAdded(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData == null) {
                     return;
                 }
@@ -66,7 +66,7 @@ public class AlertNotificationsService implements Service {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAppType() == appType) {
                         unconsumedAlerts.remove(authorizedAlertData);
@@ -75,7 +75,7 @@ public class AlertNotificationsService implements Service {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 unconsumedAlerts.clear();
             }
         });

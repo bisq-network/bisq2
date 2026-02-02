@@ -71,7 +71,7 @@ public class ContactsListController implements Controller {
     public void onActivate() {
         contactsListEntriesPin = contactListService.getContactListEntries().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(ContactListEntry contactListEntry) {
+            public void onAdded(ContactListEntry contactListEntry) {
                 UIThread.run(() -> {
                     ContactsListView.ListItem listItem = new ContactsListView.ListItem(contactListEntry,
                             reputationService,
@@ -84,7 +84,7 @@ public class ContactsListController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof ContactListEntry contactListEntry) {
                     UIThread.run(() -> {
                         Optional<ContactsListView.ListItem> toRemove = model.getListItems().stream()
@@ -96,7 +96,7 @@ public class ContactsListController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> model.getListItems().clear());
             }
         });

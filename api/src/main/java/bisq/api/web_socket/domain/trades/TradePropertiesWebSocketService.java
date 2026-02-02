@@ -59,7 +59,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> initialize() {
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyTrade bisqEasyTrade) {
+            public void onAdded(BisqEasyTrade bisqEasyTrade) {
                 String tradeId = bisqEasyTrade.getId();
                 pinsByTradeId.computeIfAbsent(tradeId, k -> new HashSet<>());
                 Set<Pin> pins = pinsByTradeId.get(tradeId);
@@ -77,7 +77,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BisqEasyTrade bisqEasyTrade) {
                     String tradeId = bisqEasyTrade.getId();
                     Optional.ofNullable(pinsByTradeId.remove(tradeId))
@@ -86,7 +86,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 pinsByTradeId.values().forEach(set -> set.forEach(Pin::unbind));
                 pinsByTradeId.clear();
             }

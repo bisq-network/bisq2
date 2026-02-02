@@ -112,7 +112,7 @@ public class MuSigOfferbookController implements Controller {
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(MuSigOffer muSigOffer) {
+            public void onAdded(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
                     if (!model.getMuSigOfferIds().contains(offerId)) {
@@ -129,7 +129,7 @@ public class MuSigOfferbookController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof MuSigOffer muSigOffer) {
                     UIThread.run(() -> {
                         String offerId = muSigOffer.getId();
@@ -146,7 +146,7 @@ public class MuSigOfferbookController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.getMuSigOfferListItems().clear();
                     model.getMuSigOfferIds().clear();
@@ -160,7 +160,7 @@ public class MuSigOfferbookController implements Controller {
 
         favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(Market market) {
+            public void onAdded(Market market) {
                 UIThread.run(() -> {
                     findMarketItem(market).ifPresent(item -> item.getIsFavourite().set(true));
                     updateFilteredMarketItems();
@@ -169,7 +169,7 @@ public class MuSigOfferbookController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof Market market) {
                     UIThread.run(() -> {
                         findMarketItem(market).ifPresent(item -> item.getIsFavourite().set(false));
@@ -180,7 +180,7 @@ public class MuSigOfferbookController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.getMarketItems().forEach(item -> item.getIsFavourite().set(false));
                     updateFilteredMarketItems();

@@ -105,7 +105,7 @@ public class UpdaterService implements Service {
 
         pins.add(releaseNotificationsService.getReleaseNotifications().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(ReleaseNotification releaseNotification) {
+            public void onAdded(ReleaseNotification releaseNotification) {
                 if (releaseNotification != null && releaseNotification.getAppType() == appType) {
                     releaseNotifications.add(releaseNotification);
                     updateReleaseNotificationState();
@@ -113,7 +113,7 @@ public class UpdaterService implements Service {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof ReleaseNotification toRemove && toRemove.getAppType() == appType) {
                     releaseNotifications.remove(toRemove);
                     settingsService.setCookie(CookieKey.IGNORE_VERSION, toRemove.getVersionString(), false);
@@ -122,7 +122,7 @@ public class UpdaterService implements Service {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 releaseNotifications.clear();
                 updateReleaseNotificationState();
             }
@@ -130,7 +130,7 @@ public class UpdaterService implements Service {
 
         pins.add(alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
+            public void onAdded(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
                         authorizedAlertData.isRequireVersionForTrading() &&
                         authorizedAlertData.getAppType() == appType) {
@@ -141,7 +141,7 @@ public class UpdaterService implements Service {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
                             authorizedAlertData.isRequireVersionForTrading() &&
@@ -154,7 +154,7 @@ public class UpdaterService implements Service {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 requireVersionForTrading = false;
                 minRequiredVersionForTrading = Optional.empty();
                 updateReleaseNotificationState();

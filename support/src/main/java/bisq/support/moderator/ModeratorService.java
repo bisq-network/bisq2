@@ -228,7 +228,7 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
         Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BondedRole bondedRole) {
+            public void onAdded(BondedRole bondedRole) {
                 AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
                 boolean isMyProfile = myUserProfileIds.contains(authorizedBondedRole.getProfileId());
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.MODERATOR &&
@@ -236,27 +236,27 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
                         rateLimitExceedingUserProfileIdMapPin == null) {
                     rateLimitExceedingUserProfileIdMapPin = bannedUserService.getRateLimitExceedingUserProfiles().addObserver(new CollectionObserver<>() {
                         @Override
-                        public void add(String userProfileId) {
+                        public void onAdded(String userProfileId) {
                             selfReportRateLimitExceedingUserProfileId(userProfileId);
                         }
 
                         @Override
-                        public void remove(Object element) {
+                        public void onRemoved(Object element) {
                         }
 
                         @Override
-                        public void clear() {
+                        public void onCleared() {
                         }
                     });
                 }
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
             }
         });
     }

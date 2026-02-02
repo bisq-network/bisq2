@@ -200,7 +200,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(Market market) {
+            public void onAdded(Market market) {
                 UIThread.run(() -> {
                     findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(true));
                     updateFilteredMarketChannelItems();
@@ -209,7 +209,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof Market market) {
                     UIThread.run(() -> {
                         findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(false));
@@ -220,7 +220,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(false));
                     updateFilteredMarketChannelItems();

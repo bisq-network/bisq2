@@ -20,22 +20,22 @@ package bisq.common.observable.collection;
 import java.util.Collection;
 
 public interface CollectionObserver<S> {
-    void add(S element);
+    void onAdded(S element);
 
-    default void addAll(Collection<? extends S> values) {
-        values.forEach(this::add);
+    default void onAllAdded(Collection<? extends S> values) {
+        values.forEach(this::onAdded);
     }
 
-    default void setAll(Collection<? extends S> values) {
-        clear();
-        addAll(values);
+    default void onAllSet(Collection<? extends S> values) {
+        onCleared();
+        onAllAdded(values);
     }
 
-    void remove(Object element);
+    void onRemoved(Object element);
 
-    default void removeAll(Collection<?> values) {
-        values.forEach(this::remove);
+    default void onAllRemoved(Collection<?> values) {
+        values.forEach(this::onRemoved);
     }
 
-    void clear();
+    void onCleared();
 }

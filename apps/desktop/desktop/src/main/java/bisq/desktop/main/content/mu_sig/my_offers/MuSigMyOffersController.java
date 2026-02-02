@@ -84,7 +84,7 @@ public class MuSigMyOffersController implements Controller {
 
         offersPin = muSigService.getObservableOffers().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(MuSigOffer muSigOffer) {
+            public void onAdded(MuSigOffer muSigOffer) {
                 UIThread.run(() -> {
                     boolean isMyOffer = model.getMyUserProfileIds().contains(muSigOffer.getMakersUserProfileId());
                     if (isMyOffer) {
@@ -104,7 +104,7 @@ public class MuSigMyOffersController implements Controller {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof MuSigOffer muSigOffer) {
                     UIThread.run(() -> {
                         boolean isMyOffer = model.getMyUserProfileIds().contains(muSigOffer.getMakersUserProfileId());
@@ -125,7 +125,7 @@ public class MuSigMyOffersController implements Controller {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 UIThread.run(() -> {
                     model.getMuSigMyOffersListItems().forEach(MuSigOfferListItem::dispose);
                     model.getMuSigMyOffersListItems().clear();

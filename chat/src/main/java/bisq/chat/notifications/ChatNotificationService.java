@@ -121,7 +121,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                         .forEach(prunedAndExpiredDataRequests -> {
                             Pin pin = prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
                                 @Override
-                                public void add(DataRequest element) {
+                                public void onAdded(DataRequest element) {
                                     if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
                                         if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
                                             String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
@@ -137,11 +137,11 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                                 }
 
                                 @Override
-                                public void remove(Object element) {
+                                public void onRemoved(Object element) {
                                 }
 
                                 @Override
-                                public void clear() {
+                                public void onCleared() {
                                 }
                             });
                             prunedAndExpiredDataRequestPins.add(pin);
@@ -397,12 +397,12 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
             }
             Pin pin = chatChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
-                public void add(M message) {
+                public void onAdded(M message) {
                     onMessageAdded(chatChannel, message);
                 }
 
                 @Override
-                public void remove(Object message) {
+                public void onRemoved(Object message) {
                     if (message instanceof ChatMessage chatMessage) {
                         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
                         removeNotification(id);
@@ -410,7 +410,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 }
 
                 @Override
-                public void clear() {
+                public void onCleared() {
                     chatChannel.getChatMessages().stream()
                             .map(chatMessage -> ChatNotification.createId(chatChannel.getId(), chatMessage.getId()))
                             .forEach(id -> removeNotification(id));

@@ -63,7 +63,7 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> initialize() {
         channelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOpenTradeChannel channel) {
+            public void onAdded(BisqEasyOpenTradeChannel channel) {
                 String channelId = channel.getId();
                 // Atomic operation
                 chatMessagesPinsByChannelId.compute(channelId, (key, oldPin) -> {
@@ -73,7 +73,7 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
 
                     return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                         @Override
-                        public void add(BisqEasyOpenTradeMessage message) {
+                        public void onAdded(BisqEasyOpenTradeMessage message) {
                             String messageId = message.getId();
 
                             chatMessageReactionsPinsByMessageId.compute(messageId, (key, oldReactionPin) -> {
@@ -83,19 +83,19 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
 
                                 return message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
                                     @Override
-                                    public void add(BisqEasyOpenTradeMessageReaction reaction) {
+                                    public void onAdded(BisqEasyOpenTradeMessageReaction reaction) {
                                         handleReaction(reaction, ModificationType.ADDED);
                                     }
 
                                     @Override
-                                    public void remove(Object element) {
+                                    public void onRemoved(Object element) {
                                         if (element instanceof BisqEasyOpenTradeMessageReaction reaction) {
                                             handleReaction(reaction, ModificationType.REMOVED);
                                         }
                                     }
 
                                     @Override
-                                    public void clear() {
+                                    public void onCleared() {
                                         throw new UnsupportedOperationException("Clear method is not supported for chatMessageReactions.");
                                     }
                                 });
@@ -103,12 +103,12 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
                         }
 
                         @Override
-                        public void remove(Object element) {
+                        public void onRemoved(Object element) {
                             // Messages cannot be removed
                         }
 
                         @Override
-                        public void clear() {
+                        public void onCleared() {
                             // Messages cannot be cleared
                         }
                     });
@@ -116,7 +116,7 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void remove(Object element) {
+            public void onRemoved(Object element) {
                 if (element instanceof BisqEasyOpenTradeChannel channel) {
                     String channelId = channel.getId();
                     // Atomic operation
@@ -128,7 +128,7 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
             }
 
             @Override
-            public void clear() {
+            public void onCleared() {
                 new ArrayList<>(chatMessagesPinsByChannelId.values()).forEach(Pin::unbind);
                 chatMessagesPinsByChannelId.clear();
             }
