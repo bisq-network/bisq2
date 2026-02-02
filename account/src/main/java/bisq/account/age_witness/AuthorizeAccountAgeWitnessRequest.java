@@ -42,24 +42,24 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final AccountAgeWitness accountAgeWitness;
-    private final byte[] blindedAgeWitnessInputData;
-    private final byte[] publicKey;
-    private final byte[] signature;
-    private final String keyAlgorithm;
-    private final boolean isFromBisq1;
+    private final byte[] blindedAgeWitnessInputData; //64 bytes
+    private final byte[] publicKey; // 443 bytes
+    private final byte[] signature; // 46 bytes
+    private final KeyAlgorithm keyAlgorithm; // DSA
+    private final long creationDate;
 
     public AuthorizeAccountAgeWitnessRequest(AccountAgeWitness accountAgeWitness,
                                              byte[] blindedAgeWitnessInputData,
                                              byte[] publicKey,
                                              byte[] signature,
-                                             String keyAlgorithm,
-                                             boolean isFromBisq1) {
+                                             KeyAlgorithm keyAlgorithm,
+                                             long creationDate) {
         this.accountAgeWitness = accountAgeWitness;
         this.blindedAgeWitnessInputData = blindedAgeWitnessInputData;
         this.publicKey = publicKey;
         this.signature = signature;
         this.keyAlgorithm = keyAlgorithm;
-        this.isFromBisq1 = isFromBisq1;
+        this.creationDate = creationDate;
 
         log.error(this.toString());
 
@@ -71,8 +71,7 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
         //todo
         NetworkDataValidation.validateByteArray(blindedAgeWitnessInputData, 1000);
         NetworkDataValidation.validateByteArray(publicKey, 1000);
-        NetworkDataValidation.validateByteArray(signature, 1000);
-        NetworkDataValidation.validateText(keyAlgorithm, 100);
+        NetworkDataValidation.validateByteArray(signature, 100);
     }
 
     @Override
@@ -82,8 +81,8 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
                 .setBlindedAgeWitnessInputData(ByteString.copyFrom(blindedAgeWitnessInputData))
                 .setPublicKey(ByteString.copyFrom(publicKey))
                 .setSignature(ByteString.copyFrom(signature))
-                .setKeyAlgorithm(keyAlgorithm)
-                .setIsFromBisq1(isFromBisq1);
+                .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
+                .setCreationDate(creationDate);
     }
 
     @Override
@@ -97,8 +96,8 @@ public final class AuthorizeAccountAgeWitnessRequest implements MailboxMessage, 
                 proto.getBlindedAgeWitnessInputData().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getSignature().toByteArray(),
-                proto.getKeyAlgorithm(),
-                proto.getIsFromBisq1()
+                KeyAlgorithm.fromProto(proto.getKeyAlgorithm()),
+                proto.getCreationDate()
         );
     }
 

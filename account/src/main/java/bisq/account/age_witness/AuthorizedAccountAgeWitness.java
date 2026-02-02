@@ -24,10 +24,12 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
@@ -38,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedData {
+public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
@@ -51,6 +53,10 @@ public final class AuthorizedAccountAgeWitness implements AuthorizedDistributedD
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
+
+    @EqualsAndHashCode.Exclude
+    @Setter
+    private transient long publishDate;
 
     public AuthorizedAccountAgeWitness(AccountAgeWitness accountAgeWitness,
                                        boolean staticPublicKeysProvided) {

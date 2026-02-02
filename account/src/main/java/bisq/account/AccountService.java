@@ -26,7 +26,8 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.observable.map.HashMapObserver;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -48,6 +49,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
+    private final NetworkService networkService;
     private final ImportBisq1AccountService importBisq1AccountService;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
@@ -56,6 +58,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                           UserService userService,
                           BondedRolesService bondedRolesService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        this.networkService = networkService;
         importBisq1AccountService = new ImportBisq1AccountService();
         accountAgeWitnessService = new AccountAgeWitnessService(networkService, userService, bondedRolesService);
     }
@@ -66,7 +69,16 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     /* --------------------------------------------------------------------- */
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return accountAgeWitnessService.initialize();
+        return accountAgeWitnessService.initialize()
+                .thenApply(result -> {
+                    persistableStore.getAccountByName().addObserver(new HashMapObserver<String, Account<? extends PaymentMethod<?>, ?>>() {
+                        @Override
+                        public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
+                            accountAgeWitnessService.handleAddedAccount(account);
+                        }
+                    });
+                    return result;
+                });
     }
 
     @Override
@@ -105,10 +117,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     }
 
     public void importBisq1AccountData(String json) {
-        importBisq1AccountService.parseAccounts(json).forEach(this::addPaymentAccount);
+        importBisq1AccountService.parseAccounts(json)
+                .forEach(this::addPaymentAccount);
     }
 
-    public ObservableHashMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
+    public ReadOnlyObservableMap<String, Account<? extends PaymentMethod<?>, ?>> getAccountByNameMap() {
         return persistableStore.getAccountByName();
     }
 

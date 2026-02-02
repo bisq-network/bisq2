@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.age_witness.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +36,7 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload> {
                        String accountName,
                        SepaAccountPayload accountPayload,
                        KeyPair keyPair,
-                       String keyAlgorithm) {
+                       KeyAlgorithm keyAlgorithm) {
         super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm);
     }
 
@@ -61,12 +62,12 @@ public final class SepaAccount extends CountryBasedAccount<SepaAccountPayload> {
     }
 
     public static SepaAccount fromProto(bisq.account.protobuf.Account proto) {
-        String keyAlgorithm = proto.getKeyAlgorithm();
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         return new SepaAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SepaAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
                 keyAlgorithm);
     }
 }

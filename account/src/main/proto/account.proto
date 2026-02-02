@@ -346,6 +346,12 @@ message BizumAccountPayload {
 }
 
 // Account
+enum KeyAlgorithm{
+  KEYALGOIYHM_UNSPECIFIED = 0;
+  KEYALGOIYHM_DSA = 1;
+  KEYALGOIYHM_EC = 2;
+}
+
 message Account {
   sint64 creationDate = 1;
   string accountName = 2;
@@ -353,7 +359,7 @@ message Account {
   PaymentMethod paymentMethod = 4;
   string id = 5;
   security.KeyPair keyPair = 6;
-  string keyAlgorithm = 7;
+  KeyAlgorithm keyAlgorithm = 7;
 
   oneof message {
     ZelleAccount zelleAccount = 19;
@@ -503,14 +509,13 @@ message AccountAgeWitness {
   sint64 date = 2;
 }
 
-
 message AuthorizeAccountAgeWitnessRequest {
   AccountAgeWitness accountAgeWitness = 1;
   bytes blindedAgeWitnessInputData = 2;
   bytes publicKey = 3;
   bytes signature = 4;
-  string keyAlgorithm = 5;
-  bool isFromBisq1 = 6;
+  KeyAlgorithm keyAlgorithm = 5;
+  uint64 creationDate = 6;
 }
 
 message AuthorizedAccountAgeWitness {

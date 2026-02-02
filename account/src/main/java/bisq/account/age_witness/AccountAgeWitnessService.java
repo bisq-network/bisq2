@@ -17,7 +17,9 @@
 
 package bisq.account.age_witness;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
@@ -28,6 +30,7 @@ import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
@@ -41,6 +44,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -111,43 +115,39 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
     // API
     /* --------------------------------------------------------------------- */
 
-    public void registerAccountAgeWitness(AccountPayload<?> accountPayload,
-                                          long peersCurrentTimeMillis,
-                                          KeyPair keyPair,
-                                          String keyAlgorithm,
-                                          boolean isFromBisq1) {
+    public void handleAddedAccount(Account<?, ?> account) {
+        if (requireRegistration(account)) {
+            registerAccountAgeWitness(account);
+        }
+    }
 
-        byte[] salt = accountPayload.getSalt();
-        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
-        byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
-        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
-        byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+    public void registerAccountAgeWitness(Account<?, ?> account) {
+        long now = System.currentTimeMillis();
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+        byte[] blindedAgeWitnessInputData = getBlindedAgeWitnessInputData(accountPayload);
+        KeyPair keyPair = account.getKeyPair();
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        byte[] bytes = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+        byte[] hash = DigestUtil.hash(bytes);
+        KeyAlgorithm keyAlgorithm = account.getKeyAlgorithm();
 
-        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(hashFromAccountPayload, System.currentTimeMillis());
+        AccountAgeWitness accountAgeWitness = new AccountAgeWitness(hash, System.currentTimeMillis());
         byte[] message = accountAgeWitness.toProto(true).toByteArray();
         try {
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), keyAlgorithm);
+            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), keyAlgorithm.getAlgorithm());
             AuthorizeAccountAgeWitnessRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountAgeWitnessRequest(accountAgeWitness,
                     blindedAgeWitnessInputData,
                     publicKeyBytes,
                     signature,
                     keyAlgorithm,
-                    isFromBisq1);
+                    now);
 
-            //verify
-            accountAgeWitness.getDate(); // in tolerance
-
-            // is pubkey in hash
-            byte[] hashFromAccountPayload2 = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
-            checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload2),
-                    "AgeWitnessHash not matching hashFromAccountPayload");
-
-            PublicKey publicKey = keyPair.getPublic();
-            SignatureUtil.verify(message, signature, publicKey, keyAlgorithm);
-
-            authorizedBondedRolesService.getAuthorizedOracleNodes().forEach(oracleNode ->
-                    networkService.confidentialSend(authorizeAccountAgeWitnessRequest, oracleNode.getNetworkId(), userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair()));
-
+            authorizedBondedRolesService.getAuthorizedOracleNodes()
+                    .forEach(oracleNode ->
+                            networkService.confidentialSend(authorizeAccountAgeWitnessRequest,
+                                    oracleNode.getNetworkId(),
+                                    userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair()));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -157,33 +157,25 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
                                                 AccountPayload<?> accountPayload,
                                                 long peersCurrentTimeMillis,
                                                 PublicKey publicKey,
-                                                byte[] nonce,
-                                                byte[] signature) {
+                                                byte[] message,
+                                                byte[] signature,
+                                                KeyAlgorithm keyAlgorithm) {
         try {
             // Check if peers clock is in a tolerance range of 1 day
             checkArgument(Math.abs(peersCurrentTimeMillis - System.currentTimeMillis()) <= TimeUnit.DAYS.toMillis(1),
                     "Peers clock is more then 1 day off from our clock");
-
-            // Verify that witness hash matches hash created from accountPayload data and publicKey
-            byte[] salt = accountPayload.getSalt();
-            byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
             byte[] signaturePubKeyBytes = publicKey.getEncoded();
-            byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
+            byte[] blindedAgeWitnessInputData = getBlindedAgeWitnessInputData(accountPayload);
             byte[] hashFromAccountPayload = ByteArrayUtils.concat(blindedAgeWitnessInputData, signaturePubKeyBytes);
             checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
                     "AgeWitnessHash not matching hashFromAccountPayload");
-
-            SignatureUtil.verify(nonce, signature, publicKey);
-
+            checkArgument(SignatureUtil.verify(message, signature, publicKey, keyAlgorithm.getAlgorithm()), "Signature verification failed");
             return Result.success(null);
         } catch (Exception e) {
             return Result.failure(e);
         }
     }
 
-    public Optional<AccountAgeWitness> findAccountAgeWitness(ByteArray hash) {
-        return Optional.ofNullable(accountAgeWitnessByHash.get(hash));
-    }
 
 
     /* --------------------------------------------------------------------- */
@@ -202,4 +194,54 @@ public class AccountAgeWitnessService implements Service, DataService.Listener {
     private static ByteArray getAccountAgeWitnessHash(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
         return new ByteArray(authorizedAccountAgeWitness.getAccountAgeWitness().getHash());
     }
+
+
+    private boolean requireRegistration(Account<? extends PaymentMethod<?>, ?> account) {
+        byte[] hash = createHash(account);
+        return findAuthorizedAccountAgeWitness(hash)
+                .map(AccountAgeWitnessService::isHalfExpired)
+                .findAny()
+                .orElse(true);
+    }
+
+    private static byte[] getBlindedAgeWitnessInputData(AccountPayload<?> accountPayload) {
+        byte[] salt = accountPayload.getSalt();
+        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
+        return ByteArrayUtils.concat(ageWitnessInputData, salt);
+    }
+
+    public Optional<AccountAgeWitness> findAccountAgeWitness(ByteArray hash) {
+        return Optional.ofNullable(accountAgeWitnessByHash.get(hash));
+    }
+
+    private byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+        byte[] salt = accountPayload.getSalt();
+        byte[] ageWitnessInputData = accountPayload.getAgeWitnessInputData();
+        byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
+        KeyPair keyPair = account.getKeyPair();
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        return ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+    }
+
+    private static boolean isHalfExpired(AuthorizedAccountAgeWitness authorizedAccountAgeWitness) {
+        long ttl = authorizedAccountAgeWitness.getMetaData().getTtl();
+        long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
+        return authorizedAccountAgeWitness.getPublishDate() <= halfExpiryDate;
+    }
+
+    private Stream<AuthorizedAccountAgeWitness> findAuthorizedAccountAgeWitness(byte[] hash) {
+        String storageKey = AuthorizedAccountAgeWitness.class.getSimpleName();
+        return networkService.getDataService()
+                .stream()
+                .flatMap(dataService ->
+                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                .map(AuthenticatedData::getDistributedData)
+                                .filter(AuthorizedAccountAgeWitness.class::isInstance)
+                                .map(AuthorizedAccountAgeWitness.class::cast)
+                )
+                .filter(e -> Arrays.equals(hash, e.getAccountAgeWitness().getHash()));
+    }
+
 }

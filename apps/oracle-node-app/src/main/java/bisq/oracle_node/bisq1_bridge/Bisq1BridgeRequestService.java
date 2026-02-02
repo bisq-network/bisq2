@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge;
 import bisq.account.age_witness.AccountAgeWitness;
 import bisq.account.age_witness.AuthorizeAccountAgeWitnessRequest;
 import bisq.account.age_witness.AuthorizedAccountAgeWitness;
+import bisq.account.age_witness.KeyAlgorithm;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -207,7 +208,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         CompletableFuture.runAsync(() -> {
             try {
                 AccountAgeWitness accountAgeWitness = request.getAccountAgeWitness();
-                if (request.isFromBisq1()) {
+                if (request.getKeyAlgorithm() == KeyAlgorithm.DSA) {
                     // todo grpc request to bisq 1
                     //long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
                 } else {
@@ -224,14 +225,14 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                     checkArgument(Arrays.equals(accountAgeWitness.getHash(), hashFromAccountPayload),
                             "AgeWitnessHash not matching hashFromAccountPayload");
 
-                    String keyAlgorithm = request.getKeyAlgorithm();
-                    PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, keyAlgorithm);
+                    KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
+                    PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, keyAlgorithm.getAlgorithm());
                     byte[] message = accountAgeWitness.toProto(true).toByteArray();
-                    SignatureUtil.verify(message, request.getSignature(), publicKey, keyAlgorithm);
+                    SignatureUtil.verify(message, request.getSignature(), publicKey, keyAlgorithm.getAlgorithm());
                 }
 
                 //todo persist
-             //   persistableStore.getAccountAgeRequests().add(request);
+                //   persistableStore.getAccountAgeRequests().add(request);
                 persist();
 
                 publishAuthorizedData(new AuthorizedAccountAgeWitness(accountAgeWitness, staticPublicKeysProvided));

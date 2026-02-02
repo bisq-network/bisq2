@@ -54,7 +54,7 @@ import java.util.List;
 public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
     protected final String paymentMethodId;
-    protected final byte[] salt;
+    protected final byte[] salt; // 32 bytes
 
     public AccountPayload(String id) {
         this(id, null, ByteArrayUtils.getRandomBytes(32));

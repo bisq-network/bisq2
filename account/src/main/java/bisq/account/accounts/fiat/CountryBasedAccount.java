@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.Account;
+import bisq.account.age_witness.KeyAlgorithm;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -40,7 +41,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
                                String accountName,
                                P accountPayload,
                                KeyPair keyPair,
-                               String keyAlgorithm) {
+                               KeyAlgorithm keyAlgorithm) {
         super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm);
         this.country = accountPayload.getCountry();
     }
