@@ -21,22 +21,15 @@ import bisq.common.data.Pair;
 import bisq.common.network.TransportType;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
+import bisq.security.mobile_notifications.MobileNotificationEncryption;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.IESParameterSpec;
 
-import javax.crypto.Cipher;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -52,12 +45,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class BisqRelayClient {
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
-
     private final String relayBaseUrl;
     private final ObjectMapper objectMapper;
     private final Optional<NetworkService> networkService;
@@ -265,42 +252,18 @@ public class BisqRelayClient {
 
     /**
      * Encrypt the payload using the device's public key (ECIES for EC keys).
+     * Delegates to {@link MobileNotificationEncryption} for the actual encryption.
      *
      * @param payload         The payload to encrypt
      * @param publicKeyBase64 The Base64 encoded public key
      * @return Base64 encoded encrypted payload
+     * @throws GeneralSecurityException if encryption fails
      */
     private String encryptPayload(Map<String, Object> payload, String publicKeyBase64) throws Exception {
         // Convert payload to JSON
         String payloadJson = objectMapper.writeValueAsString(payload);
-
-        // Decode the public key
-        byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("ECDH", "BC");
-        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-
-        // Encrypt with ECIES (Elliptic Curve Integrated Encryption Scheme)
-        // Using AES-128-CBC with HMAC-SHA1 for MAC (default BouncyCastle ECIES parameters)
-        //
-        // CRITICAL: These IESParameterSpec parameters MUST match exactly on the mobile client side:
-        // - derivation: empty byte[] (not null) - used for KDF derivation parameter
-        // - encoding: empty byte[] (not null) - used for KDF encoding parameter
-        // - macKeySize: 128 bits - selects AES-128-CBC with HMAC-SHA1 per BouncyCastle ECIES defaults
-        //
-        // Mobile teams: Verify your decryption uses identical IESParameterSpec(new byte[0], new byte[0], 128)
-        // Any mismatch in these parameters will cause decryption to fail silently or produce garbage.
-        byte[] derivation = new byte[0];  // Intentionally empty, not null
-        byte[] encoding = new byte[0];    // Intentionally empty, not null
-        int macKeySize = 128;             // 128 bits for AES-128-CBC + HMAC-SHA1
-        IESParameterSpec iesSpec = new IESParameterSpec(derivation, encoding, macKeySize);
-
-        Cipher cipher = Cipher.getInstance("ECIES", "BC");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey, iesSpec);
-        byte[] encryptedBytes = cipher.doFinal(payloadJson.getBytes(StandardCharsets.UTF_8));
-
-        // Return Base64 encoded encrypted data
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+        // Delegate to MobileNotificationEncryption for ECIES encryption
+        return MobileNotificationEncryption.encrypt(publicKeyBase64, payloadJson);
     }
 
     /**

@@ -132,44 +132,39 @@ public class PushNotificationService implements Service {
     }
 
     /**
-     * Send a trade event notification to all devices registered for a user.
+     * Send a trade event notification to all registered mobile devices.
      * Checks if the notification was already sent to prevent duplicates.
      *
-     * @param userProfileId The user profile ID
-     * @param tradeId       The trade ID
-     * @param eventType     The type of trade event
-     * @param message       A human-readable message
-     * @param isUrgent      Whether the notification is urgent
+     * @param tradeId   The trade ID
+     * @param eventType The type of trade event
+     * @param message   A human-readable message
+     * @param isUrgent  Whether the notification is urgent
      */
-    public void sendTradeNotification(String userProfileId, String tradeId, String eventType,
+    public void sendTradeNotification(String tradeId, String eventType,
                                        String message, boolean isUrgent) {
-        // Create unique key for this notification
-        String notificationKey = userProfileId + ":" + tradeId + ":" + eventType;
+        // Create unique key for this notification (no longer tied to userProfileId)
+        String notificationKey = tradeId + ":" + eventType;
 
         // Atomically check-and-add to prevent concurrent sends of the same notification
-        // This guards against race between wasNotificationSent and markNotificationAsSent
         if (!inFlightNotifications.add(notificationKey)) {
-            log.debug("Skipping in-flight notification for user {} trade {} event {}",
-                    userProfileId, tradeId, eventType);
+            log.debug("Skipping in-flight notification for trade {} event {}", tradeId, eventType);
             return;
         }
 
-        // Check if this notification was already sent
-        if (sentNotificationStore.wasNotificationSent(userProfileId, tradeId, eventType)) {
-            log.debug("Skipping duplicate notification for user {} trade {} event {}",
-                    userProfileId, tradeId, eventType);
-            inFlightNotifications.remove(notificationKey); // Clear guard
+        // Check if this notification was already sent (use empty string for userProfileId for backward compat)
+        if (sentNotificationStore.wasNotificationSent("", tradeId, eventType)) {
+            log.debug("Skipping duplicate notification for trade {} event {}", tradeId, eventType);
+            inFlightNotifications.remove(notificationKey);
             return;
         }
 
-        Set<DeviceRegistration> devices = deviceRegistrationService.getDevicesForUser(userProfileId);
+        Set<MobileDeviceProfile> devices = deviceRegistrationService.getMobileDeviceProfiles();
 
         if (devices.isEmpty()) {
-            log.debug("No devices registered for user {}", userProfileId);
-            // Still mark as sent to avoid checking again
-            sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
+            log.debug("No devices registered");
+            sentNotificationStore.markNotificationAsSent("", tradeId, eventType);
             persist();
-            inFlightNotifications.remove(notificationKey); // Clear guard
+            inFlightNotifications.remove(notificationKey);
             return;
         }
 
@@ -181,29 +176,16 @@ public class PushNotificationService implements Service {
         payload.put("message", message);
         payload.put("timestamp", System.currentTimeMillis());
 
-        // Send to all registered devices and wait for all to complete
+        // Send to all registered devices
         List<CompletableFuture<NotificationResult>> futures = new ArrayList<>();
-        for (DeviceRegistration device : devices) {
-            if (device.getPlatform() == DeviceRegistration.Platform.IOS) {
-                CompletableFuture<NotificationResult> future = bisqRelayClient.sendNotification(
-                        device.getDeviceToken(),
-                        device.getPublicKey(),
-                        payload,
-                        isUrgent
-                );
-                futures.add(future);
-            }
-        }
-
-        // Short-circuit if no iOS devices found
-        if (futures.isEmpty()) {
-            log.debug("No iOS devices registered for user {} (has {} non-iOS devices)",
-                    userProfileId, devices.size());
-            // Mark as sent to avoid checking again
-            sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
-            persist();
-            inFlightNotifications.remove(notificationKey); // Clear guard
-            return;
+        for (MobileDeviceProfile device : devices) {
+            CompletableFuture<NotificationResult> future = bisqRelayClient.sendNotification(
+                    device.getDeviceToken(),
+                    device.getPublicKeyBase64(),
+                    payload,
+                    isUrgent
+            );
+            futures.add(future);
         }
 
         // Wait for all notifications to complete, then process results
@@ -216,13 +198,19 @@ public class PushNotificationService implements Service {
                                 .filter(r -> r != null)
                                 .toList();
 
-                        // Auto-unregister devices that should be removed
+                        // Auto-unregister devices that should be removed (find by deviceToken)
                         results.stream()
                                 .filter(NotificationResult::isShouldUnregister)
                                 .forEach(result -> {
-                                    log.warn("Auto-unregistering invalid device token for user {}: tokenLength={}",
-                                            userProfileId, result.getDeviceToken().length());
-                                    deviceRegistrationService.unregisterDevice(userProfileId, result.getDeviceToken());
+                                    // Find the device by token and unregister by deviceId
+                                    devices.stream()
+                                            .filter(d -> d.getDeviceToken().equals(result.getDeviceToken()))
+                                            .findFirst()
+                                            .ifPresent(device -> {
+                                                log.warn("Auto-unregistering invalid device: deviceIdLength={}",
+                                                        device.getDeviceId().length());
+                                                deviceRegistrationService.unregister(device.getDeviceId());
+                                            });
                                 });
 
                         // Check if at least one notification succeeded
@@ -230,18 +218,15 @@ public class PushNotificationService implements Service {
                                 .anyMatch(NotificationResult::isSuccess);
 
                         if (anySuccess) {
-                            // At least one device received the notification successfully
-                            sentNotificationStore.markNotificationAsSent(userProfileId, tradeId, eventType);
+                            sentNotificationStore.markNotificationAsSent("", tradeId, eventType);
                             persist();
-                            log.info("✓ Sent trade notification to {} device(s) for user {} trade {} event {} - marked as sent",
-                                    devices.size(), userProfileId, tradeId, eventType);
+                            log.info("✓ Sent trade notification to {} device(s) for trade {} event {} - marked as sent",
+                                    devices.size(), tradeId, eventType);
                         } else {
-                            // All notifications failed - don't mark as sent so it can retry later
-                            log.warn("✗ All notifications failed for user {} trade {} event {} - will retry on next trigger",
-                                    userProfileId, tradeId, eventType);
+                            log.warn("✗ All notifications failed for trade {} event {} - will retry on next trigger",
+                                    tradeId, eventType);
                         }
                     } finally {
-                        // Always clear the in-flight guard, even if an exception occurred
                         inFlightNotifications.remove(notificationKey);
                     }
                 });
@@ -250,14 +235,13 @@ public class PushNotificationService implements Service {
     /**
      * Send a trade event notification for a specific trade state change.
      *
-     * @param userProfileId The user profile ID
-     * @param tradeId       The trade ID
-     * @param eventType     The type of trade event
+     * @param tradeId   The trade ID
+     * @param eventType The type of trade event
      */
-    public void sendTradeStateChangeNotification(String userProfileId, String tradeId, String eventType) {
+    public void sendTradeStateChangeNotification(String tradeId, String eventType) {
         String message = formatTradeEventMessage(eventType);
         boolean isUrgent = isUrgentEvent(eventType);
-        sendTradeNotification(userProfileId, tradeId, eventType, message, isUrgent);
+        sendTradeNotification(tradeId, eventType, message, isUrgent);
     }
 
     /**

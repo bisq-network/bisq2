@@ -8,112 +8,86 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DeviceRegistrationStoreTest {
 
+    private MobileDeviceProfile createProfile(String deviceId, String token, String key, MobileDevicePlatform platform) {
+        return new MobileDeviceProfile(deviceId, token, key, "Test Device", platform, System.currentTimeMillis());
+    }
+
     @Test
     void testDefaultConstructor() {
         DeviceRegistrationStore store = new DeviceRegistrationStore();
-        assertNotNull(store.getDevicesByUserProfileId());
-        assertTrue(store.getDevicesByUserProfileId().isEmpty());
+        assertNotNull(store.getDeviceByDeviceId());
+        assertTrue(store.getDeviceByDeviceId().isEmpty());
     }
 
     @Test
     void testConstructorWithMap() {
-        Map<String, Set<DeviceRegistration>> map = new HashMap<>();
-        Set<DeviceRegistration> devices = new HashSet<>();
-        devices.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        map.put("user1", devices);
+        Map<String, MobileDeviceProfile> map = new HashMap<>();
+        map.put("device1", createProfile("device1", "token1", "key1", MobileDevicePlatform.IOS));
 
         DeviceRegistrationStore store = new DeviceRegistrationStore(map);
 
-        assertEquals(1, store.getDevicesByUserProfileId().size());
-        assertTrue(store.getDevicesByUserProfileId().containsKey("user1"));
+        assertEquals(1, store.getDeviceByDeviceId().size());
+        assertTrue(store.getDeviceByDeviceId().containsKey("device1"));
     }
 
     @Test
     void testGetClone() {
-        Map<String, Set<DeviceRegistration>> map = new HashMap<>();
-        Set<DeviceRegistration> devices = new HashSet<>();
-        devices.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        map.put("user1", devices);
+        Map<String, MobileDeviceProfile> map = new HashMap<>();
+        map.put("device1", createProfile("device1", "token1", "key1", MobileDevicePlatform.IOS));
 
         DeviceRegistrationStore store = new DeviceRegistrationStore(map);
         DeviceRegistrationStore clone = store.getClone();
 
-        assertEquals(store.getDevicesByUserProfileId().size(), clone.getDevicesByUserProfileId().size());
-        assertNotSame(store.getDevicesByUserProfileId(), clone.getDevicesByUserProfileId());
+        assertEquals(store.getDeviceByDeviceId().size(), clone.getDeviceByDeviceId().size());
+        assertNotSame(store.getDeviceByDeviceId(), clone.getDeviceByDeviceId());
     }
 
     @Test
     void testApplyPersisted() {
         DeviceRegistrationStore store = new DeviceRegistrationStore();
-        
-        Map<String, Set<DeviceRegistration>> map = new HashMap<>();
-        Set<DeviceRegistration> devices = new HashSet<>();
-        devices.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        map.put("user1", devices);
-        
+
+        Map<String, MobileDeviceProfile> map = new HashMap<>();
+        map.put("device1", createProfile("device1", "token1", "key1", MobileDevicePlatform.IOS));
+
         DeviceRegistrationStore persisted = new DeviceRegistrationStore(map);
-        
+
         store.applyPersisted(persisted);
-        
-        assertEquals(1, store.getDevicesByUserProfileId().size());
-        assertTrue(store.getDevicesByUserProfileId().containsKey("user1"));
+
+        assertEquals(1, store.getDeviceByDeviceId().size());
+        assertTrue(store.getDeviceByDeviceId().containsKey("device1"));
     }
 
     @Test
     void testApplyPersistedClearsExisting() {
-        Map<String, Set<DeviceRegistration>> map1 = new HashMap<>();
-        Set<DeviceRegistration> devices1 = new HashSet<>();
-        devices1.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        map1.put("user1", devices1);
-        
+        Map<String, MobileDeviceProfile> map1 = new HashMap<>();
+        map1.put("device1", createProfile("device1", "token1", "key1", MobileDevicePlatform.IOS));
+
         DeviceRegistrationStore store = new DeviceRegistrationStore(map1);
-        assertEquals(1, store.getDevicesByUserProfileId().size());
-        
-        Map<String, Set<DeviceRegistration>> map2 = new HashMap<>();
-        Set<DeviceRegistration> devices2 = new HashSet<>();
-        devices2.add(new DeviceRegistration("token2", "key2", DeviceRegistration.Platform.ANDROID));
-        map2.put("user2", devices2);
-        
+        assertEquals(1, store.getDeviceByDeviceId().size());
+
+        Map<String, MobileDeviceProfile> map2 = new HashMap<>();
+        map2.put("device2", createProfile("device2", "token2", "key2", MobileDevicePlatform.ANDROID));
+
         DeviceRegistrationStore persisted = new DeviceRegistrationStore(map2);
-        
+
         store.applyPersisted(persisted);
-        
-        assertEquals(1, store.getDevicesByUserProfileId().size());
-        assertFalse(store.getDevicesByUserProfileId().containsKey("user1"));
-        assertTrue(store.getDevicesByUserProfileId().containsKey("user2"));
+
+        assertEquals(1, store.getDeviceByDeviceId().size());
+        assertFalse(store.getDeviceByDeviceId().containsKey("device1"));
+        assertTrue(store.getDeviceByDeviceId().containsKey("device2"));
     }
 
     @Test
-    void testMultipleDevicesPerUser() {
-        Map<String, Set<DeviceRegistration>> map = new HashMap<>();
-        Set<DeviceRegistration> devices = new HashSet<>();
-        devices.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        devices.add(new DeviceRegistration("token2", "key2", DeviceRegistration.Platform.ANDROID));
-        map.put("user1", devices);
+    void testMultipleDevices() {
+        Map<String, MobileDeviceProfile> map = new HashMap<>();
+        map.put("device1", createProfile("device1", "token1", "key1", MobileDevicePlatform.IOS));
+        map.put("device2", createProfile("device2", "token2", "key2", MobileDevicePlatform.ANDROID));
 
         DeviceRegistrationStore store = new DeviceRegistrationStore(map);
 
-        assertEquals(1, store.getDevicesByUserProfileId().size());
-        assertEquals(2, store.getDevicesByUserProfileId().get("user1").size());
-    }
-
-    @Test
-    void testMultipleUsers() {
-        Map<String, Set<DeviceRegistration>> map = new HashMap<>();
-        
-        Set<DeviceRegistration> devices1 = new HashSet<>();
-        devices1.add(new DeviceRegistration("token1", "key1", DeviceRegistration.Platform.IOS));
-        map.put("user1", devices1);
-        
-        Set<DeviceRegistration> devices2 = new HashSet<>();
-        devices2.add(new DeviceRegistration("token2", "key2", DeviceRegistration.Platform.ANDROID));
-        map.put("user2", devices2);
-
-        DeviceRegistrationStore store = new DeviceRegistrationStore(map);
-
-        assertEquals(2, store.getDevicesByUserProfileId().size());
-        assertTrue(store.getDevicesByUserProfileId().containsKey("user1"));
-        assertTrue(store.getDevicesByUserProfileId().containsKey("user2"));
+        assertEquals(2, store.getDeviceByDeviceId().size());
+        assertTrue(store.getDeviceByDeviceId().containsKey("device1"));
+        assertTrue(store.getDeviceByDeviceId().containsKey("device2"));
     }
 }
 

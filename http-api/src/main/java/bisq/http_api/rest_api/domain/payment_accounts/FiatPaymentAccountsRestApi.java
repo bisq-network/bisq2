@@ -128,12 +128,12 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
         try {
             Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount = accountService.getSelectedAccount();
             if (selectedAccount.isEmpty() || !isFiatAccount(selectedAccount.get())) {
-                return buildResponse(Response.Status.NO_CONTENT, "");
+                return buildNoContentResponse();
             }
 
             return convertToDto(selectedAccount.get())
                     .map(this::buildOkResponse)
-                    .orElse(buildResponse(Response.Status.NO_CONTENT, ""));
+                    .orElse(buildNoContentResponse());
         } catch (Exception e) {
             log.error("Failed to retrieve selected payment account", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
@@ -219,7 +219,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
             }
 
             accountService.removePaymentAccount(toRemove);
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            asyncResponse.resume(buildNoContentResponse());
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
@@ -281,7 +281,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
                 return;
             }
 
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            asyncResponse.resume(buildNoContentResponse());
         } catch (Exception e) {
             log.error("Failed to save payment account", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));

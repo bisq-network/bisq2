@@ -36,6 +36,15 @@ public abstract class RestApiBase {
         return Response.status(Response.Status.OK).entity(entity).build();
     }
 
+    /**
+     * Builds a 204 NO_CONTENT response without a body.
+     *
+     * @return The HTTP response.
+     */
+    protected Response buildNoContentResponse() {
+        return Response.status(Response.Status.NO_CONTENT).build();
+    }
+
     protected Response buildNotFoundResponse(String message) {
         return Response.status(Response.Status.NOT_FOUND)
                 .entity(message)

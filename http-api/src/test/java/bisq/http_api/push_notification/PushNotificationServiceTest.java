@@ -68,7 +68,7 @@ class PushNotificationServiceTest {
 
         // Should not throw exception when user has no devices
         assertDoesNotThrow(() -> {
-            service.sendTradeNotification("user-with-no-devices", "trade123", "TRADE_CREATED", "New trade", true);
+            service.sendTradeNotification("trade123", "TRADE_CREATED", "New trade", true);
         });
     }
 
@@ -76,16 +76,16 @@ class PushNotificationServiceTest {
     void testSendNotificationWithRegisteredDevice() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
+        String deviceId = "device1";
         String deviceToken = "test-device-token";
 
         // Register a device
-        deviceRegistrationService.registerDevice(userId, deviceToken, testPublicKey, DeviceRegistration.Platform.IOS);
+        deviceRegistrationService.register(deviceId, deviceToken, testPublicKey, "iPhone 15", MobileDevicePlatform.IOS);
 
         // This will attempt to send but fail since there's no actual relay server
         // We're just testing that it doesn't throw an exception
         assertDoesNotThrow(() -> {
-            service.sendTradeNotification(userId, "trade123", "TRADE_CREATED", "New trade created", true);
+            service.sendTradeNotification("trade123", "TRADE_CREATED", "New trade created", true);
         });
     }
 
@@ -93,24 +93,22 @@ class PushNotificationServiceTest {
     void testSendNotificationWithMultipleDevices() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
-
         // Register multiple devices
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
-        
+
         KeyPair keyPair1 = keyGen.generateKeyPair();
         String publicKey1 = Base64.getEncoder().encodeToString(keyPair1.getPublic().getEncoded());
-        
+
         KeyPair keyPair2 = keyGen.generateKeyPair();
         String publicKey2 = Base64.getEncoder().encodeToString(keyPair2.getPublic().getEncoded());
 
-        deviceRegistrationService.registerDevice(userId, "token1", publicKey1, DeviceRegistration.Platform.IOS);
-        deviceRegistrationService.registerDevice(userId, "token2", publicKey2, DeviceRegistration.Platform.IOS);
+        deviceRegistrationService.register("device1", "token1", publicKey1, "iPhone 15", MobileDevicePlatform.IOS);
+        deviceRegistrationService.register("device2", "token2", publicKey2, "Pixel 8", MobileDevicePlatform.ANDROID);
 
         // Should attempt to send to both devices
         assertDoesNotThrow(() -> {
-            service.sendTradeNotification(userId, "trade123", "TRADE_CREATED", "New trade", true);
+            service.sendTradeNotification("trade123", "TRADE_CREATED", "New trade", true);
         });
     }
 
@@ -142,40 +140,38 @@ class PushNotificationServiceTest {
     void testDuplicateNotificationPrevention() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         String tradeId = "trade123";
         String deviceToken = "test-device-token";
 
         // Register a device
-        deviceRegistrationService.registerDevice(userId, deviceToken, testPublicKey, DeviceRegistration.Platform.IOS);
+        deviceRegistrationService.register("device1", deviceToken, testPublicKey, "iPhone 15", MobileDevicePlatform.IOS);
 
         // Send notification first time
-        service.sendTradeNotification(userId, tradeId, "TRADE_CREATED", "New trade", true);
+        service.sendTradeNotification(tradeId, "TRADE_CREATED", "New trade", true);
 
         // Send same notification again - should be skipped
-        service.sendTradeNotification(userId, tradeId, "TRADE_CREATED", "New trade", true);
+        service.sendTradeNotification(tradeId, "TRADE_CREATED", "New trade", true);
 
         // Different event type should be sent
-        service.sendTradeNotification(userId, tradeId, "PAYMENT_SENT", "Payment sent", false);
+        service.sendTradeNotification(tradeId, "PAYMENT_SENT", "Payment sent", false);
     }
 
     @Test
     void testRemoveNotificationsForTrade() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         String tradeId = "trade123";
 
         // Send some notifications
-        service.sendTradeNotification(userId, tradeId, "TRADE_CREATED", "New trade", true);
-        service.sendTradeNotification(userId, tradeId, "PAYMENT_SENT", "Payment sent", false);
+        service.sendTradeNotification(tradeId, "TRADE_CREATED", "New trade", true);
+        service.sendTradeNotification(tradeId, "PAYMENT_SENT", "Payment sent", false);
 
         // Remove all notifications for this trade
         service.removeNotificationsForTrade(tradeId);
 
         // Now the same notifications should be sent again (not skipped)
         assertDoesNotThrow(() -> {
-            service.sendTradeNotification(userId, tradeId, "TRADE_CREATED", "New trade", true);
+            service.sendTradeNotification(tradeId, "TRADE_CREATED", "New trade", true);
         });
     }
 
@@ -183,16 +179,15 @@ class PushNotificationServiceTest {
     void testNotificationNotMarkedAsSentWhenAllDevicesFail() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         String tradeId = "trade123";
         String eventType = "TRADE_CREATED";
         String deviceToken = "test-device-token";
 
         // Register a device
-        deviceRegistrationService.registerDevice(userId, deviceToken, testPublicKey, DeviceRegistration.Platform.IOS);
+        deviceRegistrationService.register("device1", deviceToken, testPublicKey, "iPhone 15", MobileDevicePlatform.IOS);
 
         // Send notification - will fail because there's no relay server
-        service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        service.sendTradeNotification(tradeId, eventType, "New trade", true);
 
         // Wait a bit for async completion
         Thread.sleep(500);
@@ -206,7 +201,7 @@ class PushNotificationServiceTest {
             String content = Files.readString(sentNotificationsPath);
             // The file might exist but should be empty or not contain our notification
             // Since all sends failed, nothing should be marked as sent
-            assertFalse(content.contains(userId + ":" + tradeId + ":" + eventType),
+            assertFalse(content.contains(tradeId + ":" + eventType),
                     "Notification should NOT be marked as sent when all devices fail");
         }
     }
@@ -215,22 +210,21 @@ class PushNotificationServiceTest {
     void testNotificationRetriesAfterFailure() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         String tradeId = "trade123";
         String eventType = "TRADE_CREATED";
         String deviceToken = "test-device-token";
 
         // Register a device
-        deviceRegistrationService.registerDevice(userId, deviceToken, testPublicKey, DeviceRegistration.Platform.IOS);
+        deviceRegistrationService.register("device1", deviceToken, testPublicKey, "iPhone 15", MobileDevicePlatform.IOS);
 
         // First attempt - will fail (no relay server)
-        service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        service.sendTradeNotification(tradeId, eventType, "New trade", true);
         Thread.sleep(500); // Wait for async completion
 
         // Second attempt - should NOT be skipped as duplicate because first attempt failed
         // This simulates a retry after the relay comes back online
         assertDoesNotThrow(() -> {
-            service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+            service.sendTradeNotification(tradeId, eventType, "New trade", true);
         });
 
         // The second call should execute (not be skipped as duplicate)
@@ -241,12 +235,11 @@ class PushNotificationServiceTest {
     void testNotificationMarkedAsSentOnlyWhenNoDevices() throws Exception {
         service.initialize().get();
 
-        String userId = "user-no-devices";
         String tradeId = "trade123";
         String eventType = "TRADE_CREATED";
 
-        // Send notification when user has no devices
-        service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        // Send notification when there are no devices registered
+        service.sendTradeNotification(tradeId, eventType, "New trade", true);
 
         // Wait a bit for async completion
         Thread.sleep(100);
@@ -256,11 +249,11 @@ class PushNotificationServiceTest {
         assertTrue(Files.exists(sentNotificationsPath), "Sent notifications file should exist");
 
         String content = Files.readString(sentNotificationsPath);
-        assertTrue(content.contains(userId + ":" + tradeId + ":" + eventType),
-                "Notification should be marked as sent when user has no devices");
+        assertTrue(content.contains(tradeId + ":" + eventType),
+                "Notification should be marked as sent when there are no devices");
 
         // Second attempt should be skipped
-        service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        service.sendTradeNotification(tradeId, eventType, "New trade", true);
         // Should not throw exception
     }
 
@@ -268,12 +261,11 @@ class PushNotificationServiceTest {
     void testPersistenceOfSentNotifications() throws Exception {
         service.initialize().get();
 
-        String userId = "user-no-devices";
         String tradeId = "trade123";
         String eventType = "TRADE_CREATED";
 
         // Send notification (will be marked as sent because no devices)
-        service.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        service.sendTradeNotification(tradeId, eventType, "New trade", true);
         Thread.sleep(100);
 
         // Shutdown service
@@ -290,7 +282,7 @@ class PushNotificationServiceTest {
 
         // The notification should still be marked as sent after restart
         // We can verify this by trying to send again - it should be skipped
-        newService.sendTradeNotification(userId, tradeId, eventType, "New trade", true);
+        newService.sendTradeNotification(tradeId, eventType, "New trade", true);
         // Should not throw exception and should skip duplicate
 
         newService.shutdown().get();
