@@ -77,7 +77,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
     }
 
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
@@ -97,7 +96,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         return CompletableFuture.completedFuture(true);
     }
 
-
     /* --------------------------------------------------------------------- */
     // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
@@ -108,7 +106,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             processMediationRequest((BisqEasyMediationRequest) envelopePayloadMessage);
         }
     }
-
 
     /* --------------------------------------------------------------------- */
     // API
@@ -148,7 +145,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream());
     }
-
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -203,4 +199,3 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         persist();
     }
 }
-

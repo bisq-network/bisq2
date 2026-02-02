@@ -77,7 +77,6 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
         muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
     }
 
-
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
@@ -97,7 +96,6 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
         return CompletableFuture.completedFuture(true);
     }
 
-
     /* --------------------------------------------------------------------- */
     // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
@@ -108,7 +106,6 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
             processMediationRequest((MuSigMediationRequest) envelopePayloadMessage);
         }
     }
-
 
     /* --------------------------------------------------------------------- */
     // API
@@ -148,7 +145,6 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream());
     }
-
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -202,4 +198,3 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
         persist();
     }
 }
-

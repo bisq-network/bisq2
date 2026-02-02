@@ -24,13 +24,11 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -146,27 +144,6 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
-    }
-
-    public void requestMediation(MuSigOpenTradeChannel channel,
-                                 MuSigContract contract) {
-        // checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
-
-        UserProfile peer = channel.getPeer();
-        UserProfile mediator = channel.getMediator().orElseThrow();
-        NetworkId mediatorNetworkId = mediator.getNetworkId();
-        //todo
-       /* BisqEasyMediationRequest mediationRequest = new BisqEasyMediationRequest(channel.getTradeId(),
-                contract,
-                myUserIdentity.getUserProfile(),
-                peer,
-                new ArrayList<>(channel.getChatMessages()),
-                Optional.of(mediatorNetworkId));
-        networkService.confidentialSend(mediationRequest,
-                mediatorNetworkId,
-                myUserIdentity.getNetworkIdWithKeyPair());*/
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId,

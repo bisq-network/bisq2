@@ -49,8 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 public final class MuSigMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
     public static String createMessageId(String tradeId) {
-        // Keep name without MuSig prefix for backward compatibility
-        return "MediationRequest" + "." + tradeId;
+        return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.

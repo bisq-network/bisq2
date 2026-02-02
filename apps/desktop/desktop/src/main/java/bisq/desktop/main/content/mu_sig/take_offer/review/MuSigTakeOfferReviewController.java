@@ -48,7 +48,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.support.mediation.bisq_easy.NoBisqEasyMediatorAvailableException;
+import bisq.support.mediation.mu_sig.NoMuSigMediatorAvailableException;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.user.banned.BannedUserService;
@@ -247,7 +247,7 @@ public class MuSigTakeOfferReviewController implements Controller {
                 }
                 onCancelHandler.run();
             });
-        } catch (NoBisqEasyMediatorAvailableException e) {
+        } catch (NoMuSigMediatorAvailableException e) {
             UIThread.run(() -> new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
                     .onClose(onCancelHandler)

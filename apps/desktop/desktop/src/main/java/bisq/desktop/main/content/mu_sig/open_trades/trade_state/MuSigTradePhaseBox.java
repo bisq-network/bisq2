@@ -32,7 +32,7 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
+import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -89,12 +89,12 @@ class MuSigTradePhaseBox {
         private final Model model;
         @Getter
         private final View view;
-        private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
+        private final MuSigMediationRequestService muSigMediationRequestService;
         private final MuSigOpenTradeChannelService channelService;
         private Pin muSigTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
-            bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
+            muSigMediationRequestService = serviceProvider.getSupportService().getMuSigMediationRequestService();
             channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
 
             model = new Model();
@@ -190,7 +190,7 @@ class MuSigTradePhaseBox {
         void onRequestMediation() {
             MuSigOpenTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getTrade().getContract(),
-                    bisqEasyMediationRequestService, channelService);
+                    muSigMediationRequestService, channelService);
         }
     }
 
