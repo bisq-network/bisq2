@@ -18,7 +18,12 @@
 package bisq.desktop.main.content.authorized_role.release_manager;
 
 import bisq.bonded_roles.release.ReleaseNotification;
+import bisq.common.util.StringUtils;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -28,6 +33,7 @@ import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -35,6 +41,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -122,7 +129,7 @@ public class ReleaseNotificationView extends View<VBox, ReleaseNotificationModel
                 .title(Res.get("authorizedRole.releaseManager.table.releaseNotes"))
                 .minWidth(200)
                 .comparator(Comparator.comparing(ListItem::getReleaseNotes))
-                .valueSupplier(ListItem::getReleaseNotes)
+                .setCellFactory(getReleaseNotesCellFactory())
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.version"))
@@ -147,6 +154,7 @@ public class ReleaseNotificationView extends View<VBox, ReleaseNotificationModel
                 .minWidth(150)
                 .comparator(Comparator.comparing(ListItem::getReleaseManagerProfileId))
                 .valueSupplier(ListItem::getReleaseManagerProfileId)
+                .tooltipSupplier(ListItem::getReleaseManagerProfileId)
                 .build());
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
@@ -157,6 +165,40 @@ public class ReleaseNotificationView extends View<VBox, ReleaseNotificationModel
                 .build());
     }
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReleaseNotesCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label label = new Label();
+            private final BisqIconButton copyButton = new BisqIconButton();
+            private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                copyButton.setIcon(AwesomeIcon.COPY);
+                copyButton.setAlignment(Pos.TOP_RIGHT);
+                copyButton.setOpacity(0.8);
+                label.setAlignment(Pos.CENTER_LEFT);
+                hBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String data = item.getReleaseNotes();
+                    label.setText(StringUtils.truncate(data, 25));
+                    tooltip.setText(data);
+                    label.setTooltip(tooltip);
+                    copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(data));
+                    setGraphic(hBox);
+                } else {
+                    label.setTooltip(null);
+                    copyButton.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getRemoveItemCellFactory() {
         return column -> new TableCell<>() {
             private final Button button = new Button(Res.get("data.remove"));

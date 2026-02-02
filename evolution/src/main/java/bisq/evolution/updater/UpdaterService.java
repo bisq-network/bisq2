@@ -45,10 +45,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
@@ -63,9 +66,12 @@ public class UpdaterService implements Service {
     private final AlertService alertService;
 
     @Getter
-    private final Observable<ReleaseNotification> releaseNotification = new Observable<>();
+    private final Observable<ReleaseNotification> mostRelevantReleaseNotification = new Observable<>();
+    private final Set<ReleaseNotification> releaseNotifications = new CopyOnWriteArraySet<>();
     @Getter
     private final Observable<Boolean> isNewReleaseAvailable = new Observable<>();
+    @Getter
+    private final Observable<Boolean> notifyForPreReleaseSnapshot = new Observable<>();
     @Getter
     private final Observable<Boolean> ignoreNewRelease = new Observable<>();
     @Getter
@@ -73,14 +79,12 @@ public class UpdaterService implements Service {
     private final ApplicationService.Config config;
     @Nullable
     private ExecutorService executorService;
-    private final CollectionObserver<ReleaseNotification> releaseNotificationsObserver;
     private final AppType appType;
     @Getter
     private boolean requireVersionForTrading;
     @Getter
     private Optional<String> minRequiredVersionForTrading = Optional.empty();
-    @Nullable
-    private Pin releaseNotificationsPin, authorizedAlertDataSetPin;
+    private final Set<Pin> pins = new CopyOnWriteArraySet<>();
 
     public UpdaterService(ApplicationService.Config config,
                           SettingsService settingsService,
@@ -92,36 +96,6 @@ public class UpdaterService implements Service {
         this.settingsService = settingsService;
         this.releaseNotificationsService = releaseNotificationsService;
         this.alertService = alertService;
-
-        releaseNotificationsObserver = new CollectionObserver<>() {
-            @Override
-            public void add(ReleaseNotification releaseNotification) {
-                processAddedReleaseNotification(releaseNotification);
-            }
-
-            @Override
-            public void remove(Object element) {
-                if (element instanceof ReleaseNotification toRemove) {
-                    if (releaseNotification.get() == null) {
-                        return;
-                    }
-                    if (releaseNotification.get().equals(toRemove)) {
-                        releaseNotification.set(null);
-                        isNewReleaseAvailable.set(false);
-                        settingsService.setCookie(CookieKey.IGNORE_VERSION, toRemove.getVersionString(), false);
-                    } else {
-                        log.info("We got a remove call with a different releaseNotification as we have stored. releaseNotification={}, toRemove={}",
-                                releaseNotification, toRemove);
-                    }
-                }
-            }
-
-            @Override
-            public void clear() {
-                releaseNotification.set(null);
-                isNewReleaseAvailable.set(false);
-            }
-        };
         this.appType = appType;
     }
 
@@ -129,9 +103,32 @@ public class UpdaterService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        releaseNotificationsPin = releaseNotificationsService.getReleaseNotifications().addObserver(releaseNotificationsObserver);
+        pins.add(releaseNotificationsService.getReleaseNotifications().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(ReleaseNotification releaseNotification) {
+                if (releaseNotification != null && releaseNotification.getAppType() == appType) {
+                    releaseNotifications.add(releaseNotification);
+                    updateReleaseNotificationState();
+                }
+            }
 
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+            @Override
+            public void remove(Object element) {
+                if (element instanceof ReleaseNotification toRemove && toRemove.getAppType() == appType) {
+                    releaseNotifications.remove(toRemove);
+                    settingsService.setCookie(CookieKey.IGNORE_VERSION, toRemove.getVersionString(), false);
+                    updateReleaseNotificationState();
+                }
+            }
+
+            @Override
+            public void clear() {
+                releaseNotifications.clear();
+                updateReleaseNotificationState();
+            }
+        }));
+
+        pins.add(alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
@@ -139,7 +136,7 @@ public class UpdaterService implements Service {
                         authorizedAlertData.getAppType() == appType) {
                     requireVersionForTrading = true;
                     minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                    reapplyAllReleaseNotifications();
+                    updateReleaseNotificationState();
                 }
             }
 
@@ -151,7 +148,7 @@ public class UpdaterService implements Service {
                             authorizedAlertData.getAppType() == appType) {
                         requireVersionForTrading = false;
                         minRequiredVersionForTrading = Optional.empty();
-                        reapplyAllReleaseNotifications();
+                        updateReleaseNotificationState();
                     }
                 }
             }
@@ -160,9 +157,17 @@ public class UpdaterService implements Service {
             public void clear() {
                 requireVersionForTrading = false;
                 minRequiredVersionForTrading = Optional.empty();
-                reapplyAllReleaseNotifications();
+                updateReleaseNotificationState();
             }
-        });
+        }));
+
+        pins.add(settingsService.getCookieChanged().addObserver(e -> {
+            boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
+            if (notifyForPreReleaseSnapshot.get() == null || notifyForPreReleaseSnapshot.get() != notifyForPreRelease) {
+                notifyForPreReleaseSnapshot.set(notifyForPreRelease);
+                updateReleaseNotificationState();
+            }
+        }));
 
         return CompletableFuture.completedFuture(true);
     }
@@ -170,16 +175,10 @@ public class UpdaterService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (releaseNotificationsPin != null) {
-            releaseNotificationsPin.unbind();
-            releaseNotificationsPin = null;
-        }
-        if (authorizedAlertDataSetPin != null) {
-            authorizedAlertDataSetPin.unbind();
-            authorizedAlertDataSetPin = null;
-        }
+        pins.forEach(Pin::unbind);
+        pins.clear();
         downloadItemList.clear();
-        releaseNotification.set(null);
+        mostRelevantReleaseNotification.set(null);
         return CompletableFuture.supplyAsync(() -> {
             if (executorService != null) {
                 ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
@@ -194,15 +193,8 @@ public class UpdaterService implements Service {
     // API
     /* --------------------------------------------------------------------- */
 
-    public void reapplyAllReleaseNotifications() {
-        if (releaseNotificationsPin != null) {
-            releaseNotificationsPin.unbind();
-        }
-        releaseNotificationsPin = releaseNotificationsService.getReleaseNotifications().addObserver(releaseNotificationsObserver);
-    }
-
     public CompletableFuture<Void> downloadAndVerify() throws IOException {
-        ReleaseNotification releaseNotification = this.releaseNotification.get();
+        ReleaseNotification releaseNotification = this.mostRelevantReleaseNotification.get();
         if (releaseNotification == null) {
             return CompletableFuture.completedFuture(null);
         }
@@ -237,41 +229,47 @@ public class UpdaterService implements Service {
     // Private/package static
     /* --------------------------------------------------------------------- */
 
-    private void processAddedReleaseNotification(ReleaseNotification newReleaseNotification) {
-        releaseNotification.set(newReleaseNotification);
-
-        if (newReleaseNotification == null) {
+    private void updateReleaseNotificationState() {
+        if (releaseNotifications.isEmpty()) {
             isNewReleaseAvailable.set(false);
             return;
         }
-        if (newReleaseNotification.getAppType() != appType) {
-            isNewReleaseAvailable.set(false);
-            log.debug("We received a newReleaseNotification but it does not match our appType");
-            return;
-        }
 
-        Version newVersion = newReleaseNotification.getReleaseVersion();
-        boolean isNewRelease = ApplicationVersion.getVersion().below(newVersion);
-        if (isNewRelease) {
-            boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
-            if (newReleaseNotification.isPreRelease()) {
-                isNewReleaseAvailable.set(notifyForPreRelease);
-            } else {
-                isNewReleaseAvailable.set(true);
-            }
-        } else {
-            isNewReleaseAvailable.set(false);
-        }
-
-        if (requireVersionForTrading &&
-                minRequiredVersionForTrading.isPresent() &&
-                ApplicationVersion.getVersion().below(new Version(minRequiredVersionForTrading.get()))) {
-            log.info("The ignore flag is not applied because we received a minRequiredVersionForTrading which is above the applicationVersion");
-            ignoreNewRelease.set(false);
-        } else {
-            Boolean ignore = settingsService.getCookie().asBoolean(CookieKey.IGNORE_VERSION, newVersion.toString()).orElse(false);
-            ignoreNewRelease.set(ignore);
-        }
+        releaseNotifications.stream()
+                .filter(notification -> ApplicationVersion.getVersion().below(notification.getReleaseVersion()))
+                .filter(notification -> {
+                    if (requireVersionForTrading &&
+                            minRequiredVersionForTrading.isPresent() &&
+                            ApplicationVersion.getVersion().below(new Version(minRequiredVersionForTrading.get()))) {
+                        log.info("The ignore flag is not applied because we received a minRequiredVersionForTrading which is above the applicationVersion");
+                        return true;
+                    } else {
+                        Version newVersion = notification.getReleaseVersion();
+                        Boolean ignore = settingsService.getCookie().asBoolean(CookieKey.IGNORE_VERSION, newVersion.toString()).orElse(false);
+                        return !ignore;
+                    }
+                })
+                .filter(notification -> !notification.isPreRelease() ||
+                        (notifyForPreReleaseSnapshot.get() != null && notifyForPreReleaseSnapshot.get()))
+                .max(Comparator.comparing(ReleaseNotification::getReleaseVersion))
+                .ifPresentOrElse(notification -> {
+                    mostRelevantReleaseNotification.set(notification);
+                    isNewReleaseAvailable.set(false);
+                    isNewReleaseAvailable.set(true);
+                    if (requireVersionForTrading &&
+                            minRequiredVersionForTrading.isPresent() &&
+                            ApplicationVersion.getVersion().below(new Version(minRequiredVersionForTrading.get()))) {
+                        log.info("The ignore flag is not applied because we received a minRequiredVersionForTrading which is above the applicationVersion");
+                        ignoreNewRelease.set(false);
+                    } else {
+                        Version newVersion = notification.getReleaseVersion();
+                        Boolean ignore = settingsService.getCookie().asBoolean(CookieKey.IGNORE_VERSION, newVersion.toString()).orElse(false);
+                        ignoreNewRelease.set(ignore);
+                    }
+                }, () -> {
+                    mostRelevantReleaseNotification.set(null);
+                    isNewReleaseAvailable.set(false);
+                });
     }
 
     private static CompletableFuture<Void> downloadAndVerify(String version,

@@ -80,7 +80,7 @@ public class UpdaterController implements Controller {
 
         isNewReleaseAvailablePin = updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> {
             UIThread.run(() -> {
-                ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
+                ReleaseNotification releaseNotification = updaterService.getMostRelevantReleaseNotification().get();
                 if (isNewReleaseAvailable == null || !isNewReleaseAvailable || releaseNotification == null) {
                     return;
                 }
@@ -192,7 +192,7 @@ public class UpdaterController implements Controller {
     }
 
     void onShutdown() {
-        ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
+        ReleaseNotification releaseNotification = updaterService.getMostRelevantReleaseNotification().get();
         if (releaseNotification != null && releaseNotification.isLauncherUpdate()) {
             PlatformUtils.open(PlatformUtils.getDownloadOfHomeDirPath());
         }

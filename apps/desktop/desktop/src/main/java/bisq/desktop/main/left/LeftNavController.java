@@ -83,7 +83,7 @@ public class LeftNavController implements Controller {
                 if (isNewReleaseAvailable == null) {
                     return;
                 }
-                model.getIsNewReleaseAvailable().set(isNewReleaseAvailable && updaterService.getReleaseNotification().get() != null);
+                model.getIsNewReleaseAvailable().set(isNewReleaseAvailable && updaterService.getMostRelevantReleaseNotification().get() != null);
             });
         });
 

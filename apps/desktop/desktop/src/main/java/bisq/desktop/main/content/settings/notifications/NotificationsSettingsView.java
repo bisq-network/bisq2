@@ -62,22 +62,27 @@ public class NotificationsSettingsView extends View<VBox, NotificationsSettingsM
         off.setToggleGroup(notificationsToggleGroup);
         off.setUserData(ChatNotificationType.OFF);
 
-        notifyForPreRelease = new Switch(Res.get("settings.notification.notifyForPreRelease"));
-
         useTransientNotifications = new Switch(Res.get("settings.notification.useTransientNotifications"));
 
         clearNotifications = new Button(Res.get("settings.notification.clearNotifications"));
         clearNotifications.getStyleClass().add("grey-transparent-outlined-button");
 
-        VBox.setMargin(notifyForPreRelease, new Insets(10, 0, 0, 0));
         VBox.setMargin(clearNotifications, new Insets(10, 0, 0, 0));
         VBox notificationsVBox = new VBox(10, all, mention, off,
-                notifyForPreRelease, useTransientNotifications, clearNotifications);
+                useTransientNotifications, clearNotifications);
+
+        // Update notifications
+        Label updateHeadline = SettingsViewUtils.getHeadline(Res.get("settings.notification.update"));
+        notifyForPreRelease = new Switch(Res.get("settings.notification.notifyForPreRelease"));
 
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(notificationsVBox, insets);
         VBox contentBox = new VBox(50);
-        contentBox.getChildren().addAll(notificationsHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), notificationsVBox);
+        contentBox.getChildren().addAll(notificationsHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
+                notificationsVBox,
+                updateHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
+                notifyForPreRelease);
+
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
