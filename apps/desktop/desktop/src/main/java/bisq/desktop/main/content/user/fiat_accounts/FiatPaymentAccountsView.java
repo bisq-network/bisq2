@@ -114,7 +114,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                new HBox(10, saveButton, deletedButton/*, importBisq1AccountDataButton*/)); // Not ready for release
+                new HBox(10, saveButton, deletedButton, importBisq1AccountDataButton));
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);
