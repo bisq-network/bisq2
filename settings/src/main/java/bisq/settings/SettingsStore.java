@@ -60,7 +60,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
     @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated(since = "2.1.2")
     final Observable<Boolean> offersOnly = new Observable<>();
-    final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
+    final Observable<Boolean> bisqEasyTradeRulesConfirmed = new Observable<>();
+    final Observable<Boolean> muSigTradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
     final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
     final Observable<Boolean> isTacAccepted = new Observable<>();
@@ -96,6 +97,7 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
+                false,
                 ChatNotificationType.ALL,
                 false,
                 new HashSet<>(),
@@ -128,7 +130,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                   Market selectedMuSigMarket,
                   long requiredTotalReputationScore,
                   boolean offersOnly,
-                  boolean tradeRulesConfirmed,
+                  boolean bisqEasyTradeRulesConfirmed,
+                  boolean muSigTradeRulesConfirmed,
                   ChatNotificationType chatNotificationType,
                   boolean isTacAccepted,
                   Set<String> consumedAlertIds,
@@ -159,7 +162,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
         this.selectedMuSigMarket.set(selectedMuSigMarket);
         this.minRequiredReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
-        this.tradeRulesConfirmed.set(tradeRulesConfirmed);
+        this.bisqEasyTradeRulesConfirmed.set(bisqEasyTradeRulesConfirmed);
+        this.muSigTradeRulesConfirmed.set(muSigTradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
         this.isTacAccepted.set(isTacAccepted);
         this.consumedAlertIds.setAll(consumedAlertIds);
@@ -196,7 +200,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 .setSelectedMuSigMarket(selectedMuSigMarket.get().toProto(serializeForHash))
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
-                .setTradeRulesConfirmed(tradeRulesConfirmed.get())
+                .setBisqEasyTradeRulesConfirmed(bisqEasyTradeRulesConfirmed.get())
+                .setMuSigTradeRulesConfirmed(muSigTradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProtoEnum())
                 .setIsTacAccepted(isTacAccepted.get())
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
@@ -255,7 +260,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 Market.fromProto(proto.getSelectedMuSigMarket()),
                 proto.getMinRequiredReputationScore(),
                 proto.getOffersOnly(),
-                proto.getTradeRulesConfirmed(),
+                proto.getBisqEasyTradeRulesConfirmed(),
+                proto.getMuSigTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
                 proto.getIsTacAccepted(),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
@@ -303,7 +309,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
                 selectedMuSigMarket.get(),
                 minRequiredReputationScore.get(),
                 offersOnly.get(),
-                tradeRulesConfirmed.get(),
+                bisqEasyTradeRulesConfirmed.get(),
+                muSigTradeRulesConfirmed.get(),
                 chatNotificationType.get(),
                 isTacAccepted.get(),
                 Set.copyOf(consumedAlertIds),
@@ -339,7 +346,8 @@ final public class SettingsStore implements PersistableStore<SettingsStore> {
             selectedMuSigMarket.set(persisted.selectedMuSigMarket.get());
             minRequiredReputationScore.set(persisted.minRequiredReputationScore.get());
             offersOnly.set(persisted.offersOnly.get());
-            tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
+            bisqEasyTradeRulesConfirmed.set(persisted.bisqEasyTradeRulesConfirmed.get());
+            muSigTradeRulesConfirmed.set(persisted.muSigTradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
             isTacAccepted.set(persisted.isTacAccepted.get());
             consumedAlertIds.setAll(persisted.consumedAlertIds);

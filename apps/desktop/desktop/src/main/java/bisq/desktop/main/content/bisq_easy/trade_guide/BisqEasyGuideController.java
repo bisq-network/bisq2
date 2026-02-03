@@ -50,7 +50,7 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
 
     @Override
     public void onActivate() {
-        model.setTradeRulesConfirmed(settingsService.getTradeRulesConfirmed().get());
+        model.setTradeRulesConfirmed(settingsService.getBisqEasyTradeRulesConfirmed().get());
     }
 
     @Override

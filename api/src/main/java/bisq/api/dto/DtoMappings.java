@@ -1117,7 +1117,8 @@ public class DtoMappings {
 
         public static SettingsDto fromBisq2Model(SettingsService settingsService) {
             return new SettingsDto(settingsService.getIsTacAccepted().get(),
-                    settingsService.getTradeRulesConfirmed().get(),
+                    settingsService.getBisqEasyTradeRulesConfirmed().get(),
+                    settingsService.getMuSigTradeRulesConfirmed().get(),
                     settingsService.getCloseMyOfferWhenTaken().get(),
                     settingsService.getLanguageTag().get(),
                     settingsService.getSupportedLanguageTags(),

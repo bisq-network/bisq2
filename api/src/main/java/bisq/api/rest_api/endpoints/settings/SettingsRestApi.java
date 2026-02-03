@@ -100,8 +100,10 @@ public class SettingsRestApi extends RestApiBase {
         try {
             if (request.isTacAccepted() != null) {
                 settingsService.setIsTacAccepted(request.isTacAccepted());
-            } else if (request.tradeRulesConfirmed() != null) {
-                settingsService.setTradeRulesConfirmed(request.tradeRulesConfirmed());
+            } else if (request.bisqEasyTradeRulesConfirmed() != null) {
+                settingsService.setBisqEasyTradeRulesConfirmed(request.bisqEasyTradeRulesConfirmed());
+            } else if (request.muSigTradeRulesConfirmed() != null) {
+                settingsService.setMuSigTradeRulesConfirmed(request.muSigTradeRulesConfirmed());
             } else if (request.closeMyOfferWhenTaken() != null) {
                 settingsService.setCloseMyOfferWhenTaken(request.closeMyOfferWhenTaken());
             } else if (request.languageCode() != null) { // TODO rename VO for json and apply to mobile

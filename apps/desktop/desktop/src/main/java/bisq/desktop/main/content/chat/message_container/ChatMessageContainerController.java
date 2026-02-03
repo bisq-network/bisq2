@@ -298,7 +298,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-            if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
+            if (settingsService.getBisqEasyTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
                 chatService.getBisqEasyOpenTradeChannelService().sendTextMessage(text, citation, (BisqEasyOpenTradeChannel) chatChannel);
             } else {
                 new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
@@ -307,12 +307,12 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                         .show();
             }
         } else if (chatChannel instanceof MuSigOpenTradeChannel) {
-            if (settingsService.getTradeRulesConfirmed().get() || ((MuSigOpenTradeChannel) chatChannel).isMediator()) {
+            if (settingsService.getMuSigTradeRulesConfirmed().get() || ((MuSigOpenTradeChannel) chatChannel).isMediator()) {
                 chatService.getMuSigOpenTradeChannelService().sendTextMessage(text, citation, (MuSigOpenTradeChannel) chatChannel);
             } else {
-                new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
-                        .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
-                        .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
+                new Popup().information(Res.get("muSig.tradeGuide.notConfirmed.warn"))
+                        .actionButtonText(Res.get("muSig.tradeGuide.open"))
+                        .onAction(() -> Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE))
                         .show();
             }
         } else {

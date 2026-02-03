@@ -37,6 +37,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_details.MuSigTradeDetailsController;
 import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
+import bisq.desktop.main.content.mu_sig.trade_guide.MuSigGuideController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
 import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
@@ -158,6 +159,7 @@ public class OverlayController extends NavigationController {
             case MU_SIG_CREATE_OFFER -> Optional.of(new MuSigCreateOfferController(serviceProvider));
             case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));
             case MU_SIG_TRADE_DETAILS -> Optional.of(new MuSigTradeDetailsController(serviceProvider));
+            case MU_SIG_GUIDE -> Optional.of(new MuSigGuideController(serviceProvider));
 
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));
@@ -176,7 +178,8 @@ public class OverlayController extends NavigationController {
 
             case PROFILE_CARD -> Optional.of(new ProfileCardController(serviceProvider));
             case ADD_TO_CONTACTS_LIST -> Optional.of(new AddToContactsListWindow(serviceProvider).getController());
-            case BISQ_EASY_MEDIATION_CASE_DETAILS -> Optional.of(new BisqEasyMediationCaseDetailsController(serviceProvider));
+            case BISQ_EASY_MEDIATION_CASE_DETAILS ->
+                    Optional.of(new BisqEasyMediationCaseDetailsController(serviceProvider));
             case MU_SIG_MEDIATION_CASE_DETAILS -> Optional.of(new MuSigMediationCaseDetailsController(serviceProvider));
             case SHOW_TABLE_INFO -> Optional.of(new ShowTableInfo(serviceProvider).getController());
             default -> Optional.empty();

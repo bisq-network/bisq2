@@ -49,7 +49,8 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink learnMoreAutomaticBackup, webpage, dao, sourceCode, community, contribute,
-            openLogFileButton, openTorLogFileButton, openDataDirButton, chatRules, tradeGuide, walletGuide, license, tac;
+            openLogFileButton, openTorLogFileButton, openDataDirButton, chatRules, bisqEasyTradeGuide, muSigTradeGuide,
+            walletGuide, license, tac;
 
     private final TreeView<String> backupSnapshotTreeView;
 
@@ -59,10 +60,11 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         root.setAlignment(Pos.TOP_LEFT);
 
         Label guidesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.guides.headline"));
-        tradeGuide = new Hyperlink(Res.get("support.resources.guides.tradeGuide"));
+        bisqEasyTradeGuide = new Hyperlink(Res.get("support.resources.guides.bisqEasyTradeGuide"));
+        muSigTradeGuide = new Hyperlink(Res.get("support.resources.guides.muSigTradeGuide"));
         walletGuide = new Hyperlink(Res.get("support.resources.guides.walletGuide"));
         chatRules = new Hyperlink(Res.get("support.resources.guides.chatRules"));
-        VBox guidesBox = new VBox(5, tradeGuide, walletGuide, chatRules);
+        VBox guidesBox = new VBox(5, bisqEasyTradeGuide, muSigTradeGuide, walletGuide, chatRules);
 
         Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.backup.headline"));
         backupLocation = new MaterialTextField(Res.get("support.resources.backup.location"),
@@ -165,7 +167,8 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         setBackupLocationButton.setOnAction(e -> controller.onSetBackupLocation());
         backupButton.setOnAction(e -> onBackupButtonPressed());
         chatRules.setOnAction(e -> controller.onOpenChatRules());
-        tradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
+        bisqEasyTradeGuide.setOnAction(e -> controller.onOpenBisqEasyTradeGuide());
+        muSigTradeGuide.setOnAction(e -> controller.onOpenMuSigTradeGuide());
         walletGuide.setOnAction(e -> controller.onOpenWalletGuide());
         tac.setOnAction(e -> controller.onTac());
         license.setOnAction(e -> controller.onOpenLicense());
@@ -200,7 +203,8 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         setBackupLocationButton.setOnAction(null);
         backupButton.setOnAction(null);
         chatRules.setOnAction(null);
-        tradeGuide.setOnAction(null);
+        bisqEasyTradeGuide.setOnAction(null);
+        muSigTradeGuide.setOnAction(null);
         walletGuide.setOnAction(null);
         tac.setOnAction(null);
         license.setOnAction(null);

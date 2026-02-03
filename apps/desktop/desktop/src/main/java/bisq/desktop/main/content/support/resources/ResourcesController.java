@@ -146,8 +146,12 @@ public class ResourcesController implements Controller {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
-    void onOpenTradeGuide() {
+    void onOpenBisqEasyTradeGuide() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+    }
+
+    void onOpenMuSigTradeGuide() {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE);
     }
 
     void onOpenWalletGuide() {
