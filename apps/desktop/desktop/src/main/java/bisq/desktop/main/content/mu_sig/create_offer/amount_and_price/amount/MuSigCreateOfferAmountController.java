@@ -100,6 +100,9 @@ public class MuSigCreateOfferAmountController implements Controller {
     private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin,
             areBaseAndQuoteCurrenciesInvertedPin;
+    private boolean suppressInitialMinQuoteChange;
+    private boolean suppressInitialMaxQuoteChange;
+    private boolean suppressInitialIsRangeChange;
 
     public MuSigCreateOfferAmountController(ServiceProvider serviceProvider,
                                             Region owner,
@@ -192,6 +195,13 @@ public class MuSigCreateOfferAmountController implements Controller {
         return model.getBaseSideAmountSpec();
     }
 
+    public void setBaseSideAmountSpec(BaseSideAmountSpec amount) {
+        model.getBaseSideAmountSpec().set(amount);
+        if (amount != null && model.getMarket() != null) {
+            syncUiFromPrefilledAmountSpec();
+        }
+    }
+
     public ReadOnlyBooleanProperty getIsOverlayVisible() {
         return model.getIsOverlayVisible();
     }
@@ -207,8 +217,16 @@ public class MuSigCreateOfferAmountController implements Controller {
             model.getPriceQuote().set(amountSelectionController.getQuote().get());
         }
 
-        Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
-        model.getIsRangeAmountEnabled().set(cookieValue);
+        boolean hasPrefilledAmountSpec = model.getBaseSideAmountSpec().get() != null;
+        if (model.getBaseSideAmountSpec().get() != null) {
+            syncUiFromPrefilledAmountSpec();
+            suppressInitialMinQuoteChange = true;
+            suppressInitialMaxQuoteChange = true;
+            suppressInitialIsRangeChange = true;
+        } else {
+            Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
+            model.getIsRangeAmountEnabled().set(cookieValue);
+        }
         model.getShouldShowHowToBuildReputationButton().set(model.getDirection().isSell());
 
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinBaseSideAmount(),
@@ -233,6 +251,10 @@ public class MuSigCreateOfferAmountController implements Controller {
         minAmountCompQuoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinQuoteSideAmount(),
                 value -> {
                     if (value != null) {
+                        if (suppressInitialMinQuoteChange) {
+                            suppressInitialMinQuoteChange = false;
+                            return;
+                        }
                         if (model.getIsRangeAmountEnabled().get() &&
                                 amountSelectionController.getMaxOrFixedQuoteSideAmount().get() != null &&
                                 value.getValue() > amountSelectionController.getMaxOrFixedQuoteSideAmount().get().getValue()) {
@@ -245,6 +267,10 @@ public class MuSigCreateOfferAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedQuoteSideAmount(),
                 value -> {
                     if (value != null) {
+                        if (suppressInitialMaxQuoteChange) {
+                            suppressInitialMaxQuoteChange = false;
+                            return;
+                        }
                         if (model.getIsRangeAmountEnabled().get() &&
                                 amountSelectionController.getMinQuoteSideAmount().get() != null &&
                                 value.getValue() < amountSelectionController.getMinQuoteSideAmount().get().getValue()) {
@@ -256,10 +282,17 @@ public class MuSigCreateOfferAmountController implements Controller {
                 });
 
         isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
-            applyAmountSpec();
+            if (suppressInitialIsRangeChange) {
+                suppressInitialIsRangeChange = false;
+            } else {
+                applyAmountSpec();
+            }
+
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
-        applyAmountSpec();
+        if (!hasPrefilledAmountSpec) {
+            applyAmountSpec();
+        }
 
         areBaseAndQuoteCurrenciesInvertedPin = EasyBind.subscribe(amountSelectionController.getAreBaseAndQuoteCurrenciesInverted(), areInverted -> {
             String quoteCode = model.getPriceQuote().get().getMarket().getQuoteCurrencyCode();
@@ -275,6 +308,28 @@ public class MuSigCreateOfferAmountController implements Controller {
         });
     }
 
+    private void syncUiFromPrefilledAmountSpec() {
+        BaseSideAmountSpec amountSpec = model.getBaseSideAmountSpec().get();
+        if (amountSpec == null || model.getMarket() == null) return;
+
+        String baseCurrencyCode = model.getMarket().getBaseCurrencyCode();
+
+        if (amountSpec instanceof BaseSideFixedAmountSpec fixed) {
+            model.getIsRangeAmountEnabled().set(false);
+            amountSelectionController.setIsRangeAmountEnabled(false);
+            amountSelectionController.setMaxOrFixedBaseSideAmount(Monetary.from(fixed.getAmount(), baseCurrencyCode));
+        } else if (amountSpec instanceof BaseSideRangeAmountSpec range) {
+            model.getIsRangeAmountEnabled().set(true);
+            amountSelectionController.setIsRangeAmountEnabled(true);
+            amountSelectionController.setMinBaseSideAmount(Monetary.from(range.getMinAmount(), baseCurrencyCode));
+            amountSelectionController.setMaxOrFixedBaseSideAmount(Monetary.from(range.getMaxAmount(), baseCurrencyCode));
+        }
+
+        if (amountSelectionController.getQuote().get() == null && model.getPriceQuote().get() != null) {
+            amountSelectionController.setQuote(model.getPriceQuote().get());
+        }
+    }
+
     @Override
     public void onDeactivate() {
         isRangeAmountEnabledPin.unsubscribe();
@@ -286,6 +341,9 @@ public class MuSigCreateOfferAmountController implements Controller {
         priceTooltipPin.unsubscribe();
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
+        suppressInitialMinQuoteChange = false;
+        suppressInitialMaxQuoteChange = false;
+        suppressInitialIsRangeChange = false;
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {

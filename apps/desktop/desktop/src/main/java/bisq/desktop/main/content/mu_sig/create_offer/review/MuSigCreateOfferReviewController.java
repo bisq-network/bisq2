@@ -85,6 +85,8 @@ public class MuSigCreateOfferReviewController implements Controller {
     private final MuSigService muSigService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
+    private String editMode;
+    private String offerId;
 
     public MuSigCreateOfferReviewController(ServiceProvider serviceProvider,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
@@ -151,7 +153,12 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         verifyPaymentMethods(paymentMethods);
 
-        String offerId = StringUtils.createUid();
+        String offerId;
+        if(("edit").equals(editMode)) {
+            offerId = this.offerId;
+        } else {
+            offerId = StringUtils.createUid();
+        }
         List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
             Account<?, ?> account = entry.getValue();
             AccountPayload<?> accountPayload = account.getAccountPayload();
@@ -178,29 +185,61 @@ public class MuSigCreateOfferReviewController implements Controller {
                 priceSpec);
     }
 
+    public void setEditModeAndId(String editMode, String id) {
+        this.editMode = editMode;
+        this.offerId = id;
+    }
+
     public void publishOffer() {
         MuSigOffer muSigOffer = model.getOffer();
         try {
-            muSigService.publishOffer(muSigOffer).whenComplete((result, throwable) -> {
-                if (throwable == null) {
-                    UIThread.run(() -> {
-                        model.getShowCreateOfferSuccess().set(true);
-                        mainButtonsVisibleHandler.accept(false);
-                        muSigService.getSelectedMuSigOffer().set(muSigOffer);
-                    });
-                    result.forEach(future -> {
-                        future.whenComplete((res, t) -> {
-                            if (t == null) {
-                                log.info("Offer published. result={}", res);
+            if (("edit").equals(editMode)) {
+                muSigService.editOffer(muSigOffer)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                UIThread.run(() -> {
+                                    model.getShowCreateOfferSuccess().set(true);
+                                    mainButtonsVisibleHandler.accept(false);
+                                    muSigService.getSelectedMuSigOffer().set(muSigOffer);
+                                });
+                                result.forEach(future -> {
+                                    future.whenComplete((res, t) -> {
+                                        if (t == null) {
+                                            log.info("Offer Edited. result={}", res);
+                                        } else {
+                                            log.error("Offer editing failed", t);
+                                        }
+                                    });
+                                });
                             } else {
-                                log.error("Offer publishing failed", t);
+                                log.error("Offer editing failed", throwable);
                             }
                         });
-                    });
-                } else {
-                    log.error("Offer publishing failed", throwable);
-                }
-            });
+
+            }
+            else {
+                muSigService.publishOffer(muSigOffer)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                UIThread.run(() -> {
+                                    model.getShowCreateOfferSuccess().set(true);
+                                    mainButtonsVisibleHandler.accept(false);
+                                    muSigService.getSelectedMuSigOffer().set(muSigOffer);
+                                });
+                                result.forEach(future -> {
+                                    future.whenComplete((res, t) -> {
+                                        if (t == null) {
+                                            log.info("Offer published. result={}", res);
+                                        } else {
+                                            log.error("Offer publishing failed", t);
+                                        }
+                                    });
+                                });
+                            } else {
+                                log.error("Offer publishing failed", throwable);
+                            }
+                        });
+            }
         } catch (UserProfileBannedException e) {
             // We do not inform banned users about being banned
         } catch (RateLimitExceededException e) {
@@ -289,7 +328,15 @@ public class MuSigCreateOfferReviewController implements Controller {
             }
         }
 
-        model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
+        if("edit".equals(editMode)) {
+            model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker.edit"));
+        }
+        else if("copy".equals(editMode)) {
+            model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker.copy"));
+        }
+        else {
+            model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
+        }
         model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
 
         model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));

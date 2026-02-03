@@ -153,6 +153,16 @@ public class MuSigMyOffersController implements Controller {
                 new MuSigCreateOfferController.InitData(market));
     }
 
+    void onEditOffer(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
+                new MuSigCreateOfferController.InitData(muSigOffer, "edit"));
+    }
+
+    void onCopyOffer(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
+                new MuSigCreateOfferController.InitData(muSigOffer, "copy"));
+    }
+
     void onRemoveOffer(MuSigOffer muSigOffer) {
         new Popup().warning(Res.get("muSig.offerbook.removeOffer.confirmation"))
                 .actionButtonText(Res.get("confirmation.yes"))

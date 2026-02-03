@@ -36,6 +36,9 @@ import bisq.desktop.main.content.mu_sig.create_offer.review.MuSigCreateOfferRevi
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOptionUtil;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
@@ -47,7 +50,9 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class MuSigCreateOfferController extends NavigationController implements InitWithDataController<MuSigCreateOfferController.InitData> {
@@ -56,9 +61,19 @@ public class MuSigCreateOfferController extends NavigationController implements 
     @ToString
     public static class InitData {
         private final Market market;
+        private final MuSigOffer muSigOffer;
+        private final String editMode;
 
         public InitData(Market market) {
             this.market = market;
+            this.muSigOffer = null;
+            this.editMode = null;
+        }
+
+        public InitData(MuSigOffer muSigOffer, String editMode) {
+            this.market = muSigOffer.getMarket();
+            this.muSigOffer = muSigOffer;
+            this.editMode = editMode;
         }
     }
 
@@ -76,6 +91,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private Subscription directionPin, marketPin, priceSpecPin;
     private Pin selectedAccountByPaymentMethodPin;
     private boolean isPaymentStepSkipped = false;
+    private MuSigOffer muSigOffer;
+    private String editMode;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
@@ -103,6 +120,11 @@ public class MuSigCreateOfferController extends NavigationController implements 
     public void initWithData(InitData data) {
         Market market = data.getMarket();
         muSigCreateOfferDirectionAndMarketController.setMarket(market);
+
+        if(data.getMuSigOffer() != null) {
+            muSigOffer = data.getMuSigOffer();
+            editMode = data.getEditMode();
+        }
     }
 
     @Override
@@ -112,9 +134,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getNextButtonDisabled().set(false);
-
-        updateChildTargets();
-        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
         directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
             muSigCreateOfferAmountAndPriceController.setDirection(direction);
@@ -138,6 +157,37 @@ public class MuSigCreateOfferController extends NavigationController implements 
         handlePaymentMethodsUpdate();
         selectedAccountByPaymentMethodPin = muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod().addObserver(() ->
                 UIThread.run(this::handlePaymentMethodsUpdate));
+
+        if(Objects.equals(editMode, "edit") || Objects.equals(editMode, "copy")) {
+            muSigCreateOfferDirectionAndMarketController.setDirectionAndMarket(
+                    muSigOffer.getDirection(),
+                    muSigOffer.getMarket());
+
+            muSigCreateOfferAmountAndPriceController.setInitialData(muSigOffer);
+
+            muSigOffer.getOfferOptions().forEach(option -> {
+                if (option instanceof AccountOption accountOption) {
+                    PaymentMethod<?> method = accountOption.getPaymentMethod();
+                    Set<Account<? extends PaymentMethod<?>, ?>> accounts = serviceProvider.getAccountService().getAccounts(method);
+                    OfferOptionUtil.findAccountFromSaltedAccountId(accounts,
+                                    accountOption.getSaltedAccountId(),
+                                    muSigOffer.getId())
+                            .ifPresent(account -> {
+                                muSigCreateOfferPaymentController.selectAccount(account, account.getPaymentMethod());
+                            });
+                }
+            });
+            muSigCreateOfferReviewController.setEditModeAndId(this.editMode, muSigOffer.getId());
+
+            NavigationTarget target = NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER;
+            int reviewIndex = model.getChildTargets().indexOf(target);
+            model.getSelectedChildTarget().set(target);
+            model.getCurrentIndex().set(reviewIndex);
+            Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER);
+        } else {
+            model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
+            model.getCurrentIndex().set(0);
+        }
     }
 
     @Override
@@ -187,7 +237,15 @@ public class MuSigCreateOfferController extends NavigationController implements 
                     muSigCreateOfferAmountAndPriceController.getBaseSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
-            model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.createOffer"));
+            if("edit".equals(editMode)) {
+                model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.editOffer"));
+            }
+            else if("copy".equals(editMode)) {
+                model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.copyOffer"));
+            }
+            else {
+                model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.createOffer"));
+            }
         } else {
             model.getNextButtonText().set(Res.get("action.next"));
         }
@@ -285,6 +343,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
         model.reset();
 
         isPaymentStepSkipped = false;
+        editMode = null;
+        muSigOffer = null;
     }
 
     private void updateNextButtonDisabledState() {
