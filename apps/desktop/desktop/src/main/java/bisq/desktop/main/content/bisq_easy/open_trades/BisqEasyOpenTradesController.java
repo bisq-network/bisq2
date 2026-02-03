@@ -134,7 +134,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
             }
         });
 
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(isConfirmed ->
+        tradeRulesConfirmedPin = settingsService.getBisqEasyTradeRulesConfirmed().addObserver(isConfirmed ->
                 UIThread.run(() -> {
                     if (isConfirmed) {
                         model.getTradeRulesAccepted().set(true);
@@ -204,7 +204,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     }
 
     void onShowTradeRulesAcceptedWarning() {
-        if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
+        if (!model.getFilteredList().isEmpty() && !settingsService.getBisqEasyTradeRulesConfirmed().get()) {
             new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
                     .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
                     .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
@@ -373,7 +373,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         boolean openTradesAvailable = !model.getFilteredList().isEmpty();
         model.getNoOpenTrades().set(!openTradesAvailable);
 
-        boolean tradeRuleConfirmed = settingsService.getTradeRulesConfirmed().get();
+        boolean tradeRuleConfirmed = settingsService.getBisqEasyTradeRulesConfirmed().get();
         model.getTradeWelcomeVisible().set(openTradesAvailable && !tradeRuleConfirmed);
         model.getTradeStateVisible().set(openTradesAvailable && tradeRuleConfirmed);
         model.getChatVisible().set(openTradesAvailable && tradeRuleConfirmed);

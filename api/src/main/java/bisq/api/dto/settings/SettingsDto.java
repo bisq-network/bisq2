@@ -22,7 +22,8 @@ import bisq.api.dto.common.currency.MarketDto;
 import java.util.Set;
 
 public record SettingsDto(boolean isTacAccepted,
-                          boolean tradeRulesConfirmed,
+                          boolean bisqEasyTradeRulesConfirmed,
+                          boolean muSigTradeRulesConfirmed,
                           boolean closeMyOfferWhenTaken,
                           String languageCode,
                           Set<String> supportedLanguageCodes,

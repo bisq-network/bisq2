@@ -135,7 +135,7 @@ public final class MuSigOpenTradesController extends ChatController<MuSigOpenTra
             }
         });
 
-        tradeRulesConfirmedPin = settingsService.getTradeRulesConfirmed().addObserver(isConfirmed ->
+        tradeRulesConfirmedPin = settingsService.getMuSigTradeRulesConfirmed().addObserver(isConfirmed ->
                 UIThread.run(() -> {
                     if (isConfirmed) {
                         model.getTradeRulesAccepted().set(true);
@@ -205,10 +205,10 @@ public final class MuSigOpenTradesController extends ChatController<MuSigOpenTra
     }
 
     void onShowTradeRulesAcceptedWarning() {
-        if (!model.getFilteredList().isEmpty() && !settingsService.getTradeRulesConfirmed().get()) {
-            new Popup().information(Res.get("bisqEasy.tradeGuide.notConfirmed.warn"))
-                    .actionButtonText(Res.get("bisqEasy.tradeGuide.open"))
-                    .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
+        if (!model.getFilteredList().isEmpty() && !settingsService.getMuSigTradeRulesConfirmed().get()) {
+            new Popup().information(Res.get("muSig.tradeGuide.notConfirmed.warn"))
+                    .actionButtonText(Res.get("muSig.tradeGuide.open"))
+                    .onAction(() -> Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE))
                     .show();
         }
     }
@@ -374,7 +374,7 @@ public final class MuSigOpenTradesController extends ChatController<MuSigOpenTra
         boolean openTradesAvailable = !model.getFilteredList().isEmpty();
         model.getNoOpenTrades().set(!openTradesAvailable);
 
-        boolean tradeRuleConfirmed = settingsService.getTradeRulesConfirmed().get();
+        boolean tradeRuleConfirmed = settingsService.getMuSigTradeRulesConfirmed().get();
         model.getTradeWelcomeVisible().set(openTradesAvailable && !tradeRuleConfirmed);
         model.getTradeStateVisible().set(openTradesAvailable && tradeRuleConfirmed);
         model.getChatVisible().set(openTradesAvailable && tradeRuleConfirmed);

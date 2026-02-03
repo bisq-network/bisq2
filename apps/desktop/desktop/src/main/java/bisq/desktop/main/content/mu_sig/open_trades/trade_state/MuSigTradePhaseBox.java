@@ -180,7 +180,7 @@ class MuSigTradePhaseBox {
         }
 
         void onOpenTradeGuide() {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+            Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE);
         }
 
         void onOpenWalletHelp() {
@@ -254,7 +254,7 @@ class MuSigTradePhaseBox {
             double width = 160;
             walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet-white", Res.get("bisqEasy.walletGuide.open"));
             walletHelp.setPrefWidth(width);
-            openTradeGuide = new BisqMenuItem("trade-guide-grey", "trade-guide-white", Res.get("bisqEasy.tradeGuide.open"));
+            openTradeGuide = new BisqMenuItem("trade-guide-grey", "trade-guide-white", Res.get("muSig.tradeGuide.open"));
             openTradeGuide.setPrefWidth(width);
             VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide);
             tradeOptionsVBox.setPadding(new Insets(0, 20, 0, 0));

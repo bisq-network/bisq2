@@ -24,7 +24,8 @@ import java.util.Set;
 
 public record SettingsChangeRequest(
         @Nullable Boolean isTacAccepted,
-        @Nullable Boolean tradeRulesConfirmed,
+        @Nullable Boolean bisqEasyTradeRulesConfirmed,
+        @Nullable Boolean muSigTradeRulesConfirmed,
         @Nullable Boolean closeMyOfferWhenTaken,
         @Nullable String languageCode,
         @Nullable Set<String> supportedLanguageCodes,

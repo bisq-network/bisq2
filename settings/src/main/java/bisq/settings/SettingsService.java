@@ -104,7 +104,8 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getConsumedAlertIds().addObserver(this::persist));
         pins.add(getSupportedLanguageTags().addObserver(this::persist));
         pins.add(getSelectedMuSigMarket().addObserver(value -> persist()));
-        pins.add(getTradeRulesConfirmed().addObserver(value -> persist()));
+        pins.add(getBisqEasyTradeRulesConfirmed().addObserver(value -> persist()));
+        pins.add(getMuSigTradeRulesConfirmed().addObserver(value -> persist()));
         pins.add(getLanguageTag().addObserver(value -> persist()));
         pins.add(getDifficultyAdjustmentFactor().addObserver(value -> persist()));
         pins.add(getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist()));
@@ -183,8 +184,12 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return persistableStore.useAnimations;
     }
 
-    public ReadOnlyObservable<Boolean> getTradeRulesConfirmed() {
-        return persistableStore.tradeRulesConfirmed;
+    public ReadOnlyObservable<Boolean> getBisqEasyTradeRulesConfirmed() {
+        return persistableStore.bisqEasyTradeRulesConfirmed;
+    }
+
+    public ReadOnlyObservable<Boolean> getMuSigTradeRulesConfirmed() {
+        return persistableStore.muSigTradeRulesConfirmed;
     }
 
     public ReadOnlyObservable<Boolean> getPreventStandbyMode() {
@@ -298,8 +303,12 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         persistableStore.useAnimations.set(useAnimations);
     }
 
-    public void setTradeRulesConfirmed(boolean tradeRulesConfirmed) {
-        persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
+    public void setBisqEasyTradeRulesConfirmed(boolean bisqEasyTradeRulesConfirmed) {
+        persistableStore.bisqEasyTradeRulesConfirmed.set(bisqEasyTradeRulesConfirmed);
+    }
+
+    public void setMuSigTradeRulesConfirmed(boolean muSigTradeRulesConfirmed) {
+        persistableStore.muSigTradeRulesConfirmed.set(muSigTradeRulesConfirmed);
     }
 
     public void setPreventStandbyMode(boolean preventStandbyMode) {

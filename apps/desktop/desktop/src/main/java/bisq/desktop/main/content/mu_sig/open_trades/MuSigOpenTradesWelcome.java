@@ -62,7 +62,7 @@ public class MuSigOpenTradesWelcome {
         }
 
         void onOpenTradeGuide() {
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+            Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE);
         }
     }
 
@@ -95,7 +95,7 @@ public class MuSigOpenTradesWelcome {
             HBox line2 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line2"), "trading-in-circle-green");
             HBox line3 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line3"), "learn-in-circle-green");
 
-            button = new Button(Res.get("bisqEasy.tradeGuide.open"));
+            button = new Button(Res.get("muSig.tradeGuide.open"));
             button.setDefaultButton(true);
             button.getStyleClass().add("medium-large-button");
             button.setMaxWidth(Double.MAX_VALUE);

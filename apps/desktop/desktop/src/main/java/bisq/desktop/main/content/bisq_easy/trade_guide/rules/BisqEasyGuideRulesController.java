@@ -42,7 +42,7 @@ public class BisqEasyGuideRulesController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getTradeRulesConfirmed().set(settingsService.getTradeRulesConfirmed().get());
+        model.getTradeRulesConfirmed().set(settingsService.getBisqEasyTradeRulesConfirmed().get());
     }
 
     @Override
@@ -58,7 +58,7 @@ public class BisqEasyGuideRulesController implements Controller {
     }
 
     void onConfirm(boolean selected) {
-        settingsService.setTradeRulesConfirmed(selected);
+        settingsService.setBisqEasyTradeRulesConfirmed(selected);
         model.getTradeRulesConfirmed().set(selected);
     }
 
