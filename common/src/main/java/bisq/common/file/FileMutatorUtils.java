@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -159,6 +160,9 @@ public class FileMutatorUtils {
                 () -> {
                     Thread.currentThread().setName("ShutdownHook.recursiveDelete");
                     try {
+                        if (!Files.exists(path)) {
+                            return;
+                        }
                         Files.walkFileTree(path, new SimpleFileVisitor<>() {
                             @Override
                             public FileVisitResult visitFile(Path path,
@@ -179,6 +183,8 @@ public class FileMutatorUtils {
                                 throw e;
                             }
                         });
+                    } catch (NoSuchFileException e) {
+                        log.info("Temp cleanup skipped because the path no longer exists. This is likely not critical and can happen if the OS or another process already removed the temp directory: {}", path);
                     } catch (IOException e) {
                         log.error("Failed to delete " + path, e);
                     }
