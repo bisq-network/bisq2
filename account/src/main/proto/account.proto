@@ -349,7 +349,7 @@ message BizumAccountPayload {
 enum KeyAlgorithm{
   KEYALGORITHM_UNSPECIFIED = 0;
   KEYALGORITHM_DSA = 1;
-  KEYALGORITHM_ECDH = 2;
+  KEYALGORITHM_EC = 2;
 }
 
 message Account {
@@ -523,4 +523,3 @@ message AuthorizedAccountTimestamp {
   bool staticPublicKeysProvided = 2;
   sint32 version = 3;
 }
-

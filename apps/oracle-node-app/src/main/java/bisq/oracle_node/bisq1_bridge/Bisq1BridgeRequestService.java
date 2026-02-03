@@ -213,6 +213,8 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 if (request.getKeyAlgorithm() == KeyAlgorithm.DSA) {
                     // todo grpc request to bisq 1
                     //long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
+                    log.warn("DSA account timestamp request received but verification is not implemented yet. Skipping.");
+                    return;
                 } else {
                     long date = accountTimestamp.getDate();
                     if (Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(2)) {
@@ -242,7 +244,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
 
                 publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
             } catch (Exception e) {
-                log.error("processAuthorizeAccountAgeRequest failed", e);
+                log.error("processAuthorizeAccountTimestampRequest failed", e);
             }
         }, executor);
     }

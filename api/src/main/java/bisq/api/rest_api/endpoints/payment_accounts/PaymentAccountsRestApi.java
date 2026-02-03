@@ -102,8 +102,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @Path("/selected")
     public Response getSelectedPaymentAccount() {
         try {
-            if (accountService.getSelectedAccount().isPresent()) {
-                Account<? extends PaymentMethod<?>, ?> account = accountService.getSelectedAccount().get();
+            if (accountService.findSelectedAccount().isPresent()) {
+                Account<? extends PaymentMethod<?>, ?> account = accountService.findSelectedAccount().get();
                 if (account instanceof UserDefinedFiatAccount castedAccount) {
                     UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
                     return buildOkResponse(userAccount);

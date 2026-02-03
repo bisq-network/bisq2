@@ -227,14 +227,14 @@ public class FiatPaymentAccountsController implements Controller {
     }
 
     private void updateNoAccountsState() {
-        model.getNoAccountsAvailable().set(!accountService.hasAccounts());
+        model.getNoAccountsAvailable().set(accountService.hasNoAccounts());
         if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
             model.getSaveButtonVisible().set(accountService.hasAccounts());
         }
     }
 
     private void maybeSelectFirstAccount() {
-        if (accountService.getSelectedAccount().isEmpty() && !model.getSortedAccounts().isEmpty()) {
+        if (accountService.findSelectedAccount().isEmpty() && !model.getSortedAccounts().isEmpty()) {
             Account<? extends PaymentMethod<?>, ?> account = model.getSortedAccounts().get(0);
             accountService.setSelectedAccount(account);
         }

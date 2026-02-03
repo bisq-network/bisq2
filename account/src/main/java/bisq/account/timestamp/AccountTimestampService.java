@@ -84,6 +84,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -125,6 +126,12 @@ public class AccountTimestampService implements Service, DataService.Listener {
         KeyAlgorithm keyAlgorithm = account.getKeyAlgorithm();
         AccountPayload<?> accountPayload = account.getAccountPayload();
 
+        var selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        if (selectedUserIdentity == null) {
+            log.warn("No selected user identity. Skipping account timestamp registration.");
+            return;
+        }
+
         byte[] saltedFingerprint = getSaltedFingerprint(accountPayload);
         byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
         byte[] hash = DigestUtil.hash(preimage);
@@ -144,7 +151,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
                     .forEach(oracleNode ->
                             networkService.confidentialSend(authorizeAccountAgeWitnessRequest,
                                     oracleNode.getNetworkId(),
-                                    userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair()));
+                                    selectedUserIdentity.getNetworkIdWithKeyPair()));
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -222,7 +229,8 @@ public class AccountTimestampService implements Service, DataService.Listener {
         KeyPair keyPair = account.getKeyPair();
         PublicKey publicKey = keyPair.getPublic();
         byte[] publicKeyBytes = publicKey.getEncoded();
-        return ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+        byte[] preimage = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
+        return DigestUtil.hash(preimage);
     }
 
     private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {

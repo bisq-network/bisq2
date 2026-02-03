@@ -61,8 +61,6 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
         this.keyAlgorithm = keyAlgorithm;
         this.creationDate = creationDate;
 
-        log.error(this.toString());
-
         verify();
     }
 
