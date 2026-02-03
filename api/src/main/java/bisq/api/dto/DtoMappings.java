@@ -861,6 +861,7 @@ public class DtoMappings {
 
     // offer.payment_method
 
+    @SuppressWarnings("deprecation")
     public static class BitcoinPaymentMethodSpecMapping {
         public static BitcoinPaymentMethodSpec toBisq2Model(BitcoinPaymentMethodSpecDto value) {
             String paymentMethod = value.getPaymentMethod();
