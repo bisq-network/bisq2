@@ -58,19 +58,22 @@ class DeviceRegistrationServiceTest {
     void testRegisterDevice() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
+        String deviceId = "device1";
         String deviceToken = "token1";
-        String publicKey = "key1";
-        DeviceRegistration.Platform platform = DeviceRegistration.Platform.IOS;
+        String publicKeyBase64 = "key1";
+        String deviceDescriptor = "iPhone 15 Pro";
+        MobileDevicePlatform platform = MobileDevicePlatform.IOS;
 
-        service.registerDevice(userId, deviceToken, publicKey, platform);
+        service.register(deviceId, deviceToken, publicKeyBase64, deviceDescriptor, platform);
 
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
         assertEquals(1, devices.size());
 
-        DeviceRegistration device = devices.iterator().next();
+        MobileDeviceProfile device = devices.iterator().next();
+        assertEquals(deviceId, device.getDeviceId());
         assertEquals(deviceToken, device.getDeviceToken());
-        assertEquals(publicKey, device.getPublicKey());
+        assertEquals(publicKeyBase64, device.getPublicKeyBase64());
+        assertEquals(deviceDescriptor, device.getDeviceDescriptor());
         assertEquals(platform, device.getPlatform());
     }
 
@@ -78,11 +81,10 @@ class DeviceRegistrationServiceTest {
     void testRegisterMultipleDevices() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
-        service.registerDevice(userId, "token1", "key1", DeviceRegistration.Platform.IOS);
-        service.registerDevice(userId, "token2", "key2", DeviceRegistration.Platform.ANDROID);
+        service.register("device1", "token1", "key1", "iPhone 15", MobileDevicePlatform.IOS);
+        service.register("device2", "token2", "key2", "Pixel 8", MobileDevicePlatform.ANDROID);
 
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
         assertEquals(2, devices.size());
     }
 
@@ -90,81 +92,72 @@ class DeviceRegistrationServiceTest {
     void testUnregisterDevice() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
-        String deviceToken = "token1";
+        String deviceId = "device1";
 
-        service.registerDevice(userId, deviceToken, "key1", DeviceRegistration.Platform.IOS);
-        assertEquals(1, service.getDevicesForUser(userId).size());
+        service.register(deviceId, "token1", "key1", "iPhone 15", MobileDevicePlatform.IOS);
+        assertEquals(1, service.getMobileDeviceProfiles().size());
 
-        service.unregisterDevice(userId, deviceToken);
-        assertEquals(0, service.getDevicesForUser(userId).size());
+        boolean removed = service.unregister(deviceId);
+        assertTrue(removed);
+        assertEquals(0, service.getMobileDeviceProfiles().size());
     }
 
     @Test
     void testUnregisterNonExistentDevice() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
-        service.registerDevice(userId, "token1", "key1", DeviceRegistration.Platform.IOS);
+        service.register("device1", "token1", "key1", "iPhone 15", MobileDevicePlatform.IOS);
 
-        service.unregisterDevice(userId, "nonexistent");
-        assertEquals(1, service.getDevicesForUser(userId).size());
+        boolean removed = service.unregister("nonexistent");
+        assertFalse(removed);
+        assertEquals(1, service.getMobileDeviceProfiles().size());
     }
 
     @Test
-    void testGetDevicesForNonExistentUser() throws ExecutionException, InterruptedException {
+    void testGetMobileDeviceProfilesWhenEmpty() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        Set<DeviceRegistration> devices = service.getDevicesForUser("nonexistent");
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
         assertNotNull(devices);
         assertTrue(devices.isEmpty());
     }
 
-
-
     @Test
-    void testRegisterSameDeviceTokenTwice() throws ExecutionException, InterruptedException {
+    void testRegisterSameDeviceIdTwice() throws ExecutionException, InterruptedException {
         service.initialize().get();
 
-        String userId = "user1";
-        String deviceToken = "token1";
+        String deviceId = "device1";
 
-        service.registerDevice(userId, deviceToken, "key1", DeviceRegistration.Platform.IOS);
-        service.registerDevice(userId, deviceToken, "key2", DeviceRegistration.Platform.IOS); // Different key, same token
+        service.register(deviceId, "token1", "key1", "iPhone 15", MobileDevicePlatform.IOS);
+        service.register(deviceId, "token2", "key2", "iPhone 15 Pro", MobileDevicePlatform.IOS);
 
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
-        // Should only have one device (set semantics)
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
+        // Should only have one device (replaced by deviceId)
         assertEquals(1, devices.size());
-    }
 
-    @Test
-    void testMultipleUsersWithSameDeviceToken() throws ExecutionException, InterruptedException {
-        service.initialize().get();
-
-        String deviceToken = "token1";
-        service.registerDevice("user1", deviceToken, "key1", DeviceRegistration.Platform.IOS);
-        service.registerDevice("user2", deviceToken, "key2", DeviceRegistration.Platform.IOS);
-
-        assertEquals(1, service.getDevicesForUser("user1").size());
-        assertEquals(1, service.getDevicesForUser("user2").size());
+        // Should have the updated values
+        MobileDeviceProfile device = devices.iterator().next();
+        assertEquals("token2", device.getDeviceToken());
+        assertEquals("key2", device.getPublicKeyBase64());
+        assertEquals("iPhone 15 Pro", device.getDeviceDescriptor());
     }
 
     @Test
     void testConcurrentUnregisterOperations() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         int deviceCount = 100;
 
         // Register multiple devices
         for (int i = 0; i < deviceCount; i++) {
+            String deviceId = "device" + i;
             String token = "token" + i;
             String key = "key" + i;
-            service.registerDevice(userId, token, key, DeviceRegistration.Platform.IOS);
+            service.register(deviceId, token, key, "Device " + i, MobileDevicePlatform.IOS);
         }
 
         // Verify all devices were registered
-        assertEquals(deviceCount, service.getDevicesForUser(userId).size());
+        assertEquals(deviceCount, service.getMobileDeviceProfiles().size());
 
         // Concurrently unregister all devices from multiple threads
         int threadCount = 10;
@@ -177,8 +170,8 @@ class DeviceRegistrationServiceTest {
             final int deviceIndex = i;
             futures.add(executor.submit(() -> {
                 try {
-                    String token = "token" + deviceIndex;
-                    boolean removed = service.unregisterDevice(userId, token);
+                    String deviceId = "device" + deviceIndex;
+                    boolean removed = service.unregister(deviceId);
                     if (removed) {
                         successCount.incrementAndGet();
                     }
@@ -197,54 +190,28 @@ class DeviceRegistrationServiceTest {
         // Verify all devices were successfully unregistered
         assertEquals(deviceCount, successCount.get(), "All unregister operations should succeed");
 
-        // Verify user entry was removed (no devices left)
-        Set<DeviceRegistration> remainingDevices = service.getDevicesForUser(userId);
+        // Verify no devices remain
+        Set<MobileDeviceProfile> remainingDevices = service.getMobileDeviceProfiles();
         assertTrue(remainingDevices.isEmpty(), "All devices should be unregistered");
     }
 
     @Test
-    void testAtomicUnregisterRemovesUserEntryWhenEmpty() throws Exception {
+    void testConcurrentRegisterSameDeviceIdDifferentData() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
-        String token = "token1";
-        String publicKey = "test-public-key";
-
-        // Register a single device
-        service.registerDevice(userId, token, publicKey, DeviceRegistration.Platform.IOS);
-        assertEquals(1, service.getDevicesForUser(userId).size());
-
-        // Unregister the device
-        boolean removed = service.unregisterDevice(userId, token);
-        assertTrue(removed, "Device should be removed");
-
-        // Verify user entry was removed from the map (not just an empty set)
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
-        assertTrue(devices.isEmpty(), "No devices should remain for user");
-    }
-
-    @Test
-    void testConcurrentRegisterSameTokenDifferentKeys() throws Exception {
-        service.initialize().get();
-
-        String userId = "user1";
-        String token = "same-token";
+        String deviceId = "device1";
         int threadCount = 10;
 
-        // Concurrently register the same token with different keys
-        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
-        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(threadCount);
-        java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        // Concurrently register the same deviceId with different data
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         for (int i = 0; i < threadCount; i++) {
             final int keyIndex = i;
             executor.submit(() -> {
                 try {
                     String publicKey = "key" + keyIndex;
-                    boolean registered = service.registerDevice(userId, token, publicKey, DeviceRegistration.Platform.IOS);
-                    if (registered) {
-                        successCount.incrementAndGet();
-                    }
+                    service.register(deviceId, "token" + keyIndex, publicKey, "Device " + keyIndex, MobileDevicePlatform.IOS);
                 } finally {
                     latch.countDown();
                 }
@@ -254,62 +221,57 @@ class DeviceRegistrationServiceTest {
         latch.await();
         executor.shutdown();
 
-        // All threads should succeed (atomic replace)
-        assertEquals(threadCount, successCount.get(), "All register operations should succeed");
-
-        // But only ONE device should exist (the last one to win the race)
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
-        assertEquals(1, devices.size(), "Only one device should exist for the token");
+        // Only ONE device should exist (the last one to win the race)
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
+        assertEquals(1, devices.size(), "Only one device should exist for the deviceId");
     }
 
     @Test
-    void testAtomicRegisterReplacesExistingToken() throws Exception {
+    void testRegisterReplacesExistingDevice() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
-        String token = "token1";
+        String deviceId = "device1";
         String key1 = "key1";
         String key2 = "key2";
 
         // Register device with key1
-        boolean registered1 = service.registerDevice(userId, token, key1, DeviceRegistration.Platform.IOS);
-        assertTrue(registered1, "First registration should succeed");
-        assertEquals(1, service.getDevicesForUser(userId).size());
+        service.register(deviceId, "token1", key1, "iPhone 15", MobileDevicePlatform.IOS);
+        assertEquals(1, service.getMobileDeviceProfiles().size());
 
         // Get the first registration
-        DeviceRegistration firstReg = service.getDevicesForUser(userId).iterator().next();
-        assertEquals(key1, firstReg.getPublicKey());
+        MobileDeviceProfile firstReg = service.getMobileDeviceProfiles().iterator().next();
+        assertEquals(key1, firstReg.getPublicKeyBase64());
 
-        // Register same token with key2 (should replace)
-        boolean registered2 = service.registerDevice(userId, token, key2, DeviceRegistration.Platform.IOS);
-        assertTrue(registered2, "Second registration should succeed");
-        assertEquals(1, service.getDevicesForUser(userId).size(), "Should still have only 1 device");
+        // Register same deviceId with key2 (should replace)
+        service.register(deviceId, "token2", key2, "iPhone 15 Pro", MobileDevicePlatform.IOS);
+        assertEquals(1, service.getMobileDeviceProfiles().size(), "Should still have only 1 device");
 
-        // Verify the key was updated
-        DeviceRegistration secondReg = service.getDevicesForUser(userId).iterator().next();
-        assertEquals(key2, secondReg.getPublicKey(), "Public key should be updated");
-        assertEquals(token, secondReg.getDeviceToken(), "Token should be the same");
+        // Verify the data was updated
+        MobileDeviceProfile secondReg = service.getMobileDeviceProfiles().iterator().next();
+        assertEquals(key2, secondReg.getPublicKeyBase64(), "Public key should be updated");
+        assertEquals("token2", secondReg.getDeviceToken(), "Token should be updated");
+        assertEquals("iPhone 15 Pro", secondReg.getDeviceDescriptor(), "Descriptor should be updated");
     }
 
     @Test
     void testConcurrentRegisterAndUnregister() throws Exception {
         service.initialize().get();
 
-        String userId = "user1";
         int operationCount = 100;
 
         // Concurrently register and unregister devices
-        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(20);
-        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(operationCount * 2);
+        ExecutorService executor = Executors.newFixedThreadPool(20);
+        CountDownLatch latch = new CountDownLatch(operationCount * 2);
 
         // Register operations
         for (int i = 0; i < operationCount; i++) {
             final int index = i;
             executor.submit(() -> {
                 try {
+                    String deviceId = "device" + index;
                     String token = "token" + index;
                     String key = "key" + index;
-                    service.registerDevice(userId, token, key, DeviceRegistration.Platform.IOS);
+                    service.register(deviceId, token, key, "Device " + index, MobileDevicePlatform.IOS);
                 } finally {
                     latch.countDown();
                 }
@@ -321,8 +283,8 @@ class DeviceRegistrationServiceTest {
             final int index = i;
             executor.submit(() -> {
                 try {
-                    String token = "token" + index;
-                    service.unregisterDevice(userId, token);
+                    String deviceId = "device" + index;
+                    service.unregister(deviceId);
                 } finally {
                     latch.countDown();
                 }
@@ -333,11 +295,33 @@ class DeviceRegistrationServiceTest {
         executor.shutdown();
 
         // The final state should be consistent (no crashes, no corruption)
-        Set<DeviceRegistration> devices = service.getDevicesForUser(userId);
+        Set<MobileDeviceProfile> devices = service.getMobileDeviceProfiles();
         assertNotNull(devices, "Devices set should not be null");
         // We can't predict the exact count due to race conditions, but it should be valid
         assertTrue(devices.size() >= 0 && devices.size() <= operationCount,
                 "Device count should be between 0 and " + operationCount);
+    }
+
+    @Test
+    void testRegisterWithInvalidParameters() {
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register(null, "token", "key", "desc", MobileDevicePlatform.IOS));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register("", "token", "key", "desc", MobileDevicePlatform.IOS));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register("id", null, "key", "desc", MobileDevicePlatform.IOS));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register("id", "token", null, "desc", MobileDevicePlatform.IOS));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register("id", "token", "key", null, MobileDevicePlatform.IOS));
+        assertThrows(IllegalArgumentException.class, () ->
+                service.register("id", "token", "key", "desc", null));
+    }
+
+    @Test
+    void testUnregisterWithInvalidParameters() {
+        assertThrows(IllegalArgumentException.class, () -> service.unregister(null));
+        assertThrows(IllegalArgumentException.class, () -> service.unregister(""));
     }
 }
 

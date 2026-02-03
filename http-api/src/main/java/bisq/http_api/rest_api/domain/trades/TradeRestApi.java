@@ -264,7 +264,7 @@ public class TradeRestApi extends RestApiBase {
                         handleSellerConfirmBtcSent(channel, trade, tradeEvent, paymentRail, userName);
                 case BTC_CONFIRMED -> handleBtcConfirmed(channel, trade, paymentRail, userName);
             }
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            asyncResponse.resume(buildNoContentResponse());
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
@@ -408,7 +408,7 @@ public class TradeRestApi extends RestApiBase {
 
             mediationRequestService.requestMediation(channel, contract);
 
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            asyncResponse.resume(buildNoContentResponse());
         } catch (NoSuchElementException e) {
             asyncResponse.resume(buildResponse(Response.Status.CONFLICT, "No mediator found for this trade."));
         } catch (IllegalArgumentException e) {

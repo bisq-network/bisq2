@@ -160,7 +160,6 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     private void handleTradeStateNotification(BisqEasyTrade bisqEasyTrade, String tradeId, BisqEasyTradeState state) {
         pushNotificationService.ifPresent(service -> {
-            String userProfileId = bisqEasyTrade.getMyIdentity().getId();
             boolean isBuyer = bisqEasyTrade.isBuyer();
             String peerUserName = getPeerUserName(bisqEasyTrade);
 
@@ -249,7 +248,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 }
             }
 
-            service.sendTradeNotification(userProfileId, tradeId, state.name(), message, isUrgent);
+            service.sendTradeNotification(tradeId, state.name(), message, isUrgent);
         });
     }
 
@@ -281,11 +280,10 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                     // Only notify the buyer (receiver), not the seller (sender)
                     if (!isSeller) {
                         pushNotificationService.ifPresent(service -> {
-                            String userProfileId = bisqEasyTrade.getMyIdentity().getId();
                             String peerUserName = getPeerUserName(bisqEasyTrade);
                             String message = "You received payment info from " + peerUserName;
 
-                            service.sendTradeNotification(userProfileId, tradeId, "PAYMENT_INFO_UPDATED", message, true);
+                            service.sendTradeNotification(tradeId, "PAYMENT_INFO_UPDATED", message, true);
                         });
                     }
                     previousValue[0] = value;
@@ -423,11 +421,10 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
             // Send push notification for new chat message
             pushNotificationService.ifPresent(service -> {
-                String userProfileId = bisqEasyTrade.getMyIdentity().getId();
                 String peerUserName = getPeerUserName(bisqEasyTrade);
                 String message = "New message from " + peerUserName;
 
-                service.sendTradeNotification(userProfileId, tradeId, "NEW_CHAT_MESSAGE", message, true);
+                service.sendTradeNotification(tradeId, "NEW_CHAT_MESSAGE", message, true);
             });
         }
     }

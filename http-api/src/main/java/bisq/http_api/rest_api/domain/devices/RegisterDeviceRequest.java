@@ -17,38 +17,43 @@
 
 package bisq.http_api.rest_api.domain.devices;
 
-import bisq.http_api.push_notification.DeviceRegistration;
+import bisq.http_api.push_notification.MobileDevicePlatform;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 /**
- * Request to register a device for push notifications.
+ * Request to register a mobile device for push notifications.
  */
 @Getter
-@Schema(description = "Request to register a device for push notifications")
+@Schema(description = "Request to register a mobile device for push notifications")
 public class RegisterDeviceRequest {
-    @Schema(description = "User profile ID", required = true, example = "d22d7b62ef442b5df03378f134bc8f54a2171cba")
-    private final String userProfileId;
+    @Schema(description = "Unique device identifier", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+    private final String deviceId;
 
-    @Schema(description = "APNs device token", required = true, example = "abc123def456...")
+    @Schema(description = "APNs/FCM device token", required = true, example = "abc123def456...")
     private final String deviceToken;
 
     @Schema(description = "Base64 encoded public key for encrypting notifications", required = true)
-    private final String publicKey;
+    private final String publicKeyBase64;
+
+    @Schema(description = "Human-readable device description", required = true, example = "iPhone 15 Pro")
+    private final String deviceDescriptor;
 
     @Schema(description = "Platform type", required = true, example = "IOS")
-    private final DeviceRegistration.Platform platform;
+    private final MobileDevicePlatform platform;
 
     @JsonCreator
-    public RegisterDeviceRequest(@JsonProperty("userProfileId") String userProfileId,
+    public RegisterDeviceRequest(@JsonProperty("deviceId") String deviceId,
                                  @JsonProperty("deviceToken") String deviceToken,
-                                 @JsonProperty("publicKey") String publicKey,
-                                 @JsonProperty("platform") DeviceRegistration.Platform platform) {
-        this.userProfileId = userProfileId;
+                                 @JsonProperty("publicKeyBase64") String publicKeyBase64,
+                                 @JsonProperty("deviceDescriptor") String deviceDescriptor,
+                                 @JsonProperty("platform") MobileDevicePlatform platform) {
+        this.deviceId = deviceId;
         this.deviceToken = deviceToken;
-        this.publicKey = publicKey;
+        this.publicKeyBase64 = publicKeyBase64;
+        this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
     }
 }

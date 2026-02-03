@@ -25,63 +25,44 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Stores device registrations mapped by user profile ID.
- * Each user can have multiple devices registered.
+ * Stores device registrations mapped by device ID.
+ * Each device ID maps to a single MobileDeviceProfile.
  *
- * Thread-safety: Uses ConcurrentHashMap for the outer map and thread-safe sets
- * (ConcurrentHashMap.newKeySet()) for the inner device sets to ensure safe
- * concurrent access and modifications.
+ * Thread-safety: Uses ConcurrentHashMap for safe concurrent access and modifications.
  */
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class DeviceRegistrationStore implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Getter
-    private final Map<String, Set<DeviceRegistration>> devicesByUserProfileId;
+    private final Map<String, MobileDeviceProfile> deviceByDeviceId;
 
     public DeviceRegistrationStore() {
         this(new ConcurrentHashMap<>());
     }
 
     @JsonCreator
-    public DeviceRegistrationStore(@JsonProperty("devicesByUserProfileId") Map<String, Set<DeviceRegistration>> devicesByUserProfileId) {
-        // Deep copy: create new ConcurrentHashMap and deep-copy each Set to avoid shared mutable state
-        this.devicesByUserProfileId = new ConcurrentHashMap<>();
-        devicesByUserProfileId.forEach((userId, devices) -> {
-            // Create a new thread-safe set and copy all devices
-            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
-            devicesCopy.addAll(devices);
-            this.devicesByUserProfileId.put(userId, devicesCopy);
-        });
+    public DeviceRegistrationStore(@JsonProperty("deviceByDeviceId") Map<String, MobileDeviceProfile> deviceByDeviceId) {
+        // Create new ConcurrentHashMap and copy all entries
+        this.deviceByDeviceId = new ConcurrentHashMap<>();
+        if (deviceByDeviceId != null) {
+            this.deviceByDeviceId.putAll(deviceByDeviceId);
+        }
     }
 
     @JsonIgnore
     public DeviceRegistrationStore getClone() {
-        // Deep copy: create new store with deep-copied sets
-        Map<String, Set<DeviceRegistration>> clonedMap = new ConcurrentHashMap<>();
-        devicesByUserProfileId.forEach((userId, devices) -> {
-            // Create a new thread-safe set and copy all devices
-            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
-            devicesCopy.addAll(devices);
-            clonedMap.put(userId, devicesCopy);
-        });
-        return new DeviceRegistrationStore(clonedMap);
+        return new DeviceRegistrationStore(new ConcurrentHashMap<>(deviceByDeviceId));
     }
 
     public void applyPersisted(DeviceRegistrationStore persisted) {
-        devicesByUserProfileId.clear();
-        // Deep copy: don't share Set instances with the persisted store
-        persisted.devicesByUserProfileId.forEach((userId, devices) -> {
-            // Create a new thread-safe set and copy all devices
-            Set<DeviceRegistration> devicesCopy = ConcurrentHashMap.newKeySet();
-            devicesCopy.addAll(devices);
-            devicesByUserProfileId.put(userId, devicesCopy);
-        });
+        deviceByDeviceId.clear();
+        deviceByDeviceId.putAll(persisted.deviceByDeviceId);
     }
 }
 
