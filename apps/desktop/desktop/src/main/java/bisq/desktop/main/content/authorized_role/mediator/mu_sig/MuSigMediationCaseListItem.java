@@ -15,25 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
+package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.table.ActivatableTableItem;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
-import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -50,11 +50,11 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class BisqEasyMediationCaseListItem implements ActivatableTableItem, DateTableItem {
+public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTableItem {
     @EqualsAndHashCode.Include
-    private final BisqEasyMediationCase bisqEasyMediationCase;
+    private final MuSigMediationCase muSigMediationCase;
     @EqualsAndHashCode.Include
-    private final BisqEasyOpenTradeChannel channel;
+    private final MuSigOpenTradeChannel channel;
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
 
@@ -70,16 +70,16 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
     private String closeCaseDateString = "";
     private String closeCaseTimeString = "";
 
-    BisqEasyMediationCaseListItem(ServiceProvider serviceProvider,
-                                  BisqEasyMediationCase bisqEasyMediationCase,
-                                  BisqEasyOpenTradeChannel channel) {
-        this.bisqEasyMediationCase = bisqEasyMediationCase;
+    MuSigMediationCaseListItem(ServiceProvider serviceProvider,
+                               MuSigMediationCase muSigMediationCase,
+                               MuSigOpenTradeChannel channel) {
+        this.muSigMediationCase = muSigMediationCase;
         this.channel = channel;
 
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        BisqEasyContract contract = bisqEasyMediationCase.getBisqEasyMediationRequest().getContract();
-        BisqEasyOffer offer = contract.getOffer();
+        MuSigContract contract = muSigMediationCase.getMuSigMediationRequest().getContract();
+        MuSigOffer offer = contract.getOffer();
         List<UserProfile> traders = new ArrayList<>(channel.getTraders());
 
         Trader trader1 = new Trader(traders.get(0), reputationService);
@@ -91,7 +91,7 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
             maker = trader2;
             taker = trader1;
         }
-        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().equals(maker.userProfile);
+        isMakerRequester = muSigMediationCase.getMuSigMediationRequest().getRequester().equals(maker.userProfile);
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
@@ -100,12 +100,12 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = offer.getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(contract).getValue();
-        priceString = BisqEasyTradeFormatter.formatPriceWithCode(contract);
+        price = MuSigTradeUtils.getPriceQuote(contract).getValue();
+        priceString = MuSigTradeFormatter.formatPriceWithCode(contract);
         baseAmount = contract.getBaseSideAmount();
-        baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(contract);
+        baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(contract);
         quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(contract);
+        quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(contract);
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
 
         onActivate();
@@ -113,7 +113,7 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
 
     @Override
     public void onActivate() {
-        Optional<Long> optionalCloseCaseDate = bisqEasyMediationCase.getCloseCaseDate();
+        Optional<Long> optionalCloseCaseDate = muSigMediationCase.getCloseCaseDate();
         closeCaseDate = optionalCloseCaseDate.orElse(0L);
         closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
         closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");

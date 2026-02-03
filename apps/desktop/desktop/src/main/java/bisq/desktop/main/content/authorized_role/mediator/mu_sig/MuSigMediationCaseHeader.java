@@ -15,23 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.bisq_easy;
+package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details.BisqEasyMediationCaseDetailsController;
+import bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
-import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
+import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -55,10 +55,12 @@ import static bisq.settings.DontShowAgainKey.MEDIATOR_CLOSE_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVE_CHANNEL_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVE_CASE_WARNING;
 
-public class BisqEasyMediationCaseHeader {
+public class MuSigMediationCaseHeader {
     private final Controller controller;
 
-    public BisqEasyMediationCaseHeader(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
+    public MuSigMediationCaseHeader(ServiceProvider serviceProvider,
+                                    Runnable onCloseHandler,
+                                    Runnable onReOpenHandler) {
         controller = new Controller(serviceProvider, onCloseHandler, onReOpenHandler);
     }
 
@@ -66,7 +68,7 @@ public class BisqEasyMediationCaseHeader {
         return controller.view.getRoot();
     }
 
-    public void setMediationCaseListItem(BisqEasyMediationCaseListItem item) {
+    public void setMediationCaseListItem(MuSigMediationCaseListItem item) {
         controller.setMediationCaseListItem(item);
     }
 
@@ -79,8 +81,8 @@ public class BisqEasyMediationCaseHeader {
         @Getter
         private final View view;
         private final Model model;
-        private final BisqEasyOpenTradeChannelService channelService;
-        private final BisqEasyMediatorService bisqEasyMediatorService;
+        private final MuSigOpenTradeChannelService channelService;
+        private final MuSigMediatorService muSigMediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
         private final LeavePrivateChatManager leavePrivateChatManager;
@@ -90,16 +92,16 @@ public class BisqEasyMediationCaseHeader {
             this.onCloseHandler = onCloseHandler;
             this.onReOpenHandler = onReOpenHandler;
             ChatService chatService = serviceProvider.getChatService();
-            channelService = chatService.getBisqEasyOpenTradeChannelService();
+            channelService = chatService.getMuSigOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
-            bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
+            muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
 
             model = new Model();
             view = new View(model, this);
         }
 
-        private void setMediationCaseListItem(BisqEasyMediationCaseListItem item) {
+        private void setMediationCaseListItem(MuSigMediationCaseListItem item) {
             model.getMediationCaseListItem().set(item);
         }
 
@@ -155,23 +157,23 @@ public class BisqEasyMediationCaseHeader {
         }
 
         void onShowDetails() {
-            BisqEasyMediationCaseListItem item = model.getMediationCaseListItem().get();
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_MEDIATION_CASE_DETAILS, new BisqEasyMediationCaseDetailsController.InitData(item));
+            MuSigMediationCaseListItem item = model.getMediationCaseListItem().get();
+            Navigation.navigateTo(NavigationTarget.MU_SIG_MEDIATION_CASE_DETAILS, new MuSigMediationCaseDetailsController.InitData(item));
         }
 
         private void doRemoveCase() {
-            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
                 doClose();
                 doLeave();
-                bisqEasyMediatorService.removeMediationCase(listItem.getBisqEasyMediationCase());
+                muSigMediatorService.removeMediationCase(listItem.getMuSigMediationCase());
             }
         }
 
         private void doLeave() {
-            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                MuSigOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
                     leavePrivateChatManager.leaveChannel(channel);
                 }
@@ -179,25 +181,25 @@ public class BisqEasyMediationCaseHeader {
         }
 
         private void doClose() {
-            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                MuSigOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
                 }
-                bisqEasyMediatorService.closeMediationCase(listItem.getBisqEasyMediationCase());
+                muSigMediatorService.closeMediationCase(listItem.getMuSigMediationCase());
                 onCloseHandler.run();
             }
         }
 
         private void doReOpen() {
-            BisqEasyMediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                MuSigOpenTradeChannel channel = listItem.getChannel();
                 if (channel != null) {
                     channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
                 }
-                bisqEasyMediatorService.reOpenMediationCase(listItem.getBisqEasyMediationCase());
+                muSigMediatorService.reOpenMediationCase(listItem.getMuSigMediationCase());
                 onReOpenHandler.run();
             }
         }
@@ -206,7 +208,7 @@ public class BisqEasyMediationCaseHeader {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<BisqEasyMediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<MuSigMediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
         private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     }
 

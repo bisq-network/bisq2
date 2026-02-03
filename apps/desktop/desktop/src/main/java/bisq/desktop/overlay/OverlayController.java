@@ -24,6 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.table.ShowTableInfo;
 import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details.BisqEasyMediationCaseDetailsController;
+import bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.onboarding.video.BisqEasyVideoController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
@@ -176,6 +177,7 @@ public class OverlayController extends NavigationController {
             case PROFILE_CARD -> Optional.of(new ProfileCardController(serviceProvider));
             case ADD_TO_CONTACTS_LIST -> Optional.of(new AddToContactsListWindow(serviceProvider).getController());
             case BISQ_EASY_MEDIATION_CASE_DETAILS -> Optional.of(new BisqEasyMediationCaseDetailsController(serviceProvider));
+            case MU_SIG_MEDIATION_CASE_DETAILS -> Optional.of(new MuSigMediationCaseDetailsController(serviceProvider));
             case SHOW_TABLE_INFO -> Optional.of(new ShowTableInfo(serviceProvider).getController());
             default -> Optional.empty();
         };

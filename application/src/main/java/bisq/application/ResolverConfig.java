@@ -45,6 +45,8 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.mu_sig.MuSigOfferMessage;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediatorsResponse;
+import bisq.support.mediation.mu_sig.MuSigMediationRequest;
+import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
@@ -57,9 +59,9 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
-import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
@@ -119,6 +121,8 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MediationRequest", BisqEasyMediationRequest.getNetworkMessageResolver());
         // Keep proto name for backward compatibility
         NetworkMessageResolver.addResolver("support.MediatorsResponse", BisqEasyMediatorsResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigMediationRequest", MuSigMediationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigMediatorsResponse", MuSigMediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
 
 

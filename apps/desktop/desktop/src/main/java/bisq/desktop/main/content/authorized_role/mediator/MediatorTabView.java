@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
+import bisq.common.application.DevMode;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -45,6 +46,12 @@ public class MediatorTabView extends TabView<MediatorTabModel, MediatorTabContro
         addTab(Res.get("navigation.bisqEasy"),
                 NavigationTarget.BISQ_EASY_MEDIATOR,
                 styles);
+
+        if (DevMode.isDevMode()) {
+            addTab(Res.get("navigation.muSig"),
+                    NavigationTarget.MU_SIG_MEDIATOR,
+                    styles);
+        }
 
         // We apply the height of the viewpoint according the content height as we delegate the scrolling to the parent.
         // Using setFitToHeight(true) should be the preferred way to do it but there seems to be a bug in calculating

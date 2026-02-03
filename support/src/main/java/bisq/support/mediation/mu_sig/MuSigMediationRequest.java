@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.support.mediation.bisq_easy;
+package bisq.support.mediation.mu_sig;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
@@ -39,22 +39,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class BisqEasyMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+public final class MuSigMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
     public static String createMessageId(String tradeId) {
-        // Keep name without BisqEasy prefix for backward compatibility
-        return "MediationRequest" + "." + tradeId;
+        return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
-    private final BisqEasyContract contract;
+    private final MuSigContract contract;
     private final String tradeId;
 
     @EqualsAndHashCode.Exclude
@@ -62,16 +62,16 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @EqualsAndHashCode.Exclude
     private final UserProfile peer;
     @EqualsAndHashCode.Exclude
-    private final List<BisqEasyOpenTradeMessage> chatMessages;
+    private final List<MuSigOpenTradeMessage> chatMessages;
     @EqualsAndHashCode.Exclude
     private final Optional<NetworkId> mediatorNetworkId;
 
-    public BisqEasyMediationRequest(String tradeId,
-                                    BisqEasyContract contract,
-                                    UserProfile requester,
-                                    UserProfile peer,
-                                    List<BisqEasyOpenTradeMessage> chatMessages,
-                                    Optional<NetworkId> mediatorNetworkId) {
+    public MuSigMediationRequest(String tradeId,
+                                 MuSigContract contract,
+                                 UserProfile requester,
+                                 UserProfile peer,
+                                 List<MuSigOpenTradeMessage> chatMessages,
+                                 Optional<NetworkId> mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
         this.requester = requester;
@@ -96,8 +96,8 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
      */
 
     @Override
-    public bisq.support.protobuf.MediationRequest.Builder getValueBuilder(boolean serializeForHash) {
-        bisq.support.protobuf.MediationRequest.Builder builder = bisq.support.protobuf.MediationRequest.newBuilder()
+    public bisq.support.protobuf.MuSigMediationRequest.Builder getValueBuilder(boolean serializeForHash) {
+        bisq.support.protobuf.MuSigMediationRequest.Builder builder = bisq.support.protobuf.MuSigMediationRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setContract(contract.toProto(serializeForHash))
                 .setRequester(requester.toProto(serializeForHash))
@@ -110,17 +110,17 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     }
 
     @Override
-    public bisq.support.protobuf.MediationRequest toValueProto(boolean serializeForHash) {
+    public bisq.support.protobuf.MuSigMediationRequest toValueProto(boolean serializeForHash) {
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new BisqEasyMediationRequest(proto.getTradeId(),
-                BisqEasyContract.fromProto(proto.getContract()),
+    public static MuSigMediationRequest fromProto(bisq.support.protobuf.MuSigMediationRequest proto) {
+        return new MuSigMediationRequest(proto.getTradeId(),
+                MuSigContract.fromProto(proto.getContract()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
+                        .map(MuSigOpenTradeMessage::fromProto)
                         .collect(Collectors.toList()),
                 proto.hasMediatorNetworkId()
                         ? Optional.of(NetworkId.fromProto(proto.getMediatorNetworkId()))
@@ -156,8 +156,8 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.support.protobuf.MediationRequest proto = any.unpack(bisq.support.protobuf.MediationRequest.class);
-                return BisqEasyMediationRequest.fromProto(proto);
+                bisq.support.protobuf.MuSigMediationRequest proto = any.unpack(bisq.support.protobuf.MuSigMediationRequest.class);
+                return MuSigMediationRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -169,9 +169,9 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return getCostFactor(0.25, 0.5);
     }
 
-    private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
+    private List<MuSigOpenTradeMessage> maybePrune(List<MuSigOpenTradeMessage> chatMessages) {
         StringBuilder sb = new StringBuilder();
-        List<BisqEasyOpenTradeMessage> result = chatMessages.stream()
+        List<MuSigOpenTradeMessage> result = chatMessages.stream()
                 .filter(message -> {
                     sb.append(message.getTextOrNA());
                     return sb.toString().length() < 10_000;

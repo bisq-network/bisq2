@@ -11,7 +11,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
+import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
@@ -70,27 +70,27 @@ public class MuSigOpenTradesUtils {
 
     public static void requestMediation(MuSigOpenTradeChannel channel,
                                         MuSigContract contract,
-                                        BisqEasyMediationRequestService bisqEasyMediationRequestService,
+                                        MuSigMediationRequestService muSigMediationRequestService,
                                         MuSigOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
-            new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
-                    .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
-                    .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
+            new Popup().headline(Res.get("muSig.mediation.request.confirm.headline"))
+                    .information(Res.get("muSig.mediation.request.confirm.msg"))
+                    .actionButtonText(Res.get("muSig.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
+                        String encoded = Res.encode("muSig.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
                         channel.setIsInMediation(true);
                         channelService.persist();
-                        bisqEasyMediationRequestService.requestMediation(channel, contract);
-                        new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
-                                .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
+                        muSigMediationRequestService.requestMediation(channel, contract);
+                        new Popup().headline(Res.get("muSig.mediation.request.feedback.headline"))
+                                .feedback(Res.get("muSig.mediation.request.feedback.msg"))
                                 .show();
                     })
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
         } else {
-            new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
+            new Popup().warning(Res.get("muSig.mediation.request.feedback.noMediatorAvailable")).show();
         }
     }
 }

@@ -21,6 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediatorController;
+import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediatorController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ public class MediatorTabController extends TabController<MediatorTabModel> {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
             case BISQ_EASY_MEDIATOR -> Optional.of(new BisqEasyMediatorController(serviceProvider));
+            case MU_SIG_MEDIATOR -> Optional.of(new MuSigMediatorController(serviceProvider));
             default -> Optional.empty();
         };
     }
