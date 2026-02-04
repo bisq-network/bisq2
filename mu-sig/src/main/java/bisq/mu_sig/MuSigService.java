@@ -244,8 +244,10 @@ public class MuSigService extends LifecycleService {
         validateUserProfile(muSigOffer.getMakersUserProfileId());
         Optional<MuSigOffer> storedOffer = muSigOfferService.findOffer(muSigOffer.getId());
 
-        if(storedOffer.isEmpty()) {
-            return null;
+        if (storedOffer.isEmpty()) {
+            CompletableFuture<BroadcastResult> failed = new CompletableFuture<>();
+            failed.completeExceptionally((Throwable) new RuntimeException("Offer not found. OfferID=" + muSigOffer.getId()));
+            return failed;
         }
 
         return removeOffer(storedOffer.get())

@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.main.content.mu_sig.components.EditMode;
 import bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.MuSigCreateOfferAmountAndPriceController;
 import bisq.desktop.main.content.mu_sig.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketController;
 import bisq.desktop.main.content.mu_sig.create_offer.payment.MuSigCreateOfferPaymentController;
@@ -62,7 +63,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     public static class InitData {
         private final Market market;
         private final MuSigOffer muSigOffer;
-        private final String editMode;
+        private final EditMode editMode;
 
         public InitData(Market market) {
             this.market = market;
@@ -70,7 +71,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
             this.editMode = null;
         }
 
-        public InitData(MuSigOffer muSigOffer, String editMode) {
+        public InitData(MuSigOffer muSigOffer, EditMode editMode) {
             this.market = muSigOffer.getMarket();
             this.muSigOffer = muSigOffer;
             this.editMode = editMode;
@@ -92,7 +93,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private Pin selectedAccountByPaymentMethodPin;
     private boolean isPaymentStepSkipped = false;
     private MuSigOffer muSigOffer;
-    private String editMode;
+    private EditMode editMode;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
@@ -158,7 +159,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
         selectedAccountByPaymentMethodPin = muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod().addObserver(() ->
                 UIThread.run(this::handlePaymentMethodsUpdate));
 
-        if(Objects.equals(editMode, "edit") || Objects.equals(editMode, "copy")) {
+        if (editMode == EditMode.EDIT || editMode == EditMode.COPY) {
             muSigCreateOfferDirectionAndMarketController.setDirectionAndMarket(
                     muSigOffer.getDirection(),
                     muSigOffer.getMarket());
@@ -237,10 +238,10 @@ public class MuSigCreateOfferController extends NavigationController implements 
                     muSigCreateOfferAmountAndPriceController.getBaseSideAmountSpec().get(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
-            if("edit".equals(editMode)) {
+            if (editMode == EditMode.EDIT) {
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.editOffer"));
             }
-            else if("copy".equals(editMode)) {
+            else if (editMode == EditMode.COPY) {
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.copyOffer"));
             }
             else {
