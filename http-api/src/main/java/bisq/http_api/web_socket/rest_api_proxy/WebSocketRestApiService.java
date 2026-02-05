@@ -29,13 +29,14 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static java.net.http.HttpClient.Version.HTTP_1_1;
 
 @Slf4j
 @Getter
@@ -57,7 +58,12 @@ public class WebSocketRestApiService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        httpClient = Optional.of(HttpClient.newHttpClient());
+        // Use HTTP/1.1 explicitly to avoid HTTP/2 behavior where headers and body
+        // are sent as separate frames, which can appear as duplicate requests on the server, and cause requests to fail
+        // This is important to make sure WebSocket forwarded methods with body such as POST do not fail
+        httpClient = Optional.of(HttpClient.newBuilder()
+                .version(HTTP_1_1)
+                .build());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -93,8 +99,13 @@ public class WebSocketRestApiService implements Service {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .method(method, HttpRequest.BodyPublishers.ofString(body));
+                .header("Accept", "application/json");
+
+        if (body != null && !body.isEmpty()) {
+            requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(body));
+        } else {
+            requestBuilder.method(method, HttpRequest.BodyPublishers.noBody());
+        }
 
         // Support both old authentication (authToken, authTs, authNonce) and new authentication (headers)
         if (request.getHeaders() != null && !request.getHeaders().isEmpty()) {
