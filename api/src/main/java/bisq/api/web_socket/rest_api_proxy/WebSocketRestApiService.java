@@ -43,6 +43,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static java.net.http.HttpClient.Version.HTTP_1_1;
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -144,7 +146,11 @@ public class WebSocketRestApiService implements Service {
     private HttpClient getOrCreateHttpClient() {
         synchronized (httpClientLock) {
             if (httpClient.isEmpty()) {
+                // Use HTTP/1.1 explicitly to avoid HTTP/2 behavior where headers and body
+                // are sent as separate frames, which can appear as duplicate requests on the server, and cause requests to fail
+                // This is important to make sure WebSocket forwarded methods with body such as POST do not fail
                 HttpClient.Builder builder = HttpClient.newBuilder()
+                        .version(HTTP_1_1)
                         .connectTimeout(Duration.ofSeconds(10));
                 if (apiConfig.isTlsRequired()) {
                     try {
