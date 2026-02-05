@@ -99,7 +99,9 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     }
 
     public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
-        muSigCreateOfferAmountController.updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+        if(!muSigCreateOfferPriceController.getPriceSpec().isNotNull().get()) {
+            muSigCreateOfferAmountController.updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+        }
     }
 
     public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {

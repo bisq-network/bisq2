@@ -135,7 +135,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getNextButtonDisabled().set(false);
-
         directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
             muSigCreateOfferAmountAndPriceController.setDirection(direction);
             muSigCreateOfferPaymentController.setDirection(direction);
