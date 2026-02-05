@@ -58,10 +58,11 @@ public class MuSigMediationCase implements PersistableProto {
     }
 
     public boolean setClosed(boolean closed) {
-        boolean changed = isClosed.set(closed);
-        if (changed) {
-            closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
+        if (isClosed.get() == closed) {
+            return false;
         }
-        return changed;
+        closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
+        isClosed.set(closed);
+        return true;
     }
 }
