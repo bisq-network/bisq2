@@ -43,6 +43,16 @@ public class BisqEasyMediationCaseDetailsModel extends NavigationModel {
     private String tradeId;
     private String buyerUserName;
     private String sellerUserName;
+    private String buyerBotId;
+    private String buyerUserId;
+    private int buyerCaseCountTotal;
+    private int buyerCaseCountOpen;
+    private int buyerCaseCountClosed;
+    private String sellerBotId;
+    private String sellerUserId;
+    private int sellerCaseCountTotal;
+    private int sellerCaseCountOpen;
+    private int sellerCaseCountClosed;
     private String buyerNetworkAddress;
     private String sellerNetworkAddress;
 

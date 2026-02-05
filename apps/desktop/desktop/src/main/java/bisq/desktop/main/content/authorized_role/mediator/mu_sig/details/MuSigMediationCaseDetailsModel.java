@@ -32,6 +32,10 @@ public class MuSigMediationCaseDetailsModel extends NavigationModel {
     private String tradeDate;
     private String offerType;
     private String market;
+    private String buyerSecurityDeposit;
+    private boolean isBuyerSecurityDepositEmpty;
+    private String sellerSecurityDeposit;
+    private boolean isSellerSecurityDepositEmpty;
     private String fiatAmount;
     private String fiatCurrency;
     private String btcAmount;
@@ -40,9 +44,21 @@ public class MuSigMediationCaseDetailsModel extends NavigationModel {
     private String priceSpec;
     private String paymentMethod;
     private String settlementMethod;
+    private String depositTxId;
+    private boolean isDepositTxIdEmpty;
     private String tradeId;
     private String buyerUserName;
     private String sellerUserName;
+    private String buyerBotId;
+    private String buyerUserId;
+    private int buyerCaseCountTotal;
+    private int buyerCaseCountOpen;
+    private int buyerCaseCountClosed;
+    private String sellerBotId;
+    private String sellerUserId;
+    private int sellerCaseCountTotal;
+    private int sellerCaseCountOpen;
+    private int sellerCaseCountClosed;
     private String buyerNetworkAddress;
     private String sellerNetworkAddress;
 

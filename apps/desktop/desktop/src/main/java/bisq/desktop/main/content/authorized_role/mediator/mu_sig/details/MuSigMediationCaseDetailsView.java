@@ -29,6 +29,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -40,12 +41,14 @@ import java.util.Optional;
 @Slf4j
 public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMediationCaseDetailsModel, MuSigMediationCaseDetailsController> {
     private final Button closeButton;
-    private final Label tradeDateLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
+    private final Label tradeDateLabel, offerTypeLabel, marketLabel, buyerSecurityDepositLabel, sellerSecurityDepositLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
             settlementMethodLabel, tradeIdLabel, buyerNetworkAddressLabel, sellerNetworkAddressLabel,
-            buyerUserNameLabel, sellerUserNameLabel;
-    private final BisqMenuItem tradeIdCopyButton, buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton,
+            buyerUserNameLabel, sellerUserNameLabel, depositTxTitleLabel, depositTxDetailsLabel;
+    private final BisqMenuItem tradeIdCopyButton, depositTxCopyButton,
+            buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton,
             buyerUserNameCopyButton, sellerUserNameCopyButton;
+    private final HBox depositTxBox;
 
     public MuSigMediationCaseDetailsView(MuSigMediationCaseDetailsModel model, MuSigMediationCaseDetailsController controller) {
         super(new VBox(), model, controller);
@@ -86,6 +89,16 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
         HBox offerTypeAndMarketBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket",
                 offerTypeAndMarketDetailsHBox);
 
+        // Security deposits
+        buyerSecurityDepositLabel = getValueLabel();
+        HBox buyerSecurityDepositBox = createAndGetDescriptionAndValueBox(
+                "authorizedRole.mediator.mediationCaseDetails.buyerSecurityDeposit",
+                buyerSecurityDepositLabel);
+        sellerSecurityDepositLabel = getValueLabel();
+        HBox sellerSecurityDepositBox = createAndGetDescriptionAndValueBox(
+                "authorizedRole.mediator.mediationCaseDetails.sellerSecurityDeposit",
+                sellerSecurityDepositLabel);
+
         // Amount and price
         fiatAmountLabel = getValueLabel();
         fiatCurrencyLabel = new Label();
@@ -124,6 +137,13 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
         HBox paymentMethodsBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
                 paymentMethodsDetailsHBox);
 
+        // Deposit transaction ID
+        depositTxTitleLabel = getDescriptionLabel("");
+        depositTxDetailsLabel = getValueLabel();
+        depositTxCopyButton = getTradeIdCopyButton("");
+        depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
+                depositTxDetailsLabel, depositTxCopyButton);
+
         // Trade ID
         tradeIdLabel = getValueLabel();
         tradeIdCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
@@ -159,11 +179,14 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
                 sellerUserNameBox,
                 amountAndPriceBox,
                 paymentMethodsBox,
+                depositTxBox,
                 detailsLabel,
                 detailsLine,
                 tradeIdBox,
                 tradeDateBox,
                 offerTypeAndMarketBox,
+                buyerSecurityDepositBox,
+                sellerSecurityDepositBox,
                 peerNetworkAddressBox,
                 sellerNetworkAddressBox
         );
@@ -171,7 +194,7 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
 
         root.setAlignment(Pos.TOP_CENTER);
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT - 60);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
         VBox.setMargin(content, new Insets(-40, 80, 0, 80));
         VBox.setVgrow(content, Priority.ALWAYS);
@@ -180,11 +203,27 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
 
     @Override
     protected void onViewAttached() {
-        buyerUserNameLabel.setText(model.getBuyerUserName());
-        sellerUserNameLabel.setText(model.getSellerUserName());
+        buyerUserNameLabel.setText(String.format("%s (%d)", model.getBuyerUserName(), model.getBuyerCaseCountTotal()));
+        sellerUserNameLabel.setText(String.format("%s (%d)", model.getSellerUserName(), model.getSellerCaseCountTotal()));
+        buyerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                "authorizedRole.mediator.caseCounts.tooltip",
+                model.getBuyerBotId(),
+                model.getBuyerUserId(),
+                model.getBuyerCaseCountOpen(),
+                model.getBuyerCaseCountClosed()
+        )));
+        sellerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                "authorizedRole.mediator.caseCounts.tooltip",
+                model.getSellerBotId(),
+                model.getSellerUserId(),
+                model.getSellerCaseCountOpen(),
+                model.getSellerCaseCountClosed()
+        )));
         tradeDateLabel.setText(model.getTradeDate());
         offerTypeLabel.setText(model.getOfferType());
         marketLabel.setText(model.getMarket());
+        buyerSecurityDepositLabel.setText(model.getBuyerSecurityDeposit());
+        sellerSecurityDepositLabel.setText(model.getSellerSecurityDeposit());
         fiatAmountLabel.setText(model.getFiatAmount());
         fiatCurrencyLabel.setText(model.getFiatCurrency());
         btcAmountLabel.setText(model.getBtcAmount());
@@ -194,13 +233,36 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
         paymentMethodLabel.setText(model.getPaymentMethod());
         settlementMethodLabel.setText(model.getSettlementMethod());
         tradeIdLabel.setText(model.getTradeId());
+        depositTxDetailsLabel.setText(model.getDepositTxId());
         buyerNetworkAddressLabel.setText(model.getBuyerNetworkAddress());
         sellerNetworkAddressLabel.setText(model.getSellerNetworkAddress());
+
+        depositTxTitleLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.txId"));
+        depositTxCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.txId.copy"));
+        depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
+        depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
+        depositTxDetailsLabel.getStyleClass().clear();
+        depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        depositTxDetailsLabel.getStyleClass().add("normal-text");
+
+        buyerSecurityDepositLabel.getStyleClass().clear();
+        buyerSecurityDepositLabel.getStyleClass().add(model.isBuyerSecurityDepositEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        buyerSecurityDepositLabel.getStyleClass().add("normal-text");
+        sellerSecurityDepositLabel.getStyleClass().clear();
+        sellerSecurityDepositLabel.getStyleClass().add(model.isSellerSecurityDepositEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        sellerSecurityDepositLabel.getStyleClass().add("normal-text");
 
         closeButton.setOnAction(e -> controller.onClose());
         buyerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerUserName()));
         sellerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerUserName()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
+        depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
         buyerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerNetworkAddress()));
         sellerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerNetworkAddress()));
     }
@@ -211,6 +273,7 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
         buyerUserNameCopyButton.setOnAction(null);
         sellerUserNameCopyButton.setOnAction(null);
         tradeIdCopyButton.setOnAction(null);
+        depositTxCopyButton.setOnAction(null);
         buyerNetworkAddressCopyButton.setOnAction(null);
         sellerNetworkAddressCopyButton.setOnAction(null);
     }
