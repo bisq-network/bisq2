@@ -69,7 +69,7 @@ public final class Result<T> {
     public static <T> Result<T> of(ThrowingSupplier<T> supplier) {
         try {
             return success(supplier.get());
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return failure(t);
         }
     }
@@ -109,7 +109,7 @@ public final class Result<T> {
         }
         try {
             return success(mapper.apply(value));
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return failure(t);
         }
     }
@@ -120,7 +120,7 @@ public final class Result<T> {
         }
         try {
             return Objects.requireNonNull(mapper.apply(value));
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return failure(t);
         }
     }

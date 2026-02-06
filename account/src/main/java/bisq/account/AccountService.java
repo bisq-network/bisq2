@@ -75,7 +75,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                     persistableStore.getAccountByName().addObserver(new HashMapObserver<String, Account<? extends PaymentMethod<?>, ?>>() {
                         @Override
                         public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
-                            accountTimestampService.handleAddedAccount(account);
+                            try {
+                                accountTimestampService.handleAddedAccount(account);
+                            } catch (Exception e) {
+                                log.error("handleAddedAccount failed", e);
+                            }
                         }
                     });
                     return result;

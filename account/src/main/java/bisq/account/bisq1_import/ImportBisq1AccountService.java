@@ -68,15 +68,18 @@ public class ImportBisq1AccountService implements Service {
 
             List<Account<?, ?>> accounts = new ArrayList<>();
             for (JsonNode node : root.path("accounts")) {
-                Account<?, ?> account = parseAccount(node, dsaKeyPair);
-                if (account != null) {
-                    accounts.add(account);
+                try {
+                    Account<?, ?> account = parseAccount(node, dsaKeyPair);
+                    if (account != null) {
+                        accounts.add(account);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to parse account from Bisq 1 import data", e);
                 }
             }
             return accounts;
         } catch (Exception e) {
-            // TODO redact priv keys
-            log.error("importBisq1AccountData failed for json\n{}", json, e);
+            log.error("importBisq1AccountData failed", e);
             throw new RuntimeException(e);
         }
     }
@@ -105,7 +108,10 @@ public class ImportBisq1AccountService implements Service {
                 String bic = asText(paymentAccountPayloadNode, "bic");
                 String iban = asText(paymentAccountPayloadNode, "iban");
                 String countryCode = asText(paymentAccountPayloadNode, "countryCode");
-                List<String> acceptedCountryCodes = asStringList(paymentAccountPayloadNode.get("acceptedCountryCodes"));
+                JsonNode acceptedCountryCodesNode = paymentAccountPayloadNode.get("acceptedCountryCodes");
+                List<String> acceptedCountryCodes = acceptedCountryCodesNode != null && acceptedCountryCodesNode.isArray()
+                        ? asStringList(acceptedCountryCodesNode)
+                        : List.of();
                 SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(paymentAccountPayloadId, holderName, iban, bic, countryCode, acceptedCountryCodes, paymentMethodId, salt);
                 return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             default:
@@ -125,7 +131,6 @@ public class ImportBisq1AccountService implements Service {
         return jsonNode == null || jsonNode.isNull() ? null : jsonNode.asText();
     }
 
-    @Nullable
     private static long asLong(JsonNode node, String field) {
         JsonNode jsonNode = node.get(field);
         return jsonNode == null || jsonNode.isNull() ? 0L : jsonNode.asLong();

@@ -19,29 +19,29 @@ package bisq.desktop.main.content.user.fiat_accounts.create.summary;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
+import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
-import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.fiat.NationalBankAccount;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.account.accounts.fiat.PixAccount;
 import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaAccountPayload;
-import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.crypto.CryptoPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.util.StringUtils;
@@ -63,7 +63,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -194,6 +193,7 @@ public class PaymentSummaryController implements Controller {
     private Account<? extends PaymentMethod<?>, ?> getAccount(String accountName) {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
+        AccountOrigin accountOrigin = AccountOrigin.BISQ2_NEW;
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             return switch (fiatPaymentRail) {
                 case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
@@ -204,7 +204,7 @@ public class PaymentSummaryController implements Controller {
                                 (SepaAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case SEPA_INSTANT ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ZELLE ->
@@ -214,7 +214,7 @@ public class PaymentSummaryController implements Controller {
                                 (ZelleAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case REVOLUT ->
                         new RevolutAccount(StringUtils.createUid(),
                                 System.currentTimeMillis(),
@@ -222,7 +222,7 @@ public class PaymentSummaryController implements Controller {
                                 (RevolutAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case NATIONAL_BANK ->
                         new NationalBankAccount(StringUtils.createUid(),
@@ -231,7 +231,7 @@ public class PaymentSummaryController implements Controller {
                                 (NationalBankAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case F2F ->
@@ -241,7 +241,7 @@ public class PaymentSummaryController implements Controller {
                                 (F2FAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ACH_TRANSFER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -252,7 +252,7 @@ public class PaymentSummaryController implements Controller {
                                 (PixAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -263,7 +263,7 @@ public class PaymentSummaryController implements Controller {
                                 (FasterPaymentsAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
-                                AccountOrigin.BISQ2_NEW);
+                                accountOrigin);
                 case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case US_POSTAL_MONEY_ORDER ->
                         throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

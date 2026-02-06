@@ -208,55 +208,52 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         }, executor);
     }
 
-    private CompletableFuture<Result<Long>> processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
-        try {
-            AccountTimestampService.verifyHash(request);
-            AccountTimestampService.verifySignature(request);
-        } catch (Exception e) {
-            log.warn("AuthorizeAccountTimestampRequest is invalid", e);
-            return CompletableFuture.failedFuture(e);
-        }
+    private void processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                AccountTimestampService.verifyHash(request);
+                AccountTimestampService.verifySignature(request);
 
-        AccountTimestamp accountTimestamp = request.getAccountTimestamp();
-        TimestampType timestampType = request.getTimestampType();
-        ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
-        boolean isRepublish = persistableStore.getAccountTimestampHashes().contains(requestHash);
-        return switch (timestampType) {
-            case BISQ2_NEW -> {
-                if (!isRepublish) {
-                    long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
-                    if (Math.abs(System.currentTimeMillis() - accountTimestamp.getDate()) > maxTimeDrift) {
-                        log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
-                        yield CompletableFuture.failedFuture(new Exception("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time"));
-                    }
-
-                    persistAccountTimestampRequest(accountTimestamp);
-                }
-                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
-                yield CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
-            }
-            case BISQ1_IMPORTED -> CompletableFuture.supplyAsync(() -> {
-                        if (isRepublish) {
-                            return Result.success(accountTimestamp.getDate());
-                        }
-                        Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
-                        if (result.isSuccess() && request.getAccountTimestamp().getDate() != result.getOrThrow()) {
-                            return Result.<Long>failure(new IllegalArgumentException("Date from Bisq 1 is not matching date from request"));
-                        }
-                        return result;
-                    }, executor)
-                    .thenApply(result -> {
-                        if (result.isSuccess()) {
-                            if (!isRepublish) {
-                                persistAccountTimestampRequest(accountTimestamp);
+                AccountTimestamp accountTimestamp = request.getAccountTimestamp();
+                TimestampType timestampType = request.getTimestampType();
+                ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+                boolean isRepublish = persistableStore.getAccountTimestampHashes().contains(requestHash);
+                switch (timestampType) {
+                    case BISQ2_NEW -> {
+                        if (!isRepublish) {
+                            long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
+                            if (Math.abs(System.currentTimeMillis() - accountTimestamp.getDate()) > maxTimeDrift) {
+                                log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
+                                return;
                             }
-                            publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+
+                            persistAccountTimestampRequest(accountTimestamp);
                         }
-                        return result;
-                    });
-            default ->
-                    throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
-        };
+                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                    }
+                    case BISQ1_IMPORTED -> {
+                        if (!isRepublish) {
+                            Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
+                            if (result.isFailure()) {
+                                log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
+                                return;
+                            }
+                            if (request.getAccountTimestamp().getDate() != result.getOrThrow()) {
+                                log.error("Date from Bisq 1 is not matching date from request");
+                                return;
+                            }
+
+                            persistAccountTimestampRequest(accountTimestamp);
+                        }
+                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                    }
+                    default ->
+                            throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
+                }
+            } catch (Exception e) {
+                log.warn("AuthorizeAccountTimestampRequest is invalid", e);
+            }
+        }, executor);
     }
 
     private void persistAccountTimestampRequest(AccountTimestamp accountTimestamp) {
@@ -349,8 +346,6 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 identity.getNetworkIdWithKeyPair().getKeyPair(),
                 authorizedPublicKey);
     }
-
-
 
 
 }

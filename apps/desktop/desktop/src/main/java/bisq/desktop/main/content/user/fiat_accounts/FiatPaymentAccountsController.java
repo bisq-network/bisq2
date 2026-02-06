@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.fiat_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.fiat.F2FAccount;
@@ -205,7 +204,7 @@ public class FiatPaymentAccountsController implements Controller {
                         newAccountPayload,
                         keyPair,
                         keyAlgorithm,
-                        AccountOrigin.BISQ2_NEW);
+                        userDefinedFiatAccount.getAccountOrigin());
                 accountService.removePaymentAccount(selectedAccount);
                 accountService.addPaymentAccount(newAccount);
                 accountService.setSelectedAccount(newAccount);

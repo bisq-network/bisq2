@@ -25,10 +25,12 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
@@ -36,7 +38,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Slf4j
 @Getter
 @ToString
-@EqualsAndHashCode
 public final class AuthorizeAccountTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
@@ -66,7 +67,6 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
 
     @Override
     public void verify() {
-        //todo
         NetworkDataValidation.validateByteArray(saltedFingerprint, 1000);
         NetworkDataValidation.validateByteArray(publicKey, 1000);
         NetworkDataValidation.validateByteArray(signature, 100);
@@ -113,5 +113,24 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     @Override
     public double getCostFactor() {
         return getCostFactor(0.5, 1);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizeAccountTimestampRequest that)) return false;
+
+        return Objects.equals(metaData, that.metaData) && timestampType == that.timestampType && Objects.equals(accountTimestamp, that.accountTimestamp) && Arrays.equals(saltedFingerprint, that.saltedFingerprint) && Arrays.equals(publicKey, that.publicKey) && Arrays.equals(signature, that.signature) && keyAlgorithm == that.keyAlgorithm;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(metaData);
+        result = 31 * result + Objects.hashCode(timestampType);
+        result = 31 * result + Objects.hashCode(accountTimestamp);
+        result = 31 * result + Arrays.hashCode(saltedFingerprint);
+        result = 31 * result + Arrays.hashCode(publicKey);
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Objects.hashCode(keyAlgorithm);
+        return result;
     }
 }
