@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.BondedRolesService;
@@ -140,7 +141,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] message = accountTimestamp.toProto(true).toByteArray();
         try {
             byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
-            TimestampType timestampType = keyAlgorithm == KeyAlgorithm.DSA
+            TimestampType timestampType = account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED
                     ? TimestampType.BISQ1_IMPORTED
                     : TimestampType.BISQ2_NEW;
             AuthorizeAccountTimestampRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountTimestampRequest(timestampType,

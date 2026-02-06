@@ -19,6 +19,7 @@ package bisq.account.bisq1_import;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
@@ -99,14 +100,14 @@ public class ImportBisq1AccountService implements Service {
             case "CLEAR_X_CHANGE":
                 String emailOrMobileNr = asText(paymentAccountPayloadNode, "emailOrMobileNr");
                 ZelleAccountPayload zelleAccountPayload = new ZelleAccountPayload(paymentAccountPayloadId, holderName, emailOrMobileNr, paymentMethodId, salt);
-                return new ZelleAccount(accountId, creationDate, accountName, zelleAccountPayload, dsaKeyPair, KeyAlgorithm.DSA);
+                return new ZelleAccount(accountId, creationDate, accountName, zelleAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             case "SEPA":
                 String bic = asText(paymentAccountPayloadNode, "bic");
                 String iban = asText(paymentAccountPayloadNode, "iban");
                 String countryCode = asText(paymentAccountPayloadNode, "countryCode");
                 List<String> acceptedCountryCodes = asStringList(paymentAccountPayloadNode.get("acceptedCountryCodes"));
                 SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(paymentAccountPayloadId, holderName, iban, bic, countryCode, acceptedCountryCodes, paymentMethodId, salt);
-                return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyAlgorithm.DSA);
+                return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             default:
                 log.warn("Import for paymentMethod {} is not yet supported.", paymentMethodId);
                 return null;

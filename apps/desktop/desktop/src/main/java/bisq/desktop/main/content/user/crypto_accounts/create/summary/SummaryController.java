@@ -20,10 +20,12 @@ package bisq.desktop.main.content.user.crypto_accounts.create.summary;
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -33,11 +35,13 @@ import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.Mon
 import bisq.desktop.main.content.user.crypto_accounts.create.summary.details.SummaryDetails;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Set;
+import java.security.KeyPair;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -101,14 +105,24 @@ public class SummaryController implements Controller {
 
         Account<? extends DigitalAssetPaymentMethod, ?> account;
         CryptoAssetAccountPayload accountPayload = model.getAccountPayload();
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
             account = new MoneroAccount(StringUtils.createUid(),
                     System.currentTimeMillis(),
-                    accountName, moneroAccountPayload);
+                    accountName,
+                    moneroAccountPayload,
+                    keyPair,
+                    keyAlgorithm,
+                    AccountOrigin.BISQ2_NEW);
         } else if (accountPayload instanceof OtherCryptoAssetAccountPayload otherCryptoAssetAccountPayload) {
             account = new OtherCryptoAssetAccount(StringUtils.createUid(),
                     System.currentTimeMillis(),
-                    accountName, otherCryptoAssetAccountPayload);
+                    accountName,
+                    otherCryptoAssetAccountPayload,
+                    keyPair,
+                    keyAlgorithm,
+                    AccountOrigin.BISQ2_NEW);
         } else {
             throw new UnsupportedOperationException("Unsupported accountPayload " + accountPayload.getClass().getSimpleName());
         }

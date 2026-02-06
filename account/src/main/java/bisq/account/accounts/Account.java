@@ -32,7 +32,6 @@ import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,31 +55,22 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final P accountPayload;
     protected final KeyPair keyPair; // account specific key pair used for account age verification for proof of ownership
     protected final KeyAlgorithm keyAlgorithm; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
-
-    public Account(String id,
-                   long creationDate,
-                   String accountName,
-                   P accountPayload) {
-        this(id,
-                creationDate,
-                accountName,
-                accountPayload,
-                KeyGeneration.generateDefaultEcKeyPair(),
-                KeyAlgorithm.EC);
-    }
+    protected final AccountOrigin accountOrigin;
 
     public Account(String id,
                    long creationDate,
                    String accountName,
                    P accountPayload,
                    KeyPair keyPair,
-                   KeyAlgorithm keyAlgorithm) {
+                   KeyAlgorithm keyAlgorithm,
+                   AccountOrigin accountOrigin) {
         this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
         this.keyPair = keyPair;
         this.keyAlgorithm = keyAlgorithm;
+        this.accountOrigin = accountOrigin;
     }
 
     @Override
@@ -95,7 +85,8 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setAccountName(accountName)
                 .setAccountPayload(accountPayload.toProto(serializeForHash))
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
-                .setKeyAlgorithm(keyAlgorithm.toProtoEnum());
+                .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
+                .setAccountOrigin(accountOrigin.toProtoEnum());
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {

@@ -18,20 +18,24 @@
 package bisq.desktop.main.content.user.fiat_accounts.create.legacy;
 
 import bisq.account.AccountService;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Date;
+import java.security.KeyPair;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -87,8 +91,16 @@ public class LegacyCreatePaymentAccountController implements Controller {
             checkNotNull(accountData);
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                     "Account data must not be longer than 1000 characters");
+            KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+            KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), accountData);
-            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(), System.currentTimeMillis(), model.getAccountName(), accountPayload);
+            UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(),
+                    System.currentTimeMillis(),
+                    model.getAccountName(),
+                    accountPayload,
+                    keyPair,
+                    keyAlgorithm,
+                    AccountOrigin.BISQ2_NEW);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
             close();

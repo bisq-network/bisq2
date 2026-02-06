@@ -352,6 +352,12 @@ enum KeyAlgorithm{
   KEYALGORITHM_EC = 2;
 }
 
+enum AccountOrigin{
+  ACCOUNTORIGIN_UNSPECIFIED = 0;
+  ACCOUNTORIGIN_BISQ1_IMPORTED = 1;
+  ACCOUNTORIGIN_BISQ2_NEW = 2;
+}
+
 message Account {
   sint64 creationDate = 1;
   string accountName = 2;
@@ -360,6 +366,7 @@ message Account {
   string id = 5;
   security.KeyPair keyPair = 6;
   KeyAlgorithm keyAlgorithm = 7;
+  AccountOrigin accountOrigin = 8;
 
   oneof message {
     ZelleAccount zelleAccount = 19;

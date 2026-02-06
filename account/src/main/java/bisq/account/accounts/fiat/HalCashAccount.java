@@ -17,18 +17,29 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayload> {
-    public HalCashAccount(String id, long creationDate, String accountName, HalCashAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public HalCashAccount(String id,
+                          long creationDate,
+                          String accountName,
+                          HalCashAccountPayload accountPayload,
+                          KeyPair keyPair,
+                          KeyAlgorithm keyAlgorithm,
+                          AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -46,9 +57,14 @@ public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayl
     }
 
     public static HalCashAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new HalCashAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                HalCashAccountPayload.fromProto(proto.getAccountPayload()));
+                HalCashAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.fiat_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.fiat.F2FAccount;
@@ -32,6 +33,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -61,6 +63,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.security.KeyPair;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -193,11 +196,16 @@ public class FiatPaymentAccountsController implements Controller {
                 String accountId = userDefinedFiatAccount.getId();
                 long creationDate = userDefinedFiatAccount.getCreationDate();
                 String accountName = userDefinedFiatAccount.getAccountName();
+                KeyPair keyPair = userDefinedFiatAccount.getKeyPair();
+                KeyAlgorithm keyAlgorithm = userDefinedFiatAccount.getKeyAlgorithm();
                 UserDefinedFiatAccountPayload newAccountPayload = new UserDefinedFiatAccountPayload(accountId, accountData);
                 UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountId,
                         creationDate,
                         accountName,
-                        newAccountPayload);
+                        newAccountPayload,
+                        keyPair,
+                        keyAlgorithm,
+                        AccountOrigin.BISQ2_NEW);
                 accountService.removePaymentAccount(selectedAccount);
                 accountService.addPaymentAccount(newAccount);
                 accountService.setSelectedAccount(newAccount);
