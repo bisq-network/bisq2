@@ -506,20 +506,27 @@ message AccountStore {
 
 message AccountTimestamp {
   bytes hash = 1;
-  sint64 date = 2;
+  uint64 date = 2;
+}
+
+enum TimestampType {
+  TIMESTAMPTYPE_UNSPECIFIED = 0;
+  TIMESTAMPTYPE_BISQ1_IMPORTED = 1;
+  TIMESTAMPTYPE_BISQ2_NEW = 2;
 }
 
 message AuthorizeAccountTimestampRequest {
-  AccountTimestamp accountTimestamp = 1;
-  bytes saltedFingerprint = 2;
-  bytes publicKey = 3;
-  bytes signature = 4;
-  KeyAlgorithm keyAlgorithm = 5;
-  uint64 creationDate = 6;
+  TimestampType timestampType = 1;
+  AccountTimestamp accountTimestamp = 2;
+  bytes saltedFingerprint = 3;
+  bytes publicKey = 4;
+  bytes signature = 5;
+  KeyAlgorithm keyAlgorithm = 6;
+  uint64 creationDate = 7;
 }
 
 message AuthorizedAccountTimestamp {
   AccountTimestamp accountTimestamp = 1;
   bool staticPublicKeysProvided = 2;
-  sint32 version = 3;
+  uint32 version = 3;
 }

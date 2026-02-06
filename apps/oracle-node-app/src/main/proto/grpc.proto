@@ -91,6 +91,17 @@ message BurningmanDto {
   double cappedBurnAmountShare = 2;
 }
 
+service AccountTimestampGrpcService {
+  rpc RequestAccountTimestamp (AccountTimestampDateRequest) returns (AccountTimestampDateResponse);
+}
+
+message AccountTimestampDateRequest {
+  bytes hash = 1;
+}
+message AccountTimestampDateResponse {
+  sint64 date = 1;
+}
+
 service AccountAgeWitnessGrpcService {
   rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
 }
@@ -101,7 +112,6 @@ message AccountAgeWitnessDateRequest {
 message AccountAgeWitnessDateResponse {
   sint64 date = 1;
 }
-
 
 service SignedWitnessGrpcService {
   rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);

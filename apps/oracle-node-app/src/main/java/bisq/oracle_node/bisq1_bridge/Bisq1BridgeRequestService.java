@@ -22,11 +22,13 @@ import bisq.account.timestamp.AccountTimestamp;
 import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
 import bisq.account.timestamp.AuthorizedAccountTimestamp;
 import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.TimestampType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
+import bisq.common.data.Result;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ByteArrayUtils;
@@ -40,6 +42,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
 import bisq.oracle_node.bisq1_bridge.grpc.services.AccountAgeWitnessGrpcService;
+import bisq.oracle_node.bisq1_bridge.grpc.services.AccountTimestampGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BondedRoleGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.SignedWitnessGrpcService;
 import bisq.persistence.DbSubDirectory;
@@ -56,14 +59,13 @@ import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -76,6 +78,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
     private final BondedRoleGrpcService bondedRoleGrpcService;
     private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
+    private final AccountTimestampGrpcService accountTimestampGrpcService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
@@ -104,6 +107,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
 
         accountAgeWitnessGrpcService = new AccountAgeWitnessGrpcService(grpcClient);
+        accountTimestampGrpcService = new AccountTimestampGrpcService(grpcClient);
         signedWitnessGrpcService = new SignedWitnessGrpcService(grpcClient);
         bondedRoleGrpcService = new BondedRoleGrpcService(grpcClient);
 
@@ -129,6 +133,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         );
 
         return accountAgeWitnessGrpcService.initialize()
+                .thenCompose(result -> accountTimestampGrpcService.initialize())
                 .thenCompose(result -> signedWitnessGrpcService.initialize())
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
@@ -145,6 +150,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         executor = null;
         return bondedRoleGrpcService.shutdown()
                 .thenCompose(result -> signedWitnessGrpcService.shutdown())
+                .thenCompose(result -> accountTimestampGrpcService.shutdown())
                 .thenCompose(result -> accountAgeWitnessGrpcService.shutdown());
     }
 
@@ -206,49 +212,37 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         }, executor);
     }
 
-    private void processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                AccountTimestamp accountTimestamp = request.getAccountTimestamp();
-                if (request.getKeyAlgorithm() == KeyAlgorithm.DSA) {
-                    // todo grpc request to bisq 1
-                    //long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
-                    log.warn("DSA account timestamp request received but verification is not implemented yet. Skipping.");
-                    return;
-                } else {
-                    long date = accountTimestamp.getDate();
-                    if (Math.abs(System.currentTimeMillis() - date) > TimeUnit.HOURS.toMillis(2)) {
-                        log.warn("Date in request is outside tolerance. Date= {}", new Date(date));
-                        return;
-                    }
+    private CompletableFuture<Result<Long>> processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
+        try {
+            verifyHash(request);
+            verifySignature(request);
+        } catch (Exception e) {
+            log.warn("AuthorizeAccountTimestampRequest is invalid", e);
+            return CompletableFuture.failedFuture(e);
+        }
 
-                    // Check if pubkey is matching the one in the hash
-                    byte[] saltedFingerprint = request.getSaltedFingerprint();
-                    byte[] publicKeyBytes = request.getPublicKey();
-                    byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
-                    byte[] hash = DigestUtil.hash(preimage);
+        AccountTimestamp accountTimestamp = request.getAccountTimestamp();
+        TimestampType timestampType = request.getTimestampType();
+        return switch (timestampType) {
+            case BISQ2_NEW -> CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
+            case BISQ1_IMPORTED -> CompletableFuture.supplyAsync(() -> {
+                        Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
+                        if (result.isSuccess() && request.getCreationDate() != result.getOrThrow()) {
+                            return Result.<Long>failure(new IllegalArgumentException("Date from Bisq 1 is not matching date from request"));
+                        } else {
+                            return result;
+                        }
+                    }, executor)
+                    .thenApply(result -> {
+                        //todo
 
-                    checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
-                            "accountTimestamp hash not matching hash from preimage");
-
-                    KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
-                    PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, keyAlgorithm.getAlgorithm());
-                    byte[] message = accountTimestamp.toProto(true).toByteArray();
-
-                    SignatureUtil.verify(message, request.getSignature(), publicKey, Account.getSignatureAlgorithm(keyAlgorithm));
-                }
-
-                //todo persist
-                //   persistableStore.getAccountAgeRequests().add(request);
-                persist();
-
-                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
-            } catch (Exception e) {
-                log.error("processAuthorizeAccountTimestampRequest failed", e);
-            }
-        }, executor);
+                        persist();
+                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                        return result;
+                    });
+            default -> throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
+        };
     }
-
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,
                                                       BondedRoleRegistrationRequest request) {
@@ -327,4 +321,26 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 identity.getNetworkIdWithKeyPair().getKeyPair(),
                 authorizedPublicKey);
     }
+
+    private void verifyHash(AuthorizeAccountTimestampRequest request) {
+        byte[] saltedFingerprint = request.getSaltedFingerprint();
+        byte[] publicKeyBytes = request.getPublicKey();
+        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
+        byte[] hash = DigestUtil.hash(preimage);
+
+        checkArgument(Arrays.equals(request.getAccountTimestamp().getHash(), hash),
+                "AccountTimestamp hash is not matching the hash from the calculated preimage");
+    }
+
+    private void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
+        KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
+        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyAlgorithm.getAlgorithm());
+        byte[] message = request.getAccountTimestamp().toProto(true).toByteArray();
+        boolean isValid = SignatureUtil.verify(message,
+                request.getSignature(),
+                publicKey,
+                Account.getSignatureAlgorithm(keyAlgorithm));
+        checkArgument(isValid, "Signature verification for %s failed", request);
+    }
+
 }

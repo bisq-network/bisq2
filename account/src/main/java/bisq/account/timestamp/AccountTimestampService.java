@@ -118,7 +118,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         }
     }
 
-    public void registerAccountAgeWitness(Account<?, ?> account) {
+    private void registerAccountAgeWitness(Account<?, ?> account) {
         long now = System.currentTimeMillis();
         KeyPair keyPair = account.getKeyPair();
         PublicKey publicKey = keyPair.getPublic();
@@ -140,7 +140,11 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] message = accountTimestamp.toProto(true).toByteArray();
         try {
             byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
-            AuthorizeAccountTimestampRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountTimestampRequest(accountTimestamp,
+            TimestampType timestampType = keyAlgorithm == KeyAlgorithm.DSA
+                    ? TimestampType.BISQ1_IMPORTED
+                    : TimestampType.BISQ2_NEW;
+            AuthorizeAccountTimestampRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountTimestampRequest(timestampType,
+                    accountTimestamp,
                     saltedFingerprint,
                     publicKeyEncoded,
                     signature,

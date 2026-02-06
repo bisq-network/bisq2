@@ -41,19 +41,22 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
+    private final TimestampType timestampType;
     private final AccountTimestamp accountTimestamp;
-    private final byte[] saltedFingerprint; //64 bytes
-    private final byte[] publicKey; // 443 bytes
-    private final byte[] signature; // 46 bytes
-    private final KeyAlgorithm keyAlgorithm; // DSA
+    private final byte[] saltedFingerprint;
+    private final byte[] publicKey;
+    private final byte[] signature;
+    private final KeyAlgorithm keyAlgorithm;
     private final long creationDate;
 
-    public AuthorizeAccountTimestampRequest(AccountTimestamp accountTimestamp,
+    public AuthorizeAccountTimestampRequest(TimestampType timestampType,
+                                            AccountTimestamp accountTimestamp,
                                             byte[] saltedFingerprint,
                                             byte[] publicKey,
                                             byte[] signature,
                                             KeyAlgorithm keyAlgorithm,
                                             long creationDate) {
+        this.timestampType = timestampType;
         this.accountTimestamp = accountTimestamp;
         this.saltedFingerprint = saltedFingerprint;
         this.publicKey = publicKey;
@@ -75,6 +78,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     @Override
     public bisq.account.protobuf.AuthorizeAccountTimestampRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AuthorizeAccountTimestampRequest.newBuilder()
+                .setTimestampType(timestampType.toProtoEnum())
                 .setAccountTimestamp(accountTimestamp.toProto(serializeForHash))
                 .setSaltedFingerprint(ByteString.copyFrom(saltedFingerprint))
                 .setPublicKey(ByteString.copyFrom(publicKey))
@@ -90,6 +94,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
 
     public static AuthorizeAccountTimestampRequest fromProto(bisq.account.protobuf.AuthorizeAccountTimestampRequest proto) {
         return new AuthorizeAccountTimestampRequest(
+                TimestampType.fromProto(proto.getTimestampType()),
                 AccountTimestamp.fromProto(proto.getAccountTimestamp()),
                 proto.getSaltedFingerprint().toByteArray(),
                 proto.getPublicKey().toByteArray(),
