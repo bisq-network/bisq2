@@ -33,15 +33,18 @@ import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class BisqEasyMediationCaseDetailsController extends NavigationController implements InitWithDataController<BisqEasyMediationCaseDetailsController.InitData> {
@@ -60,6 +63,7 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
     private final BisqEasyMediationCaseDetailsModel model;
     @Getter
     private final BisqEasyMediationCaseDetailsView view;
+    private final BisqEasyMediatorService bisqEasyMediatorService;
 
 
     public BisqEasyMediationCaseDetailsController(ServiceProvider serviceProvider) {
@@ -67,6 +71,7 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
 
         model = new BisqEasyMediationCaseDetailsModel();
         view = new BisqEasyMediationCaseDetailsView(model, this);
+        bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
     }
 
     @Override
@@ -107,8 +112,20 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
         BisqEasyMediationCaseListItem.Trader taker = bisqEasyMediationCaseListItem.getTaker();
         BisqEasyMediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
         BisqEasyMediationCaseListItem.Trader seller = offer.getDirection().isSell() ? maker : taker;
+        CaseCounts buyerCaseCounts = getCaseCounts(buyer.getUserProfile());
+        CaseCounts sellerCaseCounts = getCaseCounts(seller.getUserProfile());
         model.setBuyerUserName(buyer.getUserName());
         model.setSellerUserName(seller.getUserName());
+        model.setBuyerBotId(buyer.getUserProfile().getNym());
+        model.setBuyerUserId(buyer.getUserProfile().getId());
+        model.setBuyerCaseCountTotal(buyerCaseCounts.total());
+        model.setBuyerCaseCountOpen(buyerCaseCounts.open());
+        model.setBuyerCaseCountClosed(buyerCaseCounts.closed());
+        model.setSellerBotId(seller.getUserProfile().getNym());
+        model.setSellerUserId(seller.getUserProfile().getId());
+        model.setSellerCaseCountTotal(sellerCaseCounts.total());
+        model.setSellerCaseCountOpen(sellerCaseCounts.open());
+        model.setSellerCaseCountClosed(sellerCaseCounts.closed());
         model.setBuyerNetworkAddress(buyer.getUserProfile().getAddressByTransportDisplayString(50));
         model.setSellerNetworkAddress(seller.getUserProfile().getAddressByTransportDisplayString(50));
     }
@@ -124,5 +141,21 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    private CaseCounts getCaseCounts(UserProfile userProfile) {
+        var counts = bisqEasyMediatorService.getMediationCases().stream()
+                .filter(mediationCase -> {
+                    BisqEasyMediationRequest request = mediationCase.getBisqEasyMediationRequest();
+                    return userProfile.equals(request.getRequester()) || userProfile.equals(request.getPeer());
+                })
+                .collect(Collectors.partitioningBy(mediationCase -> mediationCase.getIsClosed().get(),
+                        Collectors.counting()));
+        int closed = counts.getOrDefault(true, 0L).intValue();
+        int open = counts.getOrDefault(false, 0L).intValue();
+        return new CaseCounts(open + closed, open, closed);
+    }
+
+    private record CaseCounts(int total, int open, int closed) {
     }
 }
