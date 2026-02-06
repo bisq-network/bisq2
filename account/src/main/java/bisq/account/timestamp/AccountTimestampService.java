@@ -79,7 +79,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
                                 .filter(AuthorizedAccountTimestamp.class::isInstance)
                                 .map(AuthorizedAccountTimestamp.class::cast)
                 ).map(e -> e)
-                .forEach(this::handleAuthorizedAccountAgeWitnessAdded);
+                .forEach(this::handleAuthorizedAccountTimestampAdded);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -97,14 +97,14 @@ public class AccountTimestampService implements Service, DataService.Listener {
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-            handleAuthorizedAccountAgeWitnessAdded(authorizedAccountTimestamp);
+            handleAuthorizedAccountTimestampAdded(authorizedAccountTimestamp);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-            handleAuthorizedAccountAgeWitnessRemoved(authorizedAccountTimestamp);
+            handleAuthorizedAccountTimestampRemoved(authorizedAccountTimestamp);
         }
     }
 
@@ -115,53 +115,25 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
     public void handleAddedAccount(Account<?, ?> account) {
         if (requireRegistration(account)) {
-            registerAccountAgeWitness(account);
+            registerAccountTimestamp(account);
         }
     }
 
-    private void registerAccountAgeWitness(Account<?, ?> account) {
-        long now = System.currentTimeMillis();
-        KeyPair keyPair = account.getKeyPair();
-        PublicKey publicKey = keyPair.getPublic();
-        byte[] publicKeyEncoded = publicKey.getEncoded();
-        KeyAlgorithm keyAlgorithm = account.getKeyAlgorithm();
-        AccountPayload<?> accountPayload = account.getAccountPayload();
-
-        var selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        if (selectedUserIdentity == null) {
-            log.warn("No selected user identity. Skipping account timestamp registration.");
-            return;
-        }
-
-        byte[] saltedFingerprint = getSaltedFingerprint(accountPayload);
-        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
-        byte[] hash = DigestUtil.hash(preimage);
-
-        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, now);
-        byte[] message = accountTimestamp.toProto(true).toByteArray();
-        try {
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
-            TimestampType timestampType = account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED
-                    ? TimestampType.BISQ1_IMPORTED
-                    : TimestampType.BISQ2_NEW;
-            AuthorizeAccountTimestampRequest authorizeAccountAgeWitnessRequest = new AuthorizeAccountTimestampRequest(timestampType,
-                    accountTimestamp,
-                    saltedFingerprint,
-                    publicKeyEncoded,
-                    signature,
-                    keyAlgorithm);
-
-            authorizedBondedRolesService.getAuthorizedOracleNodes()
-                    .forEach(oracleNode ->
-                            networkService.confidentialSend(authorizeAccountAgeWitnessRequest,
-                                    oracleNode.getNetworkId(),
-                                    selectedUserIdentity.getNetworkIdWithKeyPair()));
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
+    public void requestRepublishTimestamp(Account<?, ?> account) {
+        findAccountTimestamp(new ByteArray(createHash(account)))
+                .ifPresentOrElse(
+                        accountTimestamp -> sendAccountTimestampRequest(account, accountTimestamp),
+                        () -> log.warn("No authorized account timestamp found for account {}. Skipping republish request.", account.getId())
+                );
     }
 
-  /*  public Result<Void> verifyAccountAgeWitness(AccountTimestamp accountTimestamp,
+    private void registerAccountTimestamp(Account<?, ?> account) {
+        byte[] hash = createHash(account);
+        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, System.currentTimeMillis());
+        sendAccountTimestampRequest(account, accountTimestamp);
+    }
+
+  /*  public Result<Void> verifyAccountTimestamp(AccountTimestamp accountTimestamp,
                                                 AccountPayload<?> accountPayload,
                                                 long peersCurrentTimeMillis,
                                                 PublicKey publicKey,
@@ -193,23 +165,23 @@ public class AccountTimestampService implements Service, DataService.Listener {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void handleAuthorizedAccountAgeWitnessAdded(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
-        accountAgeWitnessByHash.putIfAbsent(getAccountAgeWitnessHash(authorizedAccountAgeWitness),
-                authorizedAccountAgeWitness.getAccountTimestamp());
+    private void handleAuthorizedAccountTimestampAdded(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        accountAgeWitnessByHash.putIfAbsent(getAccountTimestampHash(authorizedAccountTimestamp),
+                authorizedAccountTimestamp.getAccountTimestamp());
     }
 
-    private void handleAuthorizedAccountAgeWitnessRemoved(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
-        accountAgeWitnessByHash.remove(getAccountAgeWitnessHash(authorizedAccountAgeWitness));
+    private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        accountAgeWitnessByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp));
     }
 
-    private static ByteArray getAccountAgeWitnessHash(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
-        return new ByteArray(authorizedAccountAgeWitness.getAccountTimestamp().getHash());
+    private static ByteArray getAccountTimestampHash(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        return new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
     }
 
 
     private boolean requireRegistration(Account<? extends PaymentMethod<?>, ?> account) {
         byte[] hash = createHash(account);
-        return findAuthorizedAccountAgeWitness(hash)
+        return findAuthorizedAccountTimestamp(hash)
                 .map(AccountTimestampService::isHalfExpired)
                 .findAny()
                 .orElse(true);
@@ -221,7 +193,40 @@ public class AccountTimestampService implements Service, DataService.Listener {
         return ByteArrayUtils.concat(preimage, salt);
     }
 
-    public Optional<AccountTimestamp> findAccountAgeWitness(ByteArray hash) {
+    private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
+        var selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        if (selectedUserIdentity == null) {
+            log.warn("No selected user identity. Skipping account timestamp request.");
+            return;
+        }
+
+        KeyPair keyPair = account.getKeyPair();
+        byte[] publicKeyEncoded = keyPair.getPublic().getEncoded();
+        byte[] saltedFingerprint = getSaltedFingerprint(account.getAccountPayload());
+        byte[] message = accountTimestamp.toProto(true).toByteArray();
+        try {
+            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
+            TimestampType timestampType = account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED
+                    ? TimestampType.BISQ1_IMPORTED
+                    : TimestampType.BISQ2_NEW;
+            AuthorizeAccountTimestampRequest request = new AuthorizeAccountTimestampRequest(timestampType,
+                    accountTimestamp,
+                    saltedFingerprint,
+                    publicKeyEncoded,
+                    signature,
+                    account.getKeyAlgorithm());
+
+            authorizedBondedRolesService.getAuthorizedOracleNodes()
+                    .forEach(oracleNode ->
+                            networkService.confidentialSend(request,
+                                    oracleNode.getNetworkId(),
+                                    selectedUserIdentity.getNetworkIdWithKeyPair()));
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<AccountTimestamp> findAccountTimestamp(ByteArray hash) {
         return Optional.ofNullable(accountAgeWitnessByHash.get(hash));
     }
 
@@ -237,13 +242,13 @@ public class AccountTimestampService implements Service, DataService.Listener {
         return DigestUtil.hash(preimage);
     }
 
-    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountAgeWitness) {
-        long ttl = authorizedAccountAgeWitness.getMetaData().getTtl();
+    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        long ttl = authorizedAccountTimestamp.getMetaData().getTtl();
         long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
-        return authorizedAccountAgeWitness.getPublishDate() <= halfExpiryDate;
+        return authorizedAccountTimestamp.getPublishDate() <= halfExpiryDate;
     }
 
-    private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountAgeWitness(byte[] hash) {
+    private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         return networkService.getDataService()
                 .stream()

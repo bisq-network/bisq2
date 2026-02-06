@@ -60,14 +60,15 @@ import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -225,27 +226,43 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
 
         AccountTimestamp accountTimestamp = request.getAccountTimestamp();
         TimestampType timestampType = request.getTimestampType();
+        ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+        boolean isRepublish = persistableStore.getAccountTimestampHashes().contains(requestHash);
         return switch (timestampType) {
             case BISQ2_NEW -> {
-                persistAccountTimestampRequest(accountTimestamp);
+                if (!isRepublish) {
+                    long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
+                    if (Math.abs(System.currentTimeMillis() - accountTimestamp.getDate()) > maxTimeDrift) {
+                        log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
+                        yield CompletableFuture.failedFuture(new Exception("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time"));
+                    }
+
+                    persistAccountTimestampRequest(accountTimestamp);
+                }
+                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
                 yield CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
             }
             case BISQ1_IMPORTED -> CompletableFuture.supplyAsync(() -> {
+                        if (isRepublish) {
+                            return Result.success(accountTimestamp.getDate());
+                        }
                         Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
                         if (result.isSuccess() && request.getAccountTimestamp().getDate() != result.getOrThrow()) {
                             return Result.<Long>failure(new IllegalArgumentException("Date from Bisq 1 is not matching date from request"));
-                        } else {
-                            return result;
                         }
+                        return result;
                     }, executor)
                     .thenApply(result -> {
                         if (result.isSuccess()) {
-                            persistAccountTimestampRequest(accountTimestamp);
+                            if (!isRepublish) {
+                                persistAccountTimestampRequest(accountTimestamp);
+                            }
                             publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
                         }
                         return result;
                     });
-            default -> throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
+            default ->
+                    throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
         };
     }
 
@@ -360,5 +377,6 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 Account.getSignatureAlgorithm(keyAlgorithm));
         checkArgument(isValid, "Signature verification for %s failed", request);
     }
+
 
 }
