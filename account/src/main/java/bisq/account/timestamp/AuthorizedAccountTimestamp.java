@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
 
 @Slf4j
 @EqualsAndHashCode
@@ -44,7 +44,7 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
     private static final int VERSION = 1;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName());
+    private transient final MetaData metaData = new MetaData(TTL_20_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
