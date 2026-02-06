@@ -28,6 +28,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
+import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
@@ -62,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -224,7 +226,10 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         AccountTimestamp accountTimestamp = request.getAccountTimestamp();
         TimestampType timestampType = request.getTimestampType();
         return switch (timestampType) {
-            case BISQ2_NEW -> CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
+            case BISQ2_NEW -> {
+                persistAccountTimestampRequest(accountTimestamp);
+                yield CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
+            }
             case BISQ1_IMPORTED -> CompletableFuture.supplyAsync(() -> {
                         Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
                         if (result.isSuccess() && request.getAccountTimestamp().getDate() != result.getOrThrow()) {
@@ -234,14 +239,27 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                         }
                     }, executor)
                     .thenApply(result -> {
-                        //todo
-
-                        persist();
-                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                        if (result.isSuccess()) {
+                            persistAccountTimestampRequest(accountTimestamp);
+                            publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                        }
                         return result;
                     });
             default -> throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
         };
+    }
+
+    private void persistAccountTimestampRequest(AccountTimestamp accountTimestamp) {
+        ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+        if (persistableStore.getAccountTimestampHashes().add(requestHash)) {
+            persist();
+        }
+    }
+
+    private static ByteArray createAccountTimestampRequestHash(AccountTimestamp accountTimestamp) {
+        byte[] dateBytes = ByteBuffer.allocate(Long.BYTES).putLong(accountTimestamp.getDate()).array();
+        byte[] preimage = ByteArrayUtils.concat(accountTimestamp.getHash(), dateBytes);
+        return new ByteArray(DigestUtil.hash(preimage));
     }
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,
