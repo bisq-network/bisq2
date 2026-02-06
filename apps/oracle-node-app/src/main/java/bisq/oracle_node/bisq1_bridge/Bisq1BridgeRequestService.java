@@ -17,11 +17,10 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
-import bisq.account.accounts.Account;
 import bisq.account.timestamp.AccountTimestamp;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
 import bisq.account.timestamp.AuthorizedAccountTimestamp;
-import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.timestamp.TimestampType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -51,8 +50,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.DigestUtil;
-import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyGeneration;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -61,16 +58,12 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq1BridgeRequestStore> implements Service, ConfidentialMessageService.Listener {
@@ -217,8 +210,8 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
 
     private CompletableFuture<Result<Long>> processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
         try {
-            verifyHash(request);
-            verifySignature(request);
+            AccountTimestampService.verifyHash(request);
+            AccountTimestampService.verifySignature(request);
         } catch (Exception e) {
             log.warn("AuthorizeAccountTimestampRequest is invalid", e);
             return CompletableFuture.failedFuture(e);
@@ -357,26 +350,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 authorizedPublicKey);
     }
 
-    private void verifyHash(AuthorizeAccountTimestampRequest request) {
-        byte[] saltedFingerprint = request.getSaltedFingerprint();
-        byte[] publicKeyBytes = request.getPublicKey();
-        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
-        byte[] hash = DigestUtil.hash(preimage);
 
-        checkArgument(Arrays.equals(request.getAccountTimestamp().getHash(), hash),
-                "AccountTimestamp hash is not matching the hash from the calculated preimage");
-    }
-
-    private void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
-        KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
-        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyAlgorithm.getAlgorithm());
-        byte[] message = request.getAccountTimestamp().toProto(true).toByteArray();
-        boolean isValid = SignatureUtil.verify(message,
-                request.getSignature(),
-                publicKey,
-                Account.getSignatureAlgorithm(keyAlgorithm));
-        checkArgument(isValid, "Signature verification for %s failed", request);
-    }
 
 
 }

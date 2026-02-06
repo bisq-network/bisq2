@@ -25,6 +25,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Result;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
@@ -32,6 +33,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.KeyGeneration;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -41,9 +43,10 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AccountTimestampService implements Service, DataService.Listener {
@@ -52,7 +55,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     @Getter
-    private final ObservableHashMap<ByteArray, AccountTimestamp> accountAgeWitnessByHash = new ObservableHashMap<>();
+    private final ObservableHashMap<ByteArray, AccountTimestamp> accountTimestampByHash = new ObservableHashMap<>();
 
     public AccountTimestampService(NetworkService networkService,
                                    UserService userService,
@@ -72,14 +75,15 @@ public class AccountTimestampService implements Service, DataService.Listener {
         networkService.addDataServiceListener(this);
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         networkService.getDataService()
-                .stream() // turns Optional<DataService> into Stream<DataService>
+                .stream()
                 .flatMap(dataService ->
                         dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
                                 .map(AuthenticatedData::getDistributedData)
                                 .filter(AuthorizedAccountTimestamp.class::isInstance)
                                 .map(AuthorizedAccountTimestamp.class::cast)
-                ).map(e -> e)
+                )
                 .forEach(this::handleAuthorizedAccountTimestampAdded);
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -114,51 +118,41 @@ public class AccountTimestampService implements Service, DataService.Listener {
     /* --------------------------------------------------------------------- */
 
     public void handleAddedAccount(Account<?, ?> account) {
-        if (requireRegistration(account)) {
-            registerAccountTimestamp(account);
-        }
-    }
-
-    public void requestRepublishTimestamp(Account<?, ?> account) {
-        findAccountTimestamp(new ByteArray(createHash(account)))
-                .ifPresentOrElse(
-                        accountTimestamp -> sendAccountTimestampRequest(account, accountTimestamp),
-                        () -> log.warn("No authorized account timestamp found for account {}. Skipping republish request.", account.getId())
-                );
-    }
-
-    private void registerAccountTimestamp(Account<?, ?> account) {
         byte[] hash = createHash(account);
-        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, System.currentTimeMillis());
-        sendAccountTimestampRequest(account, accountTimestamp);
+        findAuthorizedAccountTimestamp(hash).findAny()
+                .ifPresentOrElse(authorizedAccountTimestamp -> {
+                    if (isHalfExpired(authorizedAccountTimestamp)) {
+                        // Republish
+                        sendAccountTimestampRequest(account, authorizedAccountTimestamp.getAccountTimestamp());
+                    }
+                }, () -> {
+                    // New timestamp if it is a new account or republish with the account creation date in case the
+                    // authorizedAccountTimestamp has already expired.
+                    AccountTimestamp accountTimestamp = new AccountTimestamp(hash, account.getCreationDate());
+                    sendAccountTimestampRequest(account, accountTimestamp);
+                });
     }
 
-  /*  public Result<Void> verifyAccountTimestamp(AccountTimestamp accountTimestamp,
-                                                AccountPayload<?> accountPayload,
-                                                long peersCurrentTimeMillis,
-                                                PublicKey publicKey,
-                                                byte[] message,
-                                                byte[] signature,
-                                                KeyAlgorithm keyAlgorithm) {
+    public static Result<Boolean> verifyAccountTimestamp(AccountTimestamp accountTimestamp,
+                                                         AccountPayload<?> accountPayload,
+                                                         PublicKey publicKey,
+                                                         byte[] signature,
+                                                         KeyAlgorithm keyAlgorithm) {
         try {
-            // Check if peers clock is in a tolerance range of 1 day
-            checkArgument(Math.abs(peersCurrentTimeMillis - System.currentTimeMillis()) <= TimeUnit.DAYS.toMillis(1),
-                    "Peers clock is more then 1 day off from our clock");
-            byte[] publicKeyEncoded = publicKey.getEncoded();
-
-            byte[] saltedFingerprint = getSaltedFingerprint(accountPayload);
-            byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
-            byte[] hash = DigestUtil.hash(preimage);
-
-            checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
-                    "AgeWitnessHash not matching hashFromAccountPayload");
-            checkArgument(SignatureUtil.verify(message, signature, publicKey, keyAlgorithm.getAlgorithm()), "Signature verification failed");
-            return Result.success(null);
+            byte[] fingerprint = accountPayload.getFingerprint();
+            byte[] salt = accountPayload.getSalt();
+            byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
+            verifyHash(saltedFingerprint, publicKey.getEncoded(), accountTimestamp);
+            verifySignature(accountTimestamp,
+                    publicKey,
+                    signature,
+                    keyAlgorithm);
+            return Result.success(true);
         } catch (Exception e) {
+            log.warn("verifyAccountTimestamp failed", e);
             return Result.failure(e);
         }
     }
-*/
 
 
     /* --------------------------------------------------------------------- */
@@ -166,31 +160,12 @@ public class AccountTimestampService implements Service, DataService.Listener {
     /* --------------------------------------------------------------------- */
 
     private void handleAuthorizedAccountTimestampAdded(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountAgeWitnessByHash.putIfAbsent(getAccountTimestampHash(authorizedAccountTimestamp),
+        accountTimestampByHash.putIfAbsent(getAccountTimestampHash(authorizedAccountTimestamp),
                 authorizedAccountTimestamp.getAccountTimestamp());
     }
 
     private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountAgeWitnessByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp));
-    }
-
-    private static ByteArray getAccountTimestampHash(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        return new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
-    }
-
-
-    private boolean requireRegistration(Account<? extends PaymentMethod<?>, ?> account) {
-        byte[] hash = createHash(account);
-        return findAuthorizedAccountTimestamp(hash)
-                .map(AccountTimestampService::isHalfExpired)
-                .findAny()
-                .orElse(true);
-    }
-
-    private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {
-        byte[] salt = accountPayload.getSalt();
-        byte[] preimage = accountPayload.getFingerprint();
-        return ByteArrayUtils.concat(preimage, salt);
+        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp));
     }
 
     private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
@@ -226,28 +201,6 @@ public class AccountTimestampService implements Service, DataService.Listener {
         }
     }
 
-    public Optional<AccountTimestamp> findAccountTimestamp(ByteArray hash) {
-        return Optional.ofNullable(accountAgeWitnessByHash.get(hash));
-    }
-
-    private byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
-        AccountPayload<?> accountPayload = account.getAccountPayload();
-        byte[] salt = accountPayload.getSalt();
-        byte[] ageWitnessInputData = accountPayload.getFingerprint();
-        byte[] blindedAgeWitnessInputData = ByteArrayUtils.concat(ageWitnessInputData, salt);
-        KeyPair keyPair = account.getKeyPair();
-        PublicKey publicKey = keyPair.getPublic();
-        byte[] publicKeyBytes = publicKey.getEncoded();
-        byte[] preimage = ByteArrayUtils.concat(blindedAgeWitnessInputData, publicKeyBytes);
-        return DigestUtil.hash(preimage);
-    }
-
-    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        long ttl = authorizedAccountTimestamp.getMetaData().getTtl();
-        long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
-        return authorizedAccountTimestamp.getPublishDate() <= halfExpiryDate;
-    }
-
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         return networkService.getDataService()
@@ -259,6 +212,68 @@ public class AccountTimestampService implements Service, DataService.Listener {
                                 .map(AuthorizedAccountTimestamp.class::cast)
                 )
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
+    }
+
+    private static ByteArray getAccountTimestampHash(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        return new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
+    }
+
+    private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {
+        byte[] salt = accountPayload.getSalt();
+        byte[] preimage = accountPayload.getFingerprint();
+        return ByteArrayUtils.concat(preimage, salt);
+    }
+
+    private static byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
+        KeyPair keyPair = account.getKeyPair();
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+
+        byte[] salt = accountPayload.getSalt();
+        byte[] fingerprint = accountPayload.getFingerprint();
+        byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
+        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
+        return DigestUtil.hash(preimage);
+    }
+
+    public static void verifyHash(AuthorizeAccountTimestampRequest request) {
+        verifyHash(request.getSaltedFingerprint(), request.getPublicKey(), request.getAccountTimestamp());
+    }
+
+    public static void verifyHash(byte[] saltedFingerprint, byte[] publicKeyBytes, AccountTimestamp accountTimestamp) {
+        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
+        byte[] hash = DigestUtil.hash(preimage);
+
+        checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
+                "AccountTimestamp hash is not matching the hash from the calculated preimage");
+    }
+
+    public static void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
+        KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
+        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyAlgorithm.getAlgorithm());
+        verifySignature(request.getAccountTimestamp(),
+                publicKey,
+                request.getSignature(),
+                keyAlgorithm);
+    }
+
+    public static void verifySignature(AccountTimestamp accountTimestamp,
+                                       PublicKey publicKey,
+                                       byte[] signature,
+                                       KeyAlgorithm keyAlgorithm) throws GeneralSecurityException {
+        byte[] message = accountTimestamp.toProto(true).toByteArray();
+        boolean isValid = SignatureUtil.verify(message,
+                signature,
+                publicKey,
+                Account.getSignatureAlgorithm(keyAlgorithm));
+        checkArgument(isValid, "Signature verification failed");
+    }
+
+    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        long ttl = authorizedAccountTimestamp.getMetaData().getTtl();
+        long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
+        return authorizedAccountTimestamp.getPublishDate() <= halfExpiryDate;
     }
 
 }
