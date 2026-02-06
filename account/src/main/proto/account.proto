@@ -529,7 +529,6 @@ message AuthorizeAccountTimestampRequest {
   bytes publicKey = 4;
   bytes signature = 5;
   KeyAlgorithm keyAlgorithm = 6;
-  uint64 creationDate = 7;
 }
 
 message AuthorizedAccountTimestamp {

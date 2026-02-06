@@ -47,22 +47,19 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     private final byte[] publicKey;
     private final byte[] signature;
     private final KeyAlgorithm keyAlgorithm;
-    private final long creationDate;
 
     public AuthorizeAccountTimestampRequest(TimestampType timestampType,
                                             AccountTimestamp accountTimestamp,
                                             byte[] saltedFingerprint,
                                             byte[] publicKey,
                                             byte[] signature,
-                                            KeyAlgorithm keyAlgorithm,
-                                            long creationDate) {
+                                            KeyAlgorithm keyAlgorithm) {
         this.timestampType = timestampType;
         this.accountTimestamp = accountTimestamp;
         this.saltedFingerprint = saltedFingerprint;
         this.publicKey = publicKey;
         this.signature = signature;
         this.keyAlgorithm = keyAlgorithm;
-        this.creationDate = creationDate;
 
         verify();
     }
@@ -83,8 +80,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
                 .setSaltedFingerprint(ByteString.copyFrom(saltedFingerprint))
                 .setPublicKey(ByteString.copyFrom(publicKey))
                 .setSignature(ByteString.copyFrom(signature))
-                .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
-                .setCreationDate(creationDate);
+                .setKeyAlgorithm(keyAlgorithm.toProtoEnum());
     }
 
     @Override
@@ -99,8 +95,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
                 proto.getSaltedFingerprint().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getSignature().toByteArray(),
-                KeyAlgorithm.fromProto(proto.getKeyAlgorithm()),
-                proto.getCreationDate()
+                KeyAlgorithm.fromProto(proto.getKeyAlgorithm())
         );
     }
 

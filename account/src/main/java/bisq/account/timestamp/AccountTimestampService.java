@@ -137,7 +137,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyEncoded);
         byte[] hash = DigestUtil.hash(preimage);
 
-        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, System.currentTimeMillis());
+        AccountTimestamp accountTimestamp = new AccountTimestamp(hash, now);
         byte[] message = accountTimestamp.toProto(true).toByteArray();
         try {
             byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
@@ -149,8 +149,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
                     saltedFingerprint,
                     publicKeyEncoded,
                     signature,
-                    keyAlgorithm,
-                    now);
+                    keyAlgorithm);
 
             authorizedBondedRolesService.getAuthorizedOracleNodes()
                     .forEach(oracleNode ->

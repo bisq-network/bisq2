@@ -227,7 +227,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             case BISQ2_NEW -> CompletableFuture.completedFuture(Result.success(accountTimestamp.getDate()));
             case BISQ1_IMPORTED -> CompletableFuture.supplyAsync(() -> {
                         Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
-                        if (result.isSuccess() && request.getCreationDate() != result.getOrThrow()) {
+                        if (result.isSuccess() && request.getAccountTimestamp().getDate() != result.getOrThrow()) {
                             return Result.<Long>failure(new IllegalArgumentException("Date from Bisq 1 is not matching date from request"));
                         } else {
                             return result;
