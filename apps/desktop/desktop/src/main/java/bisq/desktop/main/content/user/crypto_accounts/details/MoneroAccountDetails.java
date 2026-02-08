@@ -34,8 +34,8 @@ public class MoneroAccountDetails extends CryptoAccountDetails<MoneroAccount> {
     }
 
     @Override
-    protected void addDetails(MoneroAccount account) {
-        super.addDetails(account);
+    protected void addDetails( ) {
+        super.addDetails();
 
         MoneroAccountPayload accountPayload = account.getAccountPayload();
 

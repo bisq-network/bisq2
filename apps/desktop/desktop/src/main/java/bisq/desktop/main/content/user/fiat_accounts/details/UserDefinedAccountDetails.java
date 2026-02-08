@@ -22,6 +22,7 @@ import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.main.content.user.AccountDetails;
 import bisq.i18n.Res;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.geometry.Insets;
@@ -32,7 +33,7 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-public class UserDefinedAccountDetails extends FiatBaseAccountDetails<UserDefinedFiatAccount, FiatPaymentRail> {
+public class UserDefinedAccountDetails extends AccountDetails<UserDefinedFiatAccount, FiatPaymentRail> {
     // If true we use the design from 2.1.7 and the option to save the data
     public final static boolean USE_LEGACY_DESIGN = true;
     @Getter

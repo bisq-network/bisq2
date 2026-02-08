@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.fiat_accounts.details;
+package bisq.desktop.main.content.user;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
@@ -45,7 +45,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class FiatBaseAccountDetails<A extends Account<?, ?>, R extends PaymentRail> extends VBox {
+public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentRail> extends VBox {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
@@ -53,12 +53,12 @@ public abstract class FiatBaseAccountDetails<A extends Account<?, ?>, R extends 
     protected static final double HBOX_SPACE = 10;
     protected static final double HEIGHT = 61;
 
-    protected final GridPane gridPane;
     protected final A account;
-    private final AccountTimestampService accountTimestampService;
+    protected final AccountTimestampService accountTimestampService;
+    protected final GridPane gridPane;
     protected int rowIndex = 0;
 
-    public FiatBaseAccountDetails(A account, AccountTimestampService accountTimestampService) {
+    public AccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(10);
         this.account = account;
         this.accountTimestampService = accountTimestampService;
@@ -85,6 +85,16 @@ public abstract class FiatBaseAccountDetails<A extends Account<?, ?>, R extends 
         setPadding(new Insets(20));
         getStyleClass().add("bisq-content-bg");
         getChildren().add(gridPane);
+    }
+
+    protected void addHeader() {
+        if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
+            Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.paymentMethod"),
+                    account.getPaymentMethod().getDisplayString());
+            gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
+
+            addCurrencyDisplay();
+        }
     }
 
     protected void addDetailsHeadline() {
@@ -121,16 +131,6 @@ public abstract class FiatBaseAccountDetails<A extends Account<?, ?>, R extends 
                 account.getPaymentMethod().getPaymentRail().getTradeLimit());
         addDescriptionAndValue(Res.get("paymentAccounts.tradeDuration"),
                 account.getPaymentMethod().getPaymentRail().getTradeDuration());
-    }
-
-    protected void addHeader() {
-        if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.paymentMethod"),
-                    account.getPaymentMethod().getDisplayString());
-            gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
-
-            addCurrencyDisplay();
-        }
     }
 
     protected void addCurrencyDisplay() {

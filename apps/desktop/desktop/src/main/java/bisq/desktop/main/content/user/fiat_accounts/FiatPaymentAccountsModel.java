@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.fiat_accounts.details.FiatBaseAccountDetails;
+import bisq.desktop.main.content.user.AccountDetails;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -42,5 +42,5 @@ public class FiatPaymentAccountsModel implements Model {
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accounts = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccounts = new SortedList<>(accounts);
     private final ObjectProperty<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new SimpleObjectProperty<>();
-    private final ObjectProperty<FiatBaseAccountDetails<?, ?>> accountDetails = new SimpleObjectProperty<>();
+    private final ObjectProperty<AccountDetails<?, ?>> accountDetails = new SimpleObjectProperty<>();
 }
