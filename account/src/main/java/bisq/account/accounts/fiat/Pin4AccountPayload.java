@@ -29,6 +29,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
@@ -85,5 +87,10 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(mobileNr.getBytes(StandardCharsets.UTF_8));
     }
 }

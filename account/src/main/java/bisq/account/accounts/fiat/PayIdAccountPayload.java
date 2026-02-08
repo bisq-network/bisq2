@@ -22,11 +22,14 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -77,5 +80,16 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.payId.payId"), payId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String all = payId + holderName;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "AUSTRALIA_PAYID";
     }
 }

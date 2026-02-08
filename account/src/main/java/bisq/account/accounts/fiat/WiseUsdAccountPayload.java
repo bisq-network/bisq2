@@ -30,6 +30,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
@@ -103,5 +105,15 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.email"), email
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "TRANSFERWISE_USD";
     }
 }

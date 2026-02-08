@@ -28,6 +28,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 @Getter
 @Slf4j
 @ToString
@@ -71,5 +73,10 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.holderName"), holderName
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
     }
 }

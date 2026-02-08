@@ -21,11 +21,14 @@ import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.Getter;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 public class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
@@ -111,5 +114,12 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
                 Res.get("paymentAccounts.f2f.contact"), contact,
                 Res.get("paymentAccounts.f2f.extraInfo"), extraInfo
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(contact.getBytes(StandardCharsets.UTF_8),
+                city.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

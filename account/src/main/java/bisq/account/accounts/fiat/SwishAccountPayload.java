@@ -30,6 +30,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
@@ -94,5 +96,11 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
+        return super.getFingerprint(data);
     }
 }

@@ -29,6 +29,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 @Getter
 @Slf4j
 @ToString
@@ -85,5 +87,10 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.promptPay.promptPayId"), promptPayId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(promptPayId.getBytes(StandardCharsets.UTF_8));
     }
 }

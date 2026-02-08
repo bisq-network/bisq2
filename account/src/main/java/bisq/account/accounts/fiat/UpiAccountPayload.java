@@ -28,6 +28,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 @Getter
 @Slf4j
 @ToString
@@ -72,5 +74,10 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.upi.virtualPaymentAddress"), virtualPaymentAddress
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(virtualPaymentAddress.getBytes(StandardCharsets.UTF_8));
     }
 }

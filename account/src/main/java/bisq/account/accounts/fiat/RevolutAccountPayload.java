@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Getter
@@ -95,5 +96,10 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.userName"), userName
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(userName.getBytes(StandardCharsets.UTF_8));
     }
 }

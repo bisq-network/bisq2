@@ -22,11 +22,14 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -89,5 +92,13 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
                 Res.get("paymentAccounts.interacETransfer.question"), question,
                 Res.get("paymentAccounts.interacETransfer.answer"), answer
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
+                question.getBytes(StandardCharsets.UTF_8),
+                answer.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

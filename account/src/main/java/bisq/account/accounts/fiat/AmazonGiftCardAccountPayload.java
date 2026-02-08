@@ -30,6 +30,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
@@ -86,5 +88,11 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ("AmazonGiftCard" + emailOrMobileNr).getBytes(StandardCharsets.UTF_8);
+        return super.getFingerprint(data);
     }
 }

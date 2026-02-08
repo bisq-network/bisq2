@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.PhoneNumberValidation;
@@ -30,6 +31,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -99,5 +102,12 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(emailOrMobileNr.getBytes(StandardCharsets.UTF_8),
+                holderName.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

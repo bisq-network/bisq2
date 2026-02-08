@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -30,6 +31,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Getter
@@ -109,5 +111,12 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
         return CryptoAssetRepository.findName(currencyCode)
                 .map(name -> currencyCode + " (" + name + ")")
                 .orElse(currencyCode);
+    }
+
+
+    @Override
+    protected byte[] getFingerprint(byte[] data) {
+        String codeAndAddress = currencyCode + address;
+        return super.getFingerprint(ByteArrayUtils.concat(codeAndAddress.getBytes(StandardCharsets.UTF_8), data));
     }
 }

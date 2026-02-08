@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -81,5 +82,11 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     @Override
     public List<String> getSelectedCurrencyCodes() {
         return FiatCurrencyRepository.getAllFiatCurrencyCodes();
+    }
+
+    // Will not be used for account age but add the method for correctness
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(accountData.getBytes(StandardCharsets.UTF_8));
     }
 }

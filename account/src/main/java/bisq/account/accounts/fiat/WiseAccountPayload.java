@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -30,6 +31,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -105,5 +107,17 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.email"), email
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
+                holderName.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
+    }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "TRANSFERWISE";
     }
 }

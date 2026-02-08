@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -105,5 +106,10 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.uphold.accountId"), accountId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(accountId.getBytes(StandardCharsets.UTF_8));
     }
 }

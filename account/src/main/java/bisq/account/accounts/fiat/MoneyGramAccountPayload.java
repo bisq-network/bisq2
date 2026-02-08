@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -42,6 +43,9 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String email;
+
+    //TODO used depending on country
+    private final String state = "";
 
     public MoneyGramAccountPayload(String id,
                                    String countryCode,
@@ -106,5 +110,11 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.email"), email
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String all = countryCode + state + holderName + email;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
     }
 }

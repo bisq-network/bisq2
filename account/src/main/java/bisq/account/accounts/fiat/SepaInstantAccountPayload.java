@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.SepaPaymentAccountValidation;
@@ -32,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,5 +121,11 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
                 Res.get("paymentAccounts.sepa.iban"), iban,
                 Res.get("paymentAccounts.sepa.bic"), bic
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

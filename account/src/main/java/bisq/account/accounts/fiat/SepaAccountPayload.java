@@ -152,9 +152,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     @Override
     public byte[] getFingerprint() {
-        // We don't add holderName because we don't want to break age validation if the user recreates an account with
-        // slight changes in holder name (e.g. add or remove middle name)
-        // Also we want to be compatible with Bisq 1 to not break account age data
         return super.getFingerprint(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
     }
 }

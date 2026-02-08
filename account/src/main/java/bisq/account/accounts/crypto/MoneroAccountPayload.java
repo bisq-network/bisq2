@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Getter
@@ -128,6 +129,12 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
     @Override
     public CryptoPaymentMethod getPaymentMethod() {
         return new CryptoPaymentMethod(CryptoAssetRepository.XMR.getCode());
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String data = currencyCode + address + privateViewKey.orElse("");
+        return super.getFingerprint(data.getBytes(StandardCharsets.UTF_8));
     }
 
   /*  @Override

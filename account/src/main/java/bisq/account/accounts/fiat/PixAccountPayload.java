@@ -22,12 +22,15 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -93,5 +96,12 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.pix.pixKey"), pixKey
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(pixKey.getBytes(StandardCharsets.UTF_8),
+                holderName.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }
