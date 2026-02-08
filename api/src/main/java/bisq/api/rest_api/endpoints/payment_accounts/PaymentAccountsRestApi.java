@@ -19,13 +19,16 @@ package bisq.api.rest_api.endpoints.payment_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.util.StringUtils;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.account.UserDefinedFiatAccountDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.security.keys.KeyGeneration;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,6 +50,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -102,8 +106,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @Path("/selected")
     public Response getSelectedPaymentAccount() {
         try {
-            if (accountService.getSelectedAccount().isPresent()) {
-                Account<? extends PaymentMethod<?>, ?> account = accountService.getSelectedAccount().get();
+            if (accountService.findSelectedAccount().isPresent()) {
+                Account<? extends PaymentMethod<?>, ?> account = accountService.findSelectedAccount().get();
                 if (account instanceof UserDefinedFiatAccount castedAccount) {
                     UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
                     return buildOkResponse(userAccount);
@@ -140,8 +144,16 @@ public class PaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
+            KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+            KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), request.accountData());
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(), System.currentTimeMillis(), request.accountName(), accountPayload));
+            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(),
+                    System.currentTimeMillis(),
+                    request.accountName(),
+                    accountPayload,
+                    keyPair,
+                    keyAlgorithm,
+                    AccountOrigin.BISQ2_NEW));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));

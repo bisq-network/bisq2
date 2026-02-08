@@ -17,19 +17,30 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.protobuf.Account;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
-    public UpiAccount(String id, long creationDate, String accountName, UpiAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public UpiAccount(String id,
+                      long creationDate,
+                      String accountName,
+                      UpiAccountPayload accountPayload,
+                      KeyPair keyPair,
+                      KeyAlgorithm keyAlgorithm,
+                      AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -47,9 +58,14 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
     }
 
     public static UpiAccount fromProto(Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new UpiAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                UpiAccountPayload.fromProto(proto.getAccountPayload()));
+                UpiAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

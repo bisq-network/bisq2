@@ -17,10 +17,15 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
@@ -30,8 +35,11 @@ public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAcc
     public SepaInstantAccount(String id,
                               long creationDate,
                               String accountName,
-                              SepaInstantAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+                              SepaInstantAccountPayload accountPayload,
+                              KeyPair keyPair,
+                              KeyAlgorithm keyAlgorithm,
+                              AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -49,10 +57,15 @@ public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAcc
     }
 
     public static SepaInstantAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new SepaInstantAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                SepaInstantAccountPayload.fromProto(proto.getAccountPayload()));
+                SepaInstantAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 
 }

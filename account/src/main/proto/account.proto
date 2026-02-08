@@ -102,8 +102,7 @@ message PaymentMethodSpec {
 // AccountPayload
 message AccountPayload {
   string id = 1;
-  string paymentMethodId = 2;
-  bytes salt = 3;
+  bytes salt = 2;
   oneof message {
     ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
@@ -346,6 +345,18 @@ message BizumAccountPayload {
 }
 
 // Account
+enum KeyAlgorithm{
+  KEYALGORITHM_UNSPECIFIED = 0;
+  KEYALGORITHM_DSA = 1;
+  KEYALGORITHM_EC = 2;
+}
+
+enum AccountOrigin{
+  ACCOUNTORIGIN_UNSPECIFIED = 0;
+  ACCOUNTORIGIN_BISQ1_IMPORTED = 1;
+  ACCOUNTORIGIN_BISQ2_NEW = 2;
+}
+
 message Account {
   sint64 creationDate = 1;
   string accountName = 2;
@@ -353,7 +364,8 @@ message Account {
   PaymentMethod paymentMethod = 4;
   string id = 5;
   security.KeyPair keyPair = 6;
-  string keyAlgorithm = 7;
+  KeyAlgorithm keyAlgorithm = 7;
+  AccountOrigin accountOrigin = 8;
 
   oneof message {
     ZelleAccount zelleAccount = 19;
@@ -498,3 +510,28 @@ message AccountStore {
   optional Account selectedAccount = 2;
 }
 
+message AccountTimestamp {
+  bytes hash = 1;
+  uint64 date = 2;
+}
+
+enum TimestampType {
+  TIMESTAMPTYPE_UNSPECIFIED = 0;
+  TIMESTAMPTYPE_BISQ1_IMPORTED = 1;
+  TIMESTAMPTYPE_BISQ2_NEW = 2;
+}
+
+message AuthorizeAccountTimestampRequest {
+  TimestampType timestampType = 1;
+  AccountTimestamp accountTimestamp = 2;
+  bytes saltedFingerprint = 3;
+  bytes publicKey = 4;
+  bytes signature = 5;
+  KeyAlgorithm keyAlgorithm = 6;
+}
+
+message AuthorizedAccountTimestamp {
+  AccountTimestamp accountTimestamp = 1;
+  bool staticPublicKeysProvided = 2;
+  uint32 version = 3;
+}

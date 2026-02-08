@@ -28,9 +28,10 @@ import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.security.keys.KeyGeneration;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,32 +54,23 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final String accountName;
     protected final P accountPayload;
     protected final KeyPair keyPair; // account specific key pair used for account age verification for proof of ownership
-    protected final String keyAlgorithm; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
-
-    public Account(String id,
-                   long creationDate,
-                   String accountName,
-                   P accountPayload) {
-        this(id,
-                creationDate,
-                accountName,
-                accountPayload,
-                KeyGeneration.generateDefaultEcKeyPair(),
-                KeyGeneration.EC);
-    }
+    protected final KeyAlgorithm keyAlgorithm; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
+    protected final AccountOrigin accountOrigin;
 
     public Account(String id,
                    long creationDate,
                    String accountName,
                    P accountPayload,
                    KeyPair keyPair,
-                   String keyAlgorithm) {
+                   KeyAlgorithm keyAlgorithm,
+                   AccountOrigin accountOrigin) {
         this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
         this.keyPair = keyPair;
         this.keyAlgorithm = keyAlgorithm;
+        this.accountOrigin = accountOrigin;
     }
 
     @Override
@@ -93,7 +85,8 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setAccountName(accountName)
                 .setAccountPayload(accountPayload.toProto(serializeForHash))
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
-                .setKeyAlgorithm(keyAlgorithm);
+                .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
+                .setAccountOrigin(accountOrigin.toProtoEnum());
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
@@ -119,5 +112,15 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     public List<String> getSupportedCurrencyCodes() {
         return getPaymentMethod().getSupportedCurrencyCodes();
+    }
+
+    public String getSignatureAlgorithm() {
+        return getSignatureAlgorithm(keyAlgorithm);
+    }
+
+    public static String getSignatureAlgorithm(KeyAlgorithm keyAlgorithm) {
+        return keyAlgorithm == KeyAlgorithm.EC
+                ? SignatureUtil.SHA256withECDSA
+                : SignatureUtil.SHA256withDSA;
     }
 }

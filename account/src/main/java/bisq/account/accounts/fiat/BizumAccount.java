@@ -17,19 +17,30 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.protobuf.Account;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload> {
-    public BizumAccount(String id, long creationDate, String accountName, BizumAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public BizumAccount(String id,
+                        long creationDate,
+                        String accountName,
+                        BizumAccountPayload accountPayload,
+                        KeyPair keyPair,
+                        KeyAlgorithm keyAlgorithm,
+                        AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -47,9 +58,14 @@ public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload>
     }
 
     public static BizumAccount fromProto(Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new BizumAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                BizumAccountPayload.fromProto(proto.getAccountPayload()));
+                BizumAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

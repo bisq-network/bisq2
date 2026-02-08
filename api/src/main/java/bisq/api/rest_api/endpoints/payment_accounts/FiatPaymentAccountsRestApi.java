@@ -114,7 +114,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
     @Path("/selected")
     public Response getSelectedPaymentAccount() {
         try {
-            Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount = accountService.getSelectedAccount();
+            Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount = accountService.findSelectedAccount();
             if (selectedAccount.isEmpty() || !isFiatAccount(selectedAccount.get())) {
                 return buildNoContentResponse();
             }

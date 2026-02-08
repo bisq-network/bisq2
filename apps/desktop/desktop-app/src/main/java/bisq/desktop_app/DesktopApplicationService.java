@@ -140,8 +140,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 getPersistenceService(),
                 networkService);
 
-        accountService = new AccountService(persistenceService);
-
         contractService = new ContractService(securityService);
 
         userService = new UserService(persistenceService,
@@ -149,6 +147,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 identityService,
                 networkService,
                 bondedRolesService);
+
+        accountService = new AccountService(persistenceService, networkService, userService, bondedRolesService);
 
         settingsService = new SettingsService(persistenceService);
 
@@ -290,9 +290,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     return identityService.initialize();
                 })
                 .thenCompose(result -> bondedRolesService.initialize())
-                .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> offerService.initialize())
@@ -353,9 +353,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> burningmanService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> accountService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> accountService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))

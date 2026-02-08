@@ -17,16 +17,27 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
-    public SameBankAccount(String id, long creationDate, String accountName, SameBankAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public SameBankAccount(String id,
+                           long creationDate,
+                           String accountName,
+                           SameBankAccountPayload accountPayload,
+                           KeyPair keyPair,
+                           KeyAlgorithm keyAlgorithm,
+                           AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -44,9 +55,14 @@ public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
     }
 
     public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new SameBankAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                SameBankAccountPayload.fromProto(proto.getAccountPayload()));
+                SameBankAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

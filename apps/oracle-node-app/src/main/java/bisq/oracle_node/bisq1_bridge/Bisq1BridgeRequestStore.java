@@ -19,9 +19,11 @@ package bisq.oracle_node.bisq1_bridge;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.data.ByteArray;
 import bisq.persistence.PersistableStore;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -45,11 +47,15 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
     private final Set<AuthorizeAccountAgeRequest> accountAgeRequests = new CopyOnWriteArraySet<>();
     @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeSignedWitnessRequest> signedWitnessRequests = new CopyOnWriteArraySet<>();
+    @Getter(AccessLevel.PACKAGE)
+    private final Set<ByteArray> accountTimestampHashes = new CopyOnWriteArraySet<>();
 
     private Bisq1BridgeRequestStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests,
-                                    Set<AuthorizeSignedWitnessRequest> signedWitnessRequests) {
+                                    Set<AuthorizeSignedWitnessRequest> signedWitnessRequests,
+                                    Set<ByteArray> accountTimestampHashes) {
         this.accountAgeRequests.addAll(accountAgeRequests);
         this.signedWitnessRequests.addAll(signedWitnessRequests);
+        this.accountTimestampHashes.addAll(accountTimestampHashes);
     }
 
     @Override
@@ -60,6 +66,10 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
                         .collect(Collectors.toList()))
                 .addAllSignedWitnessRequests(signedWitnessRequests.stream()
                         .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllAccountTimestampHashes(accountTimestampHashes.stream()
+                        .map(ByteArray::getBytes)
+                        .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
     }
 
@@ -75,6 +85,10 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
                         .collect(Collectors.toSet()),
                 proto.getSignedWitnessRequestsList().stream()
                         .map(AuthorizeSignedWitnessRequest::fromProto)
+                        .collect(Collectors.toSet()),
+                proto.getAccountTimestampHashesList().stream()
+                        .map(ByteString::toByteArray)
+                        .map(ByteArray::new)
                         .collect(Collectors.toSet()));
     }
 
@@ -91,7 +105,9 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
 
     @Override
     public Bisq1BridgeRequestStore getClone() {
-        return new Bisq1BridgeRequestStore(Set.copyOf(accountAgeRequests), Set.copyOf(signedWitnessRequests));
+        return new Bisq1BridgeRequestStore(Set.copyOf(accountAgeRequests),
+                Set.copyOf(signedWitnessRequests),
+                Set.copyOf(accountTimestampHashes));
     }
 
     @Override
@@ -100,5 +116,7 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
         accountAgeRequests.addAll(persisted.getAccountAgeRequests());
         signedWitnessRequests.clear();
         signedWitnessRequests.addAll(persisted.getSignedWitnessRequests());
+        accountTimestampHashes.clear();
+        accountTimestampHashes.addAll(persisted.getAccountTimestampHashes());
     }
 }

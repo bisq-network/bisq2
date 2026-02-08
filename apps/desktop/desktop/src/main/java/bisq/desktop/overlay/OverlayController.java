@@ -42,9 +42,9 @@ import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountA
 import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
-import bisq.desktop.main.content.user.crypto_accounts.create.CreateCryptoAssetAccountController;
-import bisq.desktop.main.content.user.fiat_accounts.create.CreatePaymentAccountController;
-import bisq.desktop.main.content.user.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.CreateCryptoAssetAccountController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.CreatePaymentAccountController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.SetupWalletWizardController;

@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc;
 
 import bisq.bridge.protobuf.AccountAgeWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.AccountTimestampGrpcServiceGrpc;
 import bisq.bridge.protobuf.BondedRoleGrpcServiceGrpc;
 import bisq.bridge.protobuf.BsqBlockGrpcServiceGrpc;
 import bisq.bridge.protobuf.BurningmanGrpcServiceGrpc;
@@ -48,6 +49,8 @@ public class GrpcClient implements Service {
     private BurningmanGrpcServiceGrpc.BurningmanGrpcServiceBlockingStub burningmanBlockingStub;
     @Getter
     private AccountAgeWitnessGrpcServiceGrpc.AccountAgeWitnessGrpcServiceBlockingStub accountAgeWitnessBlockingStub;
+    @Getter
+    private AccountTimestampGrpcServiceGrpc.AccountTimestampGrpcServiceBlockingStub accountTimestampBlockingStub;
     @Getter
     private SignedWitnessGrpcServiceGrpc.SignedWitnessGrpcServiceBlockingStub signedWitnessBlockingStub;
     @Getter
@@ -81,6 +84,7 @@ public class GrpcClient implements Service {
             burningmanStub = BurningmanGrpcServiceGrpc.newStub(managedChannel);
             burningmanBlockingStub = BurningmanGrpcServiceGrpc.newBlockingStub(managedChannel);
             accountAgeWitnessBlockingStub = AccountAgeWitnessGrpcServiceGrpc.newBlockingStub(managedChannel);
+            accountTimestampBlockingStub = AccountTimestampGrpcServiceGrpc.newBlockingStub(managedChannel);
             signedWitnessBlockingStub = SignedWitnessGrpcServiceGrpc.newBlockingStub(managedChannel);
             bondedRoleBlockingStub = BondedRoleGrpcServiceGrpc.newBlockingStub(managedChannel);
         } catch (Exception e) {
@@ -118,6 +122,7 @@ public class GrpcClient implements Service {
         burningmanStub = null;
         burningmanBlockingStub = null;
         accountAgeWitnessBlockingStub = null;
+        accountTimestampBlockingStub = null;
         signedWitnessBlockingStub = null;
         bondedRoleBlockingStub = null;
     }

@@ -17,18 +17,29 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
-    public PixAccount(String id, long creationDate, String accountName, PixAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public PixAccount(String id,
+                      long creationDate,
+                      String accountName,
+                      PixAccountPayload accountPayload,
+                      KeyPair keyPair,
+                      KeyAlgorithm keyAlgorithm,
+                      AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -46,9 +57,14 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
     }
 
     public static PixAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new PixAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PixAccountPayload.fromProto(proto.getAccountPayload()));
+                PixAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

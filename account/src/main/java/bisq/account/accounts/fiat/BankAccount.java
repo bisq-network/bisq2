@@ -17,12 +17,22 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.protobuf.Account;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
+import java.security.KeyPair;
+
 public abstract class BankAccount<P extends BankAccountPayload> extends CountryBasedAccount<P> {
-    public BankAccount(String id, long creationDate, String accountName, P accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public BankAccount(String id,
+                       long creationDate,
+                       String accountName,
+                       P accountPayload,
+                       KeyPair keyPair,
+                       KeyAlgorithm keyAlgorithm,
+                       AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {

@@ -18,12 +18,16 @@
 package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
@@ -33,8 +37,11 @@ public abstract class CryptoAssetAccount<P extends CryptoAssetAccountPayload> ex
     public CryptoAssetAccount(String id,
                               long creationDate,
                               String accountName,
-                              P accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+                              P accountPayload,
+                              KeyPair keyPair,
+                              KeyAlgorithm keyAlgorithm,
+                              AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
 
