@@ -29,7 +29,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class FiatAccountDetails<A extends Account<?, ?>> extends AccountDetails<A, FiatPaymentRail> {
+public abstract class FiatAccountDetails<A extends Account<?, ?>> extends FiatBaseAccountDetails<A, FiatPaymentRail> {
     public FiatAccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(account, accountTimestampService);
     }

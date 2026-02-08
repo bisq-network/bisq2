@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.crypto_accounts.details;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.timestamp.AccountTimestampService;
 
-public class OtherCryptoAssetAccountDetails extends AccountDetails<OtherCryptoAssetAccount> {
+public class OtherCryptoAssetAccountDetails extends CryptoAccountDetails<OtherCryptoAssetAccount> {
     public OtherCryptoAssetAccountDetails(OtherCryptoAssetAccount account, AccountTimestampService accountTimestampService) {
         super(account, accountTimestampService);
     }

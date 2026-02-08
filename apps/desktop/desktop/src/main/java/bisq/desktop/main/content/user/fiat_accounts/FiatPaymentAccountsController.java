@@ -45,7 +45,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.user.fiat_accounts.details.AccountDetails;
+import bisq.desktop.main.content.user.fiat_accounts.details.FiatBaseAccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.F2FAccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.FasterPaymentsAccountDetails;
 import bisq.desktop.main.content.user.fiat_accounts.details.NationalBankAccountDetails;
@@ -139,7 +139,7 @@ public class FiatPaymentAccountsController implements Controller {
                     if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
                         disposeUserDefinedAccountDetailsPin();
                         if (UserDefinedAccountDetails.USE_LEGACY_DESIGN && selectedAccount instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
-                            AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
+                            FiatBaseAccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
                             if (accountDetails instanceof UserDefinedAccountDetails userDefinedAccountDetails) {
                                 ReadOnlyStringProperty textAreaTextProperty = userDefinedAccountDetails.getTextAreaTextProperty();
                                 if (textAreaTextProperty != null) {
@@ -186,7 +186,7 @@ public class FiatPaymentAccountsController implements Controller {
     void onSaveAccount() {
         var selectedAccount = model.getSelectedAccount().get();
         if (selectedAccount instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
-            AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
+            FiatBaseAccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
             if (accountDetails instanceof UserDefinedAccountDetails userDefinedAccountDetails) {
                 ReadOnlyStringProperty textAreaTextProperty = userDefinedAccountDetails.getTextAreaTextProperty();
                 String accountData = textAreaTextProperty != null ? textAreaTextProperty.get() : null;
@@ -258,13 +258,13 @@ public class FiatPaymentAccountsController implements Controller {
 
         AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetails<?, ?> accountDetails = getAccountDetails(account, fiatPaymentRail);
+            FiatBaseAccountDetails<?, ?> accountDetails = getAccountDetails(account, fiatPaymentRail);
             model.getAccountDetails().set(accountDetails);
         }
     }
 
-    private AccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
-                                                   FiatPaymentRail fiatPaymentRail) {
+    private FiatBaseAccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
+                                                           FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account, accountTimestampService);
             case SEPA -> new SepaAccountDetails((SepaAccount) account, accountTimestampService);

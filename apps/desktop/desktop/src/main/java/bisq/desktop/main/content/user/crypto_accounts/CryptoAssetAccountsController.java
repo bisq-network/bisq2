@@ -30,7 +30,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.main.content.user.crypto_accounts.details.AccountDetails;
+import bisq.desktop.main.content.user.crypto_accounts.details.CryptoAccountDetails;
 import bisq.desktop.main.content.user.crypto_accounts.details.MoneroAccountDetails;
 import bisq.desktop.main.content.user.crypto_accounts.details.OtherCryptoAssetAccountDetails;
 import bisq.desktop.navigation.NavigationTarget;
@@ -149,7 +149,7 @@ public class CryptoAssetAccountsController implements Controller {
         model.getDeleteButtonDisabled().set(model.getSelectedAccount().get() == null);
     }
 
-    private AccountDetails<?> getAccountDetails(Account<?, ?> cryptoAssetAccount) {
+    private CryptoAccountDetails<?> getAccountDetails(Account<?, ?> cryptoAssetAccount) {
         if (cryptoAssetAccount instanceof MoneroAccount moneroAccount) {
             return new MoneroAccountDetails(moneroAccount, accountTimestampService);
         } else if (cryptoAssetAccount instanceof OtherCryptoAssetAccount otherCryptoAssetAccount) {

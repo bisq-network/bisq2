@@ -15,22 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.fiat_accounts.details;
+package bisq.desktop.main.content.user.crypto_accounts.details;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.MultiCurrencyAccountPayload;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
-import bisq.account.accounts.SingleCurrencyAccountPayload;
-import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.timestamp.AccountTimestampService;
-import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;
+import bisq.common.monetary.Coin;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -45,7 +44,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentRail> extends VBox {
+public abstract class CryptoAccountDetails<A extends CryptoAssetAccount<?>> extends VBox {
     protected static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
     protected static final String VALUE_STYLE = "trade-wizard-review-value";
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
@@ -54,40 +53,22 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     protected static final double HEIGHT = 61;
 
     protected final GridPane gridPane;
-    protected final A account;
-    private final AccountTimestampService accountTimestampService;
     protected int rowIndex = 0;
+    protected Label addressDescriptionLabel;
+    protected final AccountTimestampService accountTimestampService;
 
-    public AccountDetails(A account, AccountTimestampService accountTimestampService) {
+    public CryptoAccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(10);
-        this.account = account;
         this.accountTimestampService = accountTimestampService;
 
-        gridPane = createGridPane();
-        setupRoot();
-
-        addHeader();
-
-        addDetailsHeadline();
-        addDetails();
-
-        addRestrictionsHeadline();
-        addRestrictions();
-    }
-
-    protected GridPane createGridPane() {
-        GridPane gridPane = new GridPane(10, 10);
-        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
-        return gridPane;
-    }
-
-    protected void setupRoot() {
         setPadding(new Insets(20));
         getStyleClass().add("bisq-content-bg");
-        getChildren().add(gridPane);
-    }
 
-    protected void addDetailsHeadline() {
+        gridPane = new GridPane(10, 10);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
+
+        addHeader(account);
+
         Label detailsHeadline = new Label(Res.get("paymentAccounts.accountDetails").toUpperCase());
         detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
         gridPane.add(detailsHeadline, 0, ++rowIndex, 3, 1);
@@ -95,9 +76,60 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
         Region detailsLine = getLine();
         GridPane.setMargin(detailsLine, new Insets(-10, 0, -5, 0));
         gridPane.add(detailsLine, 0, ++rowIndex, 3, 1);
+
+        addDetails(account);
+
+        Label limitsHeadline = new Label(Res.get("paymentAccounts.restrictions").toUpperCase());
+        limitsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        GridPane.setMargin(limitsHeadline, new Insets(20, 0, 0, 0));
+        gridPane.add(limitsHeadline, 0, ++rowIndex, 3, 1);
+        Region limitsLine = getLine();
+        GridPane.setMargin(limitsLine, new Insets(-10, 0, -5, 0));
+        gridPane.add(limitsLine, 0, ++rowIndex, 3, 1);
+
+        addRestrictions(account);
+
+        getChildren().add(gridPane);
     }
 
-    protected void addDetails() {
+    protected void addDetails(A account) {
+        CryptoAssetAccountPayload accountPayload = account.getAccountPayload();
+        String address = accountPayload.getAddress();
+        addressDescriptionLabel = addDescriptionLabel(Res.get("paymentAccounts.crypto.address.address"));
+        addValueLabel(address);
+        if (address.length() > 70) {
+            addressDescriptionLabel.setTooltip(new BisqTooltip(address));
+        }
+        String isInstant = BooleanFormatter.toEnabledDisabled(accountPayload.isInstant());
+        addDescriptionAndValue(Res.get("paymentAccounts.crypto.isInstant"), isInstant);
+
+        if (accountPayload.getIsAutoConf().isPresent()) {
+            Label autoConfHeadline = new Label(Res.get("paymentAccounts.crypto.address.autoConf").toUpperCase());
+            autoConfHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+            GridPane.setMargin(autoConfHeadline, new Insets(20, 0, 0, 0));
+            gridPane.add(autoConfHeadline, 0, ++rowIndex, 3, 1);
+            Region autoConfLine = getLine();
+            GridPane.setMargin(autoConfLine, new Insets(-10, 0, -5, 0));
+            gridPane.add(autoConfLine, 0, ++rowIndex, 3, 1);
+
+            Boolean isAutoConf = accountPayload.getIsAutoConf().get();
+            String autoConfString = BooleanFormatter.toEnabledDisabled(isAutoConf);
+            addDescriptionAndValue(Res.get("state.enabled"), autoConfString);
+            if (isAutoConf) {
+                String autoConfNumConfirmations = String.valueOf(accountPayload.getAutoConfNumConfirmations().orElseThrow());
+                addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.autoConf.numConfirmations"), autoConfNumConfirmations);
+
+                String autoConfMaxTradeAmount = AmountFormatter.formatAmountWithCode(Coin.fromValue(accountPayload.getAutoConfMaxTradeAmount().orElseThrow(), "BTC"), true);
+                addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.autoConf.maxTradeAmount"), autoConfMaxTradeAmount);
+
+                String autoConfExplorerUrls = accountPayload.getAutoConfExplorerUrls().orElseThrow();
+                Label autoConfExplorerUrlsLabel = addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.autoConf.explorerUrls"), autoConfExplorerUrls);
+                if (autoConfExplorerUrls.length() > 70) {
+                    autoConfExplorerUrlsLabel.setTooltip(new BisqTooltip(autoConfExplorerUrls));
+                }
+            }
+        }
+
         accountTimestampService.findAccountTimestamp(account)
                 .ifPresent(date -> {
                     String accountAge = TimeFormatter.formatAgeInDays(date);
@@ -105,52 +137,19 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
                 });
     }
 
-    protected void addRestrictionsHeadline() {
-        Label restrictionsHeadline = new Label(Res.get("paymentAccounts.restrictions").toUpperCase());
-        restrictionsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
-        GridPane.setMargin(restrictionsHeadline, new Insets(20, 0, 0, 0));
-        gridPane.add(restrictionsHeadline, 0, ++rowIndex, 3, 1);
-
-        Region restrictionsLine = getLine();
-        GridPane.setMargin(restrictionsLine, new Insets(-10, 0, -5, 0));
-        gridPane.add(restrictionsLine, 0, ++rowIndex, 3, 1);
-    }
-
-    protected void addRestrictions() {
+    protected void addRestrictions(A account) {
         addDescriptionAndValue(Res.get("paymentAccounts.tradeLimit"),
                 account.getPaymentMethod().getPaymentRail().getTradeLimit());
         addDescriptionAndValue(Res.get("paymentAccounts.tradeDuration"),
                 account.getPaymentMethod().getPaymentRail().getTradeDuration());
     }
 
-    protected void addHeader() {
-        if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.paymentMethod"),
-                    account.getPaymentMethod().getDisplayString());
-            gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
-
-            addCurrencyDisplay();
-        }
-    }
-
-    protected void addCurrencyDisplay() {
+    protected void addHeader(A account) {
         AccountPayload<?> accountPayload = account.getAccountPayload();
-        String currencyString = switch (accountPayload) {
-            case MultiCurrencyAccountPayload multiCurrencyAccountPayload ->
-                    FiatCurrencyRepository.getCodeAndDisplayNames(multiCurrencyAccountPayload.getSelectedCurrencyCodes());
-            case SelectableCurrencyAccountPayload selectableCurrencyAccountPayload ->
-                    FiatCurrencyRepository.getCodeAndDisplayName(selectableCurrencyAccountPayload.getSelectedCurrencyCode());
-            case SingleCurrencyAccountPayload singleCurrencyAccountPayload ->
-                    FiatCurrencyRepository.getCodeAndDisplayName(singleCurrencyAccountPayload.getCurrencyCode());
-            case null, default -> {
-                String type = accountPayload != null ? accountPayload.getClass().getSimpleName() : "null";
-                throw new UnsupportedOperationException("accountPayload of unexpected type: " + type);
-            }
-        };
 
         Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.currency"),
-                currencyString);
-        gridPane.add(currencyTriple.getThird(), 1, rowIndex);
+                account.getPaymentMethod().getDisplayString());
+        gridPane.add(currencyTriple.getThird(), 0, rowIndex);
     }
 
     protected Label addDescriptionAndValue(String description, String value) {

@@ -28,7 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 
-public class MoneroAccountDetails extends AccountDetails<MoneroAccount> {
+public class MoneroAccountDetails extends CryptoAccountDetails<MoneroAccount> {
     public MoneroAccountDetails(MoneroAccount account, AccountTimestampService accountTimestampService) {
         super(account, accountTimestampService);
     }

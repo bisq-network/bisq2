@@ -32,7 +32,7 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-public class UserDefinedAccountDetails extends AccountDetails<UserDefinedFiatAccount, FiatPaymentRail> {
+public class UserDefinedAccountDetails extends FiatBaseAccountDetails<UserDefinedFiatAccount, FiatPaymentRail> {
     // If true we use the design from 2.1.7 and the option to save the data
     public final static boolean USE_LEGACY_DESIGN = true;
     @Getter
