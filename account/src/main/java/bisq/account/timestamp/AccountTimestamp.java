@@ -99,8 +99,7 @@ public final class AccountTimestamp implements DistributedData {
     public String toString() {
         return "AccountTimestamp{" +
                 "hash=" + Hex.encode(hash) +
-                ", date=" + date +
-                " / " + new Date(date) +
+                ", date=" + date + " / " + new Date(date) +
                 '}';
     }
 }

@@ -97,6 +97,7 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
         return CountryRepository.getCountry(countryCode);
     }
 
+    @Override
     protected byte[] getFingerprint(byte[] data) {
         return super.getFingerprint(ByteArrayUtils.concat(countryCode.getBytes(StandardCharsets.UTF_8), data));
     }
