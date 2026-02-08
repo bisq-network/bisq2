@@ -43,20 +43,20 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String email;
-
-    //TODO used depending on country
-    private final String state = "";
+    private final String state;
 
     public MoneyGramAccountPayload(String id,
                                    String countryCode,
                                    List<String> selectedCurrencyCodes,
                                    String holderName,
-                                   String email
+                                   String email,
+                                   String state
     ) {
         super(id, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
+        this.state = state;
 
         verify();
     }
@@ -83,7 +83,8 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
         return bisq.account.protobuf.MoneyGramAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setHolderName(holderName)
-                .setEmail(email);
+                .setEmail(email)
+                .setState(state);
     }
 
     public static MoneyGramAccountPayload fromProto(AccountPayload proto) {
@@ -95,7 +96,8 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
-                payload.getEmail()
+                payload.getEmail(),
+                payload.getState()
         );
     }
 
