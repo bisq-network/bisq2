@@ -32,6 +32,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Pin;
@@ -75,6 +76,7 @@ public class FiatPaymentAccountsController implements Controller {
     private final FiatPaymentAccountsView view;
     private final AccountService accountService;
     private final MuSigService muSigService;
+    private final AccountTimestampService accountTimestampService;
     private Subscription selectedAccountSubscription;
     private Pin accountsPin, selectedAccountPin;
     @Nullable
@@ -83,6 +85,7 @@ public class FiatPaymentAccountsController implements Controller {
     public FiatPaymentAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
         muSigService = serviceProvider.getMuSigService();
+        accountTimestampService = serviceProvider.getAccountService().getAccountTimestampService();
 
         model = new FiatPaymentAccountsModel();
         view = new FiatPaymentAccountsView(model, this);
@@ -263,23 +266,23 @@ public class FiatPaymentAccountsController implements Controller {
     private AccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
                                                    FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account);
-            case SEPA -> new SepaAccountDetails((SepaAccount) account);
+            case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account, accountTimestampService);
+            case SEPA -> new SepaAccountDetails((SepaAccount) account, accountTimestampService);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case ZELLE -> new ZelleAccountDetails((ZelleAccount) account);
-            case REVOLUT -> new RevolutAccountDetails((RevolutAccount) account);
+            case ZELLE -> new ZelleAccountDetails((ZelleAccount) account, accountTimestampService);
+            case REVOLUT -> new RevolutAccountDetails((RevolutAccount) account, accountTimestampService);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case NATIONAL_BANK -> new NationalBankAccountDetails((NationalBankAccount) account);
+            case NATIONAL_BANK -> new NationalBankAccountDetails((NationalBankAccount) account, accountTimestampService);
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case F2F -> new F2FAccountDetails((F2FAccount) account);
+            case F2F -> new F2FAccountDetails((F2FAccount) account, accountTimestampService);
             case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIX -> new PixAccountDetails((PixAccount) account);
+            case PIX -> new PixAccountDetails((PixAccount) account, accountTimestampService);
             case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case FASTER_PAYMENTS -> new FasterPaymentsAccountDetails((FasterPaymentsAccount) account);
+            case FASTER_PAYMENTS -> new FasterPaymentsAccountDetails((FasterPaymentsAccount) account, accountTimestampService);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

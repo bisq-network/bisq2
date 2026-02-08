@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.CountryBasedAccount;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.data.Triple;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
@@ -29,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class FiatAccountDetails<A extends Account<?, ?>> extends AccountDetails<A, FiatPaymentRail> {
-    public FiatAccountDetails(A account) {
-        super(account);
+    public FiatAccountDetails(A account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.crypto_accounts.details;
 
 import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.BooleanFormatter;
@@ -28,8 +29,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 
 public class MoneroAccountDetails extends AccountDetails<MoneroAccount> {
-    public MoneroAccountDetails(MoneroAccount account) {
-        super(account);
+    public MoneroAccountDetails(MoneroAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override

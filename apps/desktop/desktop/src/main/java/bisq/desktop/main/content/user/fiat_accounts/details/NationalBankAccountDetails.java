@@ -20,11 +20,12 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 import bisq.account.accounts.fiat.BankAccountUtils;
 import bisq.account.accounts.fiat.NationalBankAccount;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.i18n.Res;
 
 public class NationalBankAccountDetails extends FiatAccountDetails<NationalBankAccount> {
-    public NationalBankAccountDetails(NationalBankAccount account) {
-        super(account);
+    public NationalBankAccountDetails(NationalBankAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -40,5 +41,7 @@ public class NationalBankAccountDetails extends FiatAccountDetails<NationalBankA
         addDescriptionAndValueWithCopyButton(BankAccountUtils.getAccountNrDescription(countryCode), accountPayload.getAccountNr());
         accountPayload.getNationalAccountId().ifPresent(value -> addDescriptionAndValueWithCopyButton(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
         accountPayload.getBankAccountType().ifPresent(value -> addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.bank.bankAccountType"), value.toString()));
+
+        super.addDetails();
     }
 }

@@ -19,11 +19,12 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.i18n.Res;
 
 public class ZelleAccountDetails extends FiatAccountDetails<ZelleAccount> {
-    public ZelleAccountDetails(ZelleAccount account) {
-        super(account);
+    public ZelleAccountDetails(ZelleAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -35,5 +36,7 @@ public class ZelleAccountDetails extends FiatAccountDetails<ZelleAccount> {
 
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.emailOrMobileNr"),
                 accountPayload.getEmailOrMobileNr());
+
+        super.addDetails();
     }
 }

@@ -19,11 +19,12 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.i18n.Res;
 
 public class FasterPaymentsAccountDetails extends FiatAccountDetails<FasterPaymentsAccount> {
-    public FasterPaymentsAccountDetails(FasterPaymentsAccount account) {
-        super(account);
+    public FasterPaymentsAccountDetails(FasterPaymentsAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -35,5 +36,7 @@ public class FasterPaymentsAccountDetails extends FiatAccountDetails<FasterPayme
                 accountPayload.getSortCode());
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.accountNr"),
                 accountPayload.getAccountNr());
+
+        super.addDetails();
     }
 }

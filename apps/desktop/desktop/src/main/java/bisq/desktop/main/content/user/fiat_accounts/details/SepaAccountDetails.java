@@ -20,19 +20,21 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.locale.CountryRepository;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class SepaAccountDetails extends FiatAccountDetails<SepaAccount> {
-    public SepaAccountDetails(SepaAccount account) {
-        super(account);
+    public SepaAccountDetails(SepaAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -63,5 +65,7 @@ public class SepaAccountDetails extends FiatAccountDetails<SepaAccount> {
         if (matchAllCountries || acceptedCountries.length() > 70) {
             acceptCountriesLabel.setTooltip(new BisqTooltip(acceptedCountries));
         }
+
+        super.addDetails();
     }
 }

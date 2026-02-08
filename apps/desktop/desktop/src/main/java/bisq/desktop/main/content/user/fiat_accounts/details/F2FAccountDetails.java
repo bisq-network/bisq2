@@ -19,11 +19,12 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.F2FAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.i18n.Res;
 
 public class F2FAccountDetails extends FiatAccountDetails<F2FAccount> {
-    public F2FAccountDetails(F2FAccount account) {
-        super(account);
+    public F2FAccountDetails(F2FAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -37,5 +38,7 @@ public class F2FAccountDetails extends FiatAccountDetails<F2FAccount> {
 
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.f2f.extraInfo"),
                 accountPayload.getExtraInfo());
+
+        super.addDetails();
     }
 }

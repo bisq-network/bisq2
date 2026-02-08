@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
@@ -29,8 +30,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RevolutAccountDetails extends FiatAccountDetails<RevolutAccount> {
-    public RevolutAccountDetails(RevolutAccount account) {
-        super(account);
+    public RevolutAccountDetails(RevolutAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -60,5 +61,7 @@ public class RevolutAccountDetails extends FiatAccountDetails<RevolutAccount> {
         if (matchAllCurrencies || selectedCurrencies.length() > 70) {
             selectedCurrenciesLabel.setTooltip(new BisqTooltip(selectedCurrencies));
         }
+
+        super.addDetails();
     }
 }

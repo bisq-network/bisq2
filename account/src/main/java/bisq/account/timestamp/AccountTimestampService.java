@@ -28,6 +28,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -37,13 +38,13 @@ import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -55,7 +56,6 @@ public class AccountTimestampService implements Service, DataService.Listener {
     private final UserIdentityService userIdentityService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
-    @Getter
     private final ObservableHashMap<ByteArray, AccountTimestamp> accountTimestampByHash = new ObservableHashMap<>();
 
     public AccountTimestampService(NetworkService networkService,
@@ -153,6 +153,16 @@ public class AccountTimestampService implements Service, DataService.Listener {
             log.warn("verifyAccountTimestamp failed", e);
             return Result.failure(e);
         }
+    }
+
+    public ReadOnlyObservableMap<ByteArray, AccountTimestamp> getAccountTimestampByHash() {
+        return accountTimestampByHash;
+    }
+
+    public Optional<Long> findAccountTimestamp(Account<?, ?> account) {
+        byte[] hash = createHash(account);
+        AccountTimestamp accountTimestamp = accountTimestampByHash.get(new ByteArray(hash));
+        return Optional.ofNullable(accountTimestamp).map(AccountTimestamp::getDate);
     }
 
 

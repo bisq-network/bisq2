@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.crypto_accounts.details;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -29,6 +30,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.BooleanFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -53,9 +55,11 @@ public abstract class AccountDetails<A extends CryptoAssetAccount<?>> extends VB
     protected final GridPane gridPane;
     protected int rowIndex = 0;
     protected Label addressDescriptionLabel;
+    protected final AccountTimestampService accountTimestampService;
 
-    public AccountDetails(A account) {
+    public AccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(10);
+        this.accountTimestampService = accountTimestampService;
 
         setPadding(new Insets(20));
         getStyleClass().add("bisq-content-bg");
@@ -125,6 +129,12 @@ public abstract class AccountDetails<A extends CryptoAssetAccount<?>> extends VB
                 }
             }
         }
+
+        accountTimestampService.findAccountTimestamp(account)
+                .ifPresent(date -> {
+                    String accountAge = TimeFormatter.formatAgeInDays(date);
+                    addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), accountAge);
+                });
     }
 
     protected void addRestrictions(A account) {

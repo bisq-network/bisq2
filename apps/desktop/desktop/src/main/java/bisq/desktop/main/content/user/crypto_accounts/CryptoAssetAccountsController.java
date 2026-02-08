@@ -23,6 +23,7 @@ import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
@@ -49,12 +50,14 @@ public class CryptoAssetAccountsController implements Controller {
     private final CryptoAssetAccountsView view;
     private final AccountService accountService;
     private final MuSigService muSigService;
+    private final AccountTimestampService accountTimestampService;
     private Subscription selectedAccountPin;
     private Pin accountsPin;
 
     public CryptoAssetAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
         muSigService = serviceProvider.getMuSigService();
+        accountTimestampService = accountService.getAccountTimestampService();
 
         model = new CryptoAssetAccountsModel();
         view = new CryptoAssetAccountsView(model, this);
@@ -148,9 +151,9 @@ public class CryptoAssetAccountsController implements Controller {
 
     private AccountDetails<?> getAccountDetails(Account<?, ?> cryptoAssetAccount) {
         if (cryptoAssetAccount instanceof MoneroAccount moneroAccount) {
-            return new MoneroAccountDetails(moneroAccount);
+            return new MoneroAccountDetails(moneroAccount, accountTimestampService);
         } else if (cryptoAssetAccount instanceof OtherCryptoAssetAccount otherCryptoAssetAccount) {
-            return new OtherCryptoAssetAccountDetails(otherCryptoAssetAccount);
+            return new OtherCryptoAssetAccountDetails(otherCryptoAssetAccount, accountTimestampService);
         } else {
             throw new UnsupportedOperationException("Unsupported cryptoAssetAccount " + cryptoAssetAccount.getClass().getSimpleName());
         }

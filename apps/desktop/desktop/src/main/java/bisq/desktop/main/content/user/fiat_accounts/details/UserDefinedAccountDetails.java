@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.i18n.Res;
@@ -38,8 +39,8 @@ public class UserDefinedAccountDetails extends AccountDetails<UserDefinedFiatAcc
     @Nullable
     private ReadOnlyStringProperty textAreaTextProperty;
 
-    public UserDefinedAccountDetails(UserDefinedFiatAccount account) {
-        super(account);
+    public UserDefinedAccountDetails(UserDefinedFiatAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
 
         if (USE_LEGACY_DESIGN) {
             String accountData = account.getAccountPayload().getAccountData();
@@ -91,6 +92,8 @@ public class UserDefinedAccountDetails extends AccountDetails<UserDefinedFiatAcc
             GridPane.setMargin(valueLabel, new Insets(0, 20, 0, 0));
             BisqMenuItem copyButton = addCopyButton(accountData);
             GridPane.setValignment(copyButton, VPos.TOP);
+
+            super.addDetails();
         }
     }
 

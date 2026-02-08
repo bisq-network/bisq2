@@ -19,11 +19,12 @@ package bisq.desktop.main.content.user.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.PixAccount;
 import bisq.account.accounts.fiat.PixAccountPayload;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.i18n.Res;
 
 public class PixAccountDetails extends FiatAccountDetails<PixAccount> {
-    public PixAccountDetails(PixAccount account) {
-        super(account);
+    public PixAccountDetails(PixAccount account, AccountTimestampService accountTimestampService) {
+        super(account, accountTimestampService);
     }
 
     @Override
@@ -35,5 +36,7 @@ public class PixAccountDetails extends FiatAccountDetails<PixAccount> {
 
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.pix.pixKey"),
                 accountPayload.getPixKey());
+
+        super.addDetails();
     }
 }

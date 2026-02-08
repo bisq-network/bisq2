@@ -24,12 +24,14 @@ import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.payment_method.PaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -53,11 +55,13 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
 
     protected final GridPane gridPane;
     protected final A account;
+    private final AccountTimestampService accountTimestampService;
     protected int rowIndex = 0;
 
-    public AccountDetails(A account) {
+    public AccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(10);
         this.account = account;
+        this.accountTimestampService = accountTimestampService;
 
         gridPane = createGridPane();
         setupRoot();
@@ -93,7 +97,13 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
         gridPane.add(detailsLine, 0, ++rowIndex, 3, 1);
     }
 
-    protected abstract void addDetails();
+    protected void addDetails() {
+        accountTimestampService.findAccountTimestamp(account)
+                .ifPresent(date -> {
+                    String accountAge = TimeFormatter.formatAgeInDays(date);
+                    addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), accountAge);
+                });
+    }
 
     protected void addRestrictionsHeadline() {
         Label restrictionsHeadline = new Label(Res.get("paymentAccounts.restrictions").toUpperCase());
