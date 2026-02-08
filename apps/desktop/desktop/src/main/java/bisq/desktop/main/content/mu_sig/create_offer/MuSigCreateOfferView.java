@@ -30,6 +30,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.animation.FadeTransition;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -136,7 +137,11 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
         closeButton.setFocusTraversable(false);
 
         model.getCurrentIndex().addListener(currentIndexListener);
+        ObjectProperty<View<? extends Parent, ? extends Model, ? extends Controller>> currentView = model.getView();
         model.getView().addListener(viewChangeListener);
+        if (currentView.get() != null) {
+            viewChangeListener.changed(currentView, null, currentView.get());
+        }
         model.getChildTargets().addListener(childTargetsListener);
 
         rebuildHeader();

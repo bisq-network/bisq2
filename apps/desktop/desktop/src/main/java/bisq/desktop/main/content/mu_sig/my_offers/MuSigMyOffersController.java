@@ -30,6 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
+import bisq.desktop.main.content.mu_sig.components.EditMode;
 import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -151,6 +152,16 @@ public class MuSigMyOffersController implements Controller {
                 : MarketRepository.getDefaultBtcFiatMarket();
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
                 new MuSigCreateOfferController.InitData(market));
+    }
+
+    void onEditOffer(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
+                new MuSigCreateOfferController.InitData(muSigOffer, EditMode.EDIT));
+    }
+
+    void onCopyOffer(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
+                new MuSigCreateOfferController.InitData(muSigOffer, EditMode.COPY));
     }
 
     void onRemoveOffer(MuSigOffer muSigOffer) {

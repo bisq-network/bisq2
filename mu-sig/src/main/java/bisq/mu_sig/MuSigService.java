@@ -239,6 +239,21 @@ public class MuSigService extends LifecycleService {
         return muSigOfferService.publishAndAddOffer(muSigOffer);
     }
 
+    public CompletableFuture<BroadcastResult> editOffer(MuSigOffer muSigOffer) throws UserProfileBannedException, RateLimitExceededException {
+        checkArgument(isActivated());
+        validateUserProfile(muSigOffer.getMakersUserProfileId());
+        Optional<MuSigOffer> storedOffer = muSigOfferService.findOffer(muSigOffer.getId());
+
+        if (storedOffer.isEmpty()) {
+            CompletableFuture<BroadcastResult> failed = new CompletableFuture<>();
+            failed.completeExceptionally((Throwable) new RuntimeException("Offer not found. OfferID=" + muSigOffer.getId()));
+            return failed;
+        }
+
+        return removeOffer(storedOffer.get())
+                .thenCompose(broadcastResult -> muSigOfferService.publishAndAddOffer(muSigOffer));
+    }
+
     public CompletableFuture<BroadcastResult> removeOffer(MuSigOffer muSigOffer) throws UserProfileBannedException, RateLimitExceededException {
         checkArgument(isActivated());
         validateUserProfile(muSigOffer.getMakersUserProfileId());

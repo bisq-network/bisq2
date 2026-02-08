@@ -93,6 +93,10 @@ public class MuSigCreateOfferPriceController implements Controller {
         return model.getPriceSpec();
     }
 
+    public void setPriceSpec(PriceSpec priceSpec) {
+        model.getPriceSpec().set(priceSpec);
+    }
+
     public void reset() {
         priceInput.reset();
         model.reset();
@@ -115,15 +119,47 @@ public class MuSigCreateOfferPriceController implements Controller {
 
     @Override
     public void onActivate() {
-        settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
-                .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
-        settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
-                .ifPresentOrElse(
-                        this::applyPriceFromCookie,
-                        () -> applyPriceSliderValue(0d)
-                );
-        if (model.getPriceSpec().get() == null) {
-            model.getPriceSpec().set(new MarketPriceSpec());
+        var prefilledSpec = model.getPriceSpec();
+        if (prefilledSpec.get() == null) {
+            settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
+                    .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
+            settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
+                    .ifPresentOrElse(
+                            this::applyPriceFromCookie,
+                            () -> applyPriceSliderValue(0d)
+                    );
+            if (model.getPriceSpec().get() == null) {
+                model.getPriceSpec().set(new MarketPriceSpec());
+            }
+        } else {
+            switch (prefilledSpec.get()) {
+                case FixPriceSpec fixPriceSpec -> {
+                    model.getUseFixPrice().set(true);
+                    priceInput.setQuote(fixPriceSpec.getPriceQuote());
+                    model.getPriceAsString().set(PriceFormatter.format(fixPriceSpec.getPriceQuote(), true));
+                    applyPercentageFromQuote(fixPriceSpec.getPriceQuote());
+                    model.setLastValidPriceQuote(fixPriceSpec.getPriceQuote());
+                }
+                case FloatPriceSpec floatPriceSpec -> {
+                    model.getUseFixPrice().set(false);
+                    double percentage = floatPriceSpec.getPercentage();
+                    model.getPercentage().set(percentage);
+                    model.getPercentageInput().set(PercentageFormatter.formatToPercent(percentage));
+                    applyPriceSliderValue(percentage);
+                    findMarketPriceQuote().ifPresent(marketPriceQuote ->
+                            priceInput.setQuote(PriceUtil.fromMarketPriceMarkup(marketPriceQuote, percentage)));
+                }
+                case MarketPriceSpec marketPriceSpec -> {
+                    model.getUseFixPrice().set(false);
+                    model.getPercentage().set(0d);
+                    model.getPercentageInput().set(PercentageFormatter.formatToPercent(0));
+                    applyPriceSliderValue(0d);
+                    findMarketPriceQuote().ifPresent(marketPriceQuote ->
+                            priceInput.setQuote(PriceUtil.fromMarketPriceMarkup(marketPriceQuote, 0)));
+                }
+                default -> {
+                }
+            }
         }
 
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
@@ -161,7 +197,9 @@ public class MuSigCreateOfferPriceController implements Controller {
 
         model.getShouldShowFeedback().set(model.getDirection().isBuy());
 
-        applyPriceSpec();
+        if (prefilledSpec.get() == null) {
+            applyPriceSpec();
+        }
     }
 
     @Override

@@ -209,6 +209,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private void doSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
         if (account != null) {
             model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
+            model.getSelectedPaymentMethods().add(paymentMethod);
             model.getPaymentMethodWithMultipleAccounts().set(null);
         }
         updateShouldShowMultipleAccountsOverlay(false);
