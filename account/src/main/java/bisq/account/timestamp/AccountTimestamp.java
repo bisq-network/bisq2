@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -27,13 +28,13 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Date;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
-@ToString
 @Getter
 @EqualsAndHashCode
 public final class AccountTimestamp implements DistributedData {
@@ -92,5 +93,14 @@ public final class AccountTimestamp implements DistributedData {
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "AccountTimestamp{" +
+                "hash=" + Hex.encode(hash) +
+                ", date=" + date +
+                " / " + new Date(date) +
+                '}';
     }
 }

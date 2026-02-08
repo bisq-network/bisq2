@@ -45,8 +45,8 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
     private final String holderName;
     private final String emailOrMobileNr;
 
-    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr, String paymentMethodId, byte[] salt) {
-        super(id, "US", paymentMethodId, salt);
+    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr, byte[] salt) {
+        super(id, "US", salt);
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
     }
@@ -88,7 +88,6 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
                 proto.getId(),
                 zelleProto.getHolderName(),
                 zelleProto.getEmailOrMobileNr(),
-                proto.getPaymentMethodId(),
                 proto.getSalt().toByteArray()
         );
     }

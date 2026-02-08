@@ -60,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -233,16 +234,33 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                     }
                     case BISQ1_IMPORTED -> {
                         if (!isRepublish) {
-                            Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(request);
+                            byte[] hash = request.getAccountTimestamp().getHash();
+                            Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(hash);
                             if (result.isFailure()) {
                                 log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
                                 return;
                             }
-                            if (request.getAccountTimestamp().getDate() != result.getOrThrow()) {
-                                log.error("Date from Bisq 1 is not matching date from request");
-                                return;
-                            }
 
+                            // The date we get from the request is the account creation date from the imported account.
+                            // The account age is the date of the account age witness object.
+                            // It is expected that there is a slight difference in those 2 dates.
+                            long dateFromBisq2AccountAge = result.getOrThrow();
+                            long accountCreationDate = request.getAccountTimestamp().getDate();
+                            long ageDiff = dateFromBisq2AccountAge - accountCreationDate;
+                            if (dateFromBisq2AccountAge > accountCreationDate) {
+                                log.warn("The account age is newer then the account creation date. " +
+                                                "This could be due out of sync clock at user who created the account. " +
+                                                "dateFromBisq2AccountAge={}; accountCreationDate={}",
+                                        new Date(dateFromBisq2AccountAge), new Date(accountCreationDate));
+                            }
+                            if (ageDiff > TimeUnit.HOURS.toMillis(1)) {
+                                log.warn("The account creation date is more then 1 hour different to the account age date. " +
+                                                "This is probably because the account was created on Bisq 1 before the " +
+                                                "account age feature was implemented or there was some unusual delay when publishing the account age. " +
+                                                "ageDiff={} sec; dateFromBisq2AccountAge={}; accountCreationDate={}",
+                                        ageDiff / 1000, new Date(dateFromBisq2AccountAge), new Date(accountCreationDate));
+                            }
+                            accountTimestamp = new AccountTimestamp(hash, dateFromBisq2AccountAge);
                             persistAccountTimestampRequest(accountTimestamp);
                         }
                         publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));

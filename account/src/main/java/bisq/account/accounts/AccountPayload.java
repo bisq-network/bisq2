@@ -39,7 +39,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -53,17 +52,15 @@ import java.util.List;
 @EqualsAndHashCode
 public abstract class AccountPayload<M extends PaymentMethod<?>> implements NetworkProto {
     protected final String id;
-    protected final String paymentMethodId;
     protected final byte[] salt; // 32 bytes
 
     public AccountPayload(String id) {
-        this(id, null, ByteArrayUtils.getRandomBytes(32));
+        this(id, ByteArrayUtils.getRandomBytes(32));
     }
 
-    public AccountPayload(String id, @Nullable String paymentMethodId, byte[] salt) {
+    public AccountPayload(String id, byte[] salt) {
         this.id = id;
         this.salt = salt;
-        this.paymentMethodId = paymentMethodId != null ? paymentMethodId : getPaymentMethodName();
     }
 
     // public abstract byte[] getAgeWitnessInputData();
@@ -86,7 +83,6 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
-                .setPaymentMethodId(paymentMethodId)
                 .setSalt(ByteString.copyFrom(salt));
     }
 
@@ -108,7 +104,15 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     }
 
     protected byte[] getFingerprint(byte[] data) {
+        // paymentMethodId must match Bisq 1 paymentMethodId to support imported Bisq 1 accounts and account age
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
         return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
+    }
+
+    protected String getBisq1CompatiblePaymentMethodId() {
+        // In case Bisq 2 PaymentMethodName is different to Bisq 1, we can override it here to match the Bisq 1 ID to
+        // not break account age verification.
+        return getPaymentMethodName();
     }
 
     public abstract M getPaymentMethod();

@@ -57,9 +57,8 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                               String bic,
                               String countryCode,
                               List<String> acceptedCountryCodes,
-                              String paymentMethodId,
                               byte[] salt) {
-        super(id, countryCode, paymentMethodId, salt);
+        super(id, countryCode, salt);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -122,7 +121,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getAcceptedCountryCodesList(),
-                proto.getPaymentMethodId(),
                 proto.getSalt().toByteArray());
     }
 

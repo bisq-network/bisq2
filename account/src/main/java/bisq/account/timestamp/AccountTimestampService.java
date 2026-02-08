@@ -26,6 +26,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
@@ -234,7 +235,17 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] fingerprint = accountPayload.getFingerprint();
         byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
         byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
-        return DigestUtil.hash(preimage);
+        byte[] hash = DigestUtil.hash(preimage);
+
+        log.debug("createHash:\npublicKeyBytes={}\n" +
+                        "salt={}\n" +
+                        "fingerprint={}\n" +
+                        "saltedFingerprint={}\n" +
+                        "preimage={}\n" +
+                        "hash={}", Hex.encode(publicKeyBytes), Hex.encode(salt),
+                Hex.encode(fingerprint), Hex.encode(saltedFingerprint),
+                Hex.encode(preimage), Hex.encode(hash));
+        return hash;
     }
 
     public static void verifyHash(AuthorizeAccountTimestampRequest request) {

@@ -17,9 +17,9 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
-import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
 import bisq.common.application.Service;
 import bisq.common.data.Result;
+import bisq.common.encoding.Hex;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountTimestampRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountTimestampResponse;
@@ -33,16 +33,15 @@ public class AccountTimestampGrpcService implements Service {
         this.grpcClient = grpcClient;
     }
 
-    public Result<Long> requestAccountTimestamp(AuthorizeAccountTimestampRequest request) throws IllegalArgumentException {
-        log.info("requestAccountTimestamp {}", request);
+    public Result<Long> requestAccountTimestamp( byte[] hash) {
+        log.info("requestAccountTimestamp for hash {}", Hex.encode(hash));
         try {
-            byte[] hash = request.getAccountTimestamp().getHash();
             var protoRequest = new AccountTimestampRequest(hash).completeProto();
             var protoResponse = grpcClient.getAccountTimestampBlockingStub().requestAccountTimestamp(protoRequest);
             AccountTimestampResponse response = AccountTimestampResponse.fromProto(protoResponse);
             return Result.success(response.getDate());
         } catch (Exception e) {
-            log.warn("verifyWithBisq1Data failed", e);
+            log.warn("requestAccountTimestamp failed", e);
             return Result.failure(e);
         }
     }

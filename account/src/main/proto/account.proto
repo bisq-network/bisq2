@@ -102,8 +102,7 @@ message PaymentMethodSpec {
 // AccountPayload
 message AccountPayload {
   string id = 1;
-  string paymentMethodId = 2;
-  bytes salt = 3;
+  bytes salt = 2;
   oneof message {
     ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
