@@ -69,9 +69,9 @@ public class AccountUtils {
 
     public static List<String> getAcceptedCountryCodes(AccountPayload<?> accountPayload) {
         if (accountPayload instanceof SepaAccountPayload sepaAccountPayload) {
-            Optional.of(new ArrayList<>(sepaAccountPayload.getAcceptedCountryCodes()));
+            return new ArrayList<>(sepaAccountPayload.getAcceptedCountryCodes());
         } else if (accountPayload instanceof SepaInstantAccountPayload sepaInstantAccountPayload) {
-            Optional.of(new ArrayList<>(sepaInstantAccountPayload.getAcceptedCountryCodes()));
+            return new ArrayList<>(sepaInstantAccountPayload.getAcceptedCountryCodes());
         } else if (accountPayload instanceof CountryBasedAccountPayload countryBasedAccountPayload) {
             return Collections.singletonList(countryBasedAccountPayload.getCountry().getCode());
         }
