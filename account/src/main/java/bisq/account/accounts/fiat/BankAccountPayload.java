@@ -198,9 +198,10 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode)
                 ? bankAccountType.map(BankAccountType::name).orElse("")
                 : "";
-        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode)
-                ? holderId.map(value -> BankAccountUtils.getHolderIdDescription(countryCode) + " " + value + "\n").orElse("")
-                : "";
+
+        // We also have to break compatibility with Bisq 1 holderIdValue as it uses i18n strings.
+        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode) ? holderId.orElse("") : "";
+
         String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";
         String all = bankNameValue +
                 bankIdValue +
