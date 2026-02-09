@@ -49,7 +49,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
         this(id, AccountUtils.generateSalt(), countryCode, holderName, pixKey);
     }
 
-    private PixAccountPayload(String id, byte[] salt, String countryCode, String holderName, String pixKey) {
+    public PixAccountPayload(String id, byte[] salt, String countryCode, String holderName, String pixKey) {
         super(id, salt, countryCode);
         this.holderName = holderName;
         this.pixKey = pixKey;

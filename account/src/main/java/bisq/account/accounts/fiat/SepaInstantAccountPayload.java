@@ -62,7 +62,7 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
                 acceptedCountryCodes);
     }
 
-    private SepaInstantAccountPayload(String id,
+    public SepaInstantAccountPayload(String id,
                                       byte[] salt,
                                       String holderName,
                                       String iban,

@@ -59,7 +59,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                 bankAccountType);
     }
 
-    private AchTransferAccountPayload(String id,
+    public AchTransferAccountPayload(String id,
                                       byte[] salt,
                                       String holderName,
                                       String holderAddress,

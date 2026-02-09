@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -39,7 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
@@ -50,8 +51,8 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
         this(id, AccountUtils.generateSalt(), holderName, emailOrMobileNr);
     }
 
-    private ZelleAccountPayload(String id, byte[] salt, String holderName, String emailOrMobileNr) {
-        super(id, salt, "US");
+    public ZelleAccountPayload(String id, byte[] salt, String holderName, String emailOrMobileNr) {
+        super(id, salt);
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
     }
@@ -89,10 +90,6 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
                 zelleProto.getHolderName(),
                 zelleProto.getEmailOrMobileNr()
         );
-    }
-
-    public static ZelleAccountPayload fromImport(String id, String holderName, String emailOrMobileNr, byte[] salt) {
-        return new ZelleAccountPayload(id, salt, holderName, emailOrMobileNr);
     }
 
     @Override

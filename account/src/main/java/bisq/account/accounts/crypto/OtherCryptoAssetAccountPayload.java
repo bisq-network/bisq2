@@ -49,7 +49,7 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
                 autoConfExplorerUrls);
     }
 
-    private OtherCryptoAssetAccountPayload(String id,
+    public OtherCryptoAssetAccountPayload(String id,
                                            byte[] salt,
                                            String currencyCode,
                                            String address,

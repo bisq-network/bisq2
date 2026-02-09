@@ -57,7 +57,7 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
                 beneficiaryAddress);
     }
 
-    private WiseUsdAccountPayload(String id,
+    public WiseUsdAccountPayload(String id,
                                   byte[] salt,
                                   String countryCode,
                                   String holderName,

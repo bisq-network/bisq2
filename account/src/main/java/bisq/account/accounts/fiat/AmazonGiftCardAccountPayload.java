@@ -45,7 +45,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
         this(id, AccountUtils.generateSalt(), countryCode, emailOrMobileNr);
     }
 
-    private AmazonGiftCardAccountPayload(String id, byte[] salt, String countryCode, String emailOrMobileNr) {
+    public AmazonGiftCardAccountPayload(String id, byte[] salt, String countryCode, String emailOrMobileNr) {
         super(id, salt, countryCode);
         this.emailOrMobileNr = emailOrMobileNr;
     }

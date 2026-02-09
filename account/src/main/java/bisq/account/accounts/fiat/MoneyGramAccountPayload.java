@@ -61,7 +61,7 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 state);
     }
 
-    private MoneyGramAccountPayload(String id,
+    public MoneyGramAccountPayload(String id,
                                     byte[] salt,
                                     String countryCode,
                                     List<String> selectedCurrencyCodes,

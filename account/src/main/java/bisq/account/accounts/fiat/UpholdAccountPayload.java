@@ -17,12 +17,13 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.common.validation.EmailValidation;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -39,33 +40,30 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class UpholdAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
+public final class UpholdAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String accountId;
 
     public UpholdAccountPayload(String id,
-                                String countryCode,
                                 List<String> selectedCurrencyCodes,
                                 String holderName,
                                 String accountId
     ) {
         this(id,
                 AccountUtils.generateSalt(),
-                countryCode,
                 selectedCurrencyCodes,
                 holderName,
                 accountId);
     }
 
-    private UpholdAccountPayload(String id,
+    public UpholdAccountPayload(String id,
                                  byte[] salt,
-                                 String countryCode,
                                  List<String> selectedCurrencyCodes,
                                  String holderName,
                                  String accountId
     ) {
-        super(id, salt, countryCode);
+        super(id, salt);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.accountId = accountId;
@@ -77,13 +75,13 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
     public void verify() {
         super.verify();
         PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes);
-        checkArgument(EmailValidation.isValid(accountId));
-        PaymentAccountValidation.validateHolderName(holderName);
+        checkArgument(StringUtils.isNotEmpty(accountId));
+        // We don't verify holderName as it was optional in Bisq 1
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
                 .setUpholdAccountPayload(toUpholdAccountPayloadProto(serializeForHash));
     }
 
@@ -99,12 +97,10 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
     }
 
     public static UpholdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getUpholdAccountPayload();
+        var payload = proto.getUpholdAccountPayload();
         return new UpholdAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
                 payload.getAccountId()

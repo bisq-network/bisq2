@@ -22,7 +22,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
 public enum BankAccountType implements ProtocolType {
-    CHECKINGS,
+    CHECKING,
     SAVINGS;
 
     @Override
@@ -31,7 +31,7 @@ public enum BankAccountType implements ProtocolType {
     }
 
     public static BankAccountType fromProto(bisq.account.protobuf.BankAccountType proto) {
-        return ProtobufUtils.enumFromProto(BankAccountType.class, proto.name(), CHECKINGS);
+        return ProtobufUtils.enumFromProto(BankAccountType.class, proto.name(), CHECKING);
     }
 
     @Override

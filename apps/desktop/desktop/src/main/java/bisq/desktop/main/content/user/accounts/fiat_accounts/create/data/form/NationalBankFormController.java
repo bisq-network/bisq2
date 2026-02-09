@@ -54,7 +54,7 @@ public class NationalBankFormController extends FormController<NationalBankFormV
         return new NationalBankFormModel(StringUtils.createUid(),
                 nationBankAccountCountries,
                 nationBankAccountCurrencies,
-                List.of(BankAccountType.CHECKINGS, BankAccountType.SAVINGS));
+                List.of(BankAccountType.CHECKING, BankAccountType.SAVINGS));
     }
 
     @Override

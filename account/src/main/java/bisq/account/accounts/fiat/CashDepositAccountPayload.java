@@ -67,7 +67,7 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                 requirements);
     }
 
-    private CashDepositAccountPayload(String id,
+    public CashDepositAccountPayload(String id,
                                       byte[] salt,
                                       String countryCode,
                                       String selectedCurrencyCode,

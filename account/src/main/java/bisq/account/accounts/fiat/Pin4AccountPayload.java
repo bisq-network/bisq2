@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -37,16 +38,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class Pin4AccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
 
     private final String mobileNr;
 
-    public Pin4AccountPayload(String id, String countryCode, String mobileNr) {
-        this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
+    public Pin4AccountPayload(String id, String mobileNr) {
+        this(id, AccountUtils.generateSalt(), mobileNr);
     }
 
-    private Pin4AccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
-        super(id, salt, countryCode);
+    private Pin4AccountPayload(String id, byte[] salt, String mobileNr) {
+        super(id, salt);
         this.mobileNr = mobileNr;
     }
 
@@ -58,8 +59,8 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setPin4AccountPayload(
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return super.getAccountPayloadBuilder(serializeForHash).setPin4AccountPayload(
                 toPin4AccountPayloadProto(serializeForHash));
     }
 
@@ -73,11 +74,9 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
     }
 
     public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.Pin4AccountPayload payload = countryBasedAccountPayload.getPin4AccountPayload();
+        bisq.account.protobuf.Pin4AccountPayload payload = proto.getPin4AccountPayload();
         return new Pin4AccountPayload(proto.getId(),
                 proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
                 payload.getMobileNr()
         );
     }

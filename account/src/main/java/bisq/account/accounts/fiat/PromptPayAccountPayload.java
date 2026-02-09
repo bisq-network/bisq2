@@ -45,7 +45,7 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
         this(id, AccountUtils.generateSalt(), countryCode, promptPayId);
     }
 
-    private PromptPayAccountPayload(String id, byte[] salt, String countryCode, String promptPayId) {
+    public PromptPayAccountPayload(String id, byte[] salt, String countryCode, String promptPayId) {
         super(id, salt, countryCode);
         this.promptPayId = promptPayId;
     }

@@ -44,7 +44,7 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
         this(id, AccountUtils.generateSalt(), holderName, postalAddress);
     }
 
-    private USPostalMoneyOrderAccountPayload(String id, byte[] salt, String holderName, String postalAddress) {
+    public USPostalMoneyOrderAccountPayload(String id, byte[] salt, String holderName, String postalAddress) {
         super(id, salt);
         this.holderName = holderName;
         this.postalAddress = postalAddress;

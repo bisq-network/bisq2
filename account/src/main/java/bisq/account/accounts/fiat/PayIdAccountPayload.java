@@ -43,7 +43,7 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
         this(id, AccountUtils.generateSalt(), holderName, payId);
     }
 
-    private PayIdAccountPayload(String id, byte[] salt, String holderName, String payId) {
+    public PayIdAccountPayload(String id, byte[] salt, String holderName, String payId) {
         super(id, salt);
         this.holderName = holderName;
         this.payId = payId;

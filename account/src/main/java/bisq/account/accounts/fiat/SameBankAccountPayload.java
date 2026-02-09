@@ -55,7 +55,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 nationalAccountId);
     }
 
-    private SameBankAccountPayload(String id,
+    public SameBankAccountPayload(String id,
                                    byte[] salt,
                                    String countryCode,
                                    String selectedCurrencyCode,

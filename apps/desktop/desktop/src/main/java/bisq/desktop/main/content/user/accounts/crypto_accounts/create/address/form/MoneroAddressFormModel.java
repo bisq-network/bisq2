@@ -29,12 +29,15 @@ import lombok.Getter;
 @Getter
 public class MoneroAddressFormModel extends AddressFormModel {
     //todo
+    protected final TextMinMaxLengthValidator mainAddressValidator = new TextMinMaxLengthValidator(10, 200);
     protected final TextMinMaxLengthValidator privateViewKeyValidator = new TextMinMaxLengthValidator(10, 200);
     protected final NumberValidator accountIndexValidator = new NumberValidator(0, 100000);
     protected final NumberValidator initialSubAddressIndexValidator = new NumberValidator(0, 100000);
 
     private final BooleanProperty useSubAddresses = new SimpleBooleanProperty();
+    protected final StringProperty mainAddress = new SimpleStringProperty();
     protected final StringProperty privateViewKey = new SimpleStringProperty();
+    protected final StringProperty subAddress = new SimpleStringProperty();
     protected final StringProperty accountIndex = new SimpleStringProperty();
     protected final StringProperty initialSubAddressIndex = new SimpleStringProperty();
 
@@ -45,7 +48,9 @@ public class MoneroAddressFormModel extends AddressFormModel {
     public void reset() {
         super.reset();
         useSubAddresses.set(false);
+        mainAddress.set(null);
         privateViewKey.set(null);
+        subAddress.set(null);
         accountIndex.set(null);
         initialSubAddressIndex.set(null);
     }

@@ -34,7 +34,10 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
     private final boolean useSubAddresses;
+    private final Optional<String> mainAddress;
     private final Optional<String> privateViewKey;
+    // subAddress is generated from privateViewKey, accountIndex and subAddressIndex
+    private final Optional<String> subAddress;
     private final Optional<Integer> accountIndex;
     private final Optional<Integer> initialSubAddressIndex;
 
@@ -46,12 +49,14 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                                 Optional<Long> autoConfMaxTradeAmount,
                                 Optional<String> autoConfExplorerUrls,
                                 boolean useSubAddresses,
+                                Optional<String> mainAddress,
                                 Optional<String> privateViewKey,
+                                Optional<String> subAddress,
                                 Optional<Integer> accountIndex,
                                 Optional<Integer> initialSubAddressIndex) {
         this(id,
                 AccountUtils.generateSalt(),
-                "XMR",
+                CryptoAssetRepository.XMR.getCode(),
                 address,
                 isInstant,
                 isAutoConf,
@@ -59,24 +64,28 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                 autoConfMaxTradeAmount,
                 autoConfExplorerUrls,
                 useSubAddresses,
+                mainAddress,
                 privateViewKey,
+                subAddress,
                 accountIndex,
                 initialSubAddressIndex);
     }
 
-    private MoneroAccountPayload(String id,
-                                 byte[] salt,
-                                 String currencyCode,
-                                 String address,
-                                 boolean isInstant,
-                                 Optional<Boolean> isAutoConf,
-                                 Optional<Integer> autoConfNumConfirmations,
-                                 Optional<Long> autoConfMaxTradeAmount,
-                                 Optional<String> autoConfExplorerUrls,
-                                 boolean useSubAddresses,
-                                 Optional<String> privateViewKey,
-                                 Optional<Integer> accountIndex,
-                                 Optional<Integer> initialSubAddressIndex) {
+    public MoneroAccountPayload(String id,
+                                byte[] salt,
+                                String currencyCode,
+                                String address,
+                                boolean isInstant,
+                                Optional<Boolean> isAutoConf,
+                                Optional<Integer> autoConfNumConfirmations,
+                                Optional<Long> autoConfMaxTradeAmount,
+                                Optional<String> autoConfExplorerUrls,
+                                boolean useSubAddresses,
+                                Optional<String> mainAddress,
+                                Optional<String> privateViewKey,
+                                Optional<String> subAddress,
+                                Optional<Integer> accountIndex,
+                                Optional<Integer> initialSubAddressIndex) {
         super(id,
                 salt,
                 currencyCode,
@@ -87,7 +96,9 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                 autoConfMaxTradeAmount,
                 autoConfExplorerUrls);
         this.useSubAddresses = useSubAddresses;
+        this.mainAddress = mainAddress;
         this.privateViewKey = privateViewKey;
+        this.subAddress = subAddress;
         this.accountIndex = accountIndex;
         this.initialSubAddressIndex = initialSubAddressIndex;
     }
@@ -105,7 +116,9 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
             boolean serializeForHash) {
         bisq.account.protobuf.MoneroAccountPayload.Builder builder = bisq.account.protobuf.MoneroAccountPayload.newBuilder()
                 .setUseSubAddresses(useSubAddresses);
+        mainAddress.ifPresent(builder::setMainAddress);
         privateViewKey.ifPresent(builder::setPrivateViewKey);
+        subAddress.ifPresent(builder::setSubAddress);
         accountIndex.ifPresent(builder::setAccountIndex);
         initialSubAddressIndex.ifPresent(builder::setInitialSubAddressIndex);
         return builder;
@@ -125,7 +138,9 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                 cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
                 cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
                 monero.getUseSubAddresses(),
+                monero.hasMainAddress() ? Optional.of(monero.getMainAddress()) : Optional.empty(),
                 monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
+                monero.hasSubAddress() ? Optional.of(monero.getSubAddress()) : Optional.empty(),
                 monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
                 monero.hasInitialSubAddressIndex() ? Optional.of(monero.getInitialSubAddressIndex()) : Optional.empty()
         );
@@ -141,12 +156,4 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
         String data = privateViewKey.orElse("");
         return super.getFingerprint(data.getBytes(StandardCharsets.UTF_8));
     }
-
-  /*  @Override
-    public String getAccountDataDisplayString() {
-        return new AccountDataDisplayStringBuilder(
-                Res.get("paymentAccounts.altcoin.currencyCode"), currencyCode,
-                Res.get("paymentAccounts.altcoin.address"), address
-        ).toString();
-    }*/
 }

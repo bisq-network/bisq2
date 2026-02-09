@@ -35,9 +35,8 @@ import java.nio.charset.StandardCharsets;
 public class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     public static final int CITY_MIN_LENGTH = 2;
     public static final int CITY_MAX_LENGTH = 50;
-    public static final int CONTACT_MIN_LENGTH = 5;
+    public static final int CONTACT_MIN_LENGTH = 2;
     public static final int CONTACT_MAX_LENGTH = 100;
-    public static final int EXTRA_INFO_MIN_LENGTH = 1;
     public static final int EXTRA_INFO_MAX_LENGTH = 300;
 
     private final String selectedCurrencyCode;
@@ -60,7 +59,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
                 extraInfo);
     }
 
-    private F2FAccountPayload(String id,
+    public F2FAccountPayload(String id,
                               byte[] salt,
                               String countryCode,
                               String selectedCurrencyCode,
@@ -81,7 +80,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
         PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
         NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
         NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
-        NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
+        NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MAX_LENGTH);
     }
 
     @Override

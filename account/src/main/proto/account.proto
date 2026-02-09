@@ -113,7 +113,9 @@ message AccountPayload {
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
     CashByMailAccountPayload cashByMailAccountPayload = 26;
     InteracETransferAccountPayload interacETransferAccountPayload = 27;
-
+    UpholdAccountPayload upholdAccountPayload = 28;
+    HalCashAccountPayload halCashAccountPayload = 29;
+    Pin4AccountPayload pin4AccountPayload = 30;
     CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
 }
@@ -134,9 +136,11 @@ message CryptoAssetAccountPayload {
 
 message MoneroAccountPayload {
   bool useSubAddresses = 1;
-  optional string privateViewKey = 2;
-  optional sint32 accountIndex = 3;
-  optional sint32 initialSubAddressIndex = 4;
+  optional string mainAddress = 2;
+  optional string privateViewKey = 3;
+  optional string subAddress = 4;
+  optional sint32 accountIndex = 5;
+  optional sint32 initialSubAddressIndex = 6;
 }
 
 message OtherCryptoAssetAccountPayload {
@@ -169,11 +173,8 @@ message CountryBasedAccountPayload {
     WiseUsdAccountPayload wiseUsdAccountPayload = 30;
     MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
     SwishAccountPayload swishAccountPayload = 32;
-    UpholdAccountPayload upholdAccountPayload = 33;
-    MoneyGramAccountPayload moneyGramAccountPayload = 34;
-    PromptPayAccountPayload promptPayAccountPayload = 35;
-    HalCashAccountPayload halCashAccountPayload = 36;
-    Pin4AccountPayload pin4AccountPayload = 37;
+    MoneyGramAccountPayload moneyGramAccountPayload = 33;
+    PromptPayAccountPayload promptPayAccountPayload = 34;
   }
 }
 
@@ -252,7 +253,7 @@ message DomesticWireTransferAccountPayload {
 
 enum BankAccountType {
   BANKACCOUNTTYPE_UNSPECIFIED = 0;
-  BANKACCOUNTTYPE_CHECKINGS = 1;
+  BANKACCOUNTTYPE_CHECKING = 1;
   BANKACCOUNTTYPE_SAVINGS = 2;
 }
 
@@ -378,7 +379,9 @@ message Account {
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
     CashByMailAccount cashByMailAccount = 26;
     InteracETransferAccount interacETransferAccount = 27;
-
+    UpholdAccount upholdAccount = 28;
+    HalCashAccount halCashAccount = 29;
+    Pin4Account pin4Account = 30;
     CryptoAssetAccount cryptoAssetAccount = 100;
   }
 }
@@ -416,11 +419,8 @@ message CountryBasedAccount {
     WiseUsdAccount wiseUsdAccount = 30;
     MoneyBeamAccount moneyBeamAccount = 31;
     SwishAccount swishAccount = 32;
-    UpholdAccount upholdAccount = 33;
-    MoneyGramAccount moneyGramAccount = 34;
-    PromptPayAccount promptPayAccount = 35;
-    HalCashAccount halCashAccount = 36;
-    Pin4Account pin4Account = 37;
+    MoneyGramAccount moneyGramAccount = 33;
+    PromptPayAccount promptPayAccount = 34;
   }
 }
 message HalCashAccount {

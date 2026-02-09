@@ -49,7 +49,7 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
         this(id, AccountUtils.generateSalt(), countryCode, holderName, mobileNr);
     }
 
-    private SwishAccountPayload(String id, byte[] salt, String countryCode, String holderName, String mobileNr) {
+    public SwishAccountPayload(String id, byte[] salt, String countryCode, String holderName, String mobileNr) {
         super(id, salt, countryCode);
         this.holderName = holderName;
         this.mobileNr = mobileNr;

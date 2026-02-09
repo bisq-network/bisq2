@@ -49,7 +49,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
         this(id, AccountUtils.generateSalt(), holderName, sortCode, accountNr);
     }
 
-    private FasterPaymentsAccountPayload(String id,
+    public FasterPaymentsAccountPayload(String id,
                                          byte[] salt,
                                          String holderName,
                                          String sortCode,

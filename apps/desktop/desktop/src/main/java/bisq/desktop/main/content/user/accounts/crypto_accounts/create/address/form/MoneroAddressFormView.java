@@ -31,15 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormModel, MoneroAddressFormController> {
     private Switch useSubAddressesSwitch;
-    private MaterialTextField privateViewKey, accountIndex, initialSubAddressIndex;
-    private HBox subAddressesHBox;
+    private MaterialTextField mainAddress, privateViewKey, subAddress, accountIndex, initialSubAddressIndex;
+    private HBox subAddressesHBox,mainAddressPrivateViewKeyHBox;
 
     public MoneroAddressFormView(MoneroAddressFormModel model,
                                  MoneroAddressFormController controller) {
         super(model, controller);
 
-        address.setDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses"));
-        address.setPromptText(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses.prompt"));
+        address.setDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"));
+        address.setPromptText(Res.get("paymentAccounts.crypto.address.xmr.mainAddress.prompt"));
     }
 
     @Override
@@ -47,11 +47,22 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
         useSubAddressesSwitch = new Switch(Res.get("paymentAccounts.crypto.address.xmr.useSubAddresses.switch"));
         HBox useSubAddressesSwitchHBox = new HBox(useSubAddressesSwitch, Spacer.fillHBox());
 
+        mainAddress = new MaterialTextField(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"),
+                Res.get("paymentAccounts.crypto.address.xmr.mainAddress.prompt"));
+        mainAddress.setMinWidth(FIELD_WIDTH_HALF);
+        mainAddress.setMaxWidth(FIELD_WIDTH_HALF);
+        mainAddress.setValidator(model.getMainAddressValidator());
+
         privateViewKey = new MaterialTextField(Res.get("paymentAccounts.crypto.address.xmr.privateViewKey"),
                 Res.get("paymentAccounts.crypto.address.xmr.privateViewKey.prompt"));
         privateViewKey.setMinWidth(FIELD_WIDTH_HALF);
         privateViewKey.setMaxWidth(FIELD_WIDTH_HALF);
         privateViewKey.setValidator(model.getPrivateViewKeyValidator());
+
+        subAddress = new MaterialTextField(Res.get("paymentAccounts.crypto.address.xmr.subAddress"));
+        subAddress.setEditable(false);
+        subAddress.setMinWidth(FIELD_WIDTH_HALF);
+        subAddress.setMaxWidth(FIELD_WIDTH_HALF);
 
         accountIndex = new MaterialTextField(Res.get("paymentAccounts.crypto.address.xmr.accountIndex"),
                 Res.get("paymentAccounts.crypto.address.xmr.accountIndex.prompt"));
@@ -65,10 +76,12 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
         initialSubAddressIndex.setMaxWidth(FIELD_WIDTH_QUARTER);
         initialSubAddressIndex.setValidator(model.getInitialSubAddressIndexValidator());
 
+        HBox.setHgrow(mainAddress, Priority.ALWAYS);
         HBox.setHgrow(privateViewKey, Priority.ALWAYS);
         HBox.setHgrow(autoConfNumConfirmations, Priority.ALWAYS);
         HBox.setHgrow(autoConfMaxTradeAmount, Priority.ALWAYS);
-        subAddressesHBox = new HBox(10, privateViewKey, accountIndex, initialSubAddressIndex);
+        subAddressesHBox = new HBox(10, accountIndex, initialSubAddressIndex, subAddress);
+        mainAddressPrivateViewKeyHBox = new HBox(10, mainAddress, privateViewKey);
 
         VBox.setMargin(subAddressesHBox, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(address,
@@ -76,13 +89,19 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
                 isAutoConfSwitchHBox,
                 autoConfHBox,
                 useSubAddressesSwitchHBox,
-                subAddressesHBox);
+                mainAddressPrivateViewKeyHBox,
+                subAddressesHBox
+        );
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
 
+        if (StringUtils.isNotEmpty(model.getMainAddress().get())) {
+            mainAddress.setText(model.getMainAddress().get());
+            mainAddress.validate();
+        }
         if (StringUtils.isNotEmpty(model.getPrivateViewKey().get())) {
             privateViewKey.setText(model.getPrivateViewKey().get());
             privateViewKey.validate();
@@ -98,10 +117,14 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
 
         useSubAddressesSwitch.setSelected(model.getUseSubAddresses().get());
 
+        mainAddressPrivateViewKeyHBox.visibleProperty().bind(model.getUseSubAddresses());
+        mainAddressPrivateViewKeyHBox.managedProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.visibleProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.managedProperty().bind(model.getUseSubAddresses());
 
+        mainAddress.textProperty().bindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().bindBidirectional(model.getPrivateViewKey());
+        subAddress.textProperty().bind(model.getSubAddress());
         accountIndex.textProperty().bindBidirectional(model.getAccountIndex());
         initialSubAddressIndex.textProperty().bindBidirectional(model.getInitialSubAddressIndex());
 
@@ -112,10 +135,14 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
     protected void onViewDetached() {
         super.onViewDetached();
 
+        mainAddressPrivateViewKeyHBox.visibleProperty().unbind();
+        mainAddressPrivateViewKeyHBox.managedProperty().unbind();
         subAddressesHBox.visibleProperty().unbind();
         subAddressesHBox.managedProperty().unbind();
 
+        mainAddress.textProperty().unbindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().unbindBidirectional(model.getPrivateViewKey());
+        subAddress.textProperty().unbind();
         accountIndex.textProperty().unbindBidirectional(model.getAccountIndex());
         initialSubAddressIndex.textProperty().unbindBidirectional(model.getInitialSubAddressIndex());
 

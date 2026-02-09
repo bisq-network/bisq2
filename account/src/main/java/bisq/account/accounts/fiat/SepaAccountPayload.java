@@ -67,7 +67,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 acceptedCountryCodes);
     }
 
-    private SepaAccountPayload(String id,
+    public SepaAccountPayload(String id,
                                byte[] salt,
                                String holderName,
                                String iban,
@@ -124,16 +124,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getAcceptedCountryCodesList());
-    }
-
-    public static SepaAccountPayload fromImport(String id,
-                                                String holderName,
-                                                String iban,
-                                                String bic,
-                                                String countryCode,
-                                                List<String> acceptedCountryCodes,
-                                                byte[] salt) {
-        return new SepaAccountPayload(id, salt, holderName, iban, bic, countryCode, acceptedCountryCodes);
     }
 
     @Override

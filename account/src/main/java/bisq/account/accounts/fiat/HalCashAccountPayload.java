@@ -17,12 +17,13 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.common.validation.PhoneNumberValidation;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,16 +38,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class HalCashAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
 
     private final String mobileNr;
 
-    public HalCashAccountPayload(String id, String countryCode, String mobileNr) {
-        this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
+    public HalCashAccountPayload(String id, String mobileNr) {
+        this(id, AccountUtils.generateSalt(), mobileNr);
     }
 
-    private HalCashAccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
-        super(id, salt, countryCode);
+    public HalCashAccountPayload(String id, byte[] salt, String mobileNr) {
+        super(id, salt);
         this.mobileNr = mobileNr;
     }
 
@@ -54,12 +55,13 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
     public void verify() {
         super.verify();
 
-        checkArgument(PhoneNumberValidation.isValid(mobileNr, "ES"));
+        // We do not apply strict phone validation as we need to support imported Bisq 1 accounts
+        checkArgument(StringUtils.isNotEmpty(mobileNr), "mobileNr must not be empty");
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setHalCashAccountPayload(
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return super.getAccountPayloadBuilder(serializeForHash).setHalCashAccountPayload(
                 toHalCashAccountPayloadProto(serializeForHash));
     }
 
@@ -73,11 +75,9 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
     }
 
     public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.HalCashAccountPayload payload = countryBasedAccountPayload.getHalCashAccountPayload();
+        bisq.account.protobuf.HalCashAccountPayload payload = proto.getHalCashAccountPayload();
         return new HalCashAccountPayload(proto.getId(),
                 proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
                 payload.getMobileNr()
         );
     }

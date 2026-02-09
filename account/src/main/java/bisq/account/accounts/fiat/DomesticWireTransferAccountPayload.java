@@ -57,7 +57,7 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                 accountNr);
     }
 
-    private DomesticWireTransferAccountPayload(String id,
+    public DomesticWireTransferAccountPayload(String id,
                                                byte[] salt,
                                                String holderName,
                                                String holderAddress,
