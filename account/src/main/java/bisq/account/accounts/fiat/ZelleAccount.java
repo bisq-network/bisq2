@@ -17,6 +17,8 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,12 +37,9 @@ public class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
                         String accountName,
                         ZelleAccountPayload accountPayload,
                         KeyPair keyPair,
-                        String keyAlgorithm) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm);
-    }
-
-    public ZelleAccount(String id, long creationDate, String accountName, ZelleAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+                        KeyAlgorithm keyAlgorithm,
+                        AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -58,12 +57,14 @@ public class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
     }
 
     public static ZelleAccount fromProto(bisq.account.protobuf.Account proto) {
-        String keyAlgorithm = proto.getKeyAlgorithm();
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new ZelleAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 ZelleAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm),
-                keyAlgorithm);
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }

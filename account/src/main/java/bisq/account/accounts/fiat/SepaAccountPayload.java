@@ -57,9 +57,8 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                               String bic,
                               String countryCode,
                               List<String> acceptedCountryCodes,
-                              String paymentMethodId,
                               byte[] salt) {
-        super(id, countryCode, paymentMethodId, salt);
+        super(id, countryCode, salt);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -122,7 +121,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getAcceptedCountryCodesList(),
-                proto.getPaymentMethodId(),
                 proto.getSalt().toByteArray());
     }
 
@@ -153,10 +151,10 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
     }
 
     @Override
-    public byte[] getAgeWitnessInputData() {
+    public byte[] getFingerprint() {
         // We don't add holderName because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
         // Also we want to be compatible with Bisq 1 to not break account age data
-        return super.getAgeWitnessInputData(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
+        return super.getFingerprint(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
     }
 }

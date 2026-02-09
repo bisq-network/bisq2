@@ -17,13 +17,21 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.account.timestamp.AccountTimestamp;
+import bisq.account.timestamp.AccountTimestampService;
+import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
+import bisq.account.timestamp.AuthorizedAccountTimestamp;
+import bisq.account.timestamp.TimestampType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
+import bisq.common.data.ByteArray;
+import bisq.common.data.Result;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ByteArrayUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -34,12 +42,14 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
 import bisq.oracle_node.bisq1_bridge.grpc.services.AccountAgeWitnessGrpcService;
+import bisq.oracle_node.bisq1_bridge.grpc.services.AccountTimestampGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BondedRoleGrpcService;
 import bisq.oracle_node.bisq1_bridge.grpc.services.SignedWitnessGrpcService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.security.DigestUtil;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -47,11 +57,14 @@ import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq1BridgeRequestStore> implements Service, ConfidentialMessageService.Listener {
@@ -62,6 +75,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
     private final BondedRoleGrpcService bondedRoleGrpcService;
     private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
+    private final AccountTimestampGrpcService accountTimestampGrpcService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
@@ -90,6 +104,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
 
         accountAgeWitnessGrpcService = new AccountAgeWitnessGrpcService(grpcClient);
+        accountTimestampGrpcService = new AccountTimestampGrpcService(grpcClient);
         signedWitnessGrpcService = new SignedWitnessGrpcService(grpcClient);
         bondedRoleGrpcService = new BondedRoleGrpcService(grpcClient);
 
@@ -115,6 +130,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         );
 
         return accountAgeWitnessGrpcService.initialize()
+                .thenCompose(result -> accountTimestampGrpcService.initialize())
                 .thenCompose(result -> signedWitnessGrpcService.initialize())
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
@@ -131,6 +147,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         executor = null;
         return bondedRoleGrpcService.shutdown()
                 .thenCompose(result -> signedWitnessGrpcService.shutdown())
+                .thenCompose(result -> accountTimestampGrpcService.shutdown())
                 .thenCompose(result -> accountAgeWitnessGrpcService.shutdown());
     }
 
@@ -145,6 +162,8 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             processAuthorizeAccountAgeRequest(request);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
             processAuthorizeSignedWitnessRequest(request);
+        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampRequest request) {
+            processAuthorizeAccountTimestampRequest(request);
         }
     }
 
@@ -188,6 +207,84 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 log.error("processAuthorizeSignedWitnessRequest failed", e);
             }
         }, executor);
+    }
+
+    private void processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                AccountTimestampService.verifyHash(request);
+                AccountTimestampService.verifySignature(request);
+
+                AccountTimestamp accountTimestamp = request.getAccountTimestamp();
+                TimestampType timestampType = request.getTimestampType();
+                ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+                boolean isRepublish = persistableStore.getAccountTimestampHashes().contains(requestHash);
+                switch (timestampType) {
+                    case BISQ2_NEW -> {
+                        if (!isRepublish) {
+                            long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
+                            if (Math.abs(System.currentTimeMillis() - accountTimestamp.getDate()) > maxTimeDrift) {
+                                log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
+                                return;
+                            }
+
+                            persistAccountTimestampRequest(accountTimestamp);
+                        }
+                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                    }
+                    case BISQ1_IMPORTED -> {
+                        if (!isRepublish) {
+                            byte[] hash = request.getAccountTimestamp().getHash();
+                            Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(hash);
+                            if (result.isFailure()) {
+                                log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
+                                return;
+                            }
+
+                            // The date we get from the request is the account creation date from the imported account.
+                            // The account age is the date of the account age witness object.
+                            // It is expected that there is a slight difference in those 2 dates.
+                            long dateFromBisq2AccountAge = result.getOrThrow();
+                            long accountCreationDate = request.getAccountTimestamp().getDate();
+                            long ageDiff = dateFromBisq2AccountAge - accountCreationDate;
+                            if (dateFromBisq2AccountAge > accountCreationDate) {
+                                log.warn("The account age is newer then the account creation date. " +
+                                                "This could be due out of sync clock at user who created the account. " +
+                                                "dateFromBisq2AccountAge={}; accountCreationDate={}",
+                                        new Date(dateFromBisq2AccountAge), new Date(accountCreationDate));
+                            }
+                            if (ageDiff > TimeUnit.HOURS.toMillis(1)) {
+                                log.warn("The account creation date is more then 1 hour different to the account age date. " +
+                                                "This is probably because the account was created on Bisq 1 before the " +
+                                                "account age feature was implemented or there was some unusual delay when publishing the account age. " +
+                                                "ageDiff={} sec; dateFromBisq2AccountAge={}; accountCreationDate={}",
+                                        ageDiff / 1000, new Date(dateFromBisq2AccountAge), new Date(accountCreationDate));
+                            }
+                            accountTimestamp = new AccountTimestamp(hash, dateFromBisq2AccountAge);
+                            persistAccountTimestampRequest(accountTimestamp);
+                        }
+                        publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+                    }
+                    default ->
+                            throw new IllegalArgumentException("Unsupported timestamp type in AuthorizeAccountTimestampRequest: " + timestampType);
+                }
+            } catch (Exception e) {
+                log.warn("AuthorizeAccountTimestampRequest is invalid", e);
+            }
+        }, executor);
+    }
+
+    private void persistAccountTimestampRequest(AccountTimestamp accountTimestamp) {
+        ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+        if (persistableStore.getAccountTimestampHashes().add(requestHash)) {
+            persist();
+        }
+    }
+
+    private static ByteArray createAccountTimestampRequestHash(AccountTimestamp accountTimestamp) {
+        byte[] dateBytes = ByteBuffer.allocate(Long.BYTES).putLong(accountTimestamp.getDate()).array();
+        byte[] preimage = ByteArrayUtils.concat(accountTimestamp.getHash(), dateBytes);
+        return new ByteArray(DigestUtil.hash(preimage));
     }
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,
@@ -267,4 +364,6 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 identity.getNetworkIdWithKeyPair().getKeyPair(),
                 authorizedPublicKey);
     }
+
+
 }

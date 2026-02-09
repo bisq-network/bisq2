@@ -17,18 +17,29 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class WiseUsdAccount extends CountryBasedAccount<WiseUsdAccountPayload> {
-    public WiseUsdAccount(String id, long creationDate, String accountName, WiseUsdAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public WiseUsdAccount(String id,
+                          long creationDate,
+                          String accountName,
+                          WiseUsdAccountPayload accountPayload,
+                          KeyPair keyPair,
+                          KeyAlgorithm keyAlgorithm,
+                          AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -46,10 +57,15 @@ public final class WiseUsdAccount extends CountryBasedAccount<WiseUsdAccountPayl
     }
 
     public static WiseUsdAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new WiseUsdAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                WiseUsdAccountPayload.fromProto(proto.getAccountPayload())
+                WiseUsdAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin
         );
     }
 }

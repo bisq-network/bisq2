@@ -17,18 +17,29 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPaymentsAccountPayload> {
-    public FasterPaymentsAccount(String id, long creationDate, String accountName, FasterPaymentsAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public FasterPaymentsAccount(String id,
+                                 long creationDate,
+                                 String accountName,
+                                 FasterPaymentsAccountPayload accountPayload,
+                                 KeyPair keyPair,
+                                 KeyAlgorithm keyAlgorithm,
+                                 AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -46,9 +57,14 @@ public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPayme
     }
 
     public static FasterPaymentsAccount fromProto(bisq.account.protobuf.Account proto) {
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new FasterPaymentsAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                FasterPaymentsAccountPayload.fromProto(proto.getAccountPayload()));
+                FasterPaymentsAccountPayload.fromProto(proto.getAccountPayload()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
+                keyAlgorithm,
+                accountOrigin);
     }
 }
