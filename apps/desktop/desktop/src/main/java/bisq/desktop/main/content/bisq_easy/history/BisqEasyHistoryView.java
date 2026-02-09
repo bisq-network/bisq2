@@ -105,7 +105,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .title(Res.get("bisqEasy.history.table.peerProfile"))
                 .left()
                 .minWidth(140)
-                .comparator(Comparator.comparing(item -> item.getMyUserProfile().getNickName()))
+                .comparator(Comparator.comparing(item -> item.getPeerProfile().getNickName()))
                 .setCellFactory(getUserProfileCellFactory(false))
                 .includeForCsv(false)
                 .build());
@@ -160,7 +160,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .title(Res.get("bisqEasy.history.table.myRole"))
                 .left()
                 .minWidth(140)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyRole))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .build());

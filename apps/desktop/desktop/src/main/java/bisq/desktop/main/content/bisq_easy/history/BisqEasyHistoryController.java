@@ -60,9 +60,9 @@ public class BisqEasyHistoryController implements Controller {
 
             @Override
             public void onRemoved(Object element) {
-                if (element instanceof BisqEasyTrade trade) {
+                if (element instanceof BisqEasyClosedTrade closedTrade) {
                     model.getBisqEasyTradeHistoryListItems().stream()
-                            .filter(item -> item.getTrade().equals(trade))
+                            .filter(item -> item.getTrade().equals(closedTrade.trade()))
                             .findFirst()
                             .ifPresent(item -> model.getBisqEasyTradeHistoryListItems().remove(item));
                 }

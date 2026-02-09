@@ -71,7 +71,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
                             try {
                                 return closedTrade.toProto(serializeForHash);
                             } catch (Exception e) {
-                                log.error("Could not create proto from BisqEasyTrade {}", closedTrade, e);
+                                log.error("Could not create proto from BisqEasyClosedTrade {}", closedTrade, e);
                                 return null;
                             }
                         })
