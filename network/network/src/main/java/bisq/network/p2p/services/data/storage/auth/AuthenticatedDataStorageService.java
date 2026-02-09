@@ -416,7 +416,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
                     getMaxMapSize());
-            boolean showDetails = true;
+            boolean showDetails = false;
             if (showDetails) {
                 long now = System.currentTimeMillis();
                 String summaryAdded = dataStore.getMap().values().stream()

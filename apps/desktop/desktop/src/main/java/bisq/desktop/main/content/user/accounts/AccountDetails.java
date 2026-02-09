@@ -27,6 +27,8 @@ import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -57,6 +59,7 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     protected final AccountTimestampService accountTimestampService;
     protected final GridPane gridPane;
     protected int rowIndex = 0;
+    protected Pin accountTimestampByHashPin;
 
     public AccountDetails(A account, AccountTimestampService accountTimestampService) {
         super(10);
@@ -73,6 +76,13 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
 
         addRestrictionsHeadline();
         addRestrictions();
+    }
+
+    public void dispose() {
+        if (accountTimestampByHashPin != null) {
+            accountTimestampByHashPin.unbind();
+            accountTimestampByHashPin = null;
+        }
     }
 
     protected GridPane createGridPane() {
@@ -108,11 +118,14 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     }
 
     protected void addDetails() {
-        accountTimestampService.findAccountTimestamp(account)
-                .ifPresent(date -> {
-                    String accountAge = TimeFormatter.formatAgeInDays(date);
-                    addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), accountAge);
-                });
+        Label accountAgeLabel = addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), Res.get("data.na"));
+        accountTimestampByHashPin = accountTimestampService.getAccountTimestampByHash().addObserver(() -> {
+            accountTimestampService.findAccountTimestamp(account)
+                    .ifPresent(date -> UIThread.run(() -> {
+                        String accountAge = TimeFormatter.formatAgeInDays(date);
+                        accountAgeLabel.setText(accountAge);
+                    }));
+        });
     }
 
     protected void addRestrictionsHeadline() {

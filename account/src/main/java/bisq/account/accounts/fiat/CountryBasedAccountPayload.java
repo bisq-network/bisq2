@@ -18,7 +18,6 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
@@ -42,10 +41,6 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
     public CountryBasedAccountPayload(String id, byte[] salt, String countryCode) {
         super(id, salt);
         this.countryCode = countryCode;
-    }
-
-    public CountryBasedAccountPayload(String id, String countryCode) {
-        this(id, AccountUtils.generateSalt(), countryCode);
     }
 
     @Override

@@ -17,7 +17,6 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -63,31 +62,6 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
     protected final String accountNr;
     protected final Optional<BankAccountType> bankAccountType;
     protected final Optional<String> nationalAccountId;
-
-    protected BankAccountPayload(String id,
-                                 String countryCode,
-                                 String selectedCurrencyCode,
-                                 Optional<String> holderName,
-                                 Optional<String> holderId,
-                                 Optional<String> bankName,
-                                 Optional<String> bankId,
-                                 Optional<String> branchId,
-                                 String accountNr,
-                                 Optional<BankAccountType> bankAccountType,
-                                 Optional<String> nationalAccountId) {
-        this(id,
-                AccountUtils.generateSalt(),
-                countryCode,
-                selectedCurrencyCode,
-                holderName,
-                holderId,
-                bankName,
-                bankId,
-                branchId,
-                accountNr,
-                bankAccountType,
-                nationalAccountId);
-    }
 
     protected BankAccountPayload(String id,
                                  byte[] salt,
@@ -198,9 +172,10 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode)
                 ? bankAccountType.map(BankAccountType::name).orElse("")
                 : "";
-        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode)
-                ? holderId.map(value -> BankAccountUtils.getHolderIdDescription(countryCode) + " " + value + "\n").orElse("")
-                : "";
+
+        // We also have to break compatibility with Bisq 1 holderIdValue as it uses i18n strings.
+        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode) ? holderId.orElse("") : "";
+
         String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";
         String all = bankNameValue +
                 bankIdValue +

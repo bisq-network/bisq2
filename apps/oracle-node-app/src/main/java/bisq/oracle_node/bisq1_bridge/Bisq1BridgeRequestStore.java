@@ -54,10 +54,10 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
 
     private Bisq1BridgeRequestStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests,
                                     Set<AuthorizeSignedWitnessRequest> signedWitnessRequests,
-                                    Map<ByteArray, Long> accountTimestampHashes) {
+                                    Map<ByteArray, Long> accountTimestampDateByHash) {
         this.accountAgeRequests.addAll(accountAgeRequests);
         this.signedWitnessRequests.addAll(signedWitnessRequests);
-        this.accountTimestampDateByHash.putAll(accountTimestampHashes);
+        this.accountTimestampDateByHash.putAll(accountTimestampDateByHash);
     }
 
     @Override

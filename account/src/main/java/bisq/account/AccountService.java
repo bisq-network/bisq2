@@ -20,6 +20,7 @@ package bisq.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.bisq1_import.ImportBisq1AccountService;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.AccountTimestampService;
@@ -147,6 +148,18 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                 .collect(Collectors.toSet());
     }
 
+    public Set<Account<? extends PaymentMethod<?>, ?>> getCryptoAssetAccounts() {
+        return getAccountByNameMap().values().stream()
+                .filter(CryptoAssetAccount.class::isInstance)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Account<? extends PaymentMethod<?>, ?>> getFiatAccounts() {
+        return getAccountByNameMap().values().stream()
+                .filter(e-> !(e instanceof CryptoAssetAccount))
+                .collect(Collectors.toSet());
+    }
+
     public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(AccountPayload<?> accountPayload) {
         return getAccountByNameMap().values().stream()
                 .filter(account -> account.getAccountPayload().equals(accountPayload))
@@ -157,7 +170,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
-
     public ReadOnlyObservable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
@@ -165,19 +177,4 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     public Optional<Account<? extends PaymentMethod<?>, ?>> findSelectedAccount() {
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
-
-    public boolean hasAccounts() {
-        return !hasNoAccounts();
-    }
-
-    public boolean hasNoAccounts() {
-        return persistableStore.getAccountByName().isEmpty();
-    }
-
-
-
-    /* --------------------------------------------------------------------- */
-    // Private
-    /* --------------------------------------------------------------------- */
-
 }

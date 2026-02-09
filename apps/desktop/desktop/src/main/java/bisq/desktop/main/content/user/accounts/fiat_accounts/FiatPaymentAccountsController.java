@@ -85,7 +85,7 @@ public class FiatPaymentAccountsController implements Controller {
     public FiatPaymentAccountsController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
         muSigService = serviceProvider.getMuSigService();
-        accountTimestampService = serviceProvider.getAccountService().getAccountTimestampService();
+        accountTimestampService = accountService.getAccountTimestampService();
 
         model = new FiatPaymentAccountsModel();
         view = new FiatPaymentAccountsView(model, this);
@@ -95,11 +95,14 @@ public class FiatPaymentAccountsController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getImportBisq1AccountDataButtonVisible().setValue(muSigService.getMuSigActivated().get());
+
         accountsPin = accountService.getAccountByNameMap().addObserver(new HashMapObserver<>() {
             @Override
             public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
                 UIThread.run(() -> {
-                    if (!(account instanceof CryptoAssetAccount) && !model.getAccounts().contains(account)) {
+                    if (!(account instanceof CryptoAssetAccount) &&
+                            !model.getAccounts().contains(account)) {
                         model.getAccounts().add(account);
                         accountService.setSelectedAccount(account);
                         updateNoAccountsState();
@@ -133,8 +136,15 @@ public class FiatPaymentAccountsController implements Controller {
 
         selectedAccountSubscription = EasyBind.subscribe(model.getSelectedAccount(),
                 selectedAccount -> {
+                    if (selectedAccount instanceof CryptoAssetAccount<?>) {
+                        return;
+                    }
+
                     accountService.setSelectedAccount(selectedAccount);
                     applyDataDisplay(selectedAccount);
+
+                    boolean isUserDefinedFiatAccount = selectedAccount instanceof UserDefinedFiatAccount;
+                    model.getSaveUserDefinedFiatAccountButtonVisible().set(isUserDefinedFiatAccount && !accountService.getFiatAccounts().isEmpty());
 
                     if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
                         disposeUserDefinedAccountDetailsPin();
@@ -146,7 +156,7 @@ public class FiatPaymentAccountsController implements Controller {
                                     String accountData = textAreaTextProperty.get();
                                     userDefinedAccountDetailsPin = EasyBind.subscribe(textAreaTextProperty, newValue -> {
                                         String oldValue = userDefinedFiatAccount.getAccountPayload().getAccountData();
-                                        model.getSaveButtonDisabled().set(StringUtils.isEmpty(newValue) || StringUtils.isEmpty(oldValue) || oldValue.equals(newValue));
+                                        model.getSaveUserDefinedFiatAccountButtonDisabled().set(StringUtils.isEmpty(newValue) || StringUtils.isEmpty(oldValue) || oldValue.equals(newValue));
                                     });
                                 }
                             }
@@ -165,7 +175,11 @@ public class FiatPaymentAccountsController implements Controller {
         selectedAccountPin.unbind();
         selectedAccountSubscription.unsubscribe();
         disposeUserDefinedAccountDetailsPin();
-        model.getAccounts().clear();
+        AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
+        if (accountDetails != null) {
+            accountDetails.dispose();
+        }
+        model.reset();
     }
 
     void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account) {
@@ -183,7 +197,7 @@ public class FiatPaymentAccountsController implements Controller {
         }
     }
 
-    void onSaveAccount() {
+    void onSaveUserDefinedFiatAccount() {
         var selectedAccount = model.getSelectedAccount().get();
         if (selectedAccount instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
             AccountDetails<?, ?> accountDetails = model.getAccountDetails().get();
@@ -217,6 +231,9 @@ public class FiatPaymentAccountsController implements Controller {
 
     void onDeleteAccount() {
         accountService.removePaymentAccount(model.getSelectedAccount().get());
+
+        maybeSelectFirstAccount();
+        updateNoAccountsState();
     }
 
     void onImportBisq1AccountData() {
@@ -237,9 +254,10 @@ public class FiatPaymentAccountsController implements Controller {
     }
 
     private void updateNoAccountsState() {
-        model.getNoAccountsAvailable().set(accountService.hasNoAccounts());
-        if (UserDefinedAccountDetails.USE_LEGACY_DESIGN) {
-            model.getSaveButtonVisible().set(accountService.hasAccounts());
+        boolean hasNoAccounts = accountService.getFiatAccounts().isEmpty();
+        model.getNoAccountsAvailable().set(hasNoAccounts);
+        if (hasNoAccounts) {
+            model.getAccountDetails().set(null);
         }
     }
 
@@ -264,7 +282,7 @@ public class FiatPaymentAccountsController implements Controller {
     }
 
     private AccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
-                                                           FiatPaymentRail fiatPaymentRail) {
+                                                   FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account, accountTimestampService);
             case SEPA -> new SepaAccountDetails((SepaAccount) account, accountTimestampService);
@@ -272,7 +290,8 @@ public class FiatPaymentAccountsController implements Controller {
             case ZELLE -> new ZelleAccountDetails((ZelleAccount) account, accountTimestampService);
             case REVOLUT -> new RevolutAccountDetails((RevolutAccount) account, accountTimestampService);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case NATIONAL_BANK -> new NationalBankAccountDetails((NationalBankAccount) account, accountTimestampService);
+            case NATIONAL_BANK ->
+                    new NationalBankAccountDetails((NationalBankAccount) account, accountTimestampService);
             case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case F2F -> new F2FAccountDetails((F2FAccount) account, accountTimestampService);
@@ -282,7 +301,8 @@ public class FiatPaymentAccountsController implements Controller {
             case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case FASTER_PAYMENTS -> new FasterPaymentsAccountDetails((FasterPaymentsAccount) account, accountTimestampService);
+            case FASTER_PAYMENTS ->
+                    new FasterPaymentsAccountDetails((FasterPaymentsAccount) account, accountTimestampService);
             case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
                     throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -305,16 +325,16 @@ public class FiatPaymentAccountsController implements Controller {
         };
     }
 
+    private Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String key) {
+        return model.getAccounts().stream()
+                .filter(account -> account.getAccountName().equals(key))
+                .findAny();
+    }
+
     private void disposeUserDefinedAccountDetailsPin() {
         if (userDefinedAccountDetailsPin != null) {
             userDefinedAccountDetailsPin.unsubscribe();
             userDefinedAccountDetailsPin = null;
         }
-    }
-
-    private Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String key) {
-        return model.getAccounts().stream()
-                .filter(account -> account.getAccountName().equals(key))
-                .findAny();
     }
 }

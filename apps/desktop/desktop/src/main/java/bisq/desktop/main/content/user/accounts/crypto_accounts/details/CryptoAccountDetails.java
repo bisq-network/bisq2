@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.user.accounts.crypto_accounts.details;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.crypto.CryptoPaymentRail;
@@ -29,7 +28,6 @@ import bisq.desktop.main.content.user.accounts.AccountDetails;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.BooleanFormatter;
-import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -58,9 +56,9 @@ public abstract class CryptoAccountDetails<A extends CryptoAssetAccount<?>> exte
         CryptoAssetAccountPayload accountPayload = account.getAccountPayload();
         String address = accountPayload.getAddress();
         addressDescriptionLabel = addDescriptionLabel(Res.get("paymentAccounts.crypto.address.address"));
-        addValueLabel(address);
+        Label addressValueLabel = addValueLabel(address);
         if (address.length() > 70) {
-            addressDescriptionLabel.setTooltip(new BisqTooltip(address));
+            addressValueLabel.setTooltip(new BisqTooltip(address));
         }
         String isInstant = BooleanFormatter.toEnabledDisabled(accountPayload.isInstant());
         addDescriptionAndValue(Res.get("paymentAccounts.crypto.isInstant"), isInstant);
@@ -92,12 +90,6 @@ public abstract class CryptoAccountDetails<A extends CryptoAssetAccount<?>> exte
             }
         }
 
-        accountTimestampService.findAccountTimestamp(account)
-                .ifPresent(date -> {
-                    String accountAge = TimeFormatter.formatAgeInDays(date);
-                    addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), accountAge);
-                });
+        super.addDetails();
     }
-
-
 }
