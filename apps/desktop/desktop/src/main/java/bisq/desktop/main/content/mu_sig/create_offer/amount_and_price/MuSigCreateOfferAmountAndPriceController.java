@@ -28,6 +28,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.mu_sig.MuSigOffer;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -98,7 +99,9 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     }
 
     public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
-        muSigCreateOfferAmountController.updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+        if(!muSigCreateOfferPriceController.getPriceSpec().isNotNull().get()) {
+            muSigCreateOfferAmountController.updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+        }
     }
 
     public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {
@@ -116,6 +119,13 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
 
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {
         return muSigCreateOfferPriceController.getPriceSpec();
+    }
+
+    public void setInitialData(MuSigOffer muSigOffer) {
+        setDirection(muSigOffer.getDirection());
+        setMarket(muSigOffer.getMarket());
+        muSigCreateOfferAmountController.setBaseSideAmountSpec((BaseSideAmountSpec) muSigOffer.getAmountSpec());
+        muSigCreateOfferPriceController.setPriceSpec(muSigOffer.getPriceSpec());
     }
 
     private String getHeadline() {
