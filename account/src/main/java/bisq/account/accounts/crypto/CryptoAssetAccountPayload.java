@@ -18,7 +18,6 @@
 package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
@@ -47,25 +46,6 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
     protected final Optional<Integer> autoConfNumConfirmations;
     protected final Optional<Long> autoConfMaxTradeAmount;
     protected final Optional<String> autoConfExplorerUrls;
-
-    protected CryptoAssetAccountPayload(String id,
-                                        String currencyCode,
-                                        String address,
-                                        boolean isInstant,
-                                        Optional<Boolean> isAutoConf,
-                                        Optional<Integer> autoConfNumConfirmations,
-                                        Optional<Long> autoConfMaxTradeAmount,
-                                        Optional<String> autoConfExplorerUrls) {
-        this(id,
-                AccountUtils.generateSalt(),
-                currencyCode,
-                address,
-                isInstant,
-                isAutoConf,
-                autoConfNumConfirmations,
-                autoConfMaxTradeAmount,
-                autoConfExplorerUrls);
-    }
 
     protected CryptoAssetAccountPayload(String id,
                                         byte[] salt,

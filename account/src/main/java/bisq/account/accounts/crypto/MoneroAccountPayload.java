@@ -138,7 +138,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
 
     @Override
     public byte[] getFingerprint() {
-        String data = currencyCode + address + privateViewKey.orElse("");
+        String data = privateViewKey.orElse("");
         return super.getFingerprint(data.getBytes(StandardCharsets.UTF_8));
     }
 

@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Getter
@@ -99,7 +98,6 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
 
     @Override
     public byte[] getFingerprint() {
-        String data = currencyCode + address;
-        return super.getFingerprint(data.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(new byte[]{});
     }
 }
