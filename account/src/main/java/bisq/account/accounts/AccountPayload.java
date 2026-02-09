@@ -54,10 +54,6 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     protected final String id;
     protected final byte[] salt; // 32 bytes
 
-    public AccountPayload(String id) {
-        this(id, AccountUtils.generateSalt());
-    }
-
     public AccountPayload(String id, byte[] salt) {
         this.id = id;
         this.salt = salt;

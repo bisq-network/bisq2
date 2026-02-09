@@ -17,7 +17,6 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -63,31 +62,6 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
     protected final String accountNr;
     protected final Optional<BankAccountType> bankAccountType;
     protected final Optional<String> nationalAccountId;
-
-    protected BankAccountPayload(String id,
-                                 String countryCode,
-                                 String selectedCurrencyCode,
-                                 Optional<String> holderName,
-                                 Optional<String> holderId,
-                                 Optional<String> bankName,
-                                 Optional<String> bankId,
-                                 Optional<String> branchId,
-                                 String accountNr,
-                                 Optional<BankAccountType> bankAccountType,
-                                 Optional<String> nationalAccountId) {
-        this(id,
-                AccountUtils.generateSalt(),
-                countryCode,
-                selectedCurrencyCode,
-                holderName,
-                holderId,
-                bankName,
-                bankId,
-                branchId,
-                accountNr,
-                bankAccountType,
-                nationalAccountId);
-    }
 
     protected BankAccountPayload(String id,
                                  byte[] salt,
