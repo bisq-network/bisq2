@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.desktop.main.content.bisq_easy.history.BisqEasyHistoryController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
@@ -82,6 +83,7 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
             case BISQ_EASY_OFFERBOOK -> Optional.of(new BisqEasyOfferbookController(serviceProvider));
             case BISQ_EASY_OPEN_TRADES -> Optional.of(new BisqEasyOpenTradesController(serviceProvider));
             case BISQ_EASY_PRIVATE_CHAT -> Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
+            case BISQ_EASY_HISTORY -> Optional.of(new BisqEasyHistoryController(serviceProvider));
             default -> Optional.empty();
         };
     }
