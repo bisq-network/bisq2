@@ -22,11 +22,14 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -35,13 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaymentMethod> {
     protected final String countryCode;
 
-    public CountryBasedAccountPayload(String id, String countryCode, String paymentMethodId, byte[] salt) {
-        super(id, paymentMethodId, salt);
-        this.countryCode = countryCode;
-    }
-
-    public CountryBasedAccountPayload(String id, String countryCode) {
-        super(id);
+    public CountryBasedAccountPayload(String id, byte[] salt, String countryCode) {
+        super(id, salt);
         this.countryCode = countryCode;
     }
 
@@ -92,5 +90,10 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
 
     public Country getCountry() {
         return CountryRepository.getCountry(countryCode);
+    }
+
+    @Override
+    protected byte[] getFingerprint(byte[] data) {
+        return super.getFingerprint(ByteArrayUtils.concat(countryCode.getBytes(StandardCharsets.UTF_8), data));
     }
 }

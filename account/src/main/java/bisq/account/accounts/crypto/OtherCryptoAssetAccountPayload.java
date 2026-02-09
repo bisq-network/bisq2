@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.crypto;
 
+import bisq.account.accounts.AccountUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,7 +38,28 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
                                           Optional<Integer> autoConfNumConfirmations,
                                           Optional<Long> autoConfMaxTradeAmount,
                                           Optional<String> autoConfExplorerUrls) {
+        this(id,
+                AccountUtils.generateSalt(),
+                currencyCode,
+                address,
+                isInstant,
+                isAutoConf,
+                autoConfNumConfirmations,
+                autoConfMaxTradeAmount,
+                autoConfExplorerUrls);
+    }
+
+    private OtherCryptoAssetAccountPayload(String id,
+                                           byte[] salt,
+                                           String currencyCode,
+                                           String address,
+                                           boolean isInstant,
+                                           Optional<Boolean> isAutoConf,
+                                           Optional<Integer> autoConfNumConfirmations,
+                                           Optional<Long> autoConfMaxTradeAmount,
+                                           Optional<String> autoConfExplorerUrls) {
         super(id,
+                salt,
                 currencyCode,
                 address,
                 isInstant,
@@ -64,12 +86,18 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
         var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
         return new OtherCryptoAssetAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 cryptoAssetAccountPayload.getCurrencyCode(),
                 cryptoAssetAccountPayload.getAddress(),
                 cryptoAssetAccountPayload.getIsInstant(),
-                cryptoAssetAccountPayload.hasIsAutoConf()? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()):Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfNumConfirmations()? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()):Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount()? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()):Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfExplorerUrls()? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()):Optional.empty());
+                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty());
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(new byte[]{});
     }
 }

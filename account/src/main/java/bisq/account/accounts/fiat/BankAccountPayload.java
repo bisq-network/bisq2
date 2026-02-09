@@ -19,7 +19,6 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -30,6 +29,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -64,6 +64,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
     protected final Optional<String> nationalAccountId;
 
     protected BankAccountPayload(String id,
+                                 byte[] salt,
                                  String countryCode,
                                  String selectedCurrencyCode,
                                  Optional<String> holderName,
@@ -74,7 +75,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                                  String accountNr,
                                  Optional<BankAccountType> bankAccountType,
                                  Optional<String> nationalAccountId) {
-        super(id, countryCode);
+        super(id, salt, countryCode);
 
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
@@ -132,7 +133,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         return builder;
     }
 
-    public static BankAccountPayload fromProto(AccountPayload proto) {
+    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
             case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);
@@ -156,5 +157,33 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                 Res.get("paymentAccounts.bank.bankAccountType." + value.name())));
         nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
         return builder.toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String bankNameValue = BankAccountUtils.isBankNameRequired(countryCode) ? bankName.orElse("") : "";
+        String bankIdValue = BankAccountUtils.isBankIdRequired(countryCode) ? bankId.orElse("") : "";
+        String branchIdValue = BankAccountUtils.isBranchIdRequired(countryCode) ? branchId.orElse("") : "";
+
+        // In Bisq 1 bankAccountType was using the translated strings (Checking, Savings).
+        // This was a bug and cannot be ported to Bisq 2. Users with account age for such accounts would have
+        // problems on Bisq 1 as well as verification depends on language. We assume there are few accounts
+        // affected by that.
+        String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode)
+                ? bankAccountType.map(BankAccountType::name).orElse("")
+                : "";
+
+        // We also have to break compatibility with Bisq 1 holderIdValue as it uses i18n strings.
+        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode) ? holderId.orElse("") : "";
+
+        String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";
+        String all = bankNameValue +
+                bankIdValue +
+                branchIdValue +
+                accountNr +
+                accountTypeValue +
+                holderIdValue +
+                nationalAccountIdValue;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
     }
 }

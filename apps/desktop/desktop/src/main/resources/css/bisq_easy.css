@@ -802,6 +802,21 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Trade history                                                               *
+ *                                                                             *
+ ******************************************************************************/
+
+.bisq-easy-history-table .table-row-cell:hover .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-50 !important;
+}
+
+.bisq-easy-history-table .table-row-cell:selected .quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-40 !important;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
  * Trade wizard                                                                *
  *                                                                             *
  ******************************************************************************/

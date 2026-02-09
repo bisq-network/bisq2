@@ -17,15 +17,19 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.Getter;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 public class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
@@ -47,7 +51,23 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
                              String city,
                              String contact,
                              String extraInfo) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                city,
+                contact,
+                extraInfo);
+    }
+
+    private F2FAccountPayload(String id,
+                              byte[] salt,
+                              String countryCode,
+                              String selectedCurrencyCode,
+                              String city,
+                              String contact,
+                              String extraInfo) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.city = city;
         this.contact = contact;
@@ -86,6 +106,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.F2FAccountPayload payload = countryBasedAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCode(),
                 payload.getCity(),
@@ -111,5 +132,12 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
                 Res.get("paymentAccounts.f2f.contact"), contact,
                 Res.get("paymentAccounts.f2f.extraInfo"), extraInfo
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(contact.getBytes(StandardCharsets.UTF_8),
+                city.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

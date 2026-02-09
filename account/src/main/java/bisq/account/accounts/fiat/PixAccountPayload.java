@@ -17,17 +17,20 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -43,7 +46,11 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
     private final String pixKey;
 
     public PixAccountPayload(String id, String countryCode, String holderName, String pixKey) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, holderName, pixKey);
+    }
+
+    private PixAccountPayload(String id, byte[] salt, String countryCode, String holderName, String pixKey) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
         this.pixKey = pixKey;
     }
@@ -72,10 +79,11 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
                 .setPixKey(pixKey);
     }
 
-    public static PixAccountPayload fromProto(AccountPayload proto) {
+    public static PixAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.PixAccountPayload payload = countryBasedAccountPayload.getPixAccountPayload();
         return new PixAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getHolderName(),
                 payload.getPixKey()
@@ -93,5 +101,12 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.pix.pixKey"), pixKey
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(pixKey.getBytes(StandardCharsets.UTF_8),
+                holderName.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

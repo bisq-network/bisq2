@@ -21,6 +21,8 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,10 +43,12 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     // We keep track of all trades by storing the trade IDs to avoid that the same trade can be taken again.
     private final ObservableSet<String> tradeIds = new ObservableSet<>();
+    private final ObservableSet<BisqEasyClosedTrade> closedTrades = new ObservableSet<>();
 
-    private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds) {
+    private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds, Set<BisqEasyClosedTrade> closedTrades) {
         this.trades.setAll(trades);
         this.tradeIds.setAll(tradeIds);
+        this.closedTrades.setAll(closedTrades);
     }
 
     @Override
@@ -61,7 +65,19 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
                         })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList()))
-                .addAllTradeIds(tradeIds);
+                .addAllTradeIds(tradeIds)
+                .addAllBisqEasyClosedTrades(closedTrades.stream()
+                        .map(closedTrade -> {
+                            try {
+                                return closedTrade.toProto(serializeForHash);
+                            } catch (Exception e) {
+                                log.error("Could not create proto from BisqEasyClosedTrade {}", closedTrade, e);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())
+                );
     }
 
     @Override
@@ -75,14 +91,26 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
                     try {
                         return BisqEasyTrade.fromProto(tradeProto);
                     } catch (Exception e) {
-                        log.error("Could not create BisqEasyTrade from proto {}", tradeProto, e);
+                        log.error("Could not create BisqEasyClosedTrade from proto {}", tradeProto, e);
                         return null;
                     }
 
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()));
+        var closedTrades = proto.getBisqEasyClosedTradesList().stream()
+                .map(closedTradeProto -> {
+                    try {
+                        return BisqEasyClosedTrade.fromProto(closedTradeProto);
+                    } catch (Exception e) {
+                        log.error("Could not create BisqEasyClosedTrade from proto {}", closedTradeProto, e);
+                        return null;
+                    }
+
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()), closedTrades);
     }
 
     @Override
@@ -98,13 +126,21 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     @Override
     public BisqEasyTradeStore getClone() {
-        return new BisqEasyTradeStore(Set.copyOf(trades), Set.copyOf(tradeIds));
+        return new BisqEasyTradeStore(Set.copyOf(trades), Set.copyOf(tradeIds), Set.copyOf(closedTrades));
     }
 
     @Override
     public void applyPersisted(BisqEasyTradeStore persisted) {
         trades.setAll(persisted.getTrades());
         tradeIds.setAll(persisted.getTradeIds());
+        closedTrades.setAll(persisted.getClosedTrades());
+    }
+
+    ObservableSet<BisqEasyTrade> getAllTrades() {
+        ObservableSet<BisqEasyTrade> allTrades = new ObservableSet<>();
+        allTrades.addAll(trades);
+        allTrades.addAll(closedTrades.stream().map(BisqEasyClosedTrade::trade).collect(Collectors.toSet()));
+        return allTrades;
     }
 
     void addTrade(BisqEasyTrade trade) {
@@ -112,8 +148,9 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         tradeIds.add(trade.getId());
     }
 
-    void removeTrade(BisqEasyTrade trade) {
+    void removeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
         trades.remove(trade);
+        closedTrades.add(new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile));
     }
 
     Optional<BisqEasyTrade> findTrade(String tradeId) {

@@ -13,4 +13,5 @@ message TimestampStore {
 message Bisq1BridgeRequestStore {
   repeated user.AuthorizeAccountAgeRequest accountAgeRequests = 1;
   repeated user.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
+  map<string, uint64> accountTimestampDateByHash = 3;
 }

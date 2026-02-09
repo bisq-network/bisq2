@@ -17,17 +17,19 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -40,7 +42,11 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
     private final String promptPayId;
 
     public PromptPayAccountPayload(String id, String countryCode, String promptPayId) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, promptPayId);
+    }
+
+    private PromptPayAccountPayload(String id, byte[] salt, String countryCode, String promptPayId) {
+        super(id, salt, countryCode);
         this.promptPayId = promptPayId;
     }
 
@@ -66,10 +72,11 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
                 .setPromptPayId(promptPayId);
     }
 
-    public static PromptPayAccountPayload fromProto(AccountPayload proto) {
+    public static PromptPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.PromptPayAccountPayload payload = countryBasedAccountPayload.getPromptPayAccountPayload();
         return new PromptPayAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getPromptPayId()
         );
@@ -85,5 +92,10 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.promptPay.promptPayId"), promptPayId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(promptPayId.getBytes(StandardCharsets.UTF_8));
     }
 }

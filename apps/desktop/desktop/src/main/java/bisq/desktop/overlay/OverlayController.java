@@ -38,13 +38,14 @@ import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_details.MuSigTradeDetailsController;
 import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.main.content.mu_sig.trade_guide.MuSigGuideController;
+import bisq.desktop.main.content.mu_sig.trade_limits.TradeLimitsController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
 import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
-import bisq.desktop.main.content.user.crypto_accounts.create.CreateCryptoAssetAccountController;
-import bisq.desktop.main.content.user.fiat_accounts.create.CreatePaymentAccountController;
-import bisq.desktop.main.content.user.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.CreateCryptoAssetAccountController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.CreatePaymentAccountController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.SetupWalletWizardController;
@@ -160,6 +161,7 @@ public class OverlayController extends NavigationController {
             case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));
             case MU_SIG_TRADE_DETAILS -> Optional.of(new MuSigTradeDetailsController(serviceProvider));
             case MU_SIG_GUIDE -> Optional.of(new MuSigGuideController(serviceProvider));
+            case MU_SIG_TRADE_LIMITS -> Optional.of(new TradeLimitsController(serviceProvider));
 
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));

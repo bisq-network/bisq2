@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -45,14 +46,12 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
     private final String holderName;
     private final String emailOrMobileNr;
 
-    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr, String paymentMethodId, byte[] salt) {
-        super(id, "US", paymentMethodId, salt);
-        this.holderName = holderName;
-        this.emailOrMobileNr = emailOrMobileNr;
+    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr) {
+        this(id, AccountUtils.generateSalt(), holderName, emailOrMobileNr);
     }
 
-    public ZelleAccountPayload(String id, String holderName, String emailOrMobileNr) {
-        super(id, "US");
+    private ZelleAccountPayload(String id, byte[] salt, String holderName, String emailOrMobileNr) {
+        super(id, salt, "US");
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
     }
@@ -86,11 +85,14 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
         var zelleProto = proto.getZelleAccountPayload();
         return new ZelleAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 zelleProto.getHolderName(),
-                zelleProto.getEmailOrMobileNr(),
-                proto.getPaymentMethodId(),
-                proto.getSalt().toByteArray()
+                zelleProto.getEmailOrMobileNr()
         );
+    }
+
+    public static ZelleAccountPayload fromImport(String id, String holderName, String emailOrMobileNr, byte[] salt) {
+        return new ZelleAccountPayload(id, salt, holderName, emailOrMobileNr);
     }
 
     @Override
@@ -107,10 +109,7 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
     }
 
     @Override
-    public byte[] getAgeWitnessInputData() {
-        // We don't add holderName because we don't want to break age validation if the user recreates an account with
-        // slight changes in holder name (e.g. add or remove middle name)
-        // Also we want to be compatible with Bisq 1 to not break account age data
-        return super.getAgeWitnessInputData(emailOrMobileNr.getBytes(StandardCharsets.UTF_8));
+    public byte[] getFingerprint() {
+        return super.getFingerprint(emailOrMobileNr.getBytes(StandardCharsets.UTF_8));
     }
 }

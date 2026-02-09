@@ -39,6 +39,7 @@ public final class MetaData implements NetworkProto {
     public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
     public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);
+    public static final long TTL_20_DAYS = TimeUnit.DAYS.toMillis(20);
     public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
     public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
 

@@ -302,7 +302,7 @@ public class TradeStateController implements Controller {
         // We need to pin the chatChannel to close as the one in the model would get updated after
         // bisqEasyTradeService.removeTrade, and then we would close the wrong channel.
         BisqEasyOpenTradeChannel chatChannel = model.getChannel().get();
-        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
+        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get(), chatChannel.getMyUserIdentity().getUserProfile(), chatChannel.getPeer());
         leavePrivateChatManager.leaveChannel(chatChannel);
     }
 

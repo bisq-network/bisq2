@@ -49,6 +49,7 @@ import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
@@ -379,8 +380,16 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.getTrades();
     }
 
-    public void removeTrade(BisqEasyTrade trade) {
-        persistableStore.removeTrade(trade);
+    public ObservableSet<BisqEasyTrade> getAllTrades() {
+        return persistableStore.getAllTrades();
+    }
+
+    public ObservableSet<BisqEasyClosedTrade> getClosedTrades() {
+        return persistableStore.getClosedTrades();
+    }
+
+    public void removeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
+        persistableStore.removeTrade(trade, myUserProfile, peerUserProfile);
         tradeProtocolById.remove(trade.getId());
         persist();
     }
@@ -456,7 +465,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         // We use a more constrained duration of 45-90 days.
         int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
-        long numChanges = getTrades().stream()
+        long numChanges = getAllTrades().stream()
                 .filter(trade -> {
                     if (StringUtils.isEmpty(trade.getPaymentAccountData().get())) {
                         return false;

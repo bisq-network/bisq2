@@ -71,21 +71,17 @@ public class MuSigOfferListItem {
 
     private final String quoteCurrencyCode, baseAmountAsString, quoteAmountAsString, paymentMethodsAsString,
             maker, takeOfferButtonText, baseAmountWithSymbol, quoteAmountWithSymbol, offerIntentText, offerId,
-            offerDateString, deposit;
-    private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer;
+            offerDateString, deposit, paymentMethodCurrencyCode;
+    private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer, hasFixPrice, isBaseAmountBtc, hasAmountRange;
     private final Market market;
     private final Direction direction;
     private final List<PaymentMethod<?>> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
     private final long offerDate, totalScore;
-    private final boolean hasFixPrice;
     private final Map<PaymentMethod<?>, Boolean> accountAvailableByPaymentMethod;
     private final Pin marketPriceByCurrencyMapPin;
-    private final boolean isBaseAmountBtc;
-    private final boolean hasAmountRange;
     private final Pair<String, String> minAndMaxBaseAmountPair;
-    private final String paymentMethodCurrencyCode;
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;

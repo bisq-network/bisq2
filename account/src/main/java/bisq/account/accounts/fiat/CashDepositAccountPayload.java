@@ -17,10 +17,10 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -52,7 +52,36 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                                      Optional<BankAccountType> bankAccountType,
                                      Optional<String> nationalAccountId,
                                      Optional<String> requirements) {
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                holderTaxId,
+                bankName,
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId,
+                requirements);
+    }
+
+    private CashDepositAccountPayload(String id,
+                                      byte[] salt,
+                                      String countryCode,
+                                      String selectedCurrencyCode,
+                                      String holderName,
+                                      Optional<String> holderTaxId,
+                                      String bankName,
+                                      Optional<String> bankId,
+                                      Optional<String> branchId,
+                                      String accountNr,
+                                      Optional<BankAccountType> bankAccountType,
+                                      Optional<String> nationalAccountId,
+                                      Optional<String> requirements) {
         super(id,
+                salt,
                 countryCode,
                 selectedCurrencyCode,
                 Optional.of(holderName),
@@ -89,12 +118,13 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
         return builder;
     }
 
-    public static CashDepositAccountPayload fromProto(AccountPayload proto) {
+    public static CashDepositAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         var cashDepositAccountPayload = bankAccountPayload.getCashDepositAccountPayload();
         checkArgument(bankAccountPayload.hasBankName(), "Bank name for Cash Deposit must be present");
         return new CashDepositAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getSelectedCurrencyCode(),
                 bankAccountPayload.getHolderName(),
@@ -112,6 +142,7 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     public FiatPaymentMethod getPaymentMethod() {
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.CASH_DEPOSIT);
     }
+
     @Override
     public String getAccountDataDisplayString() {
         AccountDataDisplayStringBuilder builder = new AccountDataDisplayStringBuilder();

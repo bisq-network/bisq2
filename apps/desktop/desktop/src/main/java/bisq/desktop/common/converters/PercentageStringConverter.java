@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.converters;
 
+import bisq.common.util.MathUtils;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.parser.PercentageParser;
 import javafx.util.StringConverter;
@@ -25,13 +26,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PercentageStringConverter extends StringConverter<Number> {
     private final double defaultValue;
+    // Percentage value of 100 % is 1.00. Precision is referring to this decimal value, thus a precision of 2 means
+    // the percentage value gets rounded. E.g. 0.12 -> 12%
+    private int precision = 2;
 
     public PercentageStringConverter() {
         defaultValue = 0;
     }
 
+    public PercentageStringConverter(int precision) {
+        this.precision = precision;
+        defaultValue = 0;
+    }
+
     public PercentageStringConverter(double defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public PercentageStringConverter(double defaultValue, int precision) {
+        this.defaultValue = defaultValue;
+        this.precision = precision;
     }
 
     public Number fromString(String value) {
@@ -46,6 +60,11 @@ public class PercentageStringConverter extends StringConverter<Number> {
         if (numberValue == null) {
             return "";
         }
-        return PercentageFormatter.formatToPercentWithSymbol(numberValue.doubleValue());
+        double value = MathUtils.roundDouble(numberValue.doubleValue(), precision);
+        if (precision <= 2) {
+            return PercentageFormatter.formatToPercentNoDecimalsWithSymbol(value);
+        } else {
+            return PercentageFormatter.formatToPercentWithSymbol(value);
+        }
     }
 }

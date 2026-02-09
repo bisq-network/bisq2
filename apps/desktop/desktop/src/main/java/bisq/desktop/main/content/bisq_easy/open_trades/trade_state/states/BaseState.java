@@ -92,7 +92,7 @@ public abstract class BaseState {
 
         protected Optional<String> findUsersAccountData() {
             return accountService
-                    .getSelectedAccount().stream()
+                    .findSelectedAccount().stream()
                     .filter(UserDefinedFiatAccount.class::isInstance)
                     .map(UserDefinedFiatAccount.class::cast)
                     .map(account -> account.getAccountPayload().getAccountData())

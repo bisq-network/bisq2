@@ -17,18 +17,29 @@
 
 package bisq.account.accounts.crypto;
 
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.timestamp.KeyAlgorithm;
+import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.KeyPair;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCryptoAssetAccountPayload> {
-    public OtherCryptoAssetAccount(String id, long creationDate, String accountName, OtherCryptoAssetAccountPayload accountPayload) {
-        super(id, creationDate, accountName, accountPayload);
+    public OtherCryptoAssetAccount(String id,
+                                   long creationDate,
+                                   String accountName,
+                                   OtherCryptoAssetAccountPayload accountPayload,
+                                   KeyPair keyPair,
+                                   KeyAlgorithm keyAlgorithm,
+                                   AccountOrigin accountOrigin) {
+        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
@@ -47,11 +58,17 @@ public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCrypt
     public static OtherCryptoAssetAccount fromProto(bisq.account.protobuf.Account proto) {
         var cryptoAssetAccount = proto.getCryptoAssetAccount();
         var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
+        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm());
         return new OtherCryptoAssetAccount(
                 proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload())
+                OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload()),
+                keyPair,
+                keyAlgorithm,
+                accountOrigin
         );
     }
 }

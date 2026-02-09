@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -29,6 +29,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,7 +49,22 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
                                  String email,
                                  String beneficiaryAddress
     ) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                holderName,
+                email,
+                beneficiaryAddress);
+    }
+
+    private WiseUsdAccountPayload(String id,
+                                  byte[] salt,
+                                  String countryCode,
+                                  String holderName,
+                                  String email,
+                                  String beneficiaryAddress
+    ) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
         this.email = email;
         this.beneficiaryAddress = beneficiaryAddress;
@@ -80,11 +97,12 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
                 .setBeneficiaryAddress(beneficiaryAddress);
     }
 
-    public static WiseUsdAccountPayload fromProto(AccountPayload proto) {
+    public static WiseUsdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getWiseUsdAccountPayload();
         return new WiseUsdAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getHolderName(),
                 payload.getEmail(),
@@ -103,5 +121,15 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.email"), email
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "TRANSFERWISE_USD";
     }
 }

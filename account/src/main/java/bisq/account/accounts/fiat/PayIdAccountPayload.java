@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -28,6 +29,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 @Getter
 @Slf4j
 @ToString
@@ -37,7 +40,11 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     private final String payId;
 
     public PayIdAccountPayload(String id, String holderName, String payId) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), holderName, payId);
+    }
+
+    private PayIdAccountPayload(String id, byte[] salt, String holderName, String payId) {
+        super(id, salt);
         this.holderName = holderName;
         this.payId = payId;
     }
@@ -62,6 +69,7 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
         var payload = proto.getPayIdAccountPayload();
         return new PayIdAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 payload.getHolderName(),
                 payload.getPayId());
     }
@@ -77,5 +85,16 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.payId.payId"), payId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String all = payId + holderName;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "AUSTRALIA_PAYID";
     }
 }

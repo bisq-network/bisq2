@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -42,17 +43,37 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String email;
+    private final String state;
 
     public MoneyGramAccountPayload(String id,
                                    String countryCode,
                                    List<String> selectedCurrencyCodes,
                                    String holderName,
-                                   String email
+                                   String email,
+                                   String state
     ) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCodes,
+                holderName,
+                email,
+                state);
+    }
+
+    private MoneyGramAccountPayload(String id,
+                                    byte[] salt,
+                                    String countryCode,
+                                    List<String> selectedCurrencyCodes,
+                                    String holderName,
+                                    String email,
+                                    String state
+    ) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
+        this.state = state;
 
         verify();
     }
@@ -79,19 +100,22 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
         return bisq.account.protobuf.MoneyGramAccountPayload.newBuilder()
                 .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setHolderName(holderName)
-                .setEmail(email);
+                .setEmail(email)
+                .setState(state);
     }
 
-    public static MoneyGramAccountPayload fromProto(AccountPayload proto) {
+    public static MoneyGramAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
 
         return new MoneyGramAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
-                payload.getEmail()
+                payload.getEmail(),
+                payload.getState()
         );
     }
 
@@ -106,5 +130,11 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.email"), email
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String all = countryCode + state + holderName + email;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
     }
 }

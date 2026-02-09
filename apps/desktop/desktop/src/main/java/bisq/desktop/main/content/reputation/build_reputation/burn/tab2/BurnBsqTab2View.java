@@ -90,7 +90,6 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
-        UIThread.runOnNextRenderFrame(root::requestFocus);
     }
 
     private MaterialTextField getFormulaField(String key) {

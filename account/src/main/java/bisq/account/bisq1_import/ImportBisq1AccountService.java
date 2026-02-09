@@ -19,8 +19,12 @@ package bisq.account.bisq1_import;
 
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountOrigin;
+import bisq.account.accounts.fiat.SepaAccount;
+import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.json.JsonMapperProvider;
@@ -49,7 +53,7 @@ public class ImportBisq1AccountService implements Service {
     // API
     /* --------------------------------------------------------------------- */
 
-    public List<Account<?, ?>> getAccounts(String json) {
+    public List<Account<?, ?>> parseAccounts(String json) {
         try {
             JsonNode root = JsonMapperProvider.get().readTree(json);
             String privateDsaSignatureKeyAsBase64 = asText(root, "privateDsaSignatureKeyAsBase64");
@@ -64,40 +68,82 @@ public class ImportBisq1AccountService implements Service {
 
             List<Account<?, ?>> accounts = new ArrayList<>();
             for (JsonNode node : root.path("accounts")) {
-                Account<?, ?> account = parseAccount(node, dsaKeyPair);
-                if (account != null) {
-                    accounts.add(account);
+                try {
+                    Account<?, ?> account = parseAccount(node, dsaKeyPair);
+                    if (account != null) {
+                        accounts.add(account);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to parse account from Bisq 1 import data", e);
                 }
             }
             return accounts;
         } catch (Exception e) {
-            log.error("importBisq1AccountData failed for json\n{}", json, e);
+            log.error("importBisq1AccountData failed", e);
             throw new RuntimeException(e);
         }
     }
 
     private Account<?, ?> parseAccount(JsonNode accountNode, KeyPair dsaKeyPair) {
         String paymentMethodId = asText(accountNode.path("paymentMethod"), "id");
-        accountNode.path("paymentAccountPayload");
         long creationDate = asLong(accountNode, "creationDate");
         String accountId = asText(accountNode, "id");
         String accountName = asText(accountNode, "accountName");
         JsonNode paymentAccountPayloadNode = accountNode.path("paymentAccountPayload");
         // paymentAccountPayloadId and accountId are the same in Bisq 1
         String paymentAccountPayloadId = asText(paymentAccountPayloadNode, "id");
-        String saltAsHex = asText(accountNode.path("extraData"), "saltAsHex");
 
-        byte[] salt = saltAsHex != null ? Hex.decode(saltAsHex) : ByteArrayUtils.getRandomBytes(32);
+        // TODO for XMR we need to apply those
+        // JsonNode extraData = accountNode.path("extraData");
+
+        String saltAsHex = asText(paymentAccountPayloadNode.path("excludeFromJsonDataMap"), "salt");
+        byte[] salt;
+        if (saltAsHex == null) {
+            log.warn("Salt was not included in json data. We create a new random salt");
+            salt = ByteArrayUtils.getRandomBytes(32);
+        } else {
+            salt = Hex.decode(saltAsHex);
+        }
+
+        // commonly used fields
+        String holderName = asText(paymentAccountPayloadNode, "holderName");
+
         switch (paymentMethodId) {
             case "CLEAR_X_CHANGE":
                 String emailOrMobileNr = asText(paymentAccountPayloadNode, "emailOrMobileNr");
-                String holderName = asText(paymentAccountPayloadNode, "holderName");
-                ZelleAccountPayload accountPayload = new ZelleAccountPayload(paymentAccountPayloadId, holderName, emailOrMobileNr, paymentMethodId, salt);
-                return new ZelleAccount(accountId, creationDate, accountName, accountPayload, dsaKeyPair, KeyGeneration.DSA);
+                ZelleAccountPayload zelleAccountPayload = ZelleAccountPayload.fromImport(
+                        paymentAccountPayloadId,
+                        holderName,
+                        emailOrMobileNr,
+                        salt);
+                return new ZelleAccount(accountId, creationDate, accountName, zelleAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
+            case "SEPA":
+                String bic = asText(paymentAccountPayloadNode, "bic");
+                String iban = asText(paymentAccountPayloadNode, "iban");
+                String countryCode = asText(paymentAccountPayloadNode, "countryCode");
+                JsonNode acceptedCountryCodesNode = paymentAccountPayloadNode.get("acceptedCountryCodes");
+                List<String> acceptedCountryCodes = acceptedCountryCodesNode != null && acceptedCountryCodesNode.isArray()
+                        ? asStringList(acceptedCountryCodesNode)
+                        : List.of();
+                SepaAccountPayload sepaAccountPayload = SepaAccountPayload.fromImport(
+                        paymentAccountPayloadId,
+                        holderName,
+                        iban,
+                        bic,
+                        countryCode,
+                        acceptedCountryCodes,
+                        salt);
+                return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             default:
+                log.warn("Import for paymentMethod {} is not yet supported.", paymentMethodId);
                 return null;
         }
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Json utils
+    /* --------------------------------------------------------------------- */
 
     @Nullable
     private static String asText(JsonNode node, String field) {
@@ -108,5 +154,20 @@ public class ImportBisq1AccountService implements Service {
     private static long asLong(JsonNode node, String field) {
         JsonNode jsonNode = node.get(field);
         return jsonNode == null || jsonNode.isNull() ? 0L : jsonNode.asLong();
+    }
+
+    private static List<String> asStringList(JsonNode node) {
+        if (node == null || !node.isArray()) {
+            throw new IllegalArgumentException("node must be an array");
+        }
+
+        List<String> list = new ArrayList<>(node.size());
+        for (JsonNode entry : node) {
+            if (!entry.isTextual()) {
+                throw new IllegalArgumentException("Entry in string list must be a string");
+            }
+            list.add(entry.asText());
+        }
+        return list;
     }
 }
