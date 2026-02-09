@@ -315,6 +315,8 @@ public class MuSigMediationCaseHeader {
                     showClosedCases -> {
                         leaveButton.setVisible(showClosedCases);
                         leaveButton.setManaged(showClosedCases);
+                        removeButton.setVisible(showClosedCases);
+                        removeButton.setManaged(showClosedCases);
 
                         openCloseButton.setText(showClosedCases ?
                                 Res.get("authorizedRole.mediator.reOpen") :
