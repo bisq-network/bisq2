@@ -50,6 +50,8 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -152,7 +154,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         verifyPaymentMethods(paymentMethods);
 
         String offerId = StringUtils.createUid();
-        List<AccountOption> offerOptions = selectedAccountByPaymentMethod.values().stream()
+        List<OfferOption> offerOptions = selectedAccountByPaymentMethod.values().stream()
                 .map(account -> {
                     AccountPayload<?> accountPayload = account.getAccountPayload();
                     String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(account.getId(), offerId);
@@ -161,7 +163,11 @@ public class MuSigCreateOfferReviewController implements Controller {
                     Optional<String> bankId = AccountUtils.getBankId(accountPayload);
                     List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
                     return new AccountOption(account.getPaymentMethod(), saltedAccountId, countryCode, acceptedCountryCodes, bankId, acceptedBanks);
-                }).collect(Collectors.toList());
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // We use static values for both traders of 25%
+        offerOptions.add(new CollateralOption(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT, MuSigOffer.DEFAULT_SELLER_SECURITY_DEPOSIT));
 
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
                 direction,

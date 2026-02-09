@@ -106,9 +106,9 @@ public class OfferOptionUtil {
     // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
     public static String createdSaltedAccountId(String accountId, String offerId) {
         String input = accountId + offerId;
-        log.error("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
+        log.info("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
-        log.error("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
+        log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
     }
 
