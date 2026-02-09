@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.crypto_accounts;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.user.accounts.crypto_accounts.details.CryptoAccountDetails;
 import javafx.beans.property.BooleanProperty;
@@ -35,15 +36,17 @@ import lombok.extern.slf4j.Slf4j;
 public class CryptoAssetAccountsModel implements Model {
     private final BooleanProperty noAccountsAvailable = new SimpleBooleanProperty();
     private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty importBisq1AccountDataButtonVisible = new SimpleBooleanProperty();
 
-    private final ObservableList<Account<?,?>> accounts = FXCollections.observableArrayList();
-    private final SortedList<Account<?,?>> sortedAccounts = new SortedList<>(accounts);
-    private final ObjectProperty<Account<?,?>> selectedAccount = new SimpleObjectProperty<>();
+    private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accounts = FXCollections.observableArrayList();
+    private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccounts = new SortedList<>(accounts);
+    private final ObjectProperty<Account<? extends PaymentMethod<?>, ?>> selectedAccount = new SimpleObjectProperty<>();
     private final ObjectProperty<CryptoAccountDetails<?>> accountDetails = new SimpleObjectProperty<>();
 
     public void reset() {
         noAccountsAvailable.set(false);
         deleteButtonDisabled.set(false);
+        importBisq1AccountDataButtonVisible.set(false);
         accounts.clear();
         selectedAccount.set(null);
         accountDetails.set(null);

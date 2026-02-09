@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -41,7 +42,8 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel, FiatPaymentAccountsController> {
     private final Label headline;
-    private final Button createButtonWithAccounts, createButtonNoAccounts, saveButton, deletedButton, importBisq1AccountDataButton;
+    private final Button createButtonWithAccounts, createButtonNoAccounts, saveUserDefinedFiatAccountButton,
+            deletedButton, importBisq1AccountDataButton;
     private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
@@ -61,12 +63,15 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
         Label noAccountsInfo = new Label(Res.get("paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
         noAccountsInfo.getStyleClass().add("user-payment-account-no-data");
+
         Label whySetup = new Label(Res.get("paymentAccounts.noAccounts.whySetup"));
         whySetup.setWrapText(true);
         whySetup.getStyleClass().add("large-thin-headline");
+
         Label whySetupInfo = new Label(Res.get("paymentAccounts.noAccounts.whySetup.info"));
         whySetupInfo.setWrapText(true);
         whySetupInfo.getStyleClass().add("user-content-text");
+
         Label whySetupNote = new Label(Res.get("paymentAccounts.noAccounts.whySetup.note"));
         whySetupNote.setWrapText(true);
         whySetupNote.getStyleClass().add("user-content-note");
@@ -97,8 +102,8 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         comboBoxAndCreateButtonHBox = new HBox(20, accountsComboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
-        saveButton = new Button(Res.get("action.save"));
-        saveButton.setDefaultButton(true);
+        saveUserDefinedFiatAccountButton = new Button(Res.get("action.save"));
+        saveUserDefinedFiatAccountButton.setDefaultButton(true);
 
         deletedButton = new Button(Res.get("paymentAccounts.deleteAccount"));
 
@@ -114,7 +119,7 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                new HBox(10, saveButton, deletedButton, importBisq1AccountDataButton));
+                new HBox(10, saveUserDefinedFiatAccountButton, deletedButton, importBisq1AccountDataButton));
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);
@@ -124,9 +129,14 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
     @Override
     protected void onViewAttached() {
         deletedButton.disableProperty().bind(model.getDeleteButtonDisabled());
-        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
-        saveButton.visibleProperty().bind(model.getSaveButtonVisible());
-        saveButton.managedProperty().bind(model.getSaveButtonVisible());
+
+        importBisq1AccountDataButton.visibleProperty().bind(model.getImportBisq1AccountDataButtonVisible());
+        importBisq1AccountDataButton.managedProperty().bind(model.getImportBisq1AccountDataButtonVisible());
+
+        saveUserDefinedFiatAccountButton.disableProperty().bind(model.getSaveUserDefinedFiatAccountButtonDisabled());
+        saveUserDefinedFiatAccountButton.visibleProperty().bind(model.getSaveUserDefinedFiatAccountButtonVisible());
+        saveUserDefinedFiatAccountButton.managedProperty().bind(model.getSaveUserDefinedFiatAccountButtonVisible());
+
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsAvailable(), noAccountsSetup -> {
             boolean anyAccountSetup = !noAccountsSetup;
             lineAfterHeadline.setVisible(anyAccountSetup);
@@ -142,10 +152,12 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
             comboBoxAndCreateButtonHBox.setManaged(anyAccountSetup);
             deletedButton.setVisible(anyAccountSetup);
             deletedButton.setManaged(anyAccountSetup);
+
+            VBox.setMargin(createButtonNoAccounts, new Insets(0, 0, noAccountsSetup ? -45 : 0, 0));
         });
 
         selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
-                account -> accountsComboBox.getSelectionModel().select(account));
+                account -> UIThread.runOnNextRenderFrame(() -> accountsComboBox.getSelectionModel().select(account)));
 
         accountDisplayPin = EasyBind.subscribe(model.getAccountDetails(), accountDetails -> {
             if (accountDetails != null) {
@@ -165,17 +177,22 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         createButtonNoAccounts.setOnAction(e -> controller.onCreateAccount());
         createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
-        saveButton.setOnAction(e -> controller.onSaveAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
         importBisq1AccountDataButton.setOnAction(e -> controller.onImportBisq1AccountData());
+        saveUserDefinedFiatAccountButton.setOnAction(e -> controller.onSaveUserDefinedFiatAccount());
     }
 
     @Override
     protected void onViewDetached() {
         deletedButton.disableProperty().unbind();
-        saveButton.disableProperty().unbind();
-        saveButton.visibleProperty().unbind();
-        saveButton.managedProperty().unbind();
+
+        importBisq1AccountDataButton.visibleProperty().unbind();
+        importBisq1AccountDataButton.managedProperty().unbind();
+
+        saveUserDefinedFiatAccountButton.disableProperty().unbind();
+        saveUserDefinedFiatAccountButton.visibleProperty().unbind();
+        saveUserDefinedFiatAccountButton.managedProperty().unbind();
+
         noAccountsSetupPin.unsubscribe();
         selectedAccountPin.unsubscribe();
         accountDisplayPin.unsubscribe();
@@ -184,8 +201,8 @@ public class FiatPaymentAccountsView extends View<VBox, FiatPaymentAccountsModel
 
         createButtonNoAccounts.setOnAction(null);
         createButtonWithAccounts.setOnAction(null);
-        saveButton.setOnAction(null);
         deletedButton.setOnAction(null);
         importBisq1AccountDataButton.setOnAction(null);
+        saveUserDefinedFiatAccountButton.setOnAction(null);
     }
 }

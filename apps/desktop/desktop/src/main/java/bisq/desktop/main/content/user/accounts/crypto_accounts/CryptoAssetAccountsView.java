@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.crypto_accounts;
 
 import bisq.account.accounts.Account;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -40,8 +41,9 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel, CryptoAssetAccountsController> {
     private final Label headline;
-    private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton;
-    private final AutoCompleteComboBox<Account<?,?>> accountsComboBox;
+    private final Button createButtonWithAccounts, createButtonNoAccounts, deletedButton,
+            importBisq1AccountDataButton;
+    private final AutoCompleteComboBox<Account<?, ?>> accountsComboBox;
     private final HBox comboBoxAndCreateButtonHBox;
     private final VBox noAccountsVBox;
     private final Pane accountDisplayPane;
@@ -87,12 +89,12 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
         accountsComboBox.setPrefWidth(325);
         accountsComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Account<?,?> account) {
+            public String toString(Account<?, ?> account) {
                 return account != null ? account.getAccountName() : "";
             }
 
             @Override
-            public Account<?,?> fromString(String string) {
+            public Account<?, ?> fromString(String string) {
                 return null;
             }
         });
@@ -100,6 +102,8 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
         comboBoxAndCreateButtonHBox = new HBox(20, accountsComboBox, Spacer.fillHBox(), createButtonWithAccounts);
 
         deletedButton = new Button(Res.get("paymentAccounts.crypto.deleteAccount"));
+
+        importBisq1AccountDataButton = new Button(Res.get("paymentAccounts.importBisq1AccountData"));
 
         accountDisplayPane = new StackPane();
 
@@ -111,7 +115,7 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
                 createButtonNoAccounts,
                 comboBoxAndCreateButtonHBox,
                 accountDisplayPane,
-                deletedButton);
+                new HBox(10, deletedButton, importBisq1AccountDataButton));
         contentBox.getStyleClass().add("bisq-common-bg");
 
         root.getChildren().add(contentBox);
@@ -121,6 +125,9 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
     @Override
     protected void onViewAttached() {
         deletedButton.disableProperty().bind(model.getDeleteButtonDisabled());
+
+        importBisq1AccountDataButton.visibleProperty().bind(model.getImportBisq1AccountDataButtonVisible());
+        importBisq1AccountDataButton.managedProperty().bind(model.getImportBisq1AccountDataButtonVisible());
 
         noAccountsSetupPin = EasyBind.subscribe(model.getNoAccountsAvailable(), noAccountsSetup -> {
             boolean anyAccountSetup = !noAccountsSetup;
@@ -133,19 +140,20 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
             createButtonNoAccounts.setVisible(noAccountsSetup);
             createButtonNoAccounts.setManaged(noAccountsSetup);
 
-
             comboBoxAndCreateButtonHBox.setVisible(anyAccountSetup);
             comboBoxAndCreateButtonHBox.setManaged(anyAccountSetup);
             deletedButton.setVisible(anyAccountSetup);
             deletedButton.setManaged(anyAccountSetup);
+
+            VBox.setMargin(createButtonNoAccounts, new Insets(0, 0, noAccountsSetup ? -45 : 0, 0));
         });
 
         selectedAccountPin = EasyBind.subscribe(model.getSelectedAccount(),
-                account -> accountsComboBox.getSelectionModel().select(account));
+                account -> UIThread.runOnNextRenderFrame(() -> accountsComboBox.getSelectionModel().select(account)));
 
-        accountDisplayPin = EasyBind.subscribe(model.getAccountDetails(), accountDisplay -> {
-            if (accountDisplay != null) {
-                accountDisplayPane.getChildren().setAll(accountDisplay);
+        accountDisplayPin = EasyBind.subscribe(model.getAccountDetails(), accountDetails -> {
+            if (accountDetails != null) {
+                accountDisplayPane.getChildren().setAll(accountDetails);
             } else {
                 accountDisplayPane.getChildren().clear();
             }
@@ -162,11 +170,15 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
         createButtonNoAccounts.setOnAction(e -> controller.onCreateAccount());
         createButtonWithAccounts.setOnAction(e -> controller.onCreateAccount());
         deletedButton.setOnAction(e -> controller.onDeleteAccount());
+        importBisq1AccountDataButton.setOnAction(e -> controller.onImportBisq1AccountData());
     }
 
     @Override
     protected void onViewDetached() {
         deletedButton.disableProperty().unbind();
+
+        importBisq1AccountDataButton.visibleProperty().unbind();
+        importBisq1AccountDataButton.managedProperty().unbind();
 
         noAccountsSetupPin.unsubscribe();
         selectedAccountPin.unsubscribe();
@@ -177,5 +189,6 @@ public class CryptoAssetAccountsView extends View<VBox, CryptoAssetAccountsModel
         createButtonNoAccounts.setOnAction(null);
         createButtonWithAccounts.setOnAction(null);
         deletedButton.setOnAction(null);
+        importBisq1AccountDataButton.setOnAction(null);
     }
 }

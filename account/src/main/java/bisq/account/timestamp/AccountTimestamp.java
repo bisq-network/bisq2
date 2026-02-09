@@ -51,8 +51,6 @@ public final class AccountTimestamp implements DistributedData {
         this.hash = hash;
         this.date = date;
 
-        log.error(this.toString());
-
         verify();
     }
 
