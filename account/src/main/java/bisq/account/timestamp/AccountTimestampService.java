@@ -171,12 +171,13 @@ public class AccountTimestampService implements Service, DataService.Listener {
     /* --------------------------------------------------------------------- */
 
     private void handleAuthorizedAccountTimestampAdded(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountTimestampByHash.putIfAbsent(getAccountTimestampHash(authorizedAccountTimestamp),
-                authorizedAccountTimestamp.getAccountTimestamp());
+        AccountTimestamp accountTimestamp = authorizedAccountTimestamp.getAccountTimestamp();
+        ByteArray accountTimestampHash = getAccountTimestampHash(accountTimestamp);
+        accountTimestampByHash.putIfAbsent(accountTimestampHash, accountTimestamp);
     }
 
     private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp));
+        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp.getAccountTimestamp()));
     }
 
     private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
@@ -225,8 +226,8 @@ public class AccountTimestampService implements Service, DataService.Listener {
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
-    private static ByteArray getAccountTimestampHash(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        return new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
+    private static ByteArray getAccountTimestampHash(AccountTimestamp accountTimestamp) {
+        return new ByteArray(accountTimestamp.getHash());
     }
 
     private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {

@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -75,7 +75,33 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                                  String accountNr,
                                  Optional<BankAccountType> bankAccountType,
                                  Optional<String> nationalAccountId) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                holderId,
+                bankName,
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId);
+    }
+
+    protected BankAccountPayload(String id,
+                                 byte[] salt,
+                                 String countryCode,
+                                 String selectedCurrencyCode,
+                                 Optional<String> holderName,
+                                 Optional<String> holderId,
+                                 Optional<String> bankName,
+                                 Optional<String> bankId,
+                                 Optional<String> branchId,
+                                 String accountNr,
+                                 Optional<BankAccountType> bankAccountType,
+                                 Optional<String> nationalAccountId) {
+        super(id, salt, countryCode);
 
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
@@ -133,7 +159,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         return builder;
     }
 
-    public static BankAccountPayload fromProto(AccountPayload proto) {
+    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
             case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);

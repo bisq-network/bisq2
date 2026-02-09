@@ -26,17 +26,17 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
 public final class AccountTimestamp implements DistributedData {
     private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
 
@@ -101,5 +101,20 @@ public final class AccountTimestamp implements DistributedData {
                 "hash=" + Hex.encode(hash) +
                 ", date=" + date + " / " + new Date(date) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AccountTimestamp that)) return false;
+
+        return date == that.date && Objects.equals(metaData, that.metaData) && Arrays.equals(hash, that.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(metaData);
+        result = 31 * result + Arrays.hashCode(hash);
+        result = 31 * result + Long.hashCode(date);
+        return result;
     }
 }

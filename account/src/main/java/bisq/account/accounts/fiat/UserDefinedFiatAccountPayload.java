@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -43,7 +44,11 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     private final String accountData;
 
     public UserDefinedFiatAccountPayload(String id, String accountData) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), accountData);
+    }
+
+    private UserDefinedFiatAccountPayload(String id, byte[] salt, String accountData) {
+        super(id, salt);
         checkArgument(accountData.length() <= MAX_DATA_LENGTH);
         this.accountData = accountData;
     }
@@ -64,7 +69,10 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     }
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new UserDefinedFiatAccountPayload(proto.getId(), proto.getUserDefinedFiatAccountPayload().getAccountData());
+        return new UserDefinedFiatAccountPayload(
+                proto.getId(),
+                proto.getSalt().toByteArray(),
+                proto.getUserDefinedFiatAccountPayload().getAccountData());
     }
 
     @Override

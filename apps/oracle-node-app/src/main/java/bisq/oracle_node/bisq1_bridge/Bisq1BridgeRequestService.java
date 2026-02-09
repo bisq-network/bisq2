@@ -31,7 +31,6 @@ import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.ByteArrayUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -49,7 +48,6 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
-import bisq.security.DigestUtil;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -57,7 +55,6 @@ import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
@@ -217,24 +214,26 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
 
                 AccountTimestamp accountTimestamp = request.getAccountTimestamp();
                 TimestampType timestampType = request.getTimestampType();
-                ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
+                byte[] hash = accountTimestamp.getHash();
+                ByteArray requestHash = new ByteArray(hash);
                 boolean isRepublish = persistableStore.getAccountTimestampHashes().contains(requestHash);
                 switch (timestampType) {
                     case BISQ2_NEW -> {
+                        long date = accountTimestamp.getDate();
                         if (!isRepublish) {
                             long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
-                            if (Math.abs(System.currentTimeMillis() - accountTimestamp.getDate()) > maxTimeDrift) {
+                            if (Math.abs(System.currentTimeMillis() - date) > maxTimeDrift) {
                                 log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
                                 return;
                             }
 
-                            persistAccountTimestampRequest(accountTimestamp);
+                            persistAccountTimestampRequest(hash);
                         }
+                        accountTimestamp = new AccountTimestamp(hash, date);
                         publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
                     }
                     case BISQ1_IMPORTED -> {
                         if (!isRepublish) {
-                            byte[] hash = request.getAccountTimestamp().getHash();
                             Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(hash);
                             if (result.isFailure()) {
                                 log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
@@ -261,7 +260,7 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                                         ageDiff / 1000, new Date(dateFromBisq2AccountAge), new Date(accountCreationDate));
                             }
                             accountTimestamp = new AccountTimestamp(hash, dateFromBisq2AccountAge);
-                            persistAccountTimestampRequest(accountTimestamp);
+                            persistAccountTimestampRequest(hash);
                         }
                         publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
                     }
@@ -274,17 +273,10 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
         }, executor);
     }
 
-    private void persistAccountTimestampRequest(AccountTimestamp accountTimestamp) {
-        ByteArray requestHash = createAccountTimestampRequestHash(accountTimestamp);
-        if (persistableStore.getAccountTimestampHashes().add(requestHash)) {
+    private void persistAccountTimestampRequest(byte[] hash) {
+        if (persistableStore.getAccountTimestampHashes().add(new ByteArray(hash))) {
             persist();
         }
-    }
-
-    private static ByteArray createAccountTimestampRequestHash(AccountTimestamp accountTimestamp) {
-        byte[] dateBytes = ByteBuffer.allocate(Long.BYTES).putLong(accountTimestamp.getDate()).array();
-        byte[] preimage = ByteArrayUtils.concat(accountTimestamp.getHash(), dateBytes);
-        return new ByteArray(DigestUtil.hash(preimage));
     }
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,

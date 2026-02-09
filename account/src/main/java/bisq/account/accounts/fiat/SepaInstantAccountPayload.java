@@ -17,12 +17,12 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -53,7 +53,23 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
                                      String bic,
                                      String countryCode,
                                      List<String> acceptedCountryCodes) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                holderName,
+                iban,
+                bic,
+                countryCode,
+                acceptedCountryCodes);
+    }
+
+    private SepaInstantAccountPayload(String id,
+                                      byte[] salt,
+                                      String holderName,
+                                      String iban,
+                                      String bic,
+                                      String countryCode,
+                                      List<String> acceptedCountryCodes) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -62,12 +78,13 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
         verify();
     }
 
-    public static SepaInstantAccountPayload fromProto(AccountPayload proto) {
+    public static SepaInstantAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
 
         return new SepaInstantAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 payload.getHolderName(),
                 payload.getIban(),
                 payload.getBic(),

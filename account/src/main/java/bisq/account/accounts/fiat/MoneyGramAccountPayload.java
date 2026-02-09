@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -52,7 +52,24 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                                    String email,
                                    String state
     ) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCodes,
+                holderName,
+                email,
+                state);
+    }
+
+    private MoneyGramAccountPayload(String id,
+                                    byte[] salt,
+                                    String countryCode,
+                                    List<String> selectedCurrencyCodes,
+                                    String holderName,
+                                    String email,
+                                    String state
+    ) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
@@ -87,12 +104,13 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 .setState(state);
     }
 
-    public static MoneyGramAccountPayload fromProto(AccountPayload proto) {
+    public static MoneyGramAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
 
         return new MoneyGramAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),

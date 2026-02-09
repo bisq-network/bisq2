@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -51,7 +51,22 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                               String holderName,
                               String email
     ) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCodes,
+                holderName,
+                email);
+    }
+
+    private WiseAccountPayload(String id,
+                               byte[] salt,
+                               String countryCode,
+                               List<String> selectedCurrencyCodes,
+                               String holderName,
+                               String email
+    ) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
@@ -84,11 +99,12 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 .setEmail(email);
     }
 
-    public static WiseAccountPayload fromProto(AccountPayload proto) {
+    public static WiseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getWiseAccountPayload();
         return new WiseAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),

@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
@@ -46,7 +46,11 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
     private final String mobileNr;
 
     public SwishAccountPayload(String id, String countryCode, String holderName, String mobileNr) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, holderName, mobileNr);
+    }
+
+    private SwishAccountPayload(String id, byte[] salt, String countryCode, String holderName, String mobileNr) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
         this.mobileNr = mobileNr;
     }
@@ -75,10 +79,11 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
                 .setMobileNr(mobileNr);
     }
 
-    public static SwishAccountPayload fromProto(AccountPayload proto) {
+    public static SwishAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SwishAccountPayload payload = countryBasedAccountPayload.getSwishAccountPayload();
         return new SwishAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getHolderName(),
                 payload.getMobileNr()

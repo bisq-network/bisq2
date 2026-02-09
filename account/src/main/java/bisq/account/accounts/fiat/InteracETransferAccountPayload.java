@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -42,7 +43,16 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
     private final String answer;
 
     public InteracETransferAccountPayload(String id, String holderName, String email, String question, String answer) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), holderName, email, question, answer);
+    }
+
+    private InteracETransferAccountPayload(String id,
+                                           byte[] salt,
+                                           String holderName,
+                                           String email,
+                                           String question,
+                                           String answer) {
+        super(id, salt);
         this.holderName = holderName;
         this.email = email;
         this.question = question;
@@ -72,6 +82,7 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         var interactETransferAccountPayload = proto.getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 interactETransferAccountPayload.getHolderName(),
                 interactETransferAccountPayload.getEmail(),
                 interactETransferAccountPayload.getQuestion(),

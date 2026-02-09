@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -47,7 +48,24 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                                               String bankName,
                                               String routingNr,
                                               String accountNr) {
+        this(id,
+                AccountUtils.generateSalt(),
+                holderName,
+                holderAddress,
+                bankName,
+                routingNr,
+                accountNr);
+    }
+
+    private DomesticWireTransferAccountPayload(String id,
+                                               byte[] salt,
+                                               String holderName,
+                                               String holderAddress,
+                                               String bankName,
+                                               String routingNr,
+                                               String accountNr) {
         super(id,
+                salt,
                 "US",
                 "USD",
                 Optional.of(holderName),
@@ -93,6 +111,7 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
         checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
         checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
         return new DomesticWireTransferAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 bankAccountPayload.getHolderName(),
                 domesticWireAccountPayload.getHolderAddress(),
                 bankAccountPayload.getBankName(),

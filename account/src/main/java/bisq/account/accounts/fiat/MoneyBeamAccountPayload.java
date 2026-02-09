@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -50,7 +50,21 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                                    String selectedCurrencyCode,
                                    String holderName,
                                    String emailOrMobileNr) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                emailOrMobileNr);
+    }
+
+    private MoneyBeamAccountPayload(String id,
+                                    byte[] salt,
+                                    String countryCode,
+                                    String selectedCurrencyCode,
+                                    String holderName,
+                                    String emailOrMobileNr) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
@@ -81,10 +95,11 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 .setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static MoneyBeamAccountPayload fromProto(AccountPayload proto) {
+    public static MoneyBeamAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
         return new MoneyBeamAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
                 payload.getSelectedCurrencyCode(),
                 payload.getHolderName(),

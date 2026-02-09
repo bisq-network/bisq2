@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -41,7 +42,11 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     private final String extraInfo;
 
     public CashByMailAccountPayload(String id, String postalAddress, String contact, String extraInfo) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), postalAddress, contact, extraInfo);
+    }
+
+    private CashByMailAccountPayload(String id, byte[] salt, String postalAddress, String contact, String extraInfo) {
+        super(id, salt);
         this.postalAddress = postalAddress;
         this.contact = contact;
         this.extraInfo = extraInfo;
@@ -68,6 +73,7 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
         var cashByMailPayload = proto.getCashByMailAccountPayload();
         return new CashByMailAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 cashByMailPayload.getPostalAddress(),
                 cashByMailPayload.getContact(),
                 cashByMailPayload.getExtraInfo()

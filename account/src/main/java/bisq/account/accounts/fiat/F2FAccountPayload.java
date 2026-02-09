@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -50,7 +51,23 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
                              String city,
                              String contact,
                              String extraInfo) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                city,
+                contact,
+                extraInfo);
+    }
+
+    private F2FAccountPayload(String id,
+                              byte[] salt,
+                              String countryCode,
+                              String selectedCurrencyCode,
+                              String city,
+                              String contact,
+                              String extraInfo) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.city = city;
         this.contact = contact;
@@ -89,6 +106,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.F2FAccountPayload payload = countryBasedAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCode(),
                 payload.getCity(),

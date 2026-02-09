@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.crypto;
 
+import bisq.account.accounts.AccountUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,7 +39,28 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
                                           Optional<Integer> autoConfNumConfirmations,
                                           Optional<Long> autoConfMaxTradeAmount,
                                           Optional<String> autoConfExplorerUrls) {
+        this(id,
+                AccountUtils.generateSalt(),
+                currencyCode,
+                address,
+                isInstant,
+                isAutoConf,
+                autoConfNumConfirmations,
+                autoConfMaxTradeAmount,
+                autoConfExplorerUrls);
+    }
+
+    private OtherCryptoAssetAccountPayload(String id,
+                                           byte[] salt,
+                                           String currencyCode,
+                                           String address,
+                                           boolean isInstant,
+                                           Optional<Boolean> isAutoConf,
+                                           Optional<Integer> autoConfNumConfirmations,
+                                           Optional<Long> autoConfMaxTradeAmount,
+                                           Optional<String> autoConfExplorerUrls) {
         super(id,
+                salt,
                 currencyCode,
                 address,
                 isInstant,
@@ -65,6 +87,7 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
         var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
         return new OtherCryptoAssetAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 cryptoAssetAccountPayload.getCurrencyCode(),
                 cryptoAssetAccountPayload.getAddress(),
                 cryptoAssetAccountPayload.getIsInstant(),

@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -42,7 +42,11 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
     private final String mobileNr;
 
     public Pin4AccountPayload(String id, String countryCode, String mobileNr) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
+    }
+
+    private Pin4AccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
+        super(id, salt, countryCode);
         this.mobileNr = mobileNr;
     }
 
@@ -68,10 +72,11 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
                 .setMobileNr(mobileNr);
     }
 
-    public static Pin4AccountPayload fromProto(AccountPayload proto) {
+    public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.Pin4AccountPayload payload = countryBasedAccountPayload.getPin4AccountPayload();
         return new Pin4AccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getMobileNr()
         );

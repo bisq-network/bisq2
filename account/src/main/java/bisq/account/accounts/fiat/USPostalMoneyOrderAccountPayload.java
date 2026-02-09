@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -40,7 +41,11 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     private final String postalAddress;
 
     public USPostalMoneyOrderAccountPayload(String id, String holderName, String postalAddress) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), holderName, postalAddress);
+    }
+
+    private USPostalMoneyOrderAccountPayload(String id, byte[] salt, String holderName, String postalAddress) {
+        super(id, salt);
         this.holderName = holderName;
         this.postalAddress = postalAddress;
     }
@@ -55,7 +60,8 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
         return resolveBuilder(getUSPostalMoneyOrderAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.USPostalMoneyOrderAccountPayload.Builder getUSPostalMoneyOrderAccountPayloadBuilder(boolean serializeForHash) {
+    private bisq.account.protobuf.USPostalMoneyOrderAccountPayload.Builder getUSPostalMoneyOrderAccountPayloadBuilder(
+            boolean serializeForHash) {
         return bisq.account.protobuf.USPostalMoneyOrderAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setPostalAddress(postalAddress);
@@ -65,6 +71,7 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
         var usPostalOrderMoneyPayload = proto.getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 usPostalOrderMoneyPayload.getHolderName(),
                 usPostalOrderMoneyPayload.getPostalAddress()
         );

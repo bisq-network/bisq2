@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,9 +38,14 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
     private final String virtualPaymentAddress;
 
     public UpiAccountPayload(String id, String countryCode, String virtualPaymentAddress) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, virtualPaymentAddress);
+    }
+
+    private UpiAccountPayload(String id, byte[] salt, String countryCode, String virtualPaymentAddress) {
+        super(id, salt, countryCode);
         this.virtualPaymentAddress = virtualPaymentAddress;
     }
+
     @Override
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setUpiAccountPayload(
@@ -55,10 +60,11 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
         return bisq.account.protobuf.UpiAccountPayload.newBuilder().setVirtualPaymentAddress(virtualPaymentAddress);
     }
 
-    public static UpiAccountPayload fromProto(AccountPayload proto) {
+    public static UpiAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new UpiAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
 
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());

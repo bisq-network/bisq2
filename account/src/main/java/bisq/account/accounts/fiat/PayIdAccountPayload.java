@@ -18,11 +18,11 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +40,11 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     private final String payId;
 
     public PayIdAccountPayload(String id, String holderName, String payId) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), holderName, payId);
+    }
+
+    private PayIdAccountPayload(String id, byte[] salt, String holderName, String payId) {
+        super(id, salt);
         this.holderName = holderName;
         this.payId = payId;
     }
@@ -65,6 +69,7 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
         var payload = proto.getPayIdAccountPayload();
         return new PayIdAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 payload.getHolderName(),
                 payload.getPayId());
     }

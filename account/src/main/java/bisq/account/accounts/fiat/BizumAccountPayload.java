@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -41,7 +41,11 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     private final String mobileNr;
 
     public BizumAccountPayload(String id, String countryCode, String mobileNr) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
+    }
+
+    private BizumAccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
+        super(id, salt, countryCode);
         this.mobileNr = mobileNr;
     }
 
@@ -66,10 +70,11 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
         return bisq.account.protobuf.BizumAccountPayload.newBuilder().setMobileNr(mobileNr);
     }
 
-    public static BizumAccountPayload fromProto(AccountPayload proto) {
+    public static BizumAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new BizumAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
     }

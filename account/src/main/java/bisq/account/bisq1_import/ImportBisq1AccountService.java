@@ -94,7 +94,7 @@ public class ImportBisq1AccountService implements Service {
         String paymentAccountPayloadId = asText(paymentAccountPayloadNode, "id");
 
         // TODO for XMR we need to apply those
-       // JsonNode extraData = accountNode.path("extraData");
+        // JsonNode extraData = accountNode.path("extraData");
 
         String saltAsHex = asText(paymentAccountPayloadNode.path("excludeFromJsonDataMap"), "salt");
         byte[] salt;
@@ -111,7 +111,11 @@ public class ImportBisq1AccountService implements Service {
         switch (paymentMethodId) {
             case "CLEAR_X_CHANGE":
                 String emailOrMobileNr = asText(paymentAccountPayloadNode, "emailOrMobileNr");
-                ZelleAccountPayload zelleAccountPayload = new ZelleAccountPayload(paymentAccountPayloadId, holderName, emailOrMobileNr, salt);
+                ZelleAccountPayload zelleAccountPayload = ZelleAccountPayload.fromImport(
+                        paymentAccountPayloadId,
+                        holderName,
+                        emailOrMobileNr,
+                        salt);
                 return new ZelleAccount(accountId, creationDate, accountName, zelleAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             case "SEPA":
                 String bic = asText(paymentAccountPayloadNode, "bic");
@@ -121,7 +125,14 @@ public class ImportBisq1AccountService implements Service {
                 List<String> acceptedCountryCodes = acceptedCountryCodesNode != null && acceptedCountryCodesNode.isArray()
                         ? asStringList(acceptedCountryCodesNode)
                         : List.of();
-                SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(paymentAccountPayloadId, holderName, iban, bic, countryCode, acceptedCountryCodes, salt);
+                SepaAccountPayload sepaAccountPayload = SepaAccountPayload.fromImport(
+                        paymentAccountPayloadId,
+                        holderName,
+                        iban,
+                        bic,
+                        countryCode,
+                        acceptedCountryCodes,
+                        salt);
                 return new SepaAccount(accountId, creationDate, accountName, sepaAccountPayload, dsaKeyPair, KeyAlgorithm.DSA, AccountOrigin.BISQ1_IMPORTED);
             default:
                 log.warn("Import for paymentMethod {} is not yet supported.", paymentMethodId);

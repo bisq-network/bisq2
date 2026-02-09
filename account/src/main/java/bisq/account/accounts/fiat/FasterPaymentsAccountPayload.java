@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -45,7 +46,15 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     private final String accountNr;
 
     public FasterPaymentsAccountPayload(String id, String holderName, String sortCode, String accountNr) {
-        super(id, "UK");
+        this(id, AccountUtils.generateSalt(), holderName, sortCode, accountNr);
+    }
+
+    private FasterPaymentsAccountPayload(String id,
+                                         byte[] salt,
+                                         String holderName,
+                                         String sortCode,
+                                         String accountNr) {
+        super(id, salt, "UK");
         this.holderName = holderName;
         this.sortCode = sortCode;
         this.accountNr = accountNr;
@@ -80,6 +89,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 fasterPaymentsPayload.getHolderName(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());

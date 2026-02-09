@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.crypto;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
 import lombok.EqualsAndHashCode;
@@ -49,6 +50,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                                 Optional<Integer> accountIndex,
                                 Optional<Integer> initialSubAddressIndex) {
         this(id,
+                AccountUtils.generateSalt(),
                 "XMR",
                 address,
                 isInstant,
@@ -63,6 +65,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
     }
 
     private MoneroAccountPayload(String id,
+                                 byte[] salt,
                                  String currencyCode,
                                  String address,
                                  boolean isInstant,
@@ -75,6 +78,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
                                  Optional<Integer> accountIndex,
                                  Optional<Integer> initialSubAddressIndex) {
         super(id,
+                salt,
                 currencyCode,
                 address,
                 isInstant,
@@ -112,6 +116,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
         var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
         return new MoneroAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 cryptoAssetAccountPayload.getCurrencyCode(),
                 cryptoAssetAccountPayload.getAddress(),
                 cryptoAssetAccountPayload.getIsInstant(),

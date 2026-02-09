@@ -17,10 +17,10 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,7 +44,34 @@ public class NationalBankAccountPayload extends BankAccountPayload implements Se
                                       String accountNr,
                                       Optional<BankAccountType> bankAccountType,
                                       Optional<String> nationalAccountId) {
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                holderId,
+                bankName,
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId);
+    }
+
+    private NationalBankAccountPayload(String id,
+                                       byte[] salt,
+                                       String countryCode,
+                                       String selectedCurrencyCode,
+                                       Optional<String> holderName,
+                                       Optional<String> holderId,
+                                       Optional<String> bankName,
+                                       Optional<String> bankId,
+                                       Optional<String> branchId,
+                                       String accountNr,
+                                       Optional<BankAccountType> bankAccountType,
+                                       Optional<String> nationalAccountId) {
         super(id,
+                salt,
                 countryCode,
                 selectedCurrencyCode,
                 holderName,
@@ -71,11 +98,12 @@ public class NationalBankAccountPayload extends BankAccountPayload implements Se
         return bisq.account.protobuf.NationalBankAccountPayload.newBuilder();
     }
 
-    public static NationalBankAccountPayload fromProto(AccountPayload proto) {
+    public static NationalBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getSelectedCurrencyCode(),
                 bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),
