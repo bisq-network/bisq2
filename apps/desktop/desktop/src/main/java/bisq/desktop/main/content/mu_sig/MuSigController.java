@@ -23,6 +23,7 @@ import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.mu_sig.history.MuSigHistoryController;
 import bisq.desktop.main.content.mu_sig.my_offers.MuSigMyOffersController;
 import bisq.desktop.main.content.mu_sig.offerbook.MuSigOfferbookController;
+import bisq.desktop.main.content.mu_sig.onboarding.MuSigDashboardController;
 import bisq.desktop.main.content.mu_sig.open_trades.MuSigOpenTradesController;
 import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
@@ -42,6 +43,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
+            case MU_SIG_DASHBOARD -> Optional.of(new MuSigDashboardController(serviceProvider));
             case MU_SIG_OFFERBOOK -> Optional.of(new MuSigOfferbookController(serviceProvider));
             case MU_SIG_MY_OFFERS -> Optional.of(new MuSigMyOffersController(serviceProvider));
             case MU_SIG_OPEN_TRADES -> Optional.of(new MuSigOpenTradesController(serviceProvider));

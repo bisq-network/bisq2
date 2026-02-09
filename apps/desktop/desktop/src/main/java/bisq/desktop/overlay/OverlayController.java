@@ -38,6 +38,7 @@ import bisq.desktop.main.content.mu_sig.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.open_trades.trade_details.MuSigTradeDetailsController;
 import bisq.desktop.main.content.mu_sig.take_offer.MuSigTakeOfferController;
 import bisq.desktop.main.content.mu_sig.trade_guide.MuSigGuideController;
+import bisq.desktop.main.content.mu_sig.trade_limits.TradeLimitsController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
 import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
@@ -160,6 +161,7 @@ public class OverlayController extends NavigationController {
             case MU_SIG_TAKE_OFFER -> Optional.of(new MuSigTakeOfferController(serviceProvider));
             case MU_SIG_TRADE_DETAILS -> Optional.of(new MuSigTradeDetailsController(serviceProvider));
             case MU_SIG_GUIDE -> Optional.of(new MuSigGuideController(serviceProvider));
+            case MU_SIG_TRADE_LIMITS -> Optional.of(new TradeLimitsController(serviceProvider));
 
             case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
             case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));

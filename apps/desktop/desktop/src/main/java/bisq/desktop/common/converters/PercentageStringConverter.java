@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PercentageStringConverter extends StringConverter<Number> {
     private final double defaultValue;
+    // Percentage value of 100 % is 1.00. Precision is referring to this decimal value, thus a precision of 2 means
+    // the percentage value gets rounded. E.g. 0.12 -> 12%
     private int precision = 2;
 
     public PercentageStringConverter() {

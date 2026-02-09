@@ -1,8 +1,6 @@
 package bisq.desktop.common.utils;
 
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.controls.WrappingText;
-import bisq.i18n.Res;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

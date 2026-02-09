@@ -15,46 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.reputation.build_reputation.burn.tab2;
+package bisq.desktop.main.content.mu_sig.trade_limits.tab2;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqHyperlink;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.user.reputation.ProofOfBurnService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Controller> {
+public class TradeLimitsTab2View extends View<VBox, TradeLimitsTab2Model, TradeLimitsTab2Controller> {
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
 
-    public BurnBsqTab2View(BurnBsqTab2Model model, BurnBsqTab2Controller controller, VBox simulation) {
+    public TradeLimitsTab2View(TradeLimitsTab2Model model, TradeLimitsTab2Controller controller, GridPane preview) {
         super(new VBox(), model, controller);
 
-        Label headline = new Label(Res.get("reputation.burnedBsq.score.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        root.setPadding(new Insets(20, 0, 0, 0));
 
-        Label info = new Label(Res.get("reputation.burnedBsq.score.info"));
-        info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13");
-
-        Label formulaHeadline = new Label(Res.get("reputation.score.formulaHeadline"));
-        formulaHeadline.getStyleClass().addAll("bisq-text-1");
-        VBox formulaBox = new VBox(10, formulaHeadline,
-                getField(Res.get("reputation.weight"), String.valueOf(ProofOfBurnService.WEIGHT)),
-                getFormulaField("totalScore"));
-
-        HBox hBox = new HBox(20, formulaBox, simulation);
+       /* Label headline = new Label(Res.get("muSig.tradeLimits.tab2.headline"));
+        headline.getStyleClass().add("bisq-text-headline-2");*/
 
         backButton = new Button(Res.get("action.back"));
 
@@ -66,14 +54,11 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(buttons, new Insets(-5, 0, 0, 0));
-
-        VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(headline, info, hBox, buttons);
+        VBox contentBox = new VBox(15);
+        VBox.setMargin(preview, new Insets(10,0,10,0));
+        contentBox.getChildren().addAll(preview, buttons);
         contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
         root.getChildren().addAll(contentBox);
-        root.setPadding(new Insets(20, 0, 0, 0));
     }
 
     @Override
@@ -90,18 +75,5 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
-    }
-
-    private MaterialTextField getFormulaField(String key) {
-        return getField(Res.get("reputation." + key), Res.get("reputation.burnedBsq." + key));
-    }
-
-    private MaterialTextField getField(String description, String value) {
-        MaterialTextField field = new MaterialTextField(description);
-        field.setEditable(false);
-        field.setText(value);
-        field.setMinWidth(380);
-        field.setMaxWidth(380);
-        return field;
     }
 }

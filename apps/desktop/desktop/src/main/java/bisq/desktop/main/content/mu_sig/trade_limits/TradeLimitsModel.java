@@ -15,16 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig;
+package bisq.desktop.main.content.mu_sig.trade_limits;
 
+import bisq.desktop.common.view.TabModel;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class MuSigModel extends ContentTabModel {
+public class TradeLimitsModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_DASHBOARD;
+        return NavigationTarget.MU_SIG_TRADE_LIMITS_TAB_2;
     }
 }
