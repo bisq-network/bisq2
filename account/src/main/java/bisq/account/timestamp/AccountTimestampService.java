@@ -33,6 +33,7 @@ import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -74,6 +75,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
+
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         networkService.getDataService()
                 .stream()
@@ -100,15 +102,15 @@ public class AccountTimestampService implements Service, DataService.Listener {
     /* --------------------------------------------------------------------- */
 
     @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
             handleAuthorizedAccountTimestampAdded(authorizedAccountTimestamp);
         }
     }
 
     @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
             handleAuthorizedAccountTimestampRemoved(authorizedAccountTimestamp);
         }
     }
@@ -171,12 +173,13 @@ public class AccountTimestampService implements Service, DataService.Listener {
     /* --------------------------------------------------------------------- */
 
     private void handleAuthorizedAccountTimestampAdded(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountTimestampByHash.putIfAbsent(getAccountTimestampHash(authorizedAccountTimestamp),
-                authorizedAccountTimestamp.getAccountTimestamp());
+        AccountTimestamp accountTimestamp = authorizedAccountTimestamp.getAccountTimestamp();
+        ByteArray accountTimestampHash = getAccountTimestampHash(accountTimestamp);
+        accountTimestampByHash.putIfAbsent(accountTimestampHash, accountTimestamp);
     }
 
     private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp));
+        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp.getAccountTimestamp()));
     }
 
     private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
@@ -225,8 +228,8 @@ public class AccountTimestampService implements Service, DataService.Listener {
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
-    private static ByteArray getAccountTimestampHash(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        return new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
+    private static ByteArray getAccountTimestampHash(AccountTimestamp accountTimestamp) {
+        return new ByteArray(accountTimestamp.getHash());
     }
 
     private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {

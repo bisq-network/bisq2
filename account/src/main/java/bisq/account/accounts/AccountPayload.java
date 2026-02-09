@@ -55,18 +55,12 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     protected final byte[] salt; // 32 bytes
 
     public AccountPayload(String id) {
-        this(id, ByteArrayUtils.getRandomBytes(32));
+        this(id, AccountUtils.generateSalt());
     }
 
     public AccountPayload(String id, byte[] salt) {
         this.id = id;
         this.salt = salt;
-    }
-
-    // public abstract byte[] getAgeWitnessInputData();
-    //todo
-    public byte[] getFingerprint() {
-        return id.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
@@ -102,6 +96,8 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
+
+    public abstract byte[] getFingerprint();
 
     protected byte[] getFingerprint(byte[] data) {
         // paymentMethodId must match Bisq 1 paymentMethodId to support imported Bisq 1 accounts and account age

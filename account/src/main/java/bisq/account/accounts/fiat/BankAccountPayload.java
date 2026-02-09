@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -30,6 +30,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
@@ -74,7 +75,33 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                                  String accountNr,
                                  Optional<BankAccountType> bankAccountType,
                                  Optional<String> nationalAccountId) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                holderId,
+                bankName,
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId);
+    }
+
+    protected BankAccountPayload(String id,
+                                 byte[] salt,
+                                 String countryCode,
+                                 String selectedCurrencyCode,
+                                 Optional<String> holderName,
+                                 Optional<String> holderId,
+                                 Optional<String> bankName,
+                                 Optional<String> bankId,
+                                 Optional<String> branchId,
+                                 String accountNr,
+                                 Optional<BankAccountType> bankAccountType,
+                                 Optional<String> nationalAccountId) {
+        super(id, salt, countryCode);
 
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
@@ -132,7 +159,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         return builder;
     }
 
-    public static BankAccountPayload fromProto(AccountPayload proto) {
+    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
             case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);
@@ -156,5 +183,32 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                 Res.get("paymentAccounts.bank.bankAccountType." + value.name())));
         nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
         return builder.toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        String bankNameValue = BankAccountUtils.isBankNameRequired(countryCode) ? bankName.orElse("") : "";
+        String bankIdValue = BankAccountUtils.isBankIdRequired(countryCode) ? bankId.orElse("") : "";
+        String branchIdValue = BankAccountUtils.isBranchIdRequired(countryCode) ? branchId.orElse("") : "";
+
+        // In Bisq 1 bankAccountType was using the translated strings (Checking, Savings).
+        // This was a bug and cannot be ported to Bisq 2. Users with account age for such accounts would have
+        // problems on Bisq 1 as well as verification depends on language. We assume there are few accounts
+        // affected by that.
+        String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode)
+                ? bankAccountType.map(BankAccountType::name).orElse("")
+                : "";
+        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode)
+                ? holderId.map(value -> BankAccountUtils.getHolderIdDescription(countryCode) + " " + value + "\n").orElse("")
+                : "";
+        String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";
+        String all = bankNameValue +
+                bankIdValue +
+                branchIdValue +
+                accountNr +
+                accountTypeValue +
+                holderIdValue +
+                nationalAccountIdValue;
+        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
     }
 }

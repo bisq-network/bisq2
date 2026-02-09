@@ -17,10 +17,12 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -28,6 +30,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -42,7 +46,15 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     private final String accountNr;
 
     public FasterPaymentsAccountPayload(String id, String holderName, String sortCode, String accountNr) {
-        super(id, "UK");
+        this(id, AccountUtils.generateSalt(), holderName, sortCode, accountNr);
+    }
+
+    private FasterPaymentsAccountPayload(String id,
+                                         byte[] salt,
+                                         String holderName,
+                                         String sortCode,
+                                         String accountNr) {
+        super(id, salt, "UK");
         this.holderName = holderName;
         this.sortCode = sortCode;
         this.accountNr = accountNr;
@@ -77,6 +89,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 fasterPaymentsPayload.getHolderName(),
                 fasterPaymentsPayload.getSortCode(),
                 fasterPaymentsPayload.getAccountNr());
@@ -94,5 +107,12 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
                 Res.get("paymentAccounts.fasterPayments.sortCode"), sortCode,
                 Res.get("paymentAccounts.fasterPayments.accountNr"), accountNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(sortCode.getBytes(StandardCharsets.UTF_8),
+                accountNr.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

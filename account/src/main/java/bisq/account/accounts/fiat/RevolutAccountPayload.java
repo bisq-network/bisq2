@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -31,6 +32,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Getter
@@ -47,7 +49,14 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     public RevolutAccountPayload(String id,
                                  String userName,
                                  List<String> selectedCurrencyCodes) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), userName, selectedCurrencyCodes);
+    }
+
+    private RevolutAccountPayload(String id,
+                                  byte[] salt,
+                                  String userName,
+                                  List<String> selectedCurrencyCodes) {
+        super(id, salt);
         this.userName = userName;
         this.selectedCurrencyCodes = selectedCurrencyCodes;
     }
@@ -81,6 +90,7 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 revolutAccountPayload.getUserName(),
                 revolutAccountPayload.getSelectedCurrencyCodesList());
     }
@@ -95,5 +105,10 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.userName"), userName
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(userName.getBytes(StandardCharsets.UTF_8));
     }
 }

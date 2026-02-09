@@ -17,16 +17,18 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -36,7 +38,11 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
     private final String holderName;
 
     public StrikeAccountPayload(String id, String countryCode, String holderName) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, holderName);
+    }
+
+    private StrikeAccountPayload(String id, byte[] salt, String countryCode, String holderName) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
     }
 
@@ -54,9 +60,10 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
         return bisq.account.protobuf.StrikeAccountPayload.newBuilder().setHolderName(holderName);
     }
 
-    public static StrikeAccountPayload fromProto(AccountPayload proto) {
+    public static StrikeAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         return new StrikeAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
                 proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
     }
@@ -71,5 +78,10 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.holderName"), holderName
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,34 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                   String accountNr,
                                   Optional<BankAccountType> bankAccountType,
                                   Optional<String> nationalAccountId) {
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCode,
+                holderName,
+                holderId,
+                bankName,
+                bankId,
+                branchId,
+                accountNr,
+                bankAccountType,
+                nationalAccountId);
+    }
+
+    private SameBankAccountPayload(String id,
+                                   byte[] salt,
+                                   String countryCode,
+                                   String selectedCurrencyCode,
+                                   Optional<String> holderName,
+                                   Optional<String> holderId,
+                                   Optional<String> bankName,
+                                   Optional<String> bankId,
+                                   Optional<String> branchId,
+                                   String accountNr,
+                                   Optional<BankAccountType> bankAccountType,
+                                   Optional<String> nationalAccountId) {
         super(id,
+                salt,
                 countryCode,
                 selectedCurrencyCode,
                 holderName,
@@ -68,10 +95,11 @@ public final class SameBankAccountPayload extends BankAccountPayload {
         return bisq.account.protobuf.SameBankAccountPayload.newBuilder();
     }
 
-    public static SameBankAccountPayload fromProto(AccountPayload proto) {
+    public static SameBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 bankAccountPayload.getSelectedCurrencyCode(),
                 bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),

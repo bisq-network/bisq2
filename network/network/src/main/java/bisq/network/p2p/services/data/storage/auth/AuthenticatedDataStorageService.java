@@ -416,7 +416,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
                     getMaxMapSize());
-            boolean showDetails = false;
+            boolean showDetails = true;
             if (showDetails) {
                 long now = System.currentTimeMillis();
                 String summaryAdded = dataStore.getMap().values().stream()
@@ -444,8 +444,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                         .collect(Collectors.joining("\n"));
 
 
-                log.info("AddAuthenticatedDataRequest: {}\n{}", storeKey, summaryAdded);
-                log.info("RemoveAuthenticatedDataRequest: {}\n{}", storeKey, summaryRemoved);
+                log.info("AddAuthenticatedDataRequests summaryAdded: {}\n{}", storeKey, summaryAdded);
+                log.info("RemoveAuthenticatedDataRequests summaryRemoved: {}\n{}", storeKey, summaryRemoved);
             }
         }
     }

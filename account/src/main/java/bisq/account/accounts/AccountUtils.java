@@ -22,6 +22,7 @@ import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.SepaInstantAccountPayload;
+import bisq.common.util.ByteArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class AccountUtils {
+    public static byte[] generateSalt() {
+        return ByteArrayUtils.getRandomBytes(32);
+    }
+
     public static boolean isStateRequired(String countryCode) {
         return switch (countryCode) {
             case "US", "CA", "AU", "MY", "MX", "CN" -> true;

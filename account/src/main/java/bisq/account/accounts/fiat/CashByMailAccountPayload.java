@@ -18,15 +18,19 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 @Getter
 @Slf4j
@@ -38,7 +42,11 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     private final String extraInfo;
 
     public CashByMailAccountPayload(String id, String postalAddress, String contact, String extraInfo) {
-        super(id);
+        this(id, AccountUtils.generateSalt(), postalAddress, contact, extraInfo);
+    }
+
+    private CashByMailAccountPayload(String id, byte[] salt, String postalAddress, String contact, String extraInfo) {
+        super(id, salt);
         this.postalAddress = postalAddress;
         this.contact = contact;
         this.extraInfo = extraInfo;
@@ -65,6 +73,7 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
         var cashByMailPayload = proto.getCashByMailAccountPayload();
         return new CashByMailAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 cashByMailPayload.getPostalAddress(),
                 cashByMailPayload.getContact(),
                 cashByMailPayload.getExtraInfo()
@@ -83,5 +92,12 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
                 Res.get("paymentAccounts.cashByMail.contact"), contact,
                 Res.get("paymentAccounts.cashByMail.extraInfo"), extraInfo
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ByteArrayUtils.concat(contact.getBytes(StandardCharsets.UTF_8),
+                postalAddress.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

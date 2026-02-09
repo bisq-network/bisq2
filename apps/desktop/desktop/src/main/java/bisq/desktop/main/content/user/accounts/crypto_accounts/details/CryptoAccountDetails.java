@@ -48,8 +48,6 @@ public abstract class CryptoAccountDetails<A extends CryptoAssetAccount<?>> exte
 
     @Override
     protected void addHeader() {
-        AccountPayload<?> accountPayload = account.getAccountPayload();
-
         Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.currency"),
                 account.getPaymentMethod().getDisplayString());
         gridPane.add(currencyTriple.getThird(), 0, rowIndex);

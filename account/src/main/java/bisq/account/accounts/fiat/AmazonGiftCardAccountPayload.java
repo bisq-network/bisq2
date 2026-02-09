@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
@@ -29,6 +29,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -40,7 +42,11 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     private final String emailOrMobileNr;
 
     public AmazonGiftCardAccountPayload(String id, String countryCode, String emailOrMobileNr) {
-        super(id, countryCode);
+        this(id, AccountUtils.generateSalt(), countryCode, emailOrMobileNr);
+    }
+
+    private AmazonGiftCardAccountPayload(String id, byte[] salt, String countryCode, String emailOrMobileNr) {
+        super(id, salt, countryCode);
         this.emailOrMobileNr = emailOrMobileNr;
     }
 
@@ -64,13 +70,14 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
         return bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder().setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static AmazonGiftCardAccountPayload fromProto(AccountPayload proto) {
+    public static AmazonGiftCardAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
                 proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
                 countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
         return new AmazonGiftCardAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr()
         );
@@ -86,5 +93,11 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = ("AmazonGiftCard" + emailOrMobileNr).getBytes(StandardCharsets.UTF_8);
+        return super.getFingerprint(data);
     }
 }

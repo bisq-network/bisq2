@@ -17,17 +17,19 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -39,8 +41,12 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
 
     private final String mobileNr;
 
-    public HalCashAccountPayload(String id, String countryCode,  String mobileNr) {
-        super(id, countryCode);
+    public HalCashAccountPayload(String id, String countryCode, String mobileNr) {
+        this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
+    }
+
+    private HalCashAccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
+        super(id, salt, countryCode);
         this.mobileNr = mobileNr;
     }
 
@@ -66,10 +72,11 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
                 .setMobileNr(mobileNr);
     }
 
-    public static HalCashAccountPayload fromProto(AccountPayload proto) {
+    public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.HalCashAccountPayload payload = countryBasedAccountPayload.getHalCashAccountPayload();
         return new HalCashAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getMobileNr()
         );
@@ -85,5 +92,11 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
+        return super.getFingerprint(data);
     }
 }

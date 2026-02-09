@@ -17,11 +17,11 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.protobuf.AccountPayload;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -49,7 +50,22 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
                                 String holderName,
                                 String accountId
     ) {
-        super(id, countryCode);
+        this(id,
+                AccountUtils.generateSalt(),
+                countryCode,
+                selectedCurrencyCodes,
+                holderName,
+                accountId);
+    }
+
+    private UpholdAccountPayload(String id,
+                                 byte[] salt,
+                                 String countryCode,
+                                 List<String> selectedCurrencyCodes,
+                                 String holderName,
+                                 String accountId
+    ) {
+        super(id, salt, countryCode);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.accountId = accountId;
@@ -82,11 +98,12 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
                 .setAccountId(accountId);
     }
 
-    public static UpholdAccountPayload fromProto(AccountPayload proto) {
+    public static UpholdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         var payload = countryBasedAccountPayload.getUpholdAccountPayload();
         return new UpholdAccountPayload(
                 proto.getId(),
+                proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
@@ -105,5 +122,10 @@ public final class UpholdAccountPayload extends CountryBasedAccountPayload imple
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.uphold.accountId"), accountId
         ).toString();
+    }
+
+    @Override
+    public byte[] getFingerprint() {
+        return super.getFingerprint(accountId.getBytes(StandardCharsets.UTF_8));
     }
 }

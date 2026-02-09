@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -48,7 +49,26 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                                      String routingNr,
                                      String accountNr,
                                      BankAccountType bankAccountType) {
+        this(id,
+                AccountUtils.generateSalt(),
+                holderName,
+                holderAddress,
+                bankName,
+                routingNr,
+                accountNr,
+                bankAccountType);
+    }
+
+    private AchTransferAccountPayload(String id,
+                                      byte[] salt,
+                                      String holderName,
+                                      String holderAddress,
+                                      String bankName,
+                                      String routingNr,
+                                      String accountNr,
+                                      BankAccountType bankAccountType) {
         super(id,
+                salt,
                 "US",
                 "USD",
                 Optional.of(holderName),
@@ -94,6 +114,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
         checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for ACH must be present");
         checkArgument(bankAccountPayload.hasBankAccountType(), "AccountType for ACH must be present");
         return new AchTransferAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 bankAccountPayload.getHolderName(),
                 achAccountPayload.getHolderAddress(),
                 bankAccountPayload.getBankName(),

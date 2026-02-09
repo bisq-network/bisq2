@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
@@ -38,14 +39,13 @@ import java.nio.charset.StandardCharsets;
 public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaymentMethod> {
     protected final String countryCode;
 
-    public CountryBasedAccountPayload(String id, String countryCode, byte[] salt) {
+    public CountryBasedAccountPayload(String id, byte[] salt, String countryCode) {
         super(id, salt);
         this.countryCode = countryCode;
     }
 
     public CountryBasedAccountPayload(String id, String countryCode) {
-        super(id);
-        this.countryCode = countryCode;
+        this(id, AccountUtils.generateSalt(), countryCode);
     }
 
     @Override
@@ -97,6 +97,7 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
         return CountryRepository.getCountry(countryCode);
     }
 
+    @Override
     protected byte[] getFingerprint(byte[] data) {
         return super.getFingerprint(ByteArrayUtils.concat(countryCode.getBytes(StandardCharsets.UTF_8), data));
     }

@@ -17,6 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -56,23 +57,24 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                               String iban,
                               String bic,
                               String countryCode,
-                              List<String> acceptedCountryCodes,
-                              byte[] salt) {
-        super(id, countryCode, salt);
-        this.holderName = holderName;
-        this.iban = iban;
-        this.bic = bic;
-        this.acceptedCountryCodes = acceptedCountryCodes != null ? List.copyOf(acceptedCountryCodes) : List.of();
-        verify();
+                              List<String> acceptedCountryCodes) {
+        this(id,
+                AccountUtils.generateSalt(),
+                holderName,
+                iban,
+                bic,
+                countryCode,
+                acceptedCountryCodes);
     }
 
-    public SepaAccountPayload(String id,
-                              String holderName,
-                              String iban,
-                              String bic,
-                              String countryCode,
-                              List<String> acceptedCountryCodes) {
-        super(id, countryCode);
+    private SepaAccountPayload(String id,
+                               byte[] salt,
+                               String holderName,
+                               String iban,
+                               String bic,
+                               String countryCode,
+                               List<String> acceptedCountryCodes) {
+        super(id, salt, countryCode);
         this.holderName = holderName;
         this.iban = iban;
         this.bic = bic;
@@ -116,12 +118,22 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SepaAccountPayload payload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),
+                proto.getSalt().toByteArray(),
                 payload.getHolderName(),
                 payload.getIban(),
                 payload.getBic(),
                 countryBasedAccountPayload.getCountryCode(),
-                payload.getAcceptedCountryCodesList(),
-                proto.getSalt().toByteArray());
+                payload.getAcceptedCountryCodesList());
+    }
+
+    public static SepaAccountPayload fromImport(String id,
+                                                String holderName,
+                                                String iban,
+                                                String bic,
+                                                String countryCode,
+                                                List<String> acceptedCountryCodes,
+                                                byte[] salt) {
+        return new SepaAccountPayload(id, salt, holderName, iban, bic, countryCode, acceptedCountryCodes);
     }
 
     @Override
@@ -152,9 +164,6 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     @Override
     public byte[] getFingerprint() {
-        // We don't add holderName because we don't want to break age validation if the user recreates an account with
-        // slight changes in holder name (e.g. add or remove middle name)
-        // Also we want to be compatible with Bisq 1 to not break account age data
         return super.getFingerprint(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
     }
 }
