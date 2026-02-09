@@ -67,13 +67,13 @@ public class PercentageFormatter {
     }
 
     /**
-     * Formats a value as a percentage string with no decimals and a percent sign (e.g., "10 %").
+     * Formats a value as a percentage string with no decimals and a percent sign (e.g., "10%").
      * Uses the current user locale for formatting, disables grouping, and rounds to the nearest integer.
      *
      * @param value the value to be represented as a percentage (e.g., 0.1 for 10%)
      * @return the formatted percentage value as an integer with a percent sign, respecting the user's locale
      */
     public static String formatToPercentNoDecimalsWithSymbol(double value) {
-        return INTEGER_FORMAT.format(MathUtils.roundDouble(value * 100.0, 0)) + " %";
+        return INTEGER_FORMAT.format(MathUtils.roundDouble(value * 100.0, 0)) + "%";
     }
 }
