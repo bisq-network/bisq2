@@ -160,7 +160,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                 .collect(Collectors.toSet());
     }
 
-
     public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(AccountPayload<?> accountPayload) {
         return getAccountByNameMap().values().stream()
                 .filter(account -> account.getAccountPayload().equals(accountPayload))
@@ -171,7 +170,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
         return Optional.ofNullable(getAccountByNameMap().get(name));
     }
 
-
     public ReadOnlyObservable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {
         return persistableStore.getSelectedAccount();
     }
@@ -179,20 +177,4 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     public Optional<Account<? extends PaymentMethod<?>, ?>> findSelectedAccount() {
         return Optional.ofNullable(selectedAccountAsObservable().get());
     }
-
-    public boolean hasAccounts() {
-        return !hasNoAccounts();
-    }
-
-    public boolean hasNoAccounts() {
-        return persistableStore.getAccountByName().isEmpty();
-    }
-    // accountService.getAccounts().stream().filter(e->e instanceof CryptoAssetAccount)
-
-
-
-    /* --------------------------------------------------------------------- */
-    // Private
-    /* --------------------------------------------------------------------- */
-
 }
