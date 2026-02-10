@@ -48,11 +48,9 @@ import bisq.account.bisq1_import.fiat.ImportUpiAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseUsdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportZelleAccountParser;
-import bisq.common.application.Service;
 import bisq.common.json.JsonMapperProvider;
 import bisq.security.keys.KeyGeneration;
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -64,8 +62,7 @@ import java.util.Base64;
 import java.util.List;
 
 @Slf4j
-@Getter
-public class ImportBisq1AccountsParser implements Service {
+public class ImportBisq1AccountsParser {
     public static List<Account<?, ?>> parseAccounts(String json) {
         try {
             JsonNode root = JsonMapperProvider.get().readTree(json);

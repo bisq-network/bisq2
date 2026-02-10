@@ -43,41 +43,40 @@ public final class ImportMoneroAccountParser extends ImportAccountParser<CryptoP
 
     @Override
     public MoneroAccount parse(KeyPair dsaKeyPair) {
-        String address;
-        Optional<String> mainAddress;
-        Optional<String> privateViewKey;
-        Optional<String> subAddress;
-        Optional<Integer> initialSubAddressIndex;
-        Optional<Integer> accountIndex;
+        String  address = requireText(paymentAccountPayloadNode, "address");
+        Optional<String>  mainAddress = Optional.empty();
+        Optional<String>  privateViewKey = Optional.empty();
+        Optional<String> subAddress = Optional.empty();
+        Optional<Integer>  accountIndex = Optional.empty();
+        Optional<Integer> initialSubAddressIndex = Optional.empty();
 
-        JsonNode extraDataNode = requireNode(accountNode, "extraData");
-        String useXMmrSubAddressesValue = asOptionalText(extraDataNode, "UseXMmrSubAddresses");
-        boolean useSubAddresses = useXMmrSubAddressesValue != null && useXMmrSubAddressesValue.equals("1");
-        if (useSubAddresses) {
-            String xmrMainAddressValue = requireText(extraDataNode, "XmrMainAddress");
-            mainAddress = Optional.of(xmrMainAddressValue);
+        boolean useSubAddresses;
+        Optional<JsonNode> optionalExtraDataNode = optionalNode(accountNode, "extraData");
+        if (optionalExtraDataNode.isPresent()) {
+            JsonNode extraDataNode = optionalExtraDataNode.get();
+            String useXMmrSubAddressesValue = asOptionalText(extraDataNode, "UseXMmrSubAddresses");
+            useSubAddresses = useXMmrSubAddressesValue != null && useXMmrSubAddressesValue.equals("1");
+            if (useSubAddresses) {
+                String xmrMainAddressValue = requireText(extraDataNode, "XmrMainAddress");
+                mainAddress = Optional.of(xmrMainAddressValue);
 
-            String xmrPrivateViewKeyValue = requireText(extraDataNode, "XmrPrivateViewKey");
-            privateViewKey = Optional.of(xmrPrivateViewKeyValue);
+                String xmrPrivateViewKeyValue = requireText(extraDataNode, "XmrPrivateViewKey");
+                privateViewKey = Optional.of(xmrPrivateViewKeyValue);
 
-            String xmrSubAddressValue = requireText(extraDataNode, "XmrSubAddress");
-            subAddress = Optional.of(xmrSubAddressValue);
+                String xmrSubAddressValue = requireText(extraDataNode, "XmrSubAddress");
+                subAddress = Optional.of(xmrSubAddressValue);
 
-            // The address field is set to the sub address
-            address = xmrSubAddressValue;
+                // The address field is set to the sub address
+                address = xmrSubAddressValue;
 
-            String xmrAccountIndexValue = requireText(extraDataNode, "XmrAccountIndex");
-            accountIndex = Optional.of(Integer.parseInt(xmrAccountIndexValue));
+                String xmrAccountIndexValue = requireText(extraDataNode, "XmrAccountIndex");
+                accountIndex = Optional.of(Integer.parseInt(xmrAccountIndexValue));
 
-            String xmrSubAddressIndexValue = requireText(extraDataNode, "XmrSubAddressIndex");
-            initialSubAddressIndex = Optional.of(Integer.parseInt(xmrSubAddressIndexValue));
+                String xmrSubAddressIndexValue = requireText(extraDataNode, "XmrSubAddressIndex");
+                initialSubAddressIndex = Optional.of(Integer.parseInt(xmrSubAddressIndexValue));
+            }
         } else {
-            address = requireText(paymentAccountPayloadNode, "address");
-            mainAddress = Optional.empty();
-            privateViewKey = Optional.empty();
-            subAddress = Optional.empty();
-            accountIndex = Optional.empty();
-            initialSubAddressIndex = Optional.empty();
+            useSubAddresses = false;
         }
 
         // We do not export the autoconf settings. Users can edit that in the account, and

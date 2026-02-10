@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public abstract class ImportAccountParser<M extends PaymentMethod<?>, P extends AccountPayload<M>> {
@@ -88,6 +89,13 @@ public abstract class ImportAccountParser<M extends PaymentMethod<?>, P extends 
             throw new IllegalArgumentException("Missing field: " + field);
         }
         return jsonNode;
+    }
+    public static Optional<JsonNode> optionalNode(JsonNode node, String field) {
+        JsonNode jsonNode = node.get(field);
+        if (jsonNode == null || jsonNode.isNull()) {
+            return Optional.empty();
+        }
+        return Optional.of(jsonNode);
     }
 
     protected static String requireText(JsonNode node, String field) {

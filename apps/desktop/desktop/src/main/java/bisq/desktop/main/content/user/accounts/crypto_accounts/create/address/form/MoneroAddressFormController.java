@@ -101,7 +101,7 @@ public class MoneroAddressFormController extends AddressFormController<MoneroAdd
     }
 
     void onUseSubAddressesToggled(boolean selected) {
-        model.getUseSubAddresses().set(!model.getUseSubAddresses().get());
+        model.getUseSubAddresses().set(selected);
     }
 
     // TODO impl. following Bisq 1 `bisq.core.payment.XmrAccountDelegate.createAndSetNewSubAddress`
@@ -109,7 +109,6 @@ public class MoneroAddressFormController extends AddressFormController<MoneroAdd
                                     String privateViewKey,
                                     String accountIndex,
                                     String initialSubAddressIndex) {
-        log.warn("createSubAddress {} {} {} {}",mainAddress, privateViewKey, accountIndex, initialSubAddressIndex);
         return "TODO: SubAddress creation not implemented yet";
     }
 
