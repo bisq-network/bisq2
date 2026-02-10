@@ -68,8 +68,8 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         super.verify();
 
         NetworkDataValidation.validateRequiredText(userName, USER_NAME_MIN_LENGTH, USER_NAME_MAX_LENGTH);
-        PaymentAccountValidation.validateCountryCodes(selectedCurrencyCodes,
-                FiatPaymentRailUtil.getRevolutCountryCodes(),
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getRevolutCurrencyCodes(),
                 "Revolut country codes");
     }
 

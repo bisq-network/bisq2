@@ -55,6 +55,21 @@ public class PaymentAccountValidation {
         }
     }
 
+    public static void validateCurrencyCodes(List<String> currencyCodes,
+                                            List<String> allowedCurrencyCodes,
+                                            String contextDescription) {
+        checkArgument(currencyCodes != null && !currencyCodes.isEmpty(),
+                "Currency codes list must not be null or empty for " + contextDescription);
+
+        checkArgument(allowedCurrencyCodes != null && !allowedCurrencyCodes.isEmpty(),
+                "Allowed currency codes list must not be null or empty for " + contextDescription);
+
+        for (String currencyCode : currencyCodes) {
+            checkArgument(allowedCurrencyCodes.contains(currencyCode),
+                    "Currency code '" + currencyCode + "' is not supported for " + contextDescription + ". Supported currencies: " + allowedCurrencyCodes);
+        }
+    }
+
     public static void validateCurrencyCodes(List<String> currencyCodes) {
         for (var code : currencyCodes) {
             validateCurrencyCode(code);
