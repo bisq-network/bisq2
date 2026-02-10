@@ -28,8 +28,29 @@ message MediationCase {
   bool isClosed = 3;
   optional sint64 closeCaseDate = 4;
 }
+
 message MediatorStore {
   repeated MediationCase mediationCases = 1;
+}
+
+enum MediationCaseState {
+  MEDIATIONCASESTATE_UNSPECIFIED = 0;
+  MEDIATIONCASESTATE_OPEN = 1;
+  MEDIATIONCASESTATE_CLOSED = 2;
+  MEDIATIONCASESTATE_RE_OPENED = 3;
+}
+
+enum MediationResultReason {
+  MEDIATIONRESULTREASON_UNSPECIFIED = 0;
+  MEDIATIONRESULTREASON_OTHER = 1;
+  MEDIATIONRESULTREASON_BUG = 2;
+  MEDIATIONRESULTREASON_USABILITY = 3;
+  MEDIATIONRESULTREASON_BANK = 4;
+  MEDIATIONRESULTREASON_OPTION_TRADE = 5;
+  MEDIATIONRESULTREASON_TRADER_NOT_RESPONDING = 6;
+  MEDIATIONRESULTREASON_WRONG_SENDER_ACCOUNT = 7;
+  MEDIATIONRESULTREASON_TRADE_ALREADY_SETTLED = 8;
+  MEDIATIONRESULTREASON_PEER_WAS_LATE = 9;
 }
 
 message MuSigMediationRequest {
@@ -45,12 +66,21 @@ message MuSigMediatorsResponse {
   string tradeId = 1;
 }
 
+message MuSigMediationResult {
+  uint64 date = 1;
+  MediationResultReason mediationResultReason = 2;
+  sint64 proposedBuyerPayoutAmount = 3;
+  sint64 proposedSellerPayoutAmount = 4;
+  optional string summaryNotes = 5;
+}
+
 message MuSigMediationCase {
   MuSigMediationRequest muSigMediationRequest = 1;
   sint64 requestDate = 2;
-  bool isClosed = 3;
-  optional sint64 closeCaseDate = 4;
+  MediationCaseState mediationCaseState = 3;
+  optional MuSigMediationResult muSigMediationResult = 4;
 }
+
 message MuSigMediatorStore {
   repeated MuSigMediationCase muSigMediationCases = 1;
 }

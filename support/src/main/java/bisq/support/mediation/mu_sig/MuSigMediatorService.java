@@ -36,6 +36,8 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.support.mediation.MediationCaseState;
+import bisq.support.mediation.MediationResultReason;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -111,8 +113,15 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
     // API
     /* --------------------------------------------------------------------- */
 
-    public void closeMediationCase(MuSigMediationCase muSigMediationCase) {
-        if (muSigMediationCase.setClosed(true)) {
+    public MuSigMediationResult createMuSigMediationResult(MediationResultReason mediationResultReason,
+                                                           Optional<String> summaryNotes) {
+        return new MuSigMediationResult(mediationResultReason, 0L, 0L, summaryNotes);
+    }
+
+    public void closeMediationCase(MuSigMediationCase muSigMediationCase, MuSigMediationResult muSigMediationResult) {
+        boolean resultChanged = muSigMediationCase.setMuSigMediationResult(muSigMediationResult);
+        boolean stateChanged = muSigMediationCase.setMediationCaseState(MediationCaseState.CLOSED);
+        if (resultChanged || stateChanged) {
             persist();
         }
     }
@@ -123,7 +132,13 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
     }
 
     public void reOpenMediationCase(MuSigMediationCase muSigMediationCase) {
-        if (muSigMediationCase.setClosed(false)) {
+        if (muSigMediationCase.setMediationCaseState(MediationCaseState.RE_OPENED)) {
+            persist();
+        }
+    }
+
+    public void closeReOpenedMediationCase(MuSigMediationCase muSigMediationCase) {
+        if (muSigMediationCase.setMediationCaseState(MediationCaseState.CLOSED)) {
             persist();
         }
     }

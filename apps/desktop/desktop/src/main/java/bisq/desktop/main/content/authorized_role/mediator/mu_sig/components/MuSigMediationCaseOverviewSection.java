@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.mu_sig.details;
+package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
@@ -27,6 +27,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
@@ -46,18 +47,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
 
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getCopyButton;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getDescriptionLabel;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getLine;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getValueLabel;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getCopyButton;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getDescriptionLabel;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getLine;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getValueLabel;
 
 public class MuSigMediationCaseOverviewSection {
 
     private final Controller controller;
 
-    public MuSigMediationCaseOverviewSection(ServiceProvider serviceProvider) {
-        this.controller = new Controller(serviceProvider);
+    public MuSigMediationCaseOverviewSection(ServiceProvider serviceProvider, boolean isCompactView) {
+        this.controller = new Controller(serviceProvider, isCompactView);
     }
 
     public VBox getRoot() {
@@ -77,8 +78,9 @@ public class MuSigMediationCaseOverviewSection {
 
         private final MuSigMediatorService muSigMediatorService;
 
-        private Controller(ServiceProvider serviceProvider) {
+        private Controller(ServiceProvider serviceProvider, boolean isCompactView) {
             model = new Model();
+            model.setCompactView(isCompactView);
             view = new View(new VBox(), model, this);
             muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
         }
@@ -129,7 +131,6 @@ public class MuSigMediationCaseOverviewSection {
             model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
             model.setDepositTxId(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
             model.setDepositTxIdEmpty(true);
-
         }
 
         @Override
@@ -142,7 +143,8 @@ public class MuSigMediationCaseOverviewSection {
                         MuSigMediationRequest request = mediationCase.getMuSigMediationRequest();
                         return userProfile.equals(request.getRequester()) || userProfile.equals(request.getPeer());
                     })
-                    .collect(Collectors.partitioningBy(mediationCase -> mediationCase.getIsClosed().get(),
+                    .collect(Collectors.partitioningBy(mediationCase ->
+                                    mediationCase.getMediationCaseState().get() == MediationCaseState.CLOSED,
                             Collectors.counting()));
             int closed = counts.getOrDefault(true, 0L).intValue();
             int open = counts.getOrDefault(false, 0L).intValue();
@@ -158,6 +160,8 @@ public class MuSigMediationCaseOverviewSection {
     @Setter
     private static class Model implements bisq.desktop.common.view.Model {
         private MuSigMediationCaseListItem muSigMediationCaseListItem;
+
+        private boolean isCompactView;
 
         private String buyerUserName;
         private String sellerUserName;
@@ -189,24 +193,13 @@ public class MuSigMediationCaseOverviewSection {
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
 
-        private final Label buyerUserNameLabel, sellerUserNameLabel, fiatAmountLabel, fiatCurrencyLabel, btcAmountLabel, priceLabel,
-                priceCodesLabel, priceSpecLabel, paymentMethodLabel, settlementMethodLabel,
-                depositTxTitleLabel, depositTxDetailsLabel;
-        private final BisqMenuItem buyerUserNameCopyButton, sellerUserNameCopyButton, depositTxCopyButton;
+        private final Label fiatAmountLabel, fiatCurrencyLabel, btcAmountLabel, priceLabel,
+                priceCodesLabel, priceSpecLabel;
+        private Label buyerUserNameLabel, sellerUserNameLabel, paymentMethodLabel, settlementMethodLabel, depositTxTitleLabel, depositTxDetailsLabel;
+        private BisqMenuItem buyerUserNameCopyButton, sellerUserNameCopyButton, depositTxCopyButton;
 
         public View(VBox root, Model model, Controller controller) {
             super(root, model, controller);
-
-            // UserNames
-            buyerUserNameLabel = getValueLabel();
-            buyerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerUserName.copy"));
-            HBox buyerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerUserName",
-                    buyerUserNameLabel, buyerUserNameCopyButton);
-
-            sellerUserNameLabel = getValueLabel();
-            sellerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerUserName.copy"));
-            HBox sellerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerUserName",
-                    sellerUserNameLabel, sellerUserNameCopyButton);
 
             // Amount and price
             fiatAmountLabel = getValueLabel();
@@ -236,37 +229,55 @@ public class MuSigMediationCaseOverviewSection {
             amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
             HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.amountAndPrice", amountAndPriceDetailsHBox);
 
-            // Payment and settlement methods
-            paymentMethodLabel = getValueLabel();
-            Label paymentMethodsSlashLabel = new Label("/");
-            paymentMethodsSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-            settlementMethodLabel = getValueLabel();
-            HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel, paymentMethodsSlashLabel, settlementMethodLabel);
-            paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-            HBox paymentMethodsBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
-                    paymentMethodsDetailsHBox);
+            VBox content;
 
-            // Deposit transaction ID
-            depositTxTitleLabel = getDescriptionLabel("");
-            depositTxDetailsLabel = getValueLabel();
-            depositTxCopyButton = getCopyButton("");
-            HBox depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
-                    depositTxDetailsLabel, depositTxCopyButton);
+            if (!model.isCompactView()) {
+                Region overviewLine = getLine();
+                Label overviewLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.overview").toUpperCase());
+                overviewLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
 
-            Region overviewLine = getLine();
-            Label overviewLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.overview").toUpperCase());
-            overviewLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
+                VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
 
-            VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
+                // UserNames
+                buyerUserNameLabel = getValueLabel();
+                buyerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerUserName.copy"));
+                HBox buyerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerUserName",
+                        buyerUserNameLabel, buyerUserNameCopyButton);
 
-            VBox content = new VBox(10,
-                    overviewLabel,
-                    overviewLine,
-                    buyerUserNameBox,
-                    sellerUserNameBox,
-                    amountAndPriceBox,
-                    paymentMethodsBox,
-                    depositTxBox);
+                sellerUserNameLabel = getValueLabel();
+                sellerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerUserName.copy"));
+                HBox sellerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerUserName",
+                        sellerUserNameLabel, sellerUserNameCopyButton);
+
+                // Payment and settlement methods
+                paymentMethodLabel = getValueLabel();
+                Label paymentMethodsSlashLabel = new Label("/");
+                paymentMethodsSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+                settlementMethodLabel = getValueLabel();
+                HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel, paymentMethodsSlashLabel, settlementMethodLabel);
+                paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+                HBox paymentMethodsBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
+                        paymentMethodsDetailsHBox);
+
+                // Deposit transaction ID
+                depositTxTitleLabel = getDescriptionLabel("");
+                depositTxDetailsLabel = getValueLabel();
+                depositTxCopyButton = getCopyButton("");
+                HBox depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
+                        depositTxDetailsLabel, depositTxCopyButton);
+
+                content = new VBox(10,
+                        overviewLabel,
+                        overviewLine,
+                        buyerUserNameBox,
+                        sellerUserNameBox,
+                        amountAndPriceBox,
+                        paymentMethodsBox,
+                        depositTxBox);
+            } else {
+                content = new VBox(10,
+                        amountAndPriceBox);
+            }
 
             content.setAlignment(Pos.CENTER_LEFT);
             root.getChildren().add(content);
@@ -274,24 +285,41 @@ public class MuSigMediationCaseOverviewSection {
 
         @Override
         protected void onViewAttached() {
-            buyerUserNameLabel.setText(String.format("%s (%d)", model.getBuyerUserName(), model.getBuyerCaseCountTotal()));
-            sellerUserNameLabel.setText(String.format("%s (%d)", model.getSellerUserName(), model.getSellerCaseCountTotal()));
-            buyerUserNameLabel.setTooltip(new Tooltip(Res.get(
-                    "authorizedRole.mediator.caseCounts.tooltip",
-                    model.getBuyerBotId(),
-                    model.getBuyerUserId(),
-                    model.getBuyerCaseCountOpen(),
-                    model.getBuyerCaseCountClosed()
-            )));
-            sellerUserNameLabel.setTooltip(new Tooltip(Res.get(
-                    "authorizedRole.mediator.caseCounts.tooltip",
-                    model.getSellerBotId(),
-                    model.getSellerUserId(),
-                    model.getSellerCaseCountOpen(),
-                    model.getSellerCaseCountClosed()
-            )));
-            buyerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerUserName()));
-            sellerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerUserName()));
+            if (!model.isCompactView()) {
+                buyerUserNameLabel.setText(String.format("%s (%d)", model.getBuyerUserName(), model.getBuyerCaseCountTotal()));
+                sellerUserNameLabel.setText(String.format("%s (%d)", model.getSellerUserName(), model.getSellerCaseCountTotal()));
+                buyerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                        "authorizedRole.mediator.caseCounts.tooltip",
+                        model.getBuyerBotId(),
+                        model.getBuyerUserId(),
+                        model.getBuyerCaseCountOpen(),
+                        model.getBuyerCaseCountClosed()
+                )));
+                sellerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                        "authorizedRole.mediator.caseCounts.tooltip",
+                        model.getSellerBotId(),
+                        model.getSellerUserId(),
+                        model.getSellerCaseCountOpen(),
+                        model.getSellerCaseCountClosed()
+                )));
+                buyerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerUserName()));
+                sellerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerUserName()));
+
+                paymentMethodLabel.setText(model.getPaymentMethod());
+                settlementMethodLabel.setText(model.getSettlementMethod());
+
+                depositTxDetailsLabel.setText(model.getDepositTxId());
+                depositTxTitleLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.txId"));
+                depositTxCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.txId.copy"));
+                depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
+                depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
+                depositTxDetailsLabel.getStyleClass().clear();
+                depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
+                        ? "text-fill-grey-dimmed"
+                        : "text-fill-white");
+                depositTxDetailsLabel.getStyleClass().add("normal-text");
+                depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
+            }
 
             fiatAmountLabel.setText(model.getFiatAmount());
             fiatCurrencyLabel.setText(model.getFiatCurrency());
@@ -299,27 +327,15 @@ public class MuSigMediationCaseOverviewSection {
             priceLabel.setText(model.getPrice());
             priceCodesLabel.setText(model.getPriceCodes());
             priceSpecLabel.setText(model.getPriceSpec());
-            paymentMethodLabel.setText(model.getPaymentMethod());
-            settlementMethodLabel.setText(model.getSettlementMethod());
-
-            depositTxDetailsLabel.setText(model.getDepositTxId());
-            depositTxTitleLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.txId"));
-            depositTxCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.txId.copy"));
-            depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
-            depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
-            depositTxDetailsLabel.getStyleClass().clear();
-            depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
-                    ? "text-fill-grey-dimmed"
-                    : "text-fill-white");
-            depositTxDetailsLabel.getStyleClass().add("normal-text");
-            depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
         }
 
         @Override
         protected void onViewDetached() {
-            buyerUserNameCopyButton.setOnAction(null);
-            sellerUserNameCopyButton.setOnAction(null);
-            depositTxCopyButton.setOnAction(null);
+            if (!model.isCompactView()) {
+                buyerUserNameCopyButton.setOnAction(null);
+                sellerUserNameCopyButton.setOnAction(null);
+                depositTxCopyButton.setOnAction(null);
+            }
         }
     }
 }

@@ -26,11 +26,13 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.authorized_role.mediator.mu_sig.close.MuSigMediationCaseCloseController;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
+import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -51,7 +53,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.settings.DontShowAgainKey.MEDIATOR_CLOSE_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_LEAVE_CHANNEL_WARNING;
 import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVE_CASE_WARNING;
 
@@ -117,16 +118,18 @@ public class MuSigMediationCaseHeader {
             if (model.getShowClosedCases().get()) {
                 doReOpen();
             } else {
-                if (dontShowAgainService.showAgain(MEDIATOR_CLOSE_WARNING)) {
-                    new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
-                            .dontShowAgainId(MEDIATOR_CLOSE_WARNING)
-                            .actionButtonText(Res.get("confirmation.yes"))
-                            .onAction(this::doClose)
-                            .closeButtonText(Res.get("confirmation.no"))
-                            .show();
-                } else {
-                    doClose();
-                }
+                doClose();
+                // TODO: move this eventually to Close Controller
+//                if (dontShowAgainService.showAgain(MEDIATOR_CLOSE_WARNING)) {
+//                    new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
+//                            .dontShowAgainId(MEDIATOR_CLOSE_WARNING)
+//                            .actionButtonText(Res.get("confirmation.yes"))
+//                            .onAction(this::doClose)
+//                            .closeButtonText(Res.get("confirmation.no"))
+//                            .show();
+//                } else {
+//                    doClose();
+//                }
             }
         }
 
@@ -164,7 +167,9 @@ public class MuSigMediationCaseHeader {
         private void doRemoveCase() {
             MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                doClose();
+                if (listItem.getMuSigMediationCase().getMediationCaseState().get() != MediationCaseState.CLOSED) {
+                    throw new RuntimeException("Only closed MuSig mediation cases can be removed.");
+                }
                 doLeave();
                 muSigMediatorService.removeMediationCase(listItem.getMuSigMediationCase());
             }
@@ -183,12 +188,7 @@ public class MuSigMediationCaseHeader {
         private void doClose() {
             MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                MuSigOpenTradeChannel channel = listItem.getChannel();
-                if (channel != null) {
-                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
-                }
-                muSigMediatorService.closeMediationCase(listItem.getMuSigMediationCase());
-                onCloseHandler.run();
+                Navigation.navigateTo(NavigationTarget.MU_SIG_MEDIATION_CASE_CLOSE, new MuSigMediationCaseCloseController.InitData(listItem, onCloseHandler));
             }
         }
 

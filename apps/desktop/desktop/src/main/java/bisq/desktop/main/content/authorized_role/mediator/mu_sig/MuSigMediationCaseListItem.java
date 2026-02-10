@@ -32,6 +32,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -113,7 +114,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
     @Override
     public void onActivate() {
-        Optional<Long> optionalCloseCaseDate = muSigMediationCase.getCloseCaseDate();
+        Optional<Long> optionalCloseCaseDate = muSigMediationCase.getMuSigMediationResult().get().map(MuSigMediationResult::getDate);
         closeCaseDate = optionalCloseCaseDate.orElse(0L);
         closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
         closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");

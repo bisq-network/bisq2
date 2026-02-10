@@ -30,6 +30,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
+import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
@@ -244,9 +245,9 @@ public class MuSigMediatorController implements Controller {
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState().get() == MediationCaseState.CLOSED);
         } else {
-            model.getClosedCasesPredicate().set(item -> !item.getMuSigMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState().get() != MediationCaseState.CLOSED);
         }
     }
 
