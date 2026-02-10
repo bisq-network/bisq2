@@ -113,4 +113,14 @@ class RequestValidatorIsValidPathTest {
         RequestValidator validator = new RequestValidator(List.of(), List.of("/blocked"));
         assertTrue(validator.isValidUri("/allowed"));
     }
+
+    @Test
+    void testValidPathWithSpaces() {
+        RequestValidator validator = new RequestValidator(List.of(), List.of());
+        // Spaces must be URL-encoded as %20 in the URI string.
+        // The URI class decodes them to actual spaces when getPath() is called.
+        assertTrue(validator.isValidUri("/api/v1/payment-accounts/fiat/test%201"));
+        assertTrue(validator.isValidUri("/foo/bar%20baz"));
+        assertTrue(validator.isValidUri("/path%20with/multiple%20spaces"));
+    }
 }

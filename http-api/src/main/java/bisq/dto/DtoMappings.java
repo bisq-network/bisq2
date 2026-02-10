@@ -1132,7 +1132,18 @@ public class DtoMappings {
 
     // paymentaccount
     public static class UserDefinedFiatAccountMapping {
+        private static final int MIN_ACCOUNT_NAME_LENGTH = 2;
+        private static final int MAX_ACCOUNT_NAME_LENGTH = 20;
+
         public static UserDefinedFiatAccount toBisq2Model(UserDefinedFiatAccountDto dto) {
+            // Validate account name
+            String accountName = dto.accountName();
+            if (accountName == null || accountName.trim().length() < MIN_ACCOUNT_NAME_LENGTH || accountName.length() > MAX_ACCOUNT_NAME_LENGTH) {
+                throw new IllegalArgumentException(
+                        "Account name must be between " + MIN_ACCOUNT_NAME_LENGTH + " and " + MAX_ACCOUNT_NAME_LENGTH + " characters");
+            }
+
+            // Validate account data
             String accountData = dto.accountPayload().accountData();
             if (accountData == null || accountData.isEmpty()) {
                 throw new IllegalArgumentException("Account data cannot be empty");
@@ -1149,7 +1160,7 @@ public class DtoMappings {
             return new UserDefinedFiatAccount(
                     StringUtils.createUid(),
                     System.currentTimeMillis(),
-                    dto.accountName(),
+                    accountName,
                     accountPayload
             );
         }
