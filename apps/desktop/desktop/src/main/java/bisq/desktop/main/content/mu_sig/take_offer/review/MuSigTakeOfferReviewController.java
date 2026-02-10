@@ -128,7 +128,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         Optional<CollateralOption> optionalCollateralOption = OfferOptionUtil.findCollateralOption(muSigOffer.getOfferOptions());
         checkArgument(optionalCollateralOption.isPresent(), "CollateralOption must be present");
         CollateralOption collateralOption = optionalCollateralOption.get();
-        checkArgument(collateralOption.getSellerSecurityDeposit() == collateralOption.getBuyerSecurityDeposit(),
+        checkArgument(Double.compare(collateralOption.getSellerSecurityDeposit(), collateralOption.getBuyerSecurityDeposit()) == 0,
                 "SellerSecurityDeposit and BuyerSecurityDeposit are expected to be equal");
         double securityDeposit = collateralOption.getBuyerSecurityDeposit();
         model.setSecurityDepositAsPercent(securityDeposit);

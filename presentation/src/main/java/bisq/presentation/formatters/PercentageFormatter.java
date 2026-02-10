@@ -75,8 +75,9 @@ public class PercentageFormatter {
 
     public static String formatToPercent(double value, NumberFormat numberFormat, int precision) {
         double number = MathUtils.roundDouble(value * 100, precision);
-        numberFormat.setMinimumFractionDigits(precision);
-        numberFormat.setMaximumFractionDigits(precision);
-        return numberFormat.format(number);
+        NumberFormat format = (NumberFormat) numberFormat.clone();
+        format.setMinimumFractionDigits(precision);
+        format.setMaximumFractionDigits(precision);
+        return format.format(number);
     }
 }
