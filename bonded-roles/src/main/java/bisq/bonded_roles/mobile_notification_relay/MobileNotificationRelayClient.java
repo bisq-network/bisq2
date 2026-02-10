@@ -17,164 +17,36 @@
 
 package bisq.bonded_roles.mobile_notification_relay;
 
-import bisq.common.application.ApplicationVersion;
-import bisq.common.application.Service;
 import bisq.common.data.Pair;
-import bisq.common.network.TransportType;
-import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
+import bisq.network.BaseService;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-// TODO extract super class
-// TODO WIP
 
 @Slf4j
-public class MobileNotificationRelayClient implements Service {
+public class MobileNotificationRelayClient extends BaseService {
     private static final String SUCCESS = "success";
     private static final String ENDPOINT = "relay";
 
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("MobileNotificationsService", 1, 5, 60);
 
-    private static class RetryException extends RuntimeException {
-        @Getter
-        private final AtomicInteger recursionDepth;
-
-        public RetryException(String message, AtomicInteger recursionDepth) {
-            super(message);
-            this.recursionDepth = recursionDepth;
-        }
-    }
-
-    @Getter
-    @ToString
-    public static final class Config {
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            Set<Provider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-            return new Config(timeoutInSeconds, providers, fallbackProviders);
-        }
-
-        private static TransportType getTransportTypeFromUrl(String url) {
-            try {
-                java.net.URI uri = java.net.URI.create(url);
-                String host = uri.getHost();
-                if (host != null) {
-                    if (host.endsWith(".i2p")) {
-                        return TransportType.I2P;
-                    } else if (host.endsWith(".onion")) {
-                        return TransportType.TOR;
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                log.warn("Failed to parse URL for transport type detection: {}", url);
-            }
-            return TransportType.CLEAR;
-        }
-
-        private final Set<Provider> providers;
-        private final Set<Provider> fallbackProviders;
-        private final long timeoutInSeconds;
-
-        public Config(long timeoutInSeconds, Set<Provider> providers, Set<Provider> fallbackProviders) {
-            this.timeoutInSeconds = timeoutInSeconds;
-            this.providers = providers;
-            this.fallbackProviders = fallbackProviders;
-        }
-    }
-
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    public static final class Provider {
-        private final String baseUrl;
-        private final String operator;
-        private final TransportType transportType;
-
-        public Provider(String baseUrl,
-                        String operator,
-                        TransportType transportType) {
-            this.baseUrl = baseUrl;
-            this.operator = operator;
-            this.transportType = transportType;
-        }
-    }
-
-    @Getter
-    private final Observable<Provider> selectedProvider = new Observable<>();
-    private final MobileNotificationRelayClient.Config conf;
-    private final NetworkService networkService;
-    private final String userAgent;
-    private final Set<Provider> candidates = new HashSet<>();
-    private final Set<Provider> providersFromConfig = new HashSet<>();
-    private final Set<Provider> fallbackProviders = new HashSet<>();
-    private final Set<Provider> failedProviders = new HashSet<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
-    private final int numTotalCandidates;
-    private final boolean noProviderAvailable;
-    private volatile boolean shutdownStarted;
-
     public MobileNotificationRelayClient(Config conf, NetworkService networkService) {
-        this.conf = conf;
-        this.networkService = networkService;
-        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        conf.providers.stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(providersFromConfig::add);
-        conf.getFallbackProviders().stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(fallbackProviders::add);
-
-        if (providersFromConfig.isEmpty()) {
-            candidates.addAll(fallbackProviders);
-        } else {
-            candidates.addAll(providersFromConfig);
-        }
-        noProviderAvailable = candidates.isEmpty();
-        numTotalCandidates = providersFromConfig.size() + fallbackProviders.size();
-        if (noProviderAvailable) {
-            log.warn("We do not have any matching provider setup for supportedTransportTypes {}", supportedTransportTypes);
-        } else {
-            selectedProvider.set(selectNextProvider());
-        }
+      super("", conf, networkService);
     }
 
     @Override
@@ -230,7 +102,7 @@ public class MobileNotificationRelayClient implements Service {
         try {
             return CompletableFuture.supplyAsync(() -> {
                         Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-                        BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
+                        BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
                         httpClient = Optional.of(client);
                         long ts = System.currentTimeMillis();
                         try {
@@ -294,44 +166,6 @@ public class MobileNotificationRelayClient implements Service {
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected task.", e);
             return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    private Provider selectNextProvider() {
-        if (candidates.isEmpty()) {
-            fillCandidates(0);
-        }
-        // Guard against null return from getRandomElement (can happen if candidates is empty)
-        Provider selected = CollectionUtil.getRandomElement(candidates);
-        if (selected == null) {
-            log.error("No provider available - candidates list is empty after fillCandidates");
-            // Return first available provider from config as fallback
-            return providersFromConfig.stream().findFirst()
-                    .orElseGet(() -> fallbackProviders.stream().findFirst()
-                            .orElse(null));
-        }
-        candidates.remove(selected);
-        return selected;
-    }
-
-    private void fillCandidates(int recursionDepth) {
-        providersFromConfig.stream()
-                .filter(provider -> !failedProviders.contains(provider))
-                .forEach(candidates::add);
-        if (candidates.isEmpty()) {
-            log.info("We do not have any provider which has not already failed. We add the fall back providers to our candidates list.");
-            fallbackProviders.stream()
-                    .filter(provider -> !failedProviders.contains(provider))
-                    .forEach(candidates::add);
-        }
-        if (candidates.isEmpty()) {
-            log.info("All our providers from config and fallback have failed. We reset the failedProviders and fill from scratch.");
-            failedProviders.clear();
-            if (recursionDepth == 0) {
-                fillCandidates(1);
-            } else {
-                log.error("recursion at fillCandidates");
-            }
         }
     }
 

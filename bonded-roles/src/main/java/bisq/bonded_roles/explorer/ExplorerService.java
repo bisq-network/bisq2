@@ -18,168 +18,35 @@
 package bisq.bonded_roles.explorer;
 
 import bisq.bonded_roles.explorer.dto.Tx;
-import bisq.common.application.ApplicationVersion;
-import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.json.JsonMapperProvider;
-import bisq.common.network.TransportType;
-import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
+import bisq.network.BaseService;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 // TODO We should support same registration model via oracle node as used with other nodes
 
 @Slf4j
-public class ExplorerService implements Service {
+public class ExplorerService extends BaseService {
     private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("ExplorerService", 1, 5, 60);
 
-    private static class RetryException extends RuntimeException {
-        @Getter
-        private final AtomicInteger recursionDepth;
-
-        public RetryException(String message, AtomicInteger recursionDepth) {
-            super(message);
-            this.recursionDepth = recursionDepth;
-        }
-    }
-
-    @Getter
-    @ToString
-    public static final class Config {
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            Set<Provider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-            return new Config(timeoutInSeconds, providers, fallbackProviders);
-        }
-
-        private static TransportType getTransportTypeFromUrl(String url) {
-            if (url.endsWith(".i2p")) {
-                return TransportType.I2P;
-            } else if (url.endsWith(".onion")) {
-                return TransportType.TOR;
-            } else {
-                return TransportType.CLEAR;
-            }
-        }
-
-        private final Set<Provider> providers;
-        private final Set<Provider> fallbackProviders;
-        private final long timeoutInSeconds;
-
-        public Config(long timeoutInSeconds, Set<Provider> providers, Set<Provider> fallbackProviders) {
-            this.timeoutInSeconds = timeoutInSeconds;
-            this.providers = providers;
-            this.fallbackProviders = fallbackProviders;
-        }
-    }
-
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    public static final class Provider {
-        private final String baseUrl;
-        private final String operator;
-        private final String apiPath;
-        private final String txPath;
-        private final String addressPath;
-        private final TransportType transportType;
-
-        public Provider(String baseUrl, String operator, TransportType transportType) {
-            this(baseUrl, operator, "api/", "tx/", "address/", transportType);
-        }
-
-        public Provider(String baseUrl,
-                        String operator,
-                        String apiPath,
-                        String txPath,
-                        String addressPath,
-                        TransportType transportType) {
-            this.baseUrl = baseUrl;
-            this.operator = operator;
-            this.apiPath = apiPath;
-            this.txPath = txPath;
-            this.addressPath = addressPath;
-            this.transportType = transportType;
-        }
-    }
-
-    @Getter
-    private final Observable<Provider> selectedProvider = new Observable<>();
-    private final ExplorerService.Config conf;
-    private final NetworkService networkService;
-    private final String userAgent;
-    private final Set<Provider> candidates = new HashSet<>();
-    private final Set<Provider> providersFromConfig = new HashSet<>();
-    private final Set<Provider> fallbackProviders = new HashSet<>();
-    private final Set<Provider> failedProviders = new HashSet<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
-    private final int numTotalCandidates;
-    private final boolean noProviderAvailable;
-    private volatile boolean shutdownStarted;
 
     public ExplorerService(Config conf, NetworkService networkService) {
-        this.conf = conf;
-        this.networkService = networkService;
-        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
-
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        conf.providers.stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(providersFromConfig::add);
-        conf.getFallbackProviders().stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(fallbackProviders::add);
-
-        if (providersFromConfig.isEmpty()) {
-            candidates.addAll(fallbackProviders);
-        } else {
-            candidates.addAll(providersFromConfig);
-        }
-        noProviderAvailable = candidates.isEmpty();
-        numTotalCandidates = providersFromConfig.size() + fallbackProviders.size();
-        if (noProviderAvailable) {
-            log.warn("We do not have any matching provider setup for supportedTransportTypes {}", supportedTransportTypes);
-        } else {
-            selectedProvider.set(selectNextProvider());
-        }
+        super("api/tx/", conf, networkService);
     }
 
     @Override
@@ -221,10 +88,10 @@ public class ExplorerService implements Service {
         try {
             return CompletableFuture.supplyAsync(() -> {
                         Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-                        BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
+                        BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
                         httpClient = Optional.of(client);
                         long ts = System.currentTimeMillis();
-                        String param = provider.getApiPath() + provider.getTxPath() + txId;
+                        String param = provider.getApiPath() + txId;
                         try {
                             log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
                             String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
@@ -273,36 +140,6 @@ public class ExplorerService implements Service {
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected requestTx task. TxId={}", txId, e);
             return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    private Provider selectNextProvider() {
-        if (candidates.isEmpty()) {
-            fillCandidates(0);
-        }
-        Provider selected = CollectionUtil.getRandomElement(candidates);
-        candidates.remove(selected);
-        return selected;
-    }
-
-    private void fillCandidates(int recursionDepth) {
-        providersFromConfig.stream()
-                .filter(provider -> !failedProviders.contains(provider))
-                .forEach(candidates::add);
-        if (candidates.isEmpty()) {
-            log.info("We do not have any provider which has not already failed. We add the fall back providers to our candidates list.");
-            fallbackProviders.stream()
-                    .filter(provider -> !failedProviders.contains(provider))
-                    .forEach(candidates::add);
-        }
-        if (candidates.isEmpty()) {
-            log.info("All our providers from config and fallback have failed. We reset the failedProviders and fill from scratch.");
-            failedProviders.clear();
-            if (recursionDepth == 0) {
-                fillCandidates(1);
-            } else {
-                log.error("recursion at fillCandidates");
-            }
         }
     }
 
