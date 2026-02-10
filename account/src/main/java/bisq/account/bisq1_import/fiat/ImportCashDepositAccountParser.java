@@ -62,6 +62,7 @@ public final class ImportCashDepositAccountParser extends ImportBankAccountParse
                 accountTypeValue,
                 nationalAccountIdValue,
                 requirements);
+        accountPayload.verify();
 
         return new CashDepositAccount(id,
                 creationDate,

@@ -44,6 +44,7 @@ public final class ImportZelleAccountParser extends ImportFiatAccountParser<Fiat
                 salt,
                 holderName,
                 emailOrMobileNr);
+        accountPayload.verify();
 
         return new ZelleAccount(id,
                 creationDate,

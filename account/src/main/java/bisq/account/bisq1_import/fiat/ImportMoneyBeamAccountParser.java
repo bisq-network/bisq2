@@ -46,6 +46,7 @@ public final class ImportMoneyBeamAccountParser extends ImportCountryBasedAccoun
                 selectedCurrencyCode,
                 holderName,
                 accountId);
+        accountPayload.verify();
 
         return new MoneyBeamAccount(this.id,
                 creationDate,

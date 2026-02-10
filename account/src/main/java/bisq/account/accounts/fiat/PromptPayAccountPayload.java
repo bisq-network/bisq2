@@ -22,6 +22,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -98,6 +99,10 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
 
     @Override
     public byte[] getFingerprint() {
-        return super.getFingerprint(promptPayId.getBytes(StandardCharsets.UTF_8));
+        byte[] data = promptPayId.getBytes(StandardCharsets.UTF_8);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

@@ -129,7 +129,10 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
                 holderName.getBytes(StandardCharsets.UTF_8));
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 
     @Override

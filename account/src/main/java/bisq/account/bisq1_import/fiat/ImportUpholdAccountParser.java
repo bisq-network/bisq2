@@ -47,6 +47,7 @@ public final class ImportUpholdAccountParser extends ImportFiatAccountParser<Fia
                 selectedCurrencyCodes,
                 accountOwner,
                 accountId);
+        accountPayload.verify();
 
         return new UpholdAccount(this.id,
                 creationDate,

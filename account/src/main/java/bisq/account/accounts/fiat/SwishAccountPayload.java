@@ -22,6 +22,7 @@ import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
@@ -108,6 +109,9 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
     @Override
     public byte[] getFingerprint() {
         byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

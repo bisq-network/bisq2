@@ -44,6 +44,7 @@ public final class ImportSwishAccountParser extends ImportCountryBasedAccountPar
                 countryCode,
                 holderName,
                 mobileNr);
+        accountPayload.verify();
 
         return new SwishAccount(id,
                 creationDate,

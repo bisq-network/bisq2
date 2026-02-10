@@ -155,6 +155,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     @Override
     public byte[] getFingerprint() {
-        return super.getFingerprint(ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8)));
+        byte[] data = ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8));
+        return super.getFingerprint(data);
     }
 }

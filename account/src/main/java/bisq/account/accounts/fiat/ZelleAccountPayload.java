@@ -17,12 +17,12 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PhoneNumberValidation;
@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
@@ -52,7 +52,7 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> imple
     }
 
     public ZelleAccountPayload(String id, byte[] salt, String holderName, String emailOrMobileNr) {
-        super(id, salt);
+        super(id, salt, "US");
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
 
@@ -69,8 +69,8 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> imple
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return getAccountPayloadBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
                 .setZelleAccountPayload(toZelleAccountPayloadProto(serializeForHash));
     }
 
@@ -85,7 +85,7 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> imple
     }
 
     public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var zelleProto = proto.getZelleAccountPayload();
+        var zelleProto = proto.getCountryBasedAccountPayload().getZelleAccountPayload();
         return new ZelleAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
@@ -109,6 +109,10 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> imple
 
     @Override
     public byte[] getFingerprint() {
-        return super.getFingerprint(emailOrMobileNr.getBytes(StandardCharsets.UTF_8));
+        byte[] data = emailOrMobileNr.getBytes(StandardCharsets.UTF_8);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

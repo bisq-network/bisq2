@@ -60,6 +60,7 @@ public final class ImportNationalBankAccountParser extends ImportBankAccountPars
                 accountNr,
                 accountTypeValue,
                 nationalAccountIdValue);
+        accountPayload.verify();
 
         return new NationalBankAccount(id,
                 creationDate,

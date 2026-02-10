@@ -22,6 +22,7 @@ import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -134,7 +135,10 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
 
     @Override
     public byte[] getFingerprint() {
-        String all = countryCode + state + holderName + email;
-        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
+        String data = countryCode + state + holderName + email;
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data.getBytes(StandardCharsets.UTF_8));
     }
 }

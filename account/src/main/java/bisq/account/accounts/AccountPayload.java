@@ -20,16 +20,9 @@ package bisq.account.accounts;
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.accounts.fiat.CashByMailAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
-import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
-import bisq.account.accounts.fiat.HalCashAccountPayload;
-import bisq.account.accounts.fiat.InteracETransferAccountPayload;
-import bisq.account.accounts.fiat.PayIdAccountPayload;
-import bisq.account.accounts.fiat.Pin4AccountPayload;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
-import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -81,18 +74,11 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
         return switch (proto.getMessageCase()) {
-            case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
             case COUNTRYBASEDACCOUNTPAYLOAD -> CountryBasedAccountPayload.fromProto(proto);
             case REVOLUTACCOUNTPAYLOAD -> RevolutAccountPayload.fromProto(proto);
             case USERDEFINEDFIATACCOUNTPAYLOAD -> UserDefinedFiatAccountPayload.fromProto(proto);
-            case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
-            case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
-            case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
-            case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
             case UPHOLDACCOUNTPAYLOAD -> UpholdAccountPayload.fromProto(proto);
-            case HALCASHACCOUNTPAYLOAD -> HalCashAccountPayload.fromProto(proto);
-            case PIN4ACCOUNTPAYLOAD -> Pin4AccountPayload.fromProto(proto);
             case CRYPTOASSETACCOUNTPAYLOAD -> CryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);

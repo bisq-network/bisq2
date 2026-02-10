@@ -46,6 +46,7 @@ public final class ImportWiseUsdAccountParser extends ImportCountryBasedAccountP
                 holderName,
                 email,
                 beneficiaryAddress);
+        accountPayload.verify();
 
         return new WiseUsdAccount(id,
                 creationDate,

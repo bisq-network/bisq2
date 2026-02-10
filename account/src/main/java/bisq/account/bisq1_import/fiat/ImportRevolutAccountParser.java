@@ -48,6 +48,7 @@ public final class ImportRevolutAccountParser extends ImportFiatAccountParser<Fi
                 salt,
                 userNameValue,
                 selectedCurrencyCodes);
+        accountPayload.verify();
 
         return new RevolutAccount(id,
                 creationDate,

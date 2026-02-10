@@ -17,7 +17,6 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -36,7 +35,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class InteracETransferAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class InteracETransferAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String email;
     private final String question;
@@ -52,7 +51,7 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
                                            String email,
                                            String question,
                                            String answer) {
-        super(id, salt);
+        super(id, salt, "CA");
         this.holderName = holderName;
         this.email = email;
         this.question = question;
@@ -62,8 +61,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return getAccountPayloadBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
                 .setInteracETransferAccountPayload(toInteracETransferAccountPayloadProto(serializeForHash));
     }
 
@@ -81,7 +80,7 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
     }
 
     public static InteracETransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var interactETransferAccountPayload = proto.getInteracETransferAccountPayload();
+        var interactETransferAccountPayload = proto.getCountryBasedAccountPayload().getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
@@ -112,6 +111,9 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
                 question.getBytes(StandardCharsets.UTF_8),
                 answer.getBytes(StandardCharsets.UTF_8));
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

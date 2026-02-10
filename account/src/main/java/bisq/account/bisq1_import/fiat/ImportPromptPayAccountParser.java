@@ -42,6 +42,7 @@ public final class ImportPromptPayAccountParser extends ImportCountryBasedAccoun
                 salt,
                 countryCode,
                 promptPayId);
+        accountPayload.verify();
 
         return new PromptPayAccount(id,
                 creationDate,

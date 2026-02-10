@@ -44,6 +44,7 @@ public final class ImportPixAccountParser extends ImportCountryBasedAccountParse
                 countryCode,
                 holderName,
                 pixKey);
+        accountPayload.verify();
 
         return new PixAccount(id,
                 creationDate,

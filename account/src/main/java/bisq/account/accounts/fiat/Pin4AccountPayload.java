@@ -17,7 +17,6 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -38,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class Pin4AccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
 
     private final String mobileNr;
 
@@ -46,8 +45,8 @@ public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> 
         this(id, AccountUtils.generateSalt(), mobileNr);
     }
 
-    private Pin4AccountPayload(String id, byte[] salt, String mobileNr) {
-        super(id, salt);
+    public Pin4AccountPayload(String id, byte[] salt, String mobileNr) {
+        super(id, salt, "PL");
         this.mobileNr = mobileNr;
 
         verify();
@@ -61,8 +60,8 @@ public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> 
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return super.getAccountPayloadBuilder(serializeForHash).setPin4AccountPayload(
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setPin4AccountPayload(
                 toPin4AccountPayloadProto(serializeForHash));
     }
 
@@ -76,7 +75,8 @@ public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> 
     }
 
     public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.Pin4AccountPayload payload = proto.getPin4AccountPayload();
+        bisq.account.protobuf.Pin4AccountPayload payload =
+                proto.getCountryBasedAccountPayload().getPin4AccountPayload();
         return new Pin4AccountPayload(proto.getId(),
                 proto.getSalt().toByteArray(),
                 payload.getMobileNr()
@@ -97,6 +97,7 @@ public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> 
 
     @Override
     public byte[] getFingerprint() {
-        return super.getFingerprint(mobileNr.getBytes(StandardCharsets.UTF_8));
+        byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
+        return super.getFingerprint(data);
     }
 }

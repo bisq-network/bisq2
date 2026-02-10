@@ -17,7 +17,6 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
@@ -36,7 +35,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class USPostalMoneyOrderAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String postalAddress;
 
@@ -45,7 +44,7 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     }
 
     public USPostalMoneyOrderAccountPayload(String id, byte[] salt, String holderName, String postalAddress) {
-        super(id, salt);
+        super(id, salt, "US");
         this.holderName = holderName;
         this.postalAddress = postalAddress;
 
@@ -53,8 +52,8 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return getAccountPayloadBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
                 .setUsPostalMoneyOrderAccountPayload(toUSPostalMoneyOrderAccountPayloadProto(serializeForHash));
     }
 
@@ -70,7 +69,7 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     }
 
     public static USPostalMoneyOrderAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var usPostalOrderMoneyPayload = proto.getUsPostalMoneyOrderAccountPayload();
+        var usPostalOrderMoneyPayload = proto.getCountryBasedAccountPayload().getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
@@ -96,6 +95,9 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(holderName.getBytes(StandardCharsets.UTF_8),
                 postalAddress.getBytes(StandardCharsets.UTF_8));
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

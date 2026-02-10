@@ -17,12 +17,12 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +35,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class PayIdAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String payId;
 
@@ -44,7 +44,7 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     }
 
     public PayIdAccountPayload(String id, byte[] salt, String holderName, String payId) {
-        super(id, salt);
+        super(id, salt, "AU");
         this.holderName = holderName;
         this.payId = payId;
 
@@ -52,8 +52,8 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return getAccountPayloadBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
                 .setPayIdAccountPayload(toPayIdAccountPayloadProto(serializeForHash));
     }
 
@@ -68,7 +68,7 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
     }
 
     public static PayIdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getPayIdAccountPayload();
+        var payload = proto.getCountryBasedAccountPayload().getPayIdAccountPayload();
         return new PayIdAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
@@ -91,8 +91,11 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
 
     @Override
     public byte[] getFingerprint() {
-        String all = payId + holderName;
-        return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
+        byte[] data = (payId + holderName).getBytes(StandardCharsets.UTF_8);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 
     @Override
