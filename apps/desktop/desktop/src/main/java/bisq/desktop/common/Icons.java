@@ -47,7 +47,6 @@ public class Icons {
         return label;
     }
 
-
     public static Label getIcon(AwesomeIcon icon) {
         return getIcon(icon, AwesomeDude.DEFAULT_ICON_SIZE);
     }
