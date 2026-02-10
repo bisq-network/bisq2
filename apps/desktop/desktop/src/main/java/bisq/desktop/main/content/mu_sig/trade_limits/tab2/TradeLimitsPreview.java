@@ -292,7 +292,7 @@ public class TradeLimitsPreview {
 
             deposit = new SliderWithValue(0.25, 0.25, 1,
                     "muSig.tradeLimits.tab2.preview.deposit",
-                    PercentageFormatter::formatToPercentNoDecimalsWithSymbol,
+                    e -> PercentageFormatter.formatToPercentWithSymbol(e, 0),
                     new PercentageStringConverter(0.3, 2),
                     0.01);
             accountAge = new SliderWithValue(0, 0, 60,

@@ -23,7 +23,6 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -81,7 +80,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         configTableView();
 
         root.getChildren().add(richTableView);
-        root.setPadding(new Insets(SIDE_PADDING, SIDE_PADDING, 0 , SIDE_PADDING));
+        root.setPadding(new Insets(SIDE_PADDING, SIDE_PADDING, 0, SIDE_PADDING));
     }
 
     @Override
@@ -356,7 +355,9 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             contactReasonString = contactListEntry.getContactReason().getDisplayString();
             tag = contactListEntry.getTag().orElseGet(() -> Res.get("data.na"));
             //todo use custom trust display
-            trustScore = contactListEntry.getTrustScore().map(PercentageFormatter::formatToPercentNoDecimalsWithSymbol).orElseGet(() -> Res.get("data.na"));
+            trustScore = contactListEntry.getTrustScore()
+                    .map(e -> PercentageFormatter.formatToPercentWithSymbol(e, 0))
+                    .orElseGet(() -> Res.get("data.na"));
             notes = contactListEntry.getNotes().orElseGet(() -> Res.get("data.na"));
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
