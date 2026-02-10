@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.SatispayAccount;
+import bisq.account.accounts.fiat.SatispayAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,28 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportSatispayAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SatispayAccountPayload> {
+    private static final String EXPECTED_COUNTRY_CODE = "IT";
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportSatispayAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
+    public SatispayAccount parse(KeyPair dsaKeyPair) {
+        if (!EXPECTED_COUNTRY_CODE.equals(countryCode)) {
+            throw new IllegalArgumentException("Unexpected countryCode for Satispay: " + countryCode);
+        }
+
         String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+        String mobileNr = requireText(paymentAccountPayloadNode, "mobileNr");
+        SatispayAccountPayload accountPayload = new SatispayAccountPayload(
                 paymentAccountPayloadId,
                 salt,
                 holderName,
-                mobileNumber,
-                bankName);
+                mobileNr);
 
-        return new SbpAccount(id,
+        return new SatispayAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

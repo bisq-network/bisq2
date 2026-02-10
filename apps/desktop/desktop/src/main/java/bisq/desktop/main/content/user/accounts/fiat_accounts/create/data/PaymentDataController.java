@@ -111,6 +111,7 @@ public class PaymentDataController implements Controller {
     private FormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case ADVANCED_CASH -> throw new UnsupportedOperationException("Not implemented yet");
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not implemented yet");
             case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
@@ -121,16 +122,23 @@ public class PaymentDataController implements Controller {
             case F2F -> new F2FFormController(serviceProvider);
             case FASTER_PAYMENTS -> new FasterPaymentsFormController(serviceProvider);
             case HAL_CASH -> throw new UnsupportedOperationException("Not implemented yet");
+            case IMPS -> throw new UnsupportedOperationException("Not implemented yet");
             case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case MERCADO_PAGO -> throw new UnsupportedOperationException("Not implemented yet");
+            case MONESE -> throw new UnsupportedOperationException("Not implemented yet");
             case MONEY_BEAM -> throw new UnsupportedOperationException("Not implemented yet");
             case MONEY_GRAM -> throw new UnsupportedOperationException("Not implemented yet");
             case NATIONAL_BANK -> new NationalBankFormController(serviceProvider);
+            case NEFT -> throw new UnsupportedOperationException("Not implemented yet");
             case PAY_ID -> throw new UnsupportedOperationException("Not implemented yet");
+            case PAYSERA -> throw new UnsupportedOperationException("Not implemented yet");
+            case PERFECT_MONEY -> throw new UnsupportedOperationException("Not implemented yet");
             case PIN_4 -> throw new UnsupportedOperationException("Not implemented yet");
             case PIX -> new PixFormController(serviceProvider);
             case PROMPT_PAY -> throw new UnsupportedOperationException("Not implemented yet");
             case REVOLUT -> new RevolutFormController(serviceProvider);
             case SAME_BANK -> throw new UnsupportedOperationException("Not implemented yet");
+            case SATISPAY -> throw new UnsupportedOperationException("Not implemented yet");
             case SBP -> throw new UnsupportedOperationException("Not implemented yet");
             case SEPA -> new SepaFormController(serviceProvider);
             case SEPA_INSTANT -> throw new UnsupportedOperationException("Not implemented yet");
@@ -140,6 +148,7 @@ public class PaymentDataController implements Controller {
             case UPHOLD -> throw new UnsupportedOperationException("Not implemented yet");
             case UPI -> throw new UnsupportedOperationException("Not implemented yet");
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
+            case VERSE -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE_USD -> throw new UnsupportedOperationException("Not implemented yet");
             case ZELLE -> new ZelleFormController(serviceProvider);

@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.AdvancedCashAccount;
+import bisq.account.accounts.fiat.AdvancedCashAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,23 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportAdvancedCashAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, AdvancedCashAccountPayload> {
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportAdvancedCashAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
-        String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+    public AdvancedCashAccount parse(KeyPair dsaKeyPair) {
+        String accountNr = requireText(paymentAccountPayloadNode, "accountNr");
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
+        AdvancedCashAccountPayload accountPayload = new AdvancedCashAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                holderName,
-                mobileNumber,
-                bankName);
+                selectedCurrencyCode,
+                accountNr);
 
-        return new SbpAccount(id,
+        return new AdvancedCashAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

@@ -18,11 +18,18 @@
 package bisq.account.accounts;
 
 import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.fiat.AdvancedCashAccount;
 import bisq.account.accounts.fiat.CashByMailAccount;
 import bisq.account.accounts.fiat.CountryBasedAccount;
+import bisq.account.accounts.fiat.MercadoPagoAccount;
+import bisq.account.accounts.fiat.MoneseAccount;
+import bisq.account.accounts.fiat.PayseraAccount;
+import bisq.account.accounts.fiat.PerfectMoneyAccount;
 import bisq.account.accounts.fiat.RevolutAccount;
+import bisq.account.accounts.fiat.SatispayAccount;
 import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.fiat.VerseAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
@@ -92,6 +99,13 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
             case COUNTRYBASEDACCOUNT -> CountryBasedAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
             case UPHOLDACCOUNT -> UpholdAccount.fromProto(proto);
+            case ADVANCEDCASHACCOUNT -> AdvancedCashAccount.fromProto(proto);
+            case PERFECTMONEYACCOUNT -> PerfectMoneyAccount.fromProto(proto);
+            case MONESEACCOUNT -> MoneseAccount.fromProto(proto);
+            case PAYSERAACCOUNT -> PayseraAccount.fromProto(proto);
+            case SATISPAYACCOUNT -> SatispayAccount.fromProto(proto);
+            case MERCADOPAGOACCOUNT -> MercadoPagoAccount.fromProto(proto);
+            case VERSEACCOUNT -> VerseAccount.fromProto(proto);
             case CRYPTOASSETACCOUNT -> CryptoAssetAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);

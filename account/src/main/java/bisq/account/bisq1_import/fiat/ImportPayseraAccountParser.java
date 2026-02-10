@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.PayseraAccount;
+import bisq.account.accounts.fiat.PayseraAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,23 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportPayseraAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, PayseraAccountPayload> {
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportPayseraAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
-        String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+    public PayseraAccount parse(KeyPair dsaKeyPair) {
+        String email = requireText(paymentAccountPayloadNode, "email");
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
+        PayseraAccountPayload accountPayload = new PayseraAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                holderName,
-                mobileNumber,
-                bankName);
+                selectedCurrencyCode,
+                email);
 
-        return new SbpAccount(id,
+        return new PayseraAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

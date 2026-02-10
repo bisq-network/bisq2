@@ -109,6 +109,13 @@ message AccountPayload {
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
     CashByMailAccountPayload cashByMailAccountPayload = 23;
     UpholdAccountPayload upholdAccountPayload = 24;
+    AdvancedCashAccountPayload advancedCashAccountPayload = 25;
+    PerfectMoneyAccountPayload perfectMoneyAccountPayload = 26;
+    MoneseAccountPayload moneseAccountPayload = 27;
+    PayseraAccountPayload payseraAccountPayload = 28;
+    SatispayAccountPayload satispayAccountPayload = 29;
+    MercadoPagoAccountPayload mercadoPagoAccountPayload = 30;
+    VerseAccountPayload verseAccountPayload = 31;
 
     CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
@@ -177,6 +184,8 @@ message CountryBasedAccountPayload {
     Pin4AccountPayload pin4AccountPayload = 40;
     FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 41;
     SbpAccountPayload sbpAccountPayload = 42;
+    ImpsAccountPayload impsAccountPayload = 43;
+    NeftAccountPayload neftAccountPayload = 44;
   }
 }
 
@@ -310,9 +319,56 @@ message SbpAccountPayload {
   string bankName = 3;
 }
 
+message ImpsAccountPayload {
+  string holderName = 1;
+  string accountNr = 2;
+  string ifsc = 3;
+}
+
+message NeftAccountPayload {
+  string holderName = 1;
+  string accountNr = 2;
+  string ifsc = 3;
+}
+
 message PayIdAccountPayload {
   string holderName = 1;
   string payId = 2;
+}
+
+message AdvancedCashAccountPayload {
+  string selectedCurrencyCode = 1;
+  string accountNr = 2;
+}
+
+message PerfectMoneyAccountPayload {
+  string accountNr = 1;
+}
+
+message MoneseAccountPayload {
+  string selectedCurrencyCode = 1;
+  string holderName = 2;
+  string mobileNr = 3;
+}
+
+message PayseraAccountPayload {
+  string selectedCurrencyCode = 1;
+  string email = 2;
+}
+
+message SatispayAccountPayload {
+  string holderName = 1;
+  string mobileNr = 2;
+}
+
+message MercadoPagoAccountPayload {
+  string holderName = 1;
+  string holderId = 2;
+}
+
+message VerseAccountPayload {
+  string selectedCurrencyCode = 1;
+  string holderName = 2;
 }
 
 message USPostalMoneyOrderAccountPayload {
@@ -383,6 +439,13 @@ message Account {
     CountryBasedAccount countryBasedAccount = 22;
     CashByMailAccount cashByMailAccount = 24;
     UpholdAccount upholdAccount = 25;
+    AdvancedCashAccount advancedCashAccount = 26;
+    PerfectMoneyAccount perfectMoneyAccount = 27;
+    MoneseAccount moneseAccount = 28;
+    PayseraAccount payseraAccount = 29;
+    SatispayAccount satispayAccount = 30;
+    MercadoPagoAccount mercadoPagoAccount = 31;
+    VerseAccount verseAccount = 32;
     CryptoAssetAccount cryptoAssetAccount = 100;
   }
 }
@@ -430,6 +493,8 @@ message CountryBasedAccount {
     HalCashAccount halCashAccount = 40;
     Pin4Account pin4Account = 41;
     FasterPaymentsAccount fasterPaymentsAccount = 42;
+    ImpsAccount impsAccount = 43;
+    NeftAccount neftAccount = 44;
   }
 }
 message HalCashAccount {
@@ -491,6 +556,12 @@ message FasterPaymentsAccount {
 message SbpAccount {
 }
 
+message ImpsAccount {
+}
+
+message NeftAccount {
+}
+
 message PayIdAccount {
 }
 
@@ -498,6 +569,27 @@ message USPostalMoneyOrderAccount {
 }
 
 message CashByMailAccount {
+}
+
+message AdvancedCashAccount {
+}
+
+message PerfectMoneyAccount {
+}
+
+message MoneseAccount {
+}
+
+message PayseraAccount {
+}
+
+message SatispayAccount {
+}
+
+message MercadoPagoAccount {
+}
+
+message VerseAccount {
 }
 
 message StrikeAccount {

@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.ImpsAccount;
+import bisq.account.accounts.fiat.ImpsAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,25 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportImpsAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, ImpsAccountPayload> {
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportImpsAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
+    public ImpsAccount parse(KeyPair dsaKeyPair) {
         String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+        String accountNr = requireText(paymentAccountPayloadNode, "accountNr");
+        String ifsc = requireText(paymentAccountPayloadNode, "ifsc");
+        ImpsAccountPayload accountPayload = new ImpsAccountPayload(
                 paymentAccountPayloadId,
                 salt,
                 holderName,
-                mobileNumber,
-                bankName);
+                accountNr,
+                ifsc);
 
-        return new SbpAccount(id,
+        return new ImpsAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

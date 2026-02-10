@@ -3,6 +3,7 @@ package bisq.account.accounts;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
 import bisq.account.accounts.fiat.AchTransferAccountPayload;
+import bisq.account.accounts.fiat.AdvancedCashAccountPayload;
 import bisq.account.accounts.fiat.AmazonGiftCardAccountPayload;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
@@ -13,16 +14,23 @@ import bisq.account.accounts.fiat.DomesticWireTransferAccountPayload;
 import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
 import bisq.account.accounts.fiat.HalCashAccountPayload;
+import bisq.account.accounts.fiat.ImpsAccountPayload;
 import bisq.account.accounts.fiat.InteracETransferAccountPayload;
+import bisq.account.accounts.fiat.MercadoPagoAccountPayload;
+import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.account.accounts.fiat.MoneyBeamAccountPayload;
 import bisq.account.accounts.fiat.MoneyGramAccountPayload;
+import bisq.account.accounts.fiat.NeftAccountPayload;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.account.accounts.fiat.PayIdAccountPayload;
+import bisq.account.accounts.fiat.PayseraAccountPayload;
+import bisq.account.accounts.fiat.PerfectMoneyAccountPayload;
 import bisq.account.accounts.fiat.Pin4AccountPayload;
 import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.account.accounts.fiat.PromptPayAccountPayload;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;
+import bisq.account.accounts.fiat.SatispayAccountPayload;
 import bisq.account.accounts.fiat.SbpAccountPayload;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.SepaInstantAccountPayload;
@@ -32,6 +40,7 @@ import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UpiAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.VerseAccountPayload;
 import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.accounts.fiat.WiseUsdAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
@@ -104,6 +113,69 @@ public class AccountPayloadFingerprintTest {
         // Bisq 1 compatibility: SBP uses mobile number and bank name without country code.
         SbpAccountPayload payload = new SbpAccountPayload("id", SALT, "Alice", "+79161234567", "Sberbank");
         assertArrayEquals(expected("SBP", "+79161234567", "Sberbank"), payload.getFingerprint());
+    }
+
+    @Test
+    void advancedCashFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Advanced Cash uses account number.
+        AdvancedCashAccountPayload payload = new AdvancedCashAccountPayload("id", SALT, "USD", "AC-12345");
+        assertArrayEquals(expected("ADVANCED_CASH", "AC-12345"), payload.getFingerprint());
+    }
+
+    @Test
+    void perfectMoneyFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Perfect Money uses account number.
+        PerfectMoneyAccountPayload payload = new PerfectMoneyAccountPayload("id", SALT, "U1234567");
+        assertArrayEquals(expected("PERFECT_MONEY", "U1234567"), payload.getFingerprint());
+    }
+
+    @Test
+    void moneseFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Monese uses holder name.
+        MoneseAccountPayload payload = new MoneseAccountPayload("id", SALT, "EUR", "Alice", "+49123456789");
+        assertArrayEquals(expected("MONESE", "Alice"), payload.getFingerprint());
+    }
+
+    @Test
+    void payseraFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Paysera uses email.
+        PayseraAccountPayload payload = new PayseraAccountPayload("id", SALT, "EUR", "alice@example.com");
+        assertArrayEquals(expected("PAYSERA", "alice@example.com"), payload.getFingerprint());
+    }
+
+    @Test
+    void satispayFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Satispay includes country code and holder name.
+        SatispayAccountPayload payload = new SatispayAccountPayload("id", SALT, "Alice", "+393331234567");
+        assertArrayEquals(expected("SATISPAY", "IT", "Alice"), payload.getFingerprint());
+    }
+
+    @Test
+    void mercadoPagoFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: MercadoPago includes country code, holder id, and holder name.
+        MercadoPagoAccountPayload payload = new MercadoPagoAccountPayload("id", SALT, "Alice", "DNI1234");
+        assertArrayEquals(expected("MERCADO_PAGO", "AR", "DNI1234", "Alice"), payload.getFingerprint());
+    }
+
+    @Test
+    void verseFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: Verse uses holder name.
+        VerseAccountPayload payload = new VerseAccountPayload("id", SALT, "EUR", "Alice");
+        assertArrayEquals(expected("VERSE", "Alice"), payload.getFingerprint());
+    }
+
+    @Test
+    void impsFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: IMPS includes country code and account number.
+        ImpsAccountPayload payload = new ImpsAccountPayload("id", SALT, "Alice", "123456", "IFSC1234");
+        assertArrayEquals(expected("IMPS", "IN", "123456"), payload.getFingerprint());
+    }
+
+    @Test
+    void neftFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: NEFT includes country code and account number.
+        NeftAccountPayload payload = new NeftAccountPayload("id", SALT, "Alice", "123456", "IFSC1234");
+        assertArrayEquals(expected("NEFT", "IN", "123456"), payload.getFingerprint());
     }
 
     @Test

@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.MercadoPagoAccount;
+import bisq.account.accounts.fiat.MercadoPagoAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,28 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportMercadoPagoAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, MercadoPagoAccountPayload> {
+    private static final String EXPECTED_COUNTRY_CODE = "AR";
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportMercadoPagoAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
-        String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+    public MercadoPagoAccount parse(KeyPair dsaKeyPair) {
+        if (!EXPECTED_COUNTRY_CODE.equals(countryCode)) {
+            throw new IllegalArgumentException("Unexpected countryCode for MercadoPago: " + countryCode);
+        }
+
+        String accountHolderName = requireText(paymentAccountPayloadNode, "accountHolderName");
+        String accountHolderId = requireText(paymentAccountPayloadNode, "accountHolderId");
+        MercadoPagoAccountPayload accountPayload = new MercadoPagoAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                holderName,
-                mobileNumber,
-                bankName);
+                accountHolderName,
+                accountHolderId);
 
-        return new SbpAccount(id,
+        return new MercadoPagoAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

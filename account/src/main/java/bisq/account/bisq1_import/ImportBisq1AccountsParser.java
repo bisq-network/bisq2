@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.bisq1_import.crypto.ImportMoneroAccountParser;
 import bisq.account.bisq1_import.crypto.ImportOtherCryptoAssetAccountParser;
 import bisq.account.bisq1_import.fiat.ImportAchTransferAccountParser;
+import bisq.account.bisq1_import.fiat.ImportAdvancedCashAccountParser;
 import bisq.account.bisq1_import.fiat.ImportAmazonGiftCardAccountParser;
 import bisq.account.bisq1_import.fiat.ImportBizumAccountParser;
 import bisq.account.bisq1_import.fiat.ImportCashByMailAccountParser;
@@ -29,15 +30,22 @@ import bisq.account.bisq1_import.fiat.ImportDomesticWireTransferAccountParser;
 import bisq.account.bisq1_import.fiat.ImportF2FAccountParser;
 import bisq.account.bisq1_import.fiat.ImportFasterPaymentsAccountParser;
 import bisq.account.bisq1_import.fiat.ImportHalCashAccountParser;
+import bisq.account.bisq1_import.fiat.ImportImpsAccountParser;
 import bisq.account.bisq1_import.fiat.ImportInteracETransferAccountParser;
+import bisq.account.bisq1_import.fiat.ImportMercadoPagoAccountParser;
+import bisq.account.bisq1_import.fiat.ImportMoneseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportMoneyBeamAccountParser;
 import bisq.account.bisq1_import.fiat.ImportMoneyGramAccountParser;
+import bisq.account.bisq1_import.fiat.ImportNeftAccountParser;
 import bisq.account.bisq1_import.fiat.ImportNationalBankAccountParser;
+import bisq.account.bisq1_import.fiat.ImportPayseraAccountParser;
+import bisq.account.bisq1_import.fiat.ImportPerfectMoneyAccountParser;
 import bisq.account.bisq1_import.fiat.ImportPayIdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportPixAccountParser;
 import bisq.account.bisq1_import.fiat.ImportPromptPayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportRevolutAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSameBankAccountParser;
+import bisq.account.bisq1_import.fiat.ImportSatispayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSbpAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSepaAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSepaInstantAccountParser;
@@ -46,6 +54,7 @@ import bisq.account.bisq1_import.fiat.ImportSwishAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUSPostalMoneyOrderAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpholdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpiAccountParser;
+import bisq.account.bisq1_import.fiat.ImportVerseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseUsdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportZelleAccountParser;
@@ -109,6 +118,7 @@ public class ImportBisq1AccountsParser {
         }
         return switch (paymentMethodId) {
             case "ACH_TRANSFER" -> new ImportAchTransferAccountParser(accountNode).parse(dsaKeyPair);
+            case "ADVANCED_CASH" -> new ImportAdvancedCashAccountParser(accountNode).parse(dsaKeyPair);
             case "AMAZON_GIFT_CARD" -> new ImportAmazonGiftCardAccountParser(accountNode).parse(dsaKeyPair);
             case "AUSTRALIA_PAYID" -> new ImportPayIdAccountParser(accountNode).parse(dsaKeyPair);
             case "BIZUM" -> new ImportBizumAccountParser(accountNode).parse(dsaKeyPair);
@@ -120,14 +130,21 @@ public class ImportBisq1AccountsParser {
             case "F2F" -> new ImportF2FAccountParser(accountNode).parse(dsaKeyPair);
             case "FASTER_PAYMENTS" -> new ImportFasterPaymentsAccountParser(accountNode).parse(dsaKeyPair);
             case "HAL_CASH" -> new ImportHalCashAccountParser(accountNode).parse(dsaKeyPair);
+            case "IMPS" -> new ImportImpsAccountParser(accountNode).parse(dsaKeyPair);
             case "INTERAC_E_TRANSFER" -> new ImportInteracETransferAccountParser(accountNode).parse(dsaKeyPair);
+            case "MERCADO_PAGO" -> new ImportMercadoPagoAccountParser(accountNode).parse(dsaKeyPair);
             case "MONEY_BEAM" -> new ImportMoneyBeamAccountParser(accountNode).parse(dsaKeyPair);
             case "MONEY_GRAM" -> new ImportMoneyGramAccountParser(accountNode).parse(dsaKeyPair);
+            case "MONESE" -> new ImportMoneseAccountParser(accountNode).parse(dsaKeyPair);
             case "NATIONAL_BANK" -> new ImportNationalBankAccountParser(accountNode).parse(dsaKeyPair);
+            case "NEFT" -> new ImportNeftAccountParser(accountNode).parse(dsaKeyPair);
+            case "PAYSERA" -> new ImportPayseraAccountParser(accountNode).parse(dsaKeyPair);
+            case "PERFECT_MONEY" -> new ImportPerfectMoneyAccountParser(accountNode).parse(dsaKeyPair);
             case "PIX" -> new ImportPixAccountParser(accountNode).parse(dsaKeyPair);
             case "PROMPT_PAY" -> new ImportPromptPayAccountParser(accountNode).parse(dsaKeyPair);
             case "REVOLUT" -> new ImportRevolutAccountParser(accountNode).parse(dsaKeyPair);
             case "SAME_BANK" -> new ImportSameBankAccountParser(accountNode).parse(dsaKeyPair);
+            case "SATISPAY" -> new ImportSatispayAccountParser(accountNode).parse(dsaKeyPair);
             case "SBP" -> new ImportSbpAccountParser(accountNode).parse(dsaKeyPair);
             case "SEPA" -> new ImportSepaAccountParser(accountNode).parse(dsaKeyPair);
             case "SEPA_INSTANT" -> new ImportSepaInstantAccountParser(accountNode).parse(dsaKeyPair);
@@ -138,6 +155,7 @@ public class ImportBisq1AccountsParser {
             case "UPHOLD" -> new ImportUpholdAccountParser(accountNode).parse(dsaKeyPair);
             case "UPI" -> new ImportUpiAccountParser(accountNode).parse(dsaKeyPair);
             case "US_POSTAL_MONEY_ORDER" -> new ImportUSPostalMoneyOrderAccountParser(accountNode).parse(dsaKeyPair);
+            case "VERSE" -> new ImportVerseAccountParser(accountNode).parse(dsaKeyPair);
 
             case "BLOCK_CHAINS" -> {
                 JsonNode selectedTradeCurrencyNode = ImportAccountParser.requireNode(accountNode, "selectedTradeCurrency");

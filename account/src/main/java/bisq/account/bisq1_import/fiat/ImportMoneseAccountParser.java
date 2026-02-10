@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.SbpAccount;
-import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.account.accounts.fiat.MoneseAccount;
+import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,25 +28,25 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-public final class ImportSbpAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, SbpAccountPayload> {
+public final class ImportMoneseAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, MoneseAccountPayload> {
 
-    public ImportSbpAccountParser(JsonNode accountNode) {
+    public ImportMoneseAccountParser(JsonNode accountNode) {
         super(accountNode);
     }
 
     @Override
-    public SbpAccount parse(KeyPair dsaKeyPair) {
+    public MoneseAccount parse(KeyPair dsaKeyPair) {
         String holderName = requireText(paymentAccountPayloadNode, "holderName");
-        String mobileNumber = requireText(paymentAccountPayloadNode, "mobileNumber");
-        String bankName = requireText(paymentAccountPayloadNode, "bankName");
-        SbpAccountPayload accountPayload = new SbpAccountPayload(
+        String mobileNr = requireText(paymentAccountPayloadNode, "mobileNr");
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
+        MoneseAccountPayload accountPayload = new MoneseAccountPayload(
                 paymentAccountPayloadId,
                 salt,
+                selectedCurrencyCode,
                 holderName,
-                mobileNumber,
-                bankName);
+                mobileNr);
 
-        return new SbpAccount(id,
+        return new MoneseAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

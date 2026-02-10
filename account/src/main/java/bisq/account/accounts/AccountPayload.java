@@ -18,11 +18,18 @@
 package bisq.account.accounts;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
+import bisq.account.accounts.fiat.AdvancedCashAccountPayload;
 import bisq.account.accounts.fiat.CashByMailAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.MercadoPagoAccountPayload;
+import bisq.account.accounts.fiat.MoneseAccountPayload;
+import bisq.account.accounts.fiat.PayseraAccountPayload;
+import bisq.account.accounts.fiat.PerfectMoneyAccountPayload;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
+import bisq.account.accounts.fiat.SatispayAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.VerseAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -79,6 +86,13 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case USERDEFINEDFIATACCOUNTPAYLOAD -> UserDefinedFiatAccountPayload.fromProto(proto);
             case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
             case UPHOLDACCOUNTPAYLOAD -> UpholdAccountPayload.fromProto(proto);
+            case ADVANCEDCASHACCOUNTPAYLOAD -> AdvancedCashAccountPayload.fromProto(proto);
+            case PERFECTMONEYACCOUNTPAYLOAD -> PerfectMoneyAccountPayload.fromProto(proto);
+            case MONESEACCOUNTPAYLOAD -> MoneseAccountPayload.fromProto(proto);
+            case PAYSERAACCOUNTPAYLOAD -> PayseraAccountPayload.fromProto(proto);
+            case SATISPAYACCOUNTPAYLOAD -> SatispayAccountPayload.fromProto(proto);
+            case MERCADOPAGOACCOUNTPAYLOAD -> MercadoPagoAccountPayload.fromProto(proto);
+            case VERSEACCOUNTPAYLOAD -> VerseAccountPayload.fromProto(proto);
             case CRYPTOASSETACCOUNTPAYLOAD -> CryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
