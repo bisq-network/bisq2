@@ -72,6 +72,13 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case SWISHACCOUNTPAYLOAD -> SwishAccountPayload.fromProto(proto);
             case MONEYGRAMACCOUNTPAYLOAD -> MoneyGramAccountPayload.fromProto(proto);
             case PROMPTPAYACCOUNTPAYLOAD -> PromptPayAccountPayload.fromProto(proto);
+            case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
+            case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
+            case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
+            case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
+            case HALCASHACCOUNTPAYLOAD -> HalCashAccountPayload.fromProto(proto);
+            case PIN4ACCOUNTPAYLOAD -> Pin4AccountPayload.fromProto(proto);
+            case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

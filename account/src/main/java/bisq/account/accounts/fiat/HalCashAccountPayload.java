@@ -17,12 +17,12 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class HalCashAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
 
     private final String mobileNr;
 
@@ -47,7 +47,7 @@ public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     public HalCashAccountPayload(String id, byte[] salt, String mobileNr) {
-        super(id, salt);
+        super(id, salt, "ES");
         this.mobileNr = mobileNr;
 
         verify();
@@ -62,8 +62,8 @@ public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return super.getAccountPayloadBuilder(serializeForHash).setHalCashAccountPayload(
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setHalCashAccountPayload(
                 toHalCashAccountPayloadProto(serializeForHash));
     }
 
@@ -77,7 +77,8 @@ public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.HalCashAccountPayload payload = proto.getHalCashAccountPayload();
+        bisq.account.protobuf.HalCashAccountPayload payload =
+                proto.getCountryBasedAccountPayload().getHalCashAccountPayload();
         return new HalCashAccountPayload(proto.getId(),
                 proto.getSalt().toByteArray(),
                 payload.getMobileNr()
@@ -99,6 +100,9 @@ public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMetho
     @Override
     public byte[] getFingerprint() {
         byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }

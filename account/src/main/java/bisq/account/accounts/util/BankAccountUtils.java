@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.accounts.fiat;
+package bisq.account.accounts.util;
 
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.util.StringUtils;

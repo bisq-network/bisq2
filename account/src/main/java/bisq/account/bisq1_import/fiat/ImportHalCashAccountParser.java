@@ -41,8 +41,7 @@ public final class ImportHalCashAccountParser extends ImportFiatAccountParser<Fi
                 paymentAccountPayloadId,
                 salt,
                 mobileNr);
-
-        return new HalCashAccount(id,
+                return new HalCashAccount(id,
                 creationDate,
                 accountName,
                 accountPayload,

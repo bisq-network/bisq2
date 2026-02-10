@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.accounts;
+package bisq.account.accounts.util;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;

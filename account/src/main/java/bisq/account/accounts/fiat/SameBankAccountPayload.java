@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import lombok.EqualsAndHashCode;

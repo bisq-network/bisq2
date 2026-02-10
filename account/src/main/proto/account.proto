@@ -104,18 +104,12 @@ message AccountPayload {
   string id = 1;
   bytes salt = 2;
   oneof message {
-    ZelleAccountPayload zelleAccountPayload = 19;
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
     RevolutAccountPayload RevolutAccountPayload = 21;
     CountryBasedAccountPayload countryBasedAccountPayload = 22;
-    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 23;
-    PayIdAccountPayload payIdAccountPayload = 24;
-    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
-    CashByMailAccountPayload cashByMailAccountPayload = 26;
-    InteracETransferAccountPayload interacETransferAccountPayload = 27;
-    UpholdAccountPayload upholdAccountPayload = 28;
-    HalCashAccountPayload halCashAccountPayload = 29;
-    Pin4AccountPayload pin4AccountPayload = 30;
+    CashByMailAccountPayload cashByMailAccountPayload = 23;
+    UpholdAccountPayload upholdAccountPayload = 24;
+
     CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
 }
@@ -175,6 +169,13 @@ message CountryBasedAccountPayload {
     SwishAccountPayload swishAccountPayload = 32;
     MoneyGramAccountPayload moneyGramAccountPayload = 33;
     PromptPayAccountPayload promptPayAccountPayload = 34;
+    ZelleAccountPayload zelleAccountPayload = 35;
+    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 36;
+    PayIdAccountPayload payIdAccountPayload = 37;
+    InteracETransferAccountPayload interacETransferAccountPayload = 38;
+    HalCashAccountPayload halCashAccountPayload = 39;
+    Pin4AccountPayload pin4AccountPayload = 40;
+    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 41;
   }
 }
 

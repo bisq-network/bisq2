@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.crypto;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

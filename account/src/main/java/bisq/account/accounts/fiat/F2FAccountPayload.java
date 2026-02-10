@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -32,7 +32,7 @@ import lombok.Getter;
 import java.nio.charset.StandardCharsets;
 
 @Getter
-public class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
+public final class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     public static final int CITY_MIN_LENGTH = 2;
     public static final int CITY_MAX_LENGTH = 50;
     public static final int CONTACT_MIN_LENGTH = 2;

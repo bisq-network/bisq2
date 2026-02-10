@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -54,7 +54,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
                                          String holderName,
                                          String sortCode,
                                          String accountNr) {
-        super(id, salt, "UK");
+        super(id, salt, "GB");
         this.holderName = holderName;
         this.sortCode = sortCode;
         this.accountNr = accountNr;
@@ -70,8 +70,8 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
-        return getAccountPayloadBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
                 .setFasterPaymentsAccountPayload(toFasterPaymentsAccountPayloadProto(serializeForHash));
     }
 
@@ -87,7 +87,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     }
 
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var fasterPaymentsPayload = proto.getFasterPaymentsAccountPayload();
+        var fasterPaymentsPayload = proto.getCountryBasedAccountPayload().getFasterPaymentsAccountPayload();
         return new FasterPaymentsAccountPayload(proto.getId(),
                 proto.getSalt().toByteArray(),
                 fasterPaymentsPayload.getHolderName(),
@@ -113,6 +113,9 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(sortCode.getBytes(StandardCharsets.UTF_8),
                 accountNr.getBytes(StandardCharsets.UTF_8));
-        return super.getFingerprint(data);
+        // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
+        // Bisq 1 account age fingerprint.
+        String paymentMethodId = getBisq1CompatiblePaymentMethodId();
+        return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 }
