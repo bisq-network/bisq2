@@ -82,6 +82,8 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String priceCode;
     @Setter
+    private String collateral;
+    @Setter
     private String fee;
     @Setter
     private String feeDetails;

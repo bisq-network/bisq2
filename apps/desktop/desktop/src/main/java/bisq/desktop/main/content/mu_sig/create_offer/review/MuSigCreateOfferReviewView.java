@@ -43,7 +43,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     public static final String DETAILS_STYLE = "trade-wizard-review-details";
 
     private final Label headline, detailsHeadline, priceDetails, priceDescription,
-            paymentMethodDescription, paymentMethod, paymentMethodDetails, fee, feeDetails;
+            paymentMethodDescription, paymentMethod, paymentMethodDetails,
+            collateral, collateralDetails, fee, feeDetails;
     private final WizardOverlay createOfferSuccessOverlay;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
@@ -115,11 +116,24 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
+        Label collateralDescription = new Label(Res.get("muSig.tradeWizard.review.collateral.description"));
+        collateralDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(collateralDescription, 0, rowIndex);
+
+        collateral = new Label();
+        collateral.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(collateral, 1, rowIndex);
+
+        collateralDetails = new Label(Res.get("muSig.tradeWizard.review.collateral.details"));
+        collateralDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(collateralDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
 
-        fee = new Label();
+        fee = new Label(Res.get("bisqEasy.tradeWizard.review.collateral.details"));
         fee.getStyleClass().add(VALUE_STYLE);
         gridPane.add(fee, 1, rowIndex);
 
@@ -165,6 +179,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         if (paymentMethodDetailsValue.length() > 50) {
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
+
+        collateral.setText(model.getCollateral());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

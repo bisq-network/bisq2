@@ -101,6 +101,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
         model = new MuSigCreateOfferReviewModel();
         view = new MuSigCreateOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
+
+        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
+        model.setCollateral(PercentageFormatter.formatToPercentWithSymbol(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT, 0));
     }
 
     public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
@@ -336,6 +339,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     @Override
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
+
         Direction direction = model.getOffer().getDirection();
         if (direction.isSell()) {
             model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
