@@ -115,4 +115,9 @@ public class ZelleAccountPayload extends CountryBasedAccountPayload implements S
         String paymentMethodId = getBisq1CompatiblePaymentMethodId();
         return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
+
+    @Override
+    protected String getBisq1CompatiblePaymentMethodId() {
+        return "CLEAR_X_CHANGE";
+    }
 }
