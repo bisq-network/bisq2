@@ -21,7 +21,6 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.*;
 import bisq.dto.DtoMappings;
 import bisq.dto.account.fiat.FiatAccountDto;
@@ -187,7 +186,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
     @DELETE
     @Operation(
             summary = "Delete fiat payment account",
-            description = "Delete a fiat payment account by account name",
+            description = "Delete a fiat payment account by account name (provided as query parameter)",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Fiat payment account successfully deleted"),
                     @ApiResponse(responseCode = "400", description = "Account is not a fiat payment account"),
@@ -196,14 +195,18 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    @Path("/{accountName}")
-    public void removeAccount(@PathParam("accountName") String accountName,
+    public void removeAccount(@QueryParam("accountName") String accountName,
                               @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
+            if (accountName == null || accountName.trim().isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name is required"));
+                return;
+            }
+            
             Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
             if (result.isEmpty()) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found"));
@@ -228,7 +231,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
     @PUT
     @Operation(
             summary = "Update fiat payment account",
-            description = "Update an existing fiat payment account by replacing it with new data. The payment rail type is specified in the request body.",
+            description = "Update an existing fiat payment account by replacing it with new data. The account name to update is provided as a query parameter. The payment rail type is specified in the request body.",
             requestBody = @RequestBody(
                     description = "Updated fiat account details including payment rail type, account name, and payload",
                     required = true,
@@ -242,8 +245,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    @Path("/{accountName}")
-    public void saveAccount(@PathParam("accountName") String accountName,
+    public void saveAccount(@QueryParam("accountName") String accountName,
                             @Valid SaveFiatAccountRequest request,
                             @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
@@ -251,6 +253,11 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
+            if (accountName == null || accountName.trim().isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name query parameter is required"));
+                return;
+            }
+            
             FiatAccountDto accountDto = request.account();
             if (accountDto == null) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data is required"));
