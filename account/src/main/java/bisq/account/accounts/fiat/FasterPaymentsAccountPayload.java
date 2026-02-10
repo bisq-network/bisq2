@@ -54,7 +54,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
                                          String holderName,
                                          String sortCode,
                                          String accountNr) {
-        super(id, salt, "UK");
+        super(id, salt, "GB");
         this.holderName = holderName;
         this.sortCode = sortCode;
         this.accountNr = accountNr;

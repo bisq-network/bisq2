@@ -69,12 +69,12 @@ public final class USPostalMoneyOrderAccountPayload extends CountryBasedAccountP
     }
 
     public static USPostalMoneyOrderAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var usPostalOrderMoneyPayload = proto.getCountryBasedAccountPayload().getUsPostalMoneyOrderAccountPayload();
+        var payload = proto.getCountryBasedAccountPayload().getUsPostalMoneyOrderAccountPayload();
         return new USPostalMoneyOrderAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                usPostalOrderMoneyPayload.getHolderName(),
-                usPostalOrderMoneyPayload.getPostalAddress()
+                payload.getHolderName(),
+                payload.getPostalAddress()
         );
     }
 
