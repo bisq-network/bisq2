@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 

@@ -33,7 +33,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload> {
+public final class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload> {
     public ZelleAccount(String id,
                         long creationDate,
                         String accountName,

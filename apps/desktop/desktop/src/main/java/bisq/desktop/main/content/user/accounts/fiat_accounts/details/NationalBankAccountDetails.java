@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.details;
 
-import bisq.account.accounts.fiat.BankAccountUtils;
+import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.accounts.fiat.NationalBankAccount;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.account.timestamp.AccountTimestampService;

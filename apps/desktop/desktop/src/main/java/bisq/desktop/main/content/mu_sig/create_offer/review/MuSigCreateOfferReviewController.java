@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.create_offer.review;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;

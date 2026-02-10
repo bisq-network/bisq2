@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.BankAccountUtils;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;

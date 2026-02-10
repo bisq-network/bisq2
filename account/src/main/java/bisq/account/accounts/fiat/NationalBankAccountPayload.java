@@ -17,7 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.AccountUtils;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class NationalBankAccountPayload extends BankAccountPayload implements SelectableCurrencyAccountPayload {
+public final class NationalBankAccountPayload extends BankAccountPayload implements SelectableCurrencyAccountPayload {
     public NationalBankAccountPayload(String id,
                                       String countryCode,
                                       String selectedCurrencyCode,
