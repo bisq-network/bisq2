@@ -47,7 +47,6 @@ public final class ImportInteracETransferAccountParser extends ImportFiatAccount
                 email,
                 question,
                 answer);
-        accountPayload.verify();
 
         return new InteracETransferAccount(id,
                 creationDate,

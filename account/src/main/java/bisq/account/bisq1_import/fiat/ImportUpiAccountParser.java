@@ -42,7 +42,6 @@ public final class ImportUpiAccountParser extends ImportCountryBasedAccountParse
                 salt,
                 countryCode,
                 virtualPaymentAddress);
-        accountPayload.verify();
 
         return new UpiAccount(id,
                 creationDate,

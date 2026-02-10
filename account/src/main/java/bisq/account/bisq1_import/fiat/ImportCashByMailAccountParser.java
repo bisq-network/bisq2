@@ -45,7 +45,6 @@ public final class ImportCashByMailAccountParser extends ImportFiatAccountParser
                 postalAddress,
                 contact,
                 extraInfo);
-        accountPayload.verify();
 
         return new CashByMailAccount(id,
                 creationDate,

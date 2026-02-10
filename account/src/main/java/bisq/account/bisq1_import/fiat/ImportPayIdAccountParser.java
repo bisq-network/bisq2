@@ -43,7 +43,6 @@ public final class ImportPayIdAccountParser extends ImportFiatAccountParser<Fiat
                 salt,
                 bankAccountName,
                 payId);
-        accountPayload.verify();
 
         return new PayIdAccount(id,
                 creationDate,

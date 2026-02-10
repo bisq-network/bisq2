@@ -42,7 +42,6 @@ public final class ImportAmazonGiftCardAccountParser extends ImportCountryBasedA
                 salt,
                 countryCode,
                 emailOrMobileNr);
-        accountPayload.verify();
 
         return new AmazonGiftCardAccount(id,
                 creationDate,

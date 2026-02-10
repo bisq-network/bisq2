@@ -45,7 +45,6 @@ public final class ImportFasterPaymentsAccountParser extends ImportFiatAccountPa
                 holderName,
                 sortCode,
                 accountNr);
-        accountPayload.verify();
 
         return new FasterPaymentsAccount(id,
                 creationDate,

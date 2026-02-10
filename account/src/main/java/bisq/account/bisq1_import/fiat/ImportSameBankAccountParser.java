@@ -60,7 +60,6 @@ public final class ImportSameBankAccountParser extends ImportBankAccountParser<F
                 accountNr,
                 accountTypeValue,
                 nationalAccountIdValue);
-        accountPayload.verify();
 
         return new SameBankAccount(id,
                 creationDate,

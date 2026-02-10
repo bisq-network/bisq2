@@ -48,7 +48,6 @@ public final class ImportF2FAccountParser extends ImportCountryBasedAccountParse
                 city,
                 contact,
                 extraInfo);
-        accountPayload.verify();
 
         return new F2FAccount(id,
                 creationDate,
