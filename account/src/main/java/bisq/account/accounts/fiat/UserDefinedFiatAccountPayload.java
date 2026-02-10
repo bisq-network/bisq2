@@ -51,6 +51,8 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
         super(id, salt);
         checkArgument(accountData.length() <= MAX_DATA_LENGTH);
         this.accountData = accountData;
+
+        verify();
     }
 
     @Override

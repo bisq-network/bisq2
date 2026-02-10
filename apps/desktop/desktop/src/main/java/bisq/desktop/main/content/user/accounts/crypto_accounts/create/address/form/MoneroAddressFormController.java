@@ -19,18 +19,41 @@ package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.f
 
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
-import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.presentation.parser.AmountParser;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
 @Slf4j
 public class MoneroAddressFormController extends AddressFormController<MoneroAddressFormView, MoneroAddressFormModel, MoneroAccountPayload> {
+    private Subscription createSubAddressPin;
+
     public MoneroAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
+    }
+
+    @Override
+    public void onActivate() {
+        super.onActivate();
+
+        createSubAddressPin = EasyBind.subscribe(EasyBind.combine(model.getMainAddress(),
+                        model.getPrivateViewKey(),
+                        model.getAccountIndex(),
+                        model.getInitialSubAddressIndex(),
+                        this::createSubAddress),
+                subAddress -> model.getSubAddress().set(subAddress));
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+
+        createSubAddressPin.unsubscribe();
+
     }
 
     @Override
@@ -46,35 +69,47 @@ public class MoneroAddressFormController extends AddressFormController<MoneroAdd
     @Override
     public MoneroAccountPayload createAccountPayload() {
         Optional<Boolean> isAutoConf = model.isAutoConfSupported() ? Optional.of(model.getIsAutoConf().get()) : Optional.empty();
-        Optional<Integer> autoConfNumConfirmations = model.getAutoConfNumConfirmations().get() == null
-                ? Optional.empty()
-                : Optional.of(Integer.valueOf(model.getAutoConfNumConfirmations().get()));
-        Optional<Long> autoConfMaxTradeAmount = Optional.empty();
-        if (model.getAutoConfMaxTradeAmount().get() != null) {
-            Monetary amount = AmountParser.parse(model.getAutoConfMaxTradeAmount().get(), "BTC");
-            autoConfMaxTradeAmount = Optional.of(amount.getValue());
-        }
-        Optional<Integer> accountIndex = model.getAccountIndex().get() == null
-                ? Optional.empty()
-                : Optional.of(Integer.valueOf(model.getAccountIndex().get()));
-        Optional<Integer> initialSubAddressIndex = model.getInitialSubAddressIndex().get() == null
-                ? Optional.empty()
-                : Optional.of(Integer.valueOf(model.getInitialSubAddressIndex().get()));
+        Optional<Integer> autoConfNumConfirmations = Optional.ofNullable(model.getAutoConfNumConfirmations().get())
+                .map(Integer::valueOf);
+        Optional<Long> autoConfMaxTradeAmount = Optional.ofNullable(model.getAutoConfMaxTradeAmount().get())
+                .map(e -> AmountParser.parse(e, "BTC").getValue());
+        Optional<String> autoConfExplorerUrls = Optional.ofNullable(model.getAutoConfExplorerUrls().get());
+
+        boolean useSubAddresses = model.getUseSubAddresses().get();
+        Optional<String> mainAddress = Optional.ofNullable(model.getMainAddress().get());
+        Optional<String> privateViewKey = Optional.ofNullable(model.getPrivateViewKey().get());
+        Optional<String> subAddress = Optional.ofNullable(model.getSubAddress().get());
+        Optional<Integer> accountIndex = Optional.ofNullable(model.getAccountIndex().get())
+                .map(Integer::valueOf);
+        Optional<Integer> initialSubAddressIndex = Optional.ofNullable(model.getInitialSubAddressIndex().get())
+                .map(Integer::valueOf);
+
         return new MoneroAccountPayload(model.getId(),
                 model.getAddress().get(),
                 model.getIsInstant().get(),
                 isAutoConf,
                 autoConfNumConfirmations,
                 autoConfMaxTradeAmount,
-                Optional.ofNullable(model.getAutoConfExplorerUrls().get()),
-                model.getUseSubAddresses().get(),
-                Optional.ofNullable(model.getPrivateViewKey().get()),
+                autoConfExplorerUrls,
+                useSubAddresses,
+                mainAddress,
+                privateViewKey,
+                subAddress,
                 accountIndex,
                 initialSubAddressIndex
         );
     }
 
     void onUseSubAddressesToggled(boolean selected) {
-        model.getUseSubAddresses().set(!model.getUseSubAddresses().get());
+        model.getUseSubAddresses().set(selected);
     }
+
+    // TODO impl. following Bisq 1 `bisq.core.payment.XmrAccountDelegate.createAndSetNewSubAddress`
+    private String createSubAddress(String mainAddress,
+                                    String privateViewKey,
+                                    String accountIndex,
+                                    String initialSubAddressIndex) {
+        return "TODO: SubAddress creation not implemented yet";
+    }
+
 }

@@ -41,9 +41,11 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
         this(id, AccountUtils.generateSalt(), countryCode, holderName);
     }
 
-    private StrikeAccountPayload(String id, byte[] salt, String countryCode, String holderName) {
+    public StrikeAccountPayload(String id, byte[] salt, String countryCode, String holderName) {
         super(id, salt, countryCode);
         this.holderName = holderName;
+
+        verify();
     }
 
     @Override

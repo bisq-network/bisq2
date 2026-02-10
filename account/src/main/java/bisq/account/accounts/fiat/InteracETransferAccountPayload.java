@@ -46,7 +46,7 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         this(id, AccountUtils.generateSalt(), holderName, email, question, answer);
     }
 
-    private InteracETransferAccountPayload(String id,
+    public InteracETransferAccountPayload(String id,
                                            byte[] salt,
                                            String holderName,
                                            String email,
@@ -57,6 +57,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         this.email = email;
         this.question = question;
         this.answer = answer;
+
+        verify();
     }
 
     @Override

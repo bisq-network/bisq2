@@ -59,7 +59,7 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
                 email);
     }
 
-    private WiseAccountPayload(String id,
+    public WiseAccountPayload(String id,
                                byte[] salt,
                                String countryCode,
                                List<String> selectedCurrencyCodes,

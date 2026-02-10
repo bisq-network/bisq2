@@ -20,9 +20,10 @@ package bisq.desktop.main.content.mu_sig.create_offer.review;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.AccountUtils;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
@@ -50,7 +51,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -152,16 +152,16 @@ public class MuSigCreateOfferReviewController implements Controller {
         verifyPaymentMethods(paymentMethods);
 
         String offerId = StringUtils.createUid();
-        List<AccountOption> offerOptions = selectedAccountByPaymentMethod.entrySet().stream().map(entry -> {
-            Account<?, ?> account = entry.getValue();
-            AccountPayload<?> accountPayload = account.getAccountPayload();
-            String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(account.getId(), offerId);
-            Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
-            List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
-            Optional<String> bankId = AccountUtils.getBankId(accountPayload);
-            List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
-            return new AccountOption(account.getPaymentMethod(), saltedAccountId, countryCode, acceptedCountryCodes, bankId, acceptedBanks);
-        }).collect(Collectors.toList());
+        List<AccountOption> offerOptions = selectedAccountByPaymentMethod.values().stream()
+                .map(account -> {
+                    AccountPayload<?> accountPayload = account.getAccountPayload();
+                    String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(account.getId(), offerId);
+                    Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
+                    List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
+                    Optional<String> bankId = AccountUtils.getBankId(accountPayload);
+                    List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
+                    return new AccountOption(account.getPaymentMethod(), saltedAccountId, countryCode, acceptedCountryCodes, bankId, acceptedBanks);
+                }).collect(Collectors.toList());
 
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
                 direction,
@@ -407,8 +407,8 @@ public class MuSigCreateOfferReviewController implements Controller {
             throw new IllegalArgumentException("No payment methods provided");
         }
 
-        boolean allFiat = paymentMethods.stream().allMatch(pm -> pm instanceof FiatPaymentMethod);
-        boolean allCrypto = paymentMethods.stream().allMatch(pm -> pm instanceof CryptoPaymentMethod);
+        boolean allFiat = paymentMethods.stream().allMatch(FiatPaymentMethod.class::isInstance);
+        boolean allCrypto = paymentMethods.stream().allMatch(CryptoPaymentMethod.class::isInstance);
         if (!(allFiat || allCrypto)) {
             throw new IllegalArgumentException("All payment methods must be either fiat or crypto (no mixing).");
         }

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -37,7 +38,6 @@ import static bisq.account.accounts.fiat.F2FAccountPayload.CITY_MIN_LENGTH;
 import static bisq.account.accounts.fiat.F2FAccountPayload.CONTACT_MAX_LENGTH;
 import static bisq.account.accounts.fiat.F2FAccountPayload.CONTACT_MIN_LENGTH;
 import static bisq.account.accounts.fiat.F2FAccountPayload.EXTRA_INFO_MAX_LENGTH;
-import static bisq.account.accounts.fiat.F2FAccountPayload.EXTRA_INFO_MIN_LENGTH;
 
 @Getter
 public class F2FFormModel extends FormModel {
@@ -57,7 +57,7 @@ public class F2FFormModel extends FormModel {
 
     private final TextMinMaxLengthValidator cityValidator = new TextMinMaxLengthValidator(CITY_MIN_LENGTH, CITY_MAX_LENGTH);
     private final TextMinMaxLengthValidator contactValidator = new TextMinMaxLengthValidator(CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
-    private final TextMinMaxLengthValidator extraInfoValidator = new TextMinMaxLengthValidator(EXTRA_INFO_MIN_LENGTH, EXTRA_INFO_MAX_LENGTH);
+    private final TextMaxLengthValidator extraInfoValidator = new TextMaxLengthValidator(EXTRA_INFO_MAX_LENGTH);
 
     public F2FFormModel(String id, List<Country> allCountries, List<FiatCurrency> allCurrencies) {
         super(id);

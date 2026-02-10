@@ -63,11 +63,8 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case WISEUSDACCOUNT -> WiseUsdAccount.fromProto(proto);
             case MONEYBEAMACCOUNT -> MoneyBeamAccount.fromProto(proto);
             case SWISHACCOUNT -> SwishAccount.fromProto(proto);
-            case UPHOLDACCOUNT -> UpholdAccount.fromProto(proto);
             case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);
             case PROMPTPAYACCOUNT -> PromptPayAccount.fromProto(proto);
-            case HALCASHACCOUNT -> HalCashAccount.fromProto(proto);
-            case PIN4ACCOUNT -> Pin4Account.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

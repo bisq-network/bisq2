@@ -276,8 +276,12 @@ public class FiatPaymentAccountsController implements Controller {
 
         AccountPayload<? extends PaymentMethod<?>> accountPayload = account.getAccountPayload();
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
-            AccountDetails<?, ?> accountDetails = getAccountDetails(account, fiatPaymentRail);
-            model.getAccountDetails().set(accountDetails);
+            try {
+                AccountDetails<?, ?> accountDetails = getAccountDetails(account, fiatPaymentRail);
+                model.getAccountDetails().set(accountDetails);
+            } catch (Exception e) {
+                log.warn("Could not resolve account details", e);
+            }
         }
     }
 

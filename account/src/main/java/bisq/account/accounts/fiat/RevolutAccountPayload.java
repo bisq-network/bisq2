@@ -52,13 +52,15 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         this(id, AccountUtils.generateSalt(), userName, selectedCurrencyCodes);
     }
 
-    private RevolutAccountPayload(String id,
+    public RevolutAccountPayload(String id,
                                   byte[] salt,
                                   String userName,
                                   List<String> selectedCurrencyCodes) {
         super(id, salt);
         this.userName = userName;
         this.selectedCurrencyCodes = selectedCurrencyCodes;
+
+        verify();
     }
 
     @Override

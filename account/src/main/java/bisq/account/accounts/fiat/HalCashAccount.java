@@ -17,7 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -31,7 +33,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayload> {
+public final class HalCashAccount extends Account<FiatPaymentMethod, HalCashAccountPayload> {
     public HalCashAccount(String id,
                           long creationDate,
                           String accountName,
@@ -43,8 +45,8 @@ public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayl
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountBuilder(serializeForHash).setHalCashAccount(
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return super.getAccountBuilder(serializeForHash).setHalCashAccount(
                 toHalCashAccountProto(serializeForHash));
     }
 

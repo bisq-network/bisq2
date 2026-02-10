@@ -58,7 +58,7 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 emailOrMobileNr);
     }
 
-    private MoneyBeamAccountPayload(String id,
+    public MoneyBeamAccountPayload(String id,
                                     byte[] salt,
                                     String countryCode,
                                     String selectedCurrencyCode,
@@ -68,6 +68,8 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
+
+        verify();
     }
 
     @Override

@@ -58,7 +58,7 @@ public class NationalBankAccountPayload extends BankAccountPayload implements Se
                 nationalAccountId);
     }
 
-    private NationalBankAccountPayload(String id,
+    public NationalBankAccountPayload(String id,
                                        byte[] salt,
                                        String countryCode,
                                        String selectedCurrencyCode,
@@ -82,6 +82,8 @@ public class NationalBankAccountPayload extends BankAccountPayload implements Se
                 accountNr,
                 bankAccountType,
                 nationalAccountId);
+
+        verify();
     }
 
     @Override

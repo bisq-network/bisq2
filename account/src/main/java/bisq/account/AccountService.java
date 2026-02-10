@@ -21,7 +21,7 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
-import bisq.account.bisq1_import.ImportBisq1AccountService;
+import bisq.account.bisq1_import.ImportBisq1AccountsParser;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.bonded_roles.BondedRolesService;
@@ -52,7 +52,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     private final AccountStore persistableStore = new AccountStore();
     private final Persistence<AccountStore> persistence;
     private final NetworkService networkService;
-    private final ImportBisq1AccountService importBisq1AccountService;
     private final AccountTimestampService accountTimestampService;
 
     public AccountService(PersistenceService persistenceService,
@@ -61,7 +60,6 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                           BondedRolesService bondedRolesService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.networkService = networkService;
-        importBisq1AccountService = new ImportBisq1AccountService();
         accountTimestampService = new AccountTimestampService(networkService, userService, bondedRolesService);
     }
 
@@ -119,7 +117,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     }
 
     public void importBisq1AccountData(String json) {
-        importBisq1AccountService.parseAccounts(json)
+        ImportBisq1AccountsParser.parseAccounts(json)
                 .forEach(this::addPaymentAccount);
     }
 

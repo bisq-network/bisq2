@@ -45,11 +45,13 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
         this(id, AccountUtils.generateSalt(), postalAddress, contact, extraInfo);
     }
 
-    private CashByMailAccountPayload(String id, byte[] salt, String postalAddress, String contact, String extraInfo) {
+    public CashByMailAccountPayload(String id, byte[] salt, String postalAddress, String contact, String extraInfo) {
         super(id, salt);
         this.postalAddress = postalAddress;
         this.contact = contact;
         this.extraInfo = extraInfo;
+
+        verify();
     }
 
     @Override

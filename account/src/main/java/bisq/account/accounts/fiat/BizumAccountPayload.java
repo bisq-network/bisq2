@@ -44,9 +44,11 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
         this(id, AccountUtils.generateSalt(), countryCode, mobileNr);
     }
 
-    private BizumAccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
+    public BizumAccountPayload(String id, byte[] salt, String countryCode, String mobileNr) {
         super(id, salt, countryCode);
         this.mobileNr = mobileNr;
+
+        verify();
     }
 
     @Override

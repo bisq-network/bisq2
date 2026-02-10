@@ -70,11 +70,8 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case WISEUSDACCOUNTPAYLOAD -> WiseUsdAccountPayload.fromProto(proto);
             case MONEYBEAMACCOUNTPAYLOAD -> MoneyBeamAccountPayload.fromProto(proto);
             case SWISHACCOUNTPAYLOAD -> SwishAccountPayload.fromProto(proto);
-            case UPHOLDACCOUNTPAYLOAD -> UpholdAccountPayload.fromProto(proto);
             case MONEYGRAMACCOUNTPAYLOAD -> MoneyGramAccountPayload.fromProto(proto);
             case PROMPTPAYACCOUNTPAYLOAD -> PromptPayAccountPayload.fromProto(proto);
-            case HALCASHACCOUNTPAYLOAD -> HalCashAccountPayload.fromProto(proto);
-            case PIN4ACCOUNTPAYLOAD -> Pin4AccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

@@ -41,9 +41,11 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
         this(id, AccountUtils.generateSalt(), countryCode, virtualPaymentAddress);
     }
 
-    private UpiAccountPayload(String id, byte[] salt, String countryCode, String virtualPaymentAddress) {
+    public UpiAccountPayload(String id, byte[] salt, String countryCode, String virtualPaymentAddress) {
         super(id, salt, countryCode);
         this.virtualPaymentAddress = virtualPaymentAddress;
+
+        verify();
     }
 
     @Override
