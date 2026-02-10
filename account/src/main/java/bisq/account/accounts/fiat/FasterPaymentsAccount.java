@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.protobuf.Account;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -43,9 +44,9 @@ public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPayme
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return getAccountBuilder(serializeForHash)
-                .setFasterPaymentsAccount(toFasterPaymentsAccountProto(serializeForHash));
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setFasterPaymentsAccount(
+                toFasterPaymentsAccountProto(serializeForHash));
     }
 
     private bisq.account.protobuf.FasterPaymentsAccount toFasterPaymentsAccountProto(boolean serializeForHash) {
@@ -56,7 +57,7 @@ public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPayme
         return bisq.account.protobuf.FasterPaymentsAccount.newBuilder();
     }
 
-    public static FasterPaymentsAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static FasterPaymentsAccount fromProto(Account proto) {
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new FasterPaymentsAccount(proto.getId(),

@@ -17,9 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -33,7 +31,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class Pin4Account extends Account<FiatPaymentMethod, Pin4AccountPayload> {
+public final class Pin4Account extends CountryBasedAccount<Pin4AccountPayload> {
     public Pin4Account(String id,
                        long creationDate,
                        String accountName,
@@ -45,8 +43,8 @@ public final class Pin4Account extends Account<FiatPaymentMethod, Pin4AccountPay
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return super.getAccountBuilder(serializeForHash).setPin4Account(
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setPin4Account(
                 toPin4AccountProto(serializeForHash));
     }
 

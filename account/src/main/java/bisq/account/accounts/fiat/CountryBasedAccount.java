@@ -66,6 +66,13 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);
             case PROMPTPAYACCOUNT -> PromptPayAccount.fromProto(proto);
             case SBPACCOUNT -> SbpAccount.fromProto(proto);
+            case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
+            case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
+            case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
+            case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
+            case HALCASHACCOUNT -> HalCashAccount.fromProto(proto);
+            case PIN4ACCOUNT -> Pin4Account.fromProto(proto);
+            case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

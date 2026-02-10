@@ -20,16 +20,9 @@ package bisq.account.accounts;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.fiat.CashByMailAccount;
 import bisq.account.accounts.fiat.CountryBasedAccount;
-import bisq.account.accounts.fiat.FasterPaymentsAccount;
-import bisq.account.accounts.fiat.HalCashAccount;
-import bisq.account.accounts.fiat.InteracETransferAccount;
-import bisq.account.accounts.fiat.PayIdAccount;
-import bisq.account.accounts.fiat.Pin4Account;
 import bisq.account.accounts.fiat.RevolutAccount;
-import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
@@ -94,18 +87,11 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
         return switch (proto.getMessageCase()) {
-            case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
             case USERDEFINEDFIATACCOUNT -> UserDefinedFiatAccount.fromProto(proto);
             case REVOLUTACCOUNT -> RevolutAccount.fromProto(proto);
             case COUNTRYBASEDACCOUNT -> CountryBasedAccount.fromProto(proto);
-            case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
-            case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
-            case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
             case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
-            case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
             case UPHOLDACCOUNT -> UpholdAccount.fromProto(proto);
-            case HALCASHACCOUNT -> HalCashAccount.fromProto(proto);
-            case PIN4ACCOUNT -> Pin4Account.fromProto(proto);
             case CRYPTOASSETACCOUNT -> CryptoAssetAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);

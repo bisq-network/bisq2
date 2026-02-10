@@ -378,18 +378,11 @@ message Account {
   AccountOrigin accountOrigin = 8;
 
   oneof message {
-    ZelleAccount zelleAccount = 19;
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
     RevolutAccount revolutAccount = 21;
     CountryBasedAccount countryBasedAccount = 22;
-    FasterPaymentsAccount fasterPaymentsAccount = 23;
-    PayIdAccount payIdAccount = 24;
-    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
-    CashByMailAccount cashByMailAccount = 26;
-    InteracETransferAccount interacETransferAccount = 27;
-    UpholdAccount upholdAccount = 28;
-    HalCashAccount halCashAccount = 29;
-    Pin4Account pin4Account = 30;
+    CashByMailAccount cashByMailAccount = 24;
+    UpholdAccount upholdAccount = 25;
     CryptoAssetAccount cryptoAssetAccount = 100;
   }
 }
@@ -430,6 +423,13 @@ message CountryBasedAccount {
     MoneyGramAccount moneyGramAccount = 33;
     PromptPayAccount promptPayAccount = 34;
     SbpAccount sbpAccount = 35;
+    ZelleAccount zelleAccount = 36;
+    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 37;
+    PayIdAccount payIdAccount = 38;
+    InteracETransferAccount interacETransferAccount = 39;
+    HalCashAccount halCashAccount = 40;
+    Pin4Account pin4Account = 41;
+    FasterPaymentsAccount fasterPaymentsAccount = 42;
   }
 }
 message HalCashAccount {
