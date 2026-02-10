@@ -124,7 +124,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         collateral.getStyleClass().add(VALUE_STYLE);
         gridPane.add(collateral, 1, rowIndex);
 
-        collateralDetails = new Label(Res.get("muSig.tradeWizard.review.collateral.details"));
+        collateralDetails = new Label(Res.get("muSig.tradeWizard.review.collateral.maker.details"));
         collateralDetails.getStyleClass().add(DETAILS_STYLE);
         gridPane.add(collateralDetails, 2, rowIndex, 2, 1);
 
@@ -180,7 +180,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
-        collateral.setText(model.getCollateral());
+        collateral.setText(model.getCollateralAsPercent());
+        collateralDetails.setText(model.getCollateralAsBtc());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

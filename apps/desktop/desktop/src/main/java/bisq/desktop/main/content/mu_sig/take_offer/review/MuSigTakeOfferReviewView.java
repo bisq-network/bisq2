@@ -49,7 +49,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     private final WizardOverlay sendTakeOfferMessageOverlay, takeOfferSuccessOverlay;
     private final Button takeOfferSuccessButton;
-    private final Label priceDetails, paymentMethod, paymentMethodDetails, fee, feeDetails;
+    private final Label priceDetails, paymentMethod, paymentMethodDetails, collateral, collateralDetails, fee, feeDetails;
     private final GridPane gridPane;
     private final TextFlow price;
     private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
@@ -127,6 +127,19 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
+        Label collateralDescription = new Label(Res.get("muSig.tradeWizard.review.collateral.description"));
+        collateralDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(collateralDescription, 0, rowIndex);
+
+        collateral = new Label();
+        collateral.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(collateral, 1, rowIndex);
+
+        collateralDetails = new Label();
+        collateralDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(collateralDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
@@ -176,6 +189,9 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         if (paymentMethodDetailsValue.length() > 50) {
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
+
+        collateral.setText(model.getCollateralAsPercent());
+        collateralDetails.setText(model.getCollateralAsBtc());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

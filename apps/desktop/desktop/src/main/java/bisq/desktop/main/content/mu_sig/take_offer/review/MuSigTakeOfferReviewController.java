@@ -23,9 +23,11 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -93,6 +95,7 @@ public class MuSigTakeOfferReviewController implements Controller {
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
+
         model = new MuSigTakeOfferReviewModel();
         view = new MuSigTakeOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
@@ -117,6 +120,15 @@ public class MuSigTakeOfferReviewController implements Controller {
 
         applyPriceQuote(priceQuote);
         applyPriceDetails(muSigOffer.getPriceSpec(), market);
+
+        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
+        double collateral = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        String collateralAsPercent = PercentageFormatter.formatToPercentWithSymbol(collateral, 0);
+        model.setCollateralAsPercent(collateralAsPercent);
+
+        long collateralAsBtcValue = MathUtils.roundDoubleToLong(model.getTakersBaseSideAmount().getValue() * collateral);
+        String collateralAsBtc = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(collateralAsBtcValue), false);
+        model.setCollateralAsBtc(collateralAsBtc);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {

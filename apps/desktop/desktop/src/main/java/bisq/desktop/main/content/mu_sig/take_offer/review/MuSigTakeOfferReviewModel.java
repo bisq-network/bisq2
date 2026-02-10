@@ -18,10 +18,10 @@
 package bisq.desktop.main.content.mu_sig.take_offer.review;
 
 import bisq.account.accounts.Account;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
@@ -67,6 +67,10 @@ class MuSigTakeOfferReviewModel implements Model {
     private String paymentMethodDisplayString;
     @Setter
     private String paymentMethodDetails;
+    @Setter
+    private String collateralAsPercent;
+    @Setter
+    private String collateralAsBtc;
     @Setter
     private String fee;
     @Setter

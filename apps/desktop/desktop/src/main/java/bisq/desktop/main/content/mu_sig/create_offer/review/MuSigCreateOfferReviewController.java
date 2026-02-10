@@ -27,10 +27,12 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ReadOnlyObservableMap;
+import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -99,11 +101,9 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
+
         model = new MuSigCreateOfferReviewModel();
         view = new MuSigCreateOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
-
-        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
-        model.setCollateral(PercentageFormatter.formatToPercentWithSymbol(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT, 0));
     }
 
     public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
@@ -240,6 +240,11 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyPriceDetails(model.getPriceSpec(), market);
 
+        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
+        double collateral = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        String collateralAsPercent = PercentageFormatter.formatToPercentWithSymbol(collateral, 0);
+        model.setCollateralAsPercent(collateralAsPercent);
+
         model.setRangeAmount(amountSpec instanceof RangeAmountSpec);
         String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
                 currentToReceiveMaxOrFixedAmount, currentToSendMaxOrFixedAmount,
@@ -276,6 +281,8 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toSendCode = maxQuoteSideAmount.getCode();
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
+
+            model.setCollateralAsBtc(calculateCollateral(minBaseSideAmount, collateral) + " - " + calculateCollateral(maxBaseSideAmount, collateral));
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
@@ -296,6 +303,8 @@ public class MuSigCreateOfferReviewController implements Controller {
                 currentToReceiveMaxOrFixedAmount = formattedBaseAmount;
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
+
+            model.setCollateralAsBtc(calculateCollateral(fixBaseSideAmount, collateral));
         }
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
@@ -422,5 +431,10 @@ public class MuSigCreateOfferReviewController implements Controller {
         if (!(allFiat || allCrypto)) {
             throw new IllegalArgumentException("All payment methods must be either fiat or crypto (no mixing).");
         }
+    }
+
+    private static String calculateCollateral(Monetary monetary, double collateral) {
+        long value = MathUtils.roundDoubleToLong(monetary.getValue() * collateral);
+        return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }
 }
