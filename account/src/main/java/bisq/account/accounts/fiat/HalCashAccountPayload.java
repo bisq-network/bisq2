@@ -49,6 +49,8 @@ public final class HalCashAccountPayload extends AccountPayload<FiatPaymentMetho
     public HalCashAccountPayload(String id, byte[] salt, String mobileNr) {
         super(id, salt);
         this.mobileNr = mobileNr;
+
+        verify();
     }
 
     @Override

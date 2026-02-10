@@ -79,6 +79,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 accountNr,
                 bankAccountType,
                 nationalAccountId);
+
+        verify();
     }
 
     @Override

@@ -57,6 +57,8 @@ public final class InteracETransferAccountPayload extends AccountPayload<FiatPay
         this.email = email;
         this.question = question;
         this.answer = answer;
+
+        verify();
     }
 
     @Override

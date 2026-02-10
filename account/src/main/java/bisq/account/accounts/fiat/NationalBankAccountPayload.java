@@ -82,6 +82,8 @@ public class NationalBankAccountPayload extends BankAccountPayload implements Se
                 accountNr,
                 bankAccountType,
                 nationalAccountId);
+
+        verify();
     }
 
     @Override

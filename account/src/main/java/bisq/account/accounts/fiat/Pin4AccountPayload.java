@@ -49,6 +49,8 @@ public final class Pin4AccountPayload extends AccountPayload<FiatPaymentMethod> 
     private Pin4AccountPayload(String id, byte[] salt, String mobileNr) {
         super(id, salt);
         this.mobileNr = mobileNr;
+
+        verify();
     }
 
     @Override

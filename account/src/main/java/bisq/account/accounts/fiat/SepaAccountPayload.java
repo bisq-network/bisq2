@@ -79,6 +79,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
         this.iban = iban;
         this.bic = bic;
         this.acceptedCountryCodes = acceptedCountryCodes != null ? List.copyOf(acceptedCountryCodes) : List.of();
+
         verify();
     }
 

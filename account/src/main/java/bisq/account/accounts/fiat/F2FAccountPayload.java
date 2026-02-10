@@ -71,6 +71,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload implements Sel
         this.city = city;
         this.contact = contact;
         this.extraInfo = extraInfo;
+
         verify();
     }
 

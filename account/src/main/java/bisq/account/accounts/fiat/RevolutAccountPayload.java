@@ -59,6 +59,8 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
         super(id, salt);
         this.userName = userName;
         this.selectedCurrencyCodes = selectedCurrencyCodes;
+
+        verify();
     }
 
     @Override

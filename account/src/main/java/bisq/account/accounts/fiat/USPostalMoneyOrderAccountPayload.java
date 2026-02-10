@@ -48,6 +48,8 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload<FiatP
         super(id, salt);
         this.holderName = holderName;
         this.postalAddress = postalAddress;
+
+        verify();
     }
 
     @Override

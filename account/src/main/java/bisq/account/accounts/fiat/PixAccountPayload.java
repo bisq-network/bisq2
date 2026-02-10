@@ -53,6 +53,8 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
         super(id, salt, countryCode);
         this.holderName = holderName;
         this.pixKey = pixKey;
+
+        verify();
     }
 
     @Override

@@ -93,6 +93,8 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                 bankAccountType,
                 nationalAccountId);
         this.requirements = requirements;
+
+        verify();
     }
 
     @Override

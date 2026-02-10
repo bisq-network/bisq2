@@ -67,6 +67,8 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
                 autoConfNumConfirmations,
                 autoConfMaxTradeAmount,
                 autoConfExplorerUrls);
+
+        verify();
     }
 
     @Override

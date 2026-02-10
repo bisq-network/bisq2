@@ -55,6 +55,8 @@ public class ZelleAccountPayload extends AccountPayload<FiatPaymentMethod> imple
         super(id, salt);
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
+
+        verify();
     }
 
     @Override

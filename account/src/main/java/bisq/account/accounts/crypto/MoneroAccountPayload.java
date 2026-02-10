@@ -101,6 +101,8 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
         this.subAddress = subAddress;
         this.accountIndex = accountIndex;
         this.initialSubAddressIndex = initialSubAddressIndex;
+
+        verify();
     }
 
     @Override

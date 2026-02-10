@@ -47,6 +47,8 @@ public final class PayIdAccountPayload extends AccountPayload<FiatPaymentMethod>
         super(id, salt);
         this.holderName = holderName;
         this.payId = payId;
+
+        verify();
     }
 
     @Override

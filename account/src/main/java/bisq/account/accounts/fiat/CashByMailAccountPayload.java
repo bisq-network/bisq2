@@ -50,6 +50,8 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
         this.postalAddress = postalAddress;
         this.contact = contact;
         this.extraInfo = extraInfo;
+
+        verify();
     }
 
     @Override

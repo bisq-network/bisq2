@@ -53,6 +53,8 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
         super(id, salt, countryCode);
         this.holderName = holderName;
         this.mobileNr = mobileNr;
+
+        verify();
     }
 
     @Override

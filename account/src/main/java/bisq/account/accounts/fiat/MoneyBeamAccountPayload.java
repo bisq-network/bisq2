@@ -68,6 +68,8 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
         this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
+
+        verify();
     }
 
     @Override
