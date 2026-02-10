@@ -190,7 +190,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
-        securityDeposit.setText(model.getSecurityDepositAsPercent());
+        securityDeposit.setText(model.getFormattedSecurityDepositAsPercent());
         securityDepositDetails.setText(model.getSecurityDepositAsBtc());
 
         fee.setText(model.getFee());

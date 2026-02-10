@@ -69,8 +69,8 @@ public class PercentageFormatter {
         return formatToPercent(value, DEFAULT_FORMAT, precision);
     }
 
-    public static String formatToPercent(double value, NumberFormat defaultNumberFormat) {
-        return formatToPercent(value, DEFAULT_FORMAT, 2);
+    public static String formatToPercent(double value, NumberFormat numberFormat) {
+        return formatToPercent(value, numberFormat, 2);
     }
 
     public static String formatToPercent(double value, NumberFormat numberFormat, int precision) {

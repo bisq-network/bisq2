@@ -133,7 +133,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
 
-        fee = new Label(Res.get("bisqEasy.tradeWizard.review.securityDeposit.details"));
+        fee = new Label();
         fee.getStyleClass().add(VALUE_STYLE);
         gridPane.add(fee, 1, rowIndex);
 
@@ -180,7 +180,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
-        securityDeposit.setText(model.getSecurityDepositAsPercent());
+        securityDeposit.setText(model.getFormattedSecurityDepositAsPercent());
         securityDepositDetails.setText(model.getSecurityDepositAsBtc());
 
         fee.setText(model.getFee());

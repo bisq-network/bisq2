@@ -43,6 +43,8 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -122,18 +124,23 @@ public class MuSigTakeOfferReviewController implements Controller {
         applyPriceDetails(muSigOffer.getPriceSpec(), market);
 
         // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
-        double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
-        String securityDepositAsPercent = PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0);
-        model.setSecurityDepositAsPercent(securityDepositAsPercent);
+        //double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        Optional<CollateralOption> optionalCollateralOption = OfferOptionUtil.findCollateralOption(muSigOffer.getOfferOptions());
+        checkArgument(optionalCollateralOption.isPresent(), "CollateralOption must be present");
+        CollateralOption collateralOption = optionalCollateralOption.get();
+        checkArgument(collateralOption.getSellerSecurityDeposit() == collateralOption.getBuyerSecurityDeposit(),
+                "SellerSecurityDeposit and BuyerSecurityDeposit are expected to be equal");
+        double securityDeposit = collateralOption.getBuyerSecurityDeposit();
+        model.setSecurityDepositAsPercent(securityDeposit);
+        model.setFormattedSecurityDepositAsPercent(PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0));
 
-        long securityDepositAsBtcValue = MathUtils.roundDoubleToLong(model.getTakersBaseSideAmount().getValue() * securityDeposit);
-        String securityDepositAsBtc = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(securityDepositAsBtcValue), false);
-        model.setSecurityDepositAsBtc(securityDepositAsBtc);
+        applySecurityDepositAsBtc();
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
         if (amount != null) {
             model.setTakersBaseSideAmount(amount);
+            applySecurityDepositAsBtc();
         }
     }
 
@@ -387,5 +394,18 @@ public class MuSigTakeOfferReviewController implements Controller {
         model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
         model.setPrice(formattedPrice);
         model.setPriceCode(codes);
+    }
+
+    private void applySecurityDepositAsBtc() {
+        double securityDeposit = model.getSecurityDepositAsPercent();
+        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
+        if (takersBaseSideAmount != null) {
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(takersBaseSideAmount, securityDeposit));
+        }
+    }
+
+    private static String calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
+        long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
+        return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }
 }

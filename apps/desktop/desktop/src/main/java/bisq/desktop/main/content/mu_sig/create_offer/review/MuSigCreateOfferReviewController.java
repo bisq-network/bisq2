@@ -156,6 +156,11 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         verifyPaymentMethods(paymentMethods);
 
+        applyData(direction,
+                market,
+                amountSpec,
+                priceSpec);
+
         String offerId = StringUtils.createUid();
         List<OfferOption> offerOptions = selectedAccountByPaymentMethod.values().stream()
                 .map(account -> {
@@ -170,7 +175,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         // We use static values for both traders of 25%
-        offerOptions.add(new CollateralOption(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT, MuSigOffer.DEFAULT_SELLER_SECURITY_DEPOSIT));
+        offerOptions.add(new CollateralOption(model.getSecurityDepositAsPercent(), model.getSecurityDepositAsPercent()));
 
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
                 direction,
@@ -180,11 +185,6 @@ public class MuSigCreateOfferReviewController implements Controller {
                 paymentMethods,
                 offerOptions);
         model.setOffer(offer);
-
-        applyData(direction,
-                market,
-                amountSpec,
-                priceSpec);
     }
 
     public void publishOffer() {
@@ -242,8 +242,9 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
         double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        model.setSecurityDepositAsPercent(securityDeposit);
         String securityDepositAsPercent = PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0);
-        model.setSecurityDepositAsPercent(securityDepositAsPercent);
+        model.setFormattedSecurityDepositAsPercent(securityDepositAsPercent);
 
         model.setRangeAmount(amountSpec instanceof RangeAmountSpec);
         String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
@@ -282,7 +283,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
 
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount, securityDeposit) + " - " + calculateSecurityDeposit(maxBaseSideAmount, securityDeposit));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount) + " - " + calculateSecurityDeposit(maxBaseSideAmount));
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
@@ -304,7 +305,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
 
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(fixBaseSideAmount, securityDeposit));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(fixBaseSideAmount));
         }
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
@@ -433,7 +434,8 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    private static String calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
+    private String calculateSecurityDeposit(Monetary monetary) {
+        double securityDeposit = model.getSecurityDepositAsPercent();
         long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
         return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }

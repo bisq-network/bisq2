@@ -68,7 +68,9 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private String paymentMethodDetails;
     @Setter
-    private String securityDepositAsPercent;
+    private double securityDepositAsPercent;
+    @Setter
+    private String formattedSecurityDepositAsPercent;
     @Setter
     private String securityDepositAsBtc;
     @Setter
@@ -93,6 +95,9 @@ class MuSigTakeOfferReviewModel implements Model {
         price = null;
         priceCode = null;
         paymentMethodDisplayString = null;
+        securityDepositAsPercent = 0;
+        formattedSecurityDepositAsPercent = null;
+        securityDepositAsBtc = null;
         fee = null;
         feeDetails = null;
         marketPrice = 0;
