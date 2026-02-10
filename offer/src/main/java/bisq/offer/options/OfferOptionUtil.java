@@ -57,36 +57,36 @@ public class OfferOptionUtil {
 
     public static Optional<TradeTermsOption> findTradeTermsOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof TradeTermsOption)
-                .map(option -> (TradeTermsOption) option)
+                .filter(TradeTermsOption.class::isInstance)
+                .map(TradeTermsOption.class::cast)
                 .findAny();
     }
 
     public static Optional<ReputationOption> findReputationOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof ReputationOption)
-                .map(option -> (ReputationOption) option)
+                .filter(ReputationOption.class::isInstance)
+                .map(ReputationOption.class::cast)
                 .findAny();
     }
 
     public static Optional<CollateralOption> findCollateralOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof CollateralOption)
-                .map(option -> (CollateralOption) option)
+                .filter(CollateralOption.class::isInstance)
+                .map(CollateralOption.class::cast)
                 .findAny();
     }
 
     public static Optional<FiatPaymentOption> findFiatPaymentOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof FiatPaymentOption)
-                .map(option -> (FiatPaymentOption) option)
+                .filter(FiatPaymentOption.class::isInstance)
+                .map(FiatPaymentOption.class::cast)
                 .findAny();
     }
 
     public static Optional<FeeOption> findFeeOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(option -> option instanceof FeeOption)
-                .map(option -> (FeeOption) option)
+                .filter(FeeOption.class::isInstance)
+                .map(FeeOption.class::cast)
                 .findAny();
     }
 
@@ -97,8 +97,8 @@ public class OfferOptionUtil {
 
     public static Set<AccountOption> findAccountOptions(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
-                .filter(offerOption -> offerOption instanceof AccountOption)
-                .map(offerOption -> (AccountOption) offerOption)
+                .filter(AccountOption.class::isInstance)
+                .map(AccountOption.class::cast)
                 .collect(Collectors.toSet());
     }
 
@@ -106,9 +106,9 @@ public class OfferOptionUtil {
     // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
     public static String createdSaltedAccountId(String accountId, String offerId) {
         String input = accountId + offerId;
-        log.error("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
+        log.info("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
-        log.error("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
+        log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
     }
 

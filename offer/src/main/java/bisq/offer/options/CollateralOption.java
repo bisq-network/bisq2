@@ -25,10 +25,10 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class CollateralOption implements OfferOption {
-    private final long buyerSecurityDeposit;
-    private final long sellerSecurityDeposit;
+    private final double buyerSecurityDeposit;
+    private final double sellerSecurityDeposit;
 
-    public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
+    public CollateralOption(double buyerSecurityDeposit, double sellerSecurityDeposit) {
         this.buyerSecurityDeposit = buyerSecurityDeposit;
         this.sellerSecurityDeposit = sellerSecurityDeposit;
 

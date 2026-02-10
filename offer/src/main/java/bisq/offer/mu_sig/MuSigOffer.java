@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 @Getter
 public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMethodSpec<?>> {
     private static final int VERSION = 0;
+    public static final double DEFAULT_BUYER_SECURITY_DEPOSIT = 0.25;
+    public static final double DEFAULT_SELLER_SECURITY_DEPOSIT = 0.25;
 
     public MuSigOffer(String id,
                       NetworkId makerNetworkId,

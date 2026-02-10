@@ -23,9 +23,11 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -41,6 +43,8 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -93,6 +97,7 @@ public class MuSigTakeOfferReviewController implements Controller {
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
+
         model = new MuSigTakeOfferReviewModel();
         view = new MuSigTakeOfferReviewView(model, this, muSigReviewDataDisplay.getRoot());
     }
@@ -117,11 +122,25 @@ public class MuSigTakeOfferReviewController implements Controller {
 
         applyPriceQuote(priceQuote);
         applyPriceDetails(muSigOffer.getPriceSpec(), market);
+
+        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
+        //double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        Optional<CollateralOption> optionalCollateralOption = OfferOptionUtil.findCollateralOption(muSigOffer.getOfferOptions());
+        checkArgument(optionalCollateralOption.isPresent(), "CollateralOption must be present");
+        CollateralOption collateralOption = optionalCollateralOption.get();
+        checkArgument(Double.compare(collateralOption.getSellerSecurityDeposit(), collateralOption.getBuyerSecurityDeposit()) == 0,
+                "SellerSecurityDeposit and BuyerSecurityDeposit are expected to be equal");
+        double securityDeposit = collateralOption.getBuyerSecurityDeposit();
+        model.setSecurityDepositAsPercent(securityDeposit);
+        model.setFormattedSecurityDepositAsPercent(PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0));
+
+        applySecurityDepositAsBtc();
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
         if (amount != null) {
             model.setTakersBaseSideAmount(amount);
+            applySecurityDepositAsBtc();
         }
     }
 
@@ -375,5 +394,18 @@ public class MuSigTakeOfferReviewController implements Controller {
         model.setPriceWithCode(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
         model.setPrice(formattedPrice);
         model.setPriceCode(codes);
+    }
+
+    private void applySecurityDepositAsBtc() {
+        double securityDeposit = model.getSecurityDepositAsPercent();
+        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
+        if (takersBaseSideAmount != null) {
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(takersBaseSideAmount, securityDeposit));
+        }
+    }
+
+    private static String calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
+        long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
+        return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }
 }

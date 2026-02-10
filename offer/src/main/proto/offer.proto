@@ -71,8 +71,8 @@ message TradeTermsOption {
 }
 
 message CollateralOption {
-  sint64 buyerSecurityDeposit = 1;
-  sint64 sellerSecurityDeposit = 2;
+  double buyerSecurityDeposit = 1;
+  double sellerSecurityDeposit = 2;
 }
 
 message FeeOption {

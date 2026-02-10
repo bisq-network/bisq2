@@ -62,7 +62,7 @@ public class PercentageStringConverter extends StringConverter<Number> {
         }
         double value = MathUtils.roundDouble(numberValue.doubleValue(), precision);
         if (precision <= 2) {
-            return PercentageFormatter.formatToPercentNoDecimalsWithSymbol(value);
+            return PercentageFormatter.formatToPercentWithSymbol(value, 0);
         } else {
             return PercentageFormatter.formatToPercentWithSymbol(value);
         }

@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.mu_sig.create_offer.review;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -43,7 +45,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     public static final String DETAILS_STYLE = "trade-wizard-review-details";
 
     private final Label headline, detailsHeadline, priceDetails, priceDescription,
-            paymentMethodDescription, paymentMethod, paymentMethodDetails, fee, feeDetails;
+            paymentMethodDescription, paymentMethod, paymentMethodDetails,
+            securityDepositInfoIcon, securityDeposit, securityDepositDetails, fee, feeDetails;
     private final WizardOverlay createOfferSuccessOverlay;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
@@ -115,6 +118,25 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
+        Label securityDepositDescription = new Label(Res.get("muSig.tradeWizard.review.securityDeposit.description"));
+        securityDepositDescription.getStyleClass().add(DESCRIPTION_STYLE);
+
+        securityDepositInfoIcon = Icons.getIcon(AwesomeIcon.INFO_SIGN, "1.1em");
+        securityDepositInfoIcon.getStyleClass().add("text-fill-grey-dimmed");
+
+        HBox.setMargin(securityDepositInfoIcon, new Insets(0.5, 0, 0, 0));
+        HBox securityDepositDescriptionHBox = new HBox(7.5, securityDepositDescription, securityDepositInfoIcon);
+        gridPane.add(securityDepositDescriptionHBox, 0, rowIndex);
+
+        securityDeposit = new Label();
+        securityDeposit.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(securityDeposit, 1, rowIndex);
+
+        securityDepositDetails = new Label();
+        securityDepositDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(securityDepositDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
@@ -166,6 +188,11 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
+        securityDepositInfoIcon.setTooltip(new BisqTooltip(Res.get("muSig.tradeWizard.review.securityDeposit.info")));
+
+        securityDeposit.setText(model.getFormattedSecurityDepositAsPercent());
+        securityDepositDetails.setText(model.getSecurityDepositAsBtc());
+
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
 
@@ -189,6 +216,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         showCreateOfferSuccessPin.unsubscribe();
         paymentMethod.setTooltip(null);
         paymentMethodDetails.setTooltip(null);
+        securityDepositInfoIcon.setTooltip(null);
     }
 
     private Region getLine() {
