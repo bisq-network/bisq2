@@ -44,7 +44,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
 
     private final Label headline, detailsHeadline, priceDetails, priceDescription,
             paymentMethodDescription, paymentMethod, paymentMethodDetails,
-            collateral, collateralDetails, fee, feeDetails;
+            securityDeposit, securityDepositDetails, fee, feeDetails;
     private final WizardOverlay createOfferSuccessOverlay;
     private final Button createOfferSuccessButton;
     private final GridPane gridPane;
@@ -116,24 +116,24 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
         gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
-        Label collateralDescription = new Label(Res.get("muSig.tradeWizard.review.collateral.description"));
-        collateralDescription.getStyleClass().add(DESCRIPTION_STYLE);
-        gridPane.add(collateralDescription, 0, rowIndex);
+        Label securityDepositDescription = new Label(Res.get("muSig.tradeWizard.review.securityDeposit.description"));
+        securityDepositDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(securityDepositDescription, 0, rowIndex);
 
-        collateral = new Label();
-        collateral.getStyleClass().add(VALUE_STYLE);
-        gridPane.add(collateral, 1, rowIndex);
+        securityDeposit = new Label();
+        securityDeposit.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(securityDeposit, 1, rowIndex);
 
-        collateralDetails = new Label(Res.get("muSig.tradeWizard.review.collateral.maker.details"));
-        collateralDetails.getStyleClass().add(DETAILS_STYLE);
-        gridPane.add(collateralDetails, 2, rowIndex, 2, 1);
+        securityDepositDetails = new Label(Res.get("muSig.tradeWizard.review.securityDeposit.maker.details"));
+        securityDepositDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(securityDepositDetails, 2, rowIndex, 2, 1);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         gridPane.add(feeInfoDescription, 0, rowIndex);
 
-        fee = new Label(Res.get("bisqEasy.tradeWizard.review.collateral.details"));
+        fee = new Label(Res.get("bisqEasy.tradeWizard.review.securityDeposit.details"));
         fee.getStyleClass().add(VALUE_STYLE);
         gridPane.add(fee, 1, rowIndex);
 
@@ -180,8 +180,8 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
-        collateral.setText(model.getCollateralAsPercent());
-        collateralDetails.setText(model.getCollateralAsBtc());
+        securityDeposit.setText(model.getSecurityDepositAsPercent());
+        securityDepositDetails.setText(model.getSecurityDepositAsBtc());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

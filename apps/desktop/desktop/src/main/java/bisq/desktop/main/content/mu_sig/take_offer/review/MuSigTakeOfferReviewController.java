@@ -122,13 +122,13 @@ public class MuSigTakeOfferReviewController implements Controller {
         applyPriceDetails(muSigOffer.getPriceSpec(), market);
 
         // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
-        double collateral = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
-        String collateralAsPercent = PercentageFormatter.formatToPercentWithSymbol(collateral, 0);
-        model.setCollateralAsPercent(collateralAsPercent);
+        double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        String securityDepositAsPercent = PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0);
+        model.setSecurityDepositAsPercent(securityDepositAsPercent);
 
-        long collateralAsBtcValue = MathUtils.roundDoubleToLong(model.getTakersBaseSideAmount().getValue() * collateral);
-        String collateralAsBtc = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(collateralAsBtcValue), false);
-        model.setCollateralAsBtc(collateralAsBtc);
+        long securityDepositAsBtcValue = MathUtils.roundDoubleToLong(model.getTakersBaseSideAmount().getValue() * securityDeposit);
+        String securityDepositAsBtc = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(securityDepositAsBtcValue), false);
+        model.setSecurityDepositAsBtc(securityDepositAsBtc);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {

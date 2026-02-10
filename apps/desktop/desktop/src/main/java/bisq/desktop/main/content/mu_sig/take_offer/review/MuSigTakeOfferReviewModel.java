@@ -68,9 +68,9 @@ class MuSigTakeOfferReviewModel implements Model {
     @Setter
     private String paymentMethodDetails;
     @Setter
-    private String collateralAsPercent;
+    private String securityDepositAsPercent;
     @Setter
-    private String collateralAsBtc;
+    private String securityDepositAsBtc;
     @Setter
     private String fee;
     @Setter

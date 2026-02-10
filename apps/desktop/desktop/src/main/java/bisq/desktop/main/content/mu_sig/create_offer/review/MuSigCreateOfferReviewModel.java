@@ -82,9 +82,9 @@ class MuSigCreateOfferReviewModel implements Model {
     @Setter
     private String priceCode;
     @Setter
-    private String collateralAsPercent;
+    private String securityDepositAsPercent;
     @Setter
-    private String collateralAsBtc;
+    private String securityDepositAsBtc;
     @Setter
     private String fee;
     @Setter

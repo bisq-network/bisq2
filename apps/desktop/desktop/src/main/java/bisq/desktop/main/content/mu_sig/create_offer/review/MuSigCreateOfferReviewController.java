@@ -241,9 +241,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         applyPriceDetails(model.getPriceSpec(), market);
 
         // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
-        double collateral = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
-        String collateralAsPercent = PercentageFormatter.formatToPercentWithSymbol(collateral, 0);
-        model.setCollateralAsPercent(collateralAsPercent);
+        double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        String securityDepositAsPercent = PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0);
+        model.setSecurityDepositAsPercent(securityDepositAsPercent);
 
         model.setRangeAmount(amountSpec instanceof RangeAmountSpec);
         String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
@@ -282,7 +282,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
 
-            model.setCollateralAsBtc(calculateCollateral(minBaseSideAmount, collateral) + " - " + calculateCollateral(maxBaseSideAmount, collateral));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount, securityDeposit) + " - " + calculateSecurityDeposit(maxBaseSideAmount, securityDeposit));
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
@@ -304,7 +304,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
 
-            model.setCollateralAsBtc(calculateCollateral(fixBaseSideAmount, collateral));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(fixBaseSideAmount, securityDeposit));
         }
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
@@ -433,8 +433,8 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    private static String calculateCollateral(Monetary monetary, double collateral) {
-        long value = MathUtils.roundDoubleToLong(monetary.getValue() * collateral);
+    private static String calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
+        long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
         return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }
 }
