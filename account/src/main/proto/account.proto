@@ -176,6 +176,7 @@ message CountryBasedAccountPayload {
     HalCashAccountPayload halCashAccountPayload = 39;
     Pin4AccountPayload pin4AccountPayload = 40;
     FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 41;
+    SbpAccountPayload sbpAccountPayload = 42;
   }
 }
 
@@ -303,6 +304,12 @@ message FasterPaymentsAccountPayload {
   string accountNr = 3;
 }
 
+message SbpAccountPayload {
+  string holderName = 1;
+  string mobileNumber = 2;
+  string bankName = 3;
+}
+
 message PayIdAccountPayload {
   string holderName = 1;
   string payId = 2;
@@ -422,6 +429,7 @@ message CountryBasedAccount {
     SwishAccount swishAccount = 32;
     MoneyGramAccount moneyGramAccount = 33;
     PromptPayAccount promptPayAccount = 34;
+    SbpAccount sbpAccount = 35;
   }
 }
 message HalCashAccount {
@@ -478,6 +486,9 @@ message SwishAccount {
 }
 
 message FasterPaymentsAccount {
+}
+
+message SbpAccount {
 }
 
 message PayIdAccount {

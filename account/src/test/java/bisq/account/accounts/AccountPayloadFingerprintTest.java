@@ -23,6 +23,7 @@ import bisq.account.accounts.fiat.PixAccountPayload;
 import bisq.account.accounts.fiat.PromptPayAccountPayload;
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;
+import bisq.account.accounts.fiat.SbpAccountPayload;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.SepaInstantAccountPayload;
 import bisq.account.accounts.fiat.StrikeAccountPayload;
@@ -96,6 +97,13 @@ public class AccountPayloadFingerprintTest {
         // Bisq 1 compatibility: Faster Payments uses sort code and account number without country code.
         FasterPaymentsAccountPayload payload = new FasterPaymentsAccountPayload("id", SALT, "Alice", "123456", "12345678");
         assertArrayEquals(expected("FASTER_PAYMENTS", "123456", "12345678"), payload.getFingerprint());
+    }
+
+    @Test
+    void sbpFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: SBP uses mobile number and bank name without country code.
+        SbpAccountPayload payload = new SbpAccountPayload("id", SALT, "Alice", "+79161234567", "Sberbank");
+        assertArrayEquals(expected("SBP", "+79161234567", "Sberbank"), payload.getFingerprint());
     }
 
     @Test
@@ -211,7 +219,7 @@ public class AccountPayloadFingerprintTest {
     @Test
     void revolutFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Revolut uses user name.
-        RevolutAccountPayload payload = new RevolutAccountPayload("id", SALT, "alice", List.of("DE"));
+        RevolutAccountPayload payload = new RevolutAccountPayload("id", SALT, "alice", List.of("EUR"));
         assertArrayEquals(expected("REVOLUT", "alice"), payload.getFingerprint());
     }
 

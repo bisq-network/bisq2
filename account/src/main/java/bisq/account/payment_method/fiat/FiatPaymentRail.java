@@ -142,7 +142,9 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.LOW),
 
     // Russia
-    // SBP = new PaymentMethod(SBP_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    SBP(countryFromCode("RU"),
+            FiatCurrencyRepository.getCurrencyByCode("RUB"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     //India
     UPI(countryFromCode("IN"),
@@ -369,6 +371,7 @@ public enum FiatPaymentRail implements PaymentRail {
             case PAY_ID -> DAYS_4;
             case PIX -> HOURS_24;
             case PROMPT_PAY -> HOURS_24;
+            case SBP -> HOURS_24;
             case UPI -> DAYS_4;
             case CUSTOM -> DAYS_4;
             case F2F -> DAYS_4;
@@ -409,7 +412,6 @@ public enum FiatPaymentRail implements PaymentRail {
  * [Advanced Cash] => 6
  * [Paysera] => 6
  * [Satispay] => 4
- * [Faster Payments System (SBP)] => 3
  * [Payment method] => 1
  * [MercadoPago] => 1
  * [India/NEFT] => 1

@@ -149,44 +149,41 @@ public class PaymentSummaryController implements Controller {
     private AccountDetailsGridPane<?, ?> getAccountDetailsGridPane(AccountPayload<?> accountPayload,
                                                                    FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
-            case SEPA -> new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload, fiatPaymentRail);
-            case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case ZELLE -> new ZelleAccountDetailsGridPane((ZelleAccountPayload) accountPayload, fiatPaymentRail);
-            case REVOLUT -> new RevolutAccountDetailsGridPane((RevolutAccountPayload) accountPayload, fiatPaymentRail);
-            case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case NATIONAL_BANK ->
-                    new NationalBankAccountDetailsGridPane((NationalBankAccountPayload) accountPayload, fiatPaymentRail);
-            case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
-            case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIX -> new PixAccountDetailsGridPane((PixAccountPayload) accountPayload, fiatPaymentRail);
-            case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case FASTER_PAYMENTS ->
-                    new FasterPaymentsAccountDetailsGridPane((FasterPaymentsAccountPayload) accountPayload, fiatPaymentRail);
-            case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case US_POSTAL_MONEY_ORDER ->
-                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case INTERAC_E_TRANSFER ->
-                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case AMAZON_GIFT_CARD ->
-                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case DOMESTIC_WIRE_TRANSFER ->
-                    throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
+            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case F2F -> new F2FAccountDetailsGridPane((F2FAccountPayload) accountPayload, fiatPaymentRail);
+            case FASTER_PAYMENTS ->
+                    new FasterPaymentsAccountDetailsGridPane((FasterPaymentsAccountPayload) accountPayload, fiatPaymentRail);
+            case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case NATIONAL_BANK ->
+                    new NationalBankAccountDetailsGridPane((NationalBankAccountPayload) accountPayload, fiatPaymentRail);
+            case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PIX -> new PixAccountDetailsGridPane((PixAccountPayload) accountPayload, fiatPaymentRail);
+            case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case REVOLUT -> new RevolutAccountDetailsGridPane((RevolutAccountPayload) accountPayload, fiatPaymentRail);
+            case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SBP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SEPA -> new SepaAccountDetailsGridPane((SepaAccountPayload) accountPayload, fiatPaymentRail);
+            case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ZELLE -> new ZelleAccountDetailsGridPane((ZelleAccountPayload) accountPayload, fiatPaymentRail);
         };
     }
 
@@ -196,44 +193,14 @@ public class PaymentSummaryController implements Controller {
         AccountOrigin accountOrigin = AccountOrigin.BISQ2_NEW;
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             return switch (fiatPaymentRail) {
+                case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case CUSTOM -> throw new UnsupportedOperationException("FiatPaymentRail.CUSTOM is not supported");
-                case SEPA ->
-                        new SepaAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (SepaAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case SEPA_INSTANT ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case ZELLE ->
-                        new ZelleAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (ZelleAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case REVOLUT ->
-                        new RevolutAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (RevolutAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case NATIONAL_BANK ->
-                        new NationalBankAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (NationalBankAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case F2F ->
                         new F2FAccount(StringUtils.createUid(),
                                 System.currentTimeMillis(),
@@ -242,20 +209,6 @@ public class PaymentSummaryController implements Controller {
                                 keyPair,
                                 keyAlgorithm,
                                 accountOrigin);
-                case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case ACH_TRANSFER ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case PIX ->
-                        new PixAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (PixAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case FASTER_PAYMENTS ->
                         new FasterPaymentsAccount(StringUtils.createUid(),
                                 System.currentTimeMillis(),
@@ -264,27 +217,64 @@ public class PaymentSummaryController implements Controller {
                                 keyPair,
                                 keyAlgorithm,
                                 accountOrigin);
-                case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case US_POSTAL_MONEY_ORDER ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case CASH_BY_MAIL ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case INTERAC_E_TRANSFER ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case AMAZON_GIFT_CARD ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case CASH_DEPOSIT ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-                case DOMESTIC_WIRE_TRANSFER ->
-                        throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case NATIONAL_BANK ->
+                        new NationalBankAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (NationalBankAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
+                case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case PIX ->
+                        new PixAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (PixAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
+                case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case REVOLUT ->
+                        new RevolutAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (RevolutAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
+                case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SBP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SEPA ->
+                        new SepaAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (SepaAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
+                case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case ZELLE ->
+                        new ZelleAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (ZelleAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
             };
         } else if (model.getPaymentMethod().getPaymentRail() instanceof CryptoPaymentRail cryptoPaymentRail) {
             throw new UnsupportedOperationException("Unsupported paymentRail " + model.getPaymentMethod().getPaymentRail());

@@ -38,6 +38,7 @@ import bisq.account.bisq1_import.fiat.ImportPixAccountParser;
 import bisq.account.bisq1_import.fiat.ImportPromptPayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportRevolutAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSameBankAccountParser;
+import bisq.account.bisq1_import.fiat.ImportSbpAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSepaAccountParser;
 import bisq.account.bisq1_import.fiat.ImportSepaInstantAccountParser;
 import bisq.account.bisq1_import.fiat.ImportStrikeAccountParser;
@@ -127,6 +128,7 @@ public class ImportBisq1AccountsParser {
             case "PROMPT_PAY" -> new ImportPromptPayAccountParser(accountNode).parse(dsaKeyPair);
             case "REVOLUT" -> new ImportRevolutAccountParser(accountNode).parse(dsaKeyPair);
             case "SAME_BANK" -> new ImportSameBankAccountParser(accountNode).parse(dsaKeyPair);
+            case "SBP" -> new ImportSbpAccountParser(accountNode).parse(dsaKeyPair);
             case "SEPA" -> new ImportSepaAccountParser(accountNode).parse(dsaKeyPair);
             case "SEPA_INSTANT" -> new ImportSepaInstantAccountParser(accountNode).parse(dsaKeyPair);
             case "STRIKE" -> new ImportStrikeAccountParser(accountNode).parse(dsaKeyPair);
