@@ -49,7 +49,7 @@ public final class ImportMoneyGramAccountParser extends ImportCountryBasedAccoun
                 holderName,
                 email,
                 state);
-        accountPayload.verify();
+
         return new MoneyGramAccount(id,
                 creationDate,
                 accountName,

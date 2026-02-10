@@ -54,7 +54,7 @@ public final class ImportAchTransferAccountParser extends ImportBankAccountParse
                 branchId,
                 accountNr,
                 accountType);
-        accountPayload.verify();
+
         return new AchTransferAccount(id,
                 creationDate,
                 accountName,

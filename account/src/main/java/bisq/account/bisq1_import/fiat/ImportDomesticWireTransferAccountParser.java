@@ -48,7 +48,7 @@ public final class ImportDomesticWireTransferAccountParser extends ImportBankAcc
                 bankName,
                 branchId,
                 accountNr);
-        accountPayload.verify();
+
         return new DomesticWireTransferAccount(id,
                 creationDate,
                 accountName,

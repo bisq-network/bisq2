@@ -48,7 +48,7 @@ public final class ImportSepaInstantAccountParser extends ImportCountryBasedAcco
                 bic,
                 countryCode,
                 acceptedCountryCodes);
-        accountPayload.verify();
+
         return new SepaInstantAccount(id,
                 creationDate,
                 accountName,

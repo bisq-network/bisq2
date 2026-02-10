@@ -43,7 +43,7 @@ public final class ImportUSPostalMoneyOrderAccountParser extends ImportFiatAccou
                 salt,
                 holderName,
                 postalAddress);
-        accountPayload.verify();
+
         return new USPostalMoneyOrderAccount(id,
                 creationDate,
                 accountName,

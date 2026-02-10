@@ -42,7 +42,7 @@ public final class ImportStrikeAccountParser extends ImportCountryBasedAccountPa
                 salt,
                 countryCode,
                 holderName);
-        accountPayload.verify();
+
         return new StrikeAccount(id,
                 creationDate,
                 accountName,

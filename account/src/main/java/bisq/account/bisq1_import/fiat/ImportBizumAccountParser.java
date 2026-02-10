@@ -42,7 +42,7 @@ public final class ImportBizumAccountParser extends ImportCountryBasedAccountPar
                 salt,
                 countryCode,
                 mobileNr);
-        accountPayload.verify();
+
         return new BizumAccount(id,
                 creationDate,
                 accountName,

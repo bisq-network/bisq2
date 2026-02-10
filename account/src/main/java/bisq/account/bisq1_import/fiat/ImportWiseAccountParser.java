@@ -47,7 +47,7 @@ public final class ImportWiseAccountParser extends ImportCountryBasedAccountPars
                 selectedCurrencyCodes,
                 holderName,
                 email);
-        accountPayload.verify();
+
         return new WiseAccount(id,
                 creationDate,
                 accountName,
