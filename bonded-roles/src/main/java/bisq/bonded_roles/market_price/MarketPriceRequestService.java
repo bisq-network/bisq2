@@ -26,12 +26,10 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.network.BaseService;
+import bisq.network.HttpRequestBaseService;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
-import bisq.network.http.utils.HttpException;
 import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,9 +45,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,7 +55,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 @Slf4j
-public class MarketPriceRequestService extends BaseService {
+public class MarketPriceRequestService extends HttpRequestBaseService {
     private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("MarketPriceRequestService");
 
     @Getter
@@ -69,7 +67,7 @@ public class MarketPriceRequestService extends BaseService {
     private Optional<Provider> mostRecentProvider = Optional.empty();
 
     public MarketPriceRequestService(Config conf, NetworkService networkService) {
-        super("getAllMarketPrices", conf, networkService);
+        super("getAllMarketPrices", conf, networkService, EXECUTOR);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -80,13 +78,13 @@ public class MarketPriceRequestService extends BaseService {
 
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        if (scheduler != null) {
+        if (scheduler != null) {    
             scheduler.stop();
         }
 
         ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
 
-        return httpClient.map(BaseHttpClient::shutdown)
+        return httpClient.get().map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
@@ -136,98 +134,74 @@ public class MarketPriceRequestService extends BaseService {
     }
 
     private CompletableFuture<Void> requestMarketPrice() {
-        try {
-            return requestMarketPrice(new AtomicInteger(0));
-        } catch (RejectedExecutionException e) {
-            return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
-        }
+        return executeWithRetry(() -> makeRequestWithTimeout(provider -> {
+            BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
+            if (client.hasPendingRequest()) {
+                selectedProvider.set(selectNextProvider());
+                throw new RetryException("Retrying with next provider due to pending request", new AtomicInteger(1));
+            }
+
+            long ts = System.currentTimeMillis();
+            String param = provider.getApiPath();
+            log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
+            try {
+                String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
+                
+                Map<Market, MarketPrice> map = parseResponse(json);
+
+            if (map.isEmpty()) {
+                log.warn("Provider {} returned an empty or invalid response, switching provider.", client.getBaseUrl());
+                throw new IllegalStateException("Provider is responsive but not returning any market prices");
+            }
+
+            long now = System.currentTimeMillis();
+            String sinceLastResponse = conf.getTimeSinceLastResponse() == 0 ? "" : "Time since last response: " + (now - conf.getTimeSinceLastResponse()) / 1000 + " sec";
+            log.info("Market price request from {} resulted in {} items took {} ms. {}",
+                    client.getBaseUrl(), map.size(), now - ts, sinceLastResponse);
+            conf.setTimeSinceLastResponse(now);
+
+            // We only use those market prices for which we have a market in the repository
+            Map<Market, MarketPrice> filtered = map.entrySet().stream()
+                    .filter(e -> e.getValue().isValidDate())
+                    .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
+                    .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
+                            Map.Entry::getValue));
+            marketPriceByCurrencyMap.clear();
+            marketPriceByCurrencyMap.putAll(filtered);
+            mostRecentProvider = Optional.of(selectedProvider.get());
+            
+            return CompletableFuture.completedFuture(null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
-    private CompletableFuture<Void> requestMarketPrice(AtomicInteger recursionDepth) {
+    private <T> CompletableFuture<T> makeRequestWithTimeout(Function<Provider, CompletableFuture<T>> requestFunction) {
         if (noProviderAvailable) {
-            throw new RuntimeException("No market price provider available");
+            return CompletableFuture.failedFuture(new RuntimeException("No provider available"));
         }
         if (shutdownStarted) {
-            throw new RuntimeException("Shutdown has already started");
+            return CompletableFuture.failedFuture(new RuntimeException("Shutdown has already started"));
         }
 
-        return CompletableFuture.runAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
-                    httpClient = Optional.of(client);
-                    if (client.hasPendingRequest()) {
-                        selectedProvider.set(selectNextProvider());
-                        int numRecursions = recursionDepth.incrementAndGet();
-                        if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                            log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            requestMarketPrice(recursionDepth).join();
-                        } else {
-                            log.warn("We exhausted all possible providers and give up");
-                            throw new RuntimeException("We failed at all possible providers and give up");
-                        }
-                        return;
-                    }
+                    httpClient.set(Optional.of(client));
 
-                    long ts = System.currentTimeMillis();
-                    String param = provider.getApiPath();
-                    log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
-                    String json = "";
                     try {
-                        json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                        log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
-                        Map<Market, MarketPrice> map = parseResponse(json);
-
-                        if (map.isEmpty()) {
-                            log.warn("Provider {} returned an empty or invalid response, switching provider.", client.getBaseUrl());
-                            throw new IllegalStateException("Provider is responsive but not returning any market prices");
-                        }
-
-                        long now = System.currentTimeMillis();
-                        String sinceLastResponse = conf.getTimeSinceLastResponse() == 0 ? "" : "Time since last response: " + (now - conf.getTimeSinceLastResponse()) / 1000 + " sec";
-                        log.info("Market price request from {} resulted in {} items took {} ms. {}",
-                                client.getBaseUrl(), map.size(), now - ts, sinceLastResponse);
-                        conf.setTimeSinceLastResponse(now);
-
-                        // We only use those market prices for which we have a market in the repository
-                        Map<Market, MarketPrice> filtered = map.entrySet().stream()
-                                .filter(e -> e.getValue().isValidDate())
-                                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
-                                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
-                                        Map.Entry::getValue));
-                        marketPriceByCurrencyMap.clear();
-                        marketPriceByCurrencyMap.putAll(filtered);
-                        mostRecentProvider = Optional.of(selectedProvider.get());
+                        T result = requestFunction.apply(provider).join();
                         selectedProvider.set(selectNextProvider());
                         shutdownHttpClient(client);
+                        return result;
                     } catch (Exception e) {
-                        shutdownHttpClient(client);
-                        if (shutdownStarted) {
-                            throw new RuntimeException("Shutdown has already started");
-                        }
-
-                        Throwable rootCause = ExceptionUtil.getRootCause(e);
-                        log.warn("Failed to request market price data from {}. {} at request: {}", client.getBaseUrl(), rootCause.getClass().getSimpleName(), ExceptionUtil.getRootCauseMessage(e));
-                        log.warn("Json: {}", json);
-                        failedProviders.add(provider);
-                        selectedProvider.set(selectNextProvider());
-
-                        if (rootCause instanceof HttpException httpException) {
-                            int responseCode = httpException.getResponseCode();
-                            // If not server error we pass the error to the client
-                            if (responseCode < 500) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        int numRecursions = recursionDepth.incrementAndGet();
-                        if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                            log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            requestMarketPrice(recursionDepth).join();
-                        } else {
-                            log.warn("We exhausted all possible providers and give up");
-                            throw new RuntimeException("We failed at all possible providers and give up");
-                        }
+                        handleRequestException(e, provider, client);
+                        // This line should never be reached since handleRequestException throws
+                        throw new RuntimeException("Unexpected error", e);
                     }
-                }, EXECUTOR)
+                }, executor)
                 .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
@@ -279,11 +253,4 @@ public class MarketPriceRequestService extends BaseService {
         return map;
     }
 
-
-    private void shutdownHttpClient(BaseHttpClient client) {
-        try {
-            client.shutdown();
-        } catch (Exception ignore) {
-        }
-    }
 }

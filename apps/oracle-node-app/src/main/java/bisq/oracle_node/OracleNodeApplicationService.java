@@ -22,6 +22,7 @@ import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.common.observable.Pin;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
+import bisq.network.HttpRequestBaseService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -73,7 +74,7 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
         com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
         com.typesafe.config.Config marketPriceConfig = bondedRolesConfig.getConfig("marketPrice");
         MarketPriceRequestService marketPriceRequestService = new MarketPriceRequestService(
-                MarketPriceRequestService.Config.from(marketPriceConfig),
+                HttpRequestBaseService.Config.from(marketPriceConfig),
                 networkService);
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));

@@ -26,6 +26,7 @@ import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.Service;
+import bisq.network.HttpRequestBaseService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -76,11 +77,11 @@ public class BondedRolesService implements Service {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
         marketPriceService = new MarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
-        explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()), networkService);
+        explorerService = new ExplorerService(HttpRequestBaseService.Config.from(config.getBlockchainExplorer()), networkService);
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
-        mobileNotificationRelayClient = new MobileNotificationRelayClient(MobileNotificationRelayClient.Config.from(config.getMobileNotifications()), networkService);
+        mobileNotificationRelayClient = new MobileNotificationRelayClient(HttpRequestBaseService.Config.from(config.getMobileNotifications()), networkService);
     }
 
     /* --------------------------------------------------------------------- */
