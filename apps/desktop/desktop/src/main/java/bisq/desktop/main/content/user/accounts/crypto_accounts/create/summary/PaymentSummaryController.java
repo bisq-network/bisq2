@@ -46,16 +46,16 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SummaryController implements Controller {
-    private final SummaryModel model;
+public class PaymentSummaryController implements Controller {
+    private final PaymentSummaryModel model;
     @Getter
-    private final SummaryView view;
+    private final PaymentSummaryView view;
     private final AccountService accountService;
 
-    public SummaryController(ServiceProvider serviceProvider) {
+    public PaymentSummaryController(ServiceProvider serviceProvider) {
         accountService = serviceProvider.getAccountService();
-        model = new SummaryModel();
-        view = new SummaryView(model, this);
+        model = new PaymentSummaryModel();
+        view = new PaymentSummaryView(model, this);
     }
 
     public void setPaymentMethod(DigitalAssetPaymentMethod paymentMethod) {

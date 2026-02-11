@@ -31,7 +31,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
+public final class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload>  {
     public ZelleAccount(String id,
                         long creationDate,
                         String accountName,

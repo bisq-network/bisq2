@@ -46,7 +46,7 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class SummaryView extends View<StackPane, SummaryModel, SummaryController> {
+public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, PaymentSummaryController> {
     private final static int FEEDBACK_WIDTH = 700;
     private static final double TOP_PANE_HEIGHT = 55;
     private static final double HEIGHT = 61;
@@ -59,7 +59,7 @@ public class SummaryView extends View<StackPane, SummaryModel, SummaryController
     private final Text addressDescription;
     private Subscription showAccountNameOverlayPin;
 
-    public SummaryView(SummaryModel model, SummaryController controller) {
+    public PaymentSummaryView(PaymentSummaryModel model, PaymentSummaryController controller) {
         super(new StackPane(), model, controller);
 
         gridPane = new GridPane();

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary;
 
+import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.common.data.Triple;
 import bisq.desktop.common.Transitions;
@@ -54,11 +55,9 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
     private final Label paymentMethod, currency, country;
     private final GridPane gridPane;
-    private final VBox accountNameOverlay;
     private final Button accountNameButton;
     private final MaterialTextField accountNameField;
-    private final VBox countryVBox;
-    private int rowIndex = 0;
+    private final VBox accountNameOverlay, currencyVBox, countryVBox;
     private Subscription showAccountNameOverlayPin;
 
     public PaymentSummaryView(PaymentSummaryModel model, PaymentSummaryController controller) {
@@ -73,6 +72,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         headline.getStyleClass().add("trade-wizard-review-headline");
         GridPane.setHalignment(headline, HPos.CENTER);
         GridPane.setMargin(headline, new Insets(20, 0, 20, 0));
+        int rowIndex = 0;
         gridPane.add(headline, 0, rowIndex, 3, 1);
 
         rowIndex++;
@@ -85,7 +85,8 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
 
         Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.currency"));
         currency = currencyTriple.getSecond();
-        gridPane.add(currencyTriple.getThird(), 1, rowIndex);
+        currencyVBox = currencyTriple.getThird();
+        gridPane.add(currencyVBox, 1, rowIndex);
 
         Triple<Text, Label, VBox> countryTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.country"));
         country = countryTriple.getSecond();
@@ -128,6 +129,10 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
         paymentMethod.setText(model.getPaymentMethod().getDisplayString());
         currency.setText(model.getCurrencyString());
         country.setText(model.getCountry());
+
+        boolean showCurrency = !(model.getAccountPayload() instanceof MultiCurrencyAccountPayload);
+        currencyVBox.setVisible(showCurrency);
+        currencyVBox.setManaged(showCurrency);
 
         boolean isCountryBasedAccountPayload = model.getAccountPayload() instanceof CountryBasedAccountPayload;
         countryVBox.setVisible(isCountryBasedAccountPayload);

@@ -46,12 +46,12 @@ public abstract class FiatAccountDetails<A extends Account<?, ?>> extends Accoun
         }
     }
 
-    @Override
+  /*  @Override
     protected void addRestrictions() {
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             addDescriptionAndValue(Res.get("paymentAccounts.chargebackRisk"),
                     fiatPaymentRail.getChargebackRisk().toString());
         }
         super.addRestrictions();
-    }
+    }*/
 }

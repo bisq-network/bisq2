@@ -28,8 +28,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class SummaryModel implements Model {
-    private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 20);
+public class PaymentSummaryModel implements Model {
+    private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 30);
 
     @Setter
     private DigitalAssetPaymentMethod paymentMethod;
