@@ -46,7 +46,6 @@ public abstract class AddressFormView<M extends AddressFormModel, C extends Addr
 
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("payment-method-form");
-        root.setPadding(new Insets(0, 30, 0, 30));
 
         address = new MaterialTextField(Res.get("paymentAccounts.crypto.address.address"), Res.get("paymentAccounts.crypto.address.address.prompt"));
 

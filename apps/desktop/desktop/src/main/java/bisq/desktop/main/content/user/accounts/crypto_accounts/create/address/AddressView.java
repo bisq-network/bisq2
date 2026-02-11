@@ -18,10 +18,11 @@
 package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +33,7 @@ public class AddressView extends View<VBox, AddressModel, AddressController> {
     public AddressView(AddressModel model, AddressController controller) {
         super(new VBox(15), model, controller);
 
+        root.setPadding(new Insets(20));
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("create-account-data-view");
 
@@ -42,10 +44,13 @@ public class AddressView extends View<VBox, AddressModel, AddressController> {
     @Override
     protected void onViewAttached() {
         titleLabel.setText(Res.get("paymentAccounts.crypto.address.title", model.getPaymentMethod().getName()));
-        root.getChildren().setAll(Spacer.fillVBox(),
-                titleLabel,
-                model.getPaymentForm(),
-                Spacer.fillVBox());
+
+        ScrollPane scrollPane = new ScrollPane(model.getPaymentForm());
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        root.getChildren().setAll(titleLabel, scrollPane);
     }
 
     @Override
