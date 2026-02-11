@@ -76,7 +76,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    // EUR
+    // EUR zone
     SEPA(FiatPaymentRailUtil.getAllSepaCountries(),
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
             FiatPaymentMethodChargebackRisk.MODERATE),
@@ -128,7 +128,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("AUD"),
             FiatPaymentMethodChargebackRisk.LOW),
 
-    // Argentina
+    // Argentina (also other LA countries but not supported yet)
     MERCADO_PAGO(countryFromCode("AR"),
             FiatCurrencyRepository.getCurrencyByCode("ARS"),
             FiatPaymentMethodChargebackRisk.MODERATE),
@@ -139,9 +139,13 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // China
-    // Not added yet due lack of language support and low usage
-    // ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
-    // WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+    ALI_PAY(countryFromCode("CN"),
+            FiatCurrencyRepository.getCurrencyByCode("CNY"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
+    WECHAT_PAY(countryFromCode("CN"),
+            FiatCurrencyRepository.getCurrencyByCode("CNY"),
+            FiatPaymentMethodChargebackRisk.LOW),
 
     // Thailand
     PROMPT_PAY(countryFromCode("TH"),
@@ -163,14 +167,12 @@ public enum FiatPaymentRail implements PaymentRail {
     NEFT(countryFromCode("IN"),
             FiatCurrencyRepository.getCurrencyByCode("INR"),
             FiatPaymentMethodChargebackRisk.MODERATE),
-    // NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
-    // RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
 
 
     // Global
-    // WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK), N
+    // Not added as low usage and expensive fees
+    // WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+    // Not added as complex and low usage
     // SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     CUSTOM(allCountries(),
@@ -254,21 +256,6 @@ public enum FiatPaymentRail implements PaymentRail {
     MONEY_GRAM(FiatPaymentRailUtil.getMoneyGramCountries(),
             FiatPaymentRailUtil.getMoneyGramCurrencies(),
             FiatPaymentMethodChargebackRisk.MEDIUM);
-
-
-    // PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
-    // ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-    // PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-
-
-    // NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-    // TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
-    // VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
     private static List<FiatCurrency> allCurrencies() {
         return FiatCurrencyRepository.getAllCurrencies();
@@ -427,8 +414,10 @@ public enum FiatPaymentRail implements PaymentRail {
             case WISE -> DAYS_4;
             case UPHOLD -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
+            case ALI_PAY -> HOURS_24;
             case MONEY_GRAM -> DAYS_4;
             case HAL_CASH -> HOURS_24;
+            case WECHAT_PAY -> HOURS_24;
         };
     }
 

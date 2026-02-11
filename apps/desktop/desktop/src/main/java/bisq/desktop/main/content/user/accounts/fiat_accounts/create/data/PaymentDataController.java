@@ -112,6 +112,7 @@ public class PaymentDataController implements Controller {
         return switch (fiatPaymentRail) {
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
             case ADVANCED_CASH -> throw new UnsupportedOperationException("Not implemented yet");
+            case ALI_PAY -> throw new UnsupportedOperationException("Not implemented yet");
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not implemented yet");
             case BIZUM -> throw new UnsupportedOperationException("Not implemented yet");
             case CASH_APP -> throw new UnsupportedOperationException("Not implemented yet");
@@ -149,6 +150,7 @@ public class PaymentDataController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not implemented yet");
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not implemented yet");
             case VERSE -> throw new UnsupportedOperationException("Not implemented yet");
+            case WECHAT_PAY -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE -> throw new UnsupportedOperationException("Not implemented yet");
             case WISE_USD -> throw new UnsupportedOperationException("Not implemented yet");
             case ZELLE -> new ZelleFormController(serviceProvider);

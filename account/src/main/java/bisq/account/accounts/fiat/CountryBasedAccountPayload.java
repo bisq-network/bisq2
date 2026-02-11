@@ -82,6 +82,8 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case SBPACCOUNTPAYLOAD -> SbpAccountPayload.fromProto(proto);
             case IMPSACCOUNTPAYLOAD -> ImpsAccountPayload.fromProto(proto);
             case NEFTACCOUNTPAYLOAD -> NeftAccountPayload.fromProto(proto);
+            case ALIPAYACCOUNTPAYLOAD -> AliPayAccountPayload.fromProto(proto);
+            case WECHATPAYACCOUNTPAYLOAD -> WeChatPayAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

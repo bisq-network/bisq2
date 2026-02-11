@@ -151,6 +151,7 @@ public class PaymentSummaryController implements Controller {
         return switch (fiatPaymentRail) {
             case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -190,6 +191,7 @@ public class PaymentSummaryController implements Controller {
             case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case VERSE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case WECHAT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ZELLE -> new ZelleAccountDetailsGridPane((ZelleAccountPayload) accountPayload, fiatPaymentRail);
@@ -204,6 +206,7 @@ public class PaymentSummaryController implements Controller {
             return switch (fiatPaymentRail) {
                 case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -283,6 +286,7 @@ public class PaymentSummaryController implements Controller {
                 case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case VERSE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case WECHAT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ZELLE ->

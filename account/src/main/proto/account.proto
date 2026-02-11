@@ -186,6 +186,8 @@ message CountryBasedAccountPayload {
     SbpAccountPayload sbpAccountPayload = 42;
     ImpsAccountPayload impsAccountPayload = 43;
     NeftAccountPayload neftAccountPayload = 44;
+    AliPayAccountPayload aliPayAccountPayload = 45;
+    WeChatPayAccountPayload weChatPayAccountPayload = 46;
   }
 }
 
@@ -300,6 +302,14 @@ message PixAccountPayload {
 
 message PromptPayAccountPayload {
   string promptPayId = 1;
+}
+
+message AliPayAccountPayload {
+  string accountNr = 1;
+}
+
+message WeChatPayAccountPayload {
+  string accountNr = 1;
 }
 
 message SwishAccountPayload {
@@ -495,6 +505,8 @@ message CountryBasedAccount {
     FasterPaymentsAccount fasterPaymentsAccount = 42;
     ImpsAccount impsAccount = 43;
     NeftAccount neftAccount = 44;
+    AliPayAccount aliPayAccount = 45;
+    WeChatPayAccount weChatPayAccount = 46;
   }
 }
 message HalCashAccount {
@@ -560,6 +572,12 @@ message ImpsAccount {
 }
 
 message NeftAccount {
+}
+
+message AliPayAccount {
+}
+
+message WeChatPayAccount {
 }
 
 message PayIdAccount {
