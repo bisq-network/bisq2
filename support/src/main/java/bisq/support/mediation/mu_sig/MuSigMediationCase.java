@@ -1,11 +1,31 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.support.mediation.mu_sig;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
+import bisq.support.mediation.MediationCaseState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Optional;
+
+import static java.lang.System.currentTimeMillis;
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -13,21 +33,22 @@ public class MuSigMediationCase implements PersistableProto {
     @EqualsAndHashCode.Include
     private final MuSigMediationRequest muSigMediationRequest;
     private final long requestDate;
-    private final Observable<Boolean> isClosed = new Observable<>();
-    private Optional<Long> closeCaseDate;
+    private final Observable<MediationCaseState> mediationCaseState = new Observable<>();
+    private final Observable<Optional<MuSigMediationResult>> muSigMediationResult = new Observable<>();
+
 
     public MuSigMediationCase(MuSigMediationRequest muSigMediationRequest) {
-        this(muSigMediationRequest, System.currentTimeMillis(), false, Optional.empty());
+        this(muSigMediationRequest, currentTimeMillis(), MediationCaseState.OPEN, Optional.empty());
     }
 
     private MuSigMediationCase(MuSigMediationRequest muSigMediationRequest,
                                long requestDate,
-                               boolean isClosed,
-                               Optional<Long> closeCaseDate) {
+                               MediationCaseState mediationCaseState,
+                               Optional<MuSigMediationResult> muSigMediationResult) {
         this.muSigMediationRequest = muSigMediationRequest;
         this.requestDate = requestDate;
-        this.isClosed.set(isClosed);
-        this.closeCaseDate = closeCaseDate;
+        this.mediationCaseState.set(mediationCaseState);
+        this.muSigMediationResult.set(muSigMediationResult);
     }
 
     /**
@@ -39,8 +60,9 @@ public class MuSigMediationCase implements PersistableProto {
         bisq.support.protobuf.MuSigMediationCase.Builder builder = bisq.support.protobuf.MuSigMediationCase.newBuilder()
                 .setMuSigMediationRequest(muSigMediationRequest.toValueProto(serializeForHash))
                 .setRequestDate(requestDate)
-                .setIsClosed(isClosed.get());
-        closeCaseDate.ifPresent(builder::setCloseCaseDate);
+                .setMediationCaseState(mediationCaseState.get().toProtoEnum());
+        muSigMediationResult.get().ifPresent(item ->
+                builder.setMuSigMediationResult(item.toProto(serializeForHash)));
         return builder;
     }
 
@@ -49,20 +71,29 @@ public class MuSigMediationCase implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-
     public static MuSigMediationCase fromProto(bisq.support.protobuf.MuSigMediationCase proto) {
         return new MuSigMediationCase(MuSigMediationRequest.fromProto(proto.getMuSigMediationRequest()),
                 proto.getRequestDate(),
-                proto.getIsClosed(),
-                proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
+                MediationCaseState.fromProto(proto.getMediationCaseState()),
+                proto.hasMuSigMediationResult() ?
+                        Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult())) :
+                        Optional.empty());
     }
 
-    public boolean setClosed(boolean closed) {
-        if (isClosed.get() == closed) {
+    public boolean setMediationCaseState(MediationCaseState state) {
+        if (mediationCaseState.get() == state) {
             return false;
         }
-        closeCaseDate = closed ? Optional.of(System.currentTimeMillis()) : Optional.empty();
-        isClosed.set(closed);
+        mediationCaseState.set(state);
+        return true;
+    }
+
+    public boolean setMuSigMediationResult(MuSigMediationResult result) {
+        var newResult = Optional.of(result);
+        if (muSigMediationResult.get().equals(newResult)) {
+            return false;
+        }
+        muSigMediationResult.set(newResult);
         return true;
     }
 }

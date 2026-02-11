@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.mu_sig.details;
+package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
@@ -37,17 +37,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getCopyButton;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getLine;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.details.MuSigMediationCaseDetailsViewHelper.getValueLabel;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getCopyButton;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getLine;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getValueLabel;
 
 public class MuSigMediationCaseDetailSection {
 
     private final Controller controller;
 
-    public MuSigMediationCaseDetailSection(ServiceProvider serviceProvider) {
-        this.controller = new Controller(serviceProvider);
+    public MuSigMediationCaseDetailSection(ServiceProvider serviceProvider, boolean isCompactView) {
+        this.controller = new Controller(serviceProvider, isCompactView);
     }
 
     public VBox getRoot() {
@@ -65,8 +65,9 @@ public class MuSigMediationCaseDetailSection {
         private final View view;
         private final Model model;
 
-        private Controller(ServiceProvider serviceProvider) {
+        private Controller(ServiceProvider serviceProvider, boolean isCompactView) {
             model = new Model();
+            model.setCompactView(isCompactView);
             view = new View(new VBox(), model, this);
         }
 
@@ -96,10 +97,8 @@ public class MuSigMediationCaseDetailSection {
                     : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
             model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
                     offer.getMarket().getQuoteCurrencyCode()));
-            model.setBuyerSecurityDeposit(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
-            model.setBuyerSecurityDepositEmpty(true);
-            model.setSellerSecurityDeposit(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
-            model.setSellerSecurityDepositEmpty(true);
+            model.setSecurityDeposit(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
+            model.setSecurityDepositEmpty(true);
 
             model.setBuyerNetworkAddress(buyer.getUserProfile().getAddressByTransportDisplayString(50));
             model.setSellerNetworkAddress(seller.getUserProfile().getAddressByTransportDisplayString(50));
@@ -116,16 +115,16 @@ public class MuSigMediationCaseDetailSection {
     private static class Model implements bisq.desktop.common.view.Model {
         private MuSigMediationCaseListItem muSigMediationCaseListItem;
 
+        private boolean isCompactView;
+
         private String tradeId;
         private String tradeDate;
 
         private String offerType;
         private String market;
 
-        private String buyerSecurityDeposit;
-        private boolean isBuyerSecurityDepositEmpty;
-        private String sellerSecurityDeposit;
-        private boolean isSellerSecurityDepositEmpty;
+        private String securityDeposit;
+        private boolean isSecurityDepositEmpty;
 
         private String buyerNetworkAddress;
         private String sellerNetworkAddress;
@@ -134,11 +133,10 @@ public class MuSigMediationCaseDetailSection {
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
 
-        private final Label tradeIdLabel, tradeDateLabel, offerTypeLabel, marketLabel,
-                buyerSecurityDepositLabel, sellerSecurityDepositLabel,
-                buyerNetworkAddressLabel, sellerNetworkAddressLabel;
-        private final BisqMenuItem tradeIdCopyButton,
-                buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton;
+        private final Label tradeIdLabel, tradeDateLabel, offerTypeLabel, marketLabel;
+        private Label securityDepositLabel, buyerNetworkAddressLabel, sellerNetworkAddressLabel;
+        private final BisqMenuItem tradeIdCopyButton;
+        private BisqMenuItem buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton;
 
         public View(VBox root, Model model, Controller controller) {
             super(root, model, controller);
@@ -163,43 +161,46 @@ public class MuSigMediationCaseDetailSection {
             HBox offerTypeAndMarketBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket",
                     offerTypeAndMarketDetailsHBox);
 
-            // Security deposits
-            buyerSecurityDepositLabel = getValueLabel();
-            HBox buyerSecurityDepositBox = createAndGetDescriptionAndValueBox(
-                    "authorizedRole.mediator.mediationCaseDetails.buyerSecurityDeposit",
-                    buyerSecurityDepositLabel);
-            sellerSecurityDepositLabel = getValueLabel();
-            HBox sellerSecurityDepositBox = createAndGetDescriptionAndValueBox(
-                    "authorizedRole.mediator.mediationCaseDetails.sellerSecurityDeposit",
-                    sellerSecurityDepositLabel);
+            VBox content;
 
-            // Network addresses
-            buyerNetworkAddressLabel = getValueLabel();
-            buyerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress.copy"));
-            HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress",
-                    buyerNetworkAddressLabel, buyerNetworkAddressCopyButton);
+            if (!model.isCompactView()) {
+                Label detailsLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.details").toUpperCase());
+                detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
+                Region detailsLine = getLine();
 
-            sellerNetworkAddressLabel = getValueLabel();
-            sellerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress.copy"));
-            HBox sellerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress",
-                    sellerNetworkAddressLabel, sellerNetworkAddressCopyButton);
+                VBox.setMargin(detailsLabel, new Insets(15, 0, -5, 0));
 
-            Label detailsLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.details").toUpperCase());
-            detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
-            Region detailsLine = getLine();
+                // Security deposits
+                securityDepositLabel = getValueLabel();
+                HBox securityDepositBox = createAndGetDescriptionAndValueBox(
+                        "authorizedRole.mediator.mediationCaseDetails.securityDeposit",
+                        securityDepositLabel);
 
-            VBox.setMargin(detailsLabel, new Insets(15, 0, -5, 0));
+                // Network addresses
+                buyerNetworkAddressLabel = getValueLabel();
+                buyerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress.copy"));
+                HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress",
+                        buyerNetworkAddressLabel, buyerNetworkAddressCopyButton);
 
-            VBox content = new VBox(10,
-                    detailsLabel,
-                    detailsLine,
-                    tradeIdBox,
-                    tradeDateBox,
-                    offerTypeAndMarketBox,
-                    buyerSecurityDepositBox,
-                    sellerSecurityDepositBox,
-                    peerNetworkAddressBox,
-                    sellerNetworkAddressBox);
+                sellerNetworkAddressLabel = getValueLabel();
+                sellerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress.copy"));
+                HBox sellerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress",
+                        sellerNetworkAddressLabel, sellerNetworkAddressCopyButton);
+                content = new VBox(10,
+                        detailsLabel,
+                        detailsLine,
+                        tradeIdBox,
+                        tradeDateBox,
+                        offerTypeAndMarketBox,
+                        securityDepositBox,
+                        peerNetworkAddressBox,
+                        sellerNetworkAddressBox);
+            } else {
+                content = new VBox(10,
+                        tradeIdBox,
+                        tradeDateBox,
+                        offerTypeAndMarketBox);
+            }
 
             content.setAlignment(Pos.CENTER_LEFT);
             root.getChildren().add(content);
@@ -212,29 +213,27 @@ public class MuSigMediationCaseDetailSection {
             tradeDateLabel.setText(model.getTradeDate());
             offerTypeLabel.setText(model.getOfferType());
             marketLabel.setText(model.getMarket());
-            buyerSecurityDepositLabel.setText(model.getBuyerSecurityDeposit());
-            sellerSecurityDepositLabel.setText(model.getSellerSecurityDeposit());
-            buyerSecurityDepositLabel.getStyleClass().clear();
-            buyerSecurityDepositLabel.getStyleClass().add(model.isBuyerSecurityDepositEmpty()
-                    ? "text-fill-grey-dimmed"
-                    : "text-fill-white");
-            buyerSecurityDepositLabel.getStyleClass().add("normal-text");
-            sellerSecurityDepositLabel.getStyleClass().clear();
-            sellerSecurityDepositLabel.getStyleClass().add(model.isSellerSecurityDepositEmpty()
-                    ? "text-fill-grey-dimmed"
-                    : "text-fill-white");
-            sellerSecurityDepositLabel.getStyleClass().add("normal-text");
-            buyerNetworkAddressLabel.setText(model.getBuyerNetworkAddress());
-            sellerNetworkAddressLabel.setText(model.getSellerNetworkAddress());
-            buyerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerNetworkAddress()));
-            sellerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerNetworkAddress()));
+            if (!model.isCompactView()) {
+                securityDepositLabel.setText(model.getSecurityDeposit());
+                securityDepositLabel.getStyleClass().clear();
+                securityDepositLabel.getStyleClass().add(model.isSecurityDepositEmpty()
+                        ? "text-fill-grey-dimmed"
+                        : "text-fill-white");
+                securityDepositLabel.getStyleClass().add("normal-text");
+                buyerNetworkAddressLabel.setText(model.getBuyerNetworkAddress());
+                sellerNetworkAddressLabel.setText(model.getSellerNetworkAddress());
+                buyerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerNetworkAddress()));
+                sellerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerNetworkAddress()));
+            }
         }
 
         @Override
         protected void onViewDetached() {
             tradeIdCopyButton.setOnAction(null);
-            buyerNetworkAddressCopyButton.setOnAction(null);
-            sellerNetworkAddressCopyButton.setOnAction(null);
+            if (!model.isCompactView()) {
+                buyerNetworkAddressCopyButton.setOnAction(null);
+                sellerNetworkAddressCopyButton.setOnAction(null);
+            }
         }
     }
 }
