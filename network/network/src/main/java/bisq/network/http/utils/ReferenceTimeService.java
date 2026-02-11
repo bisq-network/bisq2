@@ -21,7 +21,6 @@ import bisq.common.data.Pair;
 import bisq.common.json.JsonMapperProvider;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
-import bisq.i18n.Res;
 import bisq.network.BaseService;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
@@ -53,7 +52,7 @@ public class ReferenceTimeService extends BaseService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        return httpClient.map(BaseHttpClient::shutdown)
+        return httpClient.get().map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
@@ -74,9 +73,6 @@ public class ReferenceTimeService extends BaseService {
         }
     }
 
-    public String getSelectedProviderBaseUrl() {
-        return Optional.ofNullable(selectedProvider.get()).map(ReferenceTimeService.Provider::getBaseUrl).orElse(Res.get("data.na"));
-    }
 
     private CompletableFuture<Long> request(AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
@@ -89,7 +85,7 @@ public class ReferenceTimeService extends BaseService {
             return CompletableFuture.supplyAsync(() -> {
                         Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                         BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
-                        httpClient = Optional.of(client);
+                        httpClient.set(Optional.of(client));
                         long ts = System.currentTimeMillis();
                         String param = provider.getApiPath();
                         try {
@@ -145,13 +141,6 @@ public class ReferenceTimeService extends BaseService {
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected requesting reference time task.", e);
             return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    private void shutdownHttpClient(BaseHttpClient client) {
-        try {
-            client.shutdown();
-        } catch (Exception ignore) {
         }
     }
 }

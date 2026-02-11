@@ -20,7 +20,6 @@ package bisq.bonded_roles.mobile_notification_relay;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
-import bisq.i18n.Res;
 import bisq.network.BaseService;
 import bisq.network.NetworkService;
 import bisq.network.http.BaseHttpClient;
@@ -52,7 +51,7 @@ public class MobileNotificationRelayClient extends BaseService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        return httpClient.map(BaseHttpClient::shutdown)
+        return httpClient.get().map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
@@ -84,10 +83,6 @@ public class MobileNotificationRelayClient extends BaseService {
         }
     }
 
-    public String getSelectedProviderBaseUrl() {
-        return Optional.ofNullable(selectedProvider.get()).map(MobileNotificationRelayClient.Provider::getBaseUrl).orElse(Res.get("data.na"));
-    }
-
     private CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
                                                          String deviceTokenHex,
                                                          String encryptedMessageHex,
@@ -103,7 +98,7 @@ public class MobileNotificationRelayClient extends BaseService {
             return CompletableFuture.supplyAsync(() -> {
                         Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                         BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
-                        httpClient = Optional.of(client);
+                        httpClient.set(Optional.of(client));
                         long ts = System.currentTimeMillis();
                         try {
                             String param = ENDPOINT + "?" +
@@ -166,13 +161,6 @@ public class MobileNotificationRelayClient extends BaseService {
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected task.", e);
             return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    private void shutdownHttpClient(BaseHttpClient client) {
-        try {
-            client.shutdown();
-        } catch (Exception ignore) {
         }
     }
 }

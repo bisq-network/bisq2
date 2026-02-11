@@ -1,10 +1,14 @@
 package bisq.network;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
@@ -12,6 +16,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.util.CollectionUtil;
+import bisq.i18n.Res;
 import bisq.network.http.BaseHttpClient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,15 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseService implements Service {
 
+    @Getter
     protected final Observable<Provider> selectedProvider = new Observable<>();
     protected final BaseService.Config conf;
     protected final NetworkService networkService;
     protected final String userAgent;
-    protected final Set<Provider> candidates = new HashSet<>();
-    protected final Set<Provider> providersFromConfig = new HashSet<>();
-    protected final Set<Provider> fallbackProviders = new HashSet<>();
-    protected final Set<Provider> failedProviders = new HashSet<>();
-    protected Optional<BaseHttpClient> httpClient = Optional.empty();
+    protected final Set<Provider> candidates = ConcurrentHashMap.newKeySet();
+    protected final Set<Provider> providersFromConfig = ConcurrentHashMap.newKeySet();
+    protected final Set<Provider> fallbackProviders = ConcurrentHashMap.newKeySet();
+    protected final Set<Provider> failedProviders = ConcurrentHashMap.newKeySet();
+    protected final AtomicReference<Optional<BaseHttpClient>> httpClient = new AtomicReference<>(Optional.empty());
     protected final int numTotalCandidates;
     protected final boolean noProviderAvailable;
     protected volatile boolean shutdownStarted;
@@ -46,8 +52,11 @@ public abstract class BaseService implements Service {
     }
 
     public BaseService(String apiPath, Config conf, NetworkService networkService) {
-        conf.apiPath = apiPath;
         this.conf = conf;
+
+        this.conf.providers.forEach( e -> { e.setApiPath(apiPath);});
+        this.conf.fallbackProviders.forEach( e -> { e.setApiPath(apiPath);});
+
         this.networkService = networkService;
         userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
 
@@ -55,7 +64,7 @@ public abstract class BaseService implements Service {
         conf.providers.stream()
                 .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
                 .forEach(providersFromConfig::add);
-        conf.getFallbackProviders().stream()
+        conf.fallbackProviders.stream()
                 .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
                 .forEach(fallbackProviders::add);
 
@@ -73,34 +82,37 @@ public abstract class BaseService implements Service {
         }
     }
 
+
+    public String getSelectedProviderBaseUrl() {
+        return Optional.ofNullable(selectedProvider.get()).map(BaseService.Provider::getBaseUrl).orElse(Res.get("data.na"));
+    }
+
+    protected void shutdownHttpClient(BaseHttpClient client) {
+        try {
+            client.shutdown();
+        } catch (Exception ignore) {
+        }
+    }
     @Getter
     @ToString
     public static final class Config {
-        @Setter
-        @Getter
-        protected String apiPath;
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-            String apiPath = typesafeConfig.getString("apiPath");
-            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, apiPath, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
 
-            Set<Provider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, apiPath, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-            long interval = typesafeConfig.getLong("interval");
-            return new Config(apiPath, timeoutInSeconds, interval, providers, fallbackProviders);
+        private static Set<Provider> parseProviders(List<? extends com.typesafe.config.Config> configList) {
+            return configList.stream().map(config -> {
+                    String url = config.getString("url");
+                    String operator = config.getString("operator");
+                    TransportType transportType = getTransportTypeFromUrl(url);
+                    return new Provider(url, null, operator, transportType);
+                }).collect(Collectors.toSet());
+        }
+
+        public static Config from(com.typesafe.config.Config typesafeConfig) {
+            Set<Provider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
+            Set<Provider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
+            
+            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
+            long interval = typesafeConfig.hasPath("interval") ? typesafeConfig.getLong("interval") : 0;
+            return new Config(timeoutInSeconds, interval, providers, fallbackProviders);
         }
 
         private static TransportType getTransportTypeFromUrl(String url) {
@@ -121,31 +133,31 @@ public abstract class BaseService implements Service {
         private long timeSinceLastResponse;
 
 
-        public Config(String apiPath, long timeoutInSeconds, long interval, Set<Provider> providers, Set<Provider> fallbackProviders) {
+        public Config(long timeoutInSeconds, long interval, Set<Provider> providers, Set<Provider> fallbackProviders) {
             this.timeoutInSeconds = timeoutInSeconds;
             this.providers = providers;
             this.fallbackProviders = fallbackProviders;
             this.interval = interval;
-            this.apiPath = apiPath;
         }
     }
 
     @Getter
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(exclude = "apiPath")
     public static final class Provider {
         protected final String baseUrl;
         protected final String operator;
-        protected final String apiPath;
+        @Setter
+        protected String apiPath;
         protected final TransportType transportType;
 
         public Provider(String baseUrl,
+                        @Nullable String apiPath,
                         String operator,
-                        String apiPath,
                         TransportType transportType) {
             this.baseUrl = baseUrl;
             this.operator = operator;
-            this.apiPath = apiPath;
+            this.apiPath = apiPath != null ? apiPath : "";
             this.transportType = transportType;
         }
 
@@ -175,7 +187,7 @@ public abstract class BaseService implements Service {
                     .forEach(candidates::add);
         }
         if (candidates.isEmpty()) {
-            log.info("All our providers from config and fallback have failed. We reset the failedProviders and fill from scratch.");
+            log.warn("All our providers from config and fallback have failed. We reset the failedProviders and fill from scratch.");
             failedProviders.clear();
             if (recursionDepth == 0) {
                 fillCandidates(1);

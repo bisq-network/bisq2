@@ -86,7 +86,7 @@ public class MarketPriceRequestService extends BaseService {
 
         ExecutorFactory.shutdownAndAwaitTermination(EXECUTOR, 100);
 
-        return httpClient.map(BaseHttpClient::shutdown)
+        return httpClient.get().map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));
     }
 
@@ -137,7 +137,16 @@ public class MarketPriceRequestService extends BaseService {
 
     private CompletableFuture<Void> requestMarketPrice() {
         try {
-            return requestMarketPrice(new AtomicInteger(0));
+            return requestMarketPrice(new AtomicInteger(0))
+                    .exceptionallyCompose(throwable -> {
+                        if (throwable instanceof RetryException retryException) {
+                            return requestMarketPrice(retryException.getRecursionDepth());
+                        } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
+                            return requestMarketPrice(retryException.getRecursionDepth());
+                        } else {
+                            return CompletableFuture.failedFuture(throwable);
+                        }
+                    });
         } catch (RejectedExecutionException e) {
             return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
         }
@@ -154,18 +163,17 @@ public class MarketPriceRequestService extends BaseService {
         return CompletableFuture.runAsync(() -> {
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
-                    httpClient = Optional.of(client);
+                    httpClient.set(Optional.of(client));
                     if (client.hasPendingRequest()) {
                         selectedProvider.set(selectNextProvider());
                         int numRecursions = recursionDepth.incrementAndGet();
                         if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
                             log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                            requestMarketPrice(recursionDepth).join();
+                            throw new RetryException("Retrying with next provider", recursionDepth);
                         } else {
                             log.warn("We exhausted all possible providers and give up");
                             throw new RuntimeException("We failed at all possible providers and give up");
                         }
-                        return;
                     }
 
                     long ts = System.currentTimeMillis();
@@ -279,11 +287,4 @@ public class MarketPriceRequestService extends BaseService {
         return map;
     }
 
-
-    private void shutdownHttpClient(BaseHttpClient client) {
-        try {
-            client.shutdown();
-        } catch (Exception ignore) {
-        }
-    }
 }
