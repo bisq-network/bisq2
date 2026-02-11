@@ -313,6 +313,90 @@ public class FiatPaymentRailUtil {
 
 
     /* --------------------------------------------------------------------- */
+    // ADVANCED_CASH
+    /* --------------------------------------------------------------------- */
+
+    public static List<String> getAdvancedCashCurrencyCodes() {
+        return List.of("BRL", "EUR", "GBP", "KZT", "RUB", "UAH", "USD");
+    }
+
+    public static List<FiatCurrency> getAdvancedCashCurrencies() {
+        return currenciesFromCodes(getAdvancedCashCurrencyCodes());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // MONESE
+    /* --------------------------------------------------------------------- */
+
+    public static List<String> getMoneseCurrencyCodes() {
+        return List.of("EUR", "GBP", "RON");
+    }
+
+    public static List<FiatCurrency> getMoneseCurrencies() {
+        return currenciesFromCodes(getMoneseCurrencyCodes());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // PAYSERA
+    /* --------------------------------------------------------------------- */
+
+    public static List<String> getPayseraCurrencyCodes() {
+        return List.of(
+                "AUD",
+                "BGN",
+                "BYN",
+                "CAD",
+                "CHF",
+                "CNY",
+                "CZK",
+                "DKK",
+                "EUR",
+                "GBP",
+                "GEL",
+                "HKD",
+                "HUF",
+                "ILS",
+                "INR",
+                "JPY",
+                "KZT",
+                "MXN",
+                "NOK",
+                "NZD",
+                "PHP",
+                "PLN",
+                "RON",
+                "RSD",
+                "RUB",
+                "SEK",
+                "SGD",
+                "THB",
+                "TRY",
+                "USD",
+                "ZAR"
+        );
+    }
+
+    public static List<FiatCurrency> getPayseraCurrencies() {
+        return currenciesFromCodes(getPayseraCurrencyCodes());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // VERSE
+    /* --------------------------------------------------------------------- */
+
+    public static List<String> getVerseCurrencyCodes() {
+        return List.of("DKK", "EUR", "HUF", "PLN", "SEK");
+    }
+
+    public static List<FiatCurrency> getVerseCurrencies() {
+        return currenciesFromCodes(getVerseCurrencyCodes());
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // MONEY_BEAM
     /* --------------------------------------------------------------------- */
 
@@ -442,7 +526,17 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.CASH_DEPOSIT, 2),
                 Map.entry(FiatPaymentRail.SAME_BANK, 2), //?
                 Map.entry(FiatPaymentRail.HAL_CASH, 2), //?
+                Map.entry(FiatPaymentRail.IMPS, 2),
+                Map.entry(FiatPaymentRail.MONESE, 2),
+                Map.entry(FiatPaymentRail.PAYSERA, 2),
+                Map.entry(FiatPaymentRail.PERFECT_MONEY, 2),
+                Map.entry(FiatPaymentRail.ADVANCED_CASH, 2),
                 Map.entry(FiatPaymentRail.PIN_4, 1), // not in bisq 1, polish version of halcash
+                Map.entry(FiatPaymentRail.SATISPAY, 1),
+                Map.entry(FiatPaymentRail.SBP, 1),
+                Map.entry(FiatPaymentRail.MERCADO_PAGO, 1),
+                Map.entry(FiatPaymentRail.VERSE, 1),
+                Map.entry(FiatPaymentRail.NEFT, 1),
                 Map.entry(FiatPaymentRail.UPI, 1)
         );
     }

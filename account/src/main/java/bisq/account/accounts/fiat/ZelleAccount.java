@@ -17,9 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -33,7 +31,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountPayload> {
+public final class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload> {
     public ZelleAccount(String id,
                         long creationDate,
                         String accountName,
@@ -45,8 +43,8 @@ public final class ZelleAccount extends Account<FiatPaymentMethod, ZelleAccountP
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return getAccountBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash)
                 .setZelleAccount(toZelleAccountProto(serializeForHash));
     }
 

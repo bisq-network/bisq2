@@ -17,10 +17,8 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyAlgorithm;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +31,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class InteracETransferAccount extends Account<FiatPaymentMethod, InteracETransferAccountPayload> {
+public final class InteracETransferAccount extends CountryBasedAccount<InteracETransferAccountPayload> {
     public InteracETransferAccount(String id,
                                    long creationDate,
                                    String accountName,
@@ -45,8 +43,8 @@ public final class InteracETransferAccount extends Account<FiatPaymentMethod, In
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return getAccountBuilder(serializeForHash)
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash)
                 .setInteracETransferAccount(toInteracETransferAccountProto(serializeForHash));
     }
 

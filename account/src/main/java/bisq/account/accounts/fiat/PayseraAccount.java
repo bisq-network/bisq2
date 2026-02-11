@@ -17,7 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -31,41 +33,40 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIdAccount extends CountryBasedAccount<PayIdAccountPayload> {
-    public PayIdAccount(String id,
-                        long creationDate,
-                        String accountName,
-                        PayIdAccountPayload accountPayload,
-                        KeyPair keyPair,
-                        KeyAlgorithm keyAlgorithm,
-                        AccountOrigin accountOrigin) {
+public final class PayseraAccount extends Account<FiatPaymentMethod, PayseraAccountPayload> {
+    public PayseraAccount(String id,
+                          long creationDate,
+                          String accountName,
+                          PayseraAccountPayload accountPayload,
+                          KeyPair keyPair,
+                          KeyAlgorithm keyAlgorithm,
+                          AccountOrigin accountOrigin) {
         super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountBuilder(serializeForHash)
-                .setPayIdAccount(toPayIdAccountProto(serializeForHash));
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setPayseraAccount(toPayseraAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.PayIdAccount toPayIdAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIdAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.PayseraAccount toPayseraAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getPayseraAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.PayIdAccount.Builder getPayIdAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIdAccount.newBuilder();
+    private bisq.account.protobuf.PayseraAccount.Builder getPayseraAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayseraAccount.newBuilder();
     }
 
-    public static PayIdAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static PayseraAccount fromProto(bisq.account.protobuf.Account proto) {
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new PayIdAccount(proto.getId(),
+        return new PayseraAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PayIdAccountPayload.fromProto(proto.getAccountPayload()),
+                PayseraAccountPayload.fromProto(proto.getAccountPayload()),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
                 keyAlgorithm,
-                accountOrigin
-        );
+                accountOrigin);
     }
 }

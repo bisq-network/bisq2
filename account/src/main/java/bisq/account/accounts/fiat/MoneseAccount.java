@@ -17,7 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -31,41 +33,40 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIdAccount extends CountryBasedAccount<PayIdAccountPayload> {
-    public PayIdAccount(String id,
-                        long creationDate,
-                        String accountName,
-                        PayIdAccountPayload accountPayload,
-                        KeyPair keyPair,
-                        KeyAlgorithm keyAlgorithm,
-                        AccountOrigin accountOrigin) {
+public final class MoneseAccount extends Account<FiatPaymentMethod, MoneseAccountPayload> {
+    public MoneseAccount(String id,
+                         long creationDate,
+                         String accountName,
+                         MoneseAccountPayload accountPayload,
+                         KeyPair keyPair,
+                         KeyAlgorithm keyAlgorithm,
+                         AccountOrigin accountOrigin) {
         super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountBuilder(serializeForHash)
-                .setPayIdAccount(toPayIdAccountProto(serializeForHash));
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setMoneseAccount(toMoneseAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.PayIdAccount toPayIdAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIdAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.MoneseAccount toMoneseAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getMoneseAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.PayIdAccount.Builder getPayIdAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIdAccount.newBuilder();
+    private bisq.account.protobuf.MoneseAccount.Builder getMoneseAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.MoneseAccount.newBuilder();
     }
 
-    public static PayIdAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static MoneseAccount fromProto(bisq.account.protobuf.Account proto) {
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new PayIdAccount(proto.getId(),
+        return new MoneseAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PayIdAccountPayload.fromProto(proto.getAccountPayload()),
+                MoneseAccountPayload.fromProto(proto.getAccountPayload()),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
                 keyAlgorithm,
-                accountOrigin
-        );
+                accountOrigin);
     }
 }

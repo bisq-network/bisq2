@@ -18,6 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.protobuf.Account;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -31,41 +32,40 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PayIdAccount extends CountryBasedAccount<PayIdAccountPayload> {
-    public PayIdAccount(String id,
-                        long creationDate,
-                        String accountName,
-                        PayIdAccountPayload accountPayload,
-                        KeyPair keyPair,
-                        KeyAlgorithm keyAlgorithm,
-                        AccountOrigin accountOrigin) {
+public final class NeftAccount extends CountryBasedAccount<NeftAccountPayload> {
+    public NeftAccount(String id,
+                       long creationDate,
+                       String accountName,
+                       NeftAccountPayload accountPayload,
+                       KeyPair keyPair,
+                       KeyAlgorithm keyAlgorithm,
+                       AccountOrigin accountOrigin) {
         super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
     }
 
     @Override
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountBuilder(serializeForHash)
-                .setPayIdAccount(toPayIdAccountProto(serializeForHash));
+        return super.getCountryBasedAccountBuilder(serializeForHash).setNeftAccount(
+                toNeftAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.PayIdAccount toPayIdAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getPayIdAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.NeftAccount toNeftAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getNeftAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.PayIdAccount.Builder getPayIdAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.PayIdAccount.newBuilder();
+    private bisq.account.protobuf.NeftAccount.Builder getNeftAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.NeftAccount.newBuilder();
     }
 
-    public static PayIdAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static NeftAccount fromProto(Account proto) {
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new PayIdAccount(proto.getId(),
+        return new NeftAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                PayIdAccountPayload.fromProto(proto.getAccountPayload()),
+                NeftAccountPayload.fromProto(proto.getAccountPayload()),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
                 keyAlgorithm,
-                accountOrigin
-        );
+                accountOrigin);
     }
 }

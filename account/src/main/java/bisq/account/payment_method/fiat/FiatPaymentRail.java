@@ -94,6 +94,11 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("EUR"),
             FiatPaymentMethodChargebackRisk.LOW),
 
+    // Italy
+    SATISPAY(countryFromCode("IT"),
+            FiatCurrencyRepository.getCurrencyByCode("EUR"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
     // Poland (Polish brand of Halcash)
     PIN_4(countryFromCode("PL"),
             FiatCurrencyRepository.getCurrencyByCode("PLN"),
@@ -124,7 +129,9 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.LOW),
 
     // Argentina
-    // MERCADO_PAGO = new PaymentMethod(MERCADO_PAGO_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    MERCADO_PAGO(countryFromCode("AR"),
+            FiatCurrencyRepository.getCurrencyByCode("ARS"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     // Brazil
     PIX(countryFromCode("BR"),
@@ -142,12 +149,20 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.LOW),
 
     // Russia
-    // SBP = new PaymentMethod(SBP_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+    SBP(countryFromCode("RU"),
+            FiatCurrencyRepository.getCurrencyByCode("RUB"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
 
     //India
     UPI(countryFromCode("IN"),
             FiatCurrencyRepository.getCurrencyByCode("INR"),
             FiatPaymentMethodChargebackRisk.LOW),
+    IMPS(countryFromCode("IN"),
+            FiatCurrencyRepository.getCurrencyByCode("INR"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+    NEFT(countryFromCode("IN"),
+            FiatCurrencyRepository.getCurrencyByCode("INR"),
+            FiatPaymentMethodChargebackRisk.MODERATE),
     // NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
     // RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
     // IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -205,6 +220,26 @@ public enum FiatPaymentRail implements PaymentRail {
 
     UPHOLD(FiatPaymentRailUtil.getUpholdCountries(),
             FiatPaymentRailUtil.getUpholdCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    PERFECT_MONEY(allCountries(),
+            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
+    ADVANCED_CASH(allCountries(),
+            FiatPaymentRailUtil.getAdvancedCashCurrencies(),
+            FiatPaymentMethodChargebackRisk.VERY_LOW),
+
+    PAYSERA(allCountries(),
+            FiatPaymentRailUtil.getPayseraCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    MONESE(allCountries(),
+            FiatPaymentRailUtil.getMoneseCurrencies(),
+            FiatPaymentMethodChargebackRisk.MODERATE),
+
+    VERSE(allCountries(),
+            FiatPaymentRailUtil.getVerseCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     // Selected currency is the currency derived from country
@@ -356,6 +391,8 @@ public enum FiatPaymentRail implements PaymentRail {
             case STRIKE -> DAYS_4;
             case WISE_USD -> DAYS_4;
             case ACH_TRANSFER -> DAYS_5;
+            case ADVANCED_CASH -> HOURS_24;
+            case PERFECT_MONEY -> HOURS_24;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
             case CASH_APP -> DAYS_4;
             case SEPA -> DAYS_6;
@@ -365,10 +402,17 @@ public enum FiatPaymentRail implements PaymentRail {
             case PIN_4 -> HOURS_24;
             case SWISH -> HOURS_24;
             case FASTER_PAYMENTS -> HOURS_24;
+            case IMPS -> HOURS_24;
             case INTERAC_E_TRANSFER -> HOURS_24;
+            case MERCADO_PAGO -> HOURS_24;
+            case MONESE -> HOURS_24;
+            case NEFT -> HOURS_24;
             case PAY_ID -> DAYS_4;
+            case PAYSERA -> HOURS_24;
             case PIX -> HOURS_24;
             case PROMPT_PAY -> HOURS_24;
+            case SBP -> HOURS_24;
+            case SATISPAY -> HOURS_24;
             case UPI -> DAYS_4;
             case CUSTOM -> DAYS_4;
             case F2F -> DAYS_4;
@@ -379,6 +423,7 @@ public enum FiatPaymentRail implements PaymentRail {
             case SWIFT -> DAYS_4;
             case DOMESTIC_WIRE_TRANSFER -> DAYS_3;
             case REVOLUT -> HOURS_24;
+            case VERSE -> HOURS_24;
             case WISE -> DAYS_4;
             case UPHOLD -> HOURS_24;
             case AMAZON_GIFT_CARD -> DAYS_4;
@@ -400,20 +445,8 @@ public enum FiatPaymentRail implements PaymentRail {
  * <p>
  * Those are not planned to get added for release:
  * - Western Union: high fees, low usage
- * - Perfect Money: low usage, mostly test trades?
  * - Transfers with specific banks: Low usage, complex UI
  * - SWIFT International Wire Transfer: Low usage, complex UI, high fees
- * <p>
- * All those had low usage but might get added on demand:
- * [Monese] => 7
- * [Advanced Cash] => 6
- * [Paysera] => 6
- * [Satispay] => 4
- * [Faster Payments System (SBP)] => 3
- * [Payment method] => 1
- * [MercadoPago] => 1
- * [India/NEFT] => 1
- * [Verse] => 1
  */
 
 /*
