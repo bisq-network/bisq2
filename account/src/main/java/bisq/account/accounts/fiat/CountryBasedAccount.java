@@ -75,6 +75,8 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
             case IMPSACCOUNT -> ImpsAccount.fromProto(proto);
             case NEFTACCOUNT -> NeftAccount.fromProto(proto);
+            case ALIPAYACCOUNT -> AliPayAccount.fromProto(proto);
+            case WECHATPAYACCOUNT -> WeChatPayAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }

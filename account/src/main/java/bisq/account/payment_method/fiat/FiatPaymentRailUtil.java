@@ -532,6 +532,8 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.PERFECT_MONEY, 2),
                 Map.entry(FiatPaymentRail.ADVANCED_CASH, 2),
                 Map.entry(FiatPaymentRail.PIN_4, 1), // not in bisq 1, polish version of halcash
+                Map.entry(FiatPaymentRail.ALI_PAY, 1),
+                Map.entry(FiatPaymentRail.WECHAT_PAY, 1),
                 Map.entry(FiatPaymentRail.SATISPAY, 1),
                 Map.entry(FiatPaymentRail.SBP, 1),
                 Map.entry(FiatPaymentRail.MERCADO_PAGO, 1),

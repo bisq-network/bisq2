@@ -22,6 +22,7 @@ import bisq.account.bisq1_import.crypto.ImportMoneroAccountParser;
 import bisq.account.bisq1_import.crypto.ImportOtherCryptoAssetAccountParser;
 import bisq.account.bisq1_import.fiat.ImportAchTransferAccountParser;
 import bisq.account.bisq1_import.fiat.ImportAdvancedCashAccountParser;
+import bisq.account.bisq1_import.fiat.ImportAliPayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportAmazonGiftCardAccountParser;
 import bisq.account.bisq1_import.fiat.ImportBizumAccountParser;
 import bisq.account.bisq1_import.fiat.ImportCashByMailAccountParser;
@@ -55,6 +56,7 @@ import bisq.account.bisq1_import.fiat.ImportUSPostalMoneyOrderAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpholdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpiAccountParser;
 import bisq.account.bisq1_import.fiat.ImportVerseAccountParser;
+import bisq.account.bisq1_import.fiat.ImportWeChatPayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseUsdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportZelleAccountParser;
@@ -119,6 +121,7 @@ public class ImportBisq1AccountsParser {
         return switch (paymentMethodId) {
             case "ACH_TRANSFER" -> new ImportAchTransferAccountParser(accountNode).parse(dsaKeyPair);
             case "ADVANCED_CASH" -> new ImportAdvancedCashAccountParser(accountNode).parse(dsaKeyPair);
+            case "ALI_PAY" -> new ImportAliPayAccountParser(accountNode).parse(dsaKeyPair);
             case "AMAZON_GIFT_CARD" -> new ImportAmazonGiftCardAccountParser(accountNode).parse(dsaKeyPair);
             case "AUSTRALIA_PAYID" -> new ImportPayIdAccountParser(accountNode).parse(dsaKeyPair);
             case "BIZUM" -> new ImportBizumAccountParser(accountNode).parse(dsaKeyPair);
@@ -156,6 +159,7 @@ public class ImportBisq1AccountsParser {
             case "UPI" -> new ImportUpiAccountParser(accountNode).parse(dsaKeyPair);
             case "US_POSTAL_MONEY_ORDER" -> new ImportUSPostalMoneyOrderAccountParser(accountNode).parse(dsaKeyPair);
             case "VERSE" -> new ImportVerseAccountParser(accountNode).parse(dsaKeyPair);
+            case "WECHAT_PAY" -> new ImportWeChatPayAccountParser(accountNode).parse(dsaKeyPair);
 
             case "BLOCK_CHAINS" -> {
                 JsonNode selectedTradeCurrencyNode = ImportAccountParser.requireNode(accountNode, "selectedTradeCurrency");

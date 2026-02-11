@@ -4,6 +4,7 @@ import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
 import bisq.account.accounts.fiat.AchTransferAccountPayload;
 import bisq.account.accounts.fiat.AdvancedCashAccountPayload;
+import bisq.account.accounts.fiat.AliPayAccountPayload;
 import bisq.account.accounts.fiat.AmazonGiftCardAccountPayload;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
@@ -41,6 +42,7 @@ import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UpiAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.VerseAccountPayload;
+import bisq.account.accounts.fiat.WeChatPayAccountPayload;
 import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.accounts.fiat.WiseUsdAccountPayload;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
@@ -113,6 +115,20 @@ public class AccountPayloadFingerprintTest {
         // Bisq 1 compatibility: SBP uses mobile number and bank name without country code.
         SbpAccountPayload payload = new SbpAccountPayload("id", SALT, "Alice", "+79161234567", "Sberbank");
         assertArrayEquals(expected("SBP", "+79161234567", "Sberbank"), payload.getFingerprint());
+    }
+
+    @Test
+    void aliPayFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: AliPay uses account number without country code.
+        AliPayAccountPayload payload = new AliPayAccountPayload("id", SALT, "alipay-123");
+        assertArrayEquals(expected("ALI_PAY", "alipay-123"), payload.getFingerprint());
+    }
+
+    @Test
+    void weChatPayFingerprintMatchesBisq1() {
+        // Bisq 1 compatibility: WeChat Pay uses account number without country code.
+        WeChatPayAccountPayload payload = new WeChatPayAccountPayload("id", SALT, "wechat-456");
+        assertArrayEquals(expected("WECHAT_PAY", "wechat-456"), payload.getFingerprint());
     }
 
     @Test
