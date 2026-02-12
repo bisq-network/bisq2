@@ -55,7 +55,8 @@ public abstract class CommonApiConfig {
                            String tlsKeyStorePassword,
                            List<String> tlsKeyStoreSan) {
         this.enabled = enabled;
-        this.protocol = protocol;
+        // Auto-correct protocol when TLS is required to prevent misconfiguration
+        this.protocol = tlsRequired && protocol.startsWith("http://") ? "https://" : protocol;
         this.host = host;
         this.port = port;
         this.localhostOnly = localhostOnly;
