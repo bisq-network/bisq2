@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountDataView extends View<VBox, AccountDataModel, AccountDataController> {
     private final Label titleLabel;
+    private final ScrollPane scrollPane;
 
     public AccountDataView(AccountDataModel model, AccountDataController controller) {
         super(new VBox(15), model, controller);
@@ -39,18 +40,19 @@ public class AccountDataView extends View<VBox, AccountDataModel, AccountDataCon
 
         titleLabel = new Label();
         titleLabel.getStyleClass().add("bisq-text-headline-2");
-    }
 
-    @Override
-    protected void onViewAttached() {
-        titleLabel.setText(Res.get("paymentAccounts.crypto.address.title", model.getPaymentMethod().getName()));
-
-        ScrollPane scrollPane = new ScrollPane(model.getPaymentForm());
+        scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         root.getChildren().setAll(titleLabel, scrollPane);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        titleLabel.setText(Res.get("paymentAccounts.crypto.address.title", model.getPaymentMethod().getName()));
+        scrollPane.setContent(model.getPaymentForm());
     }
 
     @Override

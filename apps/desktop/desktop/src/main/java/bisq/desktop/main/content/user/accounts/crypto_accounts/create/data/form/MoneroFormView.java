@@ -86,12 +86,12 @@ public class MoneroFormView extends FormView<MoneroFormModel, MoneroFormControll
         VBox.setMargin(subAddressesHBox, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(address,
                 isInstantSwitchHBox,
-                isAutoConfSwitchHBox,
-                autoConfHBox,
                 useSubAddressesSwitchHBox,
                 mainAddressPrivateViewKeyHBox,
-                subAddressesHBox
-        );
+                subAddressesHBox,
+                isAutoConfSwitchHBox,
+                autoConfHBox
+                );
     }
 
     @Override
@@ -121,6 +121,8 @@ public class MoneroFormView extends FormView<MoneroFormModel, MoneroFormControll
         mainAddressPrivateViewKeyHBox.managedProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.visibleProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.managedProperty().bind(model.getUseSubAddresses());
+        address.visibleProperty().bind(model.getUseSubAddresses().not());
+        address.managedProperty().bind(model.getUseSubAddresses().not());
 
         mainAddress.textProperty().bindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().bindBidirectional(model.getPrivateViewKey());
@@ -139,6 +141,8 @@ public class MoneroFormView extends FormView<MoneroFormModel, MoneroFormControll
         mainAddressPrivateViewKeyHBox.managedProperty().unbind();
         subAddressesHBox.visibleProperty().unbind();
         subAddressesHBox.managedProperty().unbind();
+        address.visibleProperty().unbind();
+        address.managedProperty().unbind();
 
         mainAddress.textProperty().unbindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().unbindBidirectional(model.getPrivateViewKey());
