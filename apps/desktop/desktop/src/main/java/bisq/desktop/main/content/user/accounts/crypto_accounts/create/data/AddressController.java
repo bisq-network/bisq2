@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
@@ -23,9 +23,9 @@ import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
 import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.FormController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.MoneroFormController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.OtherFormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.FormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.MoneroFormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.OtherFormController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

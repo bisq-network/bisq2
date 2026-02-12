@@ -23,7 +23,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.AddressController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.AddressController;
 import bisq.desktop.main.content.user.accounts.crypto_accounts.create.currency.CryptoAssetSelectionController;
 import bisq.desktop.main.content.user.accounts.crypto_accounts.create.summary.PaymentSummaryController;
 import bisq.desktop.navigation.NavigationTarget;

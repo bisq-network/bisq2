@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
