@@ -133,12 +133,6 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
         HBox.setHgrow(holderId, Priority.ALWAYS);
         holderHBox = new HBox(10, holderName, holderId);
 
-        bankName = new MaterialTextField(Res.get("paymentAccounts.bank.bankName"),
-                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.bank.bankName"))));
-        bankId = new MaterialTextField();
-        branchId = new MaterialTextField();
-
-        bankHBox = new HBox(10, bankName, bankId, branchId);
 
         accountNr = new MaterialTextField();
         accountNr.setValidators(model.getAccountNrValidator());
@@ -154,7 +148,7 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
             @Override
             public String toString(BankAccountType bankAccountType) {
                 return Optional.ofNullable(bankAccountType)
-                        .map(BankAccountType::toString)
+                        .map(BankAccountType::toDisplayString)
                         .orElse("");
             }
 
@@ -177,7 +171,15 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
         HBox.setHgrow(bankAccountTypeComboBox, Priority.ALWAYS);
         accountHBox = new HBox(10, accountNr, nationalAccountId, bankAccountTypeVBox);
 
-        content.getChildren().addAll(countryAndCurrencyBox, holderHBox, bankHBox, accountHBox);
+
+        bankName = new MaterialTextField(Res.get("paymentAccounts.bank.bankName"),
+                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.bank.bankName"))));
+        bankId = new MaterialTextField();
+        branchId = new MaterialTextField();
+
+        bankHBox = new HBox(10, bankName, bankId, branchId);
+
+        content.getChildren().addAll(countryAndCurrencyBox, holderHBox, accountHBox, bankHBox);
     }
 
     @Override

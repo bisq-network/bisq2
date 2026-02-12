@@ -34,8 +34,7 @@ public enum BankAccountType implements ProtocolType {
         return ProtobufUtils.enumFromProto(BankAccountType.class, proto.name(), CHECKING);
     }
 
-    @Override
-    public String toString() {
+    public String toDisplayString() {
         return Res.get("paymentAccounts.bank.bankAccountType." + name());
     }
 }

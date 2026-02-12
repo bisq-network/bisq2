@@ -24,6 +24,8 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
+import bisq.account.accounts.fiat.AchTransferAccount;
+import bisq.account.accounts.fiat.AchTransferAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.F2FAccountPayload;
@@ -49,6 +51,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.AccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.AchTransferAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.F2FAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.FasterPaymentsAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.NationalBankAccountDetailsGridPane;
@@ -149,7 +152,8 @@ public class PaymentSummaryController implements Controller {
     private AccountDetailsGridPane<?, ?> getAccountDetailsGridPane(AccountPayload<?> accountPayload,
                                                                    FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ACH_TRANSFER ->
+                    new AchTransferAccountDetailsGridPane((AchTransferAccountPayload) accountPayload, fiatPaymentRail);
             case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
@@ -204,7 +208,14 @@ public class PaymentSummaryController implements Controller {
         AccountOrigin accountOrigin = AccountOrigin.BISQ2_NEW;
         if (model.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             return switch (fiatPaymentRail) {
-                case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case ACH_TRANSFER ->
+                        new AchTransferAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (AchTransferAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
                 case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

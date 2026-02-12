@@ -48,7 +48,7 @@ public class CreateCryptoAssetAccountController extends NavigationController {
     private final AccountDataController addressController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription selectedPaymentMethodPin, accountDataPin;
+    private Subscription selectedPaymentMethodPin;
 
     public CreateCryptoAssetAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_CRYPTO_CURRENCY_ACCOUNT);

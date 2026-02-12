@@ -17,20 +17,21 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details;
 
-import bisq.account.accounts.fiat.NationalBankAccountPayload;
-import bisq.account.accounts.util.BankAccountUtils;
+import bisq.account.accounts.fiat.AchTransferAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.common.data.Pair;
 import bisq.i18n.Res;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-public class NationalBankAccountDetailsGridPane extends BankAccountDetailsGridPane<NationalBankAccountPayload> {
-    public NationalBankAccountDetailsGridPane(NationalBankAccountPayload accountPayload,
-                                              FiatPaymentRail fiatPaymentRail) {
+public class AchTransferAccountDetailsGridPane extends BankAccountDetailsGridPane<AchTransferAccountPayload> {
+    public AchTransferAccountDetailsGridPane(AchTransferAccountPayload accountPayload,
+                                             FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
+    }
+
+    @Override
+    protected void addDetails(AchTransferAccountPayload accountPayload) {
+        addHolderName(accountPayload);
+        addDescriptionAndValue(Res.get("paymentAccounts.holderAddress"), accountPayload.getHolderAddressAsSingleLine());
+        addAccountData(accountPayload);
+        addBankInfo(accountPayload);
     }
 }

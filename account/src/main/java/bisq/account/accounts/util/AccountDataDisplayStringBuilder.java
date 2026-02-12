@@ -33,11 +33,8 @@ public class AccountDataDisplayStringBuilder {
             if (StringUtils.isNotEmpty(value)) {
                 stringBuilder.append(key)
                         .append(": ")
-                        .append(value);
-
-                if (i < keyValuePairs.length - 1) {
-                    stringBuilder.append("\n");
-                }
+                        .append(value)
+                        .append("\n");
             }
         }
     }

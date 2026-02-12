@@ -51,7 +51,7 @@ public class CreatePaymentAccountController extends NavigationController {
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription selectedPaymentMethodPin, accountDataPin, showOverlayPin;
+    private Subscription selectedPaymentMethodPin, showOverlayPin;
 
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);

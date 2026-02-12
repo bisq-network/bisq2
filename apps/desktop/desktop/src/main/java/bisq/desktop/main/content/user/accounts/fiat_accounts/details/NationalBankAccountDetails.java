@@ -17,31 +17,12 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.details;
 
-import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.accounts.fiat.NationalBankAccount;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
 import bisq.account.timestamp.AccountTimestampService;
-import bisq.i18n.Res;
 
-public class NationalBankAccountDetails extends FiatAccountDetails<NationalBankAccount> {
+public class NationalBankAccountDetails extends BankAccountDetails<NationalBankAccountPayload, NationalBankAccount> {
     public NationalBankAccountDetails(NationalBankAccount account, AccountTimestampService accountTimestampService) {
         super(account, accountTimestampService);
-    }
-
-    @Override
-    protected void addDetails() {
-        NationalBankAccountPayload accountPayload = account.getAccountPayload();
-        String countryCode = accountPayload.getCountryCode();
-
-        accountPayload.getHolderName().ifPresent(value -> addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.holderName"), value));
-        accountPayload.getHolderId().ifPresent(value -> addDescriptionAndValueWithCopyButton(BankAccountUtils.getHolderIdDescription(countryCode), value));
-        accountPayload.getBankName().ifPresent(value -> addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.bank.bankName"), value));
-        accountPayload.getBankId().ifPresent(value -> addDescriptionAndValueWithCopyButton(BankAccountUtils.getBankIdDescription(countryCode), value));
-        accountPayload.getBranchId().ifPresent(value -> addDescriptionAndValueWithCopyButton(BankAccountUtils.getBranchIdDescription(countryCode), value));
-        addDescriptionAndValueWithCopyButton(BankAccountUtils.getAccountNrDescription(countryCode), accountPayload.getAccountNr());
-        accountPayload.getNationalAccountId().ifPresent(value -> addDescriptionAndValueWithCopyButton(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
-        accountPayload.getBankAccountType().ifPresent(value -> addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.bank.bankAccountType"), value.toString()));
-
-        super.addDetails();
     }
 }
