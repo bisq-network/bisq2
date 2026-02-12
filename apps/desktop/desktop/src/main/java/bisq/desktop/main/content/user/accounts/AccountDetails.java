@@ -103,7 +103,9 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
                     account.getPaymentMethod().getDisplayString());
             gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
 
-            addCurrencyDisplay();
+            if (!(account.getAccountPayload() instanceof MultiCurrencyAccountPayload)) {
+                addCurrencyDisplay();
+            }
         }
     }
 

@@ -114,6 +114,12 @@ public class NetworkDataValidation {
         validateText(text, maxLength);
     }
 
+    public static void validateOptionalText(String text, int maxLength) {
+        if (StringUtils.isNotEmpty(text)) {
+            validateText(text, maxLength);
+        }
+    }
+
     public static void validateByteArray(byte[] bytes, int maxLength) {
         checkArgument(bytes.length <= maxLength,
                 "Byte array must not be longer than " + maxLength + ". bytes.length=" + bytes.length);

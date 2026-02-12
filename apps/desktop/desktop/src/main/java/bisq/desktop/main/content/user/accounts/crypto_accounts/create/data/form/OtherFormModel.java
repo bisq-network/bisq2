@@ -15,22 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form;
 
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
-import bisq.desktop.common.view.Model;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.AddressFormController;
-import javafx.scene.layout.Region;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.Map;
 @Getter
-public class AddressModel implements Model {
-    @Setter
-    private DigitalAssetPaymentMethod paymentMethod;
-    @Setter
-    private Region paymentForm;
-    private final Map<String, AddressFormController<?, ?, ?>> controllerCache = new HashMap<>();
+public class OtherFormModel extends FormModel {
+    public OtherFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
+        super(id, paymentMethod);
+    }
 }

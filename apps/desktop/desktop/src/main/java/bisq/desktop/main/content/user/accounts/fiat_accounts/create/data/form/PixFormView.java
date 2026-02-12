@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
@@ -38,16 +37,22 @@ public class PixFormView extends FormView<PixFormModel, PixFormController> {
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
-        pixKey = new MaterialTextField(Res.get("paymentAccounts.pix.pixKey"),
+        pixKey = new MaterialTextField(Res.get("paymentAccounts.pix.pixKeyWithDetails"),
                 Res.get("paymentAccounts.createAccount.prompt", Res.get("paymentAccounts.pix.pixKey")));
         pixKey.setValidators(model.getPixKeyValidator());
         pixKey.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, pixKey, Spacer.height(100));
+        content.getChildren().addAll(holderName, pixKey);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.pix"));
     }
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
+        holderName.resetValidation();
+        pixKey.resetValidation();
+
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
             holderName.validate();
@@ -67,10 +72,13 @@ public class PixFormView extends FormView<PixFormModel, PixFormController> {
                 controller.onValidationDone();
             }
         });
+
+
     }
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         holderName.resetValidation();
         pixKey.resetValidation();
 

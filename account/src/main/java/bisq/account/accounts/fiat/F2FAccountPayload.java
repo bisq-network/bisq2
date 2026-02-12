@@ -42,7 +42,7 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
     private final String selectedCurrencyCode;
     private final String city;
     private final String contact;
-    private final String extraInfo;
+    private final String extraInfo; // Can be empty
 
     public F2FAccountPayload(String id,
                              String countryCode,
@@ -81,7 +81,7 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
         PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
         NetworkDataValidation.validateRequiredText(city, CITY_MIN_LENGTH, CITY_MAX_LENGTH);
         NetworkDataValidation.validateRequiredText(contact, CONTACT_MIN_LENGTH, CONTACT_MAX_LENGTH);
-        NetworkDataValidation.validateText(extraInfo, EXTRA_INFO_MAX_LENGTH);
+        NetworkDataValidation.validateOptionalText(extraInfo, EXTRA_INFO_MAX_LENGTH);
     }
 
     @Override

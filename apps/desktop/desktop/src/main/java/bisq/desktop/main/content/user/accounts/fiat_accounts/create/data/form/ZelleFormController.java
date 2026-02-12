@@ -40,11 +40,14 @@ public class ZelleFormController extends FormController<ZelleFormView, ZelleForm
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
+        showOverlay();
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

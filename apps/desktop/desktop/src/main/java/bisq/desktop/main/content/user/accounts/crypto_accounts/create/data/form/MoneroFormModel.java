@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form;
 
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.desktop.components.controls.validator.NumberValidator;
@@ -27,7 +27,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
-public class MoneroAddressFormModel extends AddressFormModel {
+public class MoneroFormModel extends FormModel {
     //todo
     protected final TextMinMaxLengthValidator mainAddressValidator = new TextMinMaxLengthValidator(10, 200);
     protected final TextMinMaxLengthValidator privateViewKeyValidator = new TextMinMaxLengthValidator(10, 200);
@@ -41,7 +41,7 @@ public class MoneroAddressFormModel extends AddressFormModel {
     protected final StringProperty accountIndex = new SimpleStringProperty();
     protected final StringProperty initialSubAddressIndex = new SimpleStringProperty();
 
-    public MoneroAddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
+    public MoneroFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         super(id, paymentMethod);
     }
 

@@ -137,7 +137,6 @@ public class TakeOfferAmountController implements Controller {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseAmountLimitInfoOverlay);
     }
 
-
     void onShowAmountLimitInfoOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getIsAmountLimitInfoOverlayVisible().set(true);

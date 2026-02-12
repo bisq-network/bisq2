@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data;
 
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
@@ -23,25 +23,25 @@ import bisq.account.payment_method.cbdc.CbdcPaymentMethod;
 import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.AddressFormController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.MoneroAddressFormController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form.OtherAddressFormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.FormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.MoneroFormController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form.OtherFormController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AddressController implements Controller {
-    private final AddressModel model;
+public class AccountDataController implements Controller {
+    private final AccountDataModel model;
     @Getter
-    private final AddressView view;
+    private final AccountDataView view;
     private final ServiceProvider serviceProvider;
-    private AddressFormController<?, ?, ?> formController;
+    private FormController<?, ?, ?> formController;
 
-    public AddressController(ServiceProvider serviceProvider) {
+    public AccountDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
-        model = new AddressModel();
-        view = new AddressView(model, this);
+        model = new AccountDataModel();
+        view = new AccountDataView(model, this);
     }
 
     public CryptoAssetAccountPayload getAccountPayload() {
@@ -67,16 +67,16 @@ public class AddressController implements Controller {
         return formController != null && formController.validate();
     }
 
-    public AddressFormController<?, ?, ?> getOrCreateController(DigitalAssetPaymentMethod paymentMethod) {
+    public FormController<?, ?, ?> getOrCreateController(DigitalAssetPaymentMethod paymentMethod) {
         return model.getControllerCache().computeIfAbsent(paymentMethod.getId(), k -> createController(paymentMethod));
     }
 
-    public AddressFormController<?, ?, ?> createController(DigitalAssetPaymentMethod paymentMethod) {
+    public FormController<?, ?, ?> createController(DigitalAssetPaymentMethod paymentMethod) {
         if (paymentMethod instanceof DigitalAssetPaymentMethod cryptoPaymentMethod) {
             if (cryptoPaymentMethod.getCode().equals("XMR")) {
-                return new MoneroAddressFormController(serviceProvider, cryptoPaymentMethod);
+                return new MoneroFormController(serviceProvider, cryptoPaymentMethod);
             } else {
-                return new OtherAddressFormController(serviceProvider, cryptoPaymentMethod);
+                return new OtherFormController(serviceProvider, cryptoPaymentMethod);
             }
         } else if (paymentMethod instanceof StableCoinPaymentMethod stableCoinPaymentMethod) {
             throw new RuntimeException("Not impl yet");

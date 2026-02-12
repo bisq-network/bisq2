@@ -23,9 +23,9 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.AddressController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.AccountDataController;
 import bisq.desktop.main.content.user.accounts.crypto_accounts.create.currency.CryptoAssetSelectionController;
-import bisq.desktop.main.content.user.accounts.crypto_accounts.create.summary.SummaryController;
+import bisq.desktop.main.content.user.accounts.crypto_accounts.create.summary.PaymentSummaryController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import javafx.event.EventHandler;
@@ -45,8 +45,8 @@ public class CreateCryptoAssetAccountController extends NavigationController {
     private final CreateCryptoAssetAccountView view;
     private final OverlayController overlayController;
     private final CryptoAssetSelectionController cryptoAssetSelectionController;
-    private final AddressController addressController;
-    private final SummaryController summaryController;
+    private final AccountDataController addressController;
+    private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private Subscription selectedPaymentMethodPin, accountDataPin;
 
@@ -59,8 +59,8 @@ public class CreateCryptoAssetAccountController extends NavigationController {
         overlayController = OverlayController.getInstance();
 
         cryptoAssetSelectionController = new CryptoAssetSelectionController();
-        addressController = new AddressController(serviceProvider);
-        summaryController = new SummaryController(serviceProvider);
+        addressController = new AccountDataController(serviceProvider);
+        summaryController = new PaymentSummaryController(serviceProvider);
     }
 
     @Override

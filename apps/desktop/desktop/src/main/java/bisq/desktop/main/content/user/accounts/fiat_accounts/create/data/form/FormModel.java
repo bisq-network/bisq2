@@ -18,11 +18,14 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
 public abstract class FormModel implements Model {
-    protected final String id;
+    private final String id;
+    private final BooleanProperty showOverlay = new SimpleBooleanProperty();
 
     public FormModel(String id) {
         this.id = id;

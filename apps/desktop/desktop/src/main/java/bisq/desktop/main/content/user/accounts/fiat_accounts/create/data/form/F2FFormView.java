@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
-import bisq.common.asset.FiatCurrency;
 import bisq.common.asset.Asset;
+import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
@@ -136,11 +136,13 @@ public class F2FFormView extends FormView<F2FFormModel, F2FFormController> {
         extraInfo.setFixedHeight(140);
         extraInfo.setValidators(model.getExtraInfoValidator());
 
-        root.getChildren().addAll(hBox, contact, extraInfo);
+        content.getChildren().addAll(hBox, contact, extraInfo);
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.f2f"));
     }
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
         if (StringUtils.isNotEmpty(model.getCity().get())) {
             city.setText(model.getCity().get());
             city.validate();
@@ -208,6 +210,7 @@ public class F2FFormView extends FormView<F2FFormModel, F2FFormController> {
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         city.resetValidation();
         contact.resetValidation();
         extraInfo.resetValidation();

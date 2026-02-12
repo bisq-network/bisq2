@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
@@ -29,13 +29,13 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormModel, MoneroAddressFormController> {
+public class MoneroFormView extends FormView<MoneroFormModel, MoneroFormController> {
     private Switch useSubAddressesSwitch;
     private MaterialTextField mainAddress, privateViewKey, subAddress, accountIndex, initialSubAddressIndex;
     private HBox subAddressesHBox,mainAddressPrivateViewKeyHBox;
 
-    public MoneroAddressFormView(MoneroAddressFormModel model,
-                                 MoneroAddressFormController controller) {
+    public MoneroFormView(MoneroFormModel model,
+                          MoneroFormController controller) {
         super(model, controller);
 
         address.setDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"));
@@ -86,12 +86,12 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
         VBox.setMargin(subAddressesHBox, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(address,
                 isInstantSwitchHBox,
-                isAutoConfSwitchHBox,
-                autoConfHBox,
                 useSubAddressesSwitchHBox,
                 mainAddressPrivateViewKeyHBox,
-                subAddressesHBox
-        );
+                subAddressesHBox,
+                isAutoConfSwitchHBox,
+                autoConfHBox
+                );
     }
 
     @Override
@@ -121,6 +121,8 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
         mainAddressPrivateViewKeyHBox.managedProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.visibleProperty().bind(model.getUseSubAddresses());
         subAddressesHBox.managedProperty().bind(model.getUseSubAddresses());
+        address.visibleProperty().bind(model.getUseSubAddresses().not());
+        address.managedProperty().bind(model.getUseSubAddresses().not());
 
         mainAddress.textProperty().bindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().bindBidirectional(model.getPrivateViewKey());
@@ -139,6 +141,8 @@ public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormMode
         mainAddressPrivateViewKeyHBox.managedProperty().unbind();
         subAddressesHBox.visibleProperty().unbind();
         subAddressesHBox.managedProperty().unbind();
+        address.visibleProperty().unbind();
+        address.managedProperty().unbind();
 
         mainAddress.textProperty().unbindBidirectional(model.getMainAddress());
         privateViewKey.textProperty().unbindBidirectional(model.getPrivateViewKey());

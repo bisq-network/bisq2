@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.det
 
 import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 
 public class F2FAccountDetailsGridPane extends FiatAccountDetailsGridPane<F2FAccountPayload> {
@@ -27,13 +28,13 @@ public class F2FAccountDetailsGridPane extends FiatAccountDetailsGridPane<F2FAcc
     }
 
     protected void addDetails(F2FAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("paymentAccounts.f2f.city"),
-                accountPayload.getCity());
+        addDescriptionAndValue(Res.get("paymentAccounts.f2f.city"), accountPayload.getCity());
 
-        addDescriptionAndValue(Res.get("paymentAccounts.f2f.contact"),
-                accountPayload.getContact());
+        addDescriptionAndValue(Res.get("paymentAccounts.f2f.contact"), accountPayload.getContact());
 
-        addDescriptionAndValue(Res.get("paymentAccounts.f2f.extraInfo"),
-                accountPayload.getExtraInfo());
+        String extraInfo = accountPayload.getExtraInfo();
+        if (StringUtils.isNotEmpty(extraInfo)) {
+            addDescriptionAndValue(Res.get("paymentAccounts.f2f.extraInfo"), extraInfo);
+        }
     }
 }

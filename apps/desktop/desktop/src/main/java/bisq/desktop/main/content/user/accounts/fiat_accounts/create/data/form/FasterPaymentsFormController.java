@@ -40,11 +40,13 @@ public class FasterPaymentsFormController extends FormController<FasterPaymentsF
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

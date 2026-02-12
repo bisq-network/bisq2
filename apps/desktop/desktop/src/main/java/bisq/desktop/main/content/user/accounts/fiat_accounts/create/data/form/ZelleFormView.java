@@ -38,17 +38,20 @@ public class ZelleFormView extends FormView<ZelleFormModel, ZelleFormController>
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
-
         emailOrMobileNr = new MaterialTextField(Res.get("paymentAccounts.emailOrMobileNr"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.emailOrMobileNr"))));
         emailOrMobileNr.setValidators(model.getEmailOrPhoneNumberValidator());
         emailOrMobileNr.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, emailOrMobileNr, Spacer.height(100));
+        content.getChildren().addAll(holderName, emailOrMobileNr, Spacer.height(100));
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.zelle"));
     }
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
+
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
             holderName.validate();
@@ -72,6 +75,7 @@ public class ZelleFormView extends FormView<ZelleFormModel, ZelleFormController>
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         holderName.resetValidation();
         emailOrMobileNr.resetValidation();
 

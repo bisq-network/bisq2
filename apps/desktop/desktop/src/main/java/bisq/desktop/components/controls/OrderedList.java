@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class OrderedList extends TextList {
-    private static final String REGEX = "\\d+\\.\\s+";
+    private static final String REGEX = "^\\d+\\.\\s+";
 
     public OrderedList(String text, String style) {
         this(text, style, 7, 0);

@@ -19,16 +19,15 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.det
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.i18n.Res;
 
 public abstract class FiatAccountDetailsGridPane<A extends AccountPayload<?>> extends AccountDetailsGridPane<A, FiatPaymentRail> {
     public FiatAccountDetailsGridPane(A accountPayload, FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
     }
 
-    @Override
+  /*  @Override
     protected void addRestrictions(FiatPaymentRail fiatPaymentRail) {
         addDescriptionAndValue(Res.get("paymentAccounts.chargebackRisk"), fiatPaymentRail.getChargebackRisk().toString());
         super.addRestrictions(fiatPaymentRail);
-    }
+    }*/
 }

@@ -59,6 +59,7 @@ public class NationalBankFormController extends FormController<NationalBankFormV
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
@@ -70,6 +71,7 @@ public class NationalBankFormController extends FormController<NationalBankFormV
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

@@ -23,12 +23,13 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.PaymentDataController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.AccountDataController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.options.PaymentOptionsController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.payment_method.PaymentMethodSelectionController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.PaymentSummaryController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -46,11 +47,11 @@ public class CreatePaymentAccountController extends NavigationController {
     @Getter
     private final CreatePaymentAccountView view;
     private final PaymentMethodSelectionController paymentMethodController;
-    private final PaymentDataController accountDataController;
+    private final AccountDataController accountDataController;
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription selectedPaymentMethodPin, accountDataPin;
+    private Subscription selectedPaymentMethodPin, accountDataPin, showOverlayPin;
 
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
@@ -61,7 +62,7 @@ public class CreatePaymentAccountController extends NavigationController {
         view = new CreatePaymentAccountView(model, this);
 
         paymentMethodController = new PaymentMethodSelectionController();
-        accountDataController = new PaymentDataController(serviceProvider);
+        accountDataController = new AccountDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
         summaryController = new PaymentSummaryController(serviceProvider);
     }
@@ -94,6 +95,19 @@ public class CreatePaymentAccountController extends NavigationController {
                                 hasConfigurableOptions(fiatMethod);
                         model.setOptionsVisible(hasOptions);
                         setChildTargets();
+
+                        ReadOnlyBooleanProperty showOverlayProperty = accountDataController.getShowOverlay();
+                        if (showOverlayProperty != null) {
+                            if (showOverlayPin != null) {
+                                showOverlayPin.unsubscribe();
+                            }
+                            showOverlayPin = EasyBind.subscribe(showOverlayProperty, showOverlay -> {
+                                model.getNextButtonVisible().set(!showOverlay);
+                                model.getBackButtonVisible().set(!showOverlay);
+                            });
+                        } else {
+                            log.warn("showOverlayProperty is expected to be not null after setPaymentMethod was called");
+                        }
                     }
                     model.getNextButtonDisabled().set(paymentMethod == null);
                 });
@@ -108,13 +122,20 @@ public class CreatePaymentAccountController extends NavigationController {
             selectedPaymentMethodPin.unsubscribe();
             selectedPaymentMethodPin = null;
         }
+        if (showOverlayPin != null) {
+            showOverlayPin.unsubscribe();
+            showOverlayPin = null;
+        }
     }
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCreateAccountButtonVisible().set(navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-        model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
+        ReadOnlyBooleanProperty showOverlay = accountDataController.getShowOverlay();
+        boolean isOverlayShown = showOverlay != null && showOverlay.get();
+        model.getNextButtonVisible().set(!isOverlayShown &&
+                navigationTarget != NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+        model.getBackButtonVisible().set(!isOverlayShown && model.getCurrentIndex().get() > 0);
     }
 
     @Override
@@ -130,7 +151,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent,getView().getRoot(),this::navigateNext);
+        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent, getView().getRoot(), this::navigateNext);
     }
 
     void onNext() {

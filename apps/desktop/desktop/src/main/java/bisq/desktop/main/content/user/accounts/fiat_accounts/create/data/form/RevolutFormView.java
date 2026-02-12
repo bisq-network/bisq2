@@ -60,7 +60,7 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
         selectedCountriesErrorLabel.getStyleClass().add("material-text-field-error");
 
         VBox.setMargin(userName, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(userName,
+        content.getChildren().addAll(userName,
                 new HBox(selectedCurrenciesLabel, Spacer.fillHBox()),
                 selectedCurrenciesFlowPane,
                 new HBox(selectedCountriesErrorLabel, Spacer.fillHBox())
@@ -69,6 +69,7 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
         if (StringUtils.isNotEmpty(model.getUserName().get())) {
             userName.setText(model.getUserName().get());
             userName.validate();
@@ -91,6 +92,7 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         userName.resetValidation();
 
         selectedCountriesErrorLabel.visibleProperty().unbind();

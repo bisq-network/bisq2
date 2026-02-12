@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form;
 
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
@@ -28,19 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoAssetAccountPayload> {
-    public OtherAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
+public class OtherFormController extends FormController<OtherFormView, OtherFormModel, OtherCryptoAssetAccountPayload> {
+    public OtherFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
 
     @Override
-    protected OtherAddressFormView createView() {
-        return new OtherAddressFormView(model, this);
+    protected OtherFormView createView() {
+        return new OtherFormView(model, this);
     }
 
     @Override
-    protected OtherAddressFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
-        return new OtherAddressFormModel(StringUtils.createUid(), paymentMethod);
+    protected OtherFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
+        return new OtherFormModel(StringUtils.createUid(), paymentMethod);
     }
 
     @Override

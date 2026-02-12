@@ -32,7 +32,6 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
     protected static final String DETAILS_STYLE = "trade-wizard-review-details";
 
     protected final Label headline;
-    protected final Region line;
 
     int rowIndex = 0;
 
@@ -45,7 +44,7 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
         headline.getStyleClass().add("trade-wizard-review-details-headline");
         GridPane.setMargin(headline, new Insets(10, 0, 0, 0));
         add(headline, 0, rowIndex, 3, 1);
-        line = getLine();
+        Region line = getLine();
         GridPane.setMargin(line, new Insets(-10, 0, -5, 0));
         add(line, 0, ++rowIndex, 3, 1);
 

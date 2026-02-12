@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.accounts.crypto_accounts.create.address.form;
+package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.View;
@@ -33,7 +33,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class AddressFormView<M extends AddressFormModel, C extends AddressFormController<?, ?, ?>> extends View<VBox, M, C> {
+public abstract class FormView<M extends FormModel, C extends FormController<?, ?, ?>> extends View<VBox, M, C> {
     protected final static double FIELD_WIDTH_QUARTER = 187.5; // 780 is available width
     protected final static double FIELD_WIDTH_HALF = 385;
     protected final MaterialTextField address, autoConfNumConfirmations, autoConfMaxTradeAmount, autoConfExplorerUrls;
@@ -41,11 +41,11 @@ public abstract class AddressFormView<M extends AddressFormModel, C extends Addr
     protected final HBox isInstantSwitchHBox, isAutoConfSwitchHBox, autoConfHBox;
     protected Subscription runValidationPin;
 
-    protected AddressFormView(M model, C controller) {
+    protected FormView(M model, C controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("payment-method-form");
+        root.setPadding(new Insets(0, 30, 0, 30));
 
         address = new MaterialTextField(Res.get("paymentAccounts.crypto.address.address"), Res.get("paymentAccounts.crypto.address.address.prompt"));
 
