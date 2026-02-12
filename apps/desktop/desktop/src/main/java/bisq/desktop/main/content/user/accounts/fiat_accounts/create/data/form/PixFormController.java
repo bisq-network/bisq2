@@ -40,11 +40,14 @@ public class PixFormController extends FormController<PixFormView, PixFormModel,
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
+        showOverlay();
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

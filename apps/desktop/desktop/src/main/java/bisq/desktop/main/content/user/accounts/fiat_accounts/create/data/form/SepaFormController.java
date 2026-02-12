@@ -24,6 +24,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,6 +64,7 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getAcceptedCountriesErrorVisible().set(false);
@@ -73,10 +75,19 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
             model.getSelectedCountryOfBank().set(defaultCountry);
             model.getSepaIbanValidator().setRestrictedToCountryCode(defaultCountry.getCode());
         }
+
+        EasyBind.subscribe(model.getIban(), iban -> {
+            if (StringUtils.isNotEmpty(iban) && iban.length() >= 2 && model.getSelectedCountryOfBank().get() == null) {
+                String ibanCountryCode = iban.substring(0, 2).toUpperCase();
+                Country country = CountryRepository.getCountry(ibanCountryCode);
+                model.getSelectedCountryOfBank().set(country);
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

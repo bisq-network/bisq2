@@ -177,11 +177,12 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
         HBox.setHgrow(bankAccountTypeComboBox, Priority.ALWAYS);
         accountHBox = new HBox(10, accountNr, nationalAccountId, bankAccountTypeVBox);
 
-        root.getChildren().addAll(countryAndCurrencyBox, holderHBox, bankHBox, accountHBox);
+        content.getChildren().addAll(countryAndCurrencyBox, holderHBox, bankHBox, accountHBox);
     }
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
         countryComboBox.getSelectionModel().select(model.getSelectedCountry().get());
         currencyComboBox.getSelectionModel().select(model.getSelectedCurrency().get());
         bankAccountTypeComboBox.getSelectionModel().select(model.getSelectedBankAccountType().get());
@@ -312,6 +313,7 @@ public class NationalBankFormView extends FormView<NationalBankFormModel, Nation
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         holderName.resetValidation();
         holderId.resetValidation();
         bankName.resetValidation();

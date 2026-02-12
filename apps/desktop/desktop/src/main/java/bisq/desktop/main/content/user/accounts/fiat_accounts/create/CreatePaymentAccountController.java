@@ -29,6 +29,7 @@ import bisq.desktop.main.content.user.accounts.fiat_accounts.create.payment_meth
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.PaymentSummaryController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -50,7 +51,7 @@ public class CreatePaymentAccountController extends NavigationController {
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription selectedPaymentMethodPin, accountDataPin;
+    private Subscription selectedPaymentMethodPin, accountDataPin, showOverlayPin;
 
     public CreatePaymentAccountController(ServiceProvider serviceProvider) {
         super(NavigationTarget.CREATE_PAYMENT_ACCOUNT);
@@ -94,6 +95,16 @@ public class CreatePaymentAccountController extends NavigationController {
                                 hasConfigurableOptions(fiatMethod);
                         model.setOptionsVisible(hasOptions);
                         setChildTargets();
+
+                        ReadOnlyBooleanProperty showOverlayProperty = accountDataController.getShowOverlay();
+                        if (showOverlayProperty != null) {
+                            showOverlayPin = EasyBind.subscribe(showOverlayProperty, showOverlay -> {
+                                model.getNextButtonVisible().set(!showOverlay);
+                                model.getBackButtonVisible().set(!showOverlay);
+                            });
+                        } else {
+                            log.warn("showOverlayProperty is expected to be not null after setPaymentMethod was called");
+                        }
                     }
                     model.getNextButtonDisabled().set(paymentMethod == null);
                 });
@@ -108,13 +119,20 @@ public class CreatePaymentAccountController extends NavigationController {
             selectedPaymentMethodPin.unsubscribe();
             selectedPaymentMethodPin = null;
         }
+        if (showOverlayPin != null) {
+            showOverlayPin.unsubscribe();
+            showOverlayPin = null;
+        }
     }
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         model.getCreateAccountButtonVisible().set(navigationTarget == NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-        model.getNextButtonVisible().set(navigationTarget != NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
-        model.getBackButtonVisible().set(model.getCurrentIndex().get() > 0);
+        ReadOnlyBooleanProperty showOverlay = accountDataController.getShowOverlay();
+        boolean isOverlayShown = showOverlay != null && showOverlay.get();
+        model.getNextButtonVisible().set(!isOverlayShown &&
+                navigationTarget != NavigationTarget.CREATE_PAYMENT_ACCOUNT_SUMMARY);
+        model.getBackButtonVisible().set(!isOverlayShown && model.getCurrentIndex().get() > 0);
     }
 
     @Override
@@ -130,7 +148,7 @@ public class CreatePaymentAccountController extends NavigationController {
 
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
-        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent,getView().getRoot(),this::navigateNext);
+        KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent, getView().getRoot(), this::navigateNext);
     }
 
     void onNext() {

@@ -43,5 +43,4 @@ public class PaymentSummaryModel implements Model {
     private String defaultAccountName;
     private final BooleanProperty showAccountNameOverlay = new SimpleBooleanProperty();
     private final TextMinMaxLengthValidator accountNameValidator = new TextMinMaxLengthValidator(2, 30);
-
 }

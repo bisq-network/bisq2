@@ -19,17 +19,37 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 
 public abstract class FormController<V extends FormView<?, ?>, M extends FormModel, P extends AccountPayload<?>> implements Controller {
     @Getter
     protected final V view;
     protected final M model;
+    private UIScheduler scheduler;
 
     protected FormController(ServiceProvider serviceProvider) {
         this.model = createModel();
         this.view = createView();
+    }
+
+    public ReadOnlyBooleanProperty getShowOverlay() {
+        return model.getShowOverlay();
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+        model.getShowOverlay().set(false);
+        disposeScheduler();
     }
 
     protected abstract V createView();
@@ -39,4 +59,30 @@ public abstract class FormController<V extends FormView<?, ?>, M extends FormMod
     public abstract boolean validate();
 
     public abstract P createAccountPayload();
+
+    void onCloseOverlay() {
+        model.getShowOverlay().set(false);
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
+    protected void showOverlay() {
+        disposeScheduler();
+        if (Transitions.useAnimations()) {
+            scheduler = UIScheduler.run(() -> model.getShowOverlay().set(true)).after(1000);
+        } else {
+            model.getShowOverlay().set(true);
+        }
+    }
+
+    private void disposeScheduler() {
+        if (scheduler != null) {
+            scheduler.stop();
+            scheduler = null;
+        }
+    }
 }

@@ -49,11 +49,12 @@ public class FasterPaymentsFormView extends FormView<FasterPaymentsFormModel, Fa
         accountNr.setValidators(model.getAccountNrValidator(), model.getAccountNrNumberValidator());
         accountNr.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
+        content.getChildren().addAll(holderName, sortCode, accountNr, Spacer.height(100));
     }
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
             holderName.validate();
@@ -83,6 +84,7 @@ public class FasterPaymentsFormView extends FormView<FasterPaymentsFormModel, Fa
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         holderName.resetValidation();
         sortCode.resetValidation();
         accountNr.resetValidation();

@@ -46,13 +46,16 @@ public class F2FFormController extends FormController<F2FFormView, F2FFormModel,
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
         model.getCountryErrorVisible().set(false);
         model.getCurrencyErrorVisible().set(false);
+        showOverlay();
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     void onValidationDone() {

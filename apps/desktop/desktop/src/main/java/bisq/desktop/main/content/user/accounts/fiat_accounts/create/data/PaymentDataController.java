@@ -18,23 +18,26 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.crypto.CryptoPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.crypto.CryptoPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.F2FFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.FasterPaymentsFormController;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.NationalBankFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.FormController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.NationalBankFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.PixFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.RevolutFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.SepaFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.ZelleFormController;
-import javafx.scene.layout.VBox;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,6 +47,7 @@ public class PaymentDataController implements Controller {
     @Getter
     private final PaymentDataView view;
     private final ServiceProvider serviceProvider;
+    @Nullable
     private FormController<?, ?, ?> paymentFormController;
 
     public PaymentDataController(ServiceProvider serviceProvider) {
@@ -53,23 +57,26 @@ public class PaymentDataController implements Controller {
         view = new PaymentDataView(model, this);
     }
 
+    @Nullable
+    public ReadOnlyBooleanProperty getShowOverlay() {
+        return paymentFormController != null ? paymentFormController.getShowOverlay() : null;
+    }
+
+    @Nullable
     public AccountPayload<?> getAccountPayload() {
-        return paymentFormController.createAccountPayload();
+        return paymentFormController != null ? paymentFormController.createAccountPayload() : null;
     }
 
     public void setPaymentMethod(PaymentMethod<?> paymentMethod) {
         checkNotNull(paymentMethod, "PaymentMethod must not be null");
         model.setPaymentMethod(paymentMethod);
+
+        applyPaymentMethod(paymentMethod);
     }
 
     @Override
     public void onActivate() {
-        PaymentMethod<?> paymentMethod = model.getPaymentMethod();
-        checkNotNull(paymentMethod, "PaymentMethod must be set before onActivate is called");
-
-        paymentFormController = getOrCreateController(paymentMethod);
-        VBox root = paymentFormController.getView().getRoot();
-        model.setPaymentForm(root);
+        applyPaymentMethod(model.getPaymentMethod());
     }
 
     @Override
@@ -81,19 +88,17 @@ public class PaymentDataController implements Controller {
         return paymentFormController != null && paymentFormController.validate();
     }
 
-    public FormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
+    private FormController<?, ?, ?> getOrCreateController(PaymentMethod<?> paymentMethod) {
         String key = paymentMethod.getPaymentRail().name();
         return model.getControllerCache().computeIfAbsent(key, k -> createController(paymentMethod));
     }
 
-    public FormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
+    private FormController<?, ?, ?> createController(PaymentMethod<?> paymentMethod) {
         PaymentRail paymentRail = paymentMethod.getPaymentRail();
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             return getPaymentFormController(fiatPaymentRail);
         } else if (paymentRail instanceof CryptoPaymentRail cryptoPaymentRail) {
-            {
-                throw new UnsupportedOperationException("CryptoPaymentRail not implemented yet");
-            }
+            throw new UnsupportedOperationException("CryptoPaymentRail not implemented yet");
         } else {
             throw new UnsupportedOperationException("No implementation found for " + paymentRail.name());
         }
@@ -102,11 +107,10 @@ public class PaymentDataController implements Controller {
     private FormController<?, ?, ?> getPaymentFormController(PaymentRail paymentRail) {
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             return getFiatPaymentFormController(fiatPaymentRail);
-        } else{
+        } else {
             throw new UnsupportedOperationException("PaymentRail not supported: " + paymentRail.name());
         }
     }
-
 
     private FormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
@@ -155,5 +159,13 @@ public class PaymentDataController implements Controller {
             case WISE_USD -> throw new UnsupportedOperationException("Not implemented yet");
             case ZELLE -> new ZelleFormController(serviceProvider);
         };
+    }
+
+    private void applyPaymentMethod(PaymentMethod<?> paymentMethod) {
+        if (paymentMethod != null) {
+            paymentFormController = getOrCreateController(paymentMethod);
+            StackPane root = paymentFormController.getView().getRoot();
+            model.setPaymentForm(root);
+        }
     }
 }

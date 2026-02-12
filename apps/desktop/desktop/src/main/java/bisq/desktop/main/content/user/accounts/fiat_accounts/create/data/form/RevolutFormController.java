@@ -50,12 +50,14 @@ public class RevolutFormController extends FormController<RevolutFormView, Revol
 
     @Override
     public void onActivate() {
+        super.onActivate();
         model.getRunValidation().set(false);
         model.getSelectedCurrenciesErrorVisible().set(false);
     }
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
     }
 
     @Override

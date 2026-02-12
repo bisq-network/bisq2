@@ -48,10 +48,12 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
     private final MaterialTextField holderName, iban, bic;
     private final Label countryErrorLabel, acceptedCountriesErrorLabel;
     private final FlowPane acceptEuroCountriesFlowPane, acceptNonEuroCountriesFlowPane;
-    private Subscription selectedCountryPin, runValidationPin;
+    private Subscription selectedCountryPin, selectedCountryFromModelPin, runValidationPin;
 
     public SepaFormView(SepaFormModel model, SepaFormController controller) {
         super(model, controller);
+
+        VBox.setMargin(titleLabel, new Insets(10, 0, 0, 0));
 
         country = new AutoCompleteComboBox<>(
                 model.getAllSepaCountries(),
@@ -120,7 +122,7 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
         VBox.setVgrow(countryAndHolderNameHBox, Priority.ALWAYS);
         VBox.setVgrow(ibanBicHBox, Priority.ALWAYS);
         VBox.setMargin(acceptEuroCountriesFlowPane, new Insets(0, 0, 5, 0));
-        root.getChildren().addAll(countryAndHolderNameHBox,
+        content.getChildren().addAll(countryAndHolderNameHBox,
                 ibanBicHBox,
                 new HBox(acceptAllEuroCountriesLabel, Spacer.fillHBox()),
                 acceptEuroCountriesFlowPane,
@@ -132,6 +134,7 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
             holderName.validate();
@@ -144,9 +147,6 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
             bic.setText(model.getBic().get());
             bic.validate();
         }
-        if (model.getSelectedCountryOfBank().get() != null) {
-            country.getSelectionModel().select(model.getSelectedCountryOfBank().get());
-        }
 
         countryErrorLabel.visibleProperty().bind(model.getCountryErrorVisible());
         countryErrorLabel.managedProperty().bind(model.getCountryErrorVisible());
@@ -158,6 +158,11 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
         iban.textProperty().bindBidirectional(model.getIban());
         bic.textProperty().bindBidirectional(model.getBic());
 
+        selectedCountryFromModelPin = EasyBind.subscribe(model.getSelectedCountryOfBank(), selectedCountry -> {
+            if (selectedCountry != null) {
+                country.getSelectionModel().select(selectedCountry);
+            }
+        });
         selectedCountryPin = EasyBind.subscribe(country.getSelectionModel().selectedItemProperty(), selectedCountry -> {
             if (selectedCountry != null) {
                 controller.onCountryOfBankSelected(selectedCountry);
@@ -183,6 +188,7 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
         holderName.resetValidation();
         iban.resetValidation();
         bic.resetValidation();
@@ -197,6 +203,7 @@ public class SepaFormView extends FormView<SepaFormModel, SepaFormController> {
         bic.textProperty().unbindBidirectional(model.getBic());
 
         selectedCountryPin.unsubscribe();
+        selectedCountryFromModelPin.unsubscribe();
         runValidationPin.unsubscribe();
 
         acceptEuroCountriesFlowPane.getChildren().stream()

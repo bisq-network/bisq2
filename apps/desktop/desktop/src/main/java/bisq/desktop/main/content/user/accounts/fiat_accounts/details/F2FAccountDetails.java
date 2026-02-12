@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.details;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.timestamp.AccountTimestampService;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 
 public class F2FAccountDetails extends FiatAccountDetails<F2FAccount> {
@@ -36,8 +37,10 @@ public class F2FAccountDetails extends FiatAccountDetails<F2FAccount> {
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.f2f.contact"),
                 accountPayload.getContact());
 
-        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.f2f.extraInfo"),
-                accountPayload.getExtraInfo());
+        String extraInfo = accountPayload.getExtraInfo();
+        if (StringUtils.isNotEmpty(extraInfo)) {
+            addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.f2f.extraInfo"), extraInfo);
+        }
 
         super.addDetails();
     }
