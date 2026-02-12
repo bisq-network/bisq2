@@ -25,6 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class SepaFormController extends FormController<SepaFormView, SepaFormModel, SepaAccountPayload> {
+    private Subscription ibanPin;
+
     public SepaFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
@@ -76,11 +79,13 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
             model.getSepaIbanValidator().setRestrictedToCountryCode(defaultCountry.getCode());
         }
 
-        EasyBind.subscribe(model.getIban(), iban -> {
+        ibanPin = EasyBind.subscribe(model.getIban(), iban -> {
             if (StringUtils.isNotEmpty(iban) && iban.length() >= 2 && model.getSelectedCountryOfBank().get() == null) {
                 String ibanCountryCode = iban.substring(0, 2).toUpperCase();
                 Country country = CountryRepository.getCountry(ibanCountryCode);
-                model.getSelectedCountryOfBank().set(country);
+                if (model.getAllSepaCountries().contains(country)) {
+                    setSelectedCountry(country);
+                }
             }
         });
     }
@@ -88,6 +93,7 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
     @Override
     public void onDeactivate() {
         super.onDeactivate();
+        ibanPin.unsubscribe();
     }
 
     @Override
@@ -130,9 +136,7 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
     }
 
     void onCountryOfBankSelected(Country selectedCountry) {
-        model.getSelectedCountryOfBank().set(selectedCountry);
-        model.getCountryErrorVisible().set(false);
-        model.getSepaIbanValidator().setRestrictedToCountryCode(selectedCountry.getCode());
+        setSelectedCountry(selectedCountry);
     }
 
     void onSelectAcceptedCountry(Country country, boolean selected, boolean isEuroCountry) {
@@ -151,6 +155,12 @@ public class SepaFormController extends FormController<SepaFormView, SepaFormMod
             }
         }
         model.getAcceptedCountriesErrorVisible().set(getAcceptedCountries().isEmpty());
+    }
+
+    private void setSelectedCountry(Country selectedCountry) {
+        model.getSelectedCountryOfBank().set(selectedCountry);
+        model.getCountryErrorVisible().set(false);
+        model.getSepaIbanValidator().setRestrictedToCountryCode(selectedCountry.getCode());
     }
 
     private ArrayList<Country> getAcceptedCountries() {

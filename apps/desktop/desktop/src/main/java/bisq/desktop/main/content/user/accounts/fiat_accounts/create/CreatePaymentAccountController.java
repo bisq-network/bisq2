@@ -98,6 +98,9 @@ public class CreatePaymentAccountController extends NavigationController {
 
                         ReadOnlyBooleanProperty showOverlayProperty = accountDataController.getShowOverlay();
                         if (showOverlayProperty != null) {
+                            if (showOverlayPin != null) {
+                                showOverlayPin.unsubscribe();
+                            }
                             showOverlayPin = EasyBind.subscribe(showOverlayProperty, showOverlay -> {
                                 model.getNextButtonVisible().set(!showOverlay);
                                 model.getBackButtonVisible().set(!showOverlay);

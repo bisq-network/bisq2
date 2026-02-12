@@ -66,7 +66,7 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<String> getSepaEuroCountries() {
-        // Exclude Vatikan, as we don't assume those will Bisq, and it causes linger lists and more constrained layout
+        // Exclude Vatican, as we don't assume those will use Bisq, and it causes longer lists and more constrained layout
         return List.of("AT", "BE", "BG", "CY", "DE", "EE", "FI", "FR", "GR", "HR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM"/*, "VA"*/);
     }

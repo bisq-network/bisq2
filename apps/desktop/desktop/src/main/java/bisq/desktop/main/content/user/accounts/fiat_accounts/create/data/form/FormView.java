@@ -133,13 +133,12 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         OrderedList subtitleLabel= new OrderedList(info,"bisq-text-21");
         subtitleLabel.setMinWidth(getFeedbackTextWidth());
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        //configFeedbackSubtitleLabel(subtitleLabel);
         VBox hyperlinksBox = getHyperlinksBox(hyperlinks);
 
         VBox.setMargin(overlayCloseButton, new Insets(10, 0, 0, 0));
         contentBox.getChildren().addAll(headlineLabel, subtitleLabel, hyperlinksBox, overlayCloseButton);
 
-        overlay.getChildren().addAll(contentBox);
+        overlay.getChildren().setAll(contentBox);
     }
 
     protected VBox getOverlayContentBox() {
@@ -149,15 +148,6 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         contentBox.setPadding(new Insets(30));
         contentBox.setMaxWidth(getFeedbackWidth());
         return contentBox;
-    }
-
-    protected void configFeedbackSubtitleLabel(Label subtitleLabel) {
-        subtitleLabel.setTextAlignment(TextAlignment.LEFT);
-        subtitleLabel.setAlignment(Pos.TOP_LEFT);
-        subtitleLabel.setMinWidth(getFeedbackTextWidth());
-        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.getStyleClass().add("bisq-text-21");
     }
 
     protected VBox getHyperlinksBox(ArrayList<String> hyperlinks) {

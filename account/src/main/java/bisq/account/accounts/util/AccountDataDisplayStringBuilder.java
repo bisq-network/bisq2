@@ -17,18 +17,27 @@
 
 package bisq.account.accounts.util;
 
+import bisq.common.util.StringUtils;
+
 public class AccountDataDisplayStringBuilder {
     StringBuilder stringBuilder = new StringBuilder();
 
-    public AccountDataDisplayStringBuilder(String... values) {
-        for (int i = 0; i < values.length; i++) {
-            String value = values[i];
-            stringBuilder.append(value).append(": ");
+    public AccountDataDisplayStringBuilder(String... keyValuePairs) {
+        if (keyValuePairs.length % 2 != 0) {
+            throw new IllegalArgumentException("Expected key-value pairs, but received an odd number of arguments: " + keyValuePairs.length);
+        }
+        for (int i = 0; i < keyValuePairs.length; i++) {
+            String key = keyValuePairs[i];
             i++;
-            value = values[i];
-            stringBuilder.append(value);
-            if (i < values.length - 1) {
-                stringBuilder.append("\n");
+            String value = keyValuePairs[i];
+            if (StringUtils.isNotEmpty(value)) {
+                stringBuilder.append(key)
+                        .append(": ")
+                        .append(value);
+
+                if (i < keyValuePairs.length - 1) {
+                    stringBuilder.append("\n");
+                }
             }
         }
     }
@@ -39,7 +48,9 @@ public class AccountDataDisplayStringBuilder {
     }
 
     public void add(String description, String value) {
-        stringBuilder.append(description).append(": ")
-                .append(value).append("\n");
+        if (StringUtils.isNotEmpty(value)) {
+            stringBuilder.append(description).append(": ")
+                    .append(value).append("\n");
+        }
     }
 }
