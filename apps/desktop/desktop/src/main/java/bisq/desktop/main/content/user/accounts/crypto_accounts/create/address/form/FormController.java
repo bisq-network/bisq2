@@ -23,12 +23,12 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-public abstract class AddressFormController<V extends AddressFormView<?, ?>, M extends AddressFormModel, P extends CryptoAssetAccountPayload> implements Controller {
+public abstract class FormController<V extends FormView<?, ?>, M extends FormModel, P extends CryptoAssetAccountPayload> implements Controller {
     @Getter
     protected final V view;
     protected final M model;
 
-    protected AddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
+    protected FormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         this.model = createModel(paymentMethod);
         this.view = createView();
     }

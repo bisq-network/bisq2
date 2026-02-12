@@ -27,7 +27,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
-public class MoneroAddressFormModel extends AddressFormModel {
+public class MoneroFormModel extends FormModel {
     //todo
     protected final TextMinMaxLengthValidator mainAddressValidator = new TextMinMaxLengthValidator(10, 200);
     protected final TextMinMaxLengthValidator privateViewKeyValidator = new TextMinMaxLengthValidator(10, 200);
@@ -41,7 +41,7 @@ public class MoneroAddressFormModel extends AddressFormModel {
     protected final StringProperty accountIndex = new SimpleStringProperty();
     protected final StringProperty initialSubAddressIndex = new SimpleStringProperty();
 
-    public MoneroAddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
+    public MoneroFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         super(id, paymentMethod);
     }
 

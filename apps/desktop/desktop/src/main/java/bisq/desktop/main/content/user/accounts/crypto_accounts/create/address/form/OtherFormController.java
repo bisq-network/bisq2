@@ -28,19 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class OtherAddressFormController extends AddressFormController<OtherAddressFormView, OtherAddressFormModel, OtherCryptoAssetAccountPayload> {
-    public OtherAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
+public class OtherFormController extends FormController<OtherFormView, OtherFormModel, OtherCryptoAssetAccountPayload> {
+    public OtherFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
 
     @Override
-    protected OtherAddressFormView createView() {
-        return new OtherAddressFormView(model, this);
+    protected OtherFormView createView() {
+        return new OtherFormView(model, this);
     }
 
     @Override
-    protected OtherAddressFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
-        return new OtherAddressFormModel(StringUtils.createUid(), paymentMethod);
+    protected OtherFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
+        return new OtherFormModel(StringUtils.createUid(), paymentMethod);
     }
 
     @Override

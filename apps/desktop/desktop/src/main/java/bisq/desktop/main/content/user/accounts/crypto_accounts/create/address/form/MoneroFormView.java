@@ -29,13 +29,13 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MoneroAddressFormView extends AddressFormView<MoneroAddressFormModel, MoneroAddressFormController> {
+public class MoneroFormView extends FormView<MoneroFormModel, MoneroFormController> {
     private Switch useSubAddressesSwitch;
     private MaterialTextField mainAddress, privateViewKey, subAddress, accountIndex, initialSubAddressIndex;
     private HBox subAddressesHBox,mainAddressPrivateViewKeyHBox;
 
-    public MoneroAddressFormView(MoneroAddressFormModel model,
-                                 MoneroAddressFormController controller) {
+    public MoneroFormView(MoneroFormModel model,
+                          MoneroFormController controller) {
         super(model, controller);
 
         address.setDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"));

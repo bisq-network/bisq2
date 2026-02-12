@@ -31,7 +31,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
-public abstract class AddressFormModel implements Model {
+public abstract class FormModel implements Model {
     protected final String id;
     protected final DigitalAssetPaymentMethod paymentMethod;
     protected final String currencyCode;
@@ -52,7 +52,7 @@ public abstract class AddressFormModel implements Model {
     protected final StringProperty autoConfMaxTradeAmount = new SimpleStringProperty();
     protected final StringProperty autoConfExplorerUrls = new SimpleStringProperty();
 
-    public AddressFormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
+    public FormModel(String id, DigitalAssetPaymentMethod paymentMethod) {
         this.id = id;
         this.paymentMethod = paymentMethod;
         currencyCode = paymentMethod.getCode();

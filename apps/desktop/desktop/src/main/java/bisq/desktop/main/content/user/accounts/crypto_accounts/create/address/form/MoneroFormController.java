@@ -29,10 +29,10 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class MoneroAddressFormController extends AddressFormController<MoneroAddressFormView, MoneroAddressFormModel, MoneroAccountPayload> {
+public class MoneroFormController extends FormController<MoneroFormView, MoneroFormModel, MoneroAccountPayload> {
     private Subscription createSubAddressPin;
 
-    public MoneroAddressFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
+    public MoneroFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
     }
 
@@ -57,13 +57,13 @@ public class MoneroAddressFormController extends AddressFormController<MoneroAdd
     }
 
     @Override
-    protected MoneroAddressFormView createView() {
-        return new MoneroAddressFormView(model, this);
+    protected MoneroFormView createView() {
+        return new MoneroFormView(model, this);
     }
 
     @Override
-    protected MoneroAddressFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
-        return new MoneroAddressFormModel(StringUtils.createUid(), paymentMethod);
+    protected MoneroFormModel createModel(DigitalAssetPaymentMethod paymentMethod) {
+        return new MoneroFormModel(StringUtils.createUid(), paymentMethod);
     }
 
     @Override
