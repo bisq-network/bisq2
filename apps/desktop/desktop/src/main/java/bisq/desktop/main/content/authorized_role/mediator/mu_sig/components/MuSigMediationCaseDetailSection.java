@@ -17,16 +17,23 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
+import bisq.common.monetary.Monetary;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediationCaseListItem;
 import bisq.i18n.Res;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -37,8 +44,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
 import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getCopyButton;
+import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getDescriptionLabel;
 import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getLine;
 import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getValueLabel;
 
@@ -84,6 +94,27 @@ public class MuSigMediationCaseDetailSection {
             MuSigOffer offer = contract.getOffer();
             String tradeId = muSigMediationRequest.getTradeId();
 
+            Optional<CollateralOption> collateralOption = OfferOptionUtil.findCollateralOption(offer.getOfferOptions());
+            if (collateralOption.isEmpty()) {
+                log.warn("CollateralOption not found in offer options. tradeId={}", tradeId);
+                model.setSecurityDepositInfo(Optional.empty());
+            } else if (collateralOption.get().getBuyerSecurityDeposit() != collateralOption.get().getSellerSecurityDeposit()) {
+                log.warn("Buyer and seller security deposits do not match. tradeId={}", tradeId);
+                String mismatch = Res.get("authorizedRole.mediator.mediationCaseDetails.securityDepositMismatch");
+                model.setSecurityDepositInfo(Optional.of(new Model.SecurityDepositInfo(
+                        0,
+                        mismatch,
+                        mismatch,
+                        false)));
+            } else {
+                double securityDeposit = collateralOption.get().getBuyerSecurityDeposit();
+                model.setSecurityDepositInfo(Optional.of(new Model.SecurityDepositInfo(
+                        securityDeposit,
+                        calculateSecurityDeposit(MuSigTradeUtils.getBaseSideMonetary(contract), securityDeposit),
+                        PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0),
+                        true)));
+            }
+
             MuSigMediationCaseListItem.Trader maker = muSigMediationCaseListItem.getMaker();
             MuSigMediationCaseListItem.Trader taker = muSigMediationCaseListItem.getTaker();
             MuSigMediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
@@ -97,8 +128,6 @@ public class MuSigMediationCaseDetailSection {
                     : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
             model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
                     offer.getMarket().getQuoteCurrencyCode()));
-            model.setSecurityDeposit(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
-            model.setSecurityDepositEmpty(true);
 
             model.setBuyerNetworkAddress(buyer.getUserProfile().getAddressByTransportDisplayString(50));
             model.setSellerNetworkAddress(seller.getUserProfile().getAddressByTransportDisplayString(50));
@@ -106,6 +135,12 @@ public class MuSigMediationCaseDetailSection {
 
         @Override
         public void onDeactivate() {
+            model.setSecurityDepositInfo(Optional.empty());
+        }
+
+        private static String calculateSecurityDeposit(Monetary monetary, double securityDepositAsPercent) {
+            Monetary securityDeposit = OfferAmountUtil.calculateSecurityDeposit(monetary, securityDepositAsPercent);
+            return OfferAmountFormatter.formatDepositAmountAsBTC(securityDeposit);
         }
     }
 
@@ -123,8 +158,10 @@ public class MuSigMediationCaseDetailSection {
         private String offerType;
         private String market;
 
-        private String securityDeposit;
-        private boolean isSecurityDepositEmpty;
+        private Optional<SecurityDepositInfo> securityDepositInfo = Optional.empty();
+
+        private record SecurityDepositInfo(double percentValue, String amountText, String percentText, boolean isMatching) {
+        }
 
         private String buyerNetworkAddress;
         private String sellerNetworkAddress;
@@ -134,7 +171,8 @@ public class MuSigMediationCaseDetailSection {
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
 
         private final Label tradeIdLabel, tradeDateLabel, offerTypeLabel, marketLabel;
-        private Label securityDepositLabel, buyerNetworkAddressLabel, sellerNetworkAddressLabel;
+        private Label securityDepositLabel, securityDepositPercentLabel, openParenthesisLabel, closingParenthesisLabel,
+                buyerNetworkAddressLabel, sellerNetworkAddressLabel;
         private final BisqMenuItem tradeIdCopyButton;
         private BisqMenuItem buyerNetworkAddressCopyButton, sellerNetworkAddressCopyButton;
 
@@ -172,9 +210,23 @@ public class MuSigMediationCaseDetailSection {
 
                 // Security deposits
                 securityDepositLabel = getValueLabel();
+                securityDepositPercentLabel = new Label();
+                securityDepositPercentLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+                openParenthesisLabel = new Label("(");
+                openParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+                closingParenthesisLabel = new Label(")");
+                closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+                HBox securityDepositPercentBox = new HBox(openParenthesisLabel,
+                        securityDepositPercentLabel,
+                        closingParenthesisLabel);
+                securityDepositPercentBox.setAlignment(Pos.BASELINE_LEFT);
+                HBox securityDepositValueBox = new HBox(5, securityDepositLabel, securityDepositPercentBox);
+                securityDepositValueBox.setAlignment(Pos.BASELINE_LEFT);
                 HBox securityDepositBox = createAndGetDescriptionAndValueBox(
-                        "authorizedRole.mediator.mediationCaseDetails.securityDeposit",
-                        securityDepositLabel);
+                        getDescriptionLabel(Res.get("authorizedRole.mediator.mediationCaseDetails.securityDeposit")),
+                        securityDepositValueBox,
+                        Optional.empty()
+                );
 
                 // Network addresses
                 buyerNetworkAddressLabel = getValueLabel();
@@ -214,12 +266,16 @@ public class MuSigMediationCaseDetailSection {
             offerTypeLabel.setText(model.getOfferType());
             marketLabel.setText(model.getMarket());
             if (!model.isCompactView()) {
-                securityDepositLabel.setText(model.getSecurityDeposit());
-                securityDepositLabel.getStyleClass().clear();
-                securityDepositLabel.getStyleClass().add(model.isSecurityDepositEmpty()
-                        ? "text-fill-grey-dimmed"
-                        : "text-fill-white");
-                securityDepositLabel.getStyleClass().add("normal-text");
+                Optional<Model.SecurityDepositInfo> info = model.getSecurityDepositInfo();
+                boolean showPercent = info.map(Model.SecurityDepositInfo::isMatching).orElse(false);
+                securityDepositLabel.setText(info.map(Model.SecurityDepositInfo::amountText).orElse(Res.get("data.na")));
+                securityDepositPercentLabel.setText(info.map(Model.SecurityDepositInfo::percentText).orElse(Res.get("data.na")));
+                securityDepositPercentLabel.setVisible(showPercent);
+                securityDepositPercentLabel.setManaged(showPercent);
+                openParenthesisLabel.setVisible(showPercent);
+                openParenthesisLabel.setManaged(showPercent);
+                closingParenthesisLabel.setVisible(showPercent);
+                closingParenthesisLabel.setManaged(showPercent);
                 buyerNetworkAddressLabel.setText(model.getBuyerNetworkAddress());
                 sellerNetworkAddressLabel.setText(model.getSellerNetworkAddress());
                 buyerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerNetworkAddress()));

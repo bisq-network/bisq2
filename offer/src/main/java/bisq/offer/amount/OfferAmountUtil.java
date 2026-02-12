@@ -20,8 +20,18 @@ package bisq.offer.amount;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.util.MathUtils;
 import bisq.offer.Offer;
-import bisq.offer.amount.spec.*;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.BaseSideAmountSpec;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
+import bisq.offer.amount.spec.FixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 
@@ -258,5 +268,13 @@ public class OfferAmountUtil {
         } else {
             throw new RuntimeException("Unsupported amountSpec: {}" + amountSpec);
         }
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Deposit Amount
+    /* --------------------------------------------------------------------- */
+
+    public static Monetary calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
+        return Monetary.from(MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit), monetary.getCode());
     }
 }

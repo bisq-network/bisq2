@@ -95,10 +95,12 @@ public class MuSigMediationCaseCloseController extends NavigationController impl
 
     @Override
     public void onActivate() {
+        model.getCloseCaseButtonDisabled().bind(muSigMediationResultSection.hasRequiredSelectionsProperty().not());
     }
 
     @Override
     public void onDeactivate() {
+        model.getCloseCaseButtonDisabled().unbind();
     }
 
     @Override

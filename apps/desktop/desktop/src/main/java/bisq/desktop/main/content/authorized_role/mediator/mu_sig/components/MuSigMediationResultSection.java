@@ -27,7 +27,10 @@ import bisq.support.mediation.MediationResultReason;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -64,6 +67,10 @@ public class MuSigMediationResultSection {
         controller.closeCase();
     }
 
+    public ReadOnlyBooleanProperty hasRequiredSelectionsProperty() {
+        return controller.getHasRequiredSelections();
+    }
+
     @Slf4j
     private static class Controller implements bisq.desktop.common.view.Controller {
 
@@ -77,10 +84,15 @@ public class MuSigMediationResultSection {
             model = new Model();
             view = new View(new VBox(), model, this);
             muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
+            model.getHasRequiredSelections().bind(model.getSelectedReason().isNotNull());
         }
 
         private void setMediationCaseListItem(MuSigMediationCaseListItem item) {
             model.setMuSigMediationCaseListItem(item);
+        }
+
+        private ReadOnlyBooleanProperty getHasRequiredSelections() {
+            return model.getHasRequiredSelections();
         }
 
         @Override
@@ -91,6 +103,7 @@ public class MuSigMediationResultSection {
             model.getPayoutTypes().setAll(Model.PayoutType.values());
             model.getReasons().setAll(MediationResultReason.values());
 
+            model.getSelectedPayoutType().set(null);
             model.getSelectedReason().set(null);
 
             model.getSelectedReason().set(
@@ -138,6 +151,7 @@ public class MuSigMediationResultSection {
         private final ObservableList<MediationResultReason> reasons = FXCollections.observableArrayList();
 
         private final StringProperty summaryNotes = new SimpleStringProperty("");
+        private final BooleanProperty hasRequiredSelections = new SimpleBooleanProperty(false);
 
         enum PayoutType {
             CUSTOM_PAYOUT,
