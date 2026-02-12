@@ -33,7 +33,9 @@ import bisq.http_api.access.permissions.RestPermissionMapping;
 import bisq.http_api.access.persistence.ApiAccessStoreService;
 import bisq.http_api.access.session.SessionService;
 import bisq.http_api.access.transport.TlsContext;
+import bisq.http_api.access.transport.TlsContextService;
 import bisq.http_api.access.transport.TorContext;
+import bisq.security.tls.TlsException;
 import bisq.common.timer.Scheduler;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
@@ -93,6 +95,7 @@ public class HttpApiService implements Service {
     private final Optional<PairingService> pairingService;
     private final Optional<SessionService> sessionService;
     private final Optional<ApiAccessService> apiAccessService;
+    private final Optional<TlsContextService> tlsContextService;
     private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
 
     public HttpApiService(RestApiService.Config restApiConfig,
@@ -137,6 +140,29 @@ public class HttpApiService implements Service {
             sessionService = Optional.empty();
             apiAccessService = Optional.empty();
             log.info("Pairing service disabled");
+        }
+
+        // Initialize TLS context service if TLS is required by either config
+        if (webSocketConfig.isTlsRequired() || restApiConfig.isTlsRequired()) {
+            // Use websocket config's TLS settings as primary (most common use case)
+            var tlsConfig = webSocketConfig.isTlsRequired() ? webSocketConfig : restApiConfig;
+            tlsContextService = Optional.of(new TlsContextService(
+                    true,
+                    tlsConfig.getTlsKeyStorePassword(),
+                    tlsConfig.getTlsKeyStoreSan(),
+                    appDataDirPath));
+        } else {
+            tlsContextService = Optional.empty();
+        }
+
+        // Get TLS context if available
+        Optional<TlsContext> tlsContext = Optional.empty();
+        if (tlsContextService.isPresent()) {
+            try {
+                tlsContext = tlsContextService.get().getOrCreateTlsContext();
+            } catch (TlsException e) {
+                log.error("Failed to create TLS context", e);
+            }
         }
 
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
@@ -224,7 +250,8 @@ public class HttpApiService implements Service {
                         userService,
                         bisqEasyService,
                         openTradeItemsService,
-                        pushNotificationService));
+                        pushNotificationService,
+                        tlsContext));
             } else {
                 webSocketService = Optional.empty();
             }
@@ -285,12 +312,13 @@ public class HttpApiService implements Service {
         Set<Permission> allPermissions = Arrays.stream(Permission.values()).collect(Collectors.toSet());
         PairingCode pairingCode = pairingService.get().createPairingCode(allPermissions);
 
-        // Get TLS and Tor contexts (currently not available in this branch, so using empty)
-        Optional<TlsContext> tlsContext = Optional.empty();
+        // Get TLS and Tor contexts
+        Optional<TlsContext> pairingTlsContext = tlsContextService
+                .flatMap(TlsContextService::getTlsContext);
         Optional<TorContext> torContext = getTorContext();
 
         // Generate and write QR code
-        pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, tlsContext, torContext);
+        pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, pairingTlsContext, torContext);
 
         log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
                 webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());

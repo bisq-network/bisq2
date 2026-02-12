@@ -89,6 +89,7 @@ annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk18on', version.ref = 'bouncycastle-lib' }
 bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bouncycastle-lib' }
+bouncycastle-pkix = { module = 'org.bouncycastle:bcpkix-jdk18on', version.ref = 'bouncycastle-lib' }
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 

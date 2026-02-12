@@ -46,7 +46,9 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import bisq.http_api.access.transport.TlsContext;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -78,8 +80,11 @@ public class WebSocketService implements Service {
                       List<String> blackListEndPoints,
                       List<String> supportedAuth,
                       String password,
-                      boolean publishOnionService) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
+                      boolean publishOnionService,
+                      boolean tlsRequired,
+                      String tlsKeyStorePassword,
+                      List<String> tlsKeyStoreSan) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService, tlsRequired, tlsKeyStorePassword, tlsKeyStoreSan);
             this.includeRestApi = includeRestApi;
         }
 
@@ -96,7 +101,10 @@ public class WebSocketService implements Service {
                     config.getStringList("blackListEndPoints"),
                     config.getStringList("supportedAuth"),
                     config.getString("password"),
-                    config.getBoolean("publishOnionService")
+                    config.getBoolean("publishOnionService"),
+                    config.getBoolean("tlsRequired"),
+                    config.getString("tlsKeyStorePassword"),
+                    config.getStringList("tlsKeyStoreSan")
             );
         }
     }
@@ -110,6 +118,7 @@ public class WebSocketService implements Service {
     private final WebSocketRestApiService webSocketRestApiService;
     private Optional<HttpServer> httpServer = Optional.empty();
     private final ApiTorOnionService apiTorOnionService;
+    private final Optional<TlsContext> tlsContext;
     private final Observable<Boolean> initializedObservable = new Observable<>(false);
     private final Observable<String> errorObservable = new Observable<>("");
     private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
@@ -125,9 +134,11 @@ public class WebSocketService implements Service {
                             UserService userService,
                             BisqEasyService bisqEasyService,
                             OpenTradeItemsService openTradeItemsService,
-                            Optional<PushNotificationService> pushNotificationService) {
+                            Optional<PushNotificationService> pushNotificationService,
+                            Optional<TlsContext> tlsContext) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
+        this.tlsContext = tlsContext;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
 
@@ -176,6 +187,21 @@ public class WebSocketService implements Service {
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);
 
+                    if (tlsContext.isPresent()) {
+                        server.getListener("grizzly").setSecure(true);
+                        SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(tlsContext.get().getSslContext())
+                                .setClientMode(false)
+                                .setNeedClientAuth(false)
+                                .setEnabledProtocols(new String[]{"TLSv1.3"})
+                                .setEnabledCipherSuites(new String[]{
+                                        "TLS_AES_128_GCM_SHA256",
+                                        "TLS_AES_256_GCM_SHA384",
+                                        "TLS_CHACHA20_POLY1305_SHA256"
+                                });
+                        server.getListener("grizzly").setSSLEngineConfig(sslEngineConfigurator);
+                        log.info("TLS enabled for WebSocket server with fingerprint: {}", tlsContext.get().getTlsFingerprint());
+                    }
+
                     if (config.isIncludeRestApi()) {
                         server.getServerConfiguration().addHttpHandler(new GrizzlySwaggerHttpHandler(), "/doc/v1/");
                     }
@@ -183,7 +209,8 @@ public class WebSocketService implements Service {
                     try {
                         server.start();
                         log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at 'ws://{}:{}/websocket'", host, port);
+                        String wsProtocol = tlsContext.isPresent() ? "wss" : "ws";
+                        log.info("WebSocket endpoint available at '{}://{}:{}/websocket'", wsProtocol, host, port);
                         if (config.isIncludeRestApi()) {
                             log.info("Rest API endpoints available at '{}'", config.getRestApiBaseUrl());
                         }

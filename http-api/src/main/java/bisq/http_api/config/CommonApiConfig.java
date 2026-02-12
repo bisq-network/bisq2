@@ -37,6 +37,9 @@ public abstract class CommonApiConfig {
     private final String restApiBaseAddress;
     private final String restApiBaseUrl;
     private final boolean publishOnionService;
+    private final boolean tlsRequired;
+    private final String tlsKeyStorePassword;
+    private final List<String> tlsKeyStoreSan;
 
     public CommonApiConfig(boolean enabled,
                            String protocol,
@@ -47,7 +50,10 @@ public abstract class CommonApiConfig {
                            List<String> blackListEndPoints,
                            List<String> supportedAuth,
                            String password,
-                           boolean publishOnionService) {
+                           boolean publishOnionService,
+                           boolean tlsRequired,
+                           String tlsKeyStorePassword,
+                           List<String> tlsKeyStoreSan) {
         this.enabled = enabled;
         this.protocol = protocol;
         this.host = host;
@@ -58,6 +64,9 @@ public abstract class CommonApiConfig {
         this.supportedAuth = supportedAuth;
         this.password = password;
         this.publishOnionService = publishOnionService;
+        this.tlsRequired = tlsRequired;
+        this.tlsKeyStorePassword = tlsKeyStorePassword;
+        this.tlsKeyStoreSan = tlsKeyStoreSan;
 
         restApiBaseAddress = protocol + host + ":" + port;
         restApiBaseUrl = restApiBaseAddress + REST_API_BASE_PATH;
