@@ -17,27 +17,20 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.layout.VBox;
-import lombok.extern.slf4j.Slf4j;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.FormController;
+import javafx.scene.layout.Region;
+import lombok.Getter;
+import lombok.Setter;
 
-@Slf4j
-public class PaymentDataView extends View<VBox, PaymentDataModel, PaymentDataController> {
-    public PaymentDataView(PaymentDataModel model, PaymentDataController controller) {
-        super(new VBox(15), model, controller);
-
-        root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("create-account-data-view");
-    }
-
-    @Override
-    protected void onViewAttached() {
-        root.getChildren().setAll(model.getPaymentForm());
-    }
-
-    @Override
-    protected void onViewDetached() {
-        root.getChildren().clear();
-    }
+import java.util.HashMap;
+import java.util.Map;
+@Getter
+public class AccountDataModel implements Model {
+    @Setter
+    private PaymentMethod<?> paymentMethod;
+    @Setter
+    private Region paymentForm;
+    private final Map<String, FormController<?, ?, ?>> controllerCache = new HashMap<>();
 }

@@ -30,18 +30,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AddressController implements Controller {
-    private final AddressModel model;
+public class AccountDataController implements Controller {
+    private final AccountDataModel model;
     @Getter
-    private final AddressView view;
+    private final AccountDataView view;
     private final ServiceProvider serviceProvider;
     private FormController<?, ?, ?> formController;
 
-    public AddressController(ServiceProvider serviceProvider) {
+    public AccountDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
-        model = new AddressModel();
-        view = new AddressView(model, this);
+        model = new AccountDataModel();
+        view = new AccountDataView(model, this);
     }
 
     public CryptoAssetAccountPayload getAccountPayload() {

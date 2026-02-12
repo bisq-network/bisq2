@@ -23,7 +23,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.PaymentDataController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.AccountDataController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.options.PaymentOptionsController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.payment_method.PaymentMethodSelectionController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.PaymentSummaryController;
@@ -47,7 +47,7 @@ public class CreatePaymentAccountController extends NavigationController {
     @Getter
     private final CreatePaymentAccountView view;
     private final PaymentMethodSelectionController paymentMethodController;
-    private final PaymentDataController accountDataController;
+    private final AccountDataController accountDataController;
     private final PaymentOptionsController optionsController;
     private final PaymentSummaryController summaryController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
@@ -62,7 +62,7 @@ public class CreatePaymentAccountController extends NavigationController {
         view = new CreatePaymentAccountView(model, this);
 
         paymentMethodController = new PaymentMethodSelectionController();
-        accountDataController = new PaymentDataController(serviceProvider);
+        accountDataController = new AccountDataController(serviceProvider);
         optionsController = new PaymentOptionsController(serviceProvider);
         summaryController = new PaymentSummaryController(serviceProvider);
     }

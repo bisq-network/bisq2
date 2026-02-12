@@ -42,19 +42,19 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class PaymentDataController implements Controller {
-    private final PaymentDataModel model;
+public class AccountDataController implements Controller {
+    private final AccountDataModel model;
     @Getter
-    private final PaymentDataView view;
+    private final AccountDataView view;
     private final ServiceProvider serviceProvider;
     @Nullable
     private FormController<?, ?, ?> paymentFormController;
 
-    public PaymentDataController(ServiceProvider serviceProvider) {
+    public AccountDataController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
 
-        model = new PaymentDataModel();
-        view = new PaymentDataView(model, this);
+        model = new AccountDataModel();
+        view = new AccountDataView(model, this);
     }
 
     @Nullable

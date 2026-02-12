@@ -27,10 +27,10 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AddressView extends View<VBox, AddressModel, AddressController> {
+public class AccountDataView extends View<VBox, AccountDataModel, AccountDataController> {
     private final Label titleLabel;
 
-    public AddressView(AddressModel model, AddressController controller) {
+    public AccountDataView(AccountDataModel model, AccountDataController controller) {
         super(new VBox(15), model, controller);
 
         root.setPadding(new Insets(20));
