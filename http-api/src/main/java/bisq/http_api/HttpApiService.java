@@ -291,6 +291,14 @@ public class HttpApiService implements Service {
                                     .runnableName("regeneratePairingCode")
                                     .periodically(4, TimeUnit.MINUTES));
                             log.info("Pairing code will be regenerated every 4 minutes");
+
+                            // Regenerate immediately when a pairing code is consumed
+                            pairingService.get().getPairingCode().addObserver(code -> {
+                                if (code == null) {
+                                    log.info("Pairing code was consumed, regenerating immediately");
+                                    createPairingQrCode();
+                                }
+                            });
                         } catch (Exception e) {
                             log.error("Failed to create pairing QR code", e);
                         }
