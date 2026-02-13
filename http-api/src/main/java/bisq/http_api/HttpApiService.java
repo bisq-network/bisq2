@@ -220,7 +220,8 @@ public class HttpApiService implements Service {
                         reputationRestApi,
                         userProfileRestApi,
                         devicesRestApi,
-                        Optional.ofNullable(accessApi));
+                        Optional.ofNullable(accessApi),
+                        sessionService);
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
@@ -239,7 +240,8 @@ public class HttpApiService implements Service {
                         reputationRestApi,
                         userProfileRestApi,
                         devicesRestApi,
-                        Optional.ofNullable(accessApi));
+                        Optional.ofNullable(accessApi),
+                        sessionService);
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketResourceConfig,
                         appDataDirPath,
@@ -252,7 +254,8 @@ public class HttpApiService implements Service {
                         bisqEasyService,
                         openTradeItemsService,
                         pushNotificationService,
-                        tlsContext));
+                        tlsContext,
+                        sessionService));
             } else {
                 webSocketService = Optional.empty();
             }

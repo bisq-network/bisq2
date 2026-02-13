@@ -28,6 +28,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.http_api.ApiTorOnionService;
+import bisq.http_api.access.session.SessionService;
 import bisq.http_api.auth.AuthenticationAddOn;
 import bisq.http_api.auth.WebSocketMetadataAddOn;
 import bisq.http_api.config.CommonApiConfig;
@@ -119,6 +120,7 @@ public class WebSocketService implements Service {
     private Optional<HttpServer> httpServer = Optional.empty();
     private final ApiTorOnionService apiTorOnionService;
     private final Optional<TlsContext> tlsContext;
+    private final Optional<SessionService> sessionService;
     private final Observable<Boolean> initializedObservable = new Observable<>(false);
     private final Observable<String> errorObservable = new Observable<>("");
     private final Observable<Optional<Address>> addressObservable = new Observable<>(Optional.empty());
@@ -135,10 +137,12 @@ public class WebSocketService implements Service {
                             BisqEasyService bisqEasyService,
                             OpenTradeItemsService openTradeItemsService,
                             Optional<PushNotificationService> pushNotificationService,
-                            Optional<TlsContext> tlsContext) {
+                            Optional<TlsContext> tlsContext,
+                            Optional<SessionService> sessionService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
         this.tlsContext = tlsContext;
+        this.sessionService = sessionService;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
 
@@ -183,7 +187,7 @@ public class WebSocketService implements Service {
                     server.getListener("grizzly").registerAddOn(new WebSocketMetadataAddOn());
                     String password = config.getPassword();
                     if (StringUtils.isNotEmpty(password)) {
-                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password));
+                        server.getListener("grizzly").registerAddOn(new AuthenticationAddOn(password, sessionService));
                     }
                     server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
                     WebSocketEngine.getEngine().register("", "/websocket", webSocketConnectionHandler);

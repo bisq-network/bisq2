@@ -2,6 +2,8 @@ package bisq.http_api.auth;
 
 import bisq.common.encoding.Hex;
 import bisq.http_api.access.AllowUnauthenticated;
+import bisq.http_api.access.session.SessionService;
+import bisq.http_api.access.session.SessionToken;
 import bisq.security.DigestUtil;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
@@ -21,11 +23,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Optional;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 @Slf4j
 public class HttpApiAuthFilter implements ContainerRequestFilter {
+    private static final String BISQ_SESSION_ID_HEADER = "Bisq-Session-Id";
+    private static final String BISQ_CLIENT_ID_HEADER = "Bisq-Client-Id";
     private static final int MAX_BODY_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
     private static final int BUFFER_SIZE = 8192;
 
@@ -33,9 +38,11 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
     private ResourceInfo resourceInfo;
 
     private final SecretKey secretKey;
+    private final Optional<SessionService> sessionService;
 
-    public HttpApiAuthFilter(String password) {
+    public HttpApiAuthFilter(String password, Optional<SessionService> sessionService) {
         this.secretKey = AuthUtils.getSecretKey(password);
+        this.sessionService = sessionService;
     }
 
     @Override
@@ -46,6 +53,21 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
             return;
         }
 
+        // Try HMAC auth first (desktop/CLI clients)
+        if (isValidHmacAuth(ctx)) {
+            return;
+        }
+
+        // Fall back to session-based auth (mobile clients that paired via QR code)
+        if (isValidSessionAuth(ctx)) {
+            return;
+        }
+
+        log.warn("HttpRequest rejected: No valid HMAC or session credentials for {}", ctx.getUriInfo().getPath());
+        ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+
+    private boolean isValidHmacAuth(ContainerRequestContext ctx) {
         URI requestUri = ctx.getUriInfo().getRequestUri();
         String normalizedPathAndQuery = AuthUtils.normalizePathAndQuery(requestUri);
         String timestamp = ctx.getHeaderString(AuthUtils.AUTH_TIMESTAMP_HEADER);
@@ -53,14 +75,44 @@ public class HttpApiAuthFilter implements ContainerRequestFilter {
         String nonce = ctx.getHeaderString(AuthUtils.AUTH_NONCE_HEADER);
         try {
             String bodySha256Hex = getBodySha256Hex(ctx);
-            if (!AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, nonce, timestamp, receivedHmac, bodySha256Hex)) {
-                log.warn("HttpRequest rejected: Invalid or missing authorization token");
-                ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-            }
+            return AuthUtils.isValidAuthentication(secretKey, ctx.getMethod(), normalizedPathAndQuery, nonce, timestamp, receivedHmac, bodySha256Hex);
         } catch (Exception e) {
-            log.error("Error while reading body of request for authentication", e);
-            ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+            log.error("Error while reading body of request for HMAC authentication", e);
+            return false;
         }
+    }
+
+    private boolean isValidSessionAuth(ContainerRequestContext ctx) {
+        if (sessionService.isEmpty()) {
+            return false;
+        }
+
+        String sessionId = ctx.getHeaderString(BISQ_SESSION_ID_HEADER);
+        String clientId = ctx.getHeaderString(BISQ_CLIENT_ID_HEADER);
+
+        if (sessionId == null || clientId == null) {
+            return false;
+        }
+
+        Optional<SessionToken> token = sessionService.get().find(sessionId);
+        if (token.isEmpty()) {
+            log.debug("Session not found for sessionId: {}", sessionId);
+            return false;
+        }
+
+        SessionToken sessionToken = token.get();
+        if (sessionToken.isExpired()) {
+            log.debug("Session expired for sessionId: {}", sessionId);
+            return false;
+        }
+
+        if (!sessionToken.getClientId().equals(clientId)) {
+            log.warn("Client ID mismatch for sessionId: {}", sessionId);
+            return false;
+        }
+
+        log.debug("REST API request authenticated via session credentials (clientId: {})", clientId);
+        return true;
     }
 
     private boolean isUnauthenticatedEndpoint() {

@@ -1,5 +1,6 @@
 package bisq.http_api.rest_api;
 
+import bisq.http_api.access.session.SessionService;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.http_api.rest_api.domain.devices.DevicesRestApi;
@@ -34,8 +35,9 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
                                  DevicesRestApi devicesRestApi,
-                                 Optional<AccessApi> accessApi) {
-        super(config);
+                                 Optional<AccessApi> accessApi,
+                                 Optional<SessionService> sessionService) {
+        super(config, sessionService);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
 

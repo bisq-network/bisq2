@@ -1,5 +1,6 @@
 package bisq.http_api.web_socket;
 
+import bisq.http_api.access.session.SessionService;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
@@ -34,7 +35,8 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           ReputationRestApi reputationRestApi,
                                           UserProfileRestApi userProfileRestApi,
                                           DevicesRestApi devicesRestApi,
-                                          Optional<AccessApi> accessApi) {
-        super(config, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, fiatPaymentAccountsRestApi, reputationRestApi, userProfileRestApi, devicesRestApi, accessApi);
+                                          Optional<AccessApi> accessApi,
+                                          Optional<SessionService> sessionService) {
+        super(config, offerbookRestApi, tradeRestApi, tradeChatMessagesRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, fiatPaymentAccountsRestApi, reputationRestApi, userProfileRestApi, devicesRestApi, accessApi, sessionService);
     }
 }
