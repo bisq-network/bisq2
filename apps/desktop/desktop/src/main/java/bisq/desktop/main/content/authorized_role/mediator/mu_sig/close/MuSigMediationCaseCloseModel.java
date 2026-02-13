@@ -20,6 +20,8 @@ package bisq.desktop.main.content.authorized_role.mediator.mu_sig.close;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediationCaseListItem;
 import bisq.desktop.navigation.NavigationTarget;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MuSigMediationCaseCloseModel extends NavigationModel {
 
     private MuSigMediationCaseListItem muSigMediationCaseListItem;
+    private final BooleanProperty closeCaseButtonDisabled = new SimpleBooleanProperty(true);
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

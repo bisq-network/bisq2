@@ -19,6 +19,7 @@ package bisq.offer.amount;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
@@ -29,6 +30,9 @@ import bisq.presentation.formatters.AmountFormatter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.BiFunction;
+
+import static bisq.presentation.formatters.AmountFormatter.formatAmountWithCode;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OfferAmountFormatter {
@@ -46,7 +50,10 @@ public class OfferAmountFormatter {
         return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, true);
     }
 
-    public static String formatBaseAmount(MarketPriceService marketPriceService, Offer<?, ?> offer, boolean withCode, boolean useLowPrecision) {
+    public static String formatBaseAmount(MarketPriceService marketPriceService,
+                                          Offer<?, ?> offer,
+                                          boolean withCode,
+                                          boolean useLowPrecision) {
         return formatBaseAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode, useLowPrecision);
     }
 
@@ -314,6 +321,14 @@ public class OfferAmountFormatter {
                 formatQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market, withCode);
     }
 
+    /* --------------------------------------------------------------------- */
+    // Deposit Amount
+    /* --------------------------------------------------------------------- */
+
+    public static String formatDepositAmountAsBTC(Monetary monetary) {
+        checkArgument(monetary.getCode().equals("BTC"));
+        return formatAmountWithCode(Coin.asBtcFromValue(monetary.getValue()), false);
+    }
 
     /* --------------------------------------------------------------------- */
     // Private

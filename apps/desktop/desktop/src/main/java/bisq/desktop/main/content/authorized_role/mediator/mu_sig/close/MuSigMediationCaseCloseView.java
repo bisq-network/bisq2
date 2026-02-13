@@ -90,12 +90,14 @@ public class MuSigMediationCaseCloseView extends NavigationView<VBox, MuSigMedia
 
     @Override
     protected void onViewAttached() {
+        closeCaseButton.disableProperty().bind(model.getCloseCaseButtonDisabled());
         closeButton.setOnAction(e -> controller.onClose());
         closeCaseButton.setOnAction(e -> controller.onCloseCase());
     }
 
     @Override
     protected void onViewDetached() {
+        closeCaseButton.disableProperty().unbind();
         closeButton.setOnAction(null);
         closeCaseButton.setOnAction(null);
     }
