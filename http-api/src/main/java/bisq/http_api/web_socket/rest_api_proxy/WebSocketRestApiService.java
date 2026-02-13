@@ -83,7 +83,9 @@ public class WebSocketRestApiService implements Service {
                 builder.sslContext(sslContext);
                 log.info("Internal REST API proxy configured with trust-all SSL for localhost self-signed cert");
             } catch (Exception e) {
-                log.error("Failed to configure SSL context for internal proxy", e);
+                log.error("Failed to configure SSL context for internal REST API proxy. " +
+                        "Internal REST forwarding will not work with HTTPS.", e);
+                return CompletableFuture.completedFuture(false);
             }
         }
 

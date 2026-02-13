@@ -156,13 +156,15 @@ public class HttpApiService implements Service {
             tlsContextService = Optional.empty();
         }
 
-        // Get TLS context if available
+        // Get TLS context if available — abort startup if TLS is required but creation fails
         Optional<TlsContext> tlsContext = Optional.empty();
         if (tlsContextService.isPresent()) {
             try {
                 tlsContext = tlsContextService.get().getOrCreateTlsContext();
             } catch (TlsException e) {
                 log.error("Failed to create TLS context", e);
+                throw new RuntimeException("TLS is required but TLS context creation failed. " +
+                        "Check tlsKeyStorePassword and tlsKeyStoreSan in your configuration.", e);
             }
         }
 

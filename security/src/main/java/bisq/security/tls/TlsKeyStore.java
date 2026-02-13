@@ -37,7 +37,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -86,8 +85,7 @@ public class TlsKeyStore {
     }
 
     public static Optional<KeyStore> readKeyStore(Path keyStorePath,
-                                                  char[] password,
-                                                  List<String> tlsKeyStoreSan) throws TlsException, TlsPasswordException {
+                                                  char[] password) throws TlsException, TlsPasswordException {
         try {
             if (!Files.exists(keyStorePath)) {
                 return Optional.empty();

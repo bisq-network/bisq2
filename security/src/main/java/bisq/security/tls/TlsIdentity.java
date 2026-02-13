@@ -30,7 +30,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
-public class TLsIdentity {
+public class TlsIdentity {
     private static final String CURVE = "secp256r1";
 
     @Getter
@@ -38,11 +38,11 @@ public class TLsIdentity {
     @Getter
     private final X509Certificate certificate;
 
-    public TLsIdentity(String commonName, List<String> hosts) throws TlsException {
+    public TlsIdentity(String commonName, List<String> hosts) throws TlsException {
         this(commonName, hosts, ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant());
     }
 
-    public TLsIdentity(String commonName,
+    public TlsIdentity(String commonName,
                        List<String> hosts,
                        Instant expiryDate) throws TlsException {
         try {

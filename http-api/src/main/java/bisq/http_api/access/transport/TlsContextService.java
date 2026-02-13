@@ -20,7 +20,7 @@ package bisq.http_api.access.transport;
 import bisq.common.util.NetworkUtils;
 import bisq.security.tls.SanUtils;
 import bisq.security.tls.SslContextFactory;
-import bisq.security.tls.TLsIdentity;
+import bisq.security.tls.TlsIdentity;
 import bisq.security.tls.TlsException;
 import bisq.security.tls.TlsKeyStore;
 import bisq.security.tls.TlsPasswordException;
@@ -93,7 +93,7 @@ public class TlsContextService {
             KeyStore keyStore;
             Optional<KeyStore> optionalKeyStore;
             try {
-                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, effectiveSan);
+                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
                 if (optionalKeyStore.isPresent()) {
                     keyStore = optionalKeyStore.get();
                     if (!SanUtils.isMatchingPersistedSan(keyStore, effectiveSan)) {
@@ -120,7 +120,7 @@ public class TlsContextService {
     private KeyStore createNewKeyStore(List<String> tlsKeyStoreSan, char[] password) throws TlsException {
         try {
             Instant expiryDate = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
-            var tlsIdentity = new TLsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
+            var tlsIdentity = new TlsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
             KeyPair keyPair = tlsIdentity.getKeyPair();
             X509Certificate certificate = tlsIdentity.getCertificate();
             return TlsKeyStore.createAndPersistKeyStore(
