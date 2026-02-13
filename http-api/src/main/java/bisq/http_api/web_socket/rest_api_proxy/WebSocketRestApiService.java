@@ -29,10 +29,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -61,9 +66,28 @@ public class WebSocketRestApiService implements Service {
         // Use HTTP/1.1 explicitly to avoid HTTP/2 behavior where headers and body
         // are sent as separate frames, which can appear as duplicate requests on the server, and cause requests to fail
         // This is important to make sure WebSocket forwarded methods with body such as POST do not fail
-        httpClient = Optional.of(HttpClient.newBuilder()
-                .version(HTTP_1_1)
-                .build());
+        HttpClient.Builder builder = HttpClient.newBuilder().version(HTTP_1_1);
+
+        // When the REST API base address uses HTTPS (TLS enabled), the internal proxy
+        // connects to the same server on localhost with a self-signed certificate.
+        // We use a trust-all SSLContext here because this is a localhost-to-localhost call
+        // within the same process — no network exposure, no MITM risk.
+        if (restApiAddress.startsWith("https://")) {
+            try {
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }}, new SecureRandom());
+                builder.sslContext(sslContext);
+                log.info("Internal REST API proxy configured with trust-all SSL for localhost self-signed cert");
+            } catch (Exception e) {
+                log.error("Failed to configure SSL context for internal proxy", e);
+            }
+        }
+
+        httpClient = Optional.of(builder.build());
         return CompletableFuture.completedFuture(true);
     }
 

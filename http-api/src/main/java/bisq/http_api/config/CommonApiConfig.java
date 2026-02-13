@@ -88,8 +88,8 @@ public abstract class CommonApiConfig {
         this.tlsKeyStorePassword = tlsKeyStorePassword;
         this.tlsKeyStoreSan = tlsKeyStoreSan;
 
-        restApiBaseAddress = protocol + host + ":" + port;
+        restApiBaseAddress = this.protocol + host + ":" + port;
         restApiBaseUrl = restApiBaseAddress + REST_API_BASE_PATH;
-        restApiBindUrl = protocol + bindHost + ":" + port + REST_API_BASE_PATH;
+        restApiBindUrl = this.protocol + bindHost + ":" + port + REST_API_BASE_PATH;
     }
 }
