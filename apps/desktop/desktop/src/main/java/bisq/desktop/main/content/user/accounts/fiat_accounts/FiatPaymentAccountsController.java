@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.fiat.AchTransferAccount;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
 import bisq.account.accounts.fiat.NationalBankAccount;
@@ -46,6 +47,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.AccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.AchTransferAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.F2FAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.FasterPaymentsAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.NationalBankAccountDetails;
@@ -288,7 +290,8 @@ public class FiatPaymentAccountsController implements Controller {
     private AccountDetails<?, ?> getAccountDetails(Account<? extends PaymentMethod<?>, ?> account,
                                                    FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case ACH_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ACH_TRANSFER ->
+                    new AchTransferAccountDetails((AchTransferAccount) account, accountTimestampService);
             case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);

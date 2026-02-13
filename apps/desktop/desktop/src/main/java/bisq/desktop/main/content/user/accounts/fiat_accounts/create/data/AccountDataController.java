@@ -24,6 +24,7 @@ import bisq.account.payment_method.crypto.CryptoPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.AchTransferFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.F2FFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.FasterPaymentsFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.FormController;
@@ -114,7 +115,7 @@ public class AccountDataController implements Controller {
 
     private FormController<?, ?, ?> getFiatPaymentFormController(FiatPaymentRail fiatPaymentRail) {
         return switch (fiatPaymentRail) {
-            case ACH_TRANSFER -> throw new UnsupportedOperationException("Not implemented yet");
+            case ACH_TRANSFER -> new AchTransferFormController(serviceProvider);
             case ADVANCED_CASH -> throw new UnsupportedOperationException("Not implemented yet");
             case ALI_PAY -> throw new UnsupportedOperationException("Not implemented yet");
             case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not implemented yet");

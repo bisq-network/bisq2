@@ -52,7 +52,8 @@ public class PaymentMethodSelectionController implements Controller {
                                 rail == FiatPaymentRail.REVOLUT ||
                                 rail == FiatPaymentRail.PIX ||
                                 rail == FiatPaymentRail.FASTER_PAYMENTS ||
-                                rail == FiatPaymentRail.NATIONAL_BANK
+                                rail == FiatPaymentRail.NATIONAL_BANK ||
+                                rail == FiatPaymentRail.ACH_TRANSFER
                 )
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)

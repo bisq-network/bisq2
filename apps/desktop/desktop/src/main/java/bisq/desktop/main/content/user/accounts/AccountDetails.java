@@ -33,6 +33,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -120,14 +121,6 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     }
 
     protected void addDetails() {
-        Label accountAgeLabel = addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), Res.get("data.na"));
-        accountTimestampByHashPin = accountTimestampService.getAccountTimestampByHash().addObserver(() -> {
-            accountTimestampService.findAccountTimestamp(account)
-                    .ifPresent(date -> UIThread.run(() -> {
-                        String accountAge = TimeFormatter.formatAgeInDays(date);
-                        accountAgeLabel.setText(accountAge);
-                    }));
-        });
     }
 
     protected void addRestrictionsHeadline() {
@@ -142,9 +135,35 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     }
 
     protected void addRestrictions() {
-        addDescriptionAndValue(Res.get("paymentAccounts.tradeLimit"),
+        addCreationDate();
+        addAccountAge();
+        addTradeLimitInfo();
+        addTradeDuration();
+    }
+
+    protected void addCreationDate() {
+        addDescriptionAndValue(Res.get("paymentAccounts.accountCreationDate"),
+                DateFormatter.formatDate(account.getCreationDate()));
+    }
+
+    protected void addAccountAge() {
+        Label accountAgeLabel = addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), Res.get("data.na"));
+        accountTimestampByHashPin = accountTimestampService.getAccountTimestampByHash().addObserver(() -> {
+            accountTimestampService.findAccountTimestamp(account)
+                    .ifPresent(date -> UIThread.run(() -> {
+                        String accountAge = TimeFormatter.formatAgeInDays(date);
+                        accountAgeLabel.setText(accountAge);
+                    }));
+        });
+    }
+
+    protected Label addTradeLimitInfo() {
+        return addDescriptionAndValue(Res.get("paymentAccounts.tradeLimit"),
                 account.getPaymentMethod().getPaymentRail().getTradeLimit());
-        addDescriptionAndValue(Res.get("paymentAccounts.tradeDuration"),
+    }
+
+    protected Label addTradeDuration() {
+        return addDescriptionAndValue(Res.get("paymentAccounts.tradeDuration"),
                 account.getPaymentMethod().getPaymentRail().getTradeDuration());
     }
 
