@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AccountDataView extends View<VBox, AccountDataModel, AccountDataController> {
+
     public AccountDataView(AccountDataModel model, AccountDataController controller) {
         super(new VBox(15), model, controller);
 

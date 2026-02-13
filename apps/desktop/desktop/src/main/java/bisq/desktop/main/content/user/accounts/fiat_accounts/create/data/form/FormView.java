@@ -31,6 +31,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -56,7 +57,7 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
     protected Subscription showOverlayPin;
     @Nullable
     protected VBox overlayContentBox;
-
+    private final ScrollPane scrollPane;
     protected FormView(M model, C controller) {
         super(new StackPane(), model, controller);
 
@@ -66,6 +67,7 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         VBox.setMargin(titleLabel, new Insets(50, 0, 10, 0));
         content = new VBox(10, titleLabel);
         content.setAlignment(Pos.TOP_CENTER);
+        content.setPadding(new Insets(0, 20, 0, 20));
 
         overlay = new VBox(20);
         overlay.setVisible(false);
@@ -75,8 +77,14 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         overlayCloseButton = new Button(Res.get("action.iUnderstand"));
         overlayCloseButton.setDefaultButton(true);
 
-        StackPane.setMargin(overlay, new Insets(-TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, overlay);
+        scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        StackPane.setMargin(overlay, new Insets(-TOP_PANE_HEIGHT - 20, 0, 20, 0));
+        StackPane.setMargin(scrollPane, new Insets(20, 0,20,0));
+        root.getChildren().addAll(scrollPane, overlay);
     }
 
     @Override
@@ -130,7 +138,7 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         info = StringUtils.extractHyperlinks(info, hyperlinks);
         //Label subtitleLabel = new Label(info);
 
-        OrderedList subtitleLabel= new OrderedList(info,"bisq-text-21");
+        OrderedList subtitleLabel = new OrderedList(info, "bisq-text-21");
         subtitleLabel.setMinWidth(getFeedbackTextWidth());
         subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
         VBox hyperlinksBox = getHyperlinksBox(hyperlinks);

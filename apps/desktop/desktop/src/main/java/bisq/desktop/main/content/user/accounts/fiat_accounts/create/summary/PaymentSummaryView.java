@@ -126,7 +126,7 @@ public class PaymentSummaryView extends View<StackPane, PaymentSummaryModel, Pay
                 });
 
         accountNameField.setText(model.getDefaultAccountName());
-        paymentMethod.setText(model.getPaymentMethod().getDisplayString());
+        paymentMethod.setText(model.getPaymentMethod().getShortDisplayString());
         currency.setText(model.getCurrencyString());
         country.setText(model.getCountry());
 

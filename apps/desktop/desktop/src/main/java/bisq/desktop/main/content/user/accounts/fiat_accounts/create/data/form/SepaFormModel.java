@@ -19,8 +19,8 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.common.locale.Country;
-import bisq.desktop.components.controls.validator.SepaBicValidator;
-import bisq.desktop.components.controls.validator.SepaIbanValidator;
+import bisq.desktop.components.controls.validator.fiat.SepaBicValidator;
+import bisq.desktop.components.controls.validator.fiat.SepaIbanValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

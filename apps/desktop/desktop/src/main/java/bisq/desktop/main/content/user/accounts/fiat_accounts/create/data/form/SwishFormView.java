@@ -1,0 +1,84 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
+
+import bisq.common.util.StringUtils;
+import bisq.desktop.components.controls.MaterialTextField;
+import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+@Slf4j
+public class SwishFormView extends FormView<SwishFormModel, SwishFormController> {
+    private final MaterialTextField holderName;
+    private final MaterialTextField mobileNr;
+    private Subscription runValidationPin;
+
+    public SwishFormView(SwishFormModel model, SwishFormController controller) {
+        super(model, controller);
+
+        holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
+                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
+        holderName.setValidators(model.getHolderNameValidator());
+        holderName.setMaxWidth(Double.MAX_VALUE);
+
+        mobileNr = new MaterialTextField(Res.get("paymentAccounts.mobileNr"),
+                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.mobileNr"))));
+        mobileNr.setValidators(model.getMobileNrValidator());
+        mobileNr.setMaxWidth(Double.MAX_VALUE);
+
+        content.getChildren().addAll(holderName, mobileNr);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        super.onViewAttached();
+        if (StringUtils.isNotEmpty(model.getHolderName().get())) {
+            holderName.setText(model.getHolderName().get());
+            holderName.validate();
+        }
+        if (StringUtils.isNotEmpty(model.getMobileNr().get())) {
+            mobileNr.setText(model.getMobileNr().get());
+            mobileNr.validate();
+        }
+
+        holderName.textProperty().bindBidirectional(model.getHolderName());
+        mobileNr.textProperty().bindBidirectional(model.getMobileNr());
+
+        runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
+            if (runValidation) {
+                holderName.validate();
+                mobileNr.validate();
+                controller.onValidationDone();
+            }
+        });
+    }
+
+    @Override
+    protected void onViewDetached() {
+        super.onViewDetached();
+        holderName.resetValidation();
+        mobileNr.resetValidation();
+
+        holderName.textProperty().unbindBidirectional(model.getHolderName());
+        mobileNr.textProperty().unbindBidirectional(model.getMobileNr());
+
+        runValidationPin.unsubscribe();
+    }
+}

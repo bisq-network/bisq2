@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.payment_method;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.desktop.common.view.Controller;
@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,32 +45,27 @@ public class PaymentMethodSelectionController implements Controller {
     public PaymentMethodSelectionController() {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
-                .filter(rail ->
-                        // TODO until others are implemented
-                        rail == FiatPaymentRail.F2F ||
-                                rail == FiatPaymentRail.SEPA ||
-                                rail == FiatPaymentRail.ZELLE ||
-                                rail == FiatPaymentRail.REVOLUT ||
-                                rail == FiatPaymentRail.PIX ||
-                                rail == FiatPaymentRail.FASTER_PAYMENTS ||
-                                rail == FiatPaymentRail.NATIONAL_BANK ||
-                                rail == FiatPaymentRail.ACH_TRANSFER
-                )
+                .filter(rail -> rail != FiatPaymentRail.CASH_APP)
+                .filter(rail -> rail != FiatPaymentRail.SWIFT)
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)
+                .sorted(Comparator.comparing(PaymentMethodItem::getName))
                 .collect(Collectors.toList());
         model = new PaymentMethodSelectionModel(items);
         view = new PaymentMethodSelectionView(model, this);
+
     }
 
     @Override
     public void onActivate() {
         String userCountryCode = LocaleRepository.getDefaultLocale().getCountry();
         String userCurrencyCode = FiatCurrencyRepository.getCurrencyByCountryCode(userCountryCode).getCode();
-        PaymentMethodComparator comparator = new PaymentMethodComparator(userCountryCode, userCurrencyCode);
+       // PaymentMethodComparator comparator = new PaymentMethodComparator(userCountryCode, userCurrencyCode);
         // We do not use sorted list as we want to use the column sort properties.
         // This initial sorting is just applied at start. If user use column sorting that will be applied.
-        model.getList().sort(comparator);
+
+        // TODO add a check box for showing only methods matching my currency/country
+        model.getList().sort(Comparator.comparing(PaymentMethodItem::getName));
 
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             model.getFilteredList().setPredicate(item -> {

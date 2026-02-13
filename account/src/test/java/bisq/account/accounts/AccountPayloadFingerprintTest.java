@@ -134,7 +134,7 @@ public class AccountPayloadFingerprintTest {
     @Test
     void advancedCashFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Advanced Cash uses account number.
-        AdvancedCashAccountPayload payload = new AdvancedCashAccountPayload("id", SALT, "USD", "AC-12345");
+        AdvancedCashAccountPayload payload = new AdvancedCashAccountPayload("id", SALT, List.of("USD"), "AC-12345");
         assertArrayEquals(expected("ADVANCED_CASH", "AC-12345"), payload.getFingerprint());
     }
 
@@ -197,7 +197,7 @@ public class AccountPayloadFingerprintTest {
     @Test
     void amazonGiftCardFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: AmazonGiftCard uses "AmazonGiftCard" prefix without country code.
-        AmazonGiftCardAccountPayload payload = new AmazonGiftCardAccountPayload("id", SALT, "US", "alice@example.com");
+        AmazonGiftCardAccountPayload payload = new AmazonGiftCardAccountPayload("id", SALT, "US", "USD", "alice@example.com");
         assertArrayEquals(expected("AMAZON_GIFT_CARD", "AmazonGiftCard", "alice@example.com"), payload.getFingerprint());
     }
 
@@ -211,7 +211,7 @@ public class AccountPayloadFingerprintTest {
     @Test
     void cashByMailFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: CashByMail uses contact and postal address.
-        CashByMailAccountPayload payload = new CashByMailAccountPayload("id", SALT, "123 Main St", "Alice", "Extra");
+        CashByMailAccountPayload payload = new CashByMailAccountPayload("id", SALT, "USD", "123 Main St", "Alice", "Extra");
         assertArrayEquals(expected("CASH_BY_MAIL", "Alice", "123 Main St"), payload.getFingerprint());
     }
 

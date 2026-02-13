@@ -120,7 +120,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     }
 
     public String getDefaultAccountName() {
-        return getPaymentMethodName() + "-" + StringUtils.truncate(id, 8);
+        return getPaymentMethod().getShortDisplayString() + "-" + StringUtils.truncate(id, 4);
     }
 
     public List<String> getSelectedCurrencyCodes() {

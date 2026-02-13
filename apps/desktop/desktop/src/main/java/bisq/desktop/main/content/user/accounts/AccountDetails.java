@@ -28,6 +28,7 @@ import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -214,7 +215,7 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     }
 
     protected Label addValueLabel(String value) {
-        Label label = new Label(value);
+        Label label = new Label(StringUtils.flattenLineBreaks(value));
         label.getStyleClass().add(VALUE_STYLE);
         gridPane.add(label, 1, rowIndex, 2, 1);
         return label;

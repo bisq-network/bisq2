@@ -15,29 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.validator;
+package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details;
 
-import bisq.common.validation.SepaPaymentAccountValidation;
-import javafx.scene.control.TextInputControl;
+import bisq.account.accounts.fiat.UpiAccountPayload;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.i18n.Res;
 
-public class SepaBicValidator extends ValidatorBase {
-
-    public SepaBicValidator() {
-        super();
+public class UpiAccountDetailsGridPane extends FiatAccountDetailsGridPane<UpiAccountPayload> {
+    public UpiAccountDetailsGridPane(UpiAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+        super(accountPayload, fiatPaymentRail);
     }
 
-
     @Override
-    protected void eval() {
-        if (srcControl.get() instanceof TextInputControl textInputControl) {
-            String bic = textInputControl.getText();
-            try {
-                SepaPaymentAccountValidation.validateBic(bic);
-                hasErrors.set(false);
-            } catch (Exception e) {
-                setMessage(e.getMessage());
-                hasErrors.set(true);
-            }
-        }
+    protected void addDetails(UpiAccountPayload accountPayload) {
+        addDescriptionAndValue(Res.get("paymentAccounts.upi.virtualPaymentAddress"),
+                accountPayload.getVirtualPaymentAddress());
     }
 }

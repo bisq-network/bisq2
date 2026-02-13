@@ -50,7 +50,7 @@ public class UnlockView extends View<VBox, UnlockModel, UnlockController> {
 
         password = new MaterialPasswordField(Res.get("user.password.enterPassword"));
         password.setValidators(
-                new RequiredFieldValidator(Res.get("validation.empty")),
+                new RequiredFieldValidator(),
                 new TextMinLengthValidator(Res.get("validation.password.tooShort")));
 
         unlockButton = new Button(Res.get("unlock.button"));

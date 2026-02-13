@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.List;
 
 @Slf4j
 public final class ImportAdvancedCashAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, AdvancedCashAccountPayload> {
@@ -41,7 +42,7 @@ public final class ImportAdvancedCashAccountParser extends ImportFiatAccountPars
         AdvancedCashAccountPayload accountPayload = new AdvancedCashAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                selectedCurrencyCode,
+                List.of(selectedCurrencyCode),
                 accountNr);
 
         return new AdvancedCashAccount(id,

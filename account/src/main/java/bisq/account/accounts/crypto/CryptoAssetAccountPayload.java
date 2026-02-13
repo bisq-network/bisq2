@@ -97,7 +97,7 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
 
     @Override
     public String getDefaultAccountName() {
-        return getPaymentMethod().getName() + "-" + StringUtils.truncate(address, 8);
+        return getPaymentMethod().getShortDisplayString() + "-" + StringUtils.truncate(address, 4);
     }
 
     @Override

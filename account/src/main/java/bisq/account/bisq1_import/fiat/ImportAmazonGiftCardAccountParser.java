@@ -37,10 +37,12 @@ public final class ImportAmazonGiftCardAccountParser extends ImportCountryBasedA
     @Override
     public AmazonGiftCardAccount parse(KeyPair dsaKeyPair) {
         String emailOrMobileNr = requireText(paymentAccountPayloadNode, "emailOrMobileNr");
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
         AmazonGiftCardAccountPayload accountPayload = new AmazonGiftCardAccountPayload(
                 paymentAccountPayloadId,
                 salt,
                 countryCode,
+                selectedCurrencyCode,
                 emailOrMobileNr);
 
         return new AmazonGiftCardAccount(id,

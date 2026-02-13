@@ -46,7 +46,7 @@ public class AchTransferAccountDetails extends BankAccountDetails<AchTransferAcc
 
     private void addHolderAddress(AchTransferAccountPayload accountPayload) {
         Label label = addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.holderAddress"),
-                accountPayload.getHolderAddressAsSingleLine(), accountPayload.getHolderAddress());
+                accountPayload.getHolderAddress(), accountPayload.getHolderAddress());
         label.setTooltip(new BisqTooltip(accountPayload.getHolderAddress()));
     }
 }
