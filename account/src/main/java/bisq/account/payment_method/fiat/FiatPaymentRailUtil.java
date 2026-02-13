@@ -346,7 +346,6 @@ public class FiatPaymentRailUtil {
     public static List<String> getPayseraCurrencyCodes() {
         return List.of(
                 "AUD",
-                "BGN",
                 "BYN",
                 "CAD",
                 "CHF",
@@ -383,30 +382,16 @@ public class FiatPaymentRailUtil {
         return currenciesFromCodes(getPayseraCurrencyCodes());
     }
 
-
     /* --------------------------------------------------------------------- */
-    // VERSE
+    // PERFECT_MONEY
     /* --------------------------------------------------------------------- */
 
-    public static List<String> getVerseCurrencyCodes() {
-        return List.of("DKK", "EUR", "HUF", "PLN", "SEK");
+    public static List<String> getPerfectMoneyCurrencyCodes() {
+        return List.of("EUR", "USD");
     }
 
-    public static List<FiatCurrency> getVerseCurrencies() {
-        return currenciesFromCodes(getVerseCurrencyCodes());
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // MONEY_BEAM
-    /* --------------------------------------------------------------------- */
-
-    public static List<String> getMoneyBeamCurrencyCodes() {
-        return List.of("EUR", "GBP");
-    }
-
-    public static List<FiatCurrency> getMoneyBeamCurrencies() {
-        return currenciesFromCodes(getMoneyBeamCurrencyCodes());
+    public static List<FiatCurrency> getPerfectMoneyCurrencies() {
+        return currenciesFromCodes(getPerfectMoneyCurrencyCodes());
     }
 
 
@@ -538,7 +523,6 @@ public class FiatPaymentRailUtil {
                 Map.entry(FiatPaymentRail.SATISPAY, 1),
                 Map.entry(FiatPaymentRail.SBP, 1),
                 Map.entry(FiatPaymentRail.MERCADO_PAGO, 1),
-                Map.entry(FiatPaymentRail.VERSE, 1),
                 Map.entry(FiatPaymentRail.NEFT, 1),
                 Map.entry(FiatPaymentRail.UPI, 1)
         );

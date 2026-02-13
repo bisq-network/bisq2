@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.List;
 
 @Slf4j
 public final class ImportPayseraAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, PayseraAccountPayload> {
@@ -37,11 +38,11 @@ public final class ImportPayseraAccountParser extends ImportFiatAccountParser<Fi
     @Override
     public PayseraAccount parse(KeyPair dsaKeyPair) {
         String email = requireText(paymentAccountPayloadNode, "email");
-        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
+        List<String> selectedCurrencyCodes = requireTradeCurrencyCodes();
         PayseraAccountPayload accountPayload = new PayseraAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                selectedCurrencyCode,
+                selectedCurrencyCodes,
                 email);
 
         return new PayseraAccount(id,

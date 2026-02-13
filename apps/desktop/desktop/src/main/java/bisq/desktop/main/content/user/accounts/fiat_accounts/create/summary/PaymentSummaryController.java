@@ -91,14 +91,14 @@ import bisq.account.accounts.fiat.StrikeAccount;
 import bisq.account.accounts.fiat.StrikeAccountPayload;
 import bisq.account.accounts.fiat.SwishAccount;
 import bisq.account.accounts.fiat.SwishAccountPayload;
+import bisq.account.accounts.fiat.SwiftAccount;
+import bisq.account.accounts.fiat.SwiftAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UpiAccount;
 import bisq.account.accounts.fiat.UpiAccountPayload;
 import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
-import bisq.account.accounts.fiat.VerseAccount;
-import bisq.account.accounts.fiat.VerseAccountPayload;
 import bisq.account.accounts.fiat.WeChatPayAccount;
 import bisq.account.accounts.fiat.WeChatPayAccountPayload;
 import bisq.account.accounts.fiat.WiseAccount;
@@ -150,10 +150,10 @@ import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.deta
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.SepaInstantAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.StrikeAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.SwishAccountDetailsGridPane;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.SwiftAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.UpholdAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.UpiAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.USPostalMoneyOrderAccountDetailsGridPane;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.VerseAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.WeChatPayAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.WiseAccountDetailsGridPane;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.details.WiseUsdAccountDetailsGridPane;
@@ -313,7 +313,8 @@ public class PaymentSummaryController implements Controller {
                     new SepaInstantAccountDetailsGridPane((SepaInstantAccountPayload) accountPayload, fiatPaymentRail);
             case STRIKE ->
                     new StrikeAccountDetailsGridPane((StrikeAccountPayload) accountPayload, fiatPaymentRail);
-            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWIFT ->
+                    new SwiftAccountDetailsGridPane((SwiftAccountPayload) accountPayload, fiatPaymentRail);
             case SWISH ->
                     new SwishAccountDetailsGridPane((SwishAccountPayload) accountPayload, fiatPaymentRail);
             case UPHOLD ->
@@ -322,8 +323,6 @@ public class PaymentSummaryController implements Controller {
                     new UpiAccountDetailsGridPane((UpiAccountPayload) accountPayload, fiatPaymentRail);
             case US_POSTAL_MONEY_ORDER ->
                     new USPostalMoneyOrderAccountDetailsGridPane((USPostalMoneyOrderAccountPayload) accountPayload, fiatPaymentRail);
-            case VERSE ->
-                    new VerseAccountDetailsGridPane((VerseAccountPayload) accountPayload, fiatPaymentRail);
             case WECHAT_PAY ->
                     new WeChatPayAccountDetailsGridPane((WeChatPayAccountPayload) accountPayload, fiatPaymentRail);
             case WISE ->
@@ -598,7 +597,14 @@ public class PaymentSummaryController implements Controller {
                                 keyPair,
                                 keyAlgorithm,
                                 accountOrigin);
-                case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+                case SWIFT ->
+                        new SwiftAccount(StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                accountName,
+                                (SwiftAccountPayload) model.getAccountPayload(),
+                                keyPair,
+                                keyAlgorithm,
+                                accountOrigin);
                 case SWISH ->
                         new SwishAccount(StringUtils.createUid(),
                                 System.currentTimeMillis(),
@@ -628,14 +634,6 @@ public class PaymentSummaryController implements Controller {
                                 System.currentTimeMillis(),
                                 accountName,
                                 (USPostalMoneyOrderAccountPayload) model.getAccountPayload(),
-                                keyPair,
-                                keyAlgorithm,
-                                accountOrigin);
-                case VERSE ->
-                        new VerseAccount(StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                accountName,
-                                (VerseAccountPayload) model.getAccountPayload(),
                                 keyPair,
                                 keyAlgorithm,
                                 accountOrigin);

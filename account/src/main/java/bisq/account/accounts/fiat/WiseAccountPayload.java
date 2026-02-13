@@ -17,9 +17,10 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
@@ -40,20 +41,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccountPayload extends CountryBasedAccountPayload implements MultiCurrencyAccountPayload {
+public final class WiseAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
     private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String email;
 
     public WiseAccountPayload(String id,
-                              String countryCode,
                               List<String> selectedCurrencyCodes,
                               String holderName,
                               String email
     ) {
         this(id,
                 AccountUtils.generateSalt(),
-                countryCode,
                 selectedCurrencyCodes,
                 holderName,
                 email);
@@ -61,12 +60,11 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
 
     public WiseAccountPayload(String id,
                                byte[] salt,
-                               String countryCode,
                                List<String> selectedCurrencyCodes,
                                String holderName,
                                String email
     ) {
-        super(id, salt, countryCode);
+        super(id, salt);
         this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.email = email;
@@ -83,8 +81,8 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountPayloadBuilder(serializeForHash)
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
                 .setWiseAccountPayload(toWiseAccountPayloadProto(serializeForHash));
     }
 
@@ -100,12 +98,10 @@ public final class WiseAccountPayload extends CountryBasedAccountPayload impleme
     }
 
     public static WiseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getWiseAccountPayload();
+        var payload = proto.getWiseAccountPayload();
         return new WiseAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
                 payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
                 payload.getEmail()

@@ -20,22 +20,21 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 import bisq.common.asset.FiatCurrency;
 import bisq.desktop.components.controls.validator.EmailValidator;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 public class PayseraFormModel extends FormModel {
     private final ObservableList<FiatCurrency> currencies;
-    private final ObjectProperty<FiatCurrency> selectedCurrency = new SimpleObjectProperty<>();
-    private final BooleanProperty currencyErrorVisible = new SimpleBooleanProperty();
+    private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();
+    private final BooleanProperty selectedCurrenciesErrorVisible = new SimpleBooleanProperty();
 
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty email = new SimpleStringProperty();
@@ -44,5 +43,6 @@ public class PayseraFormModel extends FormModel {
     public PayseraFormModel(String id, List<FiatCurrency> currencies) {
         super(id);
         this.currencies = FXCollections.observableArrayList(currencies);
+        selectedCurrencies.addAll(currencies);
     }
 }

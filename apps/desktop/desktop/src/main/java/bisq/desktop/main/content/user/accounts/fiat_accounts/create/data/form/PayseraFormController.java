@@ -19,8 +19,14 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.PayseraAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.asset.FiatCurrency;
+import bisq.common.asset.Asset;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PayseraFormController extends FormController<PayseraFormView, PayseraFormModel, PayseraAccountPayload> {
     public PayseraFormController(ServiceProvider serviceProvider) {
@@ -34,29 +40,35 @@ public class PayseraFormController extends FormController<PayseraFormView, Payse
 
     @Override
     protected PayseraFormModel createModel() {
-        return new PayseraFormModel(StringUtils.createUid(), FiatPaymentRailUtil.getPayseraCurrencies());
+        List<FiatCurrency> payseraCurrencies = FiatPaymentRailUtil.getPayseraCurrencies().stream()
+                .sorted(Comparator.comparing(Asset::getName))
+                .collect(Collectors.toList());
+        return new PayseraFormModel(StringUtils.createUid(), payseraCurrencies);
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
-        model.getCurrencyErrorVisible().set(false);
+        model.getSelectedCurrenciesErrorVisible().set(false);
     }
 
     @Override
     public boolean validate() {
-        boolean currencySet = model.getSelectedCurrency().get() != null;
-        model.getCurrencyErrorVisible().set(!currencySet);
+        boolean selectedCurrenciesValid = !model.getSelectedCurrencies().isEmpty();
+        model.getSelectedCurrenciesErrorVisible().set(!selectedCurrenciesValid);
         boolean emailValid = model.getEmailValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return currencySet && emailValid;
+        return selectedCurrenciesValid && emailValid;
     }
 
     @Override
     public PayseraAccountPayload createAccountPayload() {
+        List<String> selectedCurrencyCodes = model.getSelectedCurrencies().stream()
+                .map(FiatCurrency::getCode)
+                .collect(Collectors.toList());
         return new PayseraAccountPayload(model.getId(),
-                model.getSelectedCurrency().get().getCode(),
+                selectedCurrencyCodes,
                 model.getEmail().get());
     }
 
@@ -64,7 +76,12 @@ public class PayseraFormController extends FormController<PayseraFormView, Payse
         model.getRunValidation().set(false);
     }
 
-    void onSelectCurrency() {
-        model.getCurrencyErrorVisible().set(false);
+    void onSelectCurrency(FiatCurrency currency, boolean selected) {
+        if (selected) {
+            model.getSelectedCurrencies().add(currency);
+        } else {
+            model.getSelectedCurrencies().remove(currency);
+        }
+        model.getSelectedCurrenciesErrorVisible().set(model.getSelectedCurrencies().isEmpty());
     }
 }

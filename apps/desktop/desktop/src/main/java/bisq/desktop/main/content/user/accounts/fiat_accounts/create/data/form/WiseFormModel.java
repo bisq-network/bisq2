@@ -23,9 +23,7 @@ import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.EmailValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -38,8 +36,6 @@ import java.util.List;
 @Getter
 public class WiseFormModel extends FormModel {
     private final ObservableList<Country> countries;
-    private final ObjectProperty<Country> selectedCountry = new SimpleObjectProperty<>();
-    private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
 
     private final ObservableList<FiatCurrency> currencies;
     private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();

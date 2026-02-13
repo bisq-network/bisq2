@@ -32,12 +32,14 @@ public class StrikeFormView extends FormView<StrikeFormModel, StrikeFormControll
     public StrikeFormView(StrikeFormModel model, StrikeFormController controller) {
         super(model, controller);
 
-        holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
-                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
+        holderName = new MaterialTextField(Res.get("paymentAccounts.userName"),
+                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.userName"))));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
         content.getChildren().add(holderName);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.strike"));
     }
 
     @Override

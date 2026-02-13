@@ -33,17 +33,18 @@ public class MercadoPagoFormView extends FormView<MercadoPagoFormModel, MercadoP
     public MercadoPagoFormView(MercadoPagoFormModel model, MercadoPagoFormController controller) {
         super(model, controller);
 
-        holderId = new MaterialTextField(Res.get("paymentAccounts.mercadoPago.holderId"),
-                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.mercadoPago.holderId"))));
-        holderId.setValidators(model.getHolderIdValidator());
-        holderId.setMaxWidth(Double.MAX_VALUE);
-
         holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
         holderName.setValidators(model.getHolderNameValidator());
         holderName.setMaxWidth(Double.MAX_VALUE);
 
-        content.getChildren().addAll(holderId, holderName);
+        holderId = new MaterialTextField(Res.get("paymentAccounts.mercadoPago.holderId"),
+                Res.get("paymentAccounts.mercadoPago.holderId.prompt"));
+        holderId.setValidators(model.getHolderIdValidator());
+        holderId.setMaxWidth(Double.MAX_VALUE);
+
+
+        content.getChildren().addAll(holderName, holderId);
     }
 
     @Override

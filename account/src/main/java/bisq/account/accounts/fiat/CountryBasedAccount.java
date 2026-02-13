@@ -53,7 +53,6 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case BANKACCOUNT -> BankAccount.fromProto(proto);
             case SEPAACCOUNT -> SepaAccount.fromProto(proto);
             case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
-            case WISEACCOUNT -> WiseAccount.fromProto(proto);
             case F2FACCOUNT -> F2FAccount.fromProto(proto);
             case PIXACCOUNT -> PixAccount.fromProto(proto);
             case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
@@ -67,6 +66,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
             case PROMPTPAYACCOUNT -> PromptPayAccount.fromProto(proto);
             case SBPACCOUNT -> SbpAccount.fromProto(proto);
             case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
+            case SWIFTACCOUNT -> SwiftAccount.fromProto(proto);
             case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
             case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
             case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);

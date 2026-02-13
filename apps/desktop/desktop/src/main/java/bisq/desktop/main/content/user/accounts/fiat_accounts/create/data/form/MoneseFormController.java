@@ -19,8 +19,12 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.asset.Asset;
+import bisq.common.asset.FiatCurrency;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+
+import java.util.stream.Collectors;
 
 public class MoneseFormController extends FormController<MoneseFormView, MoneseFormModel, MoneseAccountPayload> {
     public MoneseFormController(ServiceProvider serviceProvider) {
@@ -41,23 +45,25 @@ public class MoneseFormController extends FormController<MoneseFormView, MoneseF
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
-        model.getCurrencyErrorVisible().set(false);
+        model.getSelectedCurrenciesErrorVisible().set(false);
     }
 
     @Override
     public boolean validate() {
-        boolean currencySet = model.getSelectedCurrency().get() != null;
-        model.getCurrencyErrorVisible().set(!currencySet);
+        boolean selectedCurrenciesValid = !model.getSelectedCurrencies().isEmpty();
+        model.getSelectedCurrenciesErrorVisible().set(!selectedCurrenciesValid);
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean mobileValid = model.getMobileNrValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return currencySet && holderNameValid && mobileValid;
+        return selectedCurrenciesValid && holderNameValid && mobileValid;
     }
 
     @Override
     public MoneseAccountPayload createAccountPayload() {
         return new MoneseAccountPayload(model.getId(),
-                model.getSelectedCurrency().get().getCode(),
+                model.getSelectedCurrencies().stream()
+                        .map(Asset::getCode)
+                        .collect(Collectors.toList()),
                 model.getHolderName().get(),
                 model.getMobileNr().get());
     }
@@ -66,7 +72,12 @@ public class MoneseFormController extends FormController<MoneseFormView, MoneseF
         model.getRunValidation().set(false);
     }
 
-    void onSelectCurrency() {
-        model.getCurrencyErrorVisible().set(false);
+    void onSelectCurrency(FiatCurrency currency, boolean selected) {
+        if (selected) {
+            model.getSelectedCurrencies().add(currency);
+        } else {
+            model.getSelectedCurrencies().remove(currency);
+        }
+        model.getSelectedCurrenciesErrorVisible().set(model.getSelectedCurrencies().isEmpty());
     }
 }

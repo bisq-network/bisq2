@@ -54,12 +54,12 @@ import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaInstantAccount;
 import bisq.account.accounts.fiat.StrikeAccount;
 import bisq.account.accounts.fiat.SwishAccount;
+import bisq.account.accounts.fiat.SwiftAccount;
 import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UpiAccount;
 import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.accounts.fiat.VerseAccount;
 import bisq.account.accounts.fiat.WeChatPayAccount;
 import bisq.account.accounts.fiat.WiseAccount;
 import bisq.account.accounts.fiat.WiseUsdAccount;
@@ -113,11 +113,11 @@ import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SepaAccount
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SepaInstantAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.StrikeAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SwishAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SwiftAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UpholdAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UpiAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.USPostalMoneyOrderAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UserDefinedAccountDetails;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.details.VerseAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WeChatPayAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WiseAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WiseUsdAccountDetails;
@@ -418,7 +418,8 @@ public class FiatPaymentAccountsController implements Controller {
                     new SepaInstantAccountDetails((SepaInstantAccount) account, accountTimestampService);
             case STRIKE ->
                     new StrikeAccountDetails((StrikeAccount) account, accountTimestampService);
-            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SWIFT ->
+                    new SwiftAccountDetails((SwiftAccount) account, accountTimestampService);
             case SWISH ->
                     new SwishAccountDetails((SwishAccount) account, accountTimestampService);
             case UPHOLD ->
@@ -427,8 +428,6 @@ public class FiatPaymentAccountsController implements Controller {
                     new UpiAccountDetails((UpiAccount) account, accountTimestampService);
             case US_POSTAL_MONEY_ORDER ->
                     new USPostalMoneyOrderAccountDetails((USPostalMoneyOrderAccount) account, accountTimestampService);
-            case VERSE ->
-                    new VerseAccountDetails((VerseAccount) account, accountTimestampService);
             case WECHAT_PAY ->
                     new WeChatPayAccountDetails((WeChatPayAccount) account, accountTimestampService);
             case WISE ->

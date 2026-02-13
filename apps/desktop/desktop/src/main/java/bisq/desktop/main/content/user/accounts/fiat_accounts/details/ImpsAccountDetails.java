@@ -37,7 +37,7 @@ public class ImpsAccountDetails extends FiatAccountDetails<ImpsAccount> {
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.accountNr"),
                 accountPayload.getAccountNr());
 
-        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.bank.bankId"),
+        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.createAccount.accountData.ifsc"),
                 accountPayload.getIfsc());
 
         super.addDetails();

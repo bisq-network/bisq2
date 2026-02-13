@@ -17,77 +17,60 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
-import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
+import java.util.List;
 
 @Slf4j
 public class PayseraFormView extends FormView<PayseraFormModel, PayseraFormController> {
-    private final AutoCompleteComboBox<FiatCurrency> currencyComboBox;
     private final MaterialTextField email;
-    private final Label currencyErrorLabel;
-    private Subscription selectedCurrencyPin, runValidationPin;
+    private final Label selectedCurrenciesErrorLabel;
+    private final FlowPane selectedCurrenciesFlowPane;
+    private Subscription runValidationPin;
 
     public PayseraFormView(PayseraFormModel model, PayseraFormController controller) {
         super(model, controller);
-
-        currencyComboBox = new AutoCompleteComboBox<>(
-                model.getCurrencies(),
-                Res.get("paymentAccounts.currency"),
-                Res.get("paymentAccounts.createAccount.accountData.currency.prompt")
-        );
-        currencyComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(FiatCurrency currency) {
-                return Optional.ofNullable(currency)
-                        .map(Asset::getDisplayNameAndCode)
-                        .orElse("");
-            }
-
-            @Override
-            public FiatCurrency fromString(String string) {
-                return null;
-            }
-        });
-
-        currencyErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.currency.error.noneSelected"));
-        currencyErrorLabel.setMouseTransparent(true);
-        currencyErrorLabel.getStyleClass().add("material-text-field-error");
-        VBox.setMargin(currencyErrorLabel, new Insets(3.5, 0, 0, 16));
-        VBox currencyVBox = new VBox(currencyComboBox, currencyErrorLabel);
-        currencyVBox.setAlignment(Pos.TOP_LEFT);
 
         email = new MaterialTextField(Res.get("paymentAccounts.email"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.email"))));
         email.setValidators(model.getEmailValidator());
         email.setMaxWidth(Double.MAX_VALUE);
 
-        HBox.setHgrow(email, Priority.ALWAYS);
-        HBox hBox = new HBox(10, currencyVBox, email);
-        content.getChildren().add(hBox);
+        Label selectedCurrenciesLabel = new Label(Res.get("paymentAccounts.paysera.selectedCurrencies"));
+        selectedCurrenciesLabel.getStyleClass().add("bisq-text-1");
+
+        selectedCurrenciesFlowPane = new FlowPane(5, 10);
+
+        selectedCurrenciesErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.paysera.selectedCurrencies.error"));
+        selectedCurrenciesErrorLabel.getStyleClass().add("material-text-field-error");
+
+        VBox.setMargin(email, new Insets(0, 0, 10, 0));
+        content.getChildren().addAll(email,
+                new HBox(selectedCurrenciesLabel, Spacer.fillHBox()),
+                selectedCurrenciesFlowPane,
+                new HBox(selectedCurrenciesErrorLabel, Spacer.fillHBox())
+        );
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
-        currencyComboBox.getSelectionModel().select(model.getSelectedCurrency().get());
-        currencyErrorLabel.visibleProperty().bind(model.getCurrencyErrorVisible());
-        currencyErrorLabel.managedProperty().bind(model.getCurrencyErrorVisible());
+        selectedCurrenciesErrorLabel.visibleProperty().bind(model.getSelectedCurrenciesErrorVisible());
+        selectedCurrenciesErrorLabel.managedProperty().bind(model.getSelectedCurrenciesErrorVisible());
 
         if (StringUtils.isNotEmpty(model.getEmail().get())) {
             email.setText(model.getEmail().get());
@@ -96,19 +79,14 @@ public class PayseraFormView extends FormView<PayseraFormModel, PayseraFormContr
 
         email.textProperty().bindBidirectional(model.getEmail());
 
-        selectedCurrencyPin = EasyBind.subscribe(currencyComboBox.getSelectionModel().selectedItemProperty(), selectedCurrency -> {
-            if (selectedCurrency != null) {
-                model.getSelectedCurrency().set(selectedCurrency);
-                controller.onSelectCurrency();
-            }
-        });
-
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
                 email.validate();
                 controller.onValidationDone();
             }
         });
+
+        selectedCurrenciesFlowPane.getChildren().addAll(getCurrencyEntries(model.getCurrencies(), model.getSelectedCurrencies()));
     }
 
     @Override
@@ -116,12 +94,37 @@ public class PayseraFormView extends FormView<PayseraFormModel, PayseraFormContr
         super.onViewDetached();
         email.resetValidation();
 
-        currencyErrorLabel.visibleProperty().unbind();
-        currencyErrorLabel.managedProperty().unbind();
+        selectedCurrenciesErrorLabel.visibleProperty().unbind();
+        selectedCurrenciesErrorLabel.managedProperty().unbind();
 
         email.textProperty().unbindBidirectional(model.getEmail());
 
-        selectedCurrencyPin.unsubscribe();
         runValidationPin.unsubscribe();
+
+        selectedCurrenciesFlowPane.getChildren().stream()
+                .map(CheckBox.class::cast)
+                .forEach(checkBox -> {
+                    checkBox.setTooltip(null);
+                    checkBox.setOnAction(null);
+                });
+        selectedCurrenciesFlowPane.getChildren().clear();
+    }
+
+    private Node[] getCurrencyEntries(List<FiatCurrency> list, List<FiatCurrency> selectedCurrencies) {
+        List<CheckBox> nodes = list.stream()
+                .map(currency -> getCurrencyEntry(currency, selectedCurrencies.contains(currency)))
+                .toList();
+        return nodes.toArray(new Node[0]);
+    }
+
+    private CheckBox getCurrencyEntry(FiatCurrency currency, boolean isSelected) {
+        CheckBox checkBox = new CheckBox(currency.getName());
+        checkBox.setSelected(isSelected);
+        checkBox.getStyleClass().add("small-checkbox");
+        double width = 136;
+        checkBox.setMinWidth(width);
+        checkBox.setMaxWidth(width);
+        checkBox.setOnAction(e -> controller.onSelectCurrency(currency, checkBox.isSelected()));
+        return checkBox;
     }
 }

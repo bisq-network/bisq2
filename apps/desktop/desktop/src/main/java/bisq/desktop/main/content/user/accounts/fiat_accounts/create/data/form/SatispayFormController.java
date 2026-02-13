@@ -40,6 +40,8 @@ public class SatispayFormController extends FormController<SatispayFormView, Sat
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
+
+        showOverlay();
     }
 
     @Override

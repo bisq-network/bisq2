@@ -45,6 +45,8 @@ public class USPostalMoneyOrderFormView extends FormView<USPostalMoneyOrderFormM
         postalAddress.setFixedHeight(120);
 
         content.getChildren().addAll(holderName, postalAddress);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.usPostalMoneyOrder"));
     }
 
     @Override

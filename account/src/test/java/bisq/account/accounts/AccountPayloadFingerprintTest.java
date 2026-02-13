@@ -21,8 +21,8 @@ import bisq.account.accounts.fiat.MercadoPagoAccountPayload;
 import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.account.accounts.fiat.MoneyBeamAccountPayload;
 import bisq.account.accounts.fiat.MoneyGramAccountPayload;
-import bisq.account.accounts.fiat.NeftAccountPayload;
 import bisq.account.accounts.fiat.NationalBankAccountPayload;
+import bisq.account.accounts.fiat.NeftAccountPayload;
 import bisq.account.accounts.fiat.PayIdAccountPayload;
 import bisq.account.accounts.fiat.PayseraAccountPayload;
 import bisq.account.accounts.fiat.PerfectMoneyAccountPayload;
@@ -41,7 +41,6 @@ import bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UpiAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.accounts.fiat.VerseAccountPayload;
 import bisq.account.accounts.fiat.WeChatPayAccountPayload;
 import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.accounts.fiat.WiseUsdAccountPayload;
@@ -50,6 +49,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +59,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+@Slf4j
 public class AccountPayloadFingerprintTest {
     private static final byte[] SALT = new byte[32];
 
@@ -134,28 +135,28 @@ public class AccountPayloadFingerprintTest {
     @Test
     void advancedCashFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Advanced Cash uses account number.
-        AdvancedCashAccountPayload payload = new AdvancedCashAccountPayload("id", SALT, List.of("USD"), "AC-12345");
-        assertArrayEquals(expected("ADVANCED_CASH", "AC-12345"), payload.getFingerprint());
+        AdvancedCashAccountPayload payload = new AdvancedCashAccountPayload("id", SALT, List.of("USD"), "A123456789012");
+        assertArrayEquals(expected("ADVANCED_CASH", "A123456789012"), payload.getFingerprint());
     }
 
     @Test
     void perfectMoneyFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Perfect Money uses account number.
-        PerfectMoneyAccountPayload payload = new PerfectMoneyAccountPayload("id", SALT, "U1234567");
+        PerfectMoneyAccountPayload payload = new PerfectMoneyAccountPayload("id", SALT, "USD", "U1234567");
         assertArrayEquals(expected("PERFECT_MONEY", "U1234567"), payload.getFingerprint());
     }
 
     @Test
     void moneseFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Monese uses holder name.
-        MoneseAccountPayload payload = new MoneseAccountPayload("id", SALT, "EUR", "Alice", "+49123456789");
+        MoneseAccountPayload payload = new MoneseAccountPayload("id", SALT, List.of("EUR"), "Alice", "+49123456789");
         assertArrayEquals(expected("MONESE", "Alice"), payload.getFingerprint());
     }
 
     @Test
     void payseraFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: Paysera uses email.
-        PayseraAccountPayload payload = new PayseraAccountPayload("id", SALT, "EUR", "alice@example.com");
+        PayseraAccountPayload payload = new PayseraAccountPayload("id", SALT, List.of("EUR"), "alice@example.com");
         assertArrayEquals(expected("PAYSERA", "alice@example.com"), payload.getFingerprint());
     }
 
@@ -174,13 +175,6 @@ public class AccountPayloadFingerprintTest {
     }
 
     @Test
-    void verseFingerprintMatchesBisq1() {
-        // Bisq 1 compatibility: Verse uses holder name.
-        VerseAccountPayload payload = new VerseAccountPayload("id", SALT, "EUR", "Alice");
-        assertArrayEquals(expected("VERSE", "Alice"), payload.getFingerprint());
-    }
-
-    @Test
     void impsFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: IMPS includes country code and account number.
         ImpsAccountPayload payload = new ImpsAccountPayload("id", SALT, "Alice", "123456", "IFSC1234");
@@ -196,7 +190,7 @@ public class AccountPayloadFingerprintTest {
 
     @Test
     void amazonGiftCardFingerprintMatchesBisq1() {
-        // Bisq 1 compatibility: AmazonGiftCard uses "AmazonGiftCard" prefix without country code.
+        // Bisq 1 compatibility: AmazonGiftCard uses the "AmazonGiftCard" prefix without country code.
         AmazonGiftCardAccountPayload payload = new AmazonGiftCardAccountPayload("id", SALT, "US", "USD", "alice@example.com");
         assertArrayEquals(expected("AMAZON_GIFT_CARD", "AmazonGiftCard", "alice@example.com"), payload.getFingerprint());
     }
@@ -276,7 +270,7 @@ public class AccountPayloadFingerprintTest {
     @Test
     void wiseFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: TransferWise uses email + holder name without country code.
-        WiseAccountPayload payload = new WiseAccountPayload("id", SALT, "DE", List.of("EUR"), "Alice", "alice@example.com");
+        WiseAccountPayload payload = new WiseAccountPayload("id", SALT, List.of("EUR"), "Alice", "alice@example.com");
         assertArrayEquals(expected("TRANSFERWISE", "alice@example.com", "Alice"), payload.getFingerprint());
     }
 
@@ -300,7 +294,7 @@ public class AccountPayloadFingerprintTest {
     void moneyBeamFingerprintMatchesBisq1() {
         // Bisq 1 compatibility: MoneyBeam uses account id and holder name without country code.
         MoneyBeamAccountPayload payload = new MoneyBeamAccountPayload(
-                "id", SALT, "DE", "EUR", "Alice", "alice@example.com");
+                "id", SALT, "DE", "Alice", "alice@example.com");
         assertArrayEquals(expected("MONEY_BEAM", "alice@example.com", "Alice"), payload.getFingerprint());
     }
 
@@ -394,14 +388,20 @@ public class AccountPayloadFingerprintTest {
     @Test
     void bankAccountFingerprintIncludesHolderIdAndNationalAccountId() {
         // Bisq 1 compatibility: holderId and nationalAccountId are included when required.
+        // Need to consider the isRequired methods in BankAccountUtils (e.g. isBankNameRequired) for the given country.
         BankAccountPayload payload = new TestBankAccountPayload(
-                "id", "AR", "ARS",
-                Optional.of("Alice"), Optional.of("CUIT123"), Optional.of("Bank"),
-                Optional.of("BANKID"), Optional.of("BRANCH"), "1234567",
-                Optional.empty(), Optional.of("CBU123"));
+                "id",
+                "AR",
+                "ARS",
+                Optional.of("Alice"),
+                Optional.of("CUIT123"),
+                Optional.of("BankXYZ"),
+                Optional.empty(),
+                Optional.of("BRANCH"), "1234567",
+                Optional.empty(),
+                Optional.of("CBU123"));
         payload.verify();
-
-        assertArrayEquals(expected("NATIONAL_BANK", "AR", "Bank", "BANKID", "BRANCH", "1234567", "", "CUIT123", "CBU123"),
+        assertArrayEquals(expected("NATIONAL_BANK", "AR", "BankXYZ", "", "BRANCH", "1234567", "", "CUIT123", "CBU123"),
                 payload.getFingerprint());
     }
 

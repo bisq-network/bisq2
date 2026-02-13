@@ -360,18 +360,6 @@
 
 ---
 
-## Verse
-
-**Availability:** Limited EU
-**Currency:** Euros (EUR)
-**Overview:** Mobile payment app offering fast person-to-person transfers in supported regions.
-**Chargeback risk:** **MEDIUM**
-
-**Required input:** Phone number or username
-**Optional data:** None
-
----
-
 ## Western Union
 
 **Availability:** Global corridors

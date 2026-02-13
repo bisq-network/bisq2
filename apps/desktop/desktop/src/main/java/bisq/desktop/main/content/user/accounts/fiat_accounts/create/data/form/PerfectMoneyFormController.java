@@ -18,8 +18,15 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.PerfectMoneyAccountPayload;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.asset.Asset;
+import bisq.common.asset.FiatCurrency;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PerfectMoneyFormController extends FormController<PerfectMoneyFormView, PerfectMoneyFormModel, PerfectMoneyAccountPayload> {
     public PerfectMoneyFormController(ServiceProvider serviceProvider) {
@@ -33,28 +40,40 @@ public class PerfectMoneyFormController extends FormController<PerfectMoneyFormV
 
     @Override
     protected PerfectMoneyFormModel createModel() {
-        return new PerfectMoneyFormModel(StringUtils.createUid());
+        List<FiatCurrency> currencies = FiatPaymentRailUtil.getPerfectMoneyCurrencies().stream()
+                .sorted(Comparator.comparing(Asset::getName))
+                .collect(Collectors.toList());
+        return new PerfectMoneyFormModel(StringUtils.createUid(), currencies);
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
+        model.getCurrencyErrorVisible().set(false);
     }
 
     @Override
     public boolean validate() {
+        boolean currencySet = model.getSelectedCurrency().get() != null;
+        model.getCurrencyErrorVisible().set(!currencySet);
         boolean accountNrValid = model.getAccountNrValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return accountNrValid;
+        return currencySet && accountNrValid;
     }
 
     @Override
     public PerfectMoneyAccountPayload createAccountPayload() {
-        return new PerfectMoneyAccountPayload(model.getId(), model.getAccountNr().get());
+        return new PerfectMoneyAccountPayload(model.getId(),
+                model.getSelectedCurrency().get().getCode(),
+                model.getAccountNr().get());
     }
 
     void onValidationDone() {
         model.getRunValidation().set(false);
+    }
+
+    void onSelectCurrency() {
+        model.getCurrencyErrorVisible().set(false);
     }
 }

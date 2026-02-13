@@ -40,6 +40,7 @@ public class UpiFormController extends FormController<UpiFormView, UpiFormModel,
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
+        showOverlay();
     }
 
     @Override

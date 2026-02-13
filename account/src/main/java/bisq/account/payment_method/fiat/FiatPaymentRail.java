@@ -122,7 +122,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     MONEY_BEAM(FiatPaymentRailUtil.getAllSepaCountries(),
-            FiatPaymentRailUtil.getMoneyBeamCurrencies(),
+            FiatCurrencyRepository.getCurrencyByCode("EUR"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     MONEY_GRAM(FiatPaymentRailUtil.getMoneyGramCountries(),
@@ -146,7 +146,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     PERFECT_MONEY(allCountries(),
-            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentRailUtil.getPerfectMoneyCurrencies(),
             FiatPaymentMethodChargebackRisk.LOW),
 
     PIN_4(countryFromCode("PL"),
@@ -189,7 +189,6 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("USD"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
-    //todo not impl accounts yet
     SWIFT(allCountries(),
             allCurrencies(),
             FiatPaymentMethodChargebackRisk.MEDIUM),
@@ -208,10 +207,6 @@ public enum FiatPaymentRail implements PaymentRail {
 
     US_POSTAL_MONEY_ORDER(countryFromCode("US"),
             FiatCurrencyRepository.getCurrencyByCode("USD"),
-            FiatPaymentMethodChargebackRisk.MODERATE),
-
-    VERSE(allCountries(),
-            FiatPaymentRailUtil.getVerseCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     WECHAT_PAY(countryFromCode("CN"),
@@ -386,7 +381,6 @@ public enum FiatPaymentRail implements PaymentRail {
             case UPHOLD -> HOURS_24;
             case UPI -> DAYS_4;
             case US_POSTAL_MONEY_ORDER -> DAYS_4;
-            case VERSE -> HOURS_24;
             case WECHAT_PAY -> HOURS_24;
             case WISE -> DAYS_4;
             case WISE_USD -> DAYS_4;
@@ -466,5 +460,4 @@ public enum FiatPaymentRail implements PaymentRail {
     [Payment method] => 1
     [MercadoPago] => 1
     [India/NEFT] => 1
-    [Verse] => 1
  */

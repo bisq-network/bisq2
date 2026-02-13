@@ -21,7 +21,6 @@ import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
-import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 
@@ -54,27 +53,18 @@ public class WiseFormController extends FormController<WiseFormView, WiseFormMod
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
-        model.getCountryErrorVisible().set(false);
         model.getSelectedCurrenciesErrorVisible().set(false);
-
-        Country defaultCountry = CountryRepository.getDefaultCountry();
-        if (model.getSelectedCountry().get() == null && model.getCountries().contains(defaultCountry)) {
-            model.getSelectedCountry().set(defaultCountry);
-        }
     }
 
     @Override
     public boolean validate() {
-        boolean isCountrySet = model.getSelectedCountry().get() != null;
-        model.getCountryErrorVisible().set(!isCountrySet);
-
         boolean hasSelectedCurrencies = !model.getSelectedCurrencies().isEmpty();
         model.getSelectedCurrenciesErrorVisible().set(!hasSelectedCurrencies);
 
         boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         boolean emailValid = model.getEmailValidator().validateAndGet();
 
-        boolean isValid = isCountrySet && hasSelectedCurrencies && holderNameValid && emailValid;
+        boolean isValid = hasSelectedCurrencies && holderNameValid && emailValid;
         model.getRunValidation().set(true);
         return isValid;
     }
@@ -85,7 +75,6 @@ public class WiseFormController extends FormController<WiseFormView, WiseFormMod
                 .map(FiatCurrency::getCode)
                 .collect(Collectors.toList());
         return new WiseAccountPayload(model.getId(),
-                model.getSelectedCountry().get().getCode(),
                 selectedCurrencyCodes,
                 model.getHolderName().get(),
                 model.getEmail().get());
@@ -95,10 +84,6 @@ public class WiseFormController extends FormController<WiseFormView, WiseFormMod
         model.getRunValidation().set(false);
     }
 
-    void onSelectCountry(Country selectedCountry) {
-        model.getSelectedCountry().set(selectedCountry);
-        model.getCountryErrorVisible().set(false);
-    }
 
     void onSelectCurrency(FiatCurrency currency, boolean selected) {
         if (selected) {

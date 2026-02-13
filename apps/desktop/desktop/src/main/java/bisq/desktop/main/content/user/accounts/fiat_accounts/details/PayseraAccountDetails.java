@@ -19,8 +19,15 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.details;
 
 import bisq.account.accounts.fiat.PayseraAccount;
 import bisq.account.accounts.fiat.PayseraAccountPayload;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.account.timestamp.AccountTimestampService;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import javafx.scene.control.Label;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PayseraAccountDetails extends FiatAccountDetails<PayseraAccount> {
     public PayseraAccountDetails(PayseraAccount account, AccountTimestampService accountTimestampService) {
@@ -33,6 +40,25 @@ public class PayseraAccountDetails extends FiatAccountDetails<PayseraAccount> {
 
         addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.email"),
                 accountPayload.getEmail());
+
+        List<String> allCurrencyCodes = FiatPaymentRailUtil.getPayseraCurrencyCodes().stream()
+                .sorted()
+                .collect(Collectors.toList());
+        List<String> selectedCurrencyCodes = accountPayload.getSelectedCurrencyCodes().stream()
+                .sorted()
+                .collect(Collectors.toList());
+        boolean matchAllCurrencies = allCurrencyCodes.equals(selectedCurrencyCodes);
+        String allCurrenciesLabel = Res.get("paymentAccounts.createAccount.accountData.paysera.allPayseraCurrencies");
+        String selectedCurrencies = selectedCurrencyCodes.stream()
+                .map(FiatCurrencyRepository::getDisplayNameAndCode)
+                .sorted()
+                .collect(Collectors.joining(", "));
+        Label selectedCurrenciesLabel = addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.paysera.selectedCurrencies"),
+                matchAllCurrencies ? allCurrenciesLabel : selectedCurrencies,
+                selectedCurrencies);
+        if (matchAllCurrencies || selectedCurrencies.length() > 70) {
+            selectedCurrenciesLabel.setTooltip(new BisqTooltip(selectedCurrencies));
+        }
 
         super.addDetails();
     }

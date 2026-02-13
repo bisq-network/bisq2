@@ -134,7 +134,7 @@ message AccountPayload {
     RevolutAccountPayload RevolutAccountPayload = 37;
     SatispayAccountPayload satispayAccountPayload = 38;
     UpholdAccountPayload upholdAccountPayload = 39;
-    VerseAccountPayload verseAccountPayload = 40;
+    WiseAccountPayload wiseAccountPayload = 40;
 
     CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
@@ -162,11 +162,11 @@ message CountryBasedAccountPayload {
     SepaAccountPayload sepaAccountPayload = 37;
     SepaInstantAccountPayload sepaInstantAccountPayload = 38;
     StrikeAccountPayload strikeAccountPayload = 39;
-    SwishAccountPayload swishAccountPayload = 40;
-    UpiAccountPayload upiAccountPayload = 41;
-    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 42;
-    WeChatPayAccountPayload weChatPayAccountPayload = 43;
-    WiseAccountPayload wiseAccountPayload = 44;
+    SwiftAccountPayload swiftAccountPayload = 40;
+    SwishAccountPayload swishAccountPayload = 41;
+    UpiAccountPayload upiAccountPayload = 42;
+    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 43;
+    WeChatPayAccountPayload weChatPayAccountPayload = 44;
     WiseUsdAccountPayload wiseUsdAccountPayload = 45;
     ZelleAccountPayload zelleAccountPayload = 46;
   }
@@ -281,14 +281,13 @@ message MercadoPagoAccountPayload {
   string holderId = 2;
 }
 message MoneseAccountPayload {
-  string selectedCurrencyCode = 1;
+  repeated string selectedCurrencyCodes = 1;
   string holderName = 2;
   string mobileNr = 3;
 }
 message MoneyBeamAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
-  string emailOrMobileNr = 3;
+  string holderName = 1;
+  string emailOrMobileNr = 2;
 }
 message MoneyGramAccountPayload {
   repeated string selectedCurrencyCodes = 1;
@@ -309,11 +308,12 @@ message PayIdAccountPayload {
   string payId = 2;
 }
 message PayseraAccountPayload {
-  string selectedCurrencyCode = 1;
+  repeated string selectedCurrencyCodes = 1;
   string email = 2;
 }
 message PerfectMoneyAccountPayload {
-  string accountNr = 1;
+  string selectedCurrencyCode = 1;
+  string accountNr = 2;
 }
 message Pin4AccountPayload {
   string mobileNr = 1;
@@ -355,6 +355,23 @@ message SepaInstantAccountPayload {
 message StrikeAccountPayload {
   string holderName = 1;
 }
+message SwiftAccountPayload {
+  string beneficiaryName = 1;
+  string beneficiaryAccountNr = 2;
+  optional string beneficiaryPhone = 3;
+  string beneficiaryAddress = 4;
+  string selectedCurrencyCode = 5;
+  string bankSwiftCode = 6;
+  string bankName = 7;
+  optional string bankBranch = 8;
+  string bankAddress = 9;
+  optional string intermediaryBankCountryCode = 10;
+  optional string intermediaryBankSwiftCode = 11;
+  optional string intermediaryBankName = 12;
+  optional string intermediaryBankBranch = 13;
+  optional string intermediaryBankAddress = 14;
+  optional string additionalInstructions = 15;
+}
 message SwishAccountPayload {
   string holderName = 1;
   string mobileNr = 2;
@@ -370,10 +387,6 @@ message UpholdAccountPayload {
 }
 message UpiAccountPayload {
   string virtualPaymentAddress = 1;
-}
-message VerseAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
 }
 message WeChatPayAccountPayload {
   string accountNr = 1;
@@ -433,7 +446,7 @@ message Account {
     RevolutAccount revolutAccount = 37;
     SatispayAccount satispayAccount = 38;
     UpholdAccount upholdAccount = 39;
-    VerseAccount verseAccount = 40;
+    WiseAccount wiseAccount = 40;
 
     CryptoAssetAccount cryptoAssetAccount = 100;
   }
@@ -460,11 +473,11 @@ message CountryBasedAccount {
     SepaAccount sepaAccount = 37;
     SepaInstantAccount sepaInstantAccount = 38;
     StrikeAccount strikeAccount = 39;
-    SwishAccount swishAccount = 40;
-    UpiAccount upiAccount = 41;
-    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 42;
-    WeChatPayAccount weChatPayAccount = 43;
-    WiseAccount wiseAccount = 44;
+    SwiftAccount swiftAccount = 40;
+    SwishAccount swishAccount = 41;
+    UpiAccount upiAccount = 42;
+    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 43;
+    WeChatPayAccount weChatPayAccount = 44;
     WiseUsdAccount wiseUsdAccount = 45;
     ZelleAccount zelleAccount = 46;
   }
@@ -558,6 +571,8 @@ message SepaInstantAccount {
 }
 message StrikeAccount {
 }
+message SwiftAccount {
+}
 message SwishAccount {
 }
 message USPostalMoneyOrderAccount {
@@ -567,8 +582,6 @@ message UpholdAccount {
 message UpiAccount {
 }
 message UserDefinedFiatAccount {
-}
-message VerseAccount {
 }
 message WeChatPayAccount {
 }

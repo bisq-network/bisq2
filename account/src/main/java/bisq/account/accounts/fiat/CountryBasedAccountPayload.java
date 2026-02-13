@@ -60,7 +60,6 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
             case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);
             case SEPAINSTANTACCOUNTPAYLOAD -> SepaInstantAccountPayload.fromProto(proto);
-            case WISEACCOUNTPAYLOAD -> WiseAccountPayload.fromProto(proto);
             case F2FACCOUNTPAYLOAD -> F2FAccountPayload.fromProto(proto);
             case PIXACCOUNTPAYLOAD -> PixAccountPayload.fromProto(proto);
             case STRIKEACCOUNTPAYLOAD -> StrikeAccountPayload.fromProto(proto);
@@ -73,6 +72,7 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
             case MONEYGRAMACCOUNTPAYLOAD -> MoneyGramAccountPayload.fromProto(proto);
             case PROMPTPAYACCOUNTPAYLOAD -> PromptPayAccountPayload.fromProto(proto);
             case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
+            case SWIFTACCOUNTPAYLOAD -> SwiftAccountPayload.fromProto(proto);
             case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
             case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
             case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);

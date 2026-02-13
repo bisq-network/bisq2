@@ -652,32 +652,72 @@
 
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
+#ACH_TRANSFER {
+    -fx-image: url("/images/payment/ach.png");
+}
+
+#ADVANCED_CASH {
+    -fx-image: url("/images/payment/advanced-cash.png");
+}
+
+#ALI_PAY {
+    -fx-image: url("/images/payment/alipay.png");
+}
+
+#AMAZON_GIFT_CARD {
+    -fx-image: url("/images/payment/amazon.png");
+}
+
+#BIZUM {
+    -fx-image: url("/images/payment/bizum.png");
+}
+
+#CASH_APP {
+    -fx-image: url("/images/payment/cashapp.png");
+}
+
+#CASH_BY_MAIL {
+    -fx-image: url("/images/payment/cash-by-mail.png");
+}
+
+#CASH_DEPOSIT {
+    -fx-image: url("/images/payment/cash-deposit.png");
+}
+
+#CUSTOM {
+    -fx-image: url("/images/payment/custom-payment-1.png");
+}
+
 #DOMESTIC_WIRE_TRANSFER {
     -fx-image: url("/images/payment/domestic-wire-transfer.png");
 }
 
-#SAME_BANK {
-    -fx-image: url("/images/payment/same-bank.png");
+#F2F {
+    -fx-image: url("/images/payment/f2f.png");
 }
 
-#WISE_USD {
-    -fx-image: url("/images/payment/wise-us.png");
+#FASTER_PAYMENTS {
+    -fx-image: url("/images/payment/faster-payments.png");
 }
 
-#PIN_4 {
-    -fx-image: url("/images/payment/pin-4.png");
+#HAL_CASH {
+    -fx-image: url("/images/payment/hal-cash.png");
 }
 
-#SWISH {
-    -fx-image: url("/images/payment/swish.png");
+#IMPS {
+    -fx-image: url("/images/payment/imps.png");
 }
 
-#PROMPT_PAY {
-    -fx-image: url("/images/payment/prompt-pay.png");
+#INTERAC_E_TRANSFER {
+    -fx-image: url("/images/payment/interac-etransfer.png");
 }
 
-#UPHOLD {
-    -fx-image: url("/images/payment/uphold.png");
+#MERCADO_PAGO {
+    -fx-image: url("/images/payment/mercado-pago.png");
+}
+
+#MONESE {
+    -fx-image: url("/images/payment/monese.png");
 }
 
 #MONEY_BEAM {
@@ -688,8 +728,52 @@
     -fx-image: url("/images/payment/money-gram.png");
 }
 
-#HAL_CASH {
-    -fx-image: url("/images/payment/hal-cash.png");
+#NATIONAL_BANK {
+    -fx-image: url("/images/payment/national-bank-transfer.png");
+}
+
+#NEFT {
+    -fx-image: url("/images/payment/neft.png");
+}
+
+#PAY_ID {
+    -fx-image: url("/images/payment/pay-id.png");
+}
+
+#PAYSERA {
+    -fx-image: url("/images/payment/paysera.png");
+}
+
+#PERFECT_MONEY {
+    -fx-image: url("/images/payment/perfect-money.png");
+}
+
+#PIN_4 {
+    -fx-image: url("/images/payment/pin-4.png");
+}
+
+#PIX {
+    -fx-image: url("/images/payment/pix.png");
+}
+
+#PROMPT_PAY {
+    -fx-image: url("/images/payment/prompt-pay.png");
+}
+
+#REVOLUT {
+    -fx-image: url("/images/payment/revolut.png");
+}
+
+#SAME_BANK {
+    -fx-image: url("/images/payment/same-bank.png");
+}
+
+#SATISPAY {
+    -fx-image: url("/images/payment/satispay.png");
+}
+
+#SBP {
+    -fx-image: url("/images/payment/sbp.png");
 }
 
 #SEPA {
@@ -700,80 +784,44 @@
     -fx-image: url("/images/payment/sepa-instant.png");
 }
 
-#ZELLE {
-    -fx-image: url("/images/payment/zelle.png");
-}
-
-#REVOLUT {
-    -fx-image: url("/images/payment/revolut.png");
-}
-
-#WISE {
-    -fx-image: url("/images/payment/wise.png");
-}
-
-#NATIONAL_BANK {
-    -fx-image: url("/images/payment/national-bank-transfer.png");
+#STRIKE {
+    -fx-image: url("/images/payment/strike.png");
 }
 
 #SWIFT {
     -fx-image: url("/images/payment/swift.png");
 }
 
-#F2F {
-    -fx-image: url("/images/payment/f2f.png");
+#SWISH {
+    -fx-image: url("/images/payment/swish.png");
 }
 
-#ACH_TRANSFER {
-    -fx-image: url("/images/payment/ach.png");
-}
-
-#PIX {
-    -fx-image: url("/images/payment/pix.png");
-}
-
-#FASTER_PAYMENTS {
-    -fx-image: url("/images/payment/faster-payments.png");
-}
-
-#PAY_ID {
-    -fx-image: url("/images/payment/pay-id.png");
-}
-
-#US_POSTAL_MONEY_ORDER {
-    -fx-image: url("/images/payment/uspmo.png");
-}
-
-#CASH_BY_MAIL {
-    -fx-image: url("/images/payment/cash-by-mail.png");
-}
-
-#STRIKE {
-    -fx-image: url("/images/payment/strike.png");
-}
-
-#INTERAC_E_TRANSFER {
-    -fx-image: url("/images/payment/interac-etransfer.png");
-}
-
-#AMAZON_GIFT_CARD {
-    -fx-image: url("/images/payment/amazon.png");
-}
-
-#CASH_DEPOSIT {
-    -fx-image: url("/images/payment/cash-deposit.png");
+#UPHOLD {
+    -fx-image: url("/images/payment/uphold.png");
 }
 
 #UPI {
     -fx-image: url("/images/payment/upi.png");
 }
 
-#BIZUM {
-    -fx-image: url("/images/payment/bizum.png");
+#US_POSTAL_MONEY_ORDER {
+    -fx-image: url("/images/payment/uspmo.png");
 }
 
-#CASH_APP {
-    -fx-image: url("/images/payment/cashapp.png");
+#WECHAT_PAY {
+    -fx-image: url("/images/payment/wechat.png");
+}
+
+#WISE {
+    -fx-image: url("/images/payment/wise.png");
+}
+
+#WISE_USD {
+    -fx-image: url("/images/payment/wise-us.png");
+}
+
+#ZELLE {
+    -fx-image: url("/images/payment/zelle.png");
 }
 
 #XMR {

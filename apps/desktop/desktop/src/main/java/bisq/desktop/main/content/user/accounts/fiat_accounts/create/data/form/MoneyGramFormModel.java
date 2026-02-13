@@ -23,7 +23,6 @@ import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.EmailValidator;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -46,6 +45,7 @@ public class MoneyGramFormModel extends FormModel {
     private final ObservableList<FiatCurrency> currencies;
     private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();
     private final BooleanProperty selectedCurrenciesErrorVisible = new SimpleBooleanProperty();
+    private final BooleanProperty stateVisible = new SimpleBooleanProperty();
 
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
 

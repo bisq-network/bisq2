@@ -57,11 +57,11 @@ import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.Sb
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.SepaFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.SepaInstantFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.StrikeFormController;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.SwiftFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.SwishFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.USPostalMoneyOrderFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.UpholdFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.UpiFormController;
-import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.VerseFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.WeChatPayFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.WiseFormController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form.WiseUsdFormController;
@@ -182,12 +182,11 @@ public class AccountDataController implements Controller {
             case SEPA -> new SepaFormController(serviceProvider);
             case SEPA_INSTANT -> new SepaInstantFormController(serviceProvider);
             case STRIKE -> new StrikeFormController(serviceProvider);
-            case SWIFT -> throw new UnsupportedOperationException("Not implemented yet");
+            case SWIFT -> new SwiftFormController(serviceProvider);
             case SWISH -> new SwishFormController(serviceProvider);
             case UPHOLD -> new UpholdFormController(serviceProvider);
             case UPI -> new UpiFormController(serviceProvider);
             case US_POSTAL_MONEY_ORDER -> new USPostalMoneyOrderFormController(serviceProvider);
-            case VERSE -> new VerseFormController(serviceProvider);
             case WECHAT_PAY -> new WeChatPayFormController(serviceProvider);
             case WISE -> new WiseFormController(serviceProvider);
             case WISE_USD -> new WiseUsdFormController(serviceProvider);

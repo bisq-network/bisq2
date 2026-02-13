@@ -46,6 +46,8 @@ public class UpholdFormView extends FormView<UpholdFormModel, UpholdFormControll
     public UpholdFormView(UpholdFormModel model, UpholdFormController controller) {
         super(model, controller);
 
+        VBox.setMargin(titleLabel, new Insets(15, 0, 10, 0));
+
         holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
         holderName.setValidators(model.getHolderNameValidator());

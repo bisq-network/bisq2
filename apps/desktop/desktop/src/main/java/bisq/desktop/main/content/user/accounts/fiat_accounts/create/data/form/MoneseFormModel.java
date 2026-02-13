@@ -21,25 +21,22 @@ import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.common.asset.FiatCurrency;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 public class MoneseFormModel extends FormModel {
     private final ObservableList<FiatCurrency> currencies;
-    private final ObjectProperty<FiatCurrency> selectedCurrency = new SimpleObjectProperty<>();
-    private final BooleanProperty currencyErrorVisible = new SimpleBooleanProperty();
-
+    private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();
+    private final BooleanProperty selectedCurrenciesErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
     private final StringProperty mobileNr = new SimpleStringProperty();
@@ -49,8 +46,10 @@ public class MoneseFormModel extends FormModel {
             MoneseAccountPayload.HOLDER_NAME_MAX_LENGTH);
     private final RequiredFieldValidator mobileNrValidator = new RequiredFieldValidator();
 
+
     public MoneseFormModel(String id, List<FiatCurrency> currencies) {
         super(id);
         this.currencies = FXCollections.observableArrayList(currencies);
+        selectedCurrencies.addAll(currencies);
     }
 }

@@ -40,6 +40,8 @@ public class USPostalMoneyOrderFormController extends FormController<USPostalMon
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
+
+        showOverlay();
     }
 
     @Override

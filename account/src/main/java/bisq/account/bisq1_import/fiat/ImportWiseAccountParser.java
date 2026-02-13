@@ -20,6 +20,7 @@ package bisq.account.bisq1_import.fiat;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.WiseAccount;
 import bisq.account.accounts.fiat.WiseAccountPayload;
+import bisq.account.bisq1_import.ImportAccountParser;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ import java.security.KeyPair;
 import java.util.List;
 
 @Slf4j
-public final class ImportWiseAccountParser extends ImportCountryBasedAccountParser<FiatPaymentMethod, WiseAccountPayload> {
+public final class ImportWiseAccountParser extends ImportAccountParser<FiatPaymentMethod, WiseAccountPayload> {
 
     public ImportWiseAccountParser(JsonNode accountNode) {
         super(accountNode);
@@ -43,7 +44,6 @@ public final class ImportWiseAccountParser extends ImportCountryBasedAccountPars
         WiseAccountPayload accountPayload = new WiseAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                countryCode,
                 selectedCurrencyCodes,
                 holderName,
                 email);

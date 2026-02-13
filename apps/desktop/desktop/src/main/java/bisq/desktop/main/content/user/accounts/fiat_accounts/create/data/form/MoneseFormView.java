@@ -17,61 +17,35 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
-import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
+import java.util.List;
 
 @Slf4j
 public class MoneseFormView extends FormView<MoneseFormModel, MoneseFormController> {
-    private final AutoCompleteComboBox<FiatCurrency> currencyComboBox;
     private final MaterialTextField holderName;
     private final MaterialTextField mobileNr;
-    private final Label currencyErrorLabel;
-    private Subscription selectedCurrencyPin, runValidationPin;
+    private final FlowPane selectedCurrenciesFlowPane;
+    private final Label selectedCountriesErrorLabel;
+    private Subscription runValidationPin;
 
     public MoneseFormView(MoneseFormModel model, MoneseFormController controller) {
         super(model, controller);
 
-        currencyComboBox = new AutoCompleteComboBox<>(
-                model.getCurrencies(),
-                Res.get("paymentAccounts.currency"),
-                Res.get("paymentAccounts.createAccount.accountData.currency.prompt")
-        );
-        currencyComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(FiatCurrency currency) {
-                return Optional.ofNullable(currency)
-                        .map(Asset::getDisplayNameAndCode)
-                        .orElse("");
-            }
-
-            @Override
-            public FiatCurrency fromString(String string) {
-                return null;
-            }
-        });
-
-        currencyErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.currency.error.noneSelected"));
-        currencyErrorLabel.setMouseTransparent(true);
-        currencyErrorLabel.getStyleClass().add("material-text-field-error");
-        VBox.setMargin(currencyErrorLabel, new Insets(3.5, 0, 0, 16));
-        VBox currencyVBox = new VBox(currencyComboBox, currencyErrorLabel);
-        currencyVBox.setAlignment(Pos.TOP_LEFT);
 
         holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
@@ -83,37 +57,43 @@ public class MoneseFormView extends FormView<MoneseFormModel, MoneseFormControll
         mobileNr.setValidators(model.getMobileNrValidator());
         mobileNr.setMaxWidth(Double.MAX_VALUE);
 
-        HBox.setHgrow(holderName, Priority.ALWAYS);
-        HBox.setHgrow(mobileNr, Priority.ALWAYS);
-        HBox hBox = new HBox(10, currencyVBox, holderName, mobileNr);
-        content.getChildren().add(hBox);
+
+        Label selectedCurrenciesLabel = new Label(Res.get("paymentAccounts.revolut.selectedCurrencies"));
+        selectedCurrenciesLabel.getStyleClass().add("bisq-text-1");
+
+        selectedCurrenciesFlowPane = new FlowPane(5, 10);
+
+        selectedCountriesErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.revolut.selectedCurrencies.error"));
+        selectedCountriesErrorLabel.getStyleClass().add("material-text-field-error");
+
+        VBox.setMargin(holderName, new Insets(0, 0, 10, 0));
+        content.getChildren().addAll(holderName,
+                mobileNr,
+                new HBox(selectedCurrenciesLabel, Spacer.fillHBox()),
+                selectedCurrenciesFlowPane,
+                new HBox(selectedCountriesErrorLabel, Spacer.fillHBox())
+        );
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
-        currencyComboBox.getSelectionModel().select(model.getSelectedCurrency().get());
-        currencyErrorLabel.visibleProperty().bind(model.getCurrencyErrorVisible());
-        currencyErrorLabel.managedProperty().bind(model.getCurrencyErrorVisible());
 
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
             holderName.validate();
         }
+
         if (StringUtils.isNotEmpty(model.getMobileNr().get())) {
             mobileNr.setText(model.getMobileNr().get());
             mobileNr.validate();
         }
 
+        selectedCountriesErrorLabel.visibleProperty().bind(model.getSelectedCurrenciesErrorVisible());
+        selectedCountriesErrorLabel.managedProperty().bind(model.getSelectedCurrenciesErrorVisible());
+
         holderName.textProperty().bindBidirectional(model.getHolderName());
         mobileNr.textProperty().bindBidirectional(model.getMobileNr());
-
-        selectedCurrencyPin = EasyBind.subscribe(currencyComboBox.getSelectionModel().selectedItemProperty(), selectedCurrency -> {
-            if (selectedCurrency != null) {
-                model.getSelectedCurrency().set(selectedCurrency);
-                controller.onSelectCurrency();
-            }
-        });
 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
@@ -122,6 +102,8 @@ public class MoneseFormView extends FormView<MoneseFormModel, MoneseFormControll
                 controller.onValidationDone();
             }
         });
+
+        selectedCurrenciesFlowPane.getChildren().addAll(getCountryEntries(model.getCurrencies(), model.getSelectedCurrencies()));
     }
 
     @Override
@@ -130,13 +112,39 @@ public class MoneseFormView extends FormView<MoneseFormModel, MoneseFormControll
         holderName.resetValidation();
         mobileNr.resetValidation();
 
-        currencyErrorLabel.visibleProperty().unbind();
-        currencyErrorLabel.managedProperty().unbind();
+        selectedCountriesErrorLabel.visibleProperty().unbind();
+        selectedCountriesErrorLabel.managedProperty().unbind();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         mobileNr.textProperty().unbindBidirectional(model.getMobileNr());
 
-        selectedCurrencyPin.unsubscribe();
         runValidationPin.unsubscribe();
+
+        selectedCurrenciesFlowPane.getChildren().stream()
+                .map(CheckBox.class::cast)
+                .forEach(checkBox -> {
+                    checkBox.setTooltip(null);
+                    checkBox.setOnAction(null);
+                });
+
+        selectedCurrenciesFlowPane.getChildren().clear();
+    }
+
+    private Node[] getCountryEntries(List<FiatCurrency> list, List<FiatCurrency> selectedCurrencies) {
+        List<CheckBox> nodes = list.stream()
+                .map(currency -> getCountryEntry(currency, selectedCurrencies.contains(currency)))
+                .toList();
+        return nodes.toArray(new Node[0]);
+    }
+
+    private CheckBox getCountryEntry(FiatCurrency currency, boolean isSelected) {
+        CheckBox checkBox = new CheckBox(currency.getName());
+        checkBox.setSelected(isSelected);
+        checkBox.getStyleClass().add("small-checkbox");
+        double width = 136;
+        checkBox.setMinWidth(width);
+        checkBox.setMaxWidth(width);
+        checkBox.setOnAction(e -> controller.onSelectCurrency(currency, checkBox.isSelected()));
+        return checkBox;
     }
 }

@@ -17,9 +17,7 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -33,11 +31,11 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class VerseAccount extends Account<FiatPaymentMethod, VerseAccountPayload> {
-    public VerseAccount(String id,
+public final class SwiftAccount extends CountryBasedAccount<SwiftAccountPayload> {
+    public SwiftAccount(String id,
                         long creationDate,
                         String accountName,
-                        VerseAccountPayload accountPayload,
+                        SwiftAccountPayload accountPayload,
                         KeyPair keyPair,
                         KeyAlgorithm keyAlgorithm,
                         AccountOrigin accountOrigin) {
@@ -45,26 +43,26 @@ public final class VerseAccount extends Account<FiatPaymentMethod, VerseAccountP
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return getAccountBuilder(serializeForHash)
-                .setVerseAccount(toVerseAccountProto(serializeForHash));
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setSwiftAccount(
+                toSwiftAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.VerseAccount toVerseAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getVerseAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.SwiftAccount toSwiftAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getSwiftAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.VerseAccount.Builder getVerseAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.VerseAccount.newBuilder();
+    private bisq.account.protobuf.SwiftAccount.Builder getSwiftAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.SwiftAccount.newBuilder();
     }
 
-    public static VerseAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static SwiftAccount fromProto(bisq.account.protobuf.Account proto) {
         KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new VerseAccount(proto.getId(),
+        return new SwiftAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
-                VerseAccountPayload.fromProto(proto.getAccountPayload()),
+                SwiftAccountPayload.fromProto(proto.getAccountPayload()),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
                 keyAlgorithm,
                 accountOrigin);

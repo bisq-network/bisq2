@@ -44,12 +44,14 @@ public class NeftFormView extends FormView<NeftFormModel, NeftFormController> {
         accountNr.setValidators(model.getAccountNrValidator());
         accountNr.setMaxWidth(Double.MAX_VALUE);
 
-        ifsc = new MaterialTextField(Res.get("paymentAccounts.bank.bankId"),
-                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.bank.bankId"))));
+        ifsc = new MaterialTextField(Res.get("paymentAccounts.createAccount.accountData.ifsc"),
+                Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.createAccount.accountData.ifsc"))));
         ifsc.setValidators(model.getIfscValidator());
         ifsc.setMaxWidth(Double.MAX_VALUE);
 
         content.getChildren().addAll(holderName, accountNr, ifsc);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.neft"));
     }
 
     @Override

@@ -233,7 +233,7 @@ public class PaymentMethodSelectionView extends View<VBox, PaymentMethodSelectio
 
         public PaymentMethodItem(FiatPaymentMethod paymentMethod) {
             this.paymentMethod = paymentMethod;
-            name = paymentMethod.getDisplayString();
+            name = paymentMethod.getShortDisplayString();
 
             supportedCurrencyCodes = paymentMethod.getSupportedCurrencyCodesAsDisplayString();
             supportedNameAndCodes = paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString();

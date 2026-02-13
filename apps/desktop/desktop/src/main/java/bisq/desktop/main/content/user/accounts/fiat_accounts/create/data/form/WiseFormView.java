@@ -18,70 +18,32 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.common.asset.FiatCurrency;
-import bisq.common.locale.Country;
-import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class WiseFormView extends FormView<WiseFormModel, WiseFormController> {
-    private final AutoCompleteComboBox<Country> countryComboBox;
     private final MaterialTextField holderName, email;
-    private final Label countryErrorLabel, selectedCurrenciesErrorLabel;
+    private final Label  selectedCurrenciesErrorLabel;
     private final FlowPane selectedCurrenciesFlowPane;
-    private Subscription runValidationPin, selectedCountryPin;
+    private Subscription runValidationPin;
 
     public WiseFormView(WiseFormModel model, WiseFormController controller) {
         super(model, controller);
-
-        countryComboBox = new AutoCompleteComboBox<>(
-                model.getCountries(),
-                Res.get("paymentAccounts.country"),
-                Res.get("paymentAccounts.createAccount.accountData.country.prompt")
-        );
-        countryComboBox.setMaxWidth(Double.MAX_VALUE);
-        countryComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Country country) {
-                return Optional.ofNullable(country)
-                        .map(Country::getName)
-                        .orElse("");
-            }
-
-            @Override
-            public Country fromString(String string) {
-                return CountryRepository.getAllCountries().stream()
-                        .filter(country -> country.getName().equals(string))
-                        .findFirst()
-                        .orElse(null);
-            }
-        });
-
-        countryErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.country.error"));
-        countryErrorLabel.setMouseTransparent(true);
-        countryErrorLabel.getStyleClass().add("material-text-field-error");
-        VBox.setMargin(countryErrorLabel, new Insets(3.5, 0, 0, 16));
-        VBox countryVBox = new VBox(countryComboBox, countryErrorLabel);
-        countryVBox.setAlignment(Pos.TOP_LEFT);
 
         holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));
@@ -101,11 +63,10 @@ public class WiseFormView extends FormView<WiseFormModel, WiseFormController> {
         selectedCurrenciesErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.wise.selectedCurrencies.error"));
         selectedCurrenciesErrorLabel.getStyleClass().add("material-text-field-error");
 
-        VBox.setMargin(countryVBox, new Insets(0, 0, 10, 0));
         VBox.setMargin(holderName, new Insets(0, 0, 10, 0));
         VBox.setMargin(email, new Insets(0, 0, 10, 0));
 
-        content.getChildren().addAll(countryVBox, holderName, email,
+        content.getChildren().addAll(holderName, email,
                 new HBox(selectedCurrenciesLabel, Spacer.fillHBox()),
                 selectedCurrenciesFlowPane,
                 new HBox(selectedCurrenciesErrorLabel, Spacer.fillHBox())
@@ -116,21 +77,11 @@ public class WiseFormView extends FormView<WiseFormModel, WiseFormController> {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        countryComboBox.getSelectionModel().select(model.getSelectedCountry().get());
-
-        countryErrorLabel.visibleProperty().bind(model.getCountryErrorVisible());
-        countryErrorLabel.managedProperty().bind(model.getCountryErrorVisible());
         selectedCurrenciesErrorLabel.visibleProperty().bind(model.getSelectedCurrenciesErrorVisible());
         selectedCurrenciesErrorLabel.managedProperty().bind(model.getSelectedCurrenciesErrorVisible());
 
         holderName.textProperty().bindBidirectional(model.getHolderName());
         email.textProperty().bindBidirectional(model.getEmail());
-
-        selectedCountryPin = EasyBind.subscribe(countryComboBox.getSelectionModel().selectedItemProperty(), selectedCountry -> {
-            if (selectedCountry != null) {
-                controller.onSelectCountry(selectedCountry);
-            }
-        });
 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
@@ -150,19 +101,16 @@ public class WiseFormView extends FormView<WiseFormModel, WiseFormController> {
         holderName.resetValidation();
         email.resetValidation();
 
-        countryErrorLabel.visibleProperty().unbind();
-        countryErrorLabel.managedProperty().unbind();
         selectedCurrenciesErrorLabel.visibleProperty().unbind();
         selectedCurrenciesErrorLabel.managedProperty().unbind();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         email.textProperty().unbindBidirectional(model.getEmail());
 
-        selectedCountryPin.unsubscribe();
         runValidationPin.unsubscribe();
 
         selectedCurrenciesFlowPane.getChildren().stream()
-                .map(e -> (CheckBox) e)
+                .map(CheckBox.class::cast)
                 .forEach(checkBox -> {
                     checkBox.setTooltip(null);
                     checkBox.setOnAction(null);
@@ -173,7 +121,7 @@ public class WiseFormView extends FormView<WiseFormModel, WiseFormController> {
     private Node[] getCurrencyEntries(List<FiatCurrency> list, List<FiatCurrency> selectedCurrencies) {
         List<CheckBox> nodes = list.stream()
                 .map(currency -> getCurrencyEntry(currency, selectedCurrencies.contains(currency)))
-                .collect(Collectors.toList());
+                .toList();
         return nodes.toArray(new Node[0]);
     }
 

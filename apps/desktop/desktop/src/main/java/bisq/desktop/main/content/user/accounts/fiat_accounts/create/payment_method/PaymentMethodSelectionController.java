@@ -33,6 +33,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,26 +47,25 @@ public class PaymentMethodSelectionController implements Controller {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(rail -> rail != FiatPaymentRail.CASH_APP)
-                .filter(rail -> rail != FiatPaymentRail.SWIFT)
+                //.filter(rail -> rail == FiatPaymentRail.CASH_BY_MAIL) //todo
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)
                 .sorted(Comparator.comparing(PaymentMethodItem::getName))
                 .collect(Collectors.toList());
         model = new PaymentMethodSelectionModel(items);
         view = new PaymentMethodSelectionView(model, this);
-
     }
 
     @Override
     public void onActivate() {
         String userCountryCode = LocaleRepository.getDefaultLocale().getCountry();
         String userCurrencyCode = FiatCurrencyRepository.getCurrencyByCountryCode(userCountryCode).getCode();
-       // PaymentMethodComparator comparator = new PaymentMethodComparator(userCountryCode, userCurrencyCode);
+        // PaymentMethodComparator comparator = new PaymentMethodComparator(userCountryCode, userCurrencyCode);
         // We do not use sorted list as we want to use the column sort properties.
         // This initial sorting is just applied at start. If user use column sorting that will be applied.
 
         // TODO add a check box for showing only methods matching my currency/country
-        model.getList().sort(Comparator.comparing(PaymentMethodItem::getName));
+        model.getList().sort(Comparator.comparing(e -> e.getName().toLowerCase(Locale.ROOT)));
 
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             model.getFilteredList().setPredicate(item -> {
