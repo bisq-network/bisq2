@@ -24,6 +24,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.http_api.access.ApiAccessService;
 import bisq.http_api.access.pairing.PairingCode;
 import bisq.http_api.access.pairing.PairingService;
@@ -338,8 +339,19 @@ public class HttpApiService implements Service {
             return wsConfig.getProtocol() + onionAddress.getHost() + ":" + onionAddress.getPort();
         }
 
-        // Fall back to clearnet address
-        return wsConfig.getProtocol() + wsConfig.getHost() + ":" + wsConfig.getPort();
+        // For clearnet, resolve actual LAN IP when config host is loopback.
+        // The QR code must contain a routable address for real devices on the same network.
+        String host = wsConfig.getHost();
+        if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
+            Optional<String> lanAddress = NetworkUtils.findLANHostAddress(Optional.empty());
+            if (lanAddress.isPresent()) {
+                log.info("Config host is loopback ({}). Using LAN address {} for pairing QR code.", host, lanAddress.get());
+                host = lanAddress.get();
+            } else {
+                log.warn("Config host is loopback ({}) but no LAN address found. QR code will only work on emulators.", host);
+            }
+        }
+        return wsConfig.getProtocol() + host + ":" + wsConfig.getPort();
     }
 
     private Optional<TorContext> getTorContext() {

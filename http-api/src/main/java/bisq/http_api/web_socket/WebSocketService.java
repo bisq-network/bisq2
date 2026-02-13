@@ -173,8 +173,9 @@ public class WebSocketService implements Service {
         CompletableFuture<Boolean> initFuture = CompletableFuture.supplyAsync(() -> {
                     String protocol = config.getProtocol();
                     String host = config.getHost();
+                    String bindHost = config.getBindHost();
                     int port = config.getPort();
-                    URI baseUri = UriBuilder.fromUri(protocol + host + "/").port(port).build();
+                    URI baseUri = UriBuilder.fromUri(protocol + bindHost + "/").port(port).build();
                     HttpServer server = config.includeRestApi
                             ? GrizzlyHttpServerFactory.createHttpServer(baseUri, restApiResourceConfig, false)
                             : GrizzlyHttpServerFactory.createHttpServer(baseUri, false);

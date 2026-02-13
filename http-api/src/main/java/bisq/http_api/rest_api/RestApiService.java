@@ -108,7 +108,7 @@ public class RestApiService implements Service {
     public CompletableFuture<Boolean> initialize() {
         if (config.isEnabled()) {
             return CompletableFuture.supplyAsync(() -> {
-                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBaseUrl()), restApiResourceConfig);
+                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBindUrl()), restApiResourceConfig);
                         httpServer = Optional.of(server);
                         addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
                         log.info("Server started at {}.", config.getRestApiBaseUrl());

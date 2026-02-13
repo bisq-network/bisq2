@@ -17,6 +17,7 @@
 
 package bisq.http_api.access.transport;
 
+import bisq.common.util.NetworkUtils;
 import bisq.security.tls.SanUtils;
 import bisq.security.tls.SslContextFactory;
 import bisq.security.tls.TLsIdentity;
@@ -35,6 +36,7 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,22 +82,30 @@ public class TlsContextService {
             checkNotNull(tlsKeyStoreSan, "tlsKeyStoreSan must not be null");
             checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
 
+            // Auto-add LAN IP to SAN list so the cert is valid when real devices connect via LAN
+            List<String> effectiveSan = new ArrayList<>(tlsKeyStoreSan);
+            Optional<String> lanAddress = NetworkUtils.findLANHostAddress(Optional.empty());
+            if (lanAddress.isPresent() && !effectiveSan.contains(lanAddress.get())) {
+                effectiveSan.add(lanAddress.get());
+                log.info("Auto-added LAN address {} to TLS certificate SAN list", lanAddress.get());
+            }
+
             KeyStore keyStore;
             Optional<KeyStore> optionalKeyStore;
             try {
-                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, tlsKeyStoreSan);
+                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, effectiveSan);
                 if (optionalKeyStore.isPresent()) {
                     keyStore = optionalKeyStore.get();
-                    if (!SanUtils.isMatchingPersistedSan(keyStore, tlsKeyStoreSan)) {
+                    if (!SanUtils.isMatchingPersistedSan(keyStore, effectiveSan)) {
                         log.info("Persisted key store had different SAN list. We create a new key store.");
-                        keyStore = createNewKeyStore(tlsKeyStoreSan, password);
+                        keyStore = createNewKeyStore(effectiveSan, password);
                     }
                 } else {
-                    keyStore = createNewKeyStore(tlsKeyStoreSan, password);
+                    keyStore = createNewKeyStore(effectiveSan, password);
                 }
             } catch (TlsPasswordException e) {
                 log.info("Could not decrypt key store with given password. Probably password has been changed.", e);
-                keyStore = createNewKeyStore(tlsKeyStoreSan, password);
+                keyStore = createNewKeyStore(effectiveSan, password);
             }
             SSLContext sslContext = SslContextFactory.fromKeyStore(keyStore, password);
             String certificateFingerprint = TlsKeyStore.getCertificateFingerprint(keyStore);
