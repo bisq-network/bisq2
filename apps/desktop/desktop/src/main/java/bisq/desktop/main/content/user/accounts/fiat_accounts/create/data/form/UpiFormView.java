@@ -38,6 +38,8 @@ public class UpiFormView extends FormView<UpiFormModel, UpiFormController> {
         virtualPaymentAddress.setMaxWidth(Double.MAX_VALUE);
 
         content.getChildren().add(virtualPaymentAddress);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.upi"));
     }
 
     @Override

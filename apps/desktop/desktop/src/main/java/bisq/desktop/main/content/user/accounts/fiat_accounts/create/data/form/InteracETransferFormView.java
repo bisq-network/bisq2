@@ -20,6 +20,8 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -34,6 +36,8 @@ public class InteracETransferFormView extends FormView<InteracETransferFormModel
 
     public InteracETransferFormView(InteracETransferFormModel model, InteracETransferFormController controller) {
         super(model, controller);
+
+        VBox.setMargin(titleLabel, new Insets(20, 0, 10, 0));
 
         holderName = new MaterialTextField(Res.get("paymentAccounts.holderName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.holderName"))));

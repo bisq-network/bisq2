@@ -122,7 +122,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     MONEY_BEAM(FiatPaymentRailUtil.getAllSepaCountries(),
-            FiatPaymentRailUtil.getMoneyBeamCurrencies(),
+            FiatCurrencyRepository.getCurrencyByCode("EUR"),
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     MONEY_GRAM(FiatPaymentRailUtil.getMoneyGramCountries(),
@@ -146,7 +146,7 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatPaymentMethodChargebackRisk.MODERATE),
 
     PERFECT_MONEY(allCountries(),
-            FiatCurrencyRepository.getCurrencyByCode("USD"),
+            FiatPaymentRailUtil.getPerfectMoneyCurrencies(),
             FiatPaymentMethodChargebackRisk.LOW),
 
     PIN_4(countryFromCode("PL"),

@@ -22,15 +22,16 @@ import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.i18n.Res;
 
 public class MercadoPagoAccountDetailsGridPane extends FiatAccountDetailsGridPane<MercadoPagoAccountPayload> {
-    public MercadoPagoAccountDetailsGridPane(MercadoPagoAccountPayload accountPayload, FiatPaymentRail fiatPaymentRail) {
+    public MercadoPagoAccountDetailsGridPane(MercadoPagoAccountPayload accountPayload,
+                                             FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
     }
 
     @Override
     protected void addDetails(MercadoPagoAccountPayload accountPayload) {
-        addDescriptionAndValue(Res.get("paymentAccounts.mercadoPago.holderId"),
-                accountPayload.getHolderId());
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),
                 accountPayload.getHolderName());
+        addDescriptionAndValue(Res.get("paymentAccounts.mercadoPago.holderId"),
+                accountPayload.getHolderId());
     }
 }

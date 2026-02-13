@@ -19,11 +19,13 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SingleCurrencyAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,23 +33,27 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPaymentMethod> implements SingleCurrencyAccountPayload {
+public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPaymentMethod>
+        implements SelectableCurrencyAccountPayload {
     public static final int ACCOUNT_NR_MIN_LENGTH = 1;
     public static final int ACCOUNT_NR_MAX_LENGTH = 50;
 
+    private final String selectedCurrencyCode;
     private final String accountNr;
 
-    public PerfectMoneyAccountPayload(String id, String accountNr) {
-        this(id, AccountUtils.generateSalt(), accountNr);
+    public PerfectMoneyAccountPayload(String id, String selectedCurrencyCode, String accountNr) {
+        this(id, AccountUtils.generateSalt(), selectedCurrencyCode, accountNr);
     }
 
-    public PerfectMoneyAccountPayload(String id, byte[] salt, String accountNr) {
+    public PerfectMoneyAccountPayload(String id, byte[] salt, String selectedCurrencyCode, String accountNr) {
         super(id, salt);
+        this.selectedCurrencyCode = selectedCurrencyCode;
         this.accountNr = accountNr;
 
         verify();
@@ -57,6 +63,9 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
     public void verify() {
         super.verify();
 
+        PaymentAccountValidation.validateCurrencyCodes(List.of(selectedCurrencyCode),
+                FiatPaymentRailUtil.getPerfectMoneyCurrencyCodes(),
+                "Perfect Money currency codes");
         NetworkDataValidation.validateRequiredText(accountNr, ACCOUNT_NR_MIN_LENGTH, ACCOUNT_NR_MAX_LENGTH);
     }
 
@@ -72,6 +81,7 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
 
     private bisq.account.protobuf.PerfectMoneyAccountPayload.Builder getPerfectMoneyAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.PerfectMoneyAccountPayload.newBuilder()
+                .setSelectedCurrencyCode(selectedCurrencyCode)
                 .setAccountNr(accountNr);
     }
 
@@ -80,6 +90,7 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
         return new PerfectMoneyAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
+                payload.getSelectedCurrencyCode(),
                 payload.getAccountNr()
         );
     }

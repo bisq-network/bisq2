@@ -44,6 +44,8 @@ public class SatispayFormView extends FormView<SatispayFormModel, SatispayFormCo
         mobileNr.setMaxWidth(Double.MAX_VALUE);
 
         content.getChildren().addAll(holderName, mobileNr);
+
+        configOverlay(Res.get("paymentAccounts.createAccount.accountData.backgroundOverlay.satispay"));
     }
 
     @Override

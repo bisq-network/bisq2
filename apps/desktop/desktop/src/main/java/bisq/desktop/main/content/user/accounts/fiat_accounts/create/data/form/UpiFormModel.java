@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
-import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;

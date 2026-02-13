@@ -102,7 +102,7 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     protected void addHeader() {
         if (account.getPaymentMethod().getPaymentRail() instanceof FiatPaymentRail fiatPaymentRail) {
             Triple<Text, Label, VBox> paymentMethodTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.paymentMethod"),
-                    account.getPaymentMethod().getDisplayString());
+                    account.getPaymentMethod().getShortDisplayString());
             gridPane.add(paymentMethodTriple.getThird(), 0, rowIndex);
 
             if (!(account.getAccountPayload() instanceof MultiCurrencyAccountPayload)) {

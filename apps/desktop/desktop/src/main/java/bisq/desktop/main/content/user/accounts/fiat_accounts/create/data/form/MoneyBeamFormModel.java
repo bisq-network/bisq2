@@ -17,34 +17,17 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
-import bisq.common.asset.FiatCurrency;
-import bisq.common.locale.Country;
 import bisq.common.validation.PaymentAccountValidation;
-import bisq.desktop.components.controls.validator.EmailOrPhoneNumberValidator;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
-import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 public class MoneyBeamFormModel extends FormModel {
-    private final ObservableList<Country> countries;
-    private final ObjectProperty<Country> selectedCountry = new SimpleObjectProperty<>();
-    private final BooleanProperty countryErrorVisible = new SimpleBooleanProperty();
-
-    private final ObservableList<FiatCurrency> currencies;
-    private final ObjectProperty<FiatCurrency> selectedCurrency = new SimpleObjectProperty<>();
-    private final BooleanProperty currencyErrorVisible = new SimpleBooleanProperty();
-
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
 
     private final StringProperty holderName = new SimpleStringProperty();
@@ -53,13 +36,9 @@ public class MoneyBeamFormModel extends FormModel {
             PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
 
     private final StringProperty emailOrMobileNr = new SimpleStringProperty();
-    private final EmailOrPhoneNumberValidator emailOrMobileNrValidator = new EmailOrPhoneNumberValidator(Res.get("validation.empty"));
+    private final RequiredFieldValidator emailOrMobileNrValidator = new RequiredFieldValidator();
 
-    public MoneyBeamFormModel(String id,
-                              List<Country> countries,
-                              List<FiatCurrency> currencies) {
+    public MoneyBeamFormModel(String id) {
         super(id);
-        this.countries = FXCollections.observableArrayList(countries);
-        this.currencies = FXCollections.observableArrayList(currencies);
     }
 }

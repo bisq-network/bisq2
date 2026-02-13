@@ -63,7 +63,7 @@ public class RevolutFormController extends FormController<RevolutFormView, Revol
     @Override
     public RevolutAccountPayload createAccountPayload() {
         return new RevolutAccountPayload(model.getId(),
-                model.getUserName().get(),
+                model.getHolderName().get(),
                 model.getSelectedCurrencies().stream()
                         .map(Asset::getCode)
                         .collect(Collectors.toList()));
@@ -73,10 +73,9 @@ public class RevolutFormController extends FormController<RevolutFormView, Revol
     public boolean validate() {
         boolean selectedCurrenciesValid = !model.getSelectedCurrencies().isEmpty();
         model.getSelectedCurrenciesErrorVisible().set(!selectedCurrenciesValid);
-        boolean holderNameValid = model.getUserNameValidator().validateAndGet();
-        boolean isValid = selectedCurrenciesValid && holderNameValid;
+        boolean holderNameValid = model.getHolderNameValidator().validateAndGet();
         model.getRunValidation().set(true);
-        return isValid;
+        return selectedCurrenciesValid && holderNameValid;
     }
 
     void onValidationDone() {

@@ -132,6 +132,8 @@ public class MoneyGramFormView extends FormView<MoneyGramFormModel, MoneyGramFor
         countryErrorLabel.managedProperty().bind(model.getCountryErrorVisible());
         selectedCurrenciesErrorLabel.visibleProperty().bind(model.getSelectedCurrenciesErrorVisible());
         selectedCurrenciesErrorLabel.managedProperty().bind(model.getSelectedCurrenciesErrorVisible());
+        state.visibleProperty().bind(model.getStateVisible());
+        state.managedProperty().bind(model.getStateVisible());
 
         if (StringUtils.isNotEmpty(model.getHolderName().get())) {
             holderName.setText(model.getHolderName().get());
@@ -179,6 +181,8 @@ public class MoneyGramFormView extends FormView<MoneyGramFormModel, MoneyGramFor
         countryErrorLabel.managedProperty().unbind();
         selectedCurrenciesErrorLabel.visibleProperty().unbind();
         selectedCurrenciesErrorLabel.managedProperty().unbind();
+        state.visibleProperty().unbind();
+        state.managedProperty().unbind();
 
         holderName.textProperty().unbindBidirectional(model.getHolderName());
         email.textProperty().unbindBidirectional(model.getEmail());

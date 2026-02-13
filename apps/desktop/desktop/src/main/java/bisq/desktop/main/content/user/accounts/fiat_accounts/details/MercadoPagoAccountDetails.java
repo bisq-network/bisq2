@@ -30,13 +30,10 @@ public class MercadoPagoAccountDetails extends FiatAccountDetails<MercadoPagoAcc
     @Override
     protected void addDetails() {
         MercadoPagoAccountPayload accountPayload = account.getAccountPayload();
-
-        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.mercadoPago.holderId"),
-                accountPayload.getHolderId());
-
         addDescriptionAndValue(Res.get("paymentAccounts.holderName"),
                 accountPayload.getHolderName());
-
+        addDescriptionAndValueWithCopyButton(Res.get("paymentAccounts.mercadoPago.holderId"),
+                accountPayload.getHolderId());
         super.addDetails();
     }
 }

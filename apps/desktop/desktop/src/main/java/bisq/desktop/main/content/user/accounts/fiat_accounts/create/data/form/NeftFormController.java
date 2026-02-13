@@ -40,6 +40,7 @@ public class NeftFormController extends FormController<NeftFormView, NeftFormMod
     public void onActivate() {
         super.onActivate();
         model.getRunValidation().set(false);
+        showOverlay();
     }
 
     @Override

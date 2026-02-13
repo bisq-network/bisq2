@@ -18,8 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.common.locale.Country;
-import bisq.desktop.components.controls.validator.EmailOrPhoneNumberValidator;
-import bisq.i18n.Res;
+import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -40,7 +39,7 @@ public class AmazonGiftCardFormModel extends FormModel {
 
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty emailOrMobileNr = new SimpleStringProperty();
-    private final EmailOrPhoneNumberValidator emailOrMobileNrValidator = new EmailOrPhoneNumberValidator(Res.get("validation.empty"));
+    private final RequiredFieldValidator emailOrMobileNrValidator = new RequiredFieldValidator();
 
     public AmazonGiftCardFormModel(String id, List<Country> countries) {
         super(id);

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.NeftAccountPayload;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
+import bisq.desktop.components.controls.validator.fiat.IFSCValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -38,9 +39,7 @@ public class NeftFormModel extends FormModel {
     private final TextMinMaxLengthValidator accountNrValidator = new TextMinMaxLengthValidator(
             NeftAccountPayload.ACCOUNT_NR_MIN_LENGTH,
             NeftAccountPayload.ACCOUNT_NR_MAX_LENGTH);
-    private final TextMinMaxLengthValidator ifscValidator = new TextMinMaxLengthValidator(
-            NeftAccountPayload.IFSC_MIN_LENGTH,
-            NeftAccountPayload.IFSC_MAX_LENGTH);
+    private final IFSCValidator ifscValidator = new IFSCValidator();
 
     public NeftFormModel(String id) {
         super(id);

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.List;
 
 @Slf4j
 public final class ImportMoneseAccountParser extends ImportFiatAccountParser<FiatPaymentMethod, MoneseAccountPayload> {
@@ -38,11 +39,11 @@ public final class ImportMoneseAccountParser extends ImportFiatAccountParser<Fia
     public MoneseAccount parse(KeyPair dsaKeyPair) {
         String holderName = requireText(paymentAccountPayloadNode, "holderName");
         String mobileNr = requireText(paymentAccountPayloadNode, "mobileNr");
-        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
+        List<String> selectedCurrencyCodes = requireTradeCurrencyCodes();
         MoneseAccountPayload accountPayload = new MoneseAccountPayload(
                 paymentAccountPayloadId,
                 salt,
-                selectedCurrencyCode,
+                selectedCurrencyCodes,
                 holderName,
                 mobileNr);
 

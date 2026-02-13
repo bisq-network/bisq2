@@ -281,14 +281,13 @@ message MercadoPagoAccountPayload {
   string holderId = 2;
 }
 message MoneseAccountPayload {
-  string selectedCurrencyCode = 1;
+  repeated string selectedCurrencyCodes = 1;
   string holderName = 2;
   string mobileNr = 3;
 }
 message MoneyBeamAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
-  string emailOrMobileNr = 3;
+  string holderName = 1;
+  string emailOrMobileNr = 2;
 }
 message MoneyGramAccountPayload {
   repeated string selectedCurrencyCodes = 1;
@@ -309,11 +308,12 @@ message PayIdAccountPayload {
   string payId = 2;
 }
 message PayseraAccountPayload {
-  string selectedCurrencyCode = 1;
+  repeated string selectedCurrencyCodes = 1;
   string email = 2;
 }
 message PerfectMoneyAccountPayload {
-  string accountNr = 1;
+  string selectedCurrencyCode = 1;
+  string accountNr = 2;
 }
 message Pin4AccountPayload {
   string mobileNr = 1;

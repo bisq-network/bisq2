@@ -18,18 +18,23 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.MoneyGramAccountPayload;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MoneyGramFormController extends FormController<MoneyGramFormView, MoneyGramFormModel, MoneyGramAccountPayload> {
+    private Subscription selectedCountryPin;
+
     public MoneyGramFormController(ServiceProvider serviceProvider) {
         super(serviceProvider);
     }
@@ -61,6 +66,19 @@ public class MoneyGramFormController extends FormController<MoneyGramFormView, M
         if (model.getSelectedCountry().get() == null && model.getCountries().contains(defaultCountry)) {
             model.getSelectedCountry().set(defaultCountry);
         }
+
+        selectedCountryPin = EasyBind.subscribe(model.getSelectedCountry(),
+                country -> {
+                    if (country != null) {
+                        model.getStateVisible().set(AccountUtils.isStateRequired(country.getCode()));
+                    }
+                });
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+        selectedCountryPin.unsubscribe();
     }
 
     @Override

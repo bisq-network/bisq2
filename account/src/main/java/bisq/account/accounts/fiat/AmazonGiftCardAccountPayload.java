@@ -22,10 +22,8 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.util.ByteArrayUtils;
-import bisq.common.validation.EmailValidation;
-import bisq.common.validation.PhoneNumberValidation;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -67,13 +65,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     public void verify() {
         super.verify();
 
-        boolean isEmailValid = EmailValidation.isValid(emailOrMobileNr);
-        boolean isMobileNrValid = PhoneNumberValidation.isValid(emailOrMobileNr, countryCode);
-        checkArgument(isEmailValid || isMobileNrValid,
-                "Invalid email or mobile number format. isEmailValid=%s; isMobileNrValid=%s",
-                isEmailValid, isMobileNrValid);
-        checkArgument(FiatPaymentRailUtil.getAmazonGiftCardCurrencyCodes().contains(selectedCurrencyCode),
-                "selectedCurrencyCode must be a valid Amazon Gift Card currency code");
+        checkArgument(StringUtils.isNotEmpty(emailOrMobileNr));
     }
 
     @Override
