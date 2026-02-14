@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.PaymentRail;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.data.Pair;
@@ -97,17 +98,17 @@ public class State4TradeClosed extends BaseState {
 
             MuSigTrade trade = model.getTrade();
             MuSigContract contract = trade.getContract();
-            BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-            String name = paymentRail.name();
+            PaymentRail basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            String name = basePaymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
-            model.setBlockExplorerLinkVisible(paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
+            model.setBlockExplorerLinkVisible(basePaymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
             String paymentProof = trade.getDepositTxId();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
             UserProfile tradePeer = model.getChannel().getPeer();
             model.setTradePeer(tradePeer);
             model.setBuyer(trade.isBuyer());
-            model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
+            model.setQuoteCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
             model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
             model.setTradeId(trade.getShortId());
             long takeOfferDate = contract.getTakeOfferDate();
@@ -182,7 +183,7 @@ public class State4TradeClosed extends BaseState {
         protected boolean paymentProofVisible;
         protected UserProfile tradePeer;
         protected boolean isBuyer;
-        protected String fiatCurrency;
+        protected String quoteCurrency;
         protected String paymentMethod;
         protected String tradeId;
         protected String tradeDate;
@@ -233,7 +234,7 @@ public class State4TradeClosed extends BaseState {
             peerProfileDisplay.setUserProfile(model.getTradePeer());
             peerProfileDisplay.setReputationScore(model.getTradePeerReputationScore());
             muSigTradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBaseAmount(),
-                    model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
+                    model.getQuoteAmount(), model.getQuoteCurrency(), model.getPaymentMethod(), model.getTradeId(),
                     model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
                 muSigTradeCompletedTable.showBlockExplorerLink();

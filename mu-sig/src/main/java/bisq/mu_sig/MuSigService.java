@@ -218,7 +218,7 @@ public class MuSigService extends LifecycleService {
                                              Market market,
                                              AmountSpec amountSpec,
                                              PriceSpec priceSpec,
-                                             List<PaymentMethod<?>> fiatPaymentMethods,
+                                             List<PaymentMethod<?>> paymentMethods,
                                              List<? extends OfferOption> offerOptions) {
         checkArgument(isActivated());
         NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
@@ -228,7 +228,7 @@ public class MuSigService extends LifecycleService {
                 market,
                 amountSpec,
                 priceSpec,
-                fiatPaymentMethods,
+                paymentMethods,
                 offerOptions,
                 MuSigProtocol.VERSION);
     }
