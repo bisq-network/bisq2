@@ -71,8 +71,16 @@ public class SignedWitnessScoreSimulation {
                 }
             });
 
-            scorePin = EasyBind.subscribe(model.getAge(), age -> model.getScore().set(calculateSimScore(age)));
-        }
+            scorePin = EasyBind.subscribe(model.getAge(), age -> {
+                String score = calculateSimScore(age);
+                model.getScore().set(score);
+                try {
+                    long s = Long.parseLong(score);
+                    model.getTradeLimit().set(String.valueOf(s / 200));
+                } catch (Exception ignore) {
+                    model.getTradeLimit().set("");
+                }
+            });}
 
         @Override
         public void onDeactivate() {
@@ -97,6 +105,7 @@ public class SignedWitnessScoreSimulation {
         private final IntegerProperty age = new SimpleIntegerProperty();
         private final StringProperty ageAsString = new SimpleStringProperty();
         private final StringProperty score = new SimpleStringProperty();
+        private final StringProperty tradeLimit = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -104,6 +113,7 @@ public class SignedWitnessScoreSimulation {
 
         private final AgeSlider simAgeSlider;
         private final MaterialTextField simScore;
+        private final MaterialTextField simTradeLimit;
         private final MaterialTextField ageField;
 
         private View(Model model,
@@ -115,11 +125,13 @@ public class SignedWitnessScoreSimulation {
             ageField = getInputField("reputation.sim.age");
             simAgeSlider = new AgeSlider(0, (int) SignedWitnessService.MAX_DAYS_AGE_SCORE, 0);
             simScore = getField(Res.get("reputation.sim.score"));
+            simTradeLimit = getField(Res.get("reputation.sim.tradeLimit"));
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,
                     ageField,
                     simAgeSlider.getView().getRoot(),
-                    simScore);
+                    simScore,
+                    simTradeLimit);
         }
 
         @Override
@@ -127,6 +139,7 @@ public class SignedWitnessScoreSimulation {
             simAgeSlider.valueProperty().bindBidirectional(model.getAge());
             ageField.textProperty().bindBidirectional(model.getAgeAsString());
             simScore.textProperty().bind(model.getScore());
+            simTradeLimit.textProperty().bind(model.getTradeLimit());
         }
 
         @Override
@@ -134,6 +147,7 @@ public class SignedWitnessScoreSimulation {
             simAgeSlider.valueProperty().unbindBidirectional(model.getAge());
             ageField.textProperty().unbindBidirectional(model.getAgeAsString());
             simScore.textProperty().unbind();
+            simTradeLimit.textProperty().unbind();
         }
 
         private MaterialTextField getField(String description) {
