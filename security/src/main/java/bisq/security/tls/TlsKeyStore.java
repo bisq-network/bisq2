@@ -32,7 +32,6 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -97,7 +96,7 @@ public class TlsKeyStore {
             }
             return Optional.of(keyStore);
         } catch (IOException e) {
-            if (e.getCause() instanceof UnrecoverableKeyException) {
+            if (isPasswordRelated(e)) {
                 throw new TlsPasswordException("Could not decrypt key store with given password.", e);
             } else {
                 throw new TlsException("Failed to read TLS key store", e);
@@ -120,16 +119,29 @@ public class TlsKeyStore {
         }
     }
 
-    private static PrivateKey loadPrivateKey(KeyStore keyStore, char[] password) throws TlsException {
-        try {
-            return (PrivateKey) keyStore.getKey(KEY_ALIAS, password);
-        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
-            throw new TlsException("Failed to load private key", e);
-        }
-    }
-
     private static X509Certificate loadCertificate(KeyStore keyStore) throws KeyStoreException {
         return (X509Certificate) keyStore.getCertificate(KEY_ALIAS);
     }
 
+    private static boolean isPasswordRelated(IOException e) {
+        if (e.getCause() instanceof UnrecoverableKeyException) {
+            return true;
+        }
+        // Different JDK implementations may surface password errors differently
+        String message = e.getMessage();
+        if (message != null) {
+            String lower = message.toLowerCase();
+            if (lower.contains("password") || lower.contains("unrecoverable")) {
+                return true;
+            }
+        }
+        Throwable cause = e.getCause();
+        if (cause != null && cause.getMessage() != null) {
+            String causeLower = cause.getMessage().toLowerCase();
+            if (causeLower.contains("password") || causeLower.contains("unrecoverable")) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

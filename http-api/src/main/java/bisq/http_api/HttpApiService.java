@@ -97,6 +97,7 @@ public class HttpApiService implements Service {
     private final Optional<SessionService> sessionService;
     private final Optional<ApiAccessService> apiAccessService;
     private final Optional<TlsContextService> tlsContextService;
+    private final Object pairingQrCodeLock = new Object();
     private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
 
     public HttpApiService(RestApiService.Config restApiConfig,
@@ -310,32 +311,34 @@ public class HttpApiService implements Service {
     }
 
     private void createPairingQrCode() {
-        if (pairingService.isEmpty()) {
-            log.warn("Cannot create pairing QR code: pairing service not initialized");
-            return;
+        synchronized (pairingQrCodeLock) {
+            if (pairingService.isEmpty()) {
+                log.warn("Cannot create pairing QR code: pairing service not initialized");
+                return;
+            }
+
+            // Get WebSocket URL
+            String webSocketUrl = getWebSocketUrl();
+            if (webSocketUrl == null) {
+                log.warn("Cannot create pairing QR code: WebSocket URL not available");
+                return;
+            }
+
+            // Create pairing code with all permissions
+            Set<Permission> allPermissions = Arrays.stream(Permission.values()).collect(Collectors.toSet());
+            PairingCode pairingCode = pairingService.get().createPairingCode(allPermissions);
+
+            // Get TLS and Tor contexts
+            Optional<TlsContext> pairingTlsContext = tlsContextService
+                    .flatMap(TlsContextService::getTlsContext);
+            Optional<TorContext> torContext = getTorContext();
+
+            // Generate and write QR code
+            pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, pairingTlsContext, torContext);
+
+            log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
+                    webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());
         }
-
-        // Get WebSocket URL
-        String webSocketUrl = getWebSocketUrl();
-        if (webSocketUrl == null) {
-            log.warn("Cannot create pairing QR code: WebSocket URL not available");
-            return;
-        }
-
-        // Create pairing code with all permissions
-        Set<Permission> allPermissions = Arrays.stream(Permission.values()).collect(Collectors.toSet());
-        PairingCode pairingCode = pairingService.get().createPairingCode(allPermissions);
-
-        // Get TLS and Tor contexts
-        Optional<TlsContext> pairingTlsContext = tlsContextService
-                .flatMap(TlsContextService::getTlsContext);
-        Optional<TorContext> torContext = getTorContext();
-
-        // Generate and write QR code
-        pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, pairingTlsContext, torContext);
-
-        log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
-                webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());
     }
 
     private String getWebSocketUrl() {
