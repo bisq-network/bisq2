@@ -27,12 +27,10 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
-import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ReadOnlyObservableMap;
-import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -46,6 +44,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
@@ -283,7 +282,8 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
 
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount) + " - " + calculateSecurityDeposit(maxBaseSideAmount));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(market, minBaseSideAmount, minQuoteSideAmount) + " - " +
+                    calculateSecurityDeposit(market, maxBaseSideAmount, maxQuoteSideAmount));
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
@@ -305,7 +305,7 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
 
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(fixBaseSideAmount));
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(market, fixBaseSideAmount, fixQuoteSideAmount));
         }
 
         model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
@@ -434,9 +434,12 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    private String calculateSecurityDeposit(Monetary monetary) {
-        double securityDeposit = model.getSecurityDepositAsPercent();
-        long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
-        return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
+    private String calculateSecurityDeposit(Market market, Monetary baseSideMonetary, Monetary quoteSideMonetary) {
+        double securityDepositAsPercent = model.getSecurityDepositAsPercent();
+        Monetary securityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(market,
+                baseSideMonetary,
+                quoteSideMonetary,
+                securityDepositAsPercent);
+        return OfferAmountFormatter.formatDepositAmountAsBTC(securityDeposit);
     }
 }
