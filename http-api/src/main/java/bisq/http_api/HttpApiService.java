@@ -24,6 +24,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.http_api.access.ApiAccessService;
 import bisq.http_api.access.pairing.PairingCode;
 import bisq.http_api.access.pairing.PairingService;
@@ -33,7 +34,9 @@ import bisq.http_api.access.permissions.RestPermissionMapping;
 import bisq.http_api.access.persistence.ApiAccessStoreService;
 import bisq.http_api.access.session.SessionService;
 import bisq.http_api.access.transport.TlsContext;
+import bisq.http_api.access.transport.TlsContextService;
 import bisq.http_api.access.transport.TorContext;
+import bisq.security.tls.TlsException;
 import bisq.common.timer.Scheduler;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
@@ -93,6 +96,8 @@ public class HttpApiService implements Service {
     private final Optional<PairingService> pairingService;
     private final Optional<SessionService> sessionService;
     private final Optional<ApiAccessService> apiAccessService;
+    private final Optional<TlsContextService> tlsContextService;
+    private final Object pairingQrCodeLock = new Object();
     private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
 
     public HttpApiService(RestApiService.Config restApiConfig,
@@ -137,6 +142,31 @@ public class HttpApiService implements Service {
             sessionService = Optional.empty();
             apiAccessService = Optional.empty();
             log.info("Pairing service disabled");
+        }
+
+        // Initialize TLS context service if TLS is required by either config
+        if (webSocketConfig.isTlsRequired() || restApiConfig.isTlsRequired()) {
+            // Use websocket config's TLS settings as primary (most common use case)
+            var tlsConfig = webSocketConfig.isTlsRequired() ? webSocketConfig : restApiConfig;
+            tlsContextService = Optional.of(new TlsContextService(
+                    true,
+                    tlsConfig.getTlsKeyStorePassword(),
+                    tlsConfig.getTlsKeyStoreSan(),
+                    appDataDirPath));
+        } else {
+            tlsContextService = Optional.empty();
+        }
+
+        // Get TLS context if available — abort startup if TLS is required but creation fails
+        Optional<TlsContext> tlsContext = Optional.empty();
+        if (tlsContextService.isPresent()) {
+            try {
+                tlsContext = tlsContextService.get().getOrCreateTlsContext();
+            } catch (TlsException e) {
+                log.error("Failed to create TLS context", e);
+                throw new RuntimeException("TLS is required but TLS context creation failed. " +
+                        "Check tlsKeyStorePassword and tlsKeyStoreSan in your configuration.", e);
+            }
         }
 
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
@@ -193,7 +223,8 @@ public class HttpApiService implements Service {
                         reputationRestApi,
                         userProfileRestApi,
                         devicesRestApi,
-                        Optional.ofNullable(accessApi));
+                        Optional.ofNullable(accessApi),
+                        sessionService);
                 restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig, appDataDirPath, securityService, networkService));
             } else {
                 restApiService = Optional.empty();
@@ -212,7 +243,8 @@ public class HttpApiService implements Service {
                         reputationRestApi,
                         userProfileRestApi,
                         devicesRestApi,
-                        Optional.ofNullable(accessApi));
+                        Optional.ofNullable(accessApi),
+                        sessionService);
                 webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketResourceConfig,
                         appDataDirPath,
@@ -224,7 +256,9 @@ public class HttpApiService implements Service {
                         userService,
                         bisqEasyService,
                         openTradeItemsService,
-                        pushNotificationService));
+                        pushNotificationService,
+                        tlsContext,
+                        sessionService));
             } else {
                 webSocketService = Optional.empty();
             }
@@ -260,6 +294,14 @@ public class HttpApiService implements Service {
                                     .runnableName("regeneratePairingCode")
                                     .periodically(4, TimeUnit.MINUTES));
                             log.info("Pairing code will be regenerated every 4 minutes");
+
+                            // Regenerate immediately when a pairing code is consumed
+                            pairingService.get().getPairingCode().addObserver(code -> {
+                                if (code == null) {
+                                    log.info("Pairing code was consumed, regenerating immediately");
+                                    createPairingQrCode();
+                                }
+                            });
                         } catch (Exception e) {
                             log.error("Failed to create pairing QR code", e);
                         }
@@ -269,31 +311,34 @@ public class HttpApiService implements Service {
     }
 
     private void createPairingQrCode() {
-        if (pairingService.isEmpty()) {
-            log.warn("Cannot create pairing QR code: pairing service not initialized");
-            return;
+        synchronized (pairingQrCodeLock) {
+            if (pairingService.isEmpty()) {
+                log.warn("Cannot create pairing QR code: pairing service not initialized");
+                return;
+            }
+
+            // Get WebSocket URL
+            String webSocketUrl = getWebSocketUrl();
+            if (webSocketUrl == null) {
+                log.warn("Cannot create pairing QR code: WebSocket URL not available");
+                return;
+            }
+
+            // Create pairing code with all permissions
+            Set<Permission> allPermissions = Arrays.stream(Permission.values()).collect(Collectors.toSet());
+            PairingCode pairingCode = pairingService.get().createPairingCode(allPermissions);
+
+            // Get TLS and Tor contexts
+            Optional<TlsContext> pairingTlsContext = tlsContextService
+                    .flatMap(TlsContextService::getTlsContext);
+            Optional<TorContext> torContext = getTorContext();
+
+            // Generate and write QR code
+            pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, pairingTlsContext, torContext);
+
+            log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
+                    webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());
         }
-
-        // Get WebSocket URL
-        String webSocketUrl = getWebSocketUrl();
-        if (webSocketUrl == null) {
-            log.warn("Cannot create pairing QR code: WebSocket URL not available");
-            return;
-        }
-
-        // Create pairing code with all permissions
-        Set<Permission> allPermissions = Arrays.stream(Permission.values()).collect(Collectors.toSet());
-        PairingCode pairingCode = pairingService.get().createPairingCode(allPermissions);
-
-        // Get TLS and Tor contexts (currently not available in this branch, so using empty)
-        Optional<TlsContext> tlsContext = Optional.empty();
-        Optional<TorContext> torContext = getTorContext();
-
-        // Generate and write QR code
-        pairingService.get().createPairingQrCode(pairingCode, webSocketUrl, tlsContext, torContext);
-
-        log.info("Pairing QR code created for WebSocket URL: {} with pairing code ID: {} (expires at: {})",
-                webSocketUrl, pairingCode.getId(), pairingCode.getExpiresAt());
     }
 
     private String getWebSocketUrl() {
@@ -310,8 +355,19 @@ public class HttpApiService implements Service {
             return wsConfig.getProtocol() + onionAddress.getHost() + ":" + onionAddress.getPort();
         }
 
-        // Fall back to clearnet address
-        return wsConfig.getProtocol() + wsConfig.getHost() + ":" + wsConfig.getPort();
+        // For clearnet, resolve actual LAN IP when config host is loopback.
+        // The QR code must contain a routable address for real devices on the same network.
+        String host = wsConfig.getHost();
+        if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
+            Optional<String> lanAddress = NetworkUtils.findLANHostAddress(Optional.empty());
+            if (lanAddress.isPresent()) {
+                log.info("Config host is loopback ({}). Using LAN address {} for pairing QR code.", host, lanAddress.get());
+                host = lanAddress.get();
+            } else {
+                log.warn("Config host is loopback ({}) but no LAN address found. QR code will only work on emulators.", host);
+            }
+        }
+        return wsConfig.getProtocol() + host + ":" + wsConfig.getPort();
     }
 
     private Optional<TorContext> getTorContext() {

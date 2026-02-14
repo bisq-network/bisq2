@@ -40,9 +40,10 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class KeyGeneration {
     public static final String ECDH = "ECDH";
+    public static final String EC = "EC";
+    public static final String DSA = "DSA";
     private static final String CURVE = "secp256k1";
     private static final String ECDSA = "ECDSA";
-    public static final String DSA = "DSA";
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -51,14 +52,18 @@ public class KeyGeneration {
     }
 
     public static KeyPair generateKeyPair() {
+        return generateKeyPair(CURVE, ECDH);
+    }
+
+    public static KeyPair generateKeyPair(String curve, String algorithm) {
         try {
-            ECGenParameterSpec ecSpec = new ECGenParameterSpec(CURVE);
-            KeyPairGenerator generator = KeyPairGenerator.getInstance(ECDH, "BC");
+            ECGenParameterSpec ecSpec = new ECGenParameterSpec(curve);
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm, "BC");
             generator.initialize(ecSpec, new SecureRandom());
             return generator.generateKeyPair();
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(
-                    "Failed to generate ECDH key pair (curve=" + CURVE + ", provider=BC)", e);
+                    "Failed to generate " + algorithm + " key pair (curve=" + curve + ", provider=BC)", e);
         }
     }
 

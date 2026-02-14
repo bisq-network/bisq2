@@ -98,6 +98,8 @@ public class PairingService {
 
         // Mark used by removing it
         pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
+        // Signal that the active code was consumed so observers can regenerate
+        this.pairingCode.set(null);
 
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);

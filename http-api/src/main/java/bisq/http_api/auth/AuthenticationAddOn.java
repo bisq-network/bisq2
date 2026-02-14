@@ -1,22 +1,27 @@
 package bisq.http_api.auth;
 
+import bisq.http_api.access.session.SessionService;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.HttpServerFilter;
 import org.glassfish.grizzly.http.server.NetworkListener;
 
+import java.util.Optional;
+
 public class AuthenticationAddOn implements AddOn {
     private final String password;
+    private final Optional<SessionService> sessionService;
 
-    public AuthenticationAddOn(String password) {
+    public AuthenticationAddOn(String password, Optional<SessionService> sessionService) {
         this.password = password;
+        this.sessionService = sessionService;
     }
 
     @Override
     public void setup(NetworkListener networkListener, FilterChainBuilder builder) {
         int httpServerFilterIdx = builder.indexOfType(HttpServerFilter.class);
         if (httpServerFilterIdx >= 0) {
-            builder.add(httpServerFilterIdx, new WebSocketAuthFilter(password));
+            builder.add(httpServerFilterIdx, new WebSocketAuthFilter(password, sessionService));
         } else {
             throw new RuntimeException("Expected HttpServerFilter to be present but was not. This prevents AuthenticationAddOn from setting up correctly, which is critical for security as a password has been set.");
         }

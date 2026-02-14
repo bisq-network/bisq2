@@ -14,7 +14,7 @@ apache-httpcomponents-httpclient-lib = { strictly = '5.4.1' }
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
-bouncycastle-lib = { strictly = '1.78.1' }
+bouncycastle-lib = { strictly = '1.83' }
 
 commons-codec = { strictly = '1.17.1' }
 
@@ -89,6 +89,7 @@ annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk18on', version.ref = 'bouncycastle-lib' }
 bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bouncycastle-lib' }
+bouncycastle-pkix = { module = 'org.bouncycastle:bcpkix-jdk18on', version.ref = 'bouncycastle-lib' }
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 

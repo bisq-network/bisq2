@@ -8,13 +8,15 @@ import bisq.node_monitor.NodeMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
+import java.util.Optional;
+
 @Slf4j
 public class NodeMonitorRestApiResourceConfig extends BaseRestApiResourceConfig {
     public NodeMonitorRestApiResourceConfig(CommonApiConfig config,
                                             NetworkService networkService,
                                             NodeMonitorService nodeMonitorService
     ) {
-        super(config);
+        super(config, Optional.empty());
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack

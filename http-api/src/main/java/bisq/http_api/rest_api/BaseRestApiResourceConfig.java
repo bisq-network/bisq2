@@ -1,6 +1,7 @@
 package bisq.http_api.rest_api;
 
 import bisq.common.util.StringUtils;
+import bisq.http_api.access.session.SessionService;
 import bisq.http_api.auth.HttpApiAuthFilter;
 import bisq.http_api.config.CommonApiConfig;
 import bisq.http_api.rest_api.error.CustomExceptionMapper;
@@ -11,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import java.util.Optional;
+
 public abstract class BaseRestApiResourceConfig extends ResourceConfig {
-    public BaseRestApiResourceConfig(CommonApiConfig config) {
+    public BaseRestApiResourceConfig(CommonApiConfig config, Optional<SessionService> sessionService) {
         super();
         String swaggerBaseUrl = config.getRestApiBaseUrl();
         ObjectMapper mapper = new ObjectMapper();
@@ -24,7 +27,7 @@ public abstract class BaseRestApiResourceConfig extends ResourceConfig {
 
         String password = config.getPassword();
         if (StringUtils.isNotEmpty(password)) {
-            HttpApiAuthFilter httpApiAuthFilter = new HttpApiAuthFilter(password);
+            HttpApiAuthFilter httpApiAuthFilter = new HttpApiAuthFilter(password, sessionService);
             register(httpApiAuthFilter);
         }
 

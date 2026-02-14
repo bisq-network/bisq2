@@ -55,8 +55,11 @@ public class RestApiService implements Service {
                       List<String> blackListEndPoints,
                       List<String> supportedAuth,
                       String password,
-                      boolean publishOnionService) {
-            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService);
+                      boolean publishOnionService,
+                      boolean tlsRequired,
+                      String tlsKeyStorePassword,
+                      List<String> tlsKeyStoreSan) {
+            super(enabled, protocol, host, port, localhostOnly, whiteListEndPoints, blackListEndPoints, supportedAuth, password, publishOnionService, tlsRequired, tlsKeyStorePassword, tlsKeyStoreSan);
         }
 
         public static Config from(com.typesafe.config.Config config) {
@@ -71,7 +74,10 @@ public class RestApiService implements Service {
                     config.getStringList("blackListEndPoints"),
                     config.getStringList("supportedAuth"),
                     config.getString("password"),
-                    config.getBoolean("publishOnionService")
+                    config.getBoolean("publishOnionService"),
+                    config.getBoolean("tlsRequired"),
+                    config.getString("tlsKeyStorePassword"),
+                    config.getStringList("tlsKeyStoreSan")
             );
         }
     }
@@ -102,7 +108,7 @@ public class RestApiService implements Service {
     public CompletableFuture<Boolean> initialize() {
         if (config.isEnabled()) {
             return CompletableFuture.supplyAsync(() -> {
-                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBaseUrl()), restApiResourceConfig);
+                        HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getRestApiBindUrl()), restApiResourceConfig);
                         httpServer = Optional.of(server);
                         addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
                         log.info("Server started at {}.", config.getRestApiBaseUrl());

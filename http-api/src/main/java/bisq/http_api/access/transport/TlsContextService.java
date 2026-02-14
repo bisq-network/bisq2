@@ -1,0 +1,136 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.http_api.access.transport;
+
+import bisq.common.util.NetworkUtils;
+import bisq.security.tls.SanUtils;
+import bisq.security.tls.SslContextFactory;
+import bisq.security.tls.TlsIdentity;
+import bisq.security.tls.TlsException;
+import bisq.security.tls.TlsKeyStore;
+import bisq.security.tls.TlsPasswordException;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.net.ssl.SSLContext;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+@Slf4j
+public class TlsContextService {
+    public static final int MIN_PASSWORD_LENGTH = 8;
+
+    private final boolean tlsRequired;
+    private final String tlsKeyStorePassword;
+    private final List<String> tlsKeyStoreSan;
+    private final Path keyStorePath;
+
+    @Getter
+    private volatile Optional<TlsContext> tlsContext = Optional.empty();
+
+    public TlsContextService(boolean tlsRequired,
+                             String tlsKeyStorePassword,
+                             List<String> tlsKeyStoreSan,
+                             Path appDataDirPath) {
+        this.tlsRequired = tlsRequired;
+        this.tlsKeyStorePassword = tlsKeyStorePassword;
+        this.tlsKeyStoreSan = tlsKeyStoreSan;
+        this.keyStorePath = appDataDirPath.resolve(Paths.get("db", "private")).resolve("tls_keystore.p12");
+    }
+
+    public synchronized Optional<TlsContext> getOrCreateTlsContext() throws TlsException {
+        if (tlsRequired && tlsContext.isEmpty()) {
+            tlsContext = Optional.of(createTlsContext());
+        }
+        return tlsContext;
+    }
+
+    private TlsContext createTlsContext() throws TlsException {
+        try {
+            checkNotNull(tlsKeyStorePassword, "TLS password must not be null");
+            checkArgument(tlsKeyStorePassword.length() >= MIN_PASSWORD_LENGTH,
+                    "TLS password does not have required min. length of " + MIN_PASSWORD_LENGTH);
+            char[] password = tlsKeyStorePassword.toCharArray();
+
+            checkNotNull(tlsKeyStoreSan, "tlsKeyStoreSan must not be null");
+            checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
+
+            // Auto-add LAN IP to SAN list so the cert is valid when real devices connect via LAN
+            List<String> effectiveSan = new ArrayList<>(tlsKeyStoreSan);
+            Optional<String> lanAddress = NetworkUtils.findLANHostAddress(Optional.empty());
+            if (lanAddress.isPresent() && !effectiveSan.contains(lanAddress.get())) {
+                effectiveSan.add(lanAddress.get());
+                log.info("Auto-added LAN address {} to TLS certificate SAN list", lanAddress.get());
+            }
+
+            KeyStore keyStore;
+            Optional<KeyStore> optionalKeyStore;
+            try {
+                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
+                if (optionalKeyStore.isPresent()) {
+                    keyStore = optionalKeyStore.get();
+                    if (!SanUtils.isMatchingPersistedSan(keyStore, effectiveSan)) {
+                        log.info("Persisted key store had different SAN list. We create a new key store.");
+                        keyStore = createNewKeyStore(effectiveSan, password);
+                    }
+                } else {
+                    keyStore = createNewKeyStore(effectiveSan, password);
+                }
+            } catch (TlsPasswordException e) {
+                log.info("Could not decrypt key store with given password. Probably password has been changed.", e);
+                keyStore = createNewKeyStore(effectiveSan, password);
+            }
+            SSLContext sslContext = SslContextFactory.fromKeyStore(keyStore, password);
+            String certificateFingerprint = TlsKeyStore.getCertificateFingerprint(keyStore);
+            return new TlsContext(certificateFingerprint, sslContext);
+        } catch (TlsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new TlsException(e);
+        }
+    }
+
+    private KeyStore createNewKeyStore(List<String> tlsKeyStoreSan, char[] password) throws TlsException {
+        try {
+            Instant expiryDate = ZonedDateTime.now(ZoneOffset.UTC).plusYears(1).toInstant();
+            var tlsIdentity = new TlsIdentity("Bisq2 Api Certificate", tlsKeyStoreSan, expiryDate);
+            KeyPair keyPair = tlsIdentity.getKeyPair();
+            X509Certificate certificate = tlsIdentity.getCertificate();
+            return TlsKeyStore.createAndPersistKeyStore(
+                    keyPair,
+                    certificate,
+                    keyStorePath,
+                    password);
+        } catch (TlsException e) {
+            log.error("Failed to create TlsKeyStore", e);
+            throw e;
+        }
+    }
+}
