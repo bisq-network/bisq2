@@ -34,11 +34,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormController> {
-    private final MaterialTextField userName;
+    private final MaterialTextField holderName;
     private final Label selectedCountriesErrorLabel;
     private final FlowPane selectedCurrenciesFlowPane;
     private Subscription runValidationPin;
@@ -46,10 +45,10 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
     public RevolutFormView(RevolutFormModel model, RevolutFormController controller) {
         super(model, controller);
 
-        userName = new MaterialTextField(Res.get("paymentAccounts.userName"),
+        holderName = new MaterialTextField(Res.get("paymentAccounts.userName"),
                 Res.get("paymentAccounts.createAccount.prompt", StringUtils.unCapitalize(Res.get("paymentAccounts.userName"))));
-        userName.setValidators(model.getUserNameValidator());
-        userName.setMaxWidth(Double.MAX_VALUE);
+        holderName.setValidators(model.getHolderNameValidator());
+        holderName.setMaxWidth(Double.MAX_VALUE);
 
         Label selectedCurrenciesLabel = new Label(Res.get("paymentAccounts.revolut.selectedCurrencies"));
         selectedCurrenciesLabel.getStyleClass().add("bisq-text-1");
@@ -59,8 +58,8 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
         selectedCountriesErrorLabel = new Label(Res.get("paymentAccounts.createAccount.accountData.revolut.selectedCurrencies.error"));
         selectedCountriesErrorLabel.getStyleClass().add("material-text-field-error");
 
-        VBox.setMargin(userName, new Insets(0, 0, 10, 0));
-        content.getChildren().addAll(userName,
+        VBox.setMargin(holderName, new Insets(0, 0, 10, 0));
+        content.getChildren().addAll(holderName,
                 new HBox(selectedCurrenciesLabel, Spacer.fillHBox()),
                 selectedCurrenciesFlowPane,
                 new HBox(selectedCountriesErrorLabel, Spacer.fillHBox())
@@ -70,40 +69,40 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
-        if (StringUtils.isNotEmpty(model.getUserName().get())) {
-            userName.setText(model.getUserName().get());
-            userName.validate();
+        if (StringUtils.isNotEmpty(model.getHolderName().get())) {
+            holderName.setText(model.getHolderName().get());
+            holderName.validate();
         }
 
         selectedCountriesErrorLabel.visibleProperty().bind(model.getSelectedCurrenciesErrorVisible());
         selectedCountriesErrorLabel.managedProperty().bind(model.getSelectedCurrenciesErrorVisible());
 
-        userName.textProperty().bindBidirectional(model.getUserName());
+        holderName.textProperty().bindBidirectional(model.getHolderName());
 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
-                userName.validate();
+                holderName.validate();
                 controller.onValidationDone();
             }
         });
 
-        selectedCurrenciesFlowPane.getChildren().addAll(getCountryEntries(model.getRevolutCurrencies(), model.getSelectedCurrencies()));
+        selectedCurrenciesFlowPane.getChildren().addAll(getCountryEntries(model.getCurrencies(), model.getSelectedCurrencies()));
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
-        userName.resetValidation();
+        holderName.resetValidation();
 
         selectedCountriesErrorLabel.visibleProperty().unbind();
         selectedCountriesErrorLabel.managedProperty().unbind();
 
-        userName.textProperty().unbindBidirectional(model.getUserName());
+        holderName.textProperty().unbindBidirectional(model.getHolderName());
 
         runValidationPin.unsubscribe();
 
         selectedCurrenciesFlowPane.getChildren().stream()
-                .map(e -> (CheckBox) e)
+                .map(CheckBox.class::cast)
                 .forEach(checkBox -> {
                     checkBox.setTooltip(null);
                     checkBox.setOnAction(null);
@@ -115,7 +114,7 @@ public class RevolutFormView extends FormView<RevolutFormModel, RevolutFormContr
     private Node[] getCountryEntries(List<FiatCurrency> list, List<FiatCurrency> selectedCurrencies) {
         List<CheckBox> nodes = list.stream()
                 .map(currency -> getCountryEntry(currency, selectedCurrencies.contains(currency)))
-                .collect(Collectors.toList());
+                .toList();
         return nodes.toArray(new Node[0]);
     }
 

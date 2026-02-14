@@ -37,8 +37,8 @@ import java.nio.charset.StandardCharsets;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class AliPayAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int ACCOUNT_NR_MIN_LENGTH = 1;
-    public static final int ACCOUNT_NR_MAX_LENGTH = 50;
+    public static final int ACCOUNT_NR_MIN_LENGTH = 2;
+    public static final int ACCOUNT_NR_MAX_LENGTH = 100;
 
     private final String accountNr;
 

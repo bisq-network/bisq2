@@ -342,4 +342,8 @@ public class StringUtils {
         cleaned = cleaned.trim();
         return cleaned;
     }
+
+    public static String flattenLineBreaks(String value) {
+        return value.replaceAll("\\R", ", ");
+    }
 }

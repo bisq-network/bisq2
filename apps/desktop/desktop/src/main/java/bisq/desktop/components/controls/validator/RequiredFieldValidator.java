@@ -17,17 +17,24 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 
 public class RequiredFieldValidator extends ValidatorBase {
+
+    public RequiredFieldValidator() {
+        this(Res.get("validation.empty"));
+    }
 
     public RequiredFieldValidator(String message) {
         super(message);
     }
 
+
     @Override
     protected void eval() {
         TextInputControl textField = (TextInputControl) srcControl.get();
-        hasErrors.set(textField.getText() == null || textField.getText().isEmpty());
+        hasErrors.set(StringUtils.isEmpty(textField.getText()));
     }
 }

@@ -36,12 +36,14 @@ public final class ImportCashByMailAccountParser extends ImportFiatAccountParser
 
     @Override
     public CashByMailAccount parse(KeyPair dsaKeyPair) {
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
         String postalAddress = requireText(paymentAccountPayloadNode, "postalAddress");
         String contact = requireText(paymentAccountPayloadNode, "contact");
         String extraInfo = requireTextAllowEmpty(paymentAccountPayloadNode, "extraInfo");
         CashByMailAccountPayload accountPayload = new CashByMailAccountPayload(
                 paymentAccountPayloadId,
                 salt,
+                selectedCurrencyCode,
                 postalAddress,
                 contact,
                 extraInfo);

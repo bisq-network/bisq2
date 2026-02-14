@@ -17,15 +17,14 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
-import bisq.common.validation.EmailValidation;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.PaymentAccountValidation;
-import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,20 +39,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
-    private final String selectedCurrencyCode;
+public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
     private final String holderName;
     private final String emailOrMobileNr;
 
     public MoneyBeamAccountPayload(String id,
                                    String countryCode,
-                                   String selectedCurrencyCode,
                                    String holderName,
                                    String emailOrMobileNr) {
         this(id,
                 AccountUtils.generateSalt(),
                 countryCode,
-                selectedCurrencyCode,
                 holderName,
                 emailOrMobileNr);
     }
@@ -61,11 +57,9 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     public MoneyBeamAccountPayload(String id,
                                     byte[] salt,
                                     String countryCode,
-                                    String selectedCurrencyCode,
                                     String holderName,
                                     String emailOrMobileNr) {
         super(id, salt, countryCode);
-        this.selectedCurrencyCode = selectedCurrencyCode;
         this.holderName = holderName;
         this.emailOrMobileNr = emailOrMobileNr;
 
@@ -75,9 +69,8 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
     @Override
     public void verify() {
         super.verify();
-        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
         PaymentAccountValidation.validateHolderName(holderName);
-        checkArgument(EmailValidation.isValid(emailOrMobileNr) || PhoneNumberValidation.isValid(emailOrMobileNr, countryCode));
+        checkArgument(StringUtils.isNotEmpty(emailOrMobileNr));
     }
 
     @Override
@@ -92,7 +85,6 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
 
     private bisq.account.protobuf.MoneyBeamAccountPayload.Builder getMoneyBeamAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.MoneyBeamAccountPayload.newBuilder()
-                .setSelectedCurrencyCode(selectedCurrencyCode)
                 .setHolderName(holderName)
                 .setEmailOrMobileNr(emailOrMobileNr);
     }
@@ -103,7 +95,6 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 proto.getId(),
                 proto.getSalt().toByteArray(),
                 proto.getCountryBasedAccountPayload().getCountryCode(),
-                payload.getSelectedCurrencyCode(),
                 payload.getHolderName(),
                 payload.getEmailOrMobileNr());
     }

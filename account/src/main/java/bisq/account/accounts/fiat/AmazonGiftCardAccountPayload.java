@@ -17,14 +17,13 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SingleCurrencyAccountPayload;
+import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
-import bisq.common.validation.EmailValidation;
-import bisq.common.validation.PhoneNumberValidation;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,15 +38,24 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
+public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     private final String emailOrMobileNr;
+    private final String selectedCurrencyCode;
 
-    public AmazonGiftCardAccountPayload(String id, String countryCode, String emailOrMobileNr) {
-        this(id, AccountUtils.generateSalt(), countryCode, emailOrMobileNr);
+    public AmazonGiftCardAccountPayload(String id,
+                                        String countryCode,
+                                        String selectedCurrencyCode,
+                                        String emailOrMobileNr) {
+        this(id, AccountUtils.generateSalt(), countryCode, selectedCurrencyCode, emailOrMobileNr);
     }
 
-    public AmazonGiftCardAccountPayload(String id, byte[] salt, String countryCode, String emailOrMobileNr) {
+    public AmazonGiftCardAccountPayload(String id,
+                                        byte[] salt,
+                                        String countryCode,
+                                        String selectedCurrencyCode,
+                                        String emailOrMobileNr) {
         super(id, salt, countryCode);
+        this.selectedCurrencyCode = selectedCurrencyCode;
         this.emailOrMobileNr = emailOrMobileNr;
 
         verify();
@@ -56,7 +64,8 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     @Override
     public void verify() {
         super.verify();
-        checkArgument(EmailValidation.isValid(emailOrMobileNr) || PhoneNumberValidation.isValid(emailOrMobileNr, countryCode));
+
+        checkArgument(StringUtils.isNotEmpty(emailOrMobileNr));
     }
 
     @Override
@@ -70,7 +79,9 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     }
 
     private bisq.account.protobuf.AmazonGiftCardAccountPayload.Builder getAmazonGiftCardAccountPayloadBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder().setEmailOrMobileNr(emailOrMobileNr);
+        return bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder()
+                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .setEmailOrMobileNr(emailOrMobileNr);
     }
 
     public static AmazonGiftCardAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
@@ -82,6 +93,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
                 proto.getId(),
                 proto.getSalt().toByteArray(),
                 countryBasedAccountPayload.getCountryCode(),
+                amazonGiftCardAccountPayload.getSelectedCurrencyCode(),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr()
         );
     }

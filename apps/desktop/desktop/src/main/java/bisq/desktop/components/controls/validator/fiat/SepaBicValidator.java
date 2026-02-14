@@ -15,34 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls.validator;
+package bisq.desktop.components.controls.validator.fiat;
 
 import bisq.common.validation.SepaPaymentAccountValidation;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import javafx.scene.control.TextInputControl;
-import lombok.Setter;
 
-public class SepaIbanValidator extends ValidatorBase {
-    // The country code which the Iban need to match
-    @Setter
-    private String restrictedToCountryCode = "";
+public class SepaBicValidator extends ValidatorBase {
 
-    public SepaIbanValidator() {
+    public SepaBicValidator() {
         super();
     }
+
 
     @Override
     protected void eval() {
         if (srcControl.get() instanceof TextInputControl textInputControl) {
-            String iban = textInputControl.getText();
+            String bic = textInputControl.getText();
             try {
-                SepaPaymentAccountValidation.validateIban(iban);
-
-                if (!restrictedToCountryCode.isEmpty()) {
-                    SepaPaymentAccountValidation.validateIbanMatchesCountryCode(iban, restrictedToCountryCode);
-                }
+                SepaPaymentAccountValidation.validateBic(bic);
                 hasErrors.set(false);
             } catch (Exception e) {
-                setMessage( e.getMessage());
+                setMessage(e.getMessage());
                 hasErrors.set(true);
             }
         }

@@ -21,11 +21,14 @@ import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public abstract class FormModel implements Model {
     private final String id;
     private final BooleanProperty showOverlay = new SimpleBooleanProperty();
+    @Setter
+    private  boolean overlayWasDisplayed;
 
     public FormModel(String id) {
         this.id = id;

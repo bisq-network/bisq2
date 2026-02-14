@@ -144,8 +144,4 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
         nationalAccountId.ifPresent(value -> builder.add(BankAccountUtils.getNationalAccountIdDescription(countryCode), value));
         return builder.toString();
     }
-
-    public String getHolderAddressAsSingleLine() {
-        return holderAddress.replaceAll("\\R", ", ");
-    }
 }

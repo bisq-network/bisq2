@@ -30,7 +30,7 @@ public class AchTransferAccountDetailsGridPane extends BankAccountDetailsGridPan
     @Override
     protected void addDetails(AchTransferAccountPayload accountPayload) {
         addHolderName(accountPayload);
-        addDescriptionAndValue(Res.get("paymentAccounts.holderAddress"), accountPayload.getHolderAddressAsSingleLine());
+        addDescriptionAndValue(Res.get("paymentAccounts.holderAddress"), accountPayload.getHolderAddress());
         addAccountData(accountPayload);
         addBankInfo(accountPayload);
     }

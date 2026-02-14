@@ -346,7 +346,6 @@ public class FiatPaymentRailUtil {
     public static List<String> getPayseraCurrencyCodes() {
         return List.of(
                 "AUD",
-                "BGN",
                 "BYN",
                 "CAD",
                 "CHF",
@@ -383,6 +382,18 @@ public class FiatPaymentRailUtil {
         return currenciesFromCodes(getPayseraCurrencyCodes());
     }
 
+    /* --------------------------------------------------------------------- */
+    // PERFECT_MONEY
+    /* --------------------------------------------------------------------- */
+
+    public static List<String> getPerfectMoneyCurrencyCodes() {
+        return List.of("EUR", "USD");
+    }
+
+    public static List<FiatCurrency> getPerfectMoneyCurrencies() {
+        return currenciesFromCodes(getPerfectMoneyCurrencyCodes());
+    }
+
 
     /* --------------------------------------------------------------------- */
     // VERSE
@@ -394,19 +405,6 @@ public class FiatPaymentRailUtil {
 
     public static List<FiatCurrency> getVerseCurrencies() {
         return currenciesFromCodes(getVerseCurrencyCodes());
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // MONEY_BEAM
-    /* --------------------------------------------------------------------- */
-
-    public static List<String> getMoneyBeamCurrencyCodes() {
-        return List.of("EUR", "GBP");
-    }
-
-    public static List<FiatCurrency> getMoneyBeamCurrencies() {
-        return currenciesFromCodes(getMoneyBeamCurrencyCodes());
     }
 
 

@@ -18,13 +18,14 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.common.validation.NetworkDataValidation;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.validation.PaymentAccountValidation;
+import bisq.common.validation.fiat.AdvancedCashAccountNrValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,29 +33,28 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class AdvancedCashAccountPayload extends AccountPayload<FiatPaymentMethod>
-        implements SelectableCurrencyAccountPayload {
-    public static final int ACCOUNT_NR_MIN_LENGTH = 1;
-    public static final int ACCOUNT_NR_MAX_LENGTH = 50;
-
-    private final String selectedCurrencyCode;
+public final class AdvancedCashAccountPayload extends AccountPayload<FiatPaymentMethod> implements MultiCurrencyAccountPayload {
+    private final List<String> selectedCurrencyCodes;
     private final String accountNr;
 
-    public AdvancedCashAccountPayload(String id, String selectedCurrencyCode, String accountNr) {
-        this(id, AccountUtils.generateSalt(), selectedCurrencyCode, accountNr);
+    public AdvancedCashAccountPayload(String id, List<String> selectedCurrencyCodes, String accountNr) {
+        this(id, AccountUtils.generateSalt(), selectedCurrencyCodes, accountNr);
     }
 
     public AdvancedCashAccountPayload(String id,
                                       byte[] salt,
-                                      String selectedCurrencyCode,
+                                      List<String> selectedCurrencyCodes,
                                       String accountNr) {
         super(id, salt);
-        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.accountNr = accountNr;
 
         verify();
@@ -64,8 +64,11 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
     public void verify() {
         super.verify();
 
-        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
-        NetworkDataValidation.validateRequiredText(accountNr, ACCOUNT_NR_MIN_LENGTH, ACCOUNT_NR_MAX_LENGTH);
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getAdvancedCashCurrencyCodes(),
+                "Advanced Cash currency codes");
+        checkArgument(AdvancedCashAccountNrValidation.getInstance().isValid(accountNr),
+                "Account number is invalid");
     }
 
     @Override
@@ -80,7 +83,7 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
 
     private bisq.account.protobuf.AdvancedCashAccountPayload.Builder getAdvancedCashAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AdvancedCashAccountPayload.newBuilder()
-                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setAccountNr(accountNr);
     }
 
@@ -89,7 +92,7 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
         return new AdvancedCashAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCode(),
+                payload.getSelectedCurrencyCodesList(),
                 payload.getAccountNr()
         );
     }

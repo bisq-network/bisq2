@@ -141,7 +141,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     @Override
     public String getDefaultAccountName() {
-        return getPaymentMethodName() + "-" + StringUtils.truncate(iban, 8);
+        return getPaymentMethod().getShortDisplayString() + "-" + StringUtils.truncate(iban, 8);
     }
 
     @Override

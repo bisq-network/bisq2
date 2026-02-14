@@ -84,7 +84,7 @@ public class ApiConfigModel implements Model {
     // validators
     private final PortValidator bindPortValidator = new PortValidator();
     private final HostValidator bindHostValidator = new HostValidator();
-    private final ValidatorBase pwdRequiredFieldValidator = new RequiredFieldValidator(Res.get("validation.empty"));
+    private final ValidatorBase pwdRequiredFieldValidator = new RequiredFieldValidator();
     private final ValidatorBase pwdMinLengthValidator = new TextMinLengthValidator(Res.get("validation.password.tooShort"), TlsContextService.MIN_PASSWORD_LENGTH);
 
     // --- constructor from ApiConfig ---

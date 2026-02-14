@@ -70,7 +70,7 @@ public class BankAccountUtils {
 
     public static boolean isBankIdRequired(String countryCode) {
         return switch (countryCode) {
-            case "GB", "NZ", "AU", "SE", "CL", "NO", "IN", "JP" -> false;
+            case "BR", "SE", "CL", "AR", "NO" -> false;
             default -> true;
         };
     }
@@ -86,9 +86,11 @@ public class BankAccountUtils {
                     Res.get("paymentAccounts.bank.bankIdOptional");
         };
     }
+
     public static String getBankIdDescriptionShort(String countryCode) {
         return switch (countryCode) {
-            case "CA" -> "Institution No."; // Shorter informal synonym for Institution Number (often used in online forms)
+            case "CA" ->
+                    "Institution No."; // Shorter informal synonym for Institution Number (often used in online forms)
             case "MX", "HK" -> Res.get("paymentAccounts.bank.bankCode");
             case "US" -> "Routing No."; // do not translate as it is used in English only
             case "IN" -> "IFSC";
@@ -114,6 +116,7 @@ public class BankAccountUtils {
                     Res.get("paymentAccounts.bank.branchIdOptional");
         };
     }
+
     public static String getBranchIdDescriptionShort(String countryCode) {
         return switch (countryCode) {
             case "GB" -> "Sort code"; // do not translate as it is used in English only
@@ -154,6 +157,7 @@ public class BankAccountUtils {
             default -> "";
         };
     }
+
     public static String getNationalAccountIdDescriptionShort(String countryCode) {
         //noinspection SwitchStatementWithTooFewBranches
         return switch (countryCode) {

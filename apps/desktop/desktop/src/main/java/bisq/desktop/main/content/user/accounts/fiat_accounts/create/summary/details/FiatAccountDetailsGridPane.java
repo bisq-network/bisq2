@@ -24,10 +24,4 @@ public abstract class FiatAccountDetailsGridPane<A extends AccountPayload<?>> ex
     public FiatAccountDetailsGridPane(A accountPayload, FiatPaymentRail fiatPaymentRail) {
         super(accountPayload, fiatPaymentRail);
     }
-
-  /*  @Override
-    protected void addRestrictions(FiatPaymentRail fiatPaymentRail) {
-        addDescriptionAndValue(Res.get("paymentAccounts.chargebackRisk"), fiatPaymentRail.getChargebackRisk().toString());
-        super.addRestrictions(fiatPaymentRail);
-    }*/
 }

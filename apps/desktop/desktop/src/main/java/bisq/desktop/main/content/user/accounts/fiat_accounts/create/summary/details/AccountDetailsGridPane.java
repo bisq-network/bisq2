@@ -19,7 +19,9 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.det
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentRail;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.GridPaneUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -74,9 +76,12 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
     }
 
     protected Label addValueLabel(String value) {
-        Label label = new Label(value);
+        Label label = new Label(StringUtils.flattenLineBreaks(value));
         label.getStyleClass().add(VALUE_STYLE);
         add(label, 1, rowIndex, 2, 1);
+        if (value.contains("\n") || value.contains("\r")) {
+            label.setTooltip(new BisqTooltip(value));
+        }
         return label;
     }
 
