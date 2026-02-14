@@ -18,6 +18,7 @@
 package bisq.offer.amount;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.asset.Asset;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
@@ -36,6 +37,8 @@ import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Public APIs for getting different types of amounts:
@@ -98,7 +101,8 @@ public class OfferAmountUtil {
     }
 
     // Combinations
-    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+    public static Optional<Monetary> findBaseSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                                  Offer<?, ?> offer) {
         return findBaseSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -113,7 +117,8 @@ public class OfferAmountUtil {
                         ));
     }
 
-    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                  Offer<?, ?> offer) {
         return findBaseSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -134,7 +139,8 @@ public class OfferAmountUtil {
     /* --------------------------------------------------------------------- */
 
     // Fixed
-    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+    public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService,
+                                                              Offer<?, ?> offer) {
         return findQuoteSideFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -182,7 +188,8 @@ public class OfferAmountUtil {
     }
 
     // Combinations
-    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                                   Offer<?, ?> offer) {
         return findQuoteSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -197,7 +204,8 @@ public class OfferAmountUtil {
                         ));
     }
 
-    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                   Offer<?, ?> offer) {
         return findQuoteSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -276,5 +284,18 @@ public class OfferAmountUtil {
 
     public static Monetary calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
         return Monetary.from(MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit), monetary.getCode());
+    }
+
+    public static Monetary calculateSecurityDepositAsBTC(Market market,
+                                                         Monetary baseSideMonetary,
+                                                         Monetary quoteSideMonetary,
+                                                         double securityDeposit) {
+        if (market.isBtcFiatMarket()) {
+            checkArgument(Asset.isBtc(baseSideMonetary.getCode()));
+            return calculateSecurityDeposit(baseSideMonetary, securityDeposit);
+        } else {
+            checkArgument(Asset.isBtc(quoteSideMonetary.getCode()));
+            return calculateSecurityDeposit(quoteSideMonetary, securityDeposit);
+        }
     }
 }
