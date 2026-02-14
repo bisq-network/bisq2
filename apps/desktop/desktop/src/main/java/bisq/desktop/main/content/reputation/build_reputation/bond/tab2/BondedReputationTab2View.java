@@ -54,7 +54,8 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
         formulaHeadline.getStyleClass().addAll("bisq-text-1");
         VBox formulaBox = new VBox(10, formulaHeadline,
                 getField("weight", String.valueOf(BondedReputationService.WEIGHT)),
-                getField("totalScore"));
+                getField("totalScore"),
+                getField("tradeLimit", Res.get("reputation.tradeLimit.formula")));
 
         HBox hBox = new HBox(20, formulaBox, simulation);
 
