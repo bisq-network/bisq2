@@ -28,9 +28,14 @@ import lombok.Getter;
  * This creates exposure risk if the persistence store is compromised.
  * Future enhancement should implement encryption for the persistence layer and document/enforce
  * strict file-level protections and rotation policies.
+ *
+ * <p><b>Authentication:</b> Constant-time secret comparison is performed at authentication using
+ * {@link java.security.MessageDigest#isEqual(byte[], byte[])} in
+ * {@link bisq.http_api.access.ApiAccessService#requestSession(String, String)}.
+ * See that method for the secure comparison implementation.
  */
 @Getter
-@EqualsAndHashCode(exclude = "clientSecret") // Exclude from equals/hashCode to prevent timing attacks
+@EqualsAndHashCode
 public class ClientProfile implements PersistableProto {
     private final String clientId;
     private final String clientSecret;

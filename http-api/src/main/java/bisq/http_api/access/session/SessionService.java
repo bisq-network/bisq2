@@ -39,12 +39,14 @@ public class SessionService {
     }
 
     public Optional<SessionToken> find(String sessionId) {
-        SessionToken token = sessionTokenBySessionIdMap.get(sessionId);
-        if (token != null && token.isExpired()) {
-            sessionTokenBySessionIdMap.remove(sessionId);
-            return Optional.empty();
-        }
-        return Optional.ofNullable(token);
+        // Use computeIfPresent for atomic check-and-evict of expired tokens (prevents TOCTOU race)
+        SessionToken result = sessionTokenBySessionIdMap.computeIfPresent(sessionId, (key, token) -> {
+            if (token.isExpired()) {
+                return null; // Evict expired token
+            }
+            return token; // Keep valid token
+        });
+        return Optional.ofNullable(result);
     }
 
     /**
