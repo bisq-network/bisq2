@@ -107,9 +107,9 @@ public class MuSigTradeCompletedTable extends VBox {
 
     public void initialize(UserProfileDisplay tradeWithValue,
                            boolean isBuyer,
-                           String btcAmount,
-                           String fiatAmount,
-                           String fiatCurrency,
+                           String baseAmount,
+                           String quoteAmount,
+                           String quoteCurrency,
                            String paymentMethod,
                            String tradeId,
                            String tradeDate,
@@ -135,7 +135,7 @@ public class MuSigTradeCompletedTable extends VBox {
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
         myDirection.getStyleClass().addAll("dimmed-text");
 
-        bitcoinAmountDisplay.setBtcAmount(btcAmount);
+        bitcoinAmountDisplay.setBtcAmount(baseAmount);
 
         HBox btcBox = new HBox(5, bitcoinAmountDisplay);
         btcBox.setAlignment(Pos.BASELINE_LEFT);
@@ -149,9 +149,9 @@ public class MuSigTradeCompletedTable extends VBox {
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
         myOutcome.getStyleClass().addAll("dimmed-text");
-        Label myOutcomeValue = new Label(fiatAmount);
+        Label myOutcomeValue = new Label(quoteAmount);
         myOutcomeValue.getStyleClass().add("medium-text");
-        Label fiat = new Label(fiatCurrency.toUpperCase());
+        Label fiat = new Label(quoteCurrency.toUpperCase());
         fiat.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
         HBox fiatBox = new HBox(5, myOutcomeValue, fiat);
         fiatBox.setAlignment(Pos.BASELINE_LEFT);

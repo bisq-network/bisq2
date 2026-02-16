@@ -19,8 +19,8 @@ package bisq.desktop.main.content.mu_sig.take_offer;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -34,7 +34,6 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
@@ -105,7 +104,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
         muSigTakeOfferReviewController.init(muSigOffer);
 
         model.setAmountVisible(muSigOffer.hasAmountRange());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
+        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
         List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
 
         boolean isSingleAccountForSinglePaymentMethod = false;

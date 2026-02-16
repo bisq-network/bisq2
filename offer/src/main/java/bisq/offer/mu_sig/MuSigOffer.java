@@ -18,6 +18,8 @@
 package bisq.offer.mu_sig;
 
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
@@ -26,9 +28,6 @@ import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMethodSpec<?>> {
+public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodSpec<?>> {
     private static final int VERSION = 0;
     public static final double DEFAULT_BUYER_SECURITY_DEPOSIT = 0.25;
     public static final double DEFAULT_SELLER_SECURITY_DEPOSIT = 0.25;
@@ -65,8 +64,12 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
                 amountSpec,
                 priceSpec,
                 List.of(TradeProtocolType.MU_SIG),
-                PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
-                PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market),
+                market.isBtcFiatMarket()
+                        ? createBitcoinMainChainPaymentMethodSpec()
+                        : PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market.getBaseCurrencyCode()),
+                market.isBtcFiatMarket()
+                        ? PaymentMethodSpecUtil.createPaymentMethodSpecs(paymentMethods, market.getQuoteCurrencyCode())
+                        : createBitcoinMainChainPaymentMethodSpec(),
                 offerOptions,
                 VERSION,
                 tradeProtocolVersion,
@@ -82,7 +85,7 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
                        AmountSpec amountSpec,
                        PriceSpec priceSpec,
                        List<TradeProtocolType> protocolTypes,
-                       List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                       List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs,
                        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs,
                        List<? extends OfferOption> offerOptions,
                        int version,
@@ -107,11 +110,16 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
         verify();
     }
 
+    private static List<PaymentMethodSpec<?>> createBitcoinMainChainPaymentMethodSpec() {
+        return PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().stream()
+                        .map(spec -> (PaymentMethodSpec<?>) spec)
+                        .collect(Collectors.toList());
+    }
+
     @Override
     public void verify() {
         super.verify();
     }
-
 
     @Override
     public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
@@ -128,13 +136,14 @@ public final class MuSigOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMet
         List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
-                .collect(Collectors.toList());
         Market market = Market.fromProto(proto.getMarket());
-        Class<? extends PaymentMethodSpec<?>> clazz = PaymentMethodSpecUtil.getPaymentMethodSpecClass(market);
+        Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
+        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
+                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
+                .collect(Collectors.toList());
+        Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
         List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazz))
+                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)

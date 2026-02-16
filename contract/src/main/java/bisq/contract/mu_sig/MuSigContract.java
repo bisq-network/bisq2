@@ -17,6 +17,7 @@
 
 package bisq.contract.mu_sig;
 
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.market.Market;
@@ -25,8 +26,6 @@ import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -42,7 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
-    private static BitcoinPaymentMethodSpec getBitcoinPaymentMethodSpec(MuSigOffer offer) {
+    private static PaymentMethodSpec<?> getBaseSidePaymentMethodSpec(MuSigOffer offer) {
         checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
                 "MuSigOffers baseSidePaymentMethodSpecs must have exactly 1 item");
         return offer.getBaseSidePaymentMethodSpecs().get(0);
@@ -50,7 +49,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     private final long baseSideAmount;
     private final long quoteSideAmount;
-    private final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
+    private final PaymentMethodSpec<?> baseSidePaymentMethodSpec;
     private final PaymentMethodSpec<?> quoteSidePaymentMethodSpec;
     private final Optional<UserProfile> mediator;
     private final PriceSpec priceSpec;
@@ -71,7 +70,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
-                getBitcoinPaymentMethodSpec(offer),
+                getBaseSidePaymentMethodSpec(offer),
                 quoteSidePaymentMethodSpec,
                 mediator,
                 priceSpec,
@@ -84,7 +83,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          Party taker,
                          long baseSideAmount,
                          long quoteSideAmount,
-                         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec,
+                         PaymentMethodSpec<?> baseSidePaymentMethodSpec,
                          PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
@@ -149,8 +148,12 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 Party.fromProto(twoPartyContractProto.getTaker()),
                 muSigContractProto.getBaseSideAmount(),
                 muSigContractProto.getQuoteSideAmount(),
-                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(muSigContractProto.getBaseSidePaymentMethodSpec()),
-                PaymentMethodSpec.fromProto(muSigContractProto.getQuoteSidePaymentMethodSpec(), PaymentMethodSpecUtil.getPaymentMethodSpecClass(market)),
+                PaymentMethodSpec.fromProto(
+                        muSigContractProto.getBaseSidePaymentMethodSpec(),
+                        PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market)),
+                PaymentMethodSpec.fromProto(
+                        muSigContractProto.getQuoteSidePaymentMethodSpec(),
+                        PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market)),
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
                         Optional.empty(),

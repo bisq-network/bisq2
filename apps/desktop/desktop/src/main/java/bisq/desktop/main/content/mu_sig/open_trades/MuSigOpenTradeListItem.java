@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
@@ -59,8 +58,8 @@ class MuSigOpenTradeListItem implements DateTableItem {
     private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
-    private final BitcoinPaymentRail bitcoinPaymentRail;
-    private final PaymentRail paymentRail;
+    private final PaymentRail basePaymentRail;
+    private final PaymentRail quotePaymentRail;
     private final PaymentMethod<?> paymentMethod;
 
     private long peerNumNotifications, mediatorNumNotifications;
@@ -96,8 +95,8 @@ class MuSigOpenTradeListItem implements DateTableItem {
         baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(trade);
         quoteAmount = contract.getQuoteSideAmount();
         quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
-        bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        paymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+        basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+        quotePaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         paymentMethodDisplayName = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
 

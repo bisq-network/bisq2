@@ -19,16 +19,12 @@ package bisq.desktop.main.content.mu_sig.create_offer.amount_and_price.amount;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.market.Market;
-import bisq.common.data.Pair;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -37,22 +33,16 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigTradeAmountLimits;
 import bisq.offer.Direction;
-import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -64,18 +54,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static bisq.mu_sig.MuSigTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
 import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
 import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
-import static bisq.mu_sig.MuSigTradeAmountLimits.Result;
-import static bisq.mu_sig.MuSigTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
 import static bisq.mu_sig.MuSigTradeAmountLimits.withTolerance;
 import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -90,7 +76,6 @@ public class MuSigCreateOfferAmountController implements Controller {
     private final AmountSelectionController amountSelectionController;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
-    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final Region owner;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
@@ -110,7 +95,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
@@ -378,40 +362,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         }
     }
 
-    private Optional<PriceQuote> findBestOfferQuote() {
-        // Only used in wizard mode where we do not show min/max amounts
-        Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
-        if (optionalChannel.isEmpty() || model.getMarket() == null) {
-            return Optional.empty();
-        }
-
-        List<BisqEasyOffer> bisqEasyOffers = optionalChannel.get().getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
-                .filter(this::filterOffers)
-                .toList();
-        boolean isSellOffer = bisqEasyOffers.stream()
-                .map(Offer::getDirection)
-                .map(Direction::isSell)
-                .findAny()
-                .orElse(false);
-        Stream<PriceQuote> priceQuoteStream = bisqEasyOffers.stream()
-                .map(Offer::getPriceSpec)
-                .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream());
-        Optional<PriceQuote> bestOffersPrice = isSellOffer
-                ? priceQuoteStream.min(Comparator.comparing(PriceQuote::getValue))
-                : priceQuoteStream.max(Comparator.comparing(PriceQuote::getValue));
-        if (bestOffersPrice.isPresent()) {
-            amountSelectionController.setQuote(bestOffersPrice.get());
-        } else {
-            getMarketPriceQuote().ifPresent(amountSelectionController::setQuote);
-        }
-        AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getBaseSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
-                .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> amountSelectionController.setMaxOrFixedQuoteSideAmount(amount)));
-
-        return bestOffersPrice;
-    }
-
     private Optional<PriceQuote> getMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket());
     }
@@ -556,187 +506,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         );
     }
 
-    private void applyLowestAndHighestAmountInAvailableOffers() {
-        Monetary selectedAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
-        if (selectedAmount == null) {
-            return;
-        }
-
-        if (model.getMarket() == null) {
-            log.warn("Market not yet set – skipping offer amount range calculation");
-            return;
-        }
-
-        Pair<Optional<Monetary>, Optional<Monetary>> availableOfferAmountRange = getLowestAndHighestAmountInAvailableOffers(bisqEasyOfferbookChannelService,
-                reputationService,
-                userIdentityService,
-                userProfileService,
-                marketPriceService,
-                model.getMarket(),
-                model.getDirection());
-        amountSelectionController.setLeftMarkerQuoteSideValue(availableOfferAmountRange.getFirst().orElse(null));
-        amountSelectionController.setRightMarkerQuoteSideValue(availableOfferAmountRange.getSecond().orElse(null));
-
-        boolean rangePresent = availableOfferAmountRange.getFirst().isPresent() && availableOfferAmountRange.getSecond().isPresent();
-        model.getLearnMoreVisible().set(false);
-        if (rangePresent) {
-            Monetary lower = availableOfferAmountRange.getFirst().get();
-            Monetary higher = availableOfferAmountRange.getSecond().get();
-            boolean offersAvailable = selectedAmount.isGreaterThanOrEqual(lower) && selectedAmount.isLessThanOrEqual(higher);
-            model.getShouldShowWarningIcon().set(!offersAvailable);
-
-            if (offersAvailable) {
-                model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.offersAvailable"));
-            } else {
-                model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.noOffersAvailable"));
-            }
-        }
-        model.getShouldShowAmountLimitInfo().set(rangePresent);
-    }
-
     private void applyReputationBasedQuoteSideAmount() {
         amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
-    }
-
-    private long getNumMatchingOffers(Monetary quoteSideAmount) {
-        return bisqEasyOfferbookChannelService.findChannel(model.getMarket()).orElseThrow().getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
-                .filter(offer -> {
-                    if (!isValidDirection(offer)) {
-                        return false;
-                    }
-                    if (!isValidMarket(offer)) {
-                        return false;
-                    }
-                    if (!isValidMakerProfile(offer)) {
-                        return false;
-                    }
-                    if (!isValidAmountRange(offer)) {
-                        return false;
-                    }
-
-                    if (!isValidAmountLimit(offer, quoteSideAmount)) {
-                        return false;
-                    }
-
-                    return true;
-                })
-                .count();
-    }
-
-    /* --------------------------------------------------------------------- */
-    // Filter
-    /* --------------------------------------------------------------------- */
-
-    private boolean isValidDirection(BisqEasyOffer peersOffer) {
-        return peersOffer.getTakersDirection().equals(model.getDirection());
-    }
-
-    private boolean isValidMarket(BisqEasyOffer peersOffer) {
-        return peersOffer.getMarket().equals(model.getMarket());
-    }
-
-    private boolean isValidMakerProfile(BisqEasyOffer peersOffer) {
-        Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-        if (optionalMakersUserProfile.isEmpty()) {
-            return false;
-        }
-        UserProfile makersUserProfile = optionalMakersUserProfile.get();
-        if (userProfileService.isChatUserIgnored(makersUserProfile)) {
-            return false;
-        }
-        if (userIdentityService.getUserIdentities().stream()
-                .map(userIdentity -> userIdentity.getUserProfile().getId())
-                .anyMatch(userProfileId -> userProfileId.equals(optionalMakersUserProfile.get().getId()))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isValidPaymentMethods(BisqEasyOffer peersOffer) {
-        List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createPaymentMethodSpecs(model.getPaymentMethods(), model.getMarket().getQuoteCurrencyCode());
-        List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
-        if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isValidAmountRange(BisqEasyOffer peersOffer) {
-        Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getBaseSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMinOrFixedAmount.get().round(0).getValue() > peersQuoteSideMaxOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
-
-        Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getBaseSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMaxOrFixedAmount.get().round(0).getValue() < peersQuoteSideMinOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isValidAmountLimit(BisqEasyOffer peersOffer, Monetary quoteSideAmount) {
-        Optional<Result> result = MuSigTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
-                userIdentityService,
-                userProfileService,
-                marketPriceService,
-                model.getMarket(),
-                quoteSideAmount,
-                peersOffer);
-        if (!result.map(Result::isValid).orElse(false)) {
-            return false;
-        }
-        return true;
-    }
-
-
-    private boolean isValidAmountLimit(BisqEasyOffer peersOffer) {
-        if (!MuSigTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                        userIdentityService,
-                        userProfileService,
-                        marketPriceService,
-                        peersOffer)
-                .map(Result::isValid)
-                .orElse(false)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // Used for finding best price quote of available matching offers
-    private boolean filterOffers(BisqEasyOffer peersOffer) {
-        if (!isValidDirection(peersOffer)) {
-            return false;
-        }
-        if (!isValidMarket(peersOffer)) {
-            return false;
-        }
-        if (!isValidPaymentMethods(peersOffer)) {
-            return false;
-        }
-        if (!isValidMakerProfile(peersOffer)) {
-            return false;
-        }
-        if (!isValidAmountRange(peersOffer)) {
-            return false;
-        }
-        if (!isValidAmountLimit(peersOffer)) {
-            return false;
-        }
-        return true;
     }
 }
