@@ -26,13 +26,14 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
-@ToString
+@ToString(exclude = {"authToken", "authTs", "authNonce", "headers", "body"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebSocketRestApiRequest implements WebSocketMessage {
     // Client side full qualified class name for response class required for polymorphism support
@@ -48,7 +49,7 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String authNonce;
 
     // New authentication via headers (session-based)
-    private Map<String, String> headers;
+    private Map<String, String> headers = new HashMap<>();
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&

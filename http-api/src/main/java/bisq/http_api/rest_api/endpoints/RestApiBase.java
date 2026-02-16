@@ -37,9 +37,7 @@ public abstract class RestApiBase {
     }
 
     protected Response buildNotFoundResponse(String message) {
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity(message)
-                .build();
+        return buildErrorResponse(Response.Status.NOT_FOUND, message);
     }
 
     /**

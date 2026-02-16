@@ -317,6 +317,9 @@ public class HttpApiService implements Service {
                 return;
             }
 
+            // Cleanup expired pairing codes before creating new one to prevent memory leaks
+            pairingService.get().cleanupExpiredPairingCodes();
+
             // Get WebSocket URL
             String webSocketUrl = getWebSocketUrl();
             if (webSocketUrl == null) {

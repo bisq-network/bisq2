@@ -24,6 +24,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class ByteArrayUtils {
+    // Shared SecureRandom instance to avoid initialization overhead on every call
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public static byte[] concat(byte[]... bytes) {
         int length = 0;
@@ -87,8 +89,11 @@ public class ByteArrayUtils {
     }
 
     public static byte[] getRandomBytes(int size) {
+        if (size < 0) {
+            throw new IllegalArgumentException("size must be >= 0");
+        }
         byte[] bytes = new byte[size];
-        new SecureRandom().nextBytes(bytes);
+        SECURE_RANDOM.nextBytes(bytes);
         return bytes;
     }
 }

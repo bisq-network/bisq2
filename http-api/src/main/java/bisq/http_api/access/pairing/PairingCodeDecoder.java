@@ -51,12 +51,17 @@ public final class PairingCodeDecoder {
             }
             Set<Permission> permissions = EnumSet.noneOf(Permission.class);
             for (int i = 0; i < numPermissions; i++) {
-                permissions.add(Permission.fromId(BinaryDecodingUtils.readInt(in)));
+                try {
+                    permissions.add(Permission.fromId(BinaryDecodingUtils.readInt(in)));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(
+                        "Invalid permission at index " + i + " in pairing code", e);
+                }
             }
 
             return new PairingCode(id, expiresAt, permissions);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to decode pairing QR", e);
+            throw new IllegalStateException("Failed to decode pairing code", e);
         }
     }
 }
