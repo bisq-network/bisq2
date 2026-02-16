@@ -37,9 +37,11 @@ public final class ImportPerfectMoneyAccountParser extends ImportFiatAccountPars
     @Override
     public PerfectMoneyAccount parse(KeyPair dsaKeyPair) {
         String accountNr = requireText(paymentAccountPayloadNode, "accountNr");
+        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
         PerfectMoneyAccountPayload accountPayload = new PerfectMoneyAccountPayload(
                 paymentAccountPayloadId,
                 salt,
+                selectedCurrencyCode,
                 accountNr);
 
         return new PerfectMoneyAccount(id,

@@ -110,7 +110,9 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
         if (supportsAllFiatCurrencies()) {
             return Res.get("paymentAccounts.allCurrencies");
         } else {
-            List<String> displayNameAndCode = getSupportedCurrencyDisplayNameAndCode().stream().sorted().collect(Collectors.toList());
+            List<String> displayNameAndCode = getSupportedCurrencyDisplayNameAndCode().stream()
+                    .sorted()
+                    .collect(Collectors.toList());
             if (displayNameAndCode.size() == 1) {
                 return displayNameAndCode.stream().findFirst().orElseThrow();
             } else {

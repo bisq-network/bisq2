@@ -55,16 +55,18 @@ public class CryptoAssetSelectionController implements Controller {
         List<CryptoAssetItem> items = Stream.concat(cryptoPaymentMethodStream,
                         Stream.concat(stableCoinPaymentMethods, cbdcPaymentMethods))
                 .map(CryptoAssetItem::new)
+                .filter(e -> !e.getTicker().equals("BTC"))
                 .toList();
 
         ToggleGroup toggleGroup = new ToggleGroup();
         RichTableView.FilterMenuItem<CryptoAssetItem> showAllFilterMenuItem = getShowAllFilterMenuItem(toggleGroup);
-        toggleGroup.selectToggle(showAllFilterMenuItem);
+        RichTableView.FilterMenuItem<CryptoAssetItem> cryptoAssetItemFilterMenuItem = getFilterMenuItem(CryptoAssetItem.Type.CRYPTO_CURRENCY, toggleGroup);
         List<RichTableView.FilterMenuItem<CryptoAssetItem>> filterMenuItems = List.of(
                 showAllFilterMenuItem,
-                getFilterMenuItem(CryptoAssetItem.Type.CRYPTO_CURRENCY, toggleGroup),
+                cryptoAssetItemFilterMenuItem,
                 getFilterMenuItem(CryptoAssetItem.Type.STABLE_COIN, toggleGroup),
                 getFilterMenuItem(CryptoAssetItem.Type.CBDC, toggleGroup));
+        toggleGroup.selectToggle(cryptoAssetItemFilterMenuItem);
         model = new CryptoAssetSelectionModel(items, toggleGroup, filterMenuItems);
         view = new CryptoAssetSelectionView(model, this);
     }
@@ -91,7 +93,7 @@ public class CryptoAssetSelectionController implements Controller {
     void onItemSelected(CryptoAssetItem item) {
         if (item != null) {
             model.getSelectedItem().set(item);
-            model.getSelectedPaymentMethod().set( item.getPaymentMethod());
+            model.getSelectedPaymentMethod().set(item.getPaymentMethod());
         }
     }
 

@@ -17,10 +17,19 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.StringUtils;
 import bisq.common.validation.RegexValidation;
+import javafx.scene.control.TextInputControl;
 
 public class RegexValidator extends ValidatorBase {
     public RegexValidator(RegexValidation validation) {
         super(validation);
+    }
+
+    @Override
+    protected void eval() {
+        TextInputControl textField = (TextInputControl) srcControl.get();
+        String address = textField.getText();
+        hasErrors.set(StringUtils.isEmpty(address) || !validation.isValid(address));
     }
 }

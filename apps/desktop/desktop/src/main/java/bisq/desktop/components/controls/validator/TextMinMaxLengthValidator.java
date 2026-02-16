@@ -24,8 +24,8 @@ public class TextMinMaxLengthValidator extends ValidatorBase {
     private static final int DEFAULT_MIN_LENGTH = 8;
     private static final int DEFAULT_MAX_LENGTH = 100;
 
-    private final int minLength;
-    private final int maxLength;
+    protected final int minLength;
+    protected final int maxLength;
 
     public TextMinMaxLengthValidator() {
         this(DEFAULT_MIN_LENGTH, DEFAULT_MAX_LENGTH);

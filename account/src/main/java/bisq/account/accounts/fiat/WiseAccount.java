@@ -17,7 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -31,7 +33,7 @@ import java.security.KeyPair;
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
+public final class WiseAccount extends Account<FiatPaymentMethod, WiseAccountPayload> {
     public WiseAccount(String id,
                        long creationDate,
                        String accountName,
@@ -43,8 +45,8 @@ public final class WiseAccount extends CountryBasedAccount<WiseAccountPayload> {
     }
 
     @Override
-    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
-        return super.getCountryBasedAccountBuilder(serializeForHash)
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
                 .setWiseAccount(toWiseAccountProto(serializeForHash));
     }
 

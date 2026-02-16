@@ -38,12 +38,10 @@ public final class ImportMoneyBeamAccountParser extends ImportCountryBasedAccoun
     public MoneyBeamAccount parse(KeyPair dsaKeyPair) {
         String accountId = requireText(paymentAccountPayloadNode, "accountId");
         String holderName = requireText(excludeFromJsonDataMapNode, "holderName");
-        String selectedCurrencyCode = requireSingleTradeCurrencyCode();
         MoneyBeamAccountPayload accountPayload = new MoneyBeamAccountPayload(
                 paymentAccountPayloadId,
                 salt,
                 countryCode,
-                selectedCurrencyCode,
                 holderName,
                 accountId);
 

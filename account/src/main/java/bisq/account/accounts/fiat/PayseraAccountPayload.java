@@ -19,10 +19,11 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -32,6 +33,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -40,20 +42,20 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMethod>
-        implements SelectableCurrencyAccountPayload {
-    private final String selectedCurrencyCode;
+        implements MultiCurrencyAccountPayload {
+    private final List<String> selectedCurrencyCodes;
     private final String email;
 
-    public PayseraAccountPayload(String id, String selectedCurrencyCode, String email) {
-        this(id, AccountUtils.generateSalt(), selectedCurrencyCode, email);
+    public PayseraAccountPayload(String id, List<String> selectedCurrencyCodes, String email) {
+        this(id, AccountUtils.generateSalt(), selectedCurrencyCodes, email);
     }
 
     public PayseraAccountPayload(String id,
                                  byte[] salt,
-                                 String selectedCurrencyCode,
+                                 List<String> selectedCurrencyCodes,
                                  String email) {
         super(id, salt);
-        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.email = email;
 
         verify();
@@ -63,7 +65,8 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
     public void verify() {
         super.verify();
 
-        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getPayseraCurrencyCodes(), "Paysera currency codes");
         checkArgument(EmailValidation.isValid(email));
     }
 
@@ -79,7 +82,7 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
 
     private bisq.account.protobuf.PayseraAccountPayload.Builder getPayseraAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.PayseraAccountPayload.newBuilder()
-                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setEmail(email);
     }
 
@@ -88,7 +91,7 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
         return new PayseraAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCode(),
+                payload.getSelectedCurrencyCodesList(),
                 payload.getEmail()
         );
     }

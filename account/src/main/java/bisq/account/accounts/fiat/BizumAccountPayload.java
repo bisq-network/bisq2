@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.validation.PhoneNumberValidation;
@@ -55,6 +55,7 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     public void verify() {
         super.verify();
 
+        checkArgument(countryCode.equals("ES"), "Country code must be 'ES' for Bizum accounts");
         checkArgument(PhoneNumberValidation.isValid(mobileNr, "ES"));
     }
 

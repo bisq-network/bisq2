@@ -33,18 +33,18 @@ import java.util.List;
 
 @Getter
 public class RevolutFormModel extends FormModel {
-    private final ObservableList<FiatCurrency> revolutCurrencies;
+    private final ObservableList<FiatCurrency> currencies;
     private final List<FiatCurrency> selectedCurrencies = new ArrayList<>();
     private final BooleanProperty selectedCurrenciesErrorVisible = new SimpleBooleanProperty();
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
-    private final StringProperty userName = new SimpleStringProperty();
+    private final StringProperty holderName = new SimpleStringProperty();
 
-    private final TextMinMaxLengthValidator userNameValidator = new TextMinMaxLengthValidator(RevolutAccountPayload.USER_NAME_MIN_LENGTH,
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(RevolutAccountPayload.USER_NAME_MIN_LENGTH,
             RevolutAccountPayload.USER_NAME_MAX_LENGTH);
 
-    public RevolutFormModel(String id, List<FiatCurrency> revolutCurrencies) {
+    public RevolutFormModel(String id, List<FiatCurrency> currencies) {
         super(id);
-        this.revolutCurrencies = FXCollections.observableArrayList(revolutCurrencies);
-        selectedCurrencies.addAll(revolutCurrencies);
+        this.currencies = FXCollections.observableArrayList(currencies);
+        selectedCurrencies.addAll(currencies);
     }
 }

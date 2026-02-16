@@ -22,14 +22,47 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.accounts.fiat.AchTransferAccount;
+import bisq.account.accounts.fiat.AdvancedCashAccount;
+import bisq.account.accounts.fiat.AliPayAccount;
+import bisq.account.accounts.fiat.AmazonGiftCardAccount;
+import bisq.account.accounts.fiat.BizumAccount;
+import bisq.account.accounts.fiat.CashByMailAccount;
+import bisq.account.accounts.fiat.CashDepositAccount;
+import bisq.account.accounts.fiat.DomesticWireTransferAccount;
 import bisq.account.accounts.fiat.F2FAccount;
 import bisq.account.accounts.fiat.FasterPaymentsAccount;
+import bisq.account.accounts.fiat.HalCashAccount;
+import bisq.account.accounts.fiat.ImpsAccount;
+import bisq.account.accounts.fiat.InteracETransferAccount;
+import bisq.account.accounts.fiat.MercadoPagoAccount;
+import bisq.account.accounts.fiat.MoneseAccount;
+import bisq.account.accounts.fiat.MoneyBeamAccount;
+import bisq.account.accounts.fiat.MoneyGramAccount;
 import bisq.account.accounts.fiat.NationalBankAccount;
+import bisq.account.accounts.fiat.NeftAccount;
+import bisq.account.accounts.fiat.PayIdAccount;
+import bisq.account.accounts.fiat.PayseraAccount;
+import bisq.account.accounts.fiat.PerfectMoneyAccount;
+import bisq.account.accounts.fiat.Pin4Account;
 import bisq.account.accounts.fiat.PixAccount;
+import bisq.account.accounts.fiat.PromptPayAccount;
 import bisq.account.accounts.fiat.RevolutAccount;
+import bisq.account.accounts.fiat.SameBankAccount;
+import bisq.account.accounts.fiat.SatispayAccount;
+import bisq.account.accounts.fiat.SbpAccount;
 import bisq.account.accounts.fiat.SepaAccount;
+import bisq.account.accounts.fiat.SepaInstantAccount;
+import bisq.account.accounts.fiat.StrikeAccount;
+import bisq.account.accounts.fiat.SwishAccount;
+import bisq.account.accounts.fiat.SwiftAccount;
+import bisq.account.accounts.fiat.UpholdAccount;
+import bisq.account.accounts.fiat.UpiAccount;
+import bisq.account.accounts.fiat.USPostalMoneyOrderAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.WeChatPayAccount;
+import bisq.account.accounts.fiat.WiseAccount;
+import bisq.account.accounts.fiat.WiseUsdAccount;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -48,13 +81,46 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.accounts.AccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.AchTransferAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.AdvancedCashAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.AliPayAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.AmazonGiftCardAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.BizumAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.CashByMailAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.CashDepositAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.DomesticWireTransferAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.F2FAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.FasterPaymentsAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.HalCashAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.ImpsAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.InteracETransferAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.MercadoPagoAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.MoneseAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.MoneyBeamAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.MoneyGramAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.NationalBankAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.NeftAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.PayIdAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.PayseraAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.PerfectMoneyAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.Pin4AccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.PixAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.PromptPayAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.RevolutAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SameBankAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SatispayAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SbpAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SepaAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SepaInstantAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.StrikeAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SwishAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.SwiftAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UpholdAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UpiAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.USPostalMoneyOrderAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.UserDefinedAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WeChatPayAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WiseAccountDetails;
+import bisq.desktop.main.content.user.accounts.fiat_accounts.details.WiseUsdAccountDetails;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.details.ZelleAccountDetails;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
@@ -292,50 +358,82 @@ public class FiatPaymentAccountsController implements Controller {
         return switch (fiatPaymentRail) {
             case ACH_TRANSFER ->
                     new AchTransferAccountDetails((AchTransferAccount) account, accountTimestampService);
-            case ADVANCED_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case ALI_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case AMAZON_GIFT_CARD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case BIZUM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case ADVANCED_CASH ->
+                    new AdvancedCashAccountDetails((AdvancedCashAccount) account, accountTimestampService);
+            case ALI_PAY ->
+                    new AliPayAccountDetails((AliPayAccount) account, accountTimestampService);
+            case AMAZON_GIFT_CARD ->
+                    new AmazonGiftCardAccountDetails((AmazonGiftCardAccount) account, accountTimestampService);
+            case BIZUM ->
+                    new BizumAccountDetails((BizumAccount) account, accountTimestampService);
             case CASH_APP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case CASH_BY_MAIL -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case CASH_DEPOSIT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case CASH_BY_MAIL ->
+                    new CashByMailAccountDetails((CashByMailAccount) account, accountTimestampService);
+            case CASH_DEPOSIT ->
+                    new CashDepositAccountDetails((CashDepositAccount) account, accountTimestampService);
             case CUSTOM -> new UserDefinedAccountDetails((UserDefinedFiatAccount) account, accountTimestampService);
-            case DOMESTIC_WIRE_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case DOMESTIC_WIRE_TRANSFER ->
+                    new DomesticWireTransferAccountDetails((DomesticWireTransferAccount) account, accountTimestampService);
             case F2F -> new F2FAccountDetails((F2FAccount) account, accountTimestampService);
             case FASTER_PAYMENTS ->
                     new FasterPaymentsAccountDetails((FasterPaymentsAccount) account, accountTimestampService);
-            case HAL_CASH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case IMPS -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case INTERAC_E_TRANSFER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case MERCADO_PAGO -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case MONESE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case MONEY_BEAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case MONEY_GRAM -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case HAL_CASH ->
+                    new HalCashAccountDetails((HalCashAccount) account, accountTimestampService);
+            case IMPS ->
+                    new ImpsAccountDetails((ImpsAccount) account, accountTimestampService);
+            case INTERAC_E_TRANSFER ->
+                    new InteracETransferAccountDetails((InteracETransferAccount) account, accountTimestampService);
+            case MERCADO_PAGO ->
+                    new MercadoPagoAccountDetails((MercadoPagoAccount) account, accountTimestampService);
+            case MONESE ->
+                    new MoneseAccountDetails((MoneseAccount) account, accountTimestampService);
+            case MONEY_BEAM ->
+                    new MoneyBeamAccountDetails((MoneyBeamAccount) account, accountTimestampService);
+            case MONEY_GRAM ->
+                    new MoneyGramAccountDetails((MoneyGramAccount) account, accountTimestampService);
             case NATIONAL_BANK ->
                     new NationalBankAccountDetails((NationalBankAccount) account, accountTimestampService);
-            case NEFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PAY_ID -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PAYSERA -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PERFECT_MONEY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case PIN_4 -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case NEFT ->
+                    new NeftAccountDetails((NeftAccount) account, accountTimestampService);
+            case PAY_ID ->
+                    new PayIdAccountDetails((PayIdAccount) account, accountTimestampService);
+            case PAYSERA ->
+                    new PayseraAccountDetails((PayseraAccount) account, accountTimestampService);
+            case PERFECT_MONEY ->
+                    new PerfectMoneyAccountDetails((PerfectMoneyAccount) account, accountTimestampService);
+            case PIN_4 ->
+                    new Pin4AccountDetails((Pin4Account) account, accountTimestampService);
             case PIX -> new PixAccountDetails((PixAccount) account, accountTimestampService);
-            case PROMPT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case PROMPT_PAY ->
+                    new PromptPayAccountDetails((PromptPayAccount) account, accountTimestampService);
             case REVOLUT -> new RevolutAccountDetails((RevolutAccount) account, accountTimestampService);
-            case SAME_BANK -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SATISPAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SBP -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SAME_BANK ->
+                    new SameBankAccountDetails((SameBankAccount) account, accountTimestampService);
+            case SATISPAY ->
+                    new SatispayAccountDetails((SatispayAccount) account, accountTimestampService);
+            case SBP ->
+                    new SbpAccountDetails((SbpAccount) account, accountTimestampService);
             case SEPA -> new SepaAccountDetails((SepaAccount) account, accountTimestampService);
-            case SEPA_INSTANT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case STRIKE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SWIFT -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case SWISH -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case UPHOLD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case UPI -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case US_POSTAL_MONEY_ORDER -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case VERSE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case WECHAT_PAY -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case WISE -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
-            case WISE_USD -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
+            case SEPA_INSTANT ->
+                    new SepaInstantAccountDetails((SepaInstantAccount) account, accountTimestampService);
+            case STRIKE ->
+                    new StrikeAccountDetails((StrikeAccount) account, accountTimestampService);
+            case SWIFT ->
+                    new SwiftAccountDetails((SwiftAccount) account, accountTimestampService);
+            case SWISH ->
+                    new SwishAccountDetails((SwishAccount) account, accountTimestampService);
+            case UPHOLD ->
+                    new UpholdAccountDetails((UpholdAccount) account, accountTimestampService);
+            case UPI ->
+                    new UpiAccountDetails((UpiAccount) account, accountTimestampService);
+            case US_POSTAL_MONEY_ORDER ->
+                    new USPostalMoneyOrderAccountDetails((USPostalMoneyOrderAccount) account, accountTimestampService);
+            case WECHAT_PAY ->
+                    new WeChatPayAccountDetails((WeChatPayAccount) account, accountTimestampService);
+            case WISE ->
+                    new WiseAccountDetails((WiseAccount) account, accountTimestampService);
+            case WISE_USD ->
+                    new WiseUsdAccountDetails((WiseUsdAccount) account, accountTimestampService);
             case ZELLE -> new ZelleAccountDetails((ZelleAccount) account, accountTimestampService);
         };
     }

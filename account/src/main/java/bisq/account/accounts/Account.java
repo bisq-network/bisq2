@@ -29,7 +29,7 @@ import bisq.account.accounts.fiat.RevolutAccount;
 import bisq.account.accounts.fiat.SatispayAccount;
 import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.accounts.fiat.VerseAccount;
+import bisq.account.accounts.fiat.WiseAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.PersistableProto;
@@ -105,7 +105,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
             case PAYSERAACCOUNT -> PayseraAccount.fromProto(proto);
             case SATISPAYACCOUNT -> SatispayAccount.fromProto(proto);
             case MERCADOPAGOACCOUNT -> MercadoPagoAccount.fromProto(proto);
-            case VERSEACCOUNT -> VerseAccount.fromProto(proto);
+            case WISEACCOUNT -> WiseAccount.fromProto(proto);
             case CRYPTOASSETACCOUNT -> CryptoAssetAccount.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);

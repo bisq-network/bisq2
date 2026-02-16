@@ -71,11 +71,14 @@ public abstract class FormController<V extends FormView<?, ?>, M extends FormMod
     }
 
     protected void showOverlay() {
-        disposeScheduler();
-        if (Transitions.useAnimations()) {
-            scheduler = UIScheduler.run(() -> model.getShowOverlay().set(true)).after(1000);
-        } else {
-            model.getShowOverlay().set(true);
+        if (!model.isOverlayWasDisplayed()) {
+            disposeScheduler();
+            if (Transitions.useAnimations()) {
+                scheduler = UIScheduler.run(() -> model.getShowOverlay().set(true)).after(1000);
+            } else {
+                model.getShowOverlay().set(true);
+            }
+            model.setOverlayWasDisplayed(true);
         }
     }
 

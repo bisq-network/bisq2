@@ -29,7 +29,7 @@ import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.account.accounts.fiat.SatispayAccountPayload;
 import bisq.account.accounts.fiat.UpholdAccountPayload;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.accounts.fiat.VerseAccountPayload;
+import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -92,7 +92,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             case PAYSERAACCOUNTPAYLOAD -> PayseraAccountPayload.fromProto(proto);
             case SATISPAYACCOUNTPAYLOAD -> SatispayAccountPayload.fromProto(proto);
             case MERCADOPAGOACCOUNTPAYLOAD -> MercadoPagoAccountPayload.fromProto(proto);
-            case VERSEACCOUNTPAYLOAD -> VerseAccountPayload.fromProto(proto);
+            case WISEACCOUNTPAYLOAD -> WiseAccountPayload.fromProto(proto);
             case CRYPTOASSETACCOUNTPAYLOAD -> CryptoAssetAccountPayload.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
@@ -120,7 +120,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
     }
 
     public String getDefaultAccountName() {
-        return getPaymentMethodName() + "-" + StringUtils.truncate(id, 8);
+        return getPaymentMethod().getShortDisplayString() + "-" + StringUtils.truncate(id, 4);
     }
 
     public List<String> getSelectedCurrencyCodes() {

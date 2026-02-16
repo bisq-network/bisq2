@@ -99,17 +99,21 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
                 : baseCurrencyName;
     }
 
-    // Returns display name of non BTC side
+    // Returns display name of non-BTC side
     public String getSignificantCurrencyName() {
-        return baseCurrencyCode.equals("BTC") ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
+        return isBaseCurrencyBitcoin() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
     public boolean isBtcFiatMarket() {
-        return baseCurrencyCode.equals("BTC") && FiatCurrency.isFiat(quoteCurrencyCode);
+        return isBaseCurrencyBitcoin() && FiatCurrency.isFiat(quoteCurrencyCode);
+    }
+
+    public boolean isBaseCurrencyBitcoin() {
+        return baseCurrencyCode.equals("BTC");
     }
 
     public boolean isBtcStableCoinMarket() {
-        return baseCurrencyCode.equals("BTC") && StableCoin.isStableCoin(quoteCurrencyCode);
+        return isBaseCurrencyBitcoin() && StableCoin.isStableCoin(quoteCurrencyCode);
     }
 
     public boolean isCrypto() {

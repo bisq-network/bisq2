@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.StringUtils;
 import bisq.common.validation.Validation;
 import bisq.i18n.Res;
 import javafx.beans.property.ObjectProperty;
@@ -83,7 +84,7 @@ public class ValidatorBase {
     protected void eval() {
         TextInputControl textField = (TextInputControl) srcControl.get();
         String address = textField.getText();
-        if (address != null && !address.isEmpty()) {
+        if (StringUtils.isNotEmpty(address)) {
             hasErrors.set(!validation.isValid(address));
         } else {
             hasErrors.set(false);

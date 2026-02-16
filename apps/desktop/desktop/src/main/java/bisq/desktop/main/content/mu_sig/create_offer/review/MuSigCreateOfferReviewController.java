@@ -283,7 +283,11 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
 
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount) + " - " + calculateSecurityDeposit(maxBaseSideAmount));
+            if (market.isBaseCurrencyBitcoin()) {
+                model.setSecurityDepositAsBtc(calculateSecurityDeposit(minBaseSideAmount) + " - " + calculateSecurityDeposit(maxBaseSideAmount));
+            } else {
+                model.setSecurityDepositAsBtc(calculateSecurityDeposit(minQuoteSideAmount) + " - " + calculateSecurityDeposit(maxQuoteSideAmount));
+            }
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
@@ -305,6 +309,9 @@ public class MuSigCreateOfferReviewController implements Controller {
                 toReceiveCode = fixBaseSideAmount.getCode();
             }
 
+            Monetary fixBtcAmount = market.isBaseCurrencyBitcoin()
+                    ? fixBaseSideAmount
+                    : fixQuoteSideAmount;
             model.setSecurityDepositAsBtc(calculateSecurityDeposit(fixBaseSideAmount));
         }
 

@@ -18,11 +18,12 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
-import bisq.account.accounts.SelectableCurrencyAccountPayload;
+import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -33,6 +34,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -41,25 +43,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod>
-        implements SelectableCurrencyAccountPayload {
+        implements MultiCurrencyAccountPayload {
     public static final int HOLDER_NAME_MIN_LENGTH = 2;
     public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
-    private final String selectedCurrencyCode;
+    private final List<String> selectedCurrencyCodes;
     private final String holderName;
     private final String mobileNr;
 
-    public MoneseAccountPayload(String id, String selectedCurrencyCode, String holderName, String mobileNr) {
-        this(id, AccountUtils.generateSalt(), selectedCurrencyCode, holderName, mobileNr);
+    public MoneseAccountPayload(String id, List<String> selectedCurrencyCodes, String holderName, String mobileNr) {
+        this(id, AccountUtils.generateSalt(), selectedCurrencyCodes, holderName, mobileNr);
     }
 
     public MoneseAccountPayload(String id,
                                 byte[] salt,
-                                String selectedCurrencyCode,
+                                List<String> selectedCurrencyCodes,
                                 String holderName,
                                 String mobileNr) {
         super(id, salt);
-        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.selectedCurrencyCodes = selectedCurrencyCodes;
         this.holderName = holderName;
         this.mobileNr = mobileNr;
 
@@ -70,9 +72,10 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
     public void verify() {
         super.verify();
 
-        PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
         NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
         checkArgument(StringUtils.isNotEmpty(mobileNr), "mobileNr must not be empty");
+        PaymentAccountValidation.validateCurrencyCodes(selectedCurrencyCodes,
+                FiatPaymentRailUtil.getMoneseCurrencyCodes(), "Monese currency codes");
     }
 
     @Override
@@ -87,7 +90,7 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
 
     private bisq.account.protobuf.MoneseAccountPayload.Builder getMoneseAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.MoneseAccountPayload.newBuilder()
-                .setSelectedCurrencyCode(selectedCurrencyCode)
+                .addAllSelectedCurrencyCodes(selectedCurrencyCodes)
                 .setHolderName(holderName)
                 .setMobileNr(mobileNr);
     }
@@ -97,7 +100,7 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
         return new MoneseAccountPayload(
                 proto.getId(),
                 proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCode(),
+                payload.getSelectedCurrencyCodesList(),
                 payload.getHolderName(),
                 payload.getMobileNr()
         );

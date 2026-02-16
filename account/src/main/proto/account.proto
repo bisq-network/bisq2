@@ -24,6 +24,28 @@ option java_multiple_files = true;
 import "common.proto";
 import "security.proto";
 
+
+// TimestampType
+enum TimestampType {
+  TIMESTAMPTYPE_UNSPECIFIED = 0;
+  TIMESTAMPTYPE_BISQ1_IMPORTED = 1;
+  TIMESTAMPTYPE_BISQ2_NEW = 2;
+}
+message AuthorizeAccountTimestampRequest {
+  TimestampType timestampType = 1;
+  AccountTimestamp accountTimestamp = 2;
+  bytes saltedFingerprint = 3;
+  bytes publicKey = 4;
+  bytes signature = 5;
+  KeyAlgorithm keyAlgorithm = 6;
+}
+message AuthorizedAccountTimestamp {
+  AccountTimestamp accountTimestamp = 1;
+  bool staticPublicKeysProvided = 2;
+  uint32 version = 3;
+}
+
+
 // ProtocolType
 enum TradeProtocolType {
   TRADEPROTOCOLTYPE_UNSPECIFIED = 0;
@@ -49,6 +71,7 @@ message ProtocolType {
   }
 }
 
+
 // PaymentMethod
 message PaymentMethod {
   string paymentRailName = 1;
@@ -73,19 +96,14 @@ message CbdcPaymentMethod {
 }
 message FiatPaymentMethodSpec {
 }
-
 message BitcoinPaymentMethodSpec {
 }
-
 message CryptoPaymentMethodSpec {
 }
-
 message StableCoinPaymentMethodSpec {
 }
-
 message CbdcPaymentMethodSpec {
 }
-
 message PaymentMethodSpec {
   account.PaymentMethod paymentMethod = 1;
   optional string saltedMakerAccountId = 2;
@@ -105,22 +123,79 @@ message AccountPayload {
   bytes salt = 2;
   oneof message {
     UserDefinedFiatAccountPayload userDefinedFiatAccountPayload = 20;
-    RevolutAccountPayload RevolutAccountPayload = 21;
-    CountryBasedAccountPayload countryBasedAccountPayload = 22;
-    CashByMailAccountPayload cashByMailAccountPayload = 23;
-    UpholdAccountPayload upholdAccountPayload = 24;
-    AdvancedCashAccountPayload advancedCashAccountPayload = 25;
-    PerfectMoneyAccountPayload perfectMoneyAccountPayload = 26;
-    MoneseAccountPayload moneseAccountPayload = 27;
-    PayseraAccountPayload payseraAccountPayload = 28;
-    SatispayAccountPayload satispayAccountPayload = 29;
-    MercadoPagoAccountPayload mercadoPagoAccountPayload = 30;
-    VerseAccountPayload verseAccountPayload = 31;
+
+    AdvancedCashAccountPayload advancedCashAccountPayload = 30;
+    CashByMailAccountPayload cashByMailAccountPayload = 31;
+    CountryBasedAccountPayload countryBasedAccountPayload = 32;
+    MercadoPagoAccountPayload mercadoPagoAccountPayload = 33;
+    MoneseAccountPayload moneseAccountPayload = 34;
+    PayseraAccountPayload payseraAccountPayload = 35;
+    PerfectMoneyAccountPayload perfectMoneyAccountPayload = 36;
+    RevolutAccountPayload RevolutAccountPayload = 37;
+    SatispayAccountPayload satispayAccountPayload = 38;
+    UpholdAccountPayload upholdAccountPayload = 39;
+    WiseAccountPayload wiseAccountPayload = 40;
 
     CryptoAssetAccountPayload cryptoAssetAccountPayload = 100;
   }
 }
+message CountryBasedAccountPayload {
+  string countryCode = 1;
+  oneof message {
+    AliPayAccountPayload aliPayAccountPayload = 20;
+    AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 21;
+    BankAccountPayload bankAccountPayload = 22;
+    BizumAccountPayload bizumAccountPayload = 23;
+    F2FAccountPayload f2fAccountPayload = 24;
+    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 25;
+    HalCashAccountPayload halCashAccountPayload = 26;
+    ImpsAccountPayload impsAccountPayload = 27;
+    InteracETransferAccountPayload interacETransferAccountPayload = 28;
+    MoneyBeamAccountPayload moneyBeamAccountPayload = 29;
+    MoneyGramAccountPayload moneyGramAccountPayload = 30;
+    NeftAccountPayload neftAccountPayload = 31;
+    PayIdAccountPayload payIdAccountPayload = 32;
+    Pin4AccountPayload pin4AccountPayload = 33;
+    PixAccountPayload pixAccountPayload = 34;
+    PromptPayAccountPayload promptPayAccountPayload = 35;
+    SbpAccountPayload sbpAccountPayload = 36;
+    SepaAccountPayload sepaAccountPayload = 37;
+    SepaInstantAccountPayload sepaInstantAccountPayload = 38;
+    StrikeAccountPayload strikeAccountPayload = 39;
+    SwiftAccountPayload swiftAccountPayload = 40;
+    SwishAccountPayload swishAccountPayload = 41;
+    UpiAccountPayload upiAccountPayload = 42;
+    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 43;
+    WeChatPayAccountPayload weChatPayAccountPayload = 44;
+    WiseUsdAccountPayload wiseUsdAccountPayload = 45;
+    ZelleAccountPayload zelleAccountPayload = 46;
+  }
+}
+message BankAccountPayload {
+  string selectedCurrencyCode = 1;
+  optional string holderName = 2;
+  optional string holderId = 3;
+  optional string bankName = 4;
+  optional string bankId = 5;
+  optional string branchId = 6;
+  string accountNr = 7;
+  optional BankAccountType bankAccountType = 8;
+  optional string nationalAccountId = 9;
+  oneof message {
+    AchTransferAccountPayload achTransferAccountPayload = 20;
+    NationalBankAccountPayload nationalBankAccountPayload = 21;
+    CashDepositAccountPayload cashDepositAccountPayload = 22;
+    SameBankAccountPayload sameBankAccountPayload = 23;
+    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 24;
+    //SpecificBanksAccountPayload
+  }
+}
+// Bisq Easy legacy
+message UserDefinedFiatAccountPayload {
+  string accountData = 2;
+}
 
+// Crypto AccountPayloads
 message CryptoAssetAccountPayload {
   string currencyCode = 1;
   string address = 2;
@@ -143,59 +218,127 @@ message MoneroAccountPayload {
   optional sint32 accountIndex = 5;
   optional sint32 initialSubAddressIndex = 6;
 }
-
 message OtherCryptoAssetAccountPayload {
 }
 
-message BsqAccountPayload {
-  string address = 1;
+// Fiat AccountPayloads
+message AchTransferAccountPayload {
+  string holderAddress = 1;
 }
-
-message UserDefinedFiatAccountPayload {
-  string accountData = 2;
+message AdvancedCashAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string accountNr = 2;
+}
+message AliPayAccountPayload {
+  string accountNr = 1;
+}
+message AmazonGiftCardAccountPayload {
+  string selectedCurrencyCode = 1;
+  string emailOrMobileNr = 2;
+}
+message BizumAccountPayload {
+  string mobileNr = 1;
+}
+message CashByMailAccountPayload {
+  string selectedCurrencyCode = 1;
+  string postalAddress = 2;
+  string contact = 3;
+  string extraInfo = 4;
+}
+message CashDepositAccountPayload {
+  optional string requirements = 1;
+}
+message DomesticWireTransferAccountPayload {
+  string holderAddress = 1;
+}
+message F2FAccountPayload {
+  string selectedCurrencyCode = 1;
+  string contact = 2;
+  string city = 3;
+  string extraInfo = 4;
+}
+message FasterPaymentsAccountPayload {
+  string holderName = 1;
+  string sortCode = 2;
+  string accountNr = 3;
+}
+message HalCashAccountPayload {
+  string mobileNr = 1;
+}
+message ImpsAccountPayload {
+  string holderName = 1;
+  string accountNr = 2;
+  string ifsc = 3;
+}
+message InteracETransferAccountPayload {
+  string holderName = 1;
+  string email = 2;
+  string question = 3;
+  string answer = 4;
+}
+message MercadoPagoAccountPayload {
+  string holderName = 1;
+  string holderId = 2;
+}
+message MoneseAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string holderName = 2;
+  string mobileNr = 3;
+}
+message MoneyBeamAccountPayload {
+  string holderName = 1;
+  string emailOrMobileNr = 2;
+}
+message MoneyGramAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string holderName = 2;
+  string email = 3;
+  string state = 4;
+}
+message NationalBankAccountPayload {
+  string selectedCurrencyCode = 1;
+}
+message NeftAccountPayload {
+  string holderName = 1;
+  string accountNr = 2;
+  string ifsc = 3;
+}
+message PayIdAccountPayload {
+  string holderName = 1;
+  string payId = 2;
+}
+message PayseraAccountPayload {
+  repeated string selectedCurrencyCodes = 1;
+  string email = 2;
+}
+message PerfectMoneyAccountPayload {
+  string selectedCurrencyCode = 1;
+  string accountNr = 2;
+}
+message Pin4AccountPayload {
+  string mobileNr = 1;
+}
+message PixAccountPayload {
+  string holderName = 1;
+  string pixKey = 2;
+}
+message PromptPayAccountPayload {
+  string promptPayId = 1;
 }
 message RevolutAccountPayload {
   string userName = 1;
   repeated string selectedCurrencyCodes = 2;
 }
-message CountryBasedAccountPayload {
-  string countryCode = 1;
-  oneof message {
-    BankAccountPayload bankAccountPayload = 20;
-    SepaAccountPayload sepaAccountPayload = 21;
-    F2FAccountPayload f2fAccountPayload = 22;
-    PixAccountPayload pixAccountPayload = 23;
-    StrikeAccountPayload strikeAccountPayload = 24;
-    AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = 25;
-    UpiAccountPayload upiAccountPayload = 26;
-    BizumAccountPayload bizumAccountPayload = 27;
-    SepaInstantAccountPayload sepaInstantAccountPayload = 28;
-    WiseAccountPayload wiseAccountPayload = 29;
-    WiseUsdAccountPayload wiseUsdAccountPayload = 30;
-    MoneyBeamAccountPayload moneyBeamAccountPayload = 31;
-    SwishAccountPayload swishAccountPayload = 32;
-    MoneyGramAccountPayload moneyGramAccountPayload = 33;
-    PromptPayAccountPayload promptPayAccountPayload = 34;
-    ZelleAccountPayload zelleAccountPayload = 35;
-    USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 36;
-    PayIdAccountPayload payIdAccountPayload = 37;
-    InteracETransferAccountPayload interacETransferAccountPayload = 38;
-    HalCashAccountPayload halCashAccountPayload = 39;
-    Pin4AccountPayload pin4AccountPayload = 40;
-    FasterPaymentsAccountPayload fasterPaymentsAccountPayload = 41;
-    SbpAccountPayload sbpAccountPayload = 42;
-    ImpsAccountPayload impsAccountPayload = 43;
-    NeftAccountPayload neftAccountPayload = 44;
-    AliPayAccountPayload aliPayAccountPayload = 45;
-    WeChatPayAccountPayload weChatPayAccountPayload = 46;
-  }
+message SameBankAccountPayload {
 }
-
-message HalCashAccountPayload {
-  string mobileNr = 1;
+message SatispayAccountPayload {
+  string holderName = 1;
+  string mobileNr = 2;
 }
-message Pin4AccountPayload {
-  string mobileNr = 1;
+message SbpAccountPayload {
+  string holderName = 1;
+  string mobileNumber = 2;
+  string bankName = 3;
 }
 message SepaAccountPayload {
   string holderName = 1;
@@ -203,236 +346,83 @@ message SepaAccountPayload {
   string bic = 3;
   repeated string acceptedCountryCodes = 4;
 }
-
 message SepaInstantAccountPayload {
   string holderName = 1;
   string iban = 2;
   string bic = 3;
   repeated string acceptedCountryCodes = 4;
 }
-
-message WiseAccountPayload {
-  repeated string selectedCurrencyCodes = 1;
-  string holderName = 2;
-  string email = 3;
+message StrikeAccountPayload {
+  string holderName = 1;
 }
-
+message SwiftAccountPayload {
+  string beneficiaryName = 1;
+  string beneficiaryAccountNr = 2;
+  optional string beneficiaryPhone = 3;
+  string beneficiaryAddress = 4;
+  string selectedCurrencyCode = 5;
+  string bankSwiftCode = 6;
+  string bankName = 7;
+  optional string bankBranch = 8;
+  string bankAddress = 9;
+  optional string intermediaryBankCountryCode = 10;
+  optional string intermediaryBankSwiftCode = 11;
+  optional string intermediaryBankName = 12;
+  optional string intermediaryBankBranch = 13;
+  optional string intermediaryBankAddress = 14;
+  optional string additionalInstructions = 15;
+}
+message SwishAccountPayload {
+  string holderName = 1;
+  string mobileNr = 2;
+}
+message USPostalMoneyOrderAccountPayload {
+  string holderName = 1;
+  string postalAddress = 2;
+}
 message UpholdAccountPayload {
   repeated string selectedCurrencyCodes = 1;
   string holderName = 2;
   string accountId = 3;
 }
-
-message MoneyGramAccountPayload {
+message UpiAccountPayload {
+  string virtualPaymentAddress = 1;
+}
+message WeChatPayAccountPayload {
+  string accountNr = 1;
+}
+message WiseAccountPayload {
   repeated string selectedCurrencyCodes = 1;
   string holderName = 2;
   string email = 3;
-  string state = 4;
 }
-
 message WiseUsdAccountPayload {
   string holderName = 1;
   string email = 2;
   string beneficiaryAddress = 3;
 }
-
-message MoneyBeamAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
-  string emailOrMobileNr = 3;
-}
-
-message F2FAccountPayload {
-  string selectedCurrencyCode = 1;
-  string contact = 2;
-  string city = 3;
-  string extraInfo = 4;
-}
-
-message AchTransferAccountPayload {
-  string holderAddress = 1;
-}
-
-message NationalBankAccountPayload {
-  string selectedCurrencyCode = 1;
-}
-
-message SameBankAccountPayload {
-}
-
-message DomesticWireTransferAccountPayload {
-  string holderAddress = 1;
-}
-
-enum BankAccountType {
-  BANKACCOUNTTYPE_UNSPECIFIED = 0;
-  BANKACCOUNTTYPE_CHECKING = 1;
-  BANKACCOUNTTYPE_SAVINGS = 2;
-}
-
-message BankAccountPayload {
-  string selectedCurrencyCode = 1;
-  optional string holderName = 2;
-  optional string holderId = 3;
-  optional string bankName = 4;
-  optional string bankId = 5;
-  optional string branchId = 6;
-  string accountNr = 7;
-  optional BankAccountType bankAccountType = 8;
-  optional string nationalAccountId = 9;
-  oneof message {
-    AchTransferAccountPayload achTransferAccountPayload = 20;
-    NationalBankAccountPayload nationalBankAccountPayload = 21;
-    CashDepositAccountPayload cashDepositAccountPayload = 22;
-    SameBankAccountPayload sameBankAccountPayload = 23;
-    DomesticWireTransferAccountPayload domesticWireTransferAccountPayload = 24;
-    //SpecificBanksAccountPayload
-  }
-}
-
 message ZelleAccountPayload {
   string holderName = 1;
   string emailOrMobileNr = 2;
 }
 
-message PixAccountPayload {
-  string holderName = 1;
-  string pixKey = 2;
-}
-
-message PromptPayAccountPayload {
-  string promptPayId = 1;
-}
-
-message AliPayAccountPayload {
-  string accountNr = 1;
-}
-
-message WeChatPayAccountPayload {
-  string accountNr = 1;
-}
-
-message SwishAccountPayload {
-  string holderName = 1;
-  string mobileNr = 2;
-}
-
-message FasterPaymentsAccountPayload {
-  string holderName = 1;
-  string sortCode = 2;
-  string accountNr = 3;
-}
-
-message SbpAccountPayload {
-  string holderName = 1;
-  string mobileNumber = 2;
-  string bankName = 3;
-}
-
-message ImpsAccountPayload {
-  string holderName = 1;
-  string accountNr = 2;
-  string ifsc = 3;
-}
-
-message NeftAccountPayload {
-  string holderName = 1;
-  string accountNr = 2;
-  string ifsc = 3;
-}
-
-message PayIdAccountPayload {
-  string holderName = 1;
-  string payId = 2;
-}
-
-message AdvancedCashAccountPayload {
-  string selectedCurrencyCode = 1;
-  string accountNr = 2;
-}
-
-message PerfectMoneyAccountPayload {
-  string accountNr = 1;
-}
-
-message MoneseAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
-  string mobileNr = 3;
-}
-
-message PayseraAccountPayload {
-  string selectedCurrencyCode = 1;
-  string email = 2;
-}
-
-message SatispayAccountPayload {
-  string holderName = 1;
-  string mobileNr = 2;
-}
-
-message MercadoPagoAccountPayload {
-  string holderName = 1;
-  string holderId = 2;
-}
-
-message VerseAccountPayload {
-  string selectedCurrencyCode = 1;
-  string holderName = 2;
-}
-
-message USPostalMoneyOrderAccountPayload {
-  string holderName = 1;
-  string postalAddress = 2;
-}
-
-message CashByMailAccountPayload {
-  string selectedCurrencyCode = 1;
-  string postalAddress = 2;
-  string contact = 3;
-  string extraInfo = 4;
-}
-
-message StrikeAccountPayload {
-  string holderName = 1;
-}
-
-message InteracETransferAccountPayload {
-  string holderName = 1;
-  string email = 2;
-  string question = 3;
-  string answer = 4;
-}
-
-message AmazonGiftCardAccountPayload {
-  string emailOrMobileNr = 1;
-}
-
-message CashDepositAccountPayload {
-  optional string requirements = 1;
-}
-
-message UpiAccountPayload {
-  string virtualPaymentAddress = 1;
-}
-
-message BizumAccountPayload {
-  string mobileNr = 1;
-}
 
 // Account
+enum BankAccountType {
+  BANKACCOUNTTYPE_UNSPECIFIED = 0;
+  BANKACCOUNTTYPE_CHECKING = 1;
+  BANKACCOUNTTYPE_SAVINGS = 2;
+}
 enum KeyAlgorithm{
   KEYALGORITHM_UNSPECIFIED = 0;
   KEYALGORITHM_DSA = 1;
   KEYALGORITHM_EC = 2;
 }
-
 enum AccountOrigin{
   ACCOUNTORIGIN_UNSPECIFIED = 0;
   ACCOUNTORIGIN_BISQ1_IMPORTED = 1;
   ACCOUNTORIGIN_BISQ2_NEW = 2;
 }
-
 message Account {
   sint64 creationDate = 1;
   string accountName = 2;
@@ -445,91 +435,52 @@ message Account {
 
   oneof message {
     UserDefinedFiatAccount userDefinedFiatAccount = 20;
-    RevolutAccount revolutAccount = 21;
-    CountryBasedAccount countryBasedAccount = 22;
-    CashByMailAccount cashByMailAccount = 24;
-    UpholdAccount upholdAccount = 25;
-    AdvancedCashAccount advancedCashAccount = 26;
-    PerfectMoneyAccount perfectMoneyAccount = 27;
-    MoneseAccount moneseAccount = 28;
-    PayseraAccount payseraAccount = 29;
-    SatispayAccount satispayAccount = 30;
-    MercadoPagoAccount mercadoPagoAccount = 31;
-    VerseAccount verseAccount = 32;
+
+    AdvancedCashAccount advancedCashAccount = 30;
+    CashByMailAccount cashByMailAccount = 31;
+    CountryBasedAccount countryBasedAccount = 32;
+    MercadoPagoAccount mercadoPagoAccount = 33;
+    MoneseAccount moneseAccount = 34;
+    PayseraAccount payseraAccount = 35;
+    PerfectMoneyAccount perfectMoneyAccount = 36;
+    RevolutAccount revolutAccount = 37;
+    SatispayAccount satispayAccount = 38;
+    UpholdAccount upholdAccount = 39;
+    WiseAccount wiseAccount = 40;
+
     CryptoAssetAccount cryptoAssetAccount = 100;
   }
 }
-
-message CryptoAssetAccount {
-  oneof message {
-    MoneroAccount moneroAccount = 10;
-    OtherCryptoAssetAccount otherCryptoAssetAccount = 11;
-  }
-}
-
-message MoneroAccount {
-}
-
-message OtherCryptoAssetAccount {
-}
-
-
-message UserDefinedFiatAccount {
-}
-message RevolutAccount {
-}
 message CountryBasedAccount {
   oneof message {
-    BankAccount bankAccount = 20;
-    SepaAccount sepaAccount = 21;
-    F2FAccount f2fAccount = 22;
-    PixAccount pixAccount = 23;
-    StrikeAccount strikeAccount = 24;
-    AmazonGiftCardAccount amazonGiftCardAccount = 25;
-    UpiAccount upiAccount = 26;
-    BizumAccount bizumAccount = 27;
-    SepaInstantAccount sepaInstantAccount = 28;
-    WiseAccount wiseAccount = 29;
-    WiseUsdAccount wiseUsdAccount = 30;
-    MoneyBeamAccount moneyBeamAccount = 31;
-    SwishAccount swishAccount = 32;
-    MoneyGramAccount moneyGramAccount = 33;
-    PromptPayAccount promptPayAccount = 34;
-    SbpAccount sbpAccount = 35;
-    ZelleAccount zelleAccount = 36;
-    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 37;
-    PayIdAccount payIdAccount = 38;
-    InteracETransferAccount interacETransferAccount = 39;
-    HalCashAccount halCashAccount = 40;
-    Pin4Account pin4Account = 41;
-    FasterPaymentsAccount fasterPaymentsAccount = 42;
-    ImpsAccount impsAccount = 43;
-    NeftAccount neftAccount = 44;
-    AliPayAccount aliPayAccount = 45;
-    WeChatPayAccount weChatPayAccount = 46;
+    AliPayAccount aliPayAccount = 20;
+    AmazonGiftCardAccount amazonGiftCardAccount = 21;
+    BankAccount bankAccount = 22;
+    BizumAccount bizumAccount = 23;
+    F2FAccount f2fAccount = 24;
+    FasterPaymentsAccount fasterPaymentsAccount = 25;
+    HalCashAccount halCashAccount = 26;
+    ImpsAccount impsAccount = 27;
+    InteracETransferAccount interacETransferAccount = 28;
+    MoneyBeamAccount moneyBeamAccount = 29;
+    MoneyGramAccount moneyGramAccount = 30;
+    NeftAccount neftAccount = 31;
+    PayIdAccount payIdAccount = 32;
+    Pin4Account pin4Account = 33;
+    PixAccount pixAccount = 34;
+    PromptPayAccount promptPayAccount = 35;
+    SbpAccount sbpAccount = 36;
+    SepaAccount sepaAccount = 37;
+    SepaInstantAccount sepaInstantAccount = 38;
+    StrikeAccount strikeAccount = 39;
+    SwiftAccount swiftAccount = 40;
+    SwishAccount swishAccount = 41;
+    UpiAccount upiAccount = 42;
+    USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 43;
+    WeChatPayAccount weChatPayAccount = 44;
+    WiseUsdAccount wiseUsdAccount = 45;
+    ZelleAccount zelleAccount = 46;
   }
-}
-message HalCashAccount {
-}
-message Pin4Account {
-}
-message SepaAccount {
-}
-message SepaInstantAccount {
-}
-message WiseAccount {
-}
-message UpholdAccount {
-}
-message WiseUsdAccount {
-}
-message MoneyBeamAccount {
-}
-message MoneyGramAccount {
-}
-message F2FAccount {
-}
-message PromptPayAccount {
 }
 message BankAccount {
   oneof message {
@@ -541,120 +492,111 @@ message BankAccount {
   }
 }
 
+message CryptoAssetAccount {
+  oneof message {
+    MoneroAccount moneroAccount = 10;
+    OtherCryptoAssetAccount otherCryptoAssetAccount = 11;
+  }
+}
+
+// Crypto accounts
+message MoneroAccount {
+}
+message OtherCryptoAssetAccount {
+}
+
+// Fiat accounts
 message AchTransferAccount {
 }
-
-message SameBankAccount {
-}
-
-message DomesticWireTransferAccount {
-}
-
-message ZelleAccount {
-}
-
-message NationalBankAccount {
-}
-
-message PixAccount {
-}
-
-message SwishAccount {
-}
-
-message FasterPaymentsAccount {
-}
-
-message SbpAccount {
-}
-
-message ImpsAccount {
-}
-
-message NeftAccount {
-}
-
-message AliPayAccount {
-}
-
-message WeChatPayAccount {
-}
-
-message PayIdAccount {
-}
-
-message USPostalMoneyOrderAccount {
-}
-
-message CashByMailAccount {
-}
-
 message AdvancedCashAccount {
 }
-
-message PerfectMoneyAccount {
+message AliPayAccount {
 }
-
-message MoneseAccount {
-}
-
-message PayseraAccount {
-}
-
-message SatispayAccount {
-}
-
-message MercadoPagoAccount {
-}
-
-message VerseAccount {
-}
-
-message StrikeAccount {
-}
-
-message InteracETransferAccount {
-}
-
 message AmazonGiftCardAccount {
 }
 
+message BizumAccount {
+}
+message CashByMailAccount {
+}
 message CashDepositAccount {
 }
-
+message DomesticWireTransferAccount {
+}
+message F2FAccount {
+}
+message FasterPaymentsAccount {
+}
+message HalCashAccount {
+}
+message ImpsAccount {
+}
+message InteracETransferAccount {
+}
+message MercadoPagoAccount {
+}
+message MoneseAccount {
+}
+message MoneyBeamAccount {
+}
+message MoneyGramAccount {
+}
+message NationalBankAccount {
+}
+message NeftAccount {
+}
+message PayIdAccount {
+}
+message PayseraAccount {
+}
+message PerfectMoneyAccount {
+}
+message Pin4Account {
+}
+message PixAccount {
+}
+message PromptPayAccount {
+}
+message RevolutAccount {
+}
+message SameBankAccount {
+}
+message SatispayAccount {
+}
+message SbpAccount {
+}
+message SepaAccount {
+}
+message SepaInstantAccount {
+}
+message StrikeAccount {
+}
+message SwiftAccount {
+}
+message SwishAccount {
+}
+message USPostalMoneyOrderAccount {
+}
+message UpholdAccount {
+}
 message UpiAccount {
 }
-
-message BizumAccount {
+message UserDefinedFiatAccount {
+}
+message WeChatPayAccount {
+}
+message WiseAccount {
+}
+message WiseUsdAccount {
+}
+message ZelleAccount {
 }
 
 message AccountStore {
   map<string, Account> accountByName = 1;
   optional Account selectedAccount = 2;
 }
-
 message AccountTimestamp {
   bytes hash = 1;
   uint64 date = 2;
-}
-
-enum TimestampType {
-  TIMESTAMPTYPE_UNSPECIFIED = 0;
-  TIMESTAMPTYPE_BISQ1_IMPORTED = 1;
-  TIMESTAMPTYPE_BISQ2_NEW = 2;
-}
-
-message AuthorizeAccountTimestampRequest {
-  TimestampType timestampType = 1;
-  AccountTimestamp accountTimestamp = 2;
-  bytes saltedFingerprint = 3;
-  bytes publicKey = 4;
-  bytes signature = 5;
-  KeyAlgorithm keyAlgorithm = 6;
-}
-
-message AuthorizedAccountTimestamp {
-  AccountTimestamp accountTimestamp = 1;
-  bool staticPublicKeysProvided = 2;
-  uint32 version = 3;
 }

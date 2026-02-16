@@ -398,14 +398,17 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     private void applySecurityDepositAsBtc() {
         double securityDeposit = model.getSecurityDepositAsPercent();
-        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
-        if (takersBaseSideAmount != null) {
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(takersBaseSideAmount, securityDeposit));
+
+        Monetary takersBtcAmount = model.getMuSigOffer().getMarket().isBaseCurrencyBitcoin()
+                ? model.getTakersBaseSideAmount()
+                : model.getTakersQuoteSideAmount();
+        if (takersBtcAmount != null) {
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(takersBtcAmount, securityDeposit));
         }
     }
 
-    private static String calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
-        long value = MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit);
+    private static String calculateSecurityDeposit(Monetary btc, double securityDeposit) {
+        long value = MathUtils.roundDoubleToLong(btc.getValue() * securityDeposit);
         return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
     }
 }

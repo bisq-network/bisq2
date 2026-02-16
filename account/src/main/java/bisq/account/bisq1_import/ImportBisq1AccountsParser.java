@@ -55,7 +55,6 @@ import bisq.account.bisq1_import.fiat.ImportSwishAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUSPostalMoneyOrderAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpholdAccountParser;
 import bisq.account.bisq1_import.fiat.ImportUpiAccountParser;
-import bisq.account.bisq1_import.fiat.ImportVerseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWeChatPayAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseAccountParser;
 import bisq.account.bisq1_import.fiat.ImportWiseUsdAccountParser;
@@ -158,7 +157,6 @@ public class ImportBisq1AccountsParser {
             case "UPHOLD" -> new ImportUpholdAccountParser(accountNode).parse(dsaKeyPair);
             case "UPI" -> new ImportUpiAccountParser(accountNode).parse(dsaKeyPair);
             case "US_POSTAL_MONEY_ORDER" -> new ImportUSPostalMoneyOrderAccountParser(accountNode).parse(dsaKeyPair);
-            case "VERSE" -> new ImportVerseAccountParser(accountNode).parse(dsaKeyPair);
             case "WECHAT_PAY" -> new ImportWeChatPayAccountParser(accountNode).parse(dsaKeyPair);
 
             case "BLOCK_CHAINS" -> {
