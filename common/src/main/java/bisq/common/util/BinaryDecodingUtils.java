@@ -22,8 +22,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public final class BinaryDecodingUtils {
+    // Actual maximum length is 65535 (unsigned short max value from readUnsignedShort)
+    private static final int MAX_UNSIGNED_SHORT_VALUE = 65535;
+
     public static byte[] readBytes(DataInputStream in) throws IOException {
-        return readBytes(in, Integer.MAX_VALUE);
+        return readBytes(in, MAX_UNSIGNED_SHORT_VALUE);
     }
 
     public static byte[] readBytes(DataInputStream in, int maxLength) throws IOException {
@@ -38,7 +41,7 @@ public final class BinaryDecodingUtils {
     }
 
     public static String readString(DataInputStream in) throws IOException {
-        return readString(in, Integer.MAX_VALUE);
+        return readString(in, MAX_UNSIGNED_SHORT_VALUE);
     }
 
     public static String readString(DataInputStream in, int maxLength) throws IOException {

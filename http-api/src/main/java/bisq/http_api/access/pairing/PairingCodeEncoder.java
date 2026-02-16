@@ -51,7 +51,7 @@ public final class PairingCodeEncoder {
             out.flush();
             return baos.toByteArray();
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to encode pairing QR", e);
+            throw new IllegalStateException("Failed to encode pairing code", e);
         }
     }
 }

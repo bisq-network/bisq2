@@ -21,4 +21,8 @@ public class InvalidSessionRequestException extends Exception {
     public InvalidSessionRequestException(String message) {
         super(message);
     }
+
+    public InvalidSessionRequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

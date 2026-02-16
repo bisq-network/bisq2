@@ -21,4 +21,8 @@ public class InvalidPairingRequestException extends Exception {
     public InvalidPairingRequestException(String message) {
         super(message);
     }
+
+    public InvalidPairingRequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

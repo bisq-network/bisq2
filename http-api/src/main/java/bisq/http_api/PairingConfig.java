@@ -32,10 +32,14 @@ public class PairingConfig {
     }
 
     public static PairingConfig from(com.typesafe.config.Config config) {
+        int sessionTtlInMinutes = config.hasPath("sessionTtlInMinutes") ? config.getInt("sessionTtlInMinutes") : 60;
+        if (sessionTtlInMinutes <= 0) {
+            throw new IllegalArgumentException("sessionTtlInMinutes must be > 0, got: " + sessionTtlInMinutes);
+        }
         return new PairingConfig(
                 config.getBoolean("enabled"),
                 config.getBoolean("writePairingQrCodeToDisk"),
-                config.hasPath("sessionTtlInMinutes") ? config.getInt("sessionTtlInMinutes") : 60 // default 60 minutes
+                sessionTtlInMinutes
         );
     }
 }

@@ -21,8 +21,16 @@ import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+/**
+ * Represents a client profile for API access pairing.
+ *
+ * <p><b>Security Note:</b> The clientSecret is currently stored in plaintext and serialized via protobuf.
+ * This creates exposure risk if the persistence store is compromised.
+ * Future enhancement should implement encryption for the persistence layer and document/enforce
+ * strict file-level protections and rotation policies.
+ */
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "clientSecret") // Exclude from equals/hashCode to prevent timing attacks
 public class ClientProfile implements PersistableProto {
     private final String clientId;
     private final String clientSecret;

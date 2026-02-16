@@ -39,6 +39,21 @@ public class SessionService {
     }
 
     public Optional<SessionToken> find(String sessionId) {
-        return Optional.ofNullable(sessionTokenBySessionIdMap.get(sessionId));
+        SessionToken token = sessionTokenBySessionIdMap.get(sessionId);
+        if (token != null && token.isExpired()) {
+            sessionTokenBySessionIdMap.remove(sessionId);
+            return Optional.empty();
+        }
+        return Optional.ofNullable(token);
+    }
+
+    /**
+     * Explicitly removes a session (e.g., for logout functionality).
+     * This prevents memory leaks from accumulated expired sessions.
+     *
+     * @param sessionId The session ID to remove
+     */
+    public void remove(String sessionId) {
+        sessionTokenBySessionIdMap.remove(sessionId);
     }
 }
