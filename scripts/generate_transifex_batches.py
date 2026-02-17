@@ -40,17 +40,6 @@ PRIORITY_TIERS["standard"] = [
 ]
 
 
-def convert_locale_format(locale: str) -> str:
-    """
-    Convert internal locale format to Transifex format.
-
-    Internal: pt_BR, zh-Hans (underscore for region)
-    Transifex: pt-BR, zh-Hans (hyphen for region)
-    """
-    # Replace underscore with hyphen for Transifex compatibility
-    return locale.replace("_", "-")
-
-
 def generate_batches(batch_size: int, max_parallel: int, priority_based: bool = False, locales: Optional[List[str]] = None) -> List[Dict]:
     """
     Generate batch configuration for GitHub Actions matrix.
@@ -77,12 +66,10 @@ def generate_batches(batch_size: int, max_parallel: int, priority_based: bool = 
 
             for i in range(0, len(tier_locales), batch_size):
                 batch_locales = tier_locales[i:i+batch_size]
-                # Convert to Transifex format
-                tx_locales = [convert_locale_format(loc) for loc in batch_locales]
 
                 batches.append({
                     "id": batch_id,
-                    "locales": ",".join(tx_locales),
+                    "locales": ",".join(batch_locales),
                     "name": f"{tier}-{batch_id}",
                     "tier": tier
                 })
@@ -91,12 +78,10 @@ def generate_batches(batch_size: int, max_parallel: int, priority_based: bool = 
         # Simple sequential batching
         for i in range(0, len(target_locales), batch_size):
             batch_locales = target_locales[i:i+batch_size]
-            # Convert to Transifex format
-            tx_locales = [convert_locale_format(loc) for loc in batch_locales]
 
             batches.append({
                 "id": batch_id,
-                "locales": ",".join(tx_locales),
+                "locales": ",".join(batch_locales),
                 "name": f"batch-{batch_id}"
             })
             batch_id += 1
@@ -150,13 +135,11 @@ def print_github_actions_json(batches: List[Dict], resources_map: Optional[Dict[
             batch_resource_set = set()
             batch_locale_list = batch["locales"].split(",")
 
-            for tx_locale in batch_locale_list:
-                # Convert Transifex format (pt-BR) back to internal format (pt_BR)
-                internal_locale = tx_locale.replace("-", "_")
-
-                if internal_locale in resources_map:
+            for locale in batch_locale_list:
+                # Matrix locales already use repository/.tx locale format.
+                if locale in resources_map:
                     # Split comma-separated resources and add to set for deduplication
-                    locale_resources = resources_map[internal_locale].split(",")
+                    locale_resources = resources_map[locale].split(",")
                     batch_resource_set.update(r.strip() for r in locale_resources if r.strip())
 
             # Sort for consistency and join back to comma-separated string

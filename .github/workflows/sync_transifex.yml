@@ -393,6 +393,15 @@ jobs:
                 fi
               fi
 
+              if ! echo "$OUTPUT" | grep -q "\[$locale\] - Uploading file"; then
+                echo "::error::tx push exited 0 but uploaded no files for locale '$locale'."
+                echo "::error::Likely locale mismatch (e.g., pt-BR vs pt_BR) or missing local files."
+                echo "Full output:"
+                echo "$OUTPUT"
+                echo "::endgroup::"
+                exit 1
+              fi
+
               # Success - show abbreviated output
               echo "✅ Upload successful (${DURATION}s)"
               echo "TX CLI output:"
