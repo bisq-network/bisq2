@@ -50,6 +50,7 @@ public class MuSigGuideRulesView extends View<VBox, MuSigGuideRulesModel, MuSigG
         headline.getStyleClass().add("musig-trade-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("muSig.tradeGuide.rules.content"), "musig-trade-guide-content");
+        content.setSpacing(5);
 
         learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/MuSig");
 

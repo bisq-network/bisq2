@@ -46,6 +46,7 @@ public class BisqEasyGuideSecurityView extends View<VBox, BisqEasyGuideSecurityM
         headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.security.content"), "bisq-easy-trade-guide-content");
+        content.setSpacing(5);
 
         backButton = new Button(Res.get("action.back"));
 

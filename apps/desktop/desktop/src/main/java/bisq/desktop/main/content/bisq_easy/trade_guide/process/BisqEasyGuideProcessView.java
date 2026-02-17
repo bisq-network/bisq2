@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_guide.process;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqHyperlink;
-import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,8 +47,8 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         Label content = new Label(Res.get("bisqEasy.tradeGuide.process.content"));
         content.setWrapText(true);
         content.getStyleClass().add("bisq-easy-trade-guide-content");
-        OrderedList rules = new OrderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-easy-trade-guide-content");
-        rules.setSpacing(15);
+        UnorderedList rules = new UnorderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-easy-trade-guide-content");
+        rules.setSpacing(5);
 
         backButton = new Button(Res.get("action.back"));
 

@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.trade_guide.process;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqHyperlink;
-import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,8 +47,8 @@ public class MuSigGuideProcessView extends View<VBox, MuSigGuideProcessModel, Mu
         Label content = new Label(Res.get("muSig.tradeGuide.process.content"));
         content.setWrapText(true);
         content.getStyleClass().add("musig-trade-guide-content");
-        OrderedList rules = new OrderedList(Res.get("muSig.tradeGuide.process.steps"), "musig-trade-guide-content");
-        rules.setSpacing(15);
+        UnorderedList rules = new UnorderedList(Res.get("muSig.tradeGuide.process.steps"), "musig-trade-guide-content");
+        rules.setSpacing(5);
 
         backButton = new Button(Res.get("action.back"));
 
