@@ -48,7 +48,6 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.CollateralOption;
@@ -109,12 +108,6 @@ public class MuSigCreateOfferReviewController implements Controller {
         if (paymentMethods != null) {
             resetSelectedPaymentMethod();
             model.setPaymentMethods(paymentMethods);
-        }
-    }
-
-    public void setSelectedBisqEasyOffer(BisqEasyOffer selectedBisqEasyOffer) {
-        if (selectedBisqEasyOffer != null) {
-            resetSelectedPaymentMethod();
         }
     }
 
