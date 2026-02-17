@@ -37,5 +37,13 @@ class GenerateTransifexBatchesTests(unittest.TestCase):
         self.assertSetEqual(expected_resources, actual_resources)
 
 
+    def test_priority_tiers_have_no_duplicates(self):
+        all_tier_locales = (
+            g.PRIORITY_TIERS["critical"]
+            + g.PRIORITY_TIERS["important"]
+            + g.PRIORITY_TIERS["standard"]
+        )
+        self.assertEqual(len(all_tier_locales), len(set(all_tier_locales)))
+
 if __name__ == "__main__":
     unittest.main()

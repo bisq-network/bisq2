@@ -29,7 +29,7 @@ ALL_LOCALES = [
 # Priority tiers for future optimization
 PRIORITY_TIERS = {
     "critical": ["fr", "ja", "ko", "zh-Hans", "zh-Hant"],  # Top 5 markets
-    "important": ["de", "es", "it", "pt_BR", "ru", "vi", "zh-Hant"],  # Major markets
+    "important": ["de", "es", "it", "pt_BR", "ru", "vi"],  # Major markets
     "standard": []  # All others (auto-populated)
 }
 
