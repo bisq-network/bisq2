@@ -46,6 +46,7 @@ public class MuSigGuideSecurityView extends View<VBox, MuSigGuideSecurityModel, 
         headline.getStyleClass().add("musig-trade-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("muSig.tradeGuide.security.content"), "musig-trade-guide-content");
+        content.setSpacing(5);
 
         backButton = new Button(Res.get("action.back"));
 

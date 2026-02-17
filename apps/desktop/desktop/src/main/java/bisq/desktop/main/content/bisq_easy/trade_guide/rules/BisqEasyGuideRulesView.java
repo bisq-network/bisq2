@@ -50,6 +50,7 @@ public class BisqEasyGuideRulesView extends View<VBox, BisqEasyGuideRulesModel, 
         headline.getStyleClass().add("bisq-easy-trade-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("bisqEasy.tradeGuide.rules.content"), "bisq-easy-trade-guide-content");
+        content.setSpacing(5);
 
         learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Bisq_Easy");
 
