@@ -18,9 +18,9 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -105,6 +106,11 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.accountNr"), accountNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(accountNr);
     }
 
     @Override

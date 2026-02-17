@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -107,6 +108,11 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.accountNr"), accountNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(accountNr);
     }
 
     @Override

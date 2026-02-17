@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * AccountPayload is sent over the wire to the peer during the trade process. It is not used in the offer.
@@ -137,6 +138,8 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
             }
         };
     }
+
+    public abstract Optional<String> getReasonForPaymentString();
 
     public abstract String getAccountDataDisplayString();
 }

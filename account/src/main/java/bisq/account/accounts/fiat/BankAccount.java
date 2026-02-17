@@ -18,8 +18,8 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.protobuf.Account;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 import java.security.KeyPair;

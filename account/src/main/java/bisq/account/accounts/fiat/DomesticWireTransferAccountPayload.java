@@ -17,8 +17,8 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;

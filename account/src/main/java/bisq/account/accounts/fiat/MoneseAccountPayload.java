@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -117,6 +118,11 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(holderName);
     }
 
     @Override

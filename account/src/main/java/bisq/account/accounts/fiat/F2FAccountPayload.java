@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
@@ -30,6 +30,7 @@ import bisq.i18n.Res;
 import lombok.Getter;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Getter
 public final class F2FAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
@@ -132,6 +133,11 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
                 Res.get("paymentAccounts.f2f.contact"), contact,
                 Res.get("paymentAccounts.f2f.extraInfo"), extraInfo
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.empty();
     }
 
     @Override

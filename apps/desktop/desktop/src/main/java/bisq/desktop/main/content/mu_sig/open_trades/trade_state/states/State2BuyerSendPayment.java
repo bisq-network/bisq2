@@ -19,8 +19,6 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.fiat.BankAccount;
-import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
@@ -123,15 +121,10 @@ public class State2BuyerSendPayment extends BaseState {
                 model.setMyAccountName(Optional.empty());
             }
 
-          var paymentReason=  myAccount.filter(BankAccount.class::isInstance)
-                    .map(BankAccount.class::cast)
+            model.setPaymentReason(myAccount
                     .map(Account::getAccountPayload)
-                    .filter(BankAccountPayload.class::isInstance)
-                    .map(BankAccountPayload.class::cast)
-                    .flatMap(BankAccountPayload::getHolderName);
-            model.setPaymentReason(paymentReason);
+                    .flatMap(AccountPayload::getReasonForPaymentString));
         }
-
 
         @Override
         public void onDeactivate() {

@@ -17,8 +17,8 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -61,13 +61,13 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     }
 
     public AchTransferAccountPayload(String id,
-                                      byte[] salt,
-                                      String holderName,
-                                      String holderAddress,
-                                      String bankName,
-                                      String routingNr,
-                                      String accountNr,
-                                      BankAccountType bankAccountType) {
+                                     byte[] salt,
+                                     String holderName,
+                                     String holderAddress,
+                                     String bankName,
+                                     String routingNr,
+                                     String accountNr,
+                                     BankAccountType bankAccountType) {
         super(id,
                 salt,
                 "US",
