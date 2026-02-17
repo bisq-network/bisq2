@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
+import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
@@ -110,7 +111,7 @@ public class MuSigMediationCaseDetailSection {
                 double securityDeposit = collateralOption.get().getBuyerSecurityDeposit();
                 model.setSecurityDepositInfo(Optional.of(new Model.SecurityDepositInfo(
                         securityDeposit,
-                        calculateSecurityDeposit(MuSigTradeUtils.getBaseSideMonetary(contract), securityDeposit),
+                        calculateSecurityDeposit(offer.getMarket(), contract, securityDeposit),
                         PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0),
                         true)));
             }
@@ -138,8 +139,12 @@ public class MuSigMediationCaseDetailSection {
             model.setSecurityDepositInfo(Optional.empty());
         }
 
-        private static String calculateSecurityDeposit(Monetary monetary, double securityDepositAsPercent) {
-            Monetary securityDeposit = OfferAmountUtil.calculateSecurityDeposit(monetary, securityDepositAsPercent);
+        private static String calculateSecurityDeposit(Market market,
+                                                       MuSigContract contract,
+                                                       double securityDepositAsPercent) {
+            Monetary baseSideMonetary = MuSigTradeUtils.getBaseSideMonetary(contract);
+            Monetary quoteSideMonetary = MuSigTradeUtils.getQuoteSideMonetary(contract);
+            Monetary securityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(market, baseSideMonetary, quoteSideMonetary, securityDepositAsPercent);
             return OfferAmountFormatter.formatDepositAmountAsBTC(securityDeposit);
         }
     }
@@ -160,7 +165,8 @@ public class MuSigMediationCaseDetailSection {
 
         private Optional<SecurityDepositInfo> securityDepositInfo = Optional.empty();
 
-        private record SecurityDepositInfo(double percentValue, String amountText, String percentText, boolean isMatching) {
+        private record SecurityDepositInfo(double percentValue, String amountText, String percentText,
+                                           boolean isMatching) {
         }
 
         private String buyerNetworkAddress;

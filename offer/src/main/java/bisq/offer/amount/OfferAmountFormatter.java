@@ -18,6 +18,7 @@
 package bisq.offer.amount;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.asset.Asset;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
@@ -326,7 +327,7 @@ public class OfferAmountFormatter {
     /* --------------------------------------------------------------------- */
 
     public static String formatDepositAmountAsBTC(Monetary monetary) {
-        checkArgument(monetary.getCode().equals("BTC"));
+        checkArgument(Asset.isBtc(monetary.getCode()));
         return formatAmountWithCode(Coin.asBtcFromValue(monetary.getValue()), false);
     }
 
