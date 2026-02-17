@@ -41,12 +41,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
-    private static PaymentMethodSpec<?> getBaseSidePaymentMethodSpec(MuSigOffer offer) {
-        checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
-                "MuSigOffers baseSidePaymentMethodSpecs must have exactly 1 item");
-        return offer.getBaseSidePaymentMethodSpecs().get(0);
-    }
-
     private final long baseSideAmount;
     private final long quoteSideAmount;
     private final PaymentMethodSpec<?> baseSidePaymentMethodSpec;
@@ -60,7 +54,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          NetworkId takerNetworkId,
                          long baseSideAmount,
                          long quoteSideAmount,
-                         PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
+                         PaymentMethodSpec<?> paymentMethodSpec,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -70,8 +64,8 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
-                getBaseSidePaymentMethodSpec(offer),
-                quoteSidePaymentMethodSpec,
+                getBaseSidePaymentMethodSpec(offer, paymentMethodSpec),
+                getQuoteSidePaymentMethodSpec(offer, paymentMethodSpec),
                 mediator,
                 priceSpec,
                 marketPrice);
@@ -159,5 +153,27 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                         Optional.empty(),
                 PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
                 muSigContractProto.getMarketPrice());
+    }
+
+    private static PaymentMethodSpec<?> getBaseSidePaymentMethodSpec(MuSigOffer offer,
+                                                                     PaymentMethodSpec<?> paymentMethodSpec) {
+        if (offer.getMarket().isBaseCurrencyBitcoin()) {
+            checkArgument(offer.getBaseSidePaymentMethodSpecs().size() == 1,
+                    "MuSigOffer's baseSidePaymentMethodSpecs must have exactly 1 item");
+            return offer.getBaseSidePaymentMethodSpecs().get(0);
+        } else {
+            return paymentMethodSpec;
+        }
+    }
+
+    private static PaymentMethodSpec<?> getQuoteSidePaymentMethodSpec(MuSigOffer offer,
+                                                                      PaymentMethodSpec<?> paymentMethodSpec) {
+        if (offer.getMarket().isBaseCurrencyBitcoin()) {
+            return paymentMethodSpec;
+        } else {
+            checkArgument(offer.getQuoteSidePaymentMethodSpecs().size() == 1,
+                    "MuSigOffer's quoteSidePaymentMethodSpecs must have exactly 1 item");
+            return offer.getQuoteSidePaymentMethodSpecs().get(0);
+        }
     }
 }

@@ -528,7 +528,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     public Optional<Account<? extends PaymentMethod<?>, ?>> findMyAccount(MuSigTrade trade) {
         MuSigContract contract = trade.getContract();
         MuSigOffer offer = contract.getOffer();
-        PaymentMethod<?> selectedPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
+        PaymentMethod<?> selectedPaymentMethod = offer.getMarket().isBaseCurrencyBitcoin()
+                ? contract.getQuoteSidePaymentMethodSpec().getPaymentMethod()
+                : contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
         Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
         Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
         return accountOptions.stream()
