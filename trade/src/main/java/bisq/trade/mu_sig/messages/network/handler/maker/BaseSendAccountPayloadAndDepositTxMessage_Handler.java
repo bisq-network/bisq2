@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SendAccountPayloadAndDepositTxMessage> {
     private ByteArray depositTx;
     private AccountPayload<?> accountPayload;
+    private String depositTxId;
 
     public BaseSendAccountPayloadAndDepositTxMessage_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -46,6 +47,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void process(SendAccountPayloadAndDepositTxMessage message) {
         depositTx = message.getDepositTx();
+        depositTxId = message.getDepositTxId();
         accountPayload = message.getAccountPayload();
 
         // We observe the txConfirmationStatus to get informed once the deposit tx is confirmed (gets published by the
@@ -71,6 +73,7 @@ public abstract class BaseSendAccountPayloadAndDepositTxMessage_Handler extends 
     @Override
     protected void commit() {
         trade.getPeer().setDepositTx(depositTx);
+        trade.setDepositTxId(depositTxId);
         trade.getPeer().setAccountPayload(accountPayload);
     }
 

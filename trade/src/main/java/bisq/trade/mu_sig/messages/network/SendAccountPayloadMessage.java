@@ -29,14 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SendAccountPayloadMessage extends MuSigTradeMessage {
-    private final AccountPayload accountPayload;
+    private final AccountPayload<?> accountPayload;
 
     public SendAccountPayloadMessage(String id,
                                      String tradeId,
                                      String protocolVersion,
                                      NetworkId sender,
                                      NetworkId receiver,
-                                     AccountPayload accountPayload) {
+                                     AccountPayload<?> accountPayload) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.accountPayload = accountPayload;
 

@@ -31,7 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessage {
     private final ByteArray depositTx;
-    private final AccountPayload accountPayload;
+    private final AccountPayload<?> accountPayload;
+
+    // TODO We need the deposit tx from the backend
+    private final String depositTxId = "TODO";
 
     public SendAccountPayloadAndDepositTxMessage(String id,
                                                  String tradeId,
@@ -39,7 +42,7 @@ public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessa
                                                  NetworkId sender,
                                                  NetworkId receiver,
                                                  ByteArray depositTx,
-                                                 AccountPayload accountPayload) {
+                                                 AccountPayload<?> accountPayload) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.depositTx = depositTx;
         this.accountPayload = accountPayload;
