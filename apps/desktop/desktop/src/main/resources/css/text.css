@@ -618,13 +618,6 @@
     -fx-font-size: 1em;
 }
 
-.dimmed-text {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1em;
-}
-
 .code-block {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;

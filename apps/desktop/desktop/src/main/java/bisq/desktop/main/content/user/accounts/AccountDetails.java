@@ -165,7 +165,7 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
 
     protected Label addTradeDuration() {
         return addDescriptionAndValue(Res.get("paymentAccounts.tradeDuration"),
-                account.getPaymentMethod().getPaymentRail().getTradeDuration());
+                account.getPaymentMethod().getPaymentRail().getTradeDuration().getDisplayString());
     }
 
     protected void addCurrencyDisplay() {

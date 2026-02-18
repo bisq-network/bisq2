@@ -18,6 +18,7 @@
 package bisq.account.payment_method.cbdc;
 
 import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.TradeDuration;
 import bisq.common.asset.Cbdc;
 import bisq.common.asset.CbdcRepository;
 import lombok.Getter;
@@ -42,5 +43,10 @@ public enum CbdcPaymentRail implements PaymentRail {
 
     CbdcPaymentRail(Cbdc cbdc) {
         this.cbdc = cbdc;
+    }
+
+    @Override
+    public TradeDuration getTradeDuration() {
+        return TradeDuration.HOURS_24;
     }
 }

@@ -155,3 +155,15 @@
 .mu-sig-my-offers-table .table-row-cell:selected .quote-currency-market-logo {
     -fx-fill: -bisq-dark-grey-40 !important;
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Remaining trade time ProgressBar                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.time-progress-bar > .bar,
+.time-progress-bar:indeterminate > .bar {
+    -fx-background-color: -bisq2-yellow;
+}

@@ -18,6 +18,7 @@
 package bisq.account.payment_method.fiat;
 
 import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.TradeDuration;
 import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.asset.FiatCurrencyRepository;
@@ -330,61 +331,53 @@ public enum FiatPaymentRail implements PaymentRail {
     }
 
     //todo add duration as enum field, use Duration not string (add method to get display string)
-    private static final String HOURS_24 = Res.get("temporal.hour.*", 24);
-    private static final String DAYS_2 = Res.get("temporal.day.*", 2);
-    private static final String DAYS_3 = Res.get("temporal.day.*", 3);
-    private static final String DAYS_4 = Res.get("temporal.day.*", 4);
-    private static final String DAYS_5 = Res.get("temporal.day.*", 5);
-    private static final String DAYS_6 = Res.get("temporal.day.*", 6);
-    private static final String DAYS_7 = Res.get("temporal.day.*", 7);
-    private static final String DAYS_8 = Res.get("temporal.day.*", 8);
 
     @Override
-    public String getTradeDuration() {
+    public TradeDuration getTradeDuration() {
         return switch (this) {
-            case ACH_TRANSFER -> DAYS_5;
-            case ADVANCED_CASH -> HOURS_24;
-            case ALI_PAY -> HOURS_24;
-            case AMAZON_GIFT_CARD -> DAYS_4;
-            case BIZUM -> DAYS_4;
-            case CASH_APP -> DAYS_4;
-            case CASH_BY_MAIL -> DAYS_8;
-            case CASH_DEPOSIT -> DAYS_4;
-            case CUSTOM -> DAYS_4;
-            case DOMESTIC_WIRE_TRANSFER -> DAYS_3;
-            case F2F -> DAYS_4;
-            case FASTER_PAYMENTS -> HOURS_24;
-            case HAL_CASH -> HOURS_24;
-            case IMPS -> HOURS_24;
-            case INTERAC_E_TRANSFER -> HOURS_24;
-            case MERCADO_PAGO -> HOURS_24;
-            case MONESE -> HOURS_24;
-            case MONEY_BEAM -> HOURS_24;
-            case MONEY_GRAM -> DAYS_4;
-            case NATIONAL_BANK -> DAYS_4;
-            case NEFT -> HOURS_24;
-            case PAY_ID -> DAYS_4;
-            case PAYSERA -> HOURS_24;
-            case PERFECT_MONEY -> HOURS_24;
-            case PIN_4 -> HOURS_24;
-            case PIX -> HOURS_24;
-            case PROMPT_PAY -> HOURS_24;
-            case REVOLUT -> HOURS_24;
-            case SAME_BANK -> HOURS_24;
-            case SATISPAY -> HOURS_24;
-            case SBP -> HOURS_24;
-            case SEPA -> DAYS_6;
-            case SEPA_INSTANT -> HOURS_24;
-            case STRIKE -> DAYS_4;
-            case SWIFT -> DAYS_4;
-            case SWISH -> HOURS_24;
-            case UPHOLD -> HOURS_24;
-            case UPI -> DAYS_4;
-            case US_POSTAL_MONEY_ORDER -> DAYS_4;
-            case WECHAT_PAY -> HOURS_24;
-            case WISE -> DAYS_4;
-            case WISE_USD -> DAYS_4;
-            case ZELLE -> DAYS_4;
+            case ACH_TRANSFER -> TradeDuration.DAYS_5;
+            case ADVANCED_CASH -> TradeDuration.HOURS_24;
+            case ALI_PAY -> TradeDuration.HOURS_24;
+            case AMAZON_GIFT_CARD -> TradeDuration.DAYS_4;
+            case BIZUM -> TradeDuration.DAYS_4;
+            case CASH_APP -> TradeDuration.DAYS_4;
+            case CASH_BY_MAIL -> TradeDuration.DAYS_8;
+            case CASH_DEPOSIT -> TradeDuration.DAYS_4;
+            case CUSTOM -> TradeDuration.DAYS_4;
+            case DOMESTIC_WIRE_TRANSFER -> TradeDuration.DAYS_3;
+            case F2F -> TradeDuration.DAYS_4;
+            case FASTER_PAYMENTS -> TradeDuration.HOURS_24;
+            case HAL_CASH -> TradeDuration.HOURS_24;
+            case IMPS -> TradeDuration.HOURS_24;
+            case INTERAC_E_TRANSFER -> TradeDuration.HOURS_24;
+            case MERCADO_PAGO -> TradeDuration.HOURS_24;
+            case MONESE -> TradeDuration.HOURS_24;
+            case MONEY_BEAM -> TradeDuration.HOURS_24;
+            case MONEY_GRAM -> TradeDuration.DAYS_4;
+            case NATIONAL_BANK -> TradeDuration.DAYS_4;
+            case NEFT -> TradeDuration.HOURS_24;
+            case PAY_ID -> TradeDuration.DAYS_4;
+            case PAYSERA -> TradeDuration.HOURS_24;
+            case PERFECT_MONEY -> TradeDuration.HOURS_24;
+            case PIN_4 -> TradeDuration.HOURS_24;
+            case PIX -> TradeDuration.HOURS_24;
+            case PROMPT_PAY -> TradeDuration.HOURS_24;
+            case REVOLUT -> TradeDuration.HOURS_24;
+            case SAME_BANK -> TradeDuration.HOURS_24;
+            case SATISPAY -> TradeDuration.HOURS_24;
+            case SBP -> TradeDuration.HOURS_24;
+            case SEPA -> TradeDuration.DAYS_6;
+            case SEPA_INSTANT -> TradeDuration.HOURS_24;
+            case STRIKE -> TradeDuration.DAYS_4;
+            case SWIFT -> TradeDuration.DAYS_4;
+            case SWISH -> TradeDuration.HOURS_24;
+            case UPHOLD -> TradeDuration.HOURS_24;
+            case UPI -> TradeDuration.DAYS_4;
+            case US_POSTAL_MONEY_ORDER -> TradeDuration.DAYS_4;
+            case WECHAT_PAY -> TradeDuration.HOURS_24;
+            case WISE -> TradeDuration.DAYS_4;
+            case WISE_USD -> TradeDuration.DAYS_4;
+            case ZELLE -> TradeDuration.DAYS_4;
         };
     }
 

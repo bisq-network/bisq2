@@ -18,6 +18,7 @@
 package bisq.account.payment_method.crypto;
 
 import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.TradeDuration;
 
 /**
  * Currently for musig it has no usage, but we still support it for potential future protocols or usage in Bisq Easy.
@@ -33,4 +34,10 @@ public enum CryptoPaymentRail implements PaymentRail {
     CUSTODIAL,               // Off-chain/internal ledger (CEX transfers, PayPal USD)
     CBDC,                    // CBDC
     OTHER                    // Catch-all
+    ;
+
+    @Override
+    public TradeDuration getTradeDuration() {
+        return TradeDuration.HOURS_24;
+    }
 }

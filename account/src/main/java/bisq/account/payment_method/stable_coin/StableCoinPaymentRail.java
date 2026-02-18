@@ -18,6 +18,7 @@
 package bisq.account.payment_method.stable_coin;
 
 import bisq.account.payment_method.PaymentRail;
+import bisq.account.payment_method.TradeDuration;
 import bisq.common.asset.StableCoin;
 import bisq.common.asset.StableCoinRepository;
 import lombok.Getter;
@@ -40,6 +41,11 @@ public enum StableCoinPaymentRail implements PaymentRail {
 
     StableCoinPaymentRail(StableCoin stableCoin) {
         this.stableCoin = stableCoin;
+    }
+
+    @Override
+    public TradeDuration getTradeDuration() {
+        return TradeDuration.HOURS_24;
     }
 }
 

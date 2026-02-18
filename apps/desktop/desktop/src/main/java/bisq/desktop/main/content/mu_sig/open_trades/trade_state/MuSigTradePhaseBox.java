@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state;
 
+import bisq.account.payment_method.TradeDuration;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.data.Triple;
@@ -24,6 +25,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
@@ -32,11 +34,14 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -44,6 +49,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -56,6 +62,7 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 class MuSigTradePhaseBox {
@@ -91,7 +98,7 @@ class MuSigTradePhaseBox {
         private final View view;
         private final MuSigMediationRequestService muSigMediationRequestService;
         private final MuSigOpenTradeChannelService channelService;
-        private Pin muSigTradeStatePin, isInMediationPin;
+        private Pin muSigTradeStatePin, isInMediationPin, onSecondTickPin;
 
         private Controller(ServiceProvider serviceProvider) {
             muSigMediationRequestService = serviceProvider.getSupportService().getMuSigMediationRequestService();
@@ -122,11 +129,25 @@ class MuSigTradePhaseBox {
                 return;
             }
 
+            TradeDuration tradeDuration = trade.getContract()
+                    .getQuoteSidePaymentMethodSpec()
+                    .getPaymentMethod()
+                    .getPaymentRail()
+                    .getTradeDuration();
+            model.getMaxPeriod().set(Res.get("muSig.tradeState.maxPeriod", tradeDuration.getDisplayString()));
+
+            long maxTradeDurationTime = tradeDuration.getTime();
+
+            if (onSecondTickPin != null) {
+                onSecondTickPin.unbind();
+            }
+            onSecondTickPin = UIClock.addOnSecondTickListener(() ->
+                    applyRemainingTime(trade.getTradeStartedDate(), maxTradeDurationTime));
+
             model.getPhase1Info().set(Res.get("muSig.tradeState.phase1").toUpperCase());
             model.getPhase2Info().set(Res.get("muSig.tradeState.phase2").toUpperCase());
             model.getPhase3Info().set(Res.get("muSig.tradeState.phase3").toUpperCase());
             model.getPhase4Info().set(Res.get("muSig.tradeState.phase4").toUpperCase());
-
 
             muSigTradeStatePin = trade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
                 model.getRequestMediationButtonVisible().set(!state.isFinalState());
@@ -139,7 +160,7 @@ class MuSigTradePhaseBox {
                          MAKER_CREATED_PARTIAL_SIGNATURES_AND_SIGNED_DEPOSIT_TX,
                          TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
                          MAKER_RECEIVED_ACCOUNT_PAYLOAD_AND_DEPOSIT_TX,
-                         TAKER_RECEIVED_ACCOUNT_PAYLOAD-> {
+                         TAKER_RECEIVED_ACCOUNT_PAYLOAD -> {
                         model.getPhaseIndex().set(0);
                     }
                     case DEPOSIT_TX_CONFIRMED -> {
@@ -162,6 +183,24 @@ class MuSigTradePhaseBox {
             }));
         }
 
+        private void applyRemainingTime(Optional<Long> tradeStartedDate, long maxTradeDurationTime) {
+            if (tradeStartedDate.isPresent()) {
+                long passed = System.currentTimeMillis() - tradeStartedDate.get();
+                long remaining = Math.max(0, maxTradeDurationTime - passed);
+                double progress = 1 - remaining / (double) maxTradeDurationTime;
+                model.getRemainingTime().set(progress);
+                if (progress < 1) {
+                    String formatted = TimeFormatter.formatAge(remaining);
+                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime", formatted));
+                } else {
+                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.exceeded"));
+                }
+            } else {
+                model.getRemainingTime().set(0);
+                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.notStarted"));
+            }
+        }
+
         @Override
         public void onActivate() {
         }
@@ -177,14 +216,15 @@ class MuSigTradePhaseBox {
                 muSigTradeStatePin.unbind();
                 muSigTradeStatePin = null;
             }
+            if (onSecondTickPin != null) {
+                onSecondTickPin.unbind();
+                onSecondTickPin = null;
+            }
         }
+
 
         void onOpenTradeGuide() {
             Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE);
-        }
-
-        void onOpenWalletHelp() {
-            Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
         void onRequestMediation() {
@@ -207,6 +247,9 @@ class MuSigTradePhaseBox {
         private final StringProperty phase2Info = new SimpleStringProperty();
         private final StringProperty phase3Info = new SimpleStringProperty();
         private final StringProperty phase4Info = new SimpleStringProperty();
+        private final StringProperty maxPeriod = new SimpleStringProperty();
+        private final StringProperty formattedRemainingTime = new SimpleStringProperty();
+        private final DoubleProperty remainingTime = new SimpleDoubleProperty();
 
         void reset() {
             selectedChannel = null;
@@ -218,21 +261,28 @@ class MuSigTradePhaseBox {
             phase2Info.set(null);
             phase3Info.set(null);
             phase4Info.set(null);
+            maxPeriod.set(null);
+            formattedRemainingTime.set(null);
+            remainingTime.set(0L);
         }
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final Label phase1Label, phase2Label, phase3Label, phase4Label;
+        private final static double WIDTH = 250;
+
+        private final Label phase1Label, phase2Label, phase3Label, phase4Label,
+                maxPeriod, remainingTimeLabel;
         private final Button requestMediationButton;
-        private final BisqMenuItem openTradeGuide, walletHelp;
+        private final BisqMenuItem openTradeGuide;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
-        private Subscription phaseIndexPin;
+        private final ProgressBar remainingTimeProgressBar;
+        private Subscription phaseIndexPin, remainingTimePin;
 
         public View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
-            root.setMinWidth(300);
-            root.setMaxWidth(root.getMinWidth());
+            root.setMinWidth(WIDTH);
+            root.setMaxWidth(WIDTH);
 
             Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
             Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
@@ -251,19 +301,33 @@ class MuSigTradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
-            double width = 160;
-            walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet-white", Res.get("bisqEasy.walletGuide.open"));
-            walletHelp.setPrefWidth(width);
+            maxPeriod = new Label();
+            maxPeriod.getStyleClass().addAll("dimmed-text");
+
+            remainingTimeProgressBar = new ProgressBar();
+            remainingTimeProgressBar.setMinHeight(3);
+            remainingTimeProgressBar.setMaxHeight(3);
+            remainingTimeProgressBar.setMaxWidth(Double.MAX_VALUE);
+
+            remainingTimeLabel = new Label();
+            remainingTimeLabel.getStyleClass().addAll("bisq-text-4");
+
             openTradeGuide = new BisqMenuItem("trade-guide-grey", "trade-guide-white", Res.get("muSig.tradeGuide.open"));
-            openTradeGuide.setPrefWidth(width);
-            VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide);
-            tradeOptionsVBox.setPadding(new Insets(0, 20, 0, 0));
+
+            VBox.setMargin(maxPeriod, new Insets(0, 0, 10, 0));
+            VBox.setMargin(remainingTimeLabel, new Insets(5, 0, 30, 0));
+            VBox tradeOptionsVBox = new VBox(
+                    maxPeriod,
+                    remainingTimeProgressBar,
+                    remainingTimeLabel,
+                    openTradeGuide);
+            tradeOptionsVBox.setPadding(new Insets(0, 30, 0, 0));
 
             requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
             requestMediationButton.getStyleClass().addAll("outlined-button", "request-mediation-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
-            VBox.setMargin(tradeOptionsVBox, new Insets(30, 0, 0, 0));
+            VBox.setMargin(tradeOptionsVBox, new Insets(40, 0, 0, 0));
             VBox.setMargin(requestMediationButton, new Insets(20, 0, 0, 0));
             root.getChildren().addAll(
                     phase1HBox,
@@ -288,9 +352,25 @@ class MuSigTradePhaseBox {
             requestMediationButton.managedProperty().bind(model.getRequestMediationButtonVisible());
             requestMediationButton.disableProperty().bind(model.getIsInMediation());
 
+            maxPeriod.textProperty().bind(model.getMaxPeriod());
+            remainingTimeLabel.textProperty().bind(model.getFormattedRemainingTime());
+            remainingTimePin = EasyBind.subscribe(model.getRemainingTime(), remainingTime -> {
+                if (remainingTime != null) {
+                    double progress = remainingTime.doubleValue();
+                    remainingTimeProgressBar.setProgress(progress);
+
+                    remainingTimeProgressBar.getStyleClass().remove("time-progress-bar");
+                    remainingTimeLabel.getStyleClass().remove("bisq-text-yellow");
+                    if (progress >= 1) {
+                        remainingTimeProgressBar.getStyleClass().add("time-progress-bar");
+                        remainingTimeLabel.getStyleClass().add("bisq-text-yellow");
+                    }
+                }
+
+            });
+
             requestMediationButton.setOnAction(e -> controller.onRequestMediation());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
-            walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
         }
 
@@ -304,11 +384,14 @@ class MuSigTradePhaseBox {
             requestMediationButton.managedProperty().unbind();
             requestMediationButton.disableProperty().unbind();
 
+            maxPeriod.textProperty().unbind();
+            remainingTimeLabel.textProperty().unbind();
+
             requestMediationButton.setOnAction(null);
-            walletHelp.setOnAction(null);
             openTradeGuide.setOnAction(null);
 
             phaseIndexPin.unsubscribe();
+            remainingTimePin.unsubscribe();
         }
 
         private void phaseIndexChanged(Number phaseIndex) {

@@ -79,7 +79,7 @@ public class SummaryDetails<P extends CryptoAssetAccountPayload> extends GridPan
     protected void addRestrictions(P accountPayload) {
         CryptoPaymentRail paymentRail = accountPayload.getPaymentMethod().getPaymentRail();
         String restrictions = Res.get("paymentAccounts.summary.tradeLimit", paymentRail.getTradeLimit()) + " / " +
-                Res.get("paymentAccounts.summary.tradeDuration", paymentRail.getTradeDuration());
+                Res.get("paymentAccounts.summary.tradeDuration", paymentRail.getTradeDuration().getDisplayString());
         addDescriptionAndValue(Res.get("paymentAccounts.restrictions"), restrictions);
     }
 

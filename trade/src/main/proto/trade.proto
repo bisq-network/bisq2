@@ -224,7 +224,8 @@ message MuSigTradeParty {
 
 message MuSigTrade {
   optional string depositTxId = 1;
-  optional sint64 tradeCompletedDate = 2;
+  optional sint64 tradeStartedDate = 2;
+  optional sint64 tradeCompletedDate = 3;
 }
 
 message MuSigTradeStore {

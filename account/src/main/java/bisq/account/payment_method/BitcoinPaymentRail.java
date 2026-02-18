@@ -25,4 +25,9 @@ public enum BitcoinPaymentRail implements PaymentRail {
     RBTC,               // BTC wrapped on the RSK blockchain
     WBTC,               // BTC wrapped on ETH
     OTHER;
+
+    @Override
+    public TradeDuration getTradeDuration() {
+        return TradeDuration.HOURS_24;
+    }
 }
