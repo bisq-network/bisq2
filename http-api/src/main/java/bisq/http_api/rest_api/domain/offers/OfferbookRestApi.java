@@ -326,12 +326,14 @@ public class OfferbookRestApi extends RestApiBase {
                                 .stream()
                                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                                 .map(this::createOfferListItemDto)
+                                .filter(Optional::isPresent)
+                                .map(Optional::get)
                                 .collect(Collectors.toList())
                         )
                 );
     }
 
-    private OfferItemPresentationDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+    private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         return OfferItemPresentationDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
