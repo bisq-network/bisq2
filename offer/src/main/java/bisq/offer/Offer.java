@@ -192,4 +192,12 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     public boolean hasAmountRange() {
         return amountSpec instanceof RangeAmountSpec;
     }
+
+    public List<? extends PaymentMethodSpec<?>> getBitcoinPaymentMethodSpecs() {
+        return market.isCrypto() ? quoteSidePaymentMethodSpecs : baseSidePaymentMethodSpecs;
+    }
+
+    public List<? extends PaymentMethodSpec<?>> getNonBitcoinPaymentMethodSpecs() {
+        return market.isCrypto() ? baseSidePaymentMethodSpecs : quoteSidePaymentMethodSpecs;
+    }
 }
