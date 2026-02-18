@@ -23,11 +23,9 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
 import bisq.common.market.Market;
-import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
-import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -40,6 +38,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
@@ -147,6 +146,7 @@ public class MuSigTakeOfferReviewController implements Controller {
     public void setTakersQuoteSideAmount(Monetary amount) {
         if (amount != null) {
             model.setTakersQuoteSideAmount(amount);
+            applySecurityDepositAsBtc();
         }
     }
 
@@ -398,17 +398,25 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     private void applySecurityDepositAsBtc() {
         double securityDeposit = model.getSecurityDepositAsPercent();
-
-        Monetary takersBtcAmount = model.getMuSigOffer().getMarket().isBaseCurrencyBitcoin()
-                ? model.getTakersBaseSideAmount()
-                : model.getTakersQuoteSideAmount();
-        if (takersBtcAmount != null) {
-            model.setSecurityDepositAsBtc(calculateSecurityDeposit(takersBtcAmount, securityDeposit));
+        Market market = model.getMuSigOffer().getMarket();
+        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
+        Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
+        if (takersBaseSideAmount != null && takersQuoteSideAmount != null) {
+            model.setSecurityDepositAsBtc(calculateSecurityDeposit(market,
+                    takersBaseSideAmount,
+                    takersQuoteSideAmount,
+                    securityDeposit));
         }
     }
 
-    private static String calculateSecurityDeposit(Monetary btc, double securityDeposit) {
-        long value = MathUtils.roundDoubleToLong(btc.getValue() * securityDeposit);
-        return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
+    private static String calculateSecurityDeposit(Market market,
+                                                   Monetary takersBaseSideAmount,
+                                                   Monetary takersQuoteSideAmount,
+                                                   double securityDeposit) {
+        Monetary securityDepositAsBtc = OfferAmountUtil.calculateSecurityDepositAsBTC(market,
+                takersBaseSideAmount,
+                takersQuoteSideAmount,
+                securityDeposit);
+        return OfferAmountFormatter.formatDepositAmountAsBTC(securityDepositAsBtc);
     }
 }
