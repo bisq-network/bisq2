@@ -20,8 +20,8 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
@@ -79,14 +79,14 @@ public class State1aSetupDepositTx extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WaitingAnimation waitingAnimation;
+        private final MuSigWaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
             WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1a.headline"));
             WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1a.info"));
-            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             root.getChildren().addAll(waitingInfo);

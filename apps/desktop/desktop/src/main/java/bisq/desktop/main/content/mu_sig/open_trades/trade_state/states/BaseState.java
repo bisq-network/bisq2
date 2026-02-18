@@ -27,7 +27,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.AmountFormatter;
@@ -123,7 +123,7 @@ public abstract class BaseState {
             this.trade = trade;
             this.channel = channel;
 
-            quoteCode=  trade.getContract().getOffer().getMarket().getQuoteCurrencyCode();
+            quoteCode = trade.getContract().getOffer().getMarket().getQuoteCurrencyCode();
         }
 
         protected MuSigOffer getMuSigOffer() {
@@ -146,7 +146,7 @@ public abstract class BaseState {
         protected void onViewDetached() {
         }
 
-        protected HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
+        protected HBox createWaitingInfo(MuSigWaitingAnimation animation, WrappingText headline, WrappingText info) {
             animation.setAlignment(Pos.CENTER);
             VBox text = new VBox(headline, info);
             text.setAlignment(Pos.CENTER_LEFT);

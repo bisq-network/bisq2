@@ -30,8 +30,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingState;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -234,7 +234,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
         private final MaterialTextField txId;
-        private final WaitingAnimation waitingAnimation;
+        private final MuSigWaitingAnimation waitingAnimation;
         private Subscription confirmationStatePin;
 
         private View(Model model, Controller controller) {
@@ -243,7 +243,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
             String role = model.getRole();
             WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1b.headline"));
             WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1b.info." + role, model.getQuoteCode()));
-            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             txId = MuSigFormUtils.getTextField(Res.get("muSig.tradeState.info.phase1b.txId"), "", false);
