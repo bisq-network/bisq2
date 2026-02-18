@@ -111,10 +111,16 @@ public class MuSigTakeOfferController extends NavigationController implements In
         boolean isSinglePaymentMethod = baseSidePaymentMethodSpecs.size() == 1 && quoteSidePaymentMethodSpecs.size() == 1;
         Set<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = null;
         if (isSinglePaymentMethod) {
-            PaymentMethod<?> paymentMethod = quoteSidePaymentMethodSpecs.get(0).getPaymentMethod();
-            String quoteCurrencyCode = muSigOffer.getMarket().getQuoteCurrencyCode();
+            boolean isBaseCurrencyBitcoin = muSigOffer.getMarket().isBaseCurrencyBitcoin();
+            PaymentMethodSpec<?> takersPaymentMethodSpec = isBaseCurrencyBitcoin
+                    ? quoteSidePaymentMethodSpecs.get(0)
+                    : baseSidePaymentMethodSpecs.get(0);
+            PaymentMethod<?> paymentMethod = takersPaymentMethodSpec.getPaymentMethod();
+            String paymentMethodCurrencyCode = isBaseCurrencyBitcoin
+                    ? muSigOffer.getMarket().getQuoteCurrencyCode()
+                    : muSigOffer.getMarket().getBaseCurrencyCode();
             accountsForPaymentMethod = accountService.getAccounts(paymentMethod).stream()
-                    .filter(account -> account.getAccountPayload().getSelectedCurrencyCodes().contains(quoteCurrencyCode))
+                    .filter(account -> account.getAccountPayload().getSelectedCurrencyCodes().contains(paymentMethodCurrencyCode))
                     .collect(Collectors.toSet());
             isSingleAccountForSinglePaymentMethod = accountsForPaymentMethod.size() == 1;
         }
@@ -133,8 +139,11 @@ public class MuSigTakeOfferController extends NavigationController implements In
             checkArgument(accountsForPaymentMethod.size() == 1,
                     "In case we have not displayed the payment method screen we expect that there exist " +
                             "only one account for that single payment method.");
+            PaymentMethodSpec<?> takersPaymentMethodSpec = muSigOffer.getMarket().isBaseCurrencyBitcoin()
+                    ? quoteSidePaymentMethodSpecs.get(0)
+                    : baseSidePaymentMethodSpecs.get(0);
             muSigTakeOfferReviewController.setTakersAccount(accountsForPaymentMethod.iterator().next());
-            muSigTakeOfferReviewController.setTakersPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
+            muSigTakeOfferReviewController.setTakersPaymentMethodSpec(takersPaymentMethodSpec);
         }
         model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
     }

@@ -107,7 +107,7 @@ public class MuSigOfferListItem {
         AmountSpec amountSpec = offer.getAmountSpec();
         hasAmountRange = amountSpec instanceof RangeAmountSpec;
         market = offer.getMarket();
-        isBaseAmountBtc = market.getBaseCurrencyCode().equals("BTC");
+        isBaseAmountBtc = market.isBaseCurrencyBitcoin();
         baseAmountAsString = OfferAmountFormatter.formatBaseAmount(marketPriceService, offer, false, false);
         baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
         quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, false);
@@ -129,13 +129,13 @@ public class MuSigOfferListItem {
         deposit = "15%";
 
         paymentMethodsAsString = Joiner.on("\n")
-                .join(offer.getQuoteSidePaymentMethodSpecs()
+                .join((market.isBaseCurrencyBitcoin() ? offer.getQuoteSidePaymentMethodSpecs() : offer.getBaseSidePaymentMethodSpecs())
                         .stream()
                         .map(PaymentMethodSpec::getPaymentMethod)
                         .map(PaymentMethod::getDisplayString)
                         .collect(Collectors.toList()));
-        paymentMethods = retrieveAndSortQuoteSidePaymentMethods();
-        paymentMethodCurrencyCode = market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
+        paymentMethods = market.isBaseCurrencyBitcoin() ? retrieveAndSortQuoteSidePaymentMethods() : retrieveAndSortBaseSidePaymentMethods();
+        paymentMethodCurrencyCode = market.isBaseCurrencyBitcoin() ? market.getQuoteCurrencyCode() : market.getBaseCurrencyCode();
 
         accountAvailableByPaymentMethod = paymentMethods.stream().collect(Collectors.toMap(paymentMethod -> paymentMethod,
                 paymentMethod -> !accountService.getAccounts(paymentMethod).isEmpty()));
@@ -202,6 +202,15 @@ public class MuSigOfferListItem {
                     pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
                     priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
                 });
+    }
+
+    private List<PaymentMethod<?>> retrieveAndSortBaseSidePaymentMethods() {
+        Stream<PaymentMethod<?>> stream = offer.getBaseSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethod);
+        return stream
+                .sorted(Comparator.comparing((PaymentMethod<?> method) -> method.isCustomPaymentMethod())
+                        .thenComparing(PaymentMethod::getDisplayString))
+                .toList();
     }
 
     private List<PaymentMethod<?>> retrieveAndSortQuoteSidePaymentMethods() {

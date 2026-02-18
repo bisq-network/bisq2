@@ -86,7 +86,9 @@ public class MuSigTakeOfferPaymentController implements Controller {
                 ));
         model.getAccountsByPaymentMethod().putAll(accountsByPaymentMethod);
 
-        List<PaymentMethodSpec<?>> offeredPaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
+        List<PaymentMethodSpec<?>> offeredPaymentMethodSpecs = market.isBaseCurrencyBitcoin()
+                ? muSigOffer.getQuoteSidePaymentMethodSpecs()
+                : muSigOffer.getBaseSidePaymentMethodSpecs();
         boolean isSinglePaymentMethod = offeredPaymentMethodSpecs.size() == 1;
         model.setSinglePaymentMethod(isSinglePaymentMethod);
         if (isSinglePaymentMethod) {
