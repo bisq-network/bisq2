@@ -32,6 +32,14 @@ public final class MuSigTradeFormatter {
         return AmountFormatter.formatBaseAmount(MuSigTradeUtils.getBaseSideMonetary(contract));
     }
 
+    public static String formatBaseSideAmountWithCode(MuSigTrade trade) {
+        return formatBaseSideAmountWithCode(trade.getContract());
+    }
+
+    public static String formatBaseSideAmountWithCode(MuSigContract contract) {
+        return AmountFormatter.formatBaseAmountWithCode(MuSigTradeUtils.getBaseSideMonetary(contract));
+    }
+
     public static String formatQuoteSideAmount(MuSigTrade trade) {
         return AmountFormatter.formatQuoteAmount(MuSigTradeUtils.getQuoteSideMonetary(trade));
     }
