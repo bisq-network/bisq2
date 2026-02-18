@@ -45,7 +45,7 @@ public class SplashController implements Controller {
     private final Observable<State> applicationServiceState;
     private final NetworkService networkService;
     private final ServiceProvider serviceProvider;
-    private Pin applicationServiceStatePin;
+    private Pin applicationServiceStatePin, secondTickPin;
 
     public SplashController(Observable<State> applicationServiceState, ServiceProvider serviceProvider) {
         this.applicationServiceState = applicationServiceState;
@@ -77,7 +77,8 @@ public class SplashController implements Controller {
 
         long startTime = System.currentTimeMillis();
         long maxExpectedStartupTime = TimeUnit.SECONDS.toMillis(model.getMaxExpectedStartupTime());
-        UIClock.addOnSecondTickListener(() -> {
+        unbindSecondTickPin();
+        secondTickPin = UIClock.observeSecondTick(() -> {
             double passed = System.currentTimeMillis() - startTime;
             if (passed > maxExpectedStartupTime) {
                 model.getIsSlowStartup().set(true);
@@ -91,6 +92,7 @@ public class SplashController implements Controller {
     @Override
     public void onDeactivate() {
         applicationServiceStatePin.unbind();
+        unbindSecondTickPin();
         model.getBootstrapElementsPerTransports().clear();
         model.getProgress().set(0);
     }
@@ -109,6 +111,13 @@ public class SplashController implements Controller {
         if (Files.exists(torDirPath)) {
             FileMutatorUtils.deleteOnExit(torDirPath);
             serviceProvider.getShutDownHandler().shutdown();
+        }
+    }
+
+    private void unbindSecondTickPin() {
+        if (secondTickPin != null) {
+            secondTickPin.unbind();
+            secondTickPin = null;
         }
     }
 }

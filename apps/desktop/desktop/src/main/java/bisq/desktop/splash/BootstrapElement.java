@@ -89,7 +89,7 @@ public class BootstrapElement {
         private final Set<Pin> pins = new HashSet<>();
         private Node.Listener nodeListener;
         private Node defaultNode;
-        private Runnable onSecondTickHandler;
+        private Pin onSecondTickPin;
 
         private Controller(ServiceProvider serviceProvider,
                            TransportType transportType,
@@ -135,15 +135,15 @@ public class BootstrapElement {
                                                 model.getVisible().set(true);
                                                 model.getInfo().set(Res.get(initializingKey, transportTypeName));
                                                 model.setTimestamp(timestamp);
-                                                applyDurationWhileInitialize();
-                                                onSecondTickHandler = this::applyDurationWhileInitialize;
-                                                UIClock.addOnSecondTickListener(onSecondTickHandler);
+
+                                                unbindOnSecondTickPin();
+                                                onSecondTickPin = UIClock.observeSecondTick(this::applyDurationWhileInitialize);
                                             }
                                             case INITIALIZED -> {
                                                 model.getInitialized().set(true);
                                                 model.getInfo().set(Res.get(initializedKey, transportTypeName));
                                                 applyDurationWhenInitialized();
-                                                UIClock.removeOnSecondTickListener(onSecondTickHandler);
+                                                unbindOnSecondTickPin();
                                             }
                                         }
                                     });
@@ -160,9 +160,9 @@ public class BootstrapElement {
                                             model.getVisible().set(true);
                                             model.getInfo().set(Res.get(transportSpecificInitializingKey, resolveUsername(tag)));
                                             model.setTimestamp(timestamp);
-                                            applyDurationWhileInitialize();
-                                            onSecondTickHandler = this::applyDurationWhileInitialize;
-                                            UIClock.addOnSecondTickListener(onSecondTickHandler);
+
+                                            unbindOnSecondTickPin();
+                                            onSecondTickPin = UIClock.observeSecondTick(this::applyDurationWhileInitialize);
                                         }
                                     });
                                 }));
@@ -173,7 +173,7 @@ public class BootstrapElement {
                                             model.getInitialized().set(true);
                                             model.getInfo().set(Res.get(transportSpecificInitializedKey, resolveUsername(tag)));
                                             applyDurationWhenInitialized();
-                                            UIClock.removeOnSecondTickListener(onSecondTickHandler);
+                                            unbindOnSecondTickPin();
                                         }
                                     });
                                 }));
@@ -193,10 +193,10 @@ public class BootstrapElement {
                                                             model.getInfo().set(Res.get(initializingKey));
                                                             model.setTimestamp(System.currentTimeMillis());
                                                             model.getHighLightInfo().set(Res.get("splash.stateInfo.peergroup.initializing.highLight", setAndGetDuration(), model.getNumConnections()));
-                                                            onSecondTickHandler = () -> updatePeerGroupState(targetNumConnectedPeers, defaultNode);
-                                                            UIClock.addOnSecondTickListener(onSecondTickHandler);
 
-                                                            updatePeerGroupState(targetNumConnectedPeers, defaultNode);
+                                                            unbindOnSecondTickPin();
+                                                            onSecondTickPin = UIClock.observeSecondTick(() -> updatePeerGroupState(targetNumConnectedPeers, defaultNode));
+
                                                             nodeListener = new Node.Listener() {
                                                                 @Override
                                                                 public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
@@ -237,7 +237,7 @@ public class BootstrapElement {
         @Override
         public void onDeactivate() {
             pins.forEach(Pin::unbind);
-            UIClock.removeOnSecondTickListener(onSecondTickHandler);
+            unbindOnSecondTickPin();
             if (defaultNode != null) {
                 defaultNode.removeListener(nodeListener);
             }
@@ -289,6 +289,13 @@ public class BootstrapElement {
                 case I2P -> "i2p-white";
                 default -> "clearnet-white";
             };
+        }
+
+        private void unbindOnSecondTickPin() {
+            if (onSecondTickPin != null) {
+                onSecondTickPin.unbind();
+                onSecondTickPin = null;
+            }
         }
     }
 
