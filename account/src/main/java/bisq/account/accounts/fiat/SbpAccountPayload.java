@@ -24,6 +24,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -41,8 +42,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SbpAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
     public static final int BANK_NAME_MIN_LENGTH = 2;
     public static final int BANK_NAME_MAX_LENGTH = 70;
 
@@ -71,7 +70,7 @@ public final class SbpAccountPayload extends CountryBasedAccountPayload implemen
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         NetworkDataValidation.validateRequiredText(bankName, BANK_NAME_MIN_LENGTH, BANK_NAME_MAX_LENGTH);
         checkArgument(PhoneNumberValidation.isValid(mobileNumber, "RU"));
     }

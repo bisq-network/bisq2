@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.SbpAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.PhoneNumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -34,8 +35,8 @@ public class SbpFormModel extends FormModel {
     private final StringProperty bankName = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            SbpAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            SbpAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final PhoneNumberValidator mobileNumberValidator = new PhoneNumberValidator("RU");
     private final TextMinMaxLengthValidator bankNameValidator = new TextMinMaxLengthValidator(
             SbpAccountPayload.BANK_NAME_MIN_LENGTH,

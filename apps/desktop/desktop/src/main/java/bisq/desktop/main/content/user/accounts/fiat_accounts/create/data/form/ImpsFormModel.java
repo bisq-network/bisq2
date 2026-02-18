@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.ImpsAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.components.controls.validator.fiat.IFSCValidator;
 import javafx.beans.property.BooleanProperty;
@@ -34,8 +35,8 @@ public class ImpsFormModel extends FormModel {
     private final StringProperty ifsc = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            ImpsAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            ImpsAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final TextMinMaxLengthValidator accountNrValidator = new TextMinMaxLengthValidator(
             ImpsAccountPayload.ACCOUNT_NR_MIN_LENGTH,
             ImpsAccountPayload.ACCOUNT_NR_MAX_LENGTH);

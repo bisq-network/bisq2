@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.PixAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -31,8 +32,8 @@ public class PixFormModel extends FormModel {
     private final StringProperty holderName = new SimpleStringProperty();
     private final StringProperty pixKey = new SimpleStringProperty();
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PixAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            PixAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final TextMinMaxLengthValidator pixKeyValidator = new TextMinMaxLengthValidator(PixAccountPayload.PIX_KEY_MIN_LENGTH,
             PixAccountPayload.PIX_KEY_MAX_LENGTH);
 

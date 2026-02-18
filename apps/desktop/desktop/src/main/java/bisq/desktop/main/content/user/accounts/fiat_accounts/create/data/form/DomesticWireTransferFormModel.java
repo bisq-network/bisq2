@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.DomesticWireTransferAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,8 +33,8 @@ public class DomesticWireTransferFormModel extends FormModel {
 
     private final StringProperty holderName = new SimpleStringProperty();
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
 
     private final StringProperty holderAddress = new SimpleStringProperty();
     private final TextMinMaxLengthValidator holderAddressValidator = new TextMinMaxLengthValidator(

@@ -19,8 +19,8 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

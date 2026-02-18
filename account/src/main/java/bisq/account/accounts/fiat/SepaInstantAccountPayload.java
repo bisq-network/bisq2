@@ -98,7 +98,7 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, SepaAccountPayload.HOLDER_NAME_MIN_LENGTH, SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         SepaPaymentAccountValidation.validateSepaIban(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
         SepaPaymentAccountValidation.validateBic(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,

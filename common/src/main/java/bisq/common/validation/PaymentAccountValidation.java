@@ -33,7 +33,7 @@ public class PaymentAccountValidation {
     public static final int ADDRESS_MAX_LENGTH = 120;
 
     public static void validateHolderName(String name) {
-        NetworkDataValidation.validateText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        NetworkDataValidation.validateRequiredText(name, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
     }
 
     public static void validateAddress(String name) {

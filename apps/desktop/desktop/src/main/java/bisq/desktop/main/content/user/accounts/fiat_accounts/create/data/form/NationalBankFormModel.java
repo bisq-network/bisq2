@@ -21,6 +21,7 @@ import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
@@ -56,8 +57,8 @@ public class NationalBankFormModel extends FormModel {
     private final BooleanProperty useValidation = new SimpleBooleanProperty();
 
     private final StringProperty holderName = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
 
     // Optional
     private final StringProperty holderId = new SimpleStringProperty();

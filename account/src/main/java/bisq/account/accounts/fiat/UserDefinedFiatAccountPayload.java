@@ -95,7 +95,6 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
         return FiatCurrencyRepository.getAllFiatCurrencyCodes();
     }
 
-    // Will not be used for account age but add the method for correctness
     @Override
     public Optional<String> getReasonForPaymentString() {
         return Optional.empty();

@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,8 +38,6 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class ImpsAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
     public static final int ACCOUNT_NR_MIN_LENGTH = 1;
     public static final int ACCOUNT_NR_MAX_LENGTH = 50;
     public static final int IFSC_MIN_LENGTH = 1;
@@ -69,7 +68,7 @@ public final class ImpsAccountPayload extends CountryBasedAccountPayload impleme
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         NetworkDataValidation.validateRequiredText(accountNr, ACCOUNT_NR_MIN_LENGTH, ACCOUNT_NR_MAX_LENGTH);
         NetworkDataValidation.validateRequiredText(ifsc, IFSC_MIN_LENGTH, IFSC_MAX_LENGTH);
     }

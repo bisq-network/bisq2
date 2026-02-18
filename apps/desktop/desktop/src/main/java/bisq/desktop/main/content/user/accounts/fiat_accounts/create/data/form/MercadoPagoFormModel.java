@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.MercadoPagoAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,8 +33,8 @@ public class MercadoPagoFormModel extends FormModel {
     private final StringProperty holderId = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            MercadoPagoAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            MercadoPagoAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final TextMinMaxLengthValidator holderIdValidator = new TextMinMaxLengthValidator(
             MercadoPagoAccountPayload.HOLDER_ID_MIN_LENGTH,
             MercadoPagoAccountPayload.HOLDER_ID_MAX_LENGTH);

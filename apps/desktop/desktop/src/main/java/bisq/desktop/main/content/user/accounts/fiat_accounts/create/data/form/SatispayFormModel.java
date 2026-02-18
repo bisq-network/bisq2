@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.SatispayAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.i18n.Res;
@@ -34,8 +35,8 @@ public class SatispayFormModel extends FormModel {
     private final StringProperty mobileNr = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            SatispayAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            SatispayAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final RequiredFieldValidator mobileNrValidator = new RequiredFieldValidator();
 
     public SatispayFormModel(String id) {

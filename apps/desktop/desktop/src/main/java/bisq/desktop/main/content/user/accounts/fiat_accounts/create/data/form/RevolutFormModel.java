@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.RevolutAccountPayload;
 import bisq.common.asset.FiatCurrency;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,8 +40,8 @@ public class RevolutFormModel extends FormModel {
     private final BooleanProperty runValidation = new SimpleBooleanProperty();
     private final StringProperty holderName = new SimpleStringProperty();
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(RevolutAccountPayload.USER_NAME_MIN_LENGTH,
-            RevolutAccountPayload.USER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
 
     public RevolutFormModel(String id, List<FiatCurrency> currencies) {
         super(id);

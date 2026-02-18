@@ -25,7 +25,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
-import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,8 +44,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class SatispayAccountPayload extends AccountPayload<FiatPaymentMethod>
         implements SingleCurrencyAccountPayload {
     public static final String COUNTRY_CODE = "IT";
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
 
     private final String holderName;
     private final String mobileNr;
@@ -66,7 +64,7 @@ public final class SatispayAccountPayload extends AccountPayload<FiatPaymentMeth
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         checkArgument(StringUtils.isNotEmpty(mobileNr), "mobileNr must not be empty");
     }
 

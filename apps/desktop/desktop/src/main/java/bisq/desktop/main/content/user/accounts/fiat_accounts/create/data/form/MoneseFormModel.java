@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.MoneseAccountPayload;
 import bisq.common.asset.FiatCurrency;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -42,8 +43,8 @@ public class MoneseFormModel extends FormModel {
     private final StringProperty mobileNr = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            MoneseAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            MoneseAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final RequiredFieldValidator mobileNrValidator = new RequiredFieldValidator();
 
 

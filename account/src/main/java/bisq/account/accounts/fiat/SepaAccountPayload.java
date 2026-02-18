@@ -45,9 +45,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class SepaAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
-
     private final String holderName;
     private final String iban;
     private final String bic;
@@ -88,7 +85,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         SepaPaymentAccountValidation.validateSepaIban(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
         SepaPaymentAccountValidation.validateBic(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,

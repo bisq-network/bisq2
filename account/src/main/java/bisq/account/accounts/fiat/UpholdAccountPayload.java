@@ -123,7 +123,7 @@ public final class UpholdAccountPayload extends AccountPayload<FiatPaymentMethod
 
     @Override
     public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
+        return Optional.ofNullable(holderName);
     }
 
     @Override

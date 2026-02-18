@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.EmailOrPhoneNumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -33,8 +34,8 @@ public class ZelleFormModel extends FormModel {
     private final StringProperty emailOrMobileNr = new SimpleStringProperty();
 
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(ZelleAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            ZelleAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final EmailOrPhoneNumberValidator emailOrPhoneNumberValidator = new EmailOrPhoneNumberValidator("US");
 
     public ZelleFormModel(String id) {
