@@ -186,6 +186,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
                 : offersQuoteSideMaxOrFixedAmount;
+
         amountSelectionController.setMaxAllowedLimitation(offersQuoteSideMaxOrFixedAmount);
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setMinMaxRange(minRangeValue, maxAmount);
