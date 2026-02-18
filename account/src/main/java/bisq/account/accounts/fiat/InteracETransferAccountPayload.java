@@ -23,6 +23,9 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
+import bisq.common.util.StringUtils;
+import bisq.common.validation.EmailValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @Slf4j
@@ -59,6 +64,16 @@ public final class InteracETransferAccountPayload extends CountryBasedAccountPay
         this.answer = answer;
 
         verify();
+    }
+
+
+    @Override
+    public void verify() {
+        super.verify();
+        PaymentAccountValidation.validateHolderName(holderName);
+        checkArgument(EmailValidation.isValid(email));
+        checkArgument(StringUtils.isNotEmpty(question), "question must not be empty");
+        checkArgument(StringUtils.isNotEmpty(answer), "answer must not be empty");
     }
 
     @Override
