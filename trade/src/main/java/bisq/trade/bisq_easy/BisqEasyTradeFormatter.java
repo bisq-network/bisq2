@@ -19,7 +19,6 @@ package bisq.trade.bisq_easy;
 
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 
@@ -57,14 +56,7 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String getDirectionalTitle(BisqEasyTrade trade) {
-        return getDirection(trade).getDirectionalTitle();
-    }
-
-    public static Direction getDirection(BisqEasyTrade trade) {
-        return switch (trade.getTradeRole()) {
-            case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
-            case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
-        };
+        return trade.getDisplayDirection().getDirectionalTitle();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {

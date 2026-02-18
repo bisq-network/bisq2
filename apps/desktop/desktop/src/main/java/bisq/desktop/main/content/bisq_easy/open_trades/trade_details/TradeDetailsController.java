@@ -92,7 +92,7 @@ public class TradeDetailsController extends NavigationController implements Init
 
         model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
-        model.setOfferType(trade.getOffer().getDirection().isBuy()
+        model.setOfferType(trade.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",

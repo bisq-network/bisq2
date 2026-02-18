@@ -309,7 +309,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
         if (chatMessage instanceof BisqEasyOfferMessage bisqEasyOfferMessage) {
             if (bisqEasyOfferMessage.hasBisqEasyOffer() && bisqEasyOfferMessage.getBisqEasyOffer().isPresent()) {
-                return bisqEasyOfferMessage.getBisqEasyOffer().get().getDirection() == direction;
+                return bisqEasyOfferMessage.getBisqEasyOffer().get().getDisplayDirection() == direction;
             }
         }
         return false;

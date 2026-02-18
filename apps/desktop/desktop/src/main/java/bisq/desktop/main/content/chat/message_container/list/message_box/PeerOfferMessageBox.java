@@ -116,7 +116,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
 
-        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
+        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDisplayDirection() == Direction.BUY;
 
         // Label
         String title = isBuy

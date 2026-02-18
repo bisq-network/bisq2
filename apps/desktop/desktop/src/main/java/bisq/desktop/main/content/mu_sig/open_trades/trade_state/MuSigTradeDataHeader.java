@@ -117,7 +117,8 @@ public class MuSigTradeDataHeader {
                 String baseAmountString = AmountFormatter.formatBaseAmount(baseAmount);
                 Monetary quoteAmount = MuSigTradeUtils.getQuoteSideMonetary(trade);
                 String quoteAmountString = AmountFormatter.formatQuoteAmount(quoteAmount);
-                if (trade.isSeller()) {
+                boolean isSeller = trade.getMarket().isCrypto() ? trade.isBuyer() : trade.isSeller();
+                if (isSeller) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());
                     model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
                     model.getLeftAmount().set(baseAmountString);

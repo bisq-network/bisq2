@@ -19,7 +19,6 @@ package bisq.trade.mu_sig;
 
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 
@@ -65,14 +64,7 @@ public final class MuSigTradeFormatter {
     }
 
     public static String getDirectionalTitle(MuSigTrade trade) {
-        return getDirection(trade).getDirectionalTitle();
-    }
-
-    public static Direction getDirection(MuSigTrade trade) {
-        return switch (trade.getTradeRole()) {
-            case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
-            case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
-        };
+        return trade.getDisplayDirection().getDirectionalTitle();
     }
 
     public static String getMakerTakerRole(MuSigTrade trade) {

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_details;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.common.market.Market;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -28,6 +29,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -83,6 +85,8 @@ public class MuSigTradeDetailsController extends NavigationController implements
         MuSigTrade trade = model.getTrade();
         MuSigOpenTradeChannel channel = model.getChannel();
         MuSigContract contract = trade.getContract();
+        MuSigOffer offer = trade.getOffer();
+        Market market = offer.getMarket();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
@@ -93,19 +97,20 @@ public class MuSigTradeDetailsController extends NavigationController implements
 
         model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), MuSigTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
-        model.setOfferType(trade.getOffer().getDisplayDirection().isBuy()
+
+        model.setOfferType(offer.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
-                trade.getOffer().getMarket().getQuoteCurrencyCode()));
+                market.getQuoteCurrencyCode()));
         model.setFiatAmount(MuSigTradeFormatter.formatQuoteSideAmount(trade));
-        model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
+        model.setFiatCurrency(market.getQuoteCurrencyCode());
         model.setBtcAmount(MuSigTradeFormatter.formatBaseSideAmount(trade));
         model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract)));
-        model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
-        model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
+        model.setPriceCodes(market.getMarketCodes());
+        model.setPriceSpec(offer.getPriceSpec() instanceof FixPriceSpec
                 ? ""
-                : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
+                : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(offer.getPriceSpec(), true)));
         model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
         model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.setTradeId(trade.getId());
