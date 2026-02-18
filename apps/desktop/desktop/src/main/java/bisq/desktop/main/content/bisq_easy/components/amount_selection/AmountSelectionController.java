@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.market.Market;
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -51,6 +51,7 @@ public class AmountSelectionController implements Controller {
     private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 11;
     private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
     private static final Map<Integer, Integer> CHAR_WIDTH_MAP = new HashMap<>();
+
     static {
         CHAR_WIDTH_MAP.put(10, 28);
         CHAR_WIDTH_MAP.put(11, 25);
@@ -231,6 +232,12 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
+        // Ensure the minRangeValue is not larger as maxAmount
+        if(minRangeValue.isGreaterThan(maxRangeValue)){
+            minRangeValue = maxRangeValue;
+            log.warn("minRangeValue was greater than maxRangeValue. We clamp it down to maxRangeValue.");
+        }
+
 //        boolean minRangeValueIsFiat = Asset.isFiat(minRangeValue.getCode());
 //        boolean maxRangeValueIsFiat = Asset.isFiat(maxRangeValue.getCode());
 //        checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
@@ -514,7 +521,8 @@ public class AmountSelectionController implements Controller {
         }
     }
 
-    private int getCount(BigNumberAmountInputBox minSideAmountInput, BigNumberAmountInputBox maxOrFixedSideAmountInput) {
+    private int getCount(BigNumberAmountInputBox minSideAmountInput,
+                         BigNumberAmountInputBox maxOrFixedSideAmountInput) {
         int count = model.getIsRangeAmountEnabled().get()
                 ? minSideAmountInput.getTextInputLength() + maxOrFixedSideAmountInput.getTextInputLength() + 1 // 1 for the dash
                 : maxOrFixedSideAmountInput.getTextInputLength();
@@ -531,10 +539,15 @@ public class AmountSelectionController implements Controller {
         long max = model.getMaxQuoteAllowedLimitation().get() != null
                 ? model.getMaxQuoteAllowedLimitation().get().getValue()
                 : model.getMaxRangeQuoteSideValue().get().getValue();
-        return (double) (amountValue - min) / (max - min);
+        long base = max - min;
+        if (base == 0) {
+            return 0;
+        }
+        return (double) (amountValue - min) / base;
     }
 
-    private void initializeQuoteSideAmount(BigNumberAmountInputBox quoteSideAmountInput, SmallNumberDisplayBox smallNumberDisplayBox) {
+    private void initializeQuoteSideAmount(BigNumberAmountInputBox quoteSideAmountInput,
+                                           SmallNumberDisplayBox smallNumberDisplayBox) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
@@ -688,7 +701,9 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, BigNumberAmountInputBox quoteAmountInput, BigNumberAmountInputBox invertedBaseAmountInput) {
+    private void applySliderValue(double sliderValue,
+                                  BigNumberAmountInputBox quoteAmountInput,
+                                  BigNumberAmountInputBox invertedBaseAmountInput) {
         if (isUsingInvertedBaseAndQuoteCurrencies()) {
             if (model.getMinRangeBaseSideValue().get() != null && model.getMaxRangeBaseSideValue().get() != null) {
                 long min = model.getMinRangeBaseSideValue().get().getValue();
