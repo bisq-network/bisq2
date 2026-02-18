@@ -59,7 +59,7 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
     protected void addRestrictions(R fiatPaymentRail) {
         String restrictions = Res.get("paymentAccounts.summary.tradeLimit", fiatPaymentRail.getTradeLimit()) + " / " +
-                Res.get("paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration());
+                Res.get("paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration().getDisplayString());
         addDescriptionAndValue(Res.get("paymentAccounts.restrictions"), restrictions);
     }
 

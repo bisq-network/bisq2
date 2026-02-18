@@ -17,6 +17,8 @@
 
 package bisq.desktop.common.threading;
 
+import bisq.common.observable.Pin;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -49,19 +51,25 @@ public class UIClock {
         onMinuteTickListeners.clear();
     }
 
-    public static void addOnSecondTickListener(Runnable listener) {
+    public static Pin addOnSecondTickListener(Runnable listener) {
         onSecondTickListeners.add(listener);
+        listener.run();
+        return () -> removeOnSecondTickListener(listener);
     }
+
 
     public static void removeOnSecondTickListener(Runnable listener) {
         onSecondTickListeners.remove(listener);
     }
 
-    public static void addOnMinuteTickListener(Runnable listener) {
+    public static Pin addOnMinuteTickListener(Runnable listener) {
         onMinuteTickListeners.add(listener);
+        listener.run();
+        return () -> removeOnMinuteTickListener(listener);
     }
 
     public static void removeOnMinuteTickListener(Runnable listener) {
         onMinuteTickListeners.remove(listener);
+
     }
 }

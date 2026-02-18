@@ -28,8 +28,5 @@ public interface PaymentRail {
         return "10000 USD";
     }
 
-    //todo
-    default String getTradeDuration() {
-        return "24 hours";
-    }
+    TradeDuration getTradeDuration();
 }
