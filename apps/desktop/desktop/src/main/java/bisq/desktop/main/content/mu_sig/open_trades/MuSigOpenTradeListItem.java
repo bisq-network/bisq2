@@ -26,6 +26,7 @@ import bisq.common.observable.Pin;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
@@ -51,8 +52,8 @@ class MuSigOpenTradeListItem implements DateTableItem {
 
     private final UserProfile myUserProfile, peersUserProfile;
     private final String offerId, tradeId, shortTradeId, myUserName, directionalTitle, peersUserName, dateString, timeString,
-            market, priceString, baseAmountString, quoteAmountString, myRole, paymentMethodDisplayName;
-    private final long date, price, baseAmount, quoteAmount;
+            market, priceString, btcAmountString, nonBtcAmountString, myRole, paymentMethodDisplayName;
+    private final long date, price, btcAmount, nonBtcAmount;
     private final ChatNotificationService chatNotificationService;
     private final ReputationScore reputationScore;
     private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
@@ -91,14 +92,22 @@ class MuSigOpenTradeListItem implements DateTableItem {
         market = trade.getOffer().getMarket().toString();
         price = MuSigTradeUtils.getPriceQuote(trade).getValue();
         priceString = MuSigTradeFormatter.formatPriceWithCode(trade);
-        baseAmount = contract.getBaseSideAmount();
-        baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(trade);
-        quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
+        boolean isBaseCurrencyBitcoin = trade.getOffer().getMarket().isBaseCurrencyBitcoin();
+        btcAmount = isBaseCurrencyBitcoin ? contract.getBaseSideAmount() : contract.getQuoteSideAmount();
+        btcAmountString = isBaseCurrencyBitcoin ? MuSigTradeFormatter.formatBaseSideAmount(trade) : MuSigTradeFormatter.formatQuoteSideAmount(trade);
+        nonBtcAmount = isBaseCurrencyBitcoin ? contract.getQuoteSideAmount() : contract.getBaseSideAmount();
+        nonBtcAmountString = AmountFormatter.formatAmountWithCode(
+                isBaseCurrencyBitcoin ? MuSigTradeUtils.getQuoteSideMonetary(trade) : MuSigTradeUtils.getBaseSideMonetary(trade),
+                true
+        );
         basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         quotePaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        paymentMethodDisplayName = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-        paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
+        paymentMethodDisplayName = isBaseCurrencyBitcoin
+                ? contract.getQuoteSidePaymentMethodSpec().getShortDisplayString()
+                : contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
+        paymentMethod = isBaseCurrencyBitcoin
+                ? contract.getQuoteSidePaymentMethodSpec().getPaymentMethod()
+                : contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
 
         myRole = MuSigTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);

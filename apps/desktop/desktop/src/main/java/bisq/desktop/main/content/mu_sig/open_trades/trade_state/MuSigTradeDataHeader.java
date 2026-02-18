@@ -20,8 +20,6 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.asset.Asset;
 import bisq.common.data.Triple;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
@@ -30,6 +28,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -114,11 +113,9 @@ public class MuSigTradeDataHeader {
                 model.getPeersUserProfile().set(peerUserProfile);
                 model.getTradeId().set(trade.getShortId());
 
-                long baseSideAmount = trade.getContract().getBaseSideAmount();
-                long quoteSideAmount = trade.getContract().getQuoteSideAmount();
-                Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
+                Monetary baseAmount = MuSigTradeUtils.getBaseSideMonetary(trade);
                 String baseAmountString = AmountFormatter.formatBaseAmount(baseAmount);
-                Monetary quoteAmount = Fiat.from(quoteSideAmount, trade.getOffer().getMarket().getQuoteCurrencyCode());
+                Monetary quoteAmount = MuSigTradeUtils.getQuoteSideMonetary(trade);
                 String quoteAmountString = AmountFormatter.formatQuoteAmount(quoteAmount);
                 if (trade.isSeller()) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());

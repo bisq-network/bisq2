@@ -43,4 +43,28 @@ public class AmountFormatterTest {
         usd = Fiat.fromFaceValue(51234.56, "USD");
         assertEquals("51234.5600", AmountFormatter.formatAmount(usd, Locale.US, false));
     }
+
+    @Test
+    void formatBaseAndQuoteAmountUseMonetaryTypePrecision() {
+        Coin btc = Coin.asBtcFromFaceValue(1.12345678);
+        Fiat usd = Fiat.fromFaceValue(1234.5678, "USD");
+
+        assertEquals(AmountFormatter.formatAmount(btc, false), AmountFormatter.formatBaseAmount(btc));
+        assertEquals(AmountFormatter.formatAmount(btc, false), AmountFormatter.formatQuoteAmount(btc));
+
+        assertEquals(AmountFormatter.formatAmount(usd, true), AmountFormatter.formatBaseAmount(usd));
+        assertEquals(AmountFormatter.formatAmount(usd, true), AmountFormatter.formatQuoteAmount(usd));
+    }
+
+    @Test
+    void formatBaseAndQuoteAmountWithCodeUseMonetaryTypePrecision() {
+        Coin btc = Coin.asBtcFromFaceValue(1.12345678);
+        Fiat usd = Fiat.fromFaceValue(1234.5678, "USD");
+
+        assertEquals(AmountFormatter.formatAmountWithCode(btc, false), AmountFormatter.formatBaseAmountWithCode(btc));
+        assertEquals(AmountFormatter.formatAmountWithCode(btc, false), AmountFormatter.formatQuoteAmountWithCode(btc));
+
+        assertEquals(AmountFormatter.formatAmountWithCode(usd, true), AmountFormatter.formatBaseAmountWithCode(usd));
+        assertEquals(AmountFormatter.formatAmountWithCode(usd, true), AmountFormatter.formatQuoteAmountWithCode(usd));
+    }
 }

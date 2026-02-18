@@ -4,8 +4,7 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileMutatorUtils;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -13,6 +12,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
@@ -27,20 +27,19 @@ public class MuSigOpenTradesUtils {
     public static void exportTrade(MuSigTrade trade, Scene scene) {
         try {
             String tradeId = trade.getId();
-            String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
             MuSigContract contract = trade.getContract();
-            long baseSideAmount = contract.getBaseSideAmount();
-            long quoteSideAmount = contract.getQuoteSideAmount();
-            String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
-            String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+            Monetary baseSideMonetary = MuSigTradeUtils.getBaseSideMonetary(contract);
+            Monetary quoteSideMonetary = MuSigTradeUtils.getQuoteSideMonetary(contract);
+            String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(baseSideMonetary);
+            String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(quoteSideMonetary);
             String paymentProof = Optional.ofNullable(trade.getDepositTxId()).orElseGet(() -> Res.get("data.na"));
-            String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
-            String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
-            String paymentMethod = bitcoinMethod + " / " + fiatMethod;
+            String baseSideMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
+            String quoteSideMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
+            String paymentMethod = baseSideMethod + " / " + quoteSideMethod;
             List<String> headers = List.of(
                     Res.get("bisqEasy.openTrades.table.tradeId"),
-                    Res.get("bisqEasy.openTrades.table.baseAmount"),
-                    Res.get("bisqEasy.openTrades.csv.quoteAmount", quoteCurrencyCode),
+                    Res.get("muSig.openTrades.csv.amount", baseSideMonetary.getCode()),
+                    Res.get("muSig.openTrades.csv.amount", quoteSideMonetary.getCode()),
                     Res.get("bisqEasy.openTrades.csv.txIdOrPreimage"),
                     Res.get("bisqEasy.openTrades.csv.paymentMethod")
             );
@@ -54,7 +53,7 @@ public class MuSigOpenTradesUtils {
                     )
             );
             String csv = Csv.toCsv(headers, tradeData);
-            String initialFileName = "BisqEasy-trade-" + trade.getShortId() + ".csv";
+            String initialFileName = "MuSig-trade-" + trade.getShortId() + ".csv";
             FileChooserUtil.saveFile(scene, initialFileName)
                     .ifPresent(file -> {
                         try {

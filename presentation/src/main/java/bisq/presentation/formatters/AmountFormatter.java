@@ -19,6 +19,7 @@ package bisq.presentation.formatters;
 
 import bisq.common.formatter.DecimalFormatter;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,20 +69,28 @@ public class AmountFormatter {
 
     // Base amount
     public static String formatBaseAmount(Monetary amount) {
-        return formatAmount(amount, false);
+        return formatAmountByMonetaryType(amount);
     }
 
     public static String formatBaseAmountWithCode(Monetary amount) {
-        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), false);
+        return formatAmountWithCodeByMonetaryType(amount);
     }
 
     // Quote amount
     public static String formatQuoteAmount(Monetary amount) {
-        return formatAmount(amount, true);
+        return formatAmountByMonetaryType(amount);
     }
 
     public static String formatQuoteAmountWithCode(Monetary amount) {
-        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), true);
+        return formatAmountWithCodeByMonetaryType(amount);
+    }
+
+    private static String formatAmountByMonetaryType(Monetary amount) {
+        return formatAmount(amount, amount instanceof Fiat);
+    }
+
+    private static String formatAmountWithCodeByMonetaryType(Monetary amount) {
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), amount instanceof Fiat);
     }
 
     public static String formatWithDecimalGroups(Monetary amount, Locale locale, boolean useLowPrecision) {

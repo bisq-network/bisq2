@@ -23,15 +23,13 @@ import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
 import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Pos;
@@ -78,13 +76,11 @@ public abstract class BaseState {
 
         @Override
         public void onActivate() {
-            MuSigOffer muSigOffer = model.getMuSigOffer();
-            long baseSideAmount = model.getTrade().getContract().getBaseSideAmount();
-            long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
-            model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
-            model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
-            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, muSigOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, muSigOffer.getMarket().getQuoteCurrencyCode())));
+            MuSigTrade trade = model.getTrade();
+            model.setBaseAmount(MuSigTradeFormatter.formatBaseSideAmount(trade));
+            model.setFormattedBaseAmount(MuSigTradeFormatter.formatBaseSideAmountWithCode(trade));
+            model.setQuoteAmount(MuSigTradeFormatter.formatQuoteSideAmount(trade));
+            model.setFormattedQuoteAmount(MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade));
         }
 
         @Override

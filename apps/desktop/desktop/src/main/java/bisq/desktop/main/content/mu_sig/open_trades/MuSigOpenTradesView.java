@@ -355,15 +355,15 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
                 .tooltipSupplier(MuSigOpenTradeListItem::getTradeId)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
+                .title(Res.get("muSig.openTrades.table.nonBtcAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getQuoteAmount))
-                .valueSupplier(MuSigOpenTradeListItem::getQuoteAmountString)
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getNonBtcAmount))
+                .valueSupplier(MuSigOpenTradeListItem::getNonBtcAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
+                .title(Res.get("muSig.openTrades.table.btcAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getBaseAmount))
+                .comparator(Comparator.comparing(MuSigOpenTradeListItem::getBtcAmount))
                 .setCellFactory(getBaseCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigOpenTradeListItem>()
@@ -404,7 +404,7 @@ public final class MuSigOpenTradesView extends ChatView<MuSigOpenTradesView, MuS
 
                 if (item != null && !empty) {
                     bitcoinAmountDisplay.applySmallCompactConfig();
-                    bitcoinAmountDisplay.setBtcAmount(item.getBaseAmountString());
+                    bitcoinAmountDisplay.setBtcAmount(item.getBtcAmountString());
                     setGraphic(bitcoinAmountDisplay);
                 } else {
                     setGraphic(null);
