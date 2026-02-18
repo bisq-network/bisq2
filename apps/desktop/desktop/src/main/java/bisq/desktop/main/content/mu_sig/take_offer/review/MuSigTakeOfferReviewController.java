@@ -296,12 +296,18 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     @Override
     public void onActivate() {
+        MuSigOffer muSigOffer = model.getMuSigOffer();
+        Market market = muSigOffer.getMarket();
+
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
         String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
-        Direction takersDirection = model.getMuSigOffer().getTakersDirection();
+        // Takers direction is mirroring the offer direction
+        // getDisplayDirection provided correct direction for fiat/crypto
+        Direction takersDirection = muSigOffer.getDisplayDirection().mirror();
+
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -326,7 +332,7 @@ public class MuSigTakeOfferReviewController implements Controller {
 
         String directionString = String.format("%s %s",
                 Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
-                model.getMuSigOffer().getMarket().getBaseCurrencyDisplayName());
+                market.getBaseCurrencyDisplayName());
 
         muSigReviewDataDisplay.setDirection(directionString);
         muSigReviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
@@ -338,7 +344,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         muSigReviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());
         muSigReviewDataDisplay.setPrice(model.getPrice());
         muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
-        muSigReviewDataDisplay.setIsCryptoMarket(model.getMuSigOffer().getMarket().isCrypto());
+        muSigReviewDataDisplay.setIsCryptoMarket(market.isCrypto());
     }
 
     @Override

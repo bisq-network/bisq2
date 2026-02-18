@@ -73,7 +73,7 @@ public class MuSigTakeOfferPaymentController implements Controller {
         Market market = muSigOffer.getMarket();
         model.setMarket(market);
         model.setPaymentMethodCurrencyCode(market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode());
-        model.setDirection(muSigOffer.getDirection());
+        model.setDirection(muSigOffer.getDisplayDirection());
         model.setHeadline(getPaymentMethodsHeadline(muSigOffer.getTakersDirection().isBuy()));
 
         Map<? extends PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = accountService.getAccounts().stream()

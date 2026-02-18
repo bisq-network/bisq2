@@ -169,8 +169,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         // We use static values for both traders of 25%
         offerOptions.add(new CollateralOption(model.getSecurityDepositAsPercent(), model.getSecurityDepositAsPercent()));
 
+        Direction bitcoinSideDirection = market.isCrypto() ? direction.mirror() : direction;
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
-                direction,
+                bitcoinSideDirection,
                 market,
                 amountSpec,
                 priceSpec,
@@ -343,8 +344,8 @@ public class MuSigCreateOfferReviewController implements Controller {
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
 
-        Direction direction = model.getOffer().getDirection();
-        if (direction.isSell()) {
+        Direction displayDirection = model.getOffer().getDisplayDirection();
+        if (displayDirection.isSell()) {
             model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
             model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
         } else {

@@ -116,11 +116,12 @@ public class MuSigOfferListItem {
                 OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, offer, false),
                 OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, offer, false));
 
-        takeOfferButtonText = offer.getDirection().isBuy()
+        Direction displayDirection = offer.getDisplayDirection();
+        takeOfferButtonText = displayDirection.isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell", market.getBaseCurrencyName())
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy", market.getBaseCurrencyName());
-        direction = offer.getDirection();
-        offerIntentText = offer.getDirection().isBuy()
+        direction = displayDirection;
+        offerIntentText = displayDirection.isBuy()
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
         offerId = offer.getShortId().toUpperCase(Locale.ROOT);
@@ -169,7 +170,7 @@ public class MuSigOfferListItem {
 
         // authorUserProfileId = offerbookMessage.getAuthorUserProfileId();
 
-        String offerType = offer.getDirection().isBuy()
+        String offerType = displayDirection.isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 
