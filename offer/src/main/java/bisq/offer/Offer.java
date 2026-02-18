@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.market.Market;
@@ -29,7 +30,6 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.OfferOption;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -183,6 +183,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
 
     public Direction getTakersDirection() {
         return direction.mirror();
+    }
+
+    public Direction getDisplayDirection() {
+        return market.isCrypto() ? direction.mirror() : direction;
     }
 
     public boolean hasAmountRange() {
