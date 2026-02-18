@@ -17,6 +17,8 @@
 
 package bisq.account.payment_method;
 
+import bisq.i18n.Res;
+
 public enum BitcoinPaymentRail implements PaymentRail {
     CUSTOM,             // Custom defined payment rail by the user
     MAIN_CHAIN,         // Native BTC

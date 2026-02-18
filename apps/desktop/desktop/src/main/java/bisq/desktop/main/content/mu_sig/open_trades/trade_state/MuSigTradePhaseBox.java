@@ -98,7 +98,7 @@ class MuSigTradePhaseBox {
         private final View view;
         private final MuSigMediationRequestService muSigMediationRequestService;
         private final MuSigOpenTradeChannelService channelService;
-        private Pin muSigTradeStatePin, isInMediationPin, onSecondTickPin;
+        private Pin muSigTradeStatePin, isInMediationPin, secondTickPin;
 
         private Controller(ServiceProvider serviceProvider) {
             muSigMediationRequestService = serviceProvider.getSupportService().getMuSigMediationRequestService();
@@ -137,11 +137,8 @@ class MuSigTradePhaseBox {
             model.getMaxPeriod().set(Res.get("muSig.tradeState.maxPeriod", tradeDuration.getDisplayString()));
 
             long maxTradeDurationTime = tradeDuration.getTime();
-
-            if (onSecondTickPin != null) {
-                onSecondTickPin.unbind();
-            }
-            onSecondTickPin = UIClock.addOnSecondTickListener(() ->
+            unbindSecondTickPin();
+            secondTickPin = UIClock.observeSecondTick(() ->
                     applyRemainingTime(trade.getTradeStartedDate(), maxTradeDurationTime));
 
             model.getPhase1Info().set(Res.get("muSig.tradeState.phase1").toUpperCase());
@@ -216,12 +213,8 @@ class MuSigTradePhaseBox {
                 muSigTradeStatePin.unbind();
                 muSigTradeStatePin = null;
             }
-            if (onSecondTickPin != null) {
-                onSecondTickPin.unbind();
-                onSecondTickPin = null;
-            }
+            unbindSecondTickPin();
         }
-
 
         void onOpenTradeGuide() {
             Navigation.navigateTo(NavigationTarget.MU_SIG_GUIDE);
@@ -231,6 +224,13 @@ class MuSigTradePhaseBox {
             MuSigOpenTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getTrade().getContract(),
                     muSigMediationRequestService, channelService);
+        }
+
+        private void unbindSecondTickPin() {
+            if (secondTickPin != null) {
+                secondTickPin.unbind();
+                secondTickPin = null;
+            }
         }
     }
 

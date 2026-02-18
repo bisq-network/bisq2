@@ -54,8 +54,8 @@ public class BisqConnectController implements Controller {
     private final Set<Pin> pins = new HashSet<>();
     private final DontShowAgainService dontShowAgainService;
     private final ApiService apiService;
-    private Runnable expiredPairingQrCodeListener;
     private Subscription onionAddressSubscription;
+    private Pin secondTickPin;
 
     public BisqConnectController(ServiceProvider serviceProvider) {
         apiService = serviceProvider.getApiService();
@@ -104,10 +104,7 @@ public class BisqConnectController implements Controller {
         if (onionAddressSubscription != null) {
             onionAddressSubscription.unsubscribe();
         }
-        if (expiredPairingQrCodeListener != null) {
-            UIClock.removeOnSecondTickListener(expiredPairingQrCodeListener);
-            expiredPairingQrCodeListener = null;
-        }
+        unbindSecondTickPin();
     }
 
     void onReCreatePairingQrCode() {
@@ -123,11 +120,9 @@ public class BisqConnectController implements Controller {
     }
 
     private void applyPairingCode(PairingCode pairingCode) {
+        unbindSecondTickPin();
         if (pairingCode != null) {
-            if (expiredPairingQrCodeListener != null) {
-                UIClock.removeOnSecondTickListener(expiredPairingQrCodeListener);
-            }
-            expiredPairingQrCodeListener = () -> {
+            secondTickPin = UIClock.observeSecondTick(() -> {
                 long remainingTime = Math.max(0, pairingCode.getExpiresAt().toEpochMilli() - Instant.now().toEpochMilli());
                 double remaining = remainingTime / (1000d * pairingService.getPairingCodeTtlInSeconds());
                 double progress = Math.min(1, 1 - remaining);
@@ -138,9 +133,7 @@ public class BisqConnectController implements Controller {
                         ? Res.get("settings.bisqConnect.qrCode.expired")
                         : Res.get("settings.bisqConnect.qrCode.expiresIn", formattedRemainingTime));
                 model.getPairingCodeExpired().set(isExpired);
-            };
-
-            UIClock.addOnSecondTickListener(expiredPairingQrCodeListener);
+            });
         }
     }
 
@@ -162,6 +155,13 @@ public class BisqConnectController implements Controller {
             model.getIsPairingVisible().set(false);
             model.getQrCode().set(null);
             model.getQrCodeImage().set(null);
+        }
+    }
+
+    private void unbindSecondTickPin() {
+        if (secondTickPin != null) {
+            secondTickPin.unbind();
+            secondTickPin = null;
         }
     }
 }

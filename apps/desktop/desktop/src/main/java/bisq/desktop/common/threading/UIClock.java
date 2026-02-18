@@ -18,13 +18,15 @@
 package bisq.desktop.common.threading;
 
 import bisq.common.observable.Pin;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Slf4j
 public class UIClock {
-    private static final List<Runnable> onSecondTickListeners = new CopyOnWriteArrayList<>();
-    private static final List<Runnable> onMinuteTickListeners = new CopyOnWriteArrayList<>();
+    private static final List<Runnable> onSecondTickObservers = new CopyOnWriteArrayList<>();
+    private static final List<Runnable> onMinuteTickObservers = new CopyOnWriteArrayList<>();
     private static UIScheduler scheduler;
     private static int secondTicks;
 
@@ -36,9 +38,9 @@ public class UIClock {
             secondTicks++;
             if (secondTicks == 60) {
                 secondTicks = 0;
-                onMinuteTickListeners.forEach(Runnable::run);
+                onMinuteTickObservers.forEach(Runnable::run);
             }
-            onSecondTickListeners.forEach(Runnable::run);
+            onSecondTickObservers.forEach(Runnable::run);
         }).periodically(1000);
     }
 
@@ -47,29 +49,19 @@ public class UIClock {
             scheduler.stop();
             scheduler = null;
         }
-        onSecondTickListeners.clear();
-        onMinuteTickListeners.clear();
+        onSecondTickObservers.clear();
+        onMinuteTickObservers.clear();
     }
 
-    public static Pin addOnSecondTickListener(Runnable listener) {
-        onSecondTickListeners.add(listener);
-        listener.run();
-        return () -> removeOnSecondTickListener(listener);
+    public static Pin observeSecondTick(Runnable observer) {
+        observer.run();
+        onSecondTickObservers.add(observer);
+        return () -> onSecondTickObservers.remove(observer);
     }
 
-
-    public static void removeOnSecondTickListener(Runnable listener) {
-        onSecondTickListeners.remove(listener);
-    }
-
-    public static Pin addOnMinuteTickListener(Runnable listener) {
-        onMinuteTickListeners.add(listener);
-        listener.run();
-        return () -> removeOnMinuteTickListener(listener);
-    }
-
-    public static void removeOnMinuteTickListener(Runnable listener) {
-        onMinuteTickListeners.remove(listener);
-
+    public static Pin observeMinuteTick(Runnable observer) {
+        observer.run();
+        onMinuteTickObservers.add(observer);
+        return () -> onMinuteTickObservers.remove(observer);
     }
 }
