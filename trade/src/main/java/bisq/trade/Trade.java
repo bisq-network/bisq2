@@ -24,6 +24,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
+import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -315,6 +316,14 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
             // tradeRole == TradeRole.SELLER_AS_MAKER
             return maker;
         }
+    }
+
+    public Direction getDisplayDirection() {
+        boolean isCrypto = getOffer().getMarket().isCrypto();
+        return switch (tradeRole) {
+            case BUYER_AS_TAKER, BUYER_AS_MAKER -> isCrypto ? Direction.SELL : Direction.BUY;
+            case SELLER_AS_TAKER, SELLER_AS_MAKER -> isCrypto ? Direction.BUY : Direction.SELL;
+        };
     }
 
     public String getShortId() {
