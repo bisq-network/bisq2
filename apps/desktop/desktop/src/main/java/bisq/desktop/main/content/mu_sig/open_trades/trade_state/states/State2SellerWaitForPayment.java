@@ -20,8 +20,8 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingState;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
@@ -33,7 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 public class State2SellerWaitForPayment extends BaseState {
     private final Controller controller;
 
-    public State2SellerWaitForPayment(ServiceProvider serviceProvider, MuSigTrade trade, MuSigOpenTradeChannel channel) {
+    public State2SellerWaitForPayment(ServiceProvider serviceProvider,
+                                      MuSigTrade trade,
+                                      MuSigOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, trade, channel);
     }
 
@@ -76,12 +78,12 @@ public class State2SellerWaitForPayment extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
         private final WrappingText headline, info;
-        private final WaitingAnimation waitingAnimation;
+        private final MuSigWaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);

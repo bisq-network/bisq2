@@ -24,9 +24,9 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
+import bisq.desktop.main.content.mu_sig.components.MuSigWaitingState;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,11 +47,11 @@ public class MuSigTradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
     @Getter
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
-    private final WaitingAnimation waitingAnimation;
+    private final MuSigWaitingAnimation waitingAnimation;
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
 
     public MuSigTradeCompletedTable() {
-        waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
+        waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.TRADE_COMPLETED);
 
         WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeCompleted.title"));
         WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeCompleted.info"));
@@ -268,7 +268,7 @@ public class MuSigTradeCompletedTable extends VBox {
         return line;
     }
 
-    private HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
+    private HBox createWaitingInfo(MuSigWaitingAnimation animation, WrappingText headline, WrappingText info) {
         animation.setAlignment(Pos.CENTER);
         VBox textBox = new VBox(10, headline, info);
         return new HBox(20, animation, textBox);
