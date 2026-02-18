@@ -56,8 +56,8 @@ public class SignedWitnessScoreSimulation {
             model = new Model();
             view = new View(model, this);
 
-            model.getAge().set(0);
-            model.getAgeAsString().set("0");
+            model.getAge().set((int) SignedWitnessService.MIN_DAYS_AGE_SCORE);
+            model.getAgeAsString().set(String.valueOf(SignedWitnessService.MIN_DAYS_AGE_SCORE));
         }
 
         @Override
@@ -83,7 +83,7 @@ public class SignedWitnessScoreSimulation {
 
         private String calculateSimScore(Number age) {
             try {
-                long ageInDays = Math.max(0, age.intValue());
+                long ageInDays = Math.max(SignedWitnessService.MIN_DAYS_AGE_SCORE, age.longValue());
                 long totalScore = SignedWitnessService.doCalculateScore(ageInDays);
                 return String.valueOf(totalScore);
             } catch (Exception e) {
@@ -113,7 +113,7 @@ public class SignedWitnessScoreSimulation {
             Label simHeadline = new Label(Res.get("reputation.sim.headline"));
             simHeadline.getStyleClass().addAll("bisq-text-1");
             ageField = getInputField("reputation.sim.age");
-            simAgeSlider = new AgeSlider(0, (int) SignedWitnessService.MAX_DAYS_AGE_SCORE, 0);
+            simAgeSlider = new AgeSlider((int) SignedWitnessService.MIN_DAYS_AGE_SCORE, (int) SignedWitnessService.MAX_DAYS_AGE_SCORE, (int) SignedWitnessService.MIN_DAYS_AGE_SCORE);
             simScore = getField(Res.get("reputation.sim.score"));
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,
