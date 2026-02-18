@@ -119,7 +119,7 @@ public final class MuSigTradeParty extends TradeParty {
                 muSigTradePartyProto.hasPeersPubKeyShares()
                         ? Optional.of(PubKeyShares.fromProto(muSigTradePartyProto.getPeersPubKeyShares()))
                         : Optional.empty(),
-muSigTradePartyProto.hasMyNonceSharesMessage()
+                muSigTradePartyProto.hasMyNonceSharesMessage()
                         ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getMyNonceSharesMessage()))
                         : Optional.empty(),
                 muSigTradePartyProto.hasPeersNonceShares()

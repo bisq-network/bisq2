@@ -55,7 +55,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
 
-
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
                       boolean isTaker,

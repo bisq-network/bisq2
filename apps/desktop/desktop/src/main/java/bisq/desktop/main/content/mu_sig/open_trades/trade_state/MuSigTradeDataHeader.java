@@ -43,6 +43,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -203,10 +204,14 @@ public class MuSigTradeDataHeader {
             rightAmount = getAmountElements();
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
 
-            direction.getThird().setTranslateY(8);
-            leftAmount.getThird().setTranslateY(8);
-            rightAmount.getThird().setTranslateY(8);
-            tradeId.getThird().setTranslateY(8);
+            VBox directionVBox = direction.getThird();
+            directionVBox.setTranslateY(8);
+            VBox leftAmountVBox = leftAmount.getThird();
+            leftAmountVBox.setTranslateY(8);
+            VBox rightAmountVBox = rightAmount.getThird();
+            rightAmountVBox.setTranslateY(8);
+            VBox tradeIdVBox = tradeId.getThird();
+            tradeIdVBox.setTranslateY(8);
 
             StackPane leftAmountPane = (StackPane) leftAmount.getFirst().getSecond();
             leftBitcoinAmountDisplay = (BitcoinAmountDisplay) leftAmountPane.getChildren().get(0);
@@ -216,11 +221,16 @@ public class MuSigTradeDataHeader {
             rightBitcoinAmountDisplay = (BitcoinAmountDisplay) rightAmountPane.getChildren().get(0);
             configureBitcoinAmountDisplay(rightBitcoinAmountDisplay);
 
+            HBox.setHgrow(peerVBox, Priority.ALWAYS);
+            HBox.setHgrow(directionVBox, Priority.ALWAYS);
+            HBox.setHgrow(leftAmountVBox, Priority.ALWAYS);
+            HBox.setHgrow(rightAmountVBox, Priority.ALWAYS);
+            HBox.setHgrow(tradeIdVBox, Priority.SOMETIMES);
             root.getChildren().addAll(peerVBox,
-                    direction.getThird(),
-                    leftAmount.getThird(),
-                    rightAmount.getThird(),
-                    tradeId.getThird());
+                    directionVBox,
+                    leftAmountVBox,
+                    rightAmountVBox,
+                    tradeIdVBox);
         }
 
         @Override

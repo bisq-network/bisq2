@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.FasterPaymentsAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextFixLengthValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
@@ -35,8 +36,8 @@ public class FasterPaymentsFormModel extends FormModel {
     private final StringProperty sortCode = new SimpleStringProperty();
     private final StringProperty accountNr = new SimpleStringProperty();
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(FasterPaymentsAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            FasterPaymentsAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final TextFixLengthValidator sortCodeValidator = new TextFixLengthValidator(Res.get("validation.fasterPayments.sortCode"), 6);
     private final TextFixLengthValidator accountNrValidator = new TextFixLengthValidator(Res.get("validation.fasterPayments.accountNr"), 8);
     private final NumberValidator sortCodeNumberValidator = new NumberValidator(Res.get("validation.fasterPayments.sortCode"));

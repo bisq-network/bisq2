@@ -39,8 +39,6 @@ import java.util.Optional;
 @ToString
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
     public static final int HOLDER_ID_MIN_LENGTH = 2;
     public static final int HOLDER_ID_MAX_LENGTH = 50;
     public static final int BANK_NAME_MIN_LENGTH = 2;
@@ -94,8 +92,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         super.verify();
 
         PaymentAccountValidation.validateCurrencyCode(selectedCurrencyCode);
-        holderName.ifPresent(holderName -> NetworkDataValidation.validateRequiredText(holderName,
-                HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH));
+        holderName.ifPresent(PaymentAccountValidation::validateHolderName);
         holderId.ifPresent(holderId -> NetworkDataValidation.validateRequiredText(holderId,
                 HOLDER_ID_MIN_LENGTH, HOLDER_ID_MAX_LENGTH));
         bankName.ifPresent(bankName -> NetworkDataValidation.validateRequiredText(bankName,
@@ -186,5 +183,13 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                 holderIdValue +
                 nationalAccountIdValue;
         return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return holderName
+                .or(() -> holderId)
+                .or(() -> nationalAccountId)
+                .or(() -> Optional.of(accountNr));
     }
 }

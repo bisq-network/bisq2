@@ -21,6 +21,8 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -30,8 +32,6 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -147,14 +147,15 @@ public class MuSigTakeOfferPaymentController implements Controller {
                 updateShouldShowNoAccountOverlay(true);
             }
         });
-        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(), paymentMethod -> {
-            if (paymentMethod != null) {
-                model.getMultipleAccountsOverlayHeadlineText().set(
-                        Res.get("muSig.takeOffer.paymentMethod.multipleAccountOverlay.title",
-                                paymentMethod.getShortDisplayString()));
-                updateShouldShowMultipleAccountsOverlay(true);
-            }
-        });
+        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(),
+                paymentMethod -> {
+                    if (paymentMethod != null) {
+                        model.getMultipleAccountsOverlayHeadlineText().set(
+                                Res.get("muSig.takeOffer.paymentMethod.multipleAccountOverlay.title",
+                                        paymentMethod.getShortDisplayString()));
+                        updateShouldShowMultipleAccountsOverlay(true);
+                    }
+                });
     }
 
     @Override
@@ -231,17 +232,20 @@ public class MuSigTakeOfferPaymentController implements Controller {
     }
 
     void onKeyPressedWhileShowingNoAccountOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {});
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoAccountOverlay);
     }
 
     void onKeyPressedWhileShowingMultipleAccountsOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {});
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseMultipleAccountsOverlay);
     }
 
     void onKeyPressedWhileShowingNoPaymentMethodSelectedOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {});
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoPaymentMethodSelectedOverlay);
     }
 

@@ -66,10 +66,15 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            Optional<AccountPayload<?>> accountPayload = model.getTrade().getSeller().getAccountPayload();
+            MuSigTrade trade = model.getTrade();
+            Optional<AccountPayload<?>> accountPayload = trade.getSeller().getAccountPayload();
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
             String accountName = account.orElseThrow().getAccountName();
             model.setMyAccountName(accountName);
+
+            AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
+
+            model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
         }
 
         @Override
@@ -88,6 +93,8 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         private String myAccountName;
+        @Setter
+        private Optional<String> paymentReason = Optional.empty();
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
@@ -115,8 +122,13 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedQuoteAmount()));
-            info.setText(Res.get("muSig.tradeState.info.seller.phase3a.info", model.getMyAccountName(), model.getTrade().getShortId()));
-            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
+            String paymentReasonPart = model.getPaymentReason()
+                    .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
+                    .orElse("");
+
+            info.setText(Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.account", model.getMyAccountName(), paymentReasonPart));
+            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton",
+                    model.getFormattedQuoteAmount()));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 

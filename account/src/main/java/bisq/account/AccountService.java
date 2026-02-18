@@ -23,6 +23,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.bisq1_import.ImportBisq1AccountsParser;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
@@ -154,7 +155,7 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     public Set<Account<? extends PaymentMethod<?>, ?>> getFiatAccounts() {
         return getAccountByNameMap().values().stream()
-                .filter(e-> !(e instanceof CryptoAssetAccount))
+                .filter(e -> !(e instanceof CryptoAssetAccount))
                 .collect(Collectors.toSet());
     }
 
@@ -164,8 +165,14 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                 .findAny();
     }
 
-    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String name) {
-        return Optional.ofNullable(getAccountByNameMap().get(name));
+    public Optional<Account<? extends PaymentMethod<?>, ?>> findAccount(String accountName) {
+        return Optional.ofNullable(getAccountByNameMap().get(accountName));
+    }
+
+    public Set<Account<? extends PaymentMethod<?>, ?>> findAccountsForPaymentRail(PaymentRail paymentRail) {
+        return getAccountByNameMap().values().stream()
+                .filter(account -> account.getPaymentMethod().getPaymentRail().equals(paymentRail))
+                .collect(Collectors.toSet());
     }
 
     public ReadOnlyObservable<Account<? extends PaymentMethod<?>, ?>> selectedAccountAsObservable() {

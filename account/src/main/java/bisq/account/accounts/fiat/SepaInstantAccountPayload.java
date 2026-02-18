@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -97,7 +98,7 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, SepaAccountPayload.HOLDER_NAME_MIN_LENGTH, SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         SepaPaymentAccountValidation.validateSepaIban(iban, FiatPaymentRailUtil.getAllSepaCountryCodes());
         SepaPaymentAccountValidation.validateBic(bic);
         PaymentAccountValidation.validateCountryCodes(acceptedCountryCodes,
@@ -138,6 +139,11 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
                 Res.get("paymentAccounts.sepa.iban"), iban,
                 Res.get("paymentAccounts.sepa.bic"), bic
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(holderName);
     }
 
     @Override

@@ -17,13 +17,14 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,14 +32,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Getter
 @Slf4j
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class PixAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
     public static final int PIX_KEY_MIN_LENGTH = 2;
     public static final int PIX_KEY_MAX_LENGTH = 100;
 
@@ -61,7 +61,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         NetworkDataValidation.validateRequiredText(pixKey, PIX_KEY_MIN_LENGTH, PIX_KEY_MAX_LENGTH);
     }
 
@@ -103,6 +103,11 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.pix.pixKey"), pixKey
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(holderName);
     }
 
     @Override

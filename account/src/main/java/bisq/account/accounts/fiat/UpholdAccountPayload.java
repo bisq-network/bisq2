@@ -18,9 +18,9 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.StringUtils;
@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -118,6 +119,11 @@ public final class UpholdAccountPayload extends AccountPayload<FiatPaymentMethod
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.uphold.accountId"), accountId
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.ofNullable(holderName);
     }
 
     @Override

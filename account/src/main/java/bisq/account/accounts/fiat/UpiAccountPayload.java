@@ -17,9 +17,9 @@
 
 package bisq.account.accounts.fiat;
 
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.i18n.Res;
@@ -29,6 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -82,6 +83,11 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.upi.virtualPaymentAddress"), virtualPaymentAddress
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(virtualPaymentAddress);
     }
 
     @Override

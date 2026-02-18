@@ -24,7 +24,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
-import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -33,6 +33,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -41,9 +42,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class ZelleAccountPayload extends CountryBasedAccountPayload implements SingleCurrencyAccountPayload {
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
-
     private final String holderName;
     private final String emailOrMobileNr;
 
@@ -63,7 +61,7 @@ public final class ZelleAccountPayload extends CountryBasedAccountPayload implem
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         checkArgument(EmailValidation.isValid(emailOrMobileNr) ||
                 PhoneNumberValidation.isValid(emailOrMobileNr, "US"));
     }
@@ -105,6 +103,11 @@ public final class ZelleAccountPayload extends CountryBasedAccountPayload implem
                 Res.get("paymentAccounts.holderName"), holderName,
                 Res.get("paymentAccounts.emailOrMobileNr"), emailOrMobileNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(holderName);
     }
 
     @Override

@@ -19,8 +19,8 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.timestamp.KeyAlgorithm;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.timestamp.KeyAlgorithm;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;

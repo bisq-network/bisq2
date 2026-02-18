@@ -31,6 +31,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -94,6 +95,11 @@ public final class WeChatPayAccountPayload extends CountryBasedAccountPayload im
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.accountNr"), accountNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(accountNr);
     }
 
     @Override

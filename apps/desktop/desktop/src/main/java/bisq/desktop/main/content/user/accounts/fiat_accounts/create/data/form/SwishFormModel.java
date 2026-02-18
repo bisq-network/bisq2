@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
 import bisq.account.accounts.fiat.SwishAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.desktop.components.controls.validator.PhoneNumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
@@ -33,8 +34,8 @@ public class SwishFormModel extends FormModel {
     private final StringProperty mobileNr = new SimpleStringProperty();
 
     private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(
-            SwishAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            SwishAccountPayload.HOLDER_NAME_MAX_LENGTH);
+            PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final PhoneNumberValidator mobileNrValidator = new PhoneNumberValidator("SE");
 
     public SwishFormModel(String id) {

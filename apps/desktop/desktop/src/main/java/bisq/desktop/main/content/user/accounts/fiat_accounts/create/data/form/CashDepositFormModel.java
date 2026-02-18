@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
 import bisq.account.accounts.fiat.CashDepositAccountPayload;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.locale.Country;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
@@ -57,8 +58,8 @@ public class CashDepositFormModel extends FormModel {
     private final BooleanProperty useValidation = new SimpleBooleanProperty();
 
     private final StringProperty holderName = new SimpleStringProperty();
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(BankAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            BankAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
 
     private final StringProperty holderId = new SimpleStringProperty();
     private final BooleanProperty isHolderIdVisible = new SimpleBooleanProperty();

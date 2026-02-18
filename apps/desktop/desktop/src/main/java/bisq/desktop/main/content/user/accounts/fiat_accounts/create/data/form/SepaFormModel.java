@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.user.accounts.fiat_accounts.create.data.form;
 
-import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.common.locale.Country;
+import bisq.common.validation.PaymentAccountValidation;
+import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.components.controls.validator.fiat.SepaBicValidator;
 import bisq.desktop.components.controls.validator.fiat.SepaIbanValidator;
-import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -51,8 +51,8 @@ public class SepaFormModel extends FormModel {
     private final StringProperty bic = new SimpleStringProperty();
 
 
-    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(SepaAccountPayload.HOLDER_NAME_MIN_LENGTH,
-            SepaAccountPayload.HOLDER_NAME_MAX_LENGTH);
+    private final TextMinMaxLengthValidator holderNameValidator = new TextMinMaxLengthValidator(PaymentAccountValidation.HOLDER_NAME_MIN_LENGTH,
+            PaymentAccountValidation.HOLDER_NAME_MAX_LENGTH);
     private final SepaIbanValidator sepaIbanValidator = new SepaIbanValidator();
     private final SepaBicValidator sepaBicValidator = new SepaBicValidator();
 

@@ -30,6 +30,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -92,6 +93,11 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
         return new AccountDataDisplayStringBuilder(
                 Res.get("paymentAccounts.mobileNr"), mobileNr
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(mobileNr);
     }
 
     @Override

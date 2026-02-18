@@ -23,15 +23,22 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+@Slf4j
+@ToString
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public final class SwiftAccountPayload extends CountryBasedAccountPayload implements SelectableCurrencyAccountPayload {
     public static final int NAME_MIN_LENGTH = 2;
     public static final int NAME_MAX_LENGTH = 100;
@@ -247,10 +254,10 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
         return FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SWIFT);
     }
 
-  /*  @Override
+    @Override
     public String getDefaultAccountName() {
-        return getPaymentMethod().getShortDisplayString() + "-" + countryCode + "-" + StringUtils.truncate(city, 4);
-    }*/
+        return getPaymentMethod().getShortDisplayString() + "-" + StringUtils.truncate(bankSwiftCode, 4);
+    }
 
     @Override
     public String getAccountDataDisplayString() {
@@ -271,6 +278,11 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
         intermediaryBankAddress.ifPresent(value -> builder.add(Res.get("paymentAccounts.swift.intermediaryBankAddress"), value));
         additionalInstructions.ifPresent(value -> builder.add(Res.get("paymentAccounts.swift.additionalInstructions"), value));
         return builder.toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(beneficiaryName);
     }
 
     @Override

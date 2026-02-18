@@ -18,9 +18,9 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.asset.FiatCurrencyRepository;
@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -94,7 +95,11 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
         return FiatCurrencyRepository.getAllFiatCurrencyCodes();
     }
 
-    // Will not be used for account age but add the method for correctness
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.empty();
+    }
+
     @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(accountData.getBytes(StandardCharsets.UTF_8));

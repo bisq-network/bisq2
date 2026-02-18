@@ -18,13 +18,14 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,6 +33,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -40,8 +42,6 @@ import java.nio.charset.StandardCharsets;
 public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentMethod>
         implements SingleCurrencyAccountPayload {
     public static final String COUNTRY_CODE = "AR";
-    public static final int HOLDER_NAME_MIN_LENGTH = 2;
-    public static final int HOLDER_NAME_MAX_LENGTH = 70;
     public static final int HOLDER_ID_MIN_LENGTH = 1;
     public static final int HOLDER_ID_MAX_LENGTH = 50;
 
@@ -64,7 +64,7 @@ public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentM
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateRequiredText(holderName, HOLDER_NAME_MIN_LENGTH, HOLDER_NAME_MAX_LENGTH);
+        PaymentAccountValidation.validateHolderName(holderName);
         NetworkDataValidation.validateRequiredText(holderId, HOLDER_ID_MIN_LENGTH, HOLDER_ID_MAX_LENGTH);
     }
 
@@ -105,6 +105,11 @@ public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentM
                 Res.get("paymentAccounts.mercadoPago.holderId"), holderId,
                 Res.get("paymentAccounts.holderName"), holderName
         ).toString();
+    }
+
+    @Override
+    public Optional<String> getReasonForPaymentString() {
+        return Optional.of(holderName);
     }
 
     @Override
