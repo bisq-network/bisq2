@@ -118,7 +118,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                                 .map(message -> {
                                     try {
-                                        return createOfferListItemDto(message);
+                                        return createOfferListItemDto(message).orElse(null);
                                     } catch (Exception e) {
                                         log.error("Failed to create OfferListItemDto", e);
                                         return null;
@@ -132,17 +132,23 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private void send(String quoteCurrencyCode,
                       BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                       ModificationType modificationType) {
-        OfferItemPresentationDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
-        // The payload is defined as a list to support batch data delivery at subscribe.
-        ArrayList<OfferItemPresentationDto> payload = new ArrayList<>(List.of(item));
-        toJson(payload).ifPresent(json -> {
-            subscriberRepository.findSubscribers(topic, quoteCurrencyCode)
-                    .ifPresent(subscribers -> subscribers
-                            .forEach(subscriber -> send(json, subscriber, modificationType)));
-        });
+        try {
+            createOfferListItemDto(bisqEasyOfferbookMessage).ifPresentOrElse(item -> {
+                // The payload is defined as a list to support batch data delivery at subscribe.
+                ArrayList<OfferItemPresentationDto> payload = new ArrayList<>(List.of(item));
+                toJson(payload).ifPresent(json -> {
+                    subscriberRepository.findSubscribers(topic, quoteCurrencyCode)
+                            .ifPresent(subscribers -> subscribers
+                                    .forEach(subscriber -> send(json, subscriber, modificationType)));
+                });
+            }, () -> log.debug("Skipping websocket send for offer from authorUserProfileId={}: user profile not yet available",
+                    bisqEasyOfferbookMessage.getAuthorUserProfileId()));
+        } catch (Exception e) {
+            log.error("Failed to send OfferListItemDto update for quoteCurrencyCode={}", quoteCurrencyCode, e);
+        }
     }
 
-    private OfferItemPresentationDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+    private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         return OfferItemPresentationDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
