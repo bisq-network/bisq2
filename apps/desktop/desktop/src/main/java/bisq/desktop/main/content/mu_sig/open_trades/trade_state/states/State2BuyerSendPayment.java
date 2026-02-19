@@ -88,7 +88,7 @@ public class State2BuyerSendPayment extends BaseState {
 
             MuSigTrade trade = model.getTrade();
             model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
-            AccountPayload<?> peersAccountPayload = trade.getBuyer().getAccountPayload().orElseThrow();
+            AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             if (muSigService.isAccountDataBanned(peersAccountPayload)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
                 model.getAccountDataBannedValidator().setIsInvalid(true);

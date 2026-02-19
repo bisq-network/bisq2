@@ -227,7 +227,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
 
         private Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = trade.isBuyer() ? "buyer" : "seller";
+            role = trade.isBuyerInDisplayContext() ? "buyer" : "seller";
         }
     }
 

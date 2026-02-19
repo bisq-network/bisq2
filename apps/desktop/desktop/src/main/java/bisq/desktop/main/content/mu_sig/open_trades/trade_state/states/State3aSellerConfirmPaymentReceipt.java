@@ -67,7 +67,7 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         public void onActivate() {
             super.onActivate();
             MuSigTrade trade = model.getTrade();
-            Optional<AccountPayload<?>> accountPayload = trade.getSeller().getAccountPayload();
+            Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
             String accountName = account.orElseThrow().getAccountName();
             model.setMyAccountName(accountName);
