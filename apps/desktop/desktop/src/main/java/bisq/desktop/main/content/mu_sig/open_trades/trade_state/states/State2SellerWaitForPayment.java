@@ -99,7 +99,7 @@ public class State2SellerWaitForPayment extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.PAYMENT);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);

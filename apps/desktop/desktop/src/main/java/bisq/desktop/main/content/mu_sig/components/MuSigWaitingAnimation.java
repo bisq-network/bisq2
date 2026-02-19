@@ -114,8 +114,8 @@ public class MuSigWaitingAnimation extends StackPane {
 
     private String getWaitingStateIconId(MuSigWaitingState waitingState) {
         return switch (waitingState) {
-            case FIAT_PAYMENT -> "fiat-payment";
-            case FIAT_PAYMENT_CONFIRMATION -> "fiat-payment-confirmation";
+            case PAYMENT -> "fiat-payment";
+            case PAYMENT_CONFIRMATION -> "fiat-payment-confirmation";
             case BITCOIN_CONFIRMATION -> "bitcoin-confirmation";
             case SCAN_WITH_CAMERA -> "scan-with-camera";
             case TRADE_COMPLETED -> "take-bisq-easy-offer";

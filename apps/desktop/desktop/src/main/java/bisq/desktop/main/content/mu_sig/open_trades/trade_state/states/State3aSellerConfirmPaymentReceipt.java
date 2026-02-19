@@ -136,7 +136,7 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
             headline.setText(Res.get("muSig.tradeState.info.phase3a.headline", model.getFormattedNonBtcAmount()));
             info.setText(model.getInfo());
-            confirmPaymentReceiptButton.setText(Res.get("muSig.tradeState.info.phase2b.fiatReceivedButton"));
+            confirmPaymentReceiptButton.setText(Res.get("muSig.tradeState.info.phase3a.fiatReceivedButton"));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 

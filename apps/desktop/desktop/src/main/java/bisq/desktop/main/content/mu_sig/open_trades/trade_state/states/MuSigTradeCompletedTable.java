@@ -52,7 +52,7 @@ public class MuSigTradeCompletedTable extends VBox {
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
     private final Label btcSideDirection, nonBtcSideDirection, nonBtcAmountValue, nonBtcCode,
             paymentMethodLabel, paymentMethodValue;
-    private final HBox btcAmountDisplayHBox, nonBtcHBox;
+    private final HBox nonBtcHBox;
 
     public MuSigTradeCompletedTable() {
         waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.TRADE_COMPLETED);
@@ -79,8 +79,6 @@ public class MuSigTradeCompletedTable extends VBox {
         bodyGridPane.getColumnConstraints().add(valueCol);
 
         bitcoinAmountDisplay = new BitcoinAmountDisplay();
-        btcAmountDisplayHBox = new HBox(5, bitcoinAmountDisplay);
-        btcAmountDisplayHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
         configureBitcoinAmountDisplay(bitcoinAmountDisplay);
 
@@ -172,7 +170,7 @@ public class MuSigTradeCompletedTable extends VBox {
                 nonBtcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
             }
             headerGridPane.add(btcSideDirection, col, rowTitle);
-            headerGridPane.add(btcAmountDisplayHBox, col, rowValue);
+            headerGridPane.add(bitcoinAmountDisplay, col, rowValue);
             ++col;
             headerGridPane.add(nonBtcSideDirection, col, rowTitle);
             headerGridPane.add(nonBtcHBox, col, rowValue);
@@ -189,7 +187,7 @@ public class MuSigTradeCompletedTable extends VBox {
             headerGridPane.add(nonBtcHBox, col, rowValue);
             ++col;
             headerGridPane.add(btcSideDirection, col, rowTitle);
-            headerGridPane.add(btcAmountDisplayHBox, col, rowValue);
+            headerGridPane.add(bitcoinAmountDisplay, col, rowValue);
         }
 
         ++col;

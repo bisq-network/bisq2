@@ -97,7 +97,7 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT_CONFIRMATION);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.PAYMENT_CONFIRMATION);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);

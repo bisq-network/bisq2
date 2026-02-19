@@ -918,7 +918,7 @@
 }
 
 .separator-line {
-    // #4d4d4d is -bisq-border-color-grey, but with -bisq-border-color-grey there are sometimes
-    // class cast exceptions.
+   /* `#4d4d4d` approximates -bisq-border-color-grey; the CSS variable is avoided here
+       because it causes class-cast exceptions in the JavaFX CSS parser. */
     -fx-background-color: #4d4d4d;
 }
