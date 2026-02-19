@@ -178,7 +178,7 @@ public class AmountSelectionController implements Controller {
             return;
         }
         model.setDirection(direction);
-        model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
+        model.getSpendOrReceiveString().set(direction.isBuy() ? Res.get("offer.buying") : Res.get("offer.selling"));
     }
 
     public void setAllowInvertingBaseAndQuoteCurrencies(boolean allowInvertingBaseAndQuoteCurrencies) {

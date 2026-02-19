@@ -43,7 +43,6 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.mu_sig.MuSigService;
-import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -281,9 +280,9 @@ public class MuSigOfferbookController implements Controller {
                 if (filter == MuSigFilters.MuSigOffersFilter.ALL) {
                     model.setMuSigOffersFilterPredicate(item -> true);
                 } else if (filter == MuSigFilters.MuSigOffersFilter.BUY) {
-                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection() == Direction.BUY);
+                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection().isBuy());
                 } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
-                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection() == Direction.SELL);
+                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection().isSell());
                 } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
                     Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
                     model.setMuSigOffersFilterPredicate(item -> myUserProfileIds.contains(item.getMakerUserProfile().getId()));

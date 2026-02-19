@@ -154,7 +154,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     public boolean validate() {
-        if (model.getDirection().get() == Direction.SELL && !model.isAllowedToCreateSellOffer()) {
+        if (model.getDirection().get().isSell() && !model.isAllowedToCreateSellOffer()) {
             showReputationInfoOverlay();
             return false;
         }
@@ -211,7 +211,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     }
 
     private void applyShowReputationInfo() {
-        if (model.getDirection().get() == Direction.BUY) {
+        if (model.getDirection().get().isBuy()) {
             model.getShowReputationInfo().set(false);
             navigationButtonsVisibleHandler.accept(true);
             return;

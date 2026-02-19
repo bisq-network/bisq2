@@ -28,7 +28,6 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.OfferPriceFormatter;
@@ -40,7 +39,11 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -174,7 +177,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         // Maker 
-        String peer = model.getDirection() == Direction.BUY ? Res.get("offer.seller") : Res.get("offer.buyer");
+        String peer = model.getDirection().isBuy() ? Res.get("offer.seller") : Res.get("offer.buyer");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
                 .left()

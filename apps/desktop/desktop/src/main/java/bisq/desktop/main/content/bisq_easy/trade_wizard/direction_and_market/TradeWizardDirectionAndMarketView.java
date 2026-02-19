@@ -170,8 +170,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
-                buyButton.setDefaultButton(direction == Direction.BUY);
-                sellButton.setDefaultButton(direction == Direction.SELL);
+                buyButton.setDefaultButton(direction.isBuy());
+                sellButton.setDefaultButton(direction.isSell());
             }
         });
 

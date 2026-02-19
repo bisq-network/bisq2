@@ -117,8 +117,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         String title = Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessageTitle", directionString);
         Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        boolean isBuy = displayDirection == Direction.BUY;
-        label.getStyleClass().add(isBuy ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
+        label.getStyleClass().add(displayDirection.isBuy() ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
         return label;
     }
 

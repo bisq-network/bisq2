@@ -27,7 +27,6 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -116,7 +115,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
 
-        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDisplayDirection() == Direction.BUY;
+        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDisplayDirection().isBuy();
 
         // Label
         String title = isBuy

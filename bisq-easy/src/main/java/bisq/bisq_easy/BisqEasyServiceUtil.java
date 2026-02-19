@@ -94,7 +94,7 @@ public class BisqEasyServiceUtil {
                                                 String bitcoinPaymentMethodNames,
                                                 String fiatPaymentMethodNames,
                                                 String price) {
-        return direction == Direction.BUY
+        return direction.isBuy()
                 ? Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.sell",
                 messageOwnerNickName, quoteAmount, bitcoinPaymentMethodNames, fiatPaymentMethodNames, price)
                 : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.buy",

@@ -166,8 +166,8 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
         directionPin = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
-                buyButton.setDefaultButton(direction == Direction.BUY);
-                sellButton.setDefaultButton(direction == Direction.SELL);
+                buyButton.setDefaultButton(direction.isBuy());
+                sellButton.setDefaultButton(direction.isSell());
             }
         });
 

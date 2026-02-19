@@ -658,7 +658,7 @@ public class DtoMappings {
         }
 
         public static DirectionDto fromBisq2Model(Direction value) {
-            if (value == Direction.BUY) {
+            if (value.isBuy()) {
                 return DirectionDto.BUY;
             } else {
                 return DirectionDto.SELL;

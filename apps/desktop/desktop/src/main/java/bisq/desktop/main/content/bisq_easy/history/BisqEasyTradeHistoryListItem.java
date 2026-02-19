@@ -24,7 +24,6 @@ import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -96,7 +95,7 @@ public class BisqEasyTradeHistoryListItem {
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
         paymentAsString = String.format("%s / %s", paymentMethod, settlementMethod);
 
-        String direction = BisqEasyTradeFormatter.getDirection(trade) == Direction.BUY
+        String direction = BisqEasyTradeFormatter.getDirection(trade).isBuy()
                 ? Res.get("bisqEasy.history.table.myRole.buyer")
                 : Res.get("bisqEasy.history.table.myRole.seller");
         String role = BisqEasyTradeFormatter.getMakerTakerRole(trade);
