@@ -56,6 +56,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
     public static final double WEIGHT = 10;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
+    public static final long MIN_DAYS_AGE_SCORE = 61;
 
     // Has to be in sync with Bisq1 class
     @Getter
@@ -149,16 +150,6 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         return userProfile.getSignedWitnessKey();
     }
 
-  /*  @Override
-    public long calculateScore(AuthorizedSignedWitnessData data) {
-        long age = getAgeInDays(data.getWitnessSignDate());
-        if (age <= 60) {
-            return 0;
-        }
-        return Math.min(365, age) * WEIGHT;
-    }*/
-
-
     @Override
     public long calculateScore(AuthorizedSignedWitnessData data) {
         return doCalculateScore(getAgeInDays(data.getWitnessSignDate()));
@@ -166,7 +157,7 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
 
     public static long doCalculateScore(long ageInDays) {
         checkArgument(ageInDays >= 0);
-        if (ageInDays <= 60) {
+        if (ageInDays < MIN_DAYS_AGE_SCORE) {
             return 0;
         }
         long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
@@ -180,8 +171,8 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
             SignedWitnessDto dto = new Gson().fromJson(json, SignedWitnessDto.class);
             long witnessSignDate = dto.getWitnessSignDate();
             long age = getAgeInDays(witnessSignDate);
-            if (age < 61) {
-                log.error("witnessSignDate has to be at least 61 days. witnessSignDate={}", witnessSignDate);
+            if (age < MIN_DAYS_AGE_SCORE) {
+                log.error("witnessSignDate has to be at least {} days. witnessSignDate={}", MIN_DAYS_AGE_SCORE, witnessSignDate);
                 return false;
             }
             String profileId = dto.getProfileId();
