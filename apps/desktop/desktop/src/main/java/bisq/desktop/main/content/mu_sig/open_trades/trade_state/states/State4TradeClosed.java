@@ -107,7 +107,7 @@ public class State4TradeClosed extends BaseState {
             model.setTradePeer(tradePeer);
             model.setBuyer(trade.isBuyerInDisplayContext());
             model.setQuoteCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
-            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setPaymentMethod(contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString());
             model.setTradeId(trade.getShortId());
             long takeOfferDate = contract.getTakeOfferDate();
             model.setTradeDate(DateFormatter.formatDateTime(takeOfferDate));

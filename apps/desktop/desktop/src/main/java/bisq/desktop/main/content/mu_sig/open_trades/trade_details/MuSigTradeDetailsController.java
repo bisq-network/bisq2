@@ -111,10 +111,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 ? ""
                 : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
 
-
-        if (isBaseCurrencyBitcoin) {
-            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
-        }
+        model.setPaymentMethod(contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString());
         model.setPaymentMethodsBoxVisible(isBaseCurrencyBitcoin);
 
         model.setTradeId(trade.getId());

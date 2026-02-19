@@ -289,11 +289,11 @@ public class OfferAmountUtil {
                                                          Monetary baseSideMonetary,
                                                          Monetary quoteSideMonetary,
                                                          double securityDeposit) {
-        if (market.isBtcFiatMarket()) {
-            checkArgument(market.isBaseCurrencyBitcoin());
+        if (market.isBaseCurrencyBitcoin()) {
+            checkArgument(baseSideMonetary.getCode().equals("BTC"));
             return calculateSecurityDeposit(baseSideMonetary, securityDeposit);
         } else {
-            checkArgument(!market.isBaseCurrencyBitcoin());
+            checkArgument(quoteSideMonetary.getCode().equals("BTC"));
             return calculateSecurityDeposit(quoteSideMonetary, securityDeposit);
         }
     }

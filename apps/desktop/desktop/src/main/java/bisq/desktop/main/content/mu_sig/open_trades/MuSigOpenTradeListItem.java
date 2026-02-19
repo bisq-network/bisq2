@@ -102,12 +102,8 @@ class MuSigOpenTradeListItem implements DateTableItem {
         );
         basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         quotePaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-        paymentMethodDisplayName = isBaseCurrencyBitcoin
-                ? contract.getQuoteSidePaymentMethodSpec().getShortDisplayString()
-                : contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
-        paymentMethod = isBaseCurrencyBitcoin
-                ? contract.getQuoteSidePaymentMethodSpec().getPaymentMethod()
-                : contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
+        paymentMethodDisplayName = contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString();
+        paymentMethod = contract.getNonBtcSidePaymentMethodSpec().getPaymentMethod();
 
         myRole = MuSigTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);
