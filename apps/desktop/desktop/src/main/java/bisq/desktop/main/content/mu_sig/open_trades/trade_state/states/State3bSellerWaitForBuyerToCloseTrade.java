@@ -95,7 +95,7 @@ public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.headline", model.getQuoteCode()));
-            info.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.info", model.getFormattedQuoteAmount()));
+            info.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.info", model.getFormattedNonBtcAmount()));
             waitingAnimation.play();
         }
 

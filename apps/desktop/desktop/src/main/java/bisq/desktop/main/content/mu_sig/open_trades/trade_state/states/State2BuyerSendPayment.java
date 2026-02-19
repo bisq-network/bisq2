@@ -87,6 +87,18 @@ public class State2BuyerSendPayment extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
+            String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.headline",
+                        formattedNonBtcAmount, model.getPaymentMethodName()));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.sellersAccount"));
+            } else {
+                model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.headline",
+                        formattedNonBtcAmount, model.getNonBtcCurrencyCode()));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.sellersAccount",
+                        model.getNonBtcCurrencyCode()));
+            }
+
             model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             if (muSigService.isAccountDataBanned(peersAccountPayload)) {
@@ -150,6 +162,10 @@ public class State2BuyerSendPayment extends BaseState {
         private Optional<String> myAccountName = Optional.empty();
         @Setter
         private Optional<String> paymentReason = Optional.empty();
+        @Setter
+        String peersAccountDataDescription;
+        @Setter
+        String headline;
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
@@ -174,7 +190,7 @@ public class State2BuyerSendPayment extends BaseState {
             HBox.setHgrow(myAccountName, Priority.ALWAYS);
             HBox.setHgrow(paymentReason, Priority.ALWAYS);
             myAccountNameAndPaymentReason = new HBox(10, myAccountName, paymentReason);
-            sellersAccountData = MuSigFormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
+            sellersAccountData = MuSigFormUtils.addTextArea("", "", false);
             sellersAccountData.setValidator(model.getAccountDataBannedValidator());
 
             confirmFiatSentButton = new Button();
@@ -193,9 +209,9 @@ public class State2BuyerSendPayment extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount(), model.getPaymentMethodName()));
-            quoteAmount.setText(model.getFormattedQuoteAmount());
-            quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
+            headline.setText(model.getHeadline());
+            quoteAmount.setText(model.getFormattedNonBtcAmount());
+            quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getNonBtcAmount()));
             model.getMyAccountName().ifPresent(myAccountName::setText);
             myAccountName.setVisible(model.getMyAccountName().isPresent());
             myAccountName.setManaged(myAccountName.isVisible());
@@ -211,9 +227,10 @@ public class State2BuyerSendPayment extends BaseState {
                     model.getPaymentReason().isPresent());
             myAccountNameAndPaymentReason.setManaged(myAccountNameAndPaymentReason.isVisible());
 
+            sellersAccountData.setDescription(model.getPeersAccountDataDescription());
             sellersAccountData.setText(model.getSellersAccountData());
             sellersAccountData.validate();
-            confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
+            confirmFiatSentButton.setText(Res.get("muSig.tradeState.info.buyer.phase2a.confirmFiatSent"));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
             confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
         }

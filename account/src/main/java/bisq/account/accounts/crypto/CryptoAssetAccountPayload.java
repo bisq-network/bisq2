@@ -19,13 +19,11 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
-import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
-import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -102,10 +100,7 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
 
     @Override
     public String getAccountDataDisplayString() {
-        return new AccountDataDisplayStringBuilder(
-                Res.get("paymentAccounts.crypto.summary.tickerSymbol"), currencyCode,
-                Res.get("paymentAccounts.crypto.address.address"), address
-        ).toString();
+        return address;
     }
 
     public String getCodeAndDisplayName() {

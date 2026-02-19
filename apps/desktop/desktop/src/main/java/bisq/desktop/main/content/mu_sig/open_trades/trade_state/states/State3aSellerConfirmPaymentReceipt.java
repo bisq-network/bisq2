@@ -84,7 +84,7 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
         private void onPaymentReceiptConfirmed() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedNonBtcAmount()));
             muSigTradeService.paymentReceiptConfirmed(model.getTrade());
         }
     }
@@ -121,14 +121,14 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedNonBtcAmount()));
             String paymentReasonPart = model.getPaymentReason()
                     .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
                     .orElse("");
 
             info.setText(Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.account", model.getMyAccountName(), paymentReasonPart));
             confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton",
-                    model.getFormattedQuoteAmount()));
+                    model.getFormattedNonBtcAmount()));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 

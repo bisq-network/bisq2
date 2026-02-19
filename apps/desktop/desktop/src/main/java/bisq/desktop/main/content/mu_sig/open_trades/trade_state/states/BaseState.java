@@ -78,10 +78,22 @@ public abstract class BaseState {
         @Override
         public void onActivate() {
             MuSigTrade trade = model.getTrade();
-            model.setBaseAmount(MuSigTradeFormatter.formatBaseSideAmount(trade));
-            model.setFormattedBaseAmount(MuSigTradeFormatter.formatBaseSideAmountWithCode(trade));
-            model.setQuoteAmount(MuSigTradeFormatter.formatQuoteSideAmount(trade));
-            model.setFormattedQuoteAmount(MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade));
+
+            String baseSideAmount = MuSigTradeFormatter.formatBaseSideAmount(trade);
+            String formatBaseSideAmount = MuSigTradeFormatter.formatBaseSideAmountWithCode(trade);
+            String quoteSideAmount = MuSigTradeFormatter.formatQuoteSideAmount(trade);
+            String formatQuoteSideAmount = MuSigTradeFormatter.formatQuoteSideAmountWithCode(trade);
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setBtcAmount(baseSideAmount);
+                model.setFormattedBtcAmount(formatBaseSideAmount);
+                model.setNonBtcAmount(quoteSideAmount);
+                model.setFormattedNonBtcAmount(formatQuoteSideAmount);
+            } else {
+                model.setBtcAmount(quoteSideAmount);
+                model.setFormattedBtcAmount(formatQuoteSideAmount);
+                model.setNonBtcAmount(baseSideAmount);
+                model.setFormattedNonBtcAmount(formatBaseSideAmount);
+            }
         }
 
         @Override
@@ -110,13 +122,13 @@ public abstract class BaseState {
         protected final Market market;
         protected final String nonBtcCurrencyCode;
         @Setter
-        protected String baseAmount;
+        protected String btcAmount;
         @Setter
-        protected String formattedBaseAmount;
+        protected String formattedBtcAmount;
         @Setter
-        protected String quoteAmount;
+        protected String nonBtcAmount;
         @Setter
-        protected String formattedQuoteAmount;
+        protected String formattedNonBtcAmount;
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             this.trade = trade;

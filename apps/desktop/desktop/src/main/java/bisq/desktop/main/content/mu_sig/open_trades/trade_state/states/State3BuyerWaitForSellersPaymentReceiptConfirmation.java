@@ -97,7 +97,7 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
             headline.setText(Res.get("muSig.tradeState.info.buyer.phase3.headline"));
             String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
             String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
-            info.setText(Res.get("muSig.tradeState.info.buyer.phase3.info", model.getFormattedQuoteAmount()));
+            info.setText(Res.get("muSig.tradeState.info.buyer.phase3.info", model.getFormattedNonBtcAmount()));
             waitingAnimation.play();
         }
 

@@ -233,8 +233,8 @@ public class State4TradeClosed extends BaseState {
             }
             peerProfileDisplay.setUserProfile(model.getTradePeer());
             peerProfileDisplay.setReputationScore(model.getTradePeerReputationScore());
-            muSigTradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBaseAmount(),
-                    model.getQuoteAmount(), model.getQuoteCurrency(), model.getPaymentMethod(), model.getTradeId(),
+            muSigTradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBtcAmount(),
+                    model.getNonBtcAmount(), model.getQuoteCurrency(), model.getPaymentMethod(), model.getTradeId(),
                     model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
                 muSigTradeCompletedTable.showBlockExplorerLink();
