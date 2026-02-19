@@ -67,6 +67,19 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         public void onActivate() {
             super.onActivate();
             MuSigTrade trade = model.getTrade();
+
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                String paymentReasonPart = model.getPaymentReason()
+                        .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
+                        .orElse("");
+                model.setInfo(Res.get("muSig.tradeState.info.seller.fiat.phase3a.verifyReceipt.account",
+                        model.getMyAccountName(), paymentReasonPart));
+            } else {
+                AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
+                model.setInfo(Res.get("muSig.tradeState.info.seller.crypto.phase3a.verifyReceipt.account",
+                        model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
+            }
+
             Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
             String accountName = account.orElseThrow().getAccountName();
@@ -91,6 +104,8 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        @Setter
+        private String info;
         @Setter
         private String myAccountName;
         @Setter
@@ -122,13 +137,8 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedNonBtcAmount()));
-            String paymentReasonPart = model.getPaymentReason()
-                    .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
-                    .orElse("");
-
-            info.setText(Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.account", model.getMyAccountName(), paymentReasonPart));
-            confirmPaymentReceiptButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton",
-                    model.getFormattedNonBtcAmount()));
+            info.setText(model.getInfo());
+            confirmPaymentReceiptButton.setText(Res.get("muSig.tradeState.info.seller.phase2b.fiatReceivedButton"));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 
