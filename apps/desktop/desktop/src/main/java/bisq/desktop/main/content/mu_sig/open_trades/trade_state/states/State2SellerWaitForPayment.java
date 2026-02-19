@@ -66,11 +66,11 @@ public class State2SellerWaitForPayment extends BaseState {
             String nonBtcCurrencyCode = model.getNonBtcCurrencyCode();
             String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
             if (model.getMarket().isBaseCurrencyBitcoin()) {
-                model.setHeadline(Res.get("muSig.tradeState.info.seller.fiat.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
-                model.setInfo(Res.get("muSig.tradeState.info.seller.fiat.phase2a.waitForPayment.info", formattedNonBtcAmount));
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase2a.waitForPayment.info", formattedNonBtcAmount));
             } else {
-                model.setHeadline(Res.get("muSig.tradeState.info.seller.crypto.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
-                model.setInfo(Res.get("muSig.tradeState.info.seller.crypto.phase2a.waitForPayment.info", formattedNonBtcAmount));
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase2a.waitForPayment.info", formattedNonBtcAmount));
             }
         }
 

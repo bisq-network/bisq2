@@ -78,12 +78,12 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
             if (model.getMarket().isBaseCurrencyBitcoin()) {
                 String paymentReasonPart = model.getPaymentReason()
-                        .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
+                        .map(e -> "\n" + Res.get("muSig.tradeState.info.phase3a.verifyReceipt.reasonForPayment", e))
                         .orElse("");
-                model.setInfo(Res.get("muSig.tradeState.info.seller.fiat.phase3a.verifyReceipt.account",
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account",
                         model.getMyAccountName(), paymentReasonPart));
             } else {
-                model.setInfo(Res.get("muSig.tradeState.info.seller.crypto.phase3a.verifyReceipt.account",
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3a.verifyReceipt.account",
                         model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
             }
         }
@@ -134,9 +134,9 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.seller.phase3a.headline", model.getFormattedNonBtcAmount()));
+            headline.setText(Res.get("muSig.tradeState.info.phase3a.headline", model.getFormattedNonBtcAmount()));
             info.setText(model.getInfo());
-            confirmPaymentReceiptButton.setText(Res.get("muSig.tradeState.info.seller.phase2b.fiatReceivedButton"));
+            confirmPaymentReceiptButton.setText(Res.get("muSig.tradeState.info.phase2b.fiatReceivedButton"));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
 

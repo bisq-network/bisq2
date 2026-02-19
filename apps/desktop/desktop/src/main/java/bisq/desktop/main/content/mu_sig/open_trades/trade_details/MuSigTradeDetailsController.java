@@ -99,7 +99,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
-                trade.getOffer().getMarket().getQuoteCurrencyCode()));
+                trade.getOffer().getMarket().getNonBtcCurrencyCode()));
 
         model.setNonBtcAmount(MuSigTradeFormatter.formatNonBtcSideAmount(trade));
         model.setNonBtcCurrency(trade.getOffer().getMarket().getNonBtcCurrencyCode());
@@ -112,7 +112,9 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
 
 
-        model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+        if (isBaseCurrencyBitcoin) {
+            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+        }
         model.setPaymentMethodsBoxVisible(isBaseCurrencyBitcoin);
 
         model.setTradeId(trade.getId());

@@ -64,11 +64,11 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
             super.onActivate();
 
             if (model.getMarket().isBaseCurrencyBitcoin()) {
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase3.headline"));
-                model.setInfo(Res.get("muSig.tradeState.info.buyer.fiat.phase3.info", model.getFormattedNonBtcAmount()));
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase3.headline"));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3.info", model.getFormattedNonBtcAmount()));
             } else {
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase3.headline"));
-                model.setInfo(Res.get("muSig.tradeState.info.buyer.crypto.phase3.info", model.getFormattedNonBtcAmount()));
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase3.headline"));
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3.info", model.getFormattedNonBtcAmount()));
             }
         }
 

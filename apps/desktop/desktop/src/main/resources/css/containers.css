@@ -916,3 +916,9 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
 }
+
+.separator-line {
+    // #4d4d4d is -bisq-border-color-grey, but with -bisq-border-color-grey there are sometimes
+    // class cast exceptions.
+    -fx-background-color: #4d4d4d;
+}

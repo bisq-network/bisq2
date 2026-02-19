@@ -109,8 +109,8 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcLabel.getStyleClass().addAll("text-fill-grey-dimmed", "small-text");
         Label closingParenthesisLabel = new Label(")");
         closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox btcAmountHBoxbtcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
-        btcAmountHBoxbtcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox btcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
+        btcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
         Label atLabel = new Label("@");
         atLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         priceLabel = getValueLabel();
@@ -118,7 +118,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         priceCodesLabel.getStyleClass().addAll("text-fill-white", "small-text");
         priceSpecLabel = new Label();
         priceSpecLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountHBoxbtcAmountHBox,
+        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountHBox,
                 atLabel, priceLabel, priceCodesLabel, priceSpecLabel);
         amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.amountAndPrice", amountAndPriceDetailsHBox);
@@ -359,7 +359,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         Region line = new Region();
         line.setMinHeight(1);
         line.setMaxHeight(1);
-        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.getStyleClass().add("separator-line");
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }

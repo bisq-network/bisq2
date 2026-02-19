@@ -129,14 +129,14 @@ public class State2BuyerSendPayment extends BaseState {
 
             String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
             if (model.getMarket().isBaseCurrencyBitcoin()) {
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.headline",
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase2a.headline",
                         formattedNonBtcAmount, paymentMethodName));
-                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.sellersAccount"));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.fiat.phase2a.sellersAccount"));
             } else {
                 String nonBtcCurrencyCode = model.getNonBtcCurrencyCode();
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.headline",
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase2a.headline",
                         formattedNonBtcAmount, nonBtcCurrencyCode));
-                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.sellersAccount",
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.crypto.phase2a.sellersAccount",
                         nonBtcCurrencyCode));
             }
         }
@@ -233,7 +233,7 @@ public class State2BuyerSendPayment extends BaseState {
             sellersAccountData.setDescription(model.getPeersAccountDataDescription());
             sellersAccountData.setText(model.getSellersAccountData());
             sellersAccountData.validate();
-            confirmFiatSentButton.setText(Res.get("muSig.tradeState.info.buyer.phase2a.confirmFiatSent"));
+            confirmFiatSentButton.setText(Res.get("muSig.tradeState.info.phase2a.confirmFiatSent"));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
             confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
         }

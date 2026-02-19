@@ -298,7 +298,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             Region line = new Region();
             line.setMinHeight(1);
             line.setMaxHeight(1);
-            line.setStyle("-fx-background-color: -bisq-border-color-grey");
+            line.getStyleClass().add("separator-line");
             return line;
         }
     }
