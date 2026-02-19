@@ -104,7 +104,17 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setTxId(model.getTrade().getDepositTxId());
+            MuSigTrade trade = model.getTrade();
+            model.setTxId(trade.getDepositTxId());
+
+            if (trade.isBuyer()) {
+                model.setInfo(Res.get("muSig.tradeState.info.phase1b.info.buyer", model.getNonBtcCurrencyCode()));
+            } else {
+                String peersRole = trade.isBuyerInDisplayContext()
+                        ? Res.get("offer.seller").toLowerCase()
+                        : Res.get("offer.buyer").toLowerCase();
+                model.setInfo(Res.get("muSig.tradeState.info.phase1b.info.seller", peersRole, model.getNonBtcCurrencyCode()));
+            }
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
@@ -218,7 +228,7 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
         @Setter
         private long txOutputValueForAddress;
         @Setter
-        private String role;
+        private String info;
 
         private final StringProperty confirmationInfo = new SimpleStringProperty();
         private final StringProperty buttonText = new SimpleStringProperty();
@@ -227,7 +237,6 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
 
         private Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
-            role = trade.isBuyerInDisplayContext() ? "buyer" : "seller";
         }
     }
 
@@ -235,14 +244,14 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
         private final Button button;
         private final MaterialTextField txId;
         private final MuSigWaitingAnimation waitingAnimation;
+        private final WrappingText info;
         private Subscription confirmationStatePin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            String role = model.getRole();
             WrappingText headline = MuSigFormUtils.getHeadline(Res.get("muSig.tradeState.info.phase1b.headline"));
-            WrappingText info = MuSigFormUtils.getInfo(Res.get("muSig.tradeState.info.phase1b.info." + role, model.getQuoteCode()));
+            info = MuSigFormUtils.getInfo();
             waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.BITCOIN_CONFIRMATION);
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
@@ -264,6 +273,8 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
+
+            info.setText(model.getInfo());
 
             txId.setText(model.getTxId());
             txId.validate();
