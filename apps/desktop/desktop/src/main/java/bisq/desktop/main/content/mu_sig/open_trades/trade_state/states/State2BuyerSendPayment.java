@@ -88,7 +88,8 @@ public class State2BuyerSendPayment extends BaseState {
 
             MuSigTrade trade = model.getTrade();
 
-            model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            String paymentMethodName = trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString();
+            model.setPaymentMethodName(paymentMethodName);
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             if (muSigService.isAccountDataBanned(peersAccountPayload)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
@@ -129,13 +130,14 @@ public class State2BuyerSendPayment extends BaseState {
             String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
             if (model.getMarket().isBaseCurrencyBitcoin()) {
                 model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.headline",
-                        formattedNonBtcAmount, model.getPaymentMethodName()));
+                        formattedNonBtcAmount, paymentMethodName));
                 model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.sellersAccount"));
             } else {
+                String nonBtcCurrencyCode = model.getNonBtcCurrencyCode();
                 model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.headline",
-                        formattedNonBtcAmount, model.getNonBtcCurrencyCode()));
+                        formattedNonBtcAmount, nonBtcCurrencyCode));
                 model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.sellersAccount",
-                        model.getNonBtcCurrencyCode()));
+                        nonBtcCurrencyCode));
             }
         }
 
