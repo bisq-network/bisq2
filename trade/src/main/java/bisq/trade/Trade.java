@@ -334,7 +334,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     // Display context
     /* --------------------------------------------------------------------- */
 
-    public Direction getDisplayDirection() {
+    public Direction getDisplayOfferDirection() {
         boolean isBaseCurrencyBitcoin = getOffer().getMarket().isBaseCurrencyBitcoin();
         Direction domainDirection = getDirection();
         return isBaseCurrencyBitcoin ? domainDirection : domainDirection.mirror();

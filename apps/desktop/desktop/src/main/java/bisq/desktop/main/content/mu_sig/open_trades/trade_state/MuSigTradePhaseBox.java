@@ -21,6 +21,7 @@ import bisq.account.payment_method.TradeDuration;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.data.Triple;
+import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
@@ -62,7 +63,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 class MuSigTradePhaseBox {
@@ -139,11 +139,23 @@ class MuSigTradePhaseBox {
             long maxTradeDurationTime = tradeDuration.getTime();
             unbindSecondTickPin();
             secondTickPin = UIClock.observeSecondTick(() ->
-                    applyRemainingTime(trade.getTradeStartedDate(), maxTradeDurationTime));
+                    applyRemainingTime(trade.getTakeOfferDate(), maxTradeDurationTime));
+
+            Market market = trade.getMarket();
+            boolean isBaseCurrencyBitcoin = market.isBaseCurrencyBitcoin();
+            String phase2, phase3;
+            if (isBaseCurrencyBitcoin) {
+                phase2 = Res.get("muSig.tradeState.fiat.phase2").toUpperCase();
+                phase3 = Res.get("muSig.tradeState.fiat.phase3").toUpperCase();
+            } else {
+                String code = market.getBaseCurrencyCode();
+                phase2 = Res.get("muSig.tradeState.crypto.phase2", code).toUpperCase();
+                phase3 = Res.get("muSig.tradeState.crypto.phase3", code).toUpperCase();
+            }
 
             model.getPhase1Info().set(Res.get("muSig.tradeState.phase1").toUpperCase());
-            model.getPhase2Info().set(Res.get("muSig.tradeState.phase2").toUpperCase());
-            model.getPhase3Info().set(Res.get("muSig.tradeState.phase3").toUpperCase());
+            model.getPhase2Info().set(phase2);
+            model.getPhase3Info().set(phase3);
             model.getPhase4Info().set(Res.get("muSig.tradeState.phase4").toUpperCase());
 
             muSigTradeStatePin = trade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
@@ -180,21 +192,16 @@ class MuSigTradePhaseBox {
             }));
         }
 
-        private void applyRemainingTime(Optional<Long> tradeStartedDate, long maxTradeDurationTime) {
-            if (tradeStartedDate.isPresent()) {
-                long passed = System.currentTimeMillis() - tradeStartedDate.get();
-                long remaining = Math.max(0, maxTradeDurationTime - passed);
-                double progress = 1 - remaining / (double) maxTradeDurationTime;
-                model.getRemainingTime().set(progress);
-                if (progress < 1) {
-                    String formatted = TimeFormatter.formatAge(remaining);
-                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime", formatted));
-                } else {
-                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.exceeded"));
-                }
+        private void applyRemainingTime(long takeOfferDate, long maxTradeDurationTime) {
+            long passed = System.currentTimeMillis() - takeOfferDate;
+            long remaining = Math.max(0, maxTradeDurationTime - passed);
+            double progress = 1 - remaining / (double) maxTradeDurationTime;
+            model.getRemainingTime().set(progress);
+            if (progress < 1) {
+                String formatted = TimeFormatter.formatAge(remaining);
+                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime", formatted));
             } else {
-                model.getRemainingTime().set(0);
-                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.notStarted"));
+                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.exceeded"));
             }
         }
 

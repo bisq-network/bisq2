@@ -27,6 +27,7 @@ import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -61,6 +62,14 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
         @Override
         public void onActivate() {
             super.onActivate();
+
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase3.headline"));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3.info", model.getFormattedNonBtcAmount()));
+            } else {
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase3.headline"));
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3.info", model.getFormattedNonBtcAmount()));
+            }
         }
 
         @Override
@@ -71,6 +80,11 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
 
     @Getter
     private static class Model extends BaseState.Model {
+        @Setter
+        private String headline;
+        @Setter
+        private String info;
+
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
@@ -83,7 +97,7 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT_CONFIRMATION);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.PAYMENT_CONFIRMATION);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
@@ -94,10 +108,9 @@ public class State3BuyerWaitForSellersPaymentReceiptConfirmation extends BaseSta
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.buyer.phase3.headline"));
-            String name = model.getTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
-            String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
-            info.setText(Res.get("muSig.tradeState.info.buyer.phase3.info", model.getFormattedQuoteAmount()));
+            headline.setText(model.getHeadline());
+            info.setText(model.getInfo());
+
             waitingAnimation.play();
         }
 

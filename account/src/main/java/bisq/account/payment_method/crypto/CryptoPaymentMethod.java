@@ -93,7 +93,10 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return new CryptoPaymentMethod(proto.getPaymentRailName(), proto.getCryptoPaymentMethod().getCode());
+        String code = proto.getCryptoPaymentMethod().getCode();
+        CryptoPaymentRail cryptoPaymentRail = CryptoPaymentMethodUtil.getCryptoPaymentRail(code);
+        //String paymentRailName = proto.getPaymentRailName();
+        return new CryptoPaymentMethod(cryptoPaymentRail, code);
     }
 
     @Override

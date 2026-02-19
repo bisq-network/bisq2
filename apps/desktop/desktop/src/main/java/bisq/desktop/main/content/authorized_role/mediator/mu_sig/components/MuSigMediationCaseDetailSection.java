@@ -130,7 +130,7 @@ public class MuSigMediationCaseDetailSection {
                     ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                     : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
             model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
-                    offer.getMarket().getQuoteCurrencyCode()));
+                    offer.getMarket().getNonBtcCurrencyCode()));
 
             model.setBuyerNetworkAddress(buyer.getUserProfile().getAddressByTransportDisplayString(50));
             model.setSellerNetworkAddress(seller.getUserProfile().getAddressByTransportDisplayString(50));

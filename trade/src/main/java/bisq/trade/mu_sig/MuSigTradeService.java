@@ -404,7 +404,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 mediator,
                 priceSpec,
                 marketPrice);
-        boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, muSigOffer, takerNetworkId, makerNetworkId);
         checkArgument(findProtocol(muSigTrade.getId()).isEmpty(),
@@ -549,7 +549,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         // We only create the data required for the protocol creation.
         // Verification will happen in the MuSigTakeOfferRequestHandler
         MuSigOffer offer = contract.getOffer();
-        Direction makersDirection = offer.getDisplayDirection();
+        Direction makersDirection = offer.getDirection();
         boolean isBuyer = makersDirection.isBuy();
         Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
         MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);

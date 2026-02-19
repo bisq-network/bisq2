@@ -87,7 +87,9 @@ public class State2BuyerSendPayment extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
-            model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
+
+            String paymentMethodName = trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString();
+            model.setPaymentMethodName(paymentMethodName);
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             if (muSigService.isAccountDataBanned(peersAccountPayload)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
@@ -106,7 +108,7 @@ public class State2BuyerSendPayment extends BaseState {
                 model.getAccountDataBannedValidator().setIsInvalid(false);
             }
 
-            model.setSellersAccountData(trade.getPeer().getAccountPayload().orElseThrow().getAccountDataDisplayString());
+            model.setSellersAccountData(peersAccountPayload.getAccountDataDisplayString());
 
             AccountPayload<?> myAccountPayload = trade.getMyself().getAccountPayload().orElseThrow();
             PaymentRail paymentRail = myAccountPayload.getPaymentMethod().getPaymentRail();
@@ -124,6 +126,19 @@ public class State2BuyerSendPayment extends BaseState {
             model.setPaymentReason(myAccount
                     .map(Account::getAccountPayload)
                     .flatMap(AccountPayload::getReasonForPaymentString));
+
+            String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase2a.headline",
+                        formattedNonBtcAmount, paymentMethodName));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.fiat.phase2a.sellersAccount"));
+            } else {
+                String nonBtcCurrencyCode = model.getNonBtcCurrencyCode();
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase2a.headline",
+                        formattedNonBtcAmount, nonBtcCurrencyCode));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.crypto.phase2a.sellersAccount",
+                        nonBtcCurrencyCode));
+            }
         }
 
         @Override
@@ -150,6 +165,10 @@ public class State2BuyerSendPayment extends BaseState {
         private Optional<String> myAccountName = Optional.empty();
         @Setter
         private Optional<String> paymentReason = Optional.empty();
+        @Setter
+        private String peersAccountDataDescription;
+        @Setter
+        private String headline;
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
@@ -174,7 +193,7 @@ public class State2BuyerSendPayment extends BaseState {
             HBox.setHgrow(myAccountName, Priority.ALWAYS);
             HBox.setHgrow(paymentReason, Priority.ALWAYS);
             myAccountNameAndPaymentReason = new HBox(10, myAccountName, paymentReason);
-            sellersAccountData = MuSigFormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
+            sellersAccountData = MuSigFormUtils.addTextArea("", "", false);
             sellersAccountData.setValidator(model.getAccountDataBannedValidator());
 
             confirmFiatSentButton = new Button();
@@ -193,9 +212,9 @@ public class State2BuyerSendPayment extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount(), model.getPaymentMethodName()));
-            quoteAmount.setText(model.getFormattedQuoteAmount());
-            quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
+            headline.setText(model.getHeadline());
+            quoteAmount.setText(model.getFormattedNonBtcAmount());
+            quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getNonBtcAmount()));
             model.getMyAccountName().ifPresent(myAccountName::setText);
             myAccountName.setVisible(model.getMyAccountName().isPresent());
             myAccountName.setManaged(myAccountName.isVisible());
@@ -211,9 +230,10 @@ public class State2BuyerSendPayment extends BaseState {
                     model.getPaymentReason().isPresent());
             myAccountNameAndPaymentReason.setManaged(myAccountNameAndPaymentReason.isVisible());
 
+            sellersAccountData.setDescription(model.getPeersAccountDataDescription());
             sellersAccountData.setText(model.getSellersAccountData());
             sellersAccountData.validate();
-            confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
+            confirmFiatSentButton.setText(Res.get("muSig.tradeState.info.phase2a.confirmFiatSent"));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
             confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
         }

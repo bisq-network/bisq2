@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.mu_sig.components;
 
 public enum MuSigWaitingState {
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
+    PAYMENT,
+    PAYMENT_CONFIRMATION,
     BITCOIN_CONFIRMATION,
     SCAN_WITH_CAMERA,
     TRADE_COMPLETED

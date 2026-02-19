@@ -27,6 +27,7 @@ import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -61,6 +62,16 @@ public class State2SellerWaitForPayment extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+
+            String nonBtcCurrencyCode = model.getNonBtcCurrencyCode();
+            String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase2a.waitForPayment.info", formattedNonBtcAmount));
+            } else {
+                model.setHeadline(Res.get("muSig.tradeState.info.crypto.phase2a.waitForPayment.headline", nonBtcCurrencyCode));
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase2a.waitForPayment.info", formattedNonBtcAmount));
+            }
         }
 
         @Override
@@ -71,6 +82,11 @@ public class State2SellerWaitForPayment extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        @Setter
+        private String headline;
+        @Setter
+        private String info;
+
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
@@ -83,7 +99,7 @@ public class State2SellerWaitForPayment extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.PAYMENT);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
@@ -94,8 +110,8 @@ public class State2SellerWaitForPayment extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.headline", model.getQuoteCode()));
-            info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.info", model.getFormattedQuoteAmount()));
+            headline.setText(model.getHeadline());
+            info.setText(model.getInfo());
             waitingAnimation.play();
         }
 

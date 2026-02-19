@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.mu_sig.open_trades.trade_details;
 
 import bisq.account.accounts.AccountPayload;
-import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.common.market.Market;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -83,6 +83,8 @@ public class MuSigTradeDetailsController extends NavigationController implements
         MuSigTrade trade = model.getTrade();
         MuSigOpenTradeChannel channel = model.getChannel();
         MuSigContract contract = trade.getContract();
+        Market market = trade.getMarket();
+        boolean isBaseCurrencyBitcoin = market.isBaseCurrencyBitcoin();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
@@ -97,41 +99,47 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
-                trade.getOffer().getMarket().getQuoteCurrencyCode()));
-        model.setFiatAmount(MuSigTradeFormatter.formatQuoteSideAmount(trade));
-        model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
-        model.setBtcAmount(MuSigTradeFormatter.formatBaseSideAmount(trade));
-        model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract)));
+                trade.getOffer().getMarket().getNonBtcCurrencyCode()));
+
+        model.setNonBtcAmount(MuSigTradeFormatter.formatNonBtcSideAmount(trade));
+        model.setNonBtcCurrency(trade.getOffer().getMarket().getNonBtcCurrencyCode());
+        model.setBtcAmount(MuSigTradeFormatter.formatBtcSideAmount(trade));
+
+        model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract), isBaseCurrencyBitcoin));
         model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
         model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
                 ? ""
                 : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
-        model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
-        model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
+
+
+        if (isBaseCurrencyBitcoin) {
+            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+        }
+        model.setPaymentMethodsBoxVisible(isBaseCurrencyBitcoin);
+
         model.setTradeId(trade.getId());
         model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
 
-        //todo add also my account by account name
         Optional<AccountPayload<?>> peersAccountPayload = trade.getPeer().getAccountPayload();
         model.setPaymentAccountDataEmpty(peersAccountPayload.isEmpty());
+
+        model.setPeersPaymentAccountDataDescription(isBaseCurrencyBitcoin
+                ? Res.get("muSig.openTrades.tradeDetails.fiat.paymentAccountData")
+                : Res.get("muSig.openTrades.tradeDetails.crypto.paymentAccountData", market.getNonBtcCurrencyCode())
+        );
+        model.setPeersPaymentAccountData(peersAccountPayload.isEmpty()
+                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
+                : peersAccountPayload.get().getAccountDataDisplayString());
+
         model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
 
-        //todo toCompactDisplayString would require text area
-        model.setPeersAccountPayloadDisplayString(peersAccountPayload.isEmpty()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : peersAccountPayload.get().getAccountDataDisplayString());
 
         model.setDepositTxId(trade.getDepositTxId() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getDepositTxId());
         model.setDepositTxIdEmpty(trade.getDepositTxId() == null);
-
-        boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
-        model.setOnChainSettlement(isOnChainSettlement);
-
-        // At LN its optional, so we show it only if set
-        model.setDepositTxIdVisible(isOnChainSettlement || trade.getDepositTxId() != null);
+        model.setDepositTxIdVisible(trade.getDepositTxId() != null);
     }
 
     @Override

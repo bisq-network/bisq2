@@ -40,15 +40,14 @@ import java.util.Optional;
 @Slf4j
 public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetailsModel, MuSigTradeDetailsController> {
     private final Button closeButton;
-    private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
-            fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
-            settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel,
-           depositTxTitleLabel, depositTxDetailsLabel,
-            peersAccountPayloadDisplayString, assignedMediatorLabel;
-    private final HBox assignedMediatorBox;
+    private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, nonBtcAmountLabel,
+            nonBtcCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodValue,
+            tradeIdLabel, peerNetworkAddressLabel,
+            depositTxTitleLabel, depositTxDetailsLabel,peersAccountPayloadDescription,
+            peersPaymentAccountData, assignedMediatorLabel;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
-            depositTxCopyButton, paymentAccountDataCopyButton;
-    private final HBox depositTxBox, tradeDurationBox;
+            depositTxCopyButton, peersAccountDataCopyButton;
+    private final HBox assignedMediatorBox, depositTxBox, tradeDurationBox, paymentMethodsBox;
 
     public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
         super(new VBox(), model, controller);
@@ -96,9 +95,9 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 offerTypeAndMarketDetailsHBox);
 
         // Amount and price
-        fiatAmountLabel = getValueLabel();
-        fiatCurrencyLabel = new Label();
-        fiatCurrencyLabel.getStyleClass().addAll("text-fill-white", "small-text");
+        nonBtcAmountLabel = getValueLabel();
+        nonBtcCurrencyLabel = new Label();
+        nonBtcCurrencyLabel.getStyleClass().addAll("text-fill-white", "small-text");
 
         Label openParenthesisLabel = new Label("(");
         openParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
@@ -109,8 +108,8 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         btcLabel.getStyleClass().addAll("text-fill-grey-dimmed", "small-text");
         Label closingParenthesisLabel = new Label(")");
         closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox btcAmountHBoxbtcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
-        btcAmountHBoxbtcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox btcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
+        btcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
         Label atLabel = new Label("@");
         atLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         priceLabel = getValueLabel();
@@ -118,20 +117,14 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         priceCodesLabel.getStyleClass().addAll("text-fill-white", "small-text");
         priceSpecLabel = new Label();
         priceSpecLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountHBoxbtcAmountHBox,
+        HBox amountAndPriceDetailsHBox = new HBox(5, nonBtcAmountLabel, nonBtcCurrencyLabel, btcAmountHBox,
                 atLabel, priceLabel, priceCodesLabel, priceSpecLabel);
         amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.amountAndPrice", amountAndPriceDetailsHBox);
 
-        // Payment and settlement methods
-        paymentMethodLabel = getValueLabel();
-        Label paymentMethodsSlashLabel = new Label("/");
-        paymentMethodsSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        settlementMethodLabel = getValueLabel();
-        HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel, paymentMethodsSlashLabel, settlementMethodLabel);
-        paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox paymentMethodsBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
-                paymentMethodsDetailsHBox);
+        // Payment method
+        paymentMethodValue = getValueLabel();
+        paymentMethodsBox = createAndGetDescriptionAndValueBox("muSig.openTrades.tradeDetails.paymentAndSettlementMethod", paymentMethodValue);
 
         // Trade ID
         tradeIdLabel = getValueLabel();
@@ -146,15 +139,16 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 peerNetworkAddressLabel, peerNetworkAddressCopyButton);
 
         // Payment account data
-        peersAccountPayloadDisplayString = getValueLabel();
-        paymentAccountDataCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
-        HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
-                peersAccountPayloadDisplayString, paymentAccountDataCopyButton);
+        peersAccountPayloadDescription = getDescriptionLabel("");
+        peersPaymentAccountData = getValueLabel();
+        peersAccountDataCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
+        HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox(peersAccountPayloadDescription,
+                peersPaymentAccountData, peersAccountDataCopyButton);
 
         // DepositTx
-        depositTxTitleLabel = getDescriptionLabel("");
+        depositTxTitleLabel = getDescriptionLabel(Res.get("muSig.openTrades.tradeDetails.depositTxId"));
         depositTxDetailsLabel = getValueLabel();
-        depositTxCopyButton = getTradeIdCopyButton("");
+        depositTxCopyButton = getTradeIdCopyButton(Res.get("muSig.openTrades.tradeDetails.depositTxId.copy"));
         depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
                 depositTxDetailsLabel, depositTxCopyButton);
 
@@ -213,48 +207,46 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
 
         tradeDurationBox.setVisible(model.getTradeDuration().isPresent());
         tradeDurationBox.setManaged(model.getTradeDuration().isPresent());
-        tradeDurationLabel.setText(model.getTradeDuration().orElse(""));
+        tradeDurationLabel.setText(model.getTradeDuration().orElse(Res.get("data.na")));
 
         meLabel.setText(model.getMe());
         peerLabel.setText(model.getPeer());
         offerTypeLabel.setText(model.getOfferType());
         marketLabel.setText(model.getMarket());
-        fiatAmountLabel.setText(model.getFiatAmount());
-        fiatCurrencyLabel.setText(model.getFiatCurrency());
+        nonBtcAmountLabel.setText(model.getNonBtcAmount());
+        nonBtcCurrencyLabel.setText(model.getNonBtcCurrency());
         btcAmountLabel.setText(model.getBtcAmount());
         priceLabel.setText(model.getPrice());
         priceCodesLabel.setText(model.getPriceCodes());
         priceSpecLabel.setText(model.getPriceSpec());
-        paymentMethodLabel.setText(model.getPaymentMethod());
-        settlementMethodLabel.setText(model.getSettlementMethod());
+        paymentMethodValue.setText(model.getPaymentMethod());
+        paymentMethodsBox.setVisible(model.isPaymentMethodsBoxVisible());
+        paymentMethodsBox.setManaged(model.isPaymentMethodsBoxVisible());
         tradeIdLabel.setText(model.getTradeId());
         peerNetworkAddressLabel.setText(model.getPeerNetworkAddress());
 
-        depositTxTitleLabel.setText(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.txId")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage"));
         depositTxDetailsLabel.setText(model.getDepositTxId());
-        depositTxCopyButton.setTooltip(model.isOnChainSettlement()
-                ? Res.get("bisqEasy.openTrades.tradeDetails.txId.copy")
-                : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage.copy"));
         depositTxBox.setVisible(model.isDepositTxIdVisible());
         depositTxBox.setManaged(model.isDepositTxIdVisible());
 
-        // todo requires text area
-        peersAccountPayloadDisplayString.setText(model.getPeersAccountPayloadDisplayString());
+        peersAccountPayloadDescription.setText(model.getPeersPaymentAccountDataDescription());
+        peersPaymentAccountData.setText(model.getPeersPaymentAccountData());
+        peersAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
+        peersAccountDataCopyButton.setManaged(!model.isPaymentAccountDataEmpty());
+
         assignedMediatorLabel.setText(model.getAssignedMediator());
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
-        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
-        paymentAccountDataCopyButton.setManaged(!model.isPaymentAccountDataEmpty());
+
+
         depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
         depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
 
-        peersAccountPayloadDisplayString.getStyleClass().clear();
-        peersAccountPayloadDisplayString.getStyleClass().add(model.isPaymentAccountDataEmpty()
+        peersPaymentAccountData.getStyleClass().clear();
+        peersPaymentAccountData.getStyleClass().add(model.isPaymentAccountDataEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
-        peersAccountPayloadDisplayString.getStyleClass().add("normal-text");
+        peersPaymentAccountData.getStyleClass().add("normal-text");
 
         depositTxDetailsLabel.getStyleClass().clear();
         depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
@@ -266,7 +258,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
         peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
-        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeersAccountPayloadDisplayString()));
+        peersAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeersPaymentAccountData()));
         depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
     }
 
@@ -276,7 +268,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradersAndRoleCopyButton.setOnAction(null);
         tradeIdCopyButton.setOnAction(null);
         peerNetworkAddressCopyButton.setOnAction(null);
-        paymentAccountDataCopyButton.setOnAction(null);
+        peersAccountDataCopyButton.setOnAction(null);
         depositTxCopyButton.setOnAction(null);
     }
 
@@ -335,7 +327,8 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         Region line = new Region();
         line.setMinHeight(1);
         line.setMaxHeight(1);
-        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.getStyleClass().add("separator-line");
+
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }

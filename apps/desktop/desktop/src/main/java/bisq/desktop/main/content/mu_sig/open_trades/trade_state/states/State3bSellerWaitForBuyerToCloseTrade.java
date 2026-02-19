@@ -27,6 +27,7 @@ import bisq.trade.mu_sig.MuSigTrade;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -61,6 +62,15 @@ public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+
+            boolean isBaseCurrencyBitcoin = model.getTrade().getMarket().isBaseCurrencyBitcoin();
+
+            model.setHeadline(isBaseCurrencyBitcoin
+                    ? Res.get("muSig.tradeState.info.fiat.phase3b.waitForTradeClose.headline")
+                    : Res.get("muSig.tradeState.info.crypto.phase3b.waitForTradeClose.headline"));
+            model.setInfo(isBaseCurrencyBitcoin
+                    ? Res.get("muSig.tradeState.info.fiat.phase3b.waitForTradeClose.info")
+                    : Res.get("muSig.tradeState.info.crypto.phase3b.waitForTradeClose.info"));
         }
 
         @Override
@@ -71,6 +81,11 @@ public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        @Setter
+        private String headline;
+        @Setter
+        private String info;
+
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
         }
@@ -83,7 +98,7 @@ public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.FIAT_PAYMENT);
+            waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.PAYMENT);
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
@@ -94,8 +109,8 @@ public class State3bSellerWaitForBuyerToCloseTrade extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.headline", model.getQuoteCode()));
-            info.setText(Res.get("muSig.tradeState.info.seller.phase3b.waitForTradeClose.info", model.getFormattedQuoteAmount()));
+            headline.setText(model.getHeadline());
+            info.setText(model.getInfo());
             waitingAnimation.play();
         }
 

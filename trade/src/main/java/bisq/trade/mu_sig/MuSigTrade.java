@@ -53,8 +53,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
-    private Optional<Long> tradeStartedDate = Optional.empty();
-    @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
 
     public MuSigTrade(MuSigContract contract,
@@ -75,8 +73,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 TradeLifecycleState.ACTIVE);
 
         stateObservable().addObserver(state -> tradeState.set((MuSigTradeState) state));
-        // TODO maybe we use deposit tx confirmation date?
-        setTradeStartedDate(System.currentTimeMillis());
     }
 
     private MuSigTrade(MuSigContract contract,
@@ -110,7 +106,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private bisq.trade.protobuf.MuSigTrade.Builder getMuSigTradeBuilder(boolean serializeForHash) {
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
         Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
-        tradeStartedDate.ifPresent(builder::setTradeStartedDate);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
         return builder;
     }
@@ -143,10 +138,6 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         }
         if (proto.hasPeersTradeProtocolFailure()) {
             trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
-        }
-
-        if (muSigTradeProto.hasTradeStartedDate()) {
-            trade.setTradeStartedDate(muSigTradeProto.getTradeStartedDate());
         }
 
         if (muSigTradeProto.hasTradeCompletedDate()) {
@@ -197,12 +188,16 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return depositTxId.get();
     }
 
-    public void setTradeStartedDate(long tradeStartedDate) {
-        this.tradeStartedDate = Optional.of(tradeStartedDate);
+    public void setTradeCompletedDate(long tradeCompletedDate) {
+        if (this.tradeCompletedDate.isEmpty()) {
+            this.tradeCompletedDate = Optional.of(tradeCompletedDate);
+        } else {
+            log.warn("Trade completed date already set");
+        }
     }
 
-    public void setTradeCompletedDate(long tradeCompletedDate) {
-        this.tradeCompletedDate = Optional.of(tradeCompletedDate);
+    public long getTakeOfferDate() {
+        return getContract().getTakeOfferDate();
     }
 
     public Market getMarket() {

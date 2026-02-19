@@ -39,7 +39,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     private final String quoteCurrencyCode;
 
     // The baseCurrencyName and quoteCurrencyName are using the US locale in case they are Fiat currencies, thus they
-    // are immutable with the code (therefor we don't need the ExcludeForHash annotation)
+    // are immutable with the code (therefore, we don't need the ExcludeForHash annotation)
     // For display purposes we use getQuoteCurrencyDisplayName() and getBaseCurrencyDisplayName()
     @EqualsAndHashCode.Exclude
     private final String baseCurrencyName;

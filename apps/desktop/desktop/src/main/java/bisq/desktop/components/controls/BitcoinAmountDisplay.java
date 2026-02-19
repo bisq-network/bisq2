@@ -45,7 +45,7 @@ public class BitcoinAmountDisplay extends HBox {
     @Getter
     private final Text significantDigits = new Text();
     @Getter
-    private final Text btcCode = new Text(" BTC");
+    private final Text btcCode = new Text("  BTC");
     @SuppressWarnings("FieldCanBeLocal")
     private final ChangeListener<String> amountChangeListener =
             (obs, old, newVal) -> updateDisplay();

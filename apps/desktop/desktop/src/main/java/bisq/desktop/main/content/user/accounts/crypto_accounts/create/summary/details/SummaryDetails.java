@@ -106,7 +106,7 @@ public class SummaryDetails<P extends CryptoAssetAccountPayload> extends GridPan
         Region line = new Region();
         line.setMinHeight(1);
         line.setMaxHeight(1);
-        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.getStyleClass().add("separator-line");
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }
