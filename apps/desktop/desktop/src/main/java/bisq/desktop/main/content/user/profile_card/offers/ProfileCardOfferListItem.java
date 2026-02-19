@@ -99,7 +99,7 @@ public class ProfileCardOfferListItem {
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
         marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
-        offerType = bisqEasyOffer.getDirection().isBuy()
+        offerType = bisqEasyOffer.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 
@@ -119,8 +119,9 @@ public class ProfileCardOfferListItem {
         marketPriceByCurrencyMapPin.unbind();
     }
 
+    // TODO not used
     boolean isBuyOffer() {
-        return bisqEasyOffer.getDirection() == Direction.BUY;
+        return bisqEasyOffer.getDisplayDirection() == Direction.BUY;
     }
 
     private void updatePriceSpecAsPercent() {

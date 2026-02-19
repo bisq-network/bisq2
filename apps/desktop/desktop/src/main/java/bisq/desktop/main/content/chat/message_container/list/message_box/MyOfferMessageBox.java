@@ -112,12 +112,12 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
 
-        Direction direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection();
-        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase(Locale.ROOT)));
+        Direction displayDirection = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDisplayDirection();
+        String directionString = StringUtils.capitalize(Res.get("offer." + displayDirection.name().toLowerCase(Locale.ROOT)));
         String title = Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessageTitle", directionString);
         Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        boolean isBuy = direction == Direction.BUY;
+        boolean isBuy = displayDirection == Direction.BUY;
         label.getStyleClass().add(isBuy ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
         return label;
     }

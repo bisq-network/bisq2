@@ -40,6 +40,7 @@ import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.mu_sig.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.MuSigOfferUtil;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
@@ -626,9 +627,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 resetStyles();
 
                 if (item != null && !empty) {
+                    Direction displayDirection = item.getOffer().getDisplayDirection();
                     if (item.isMyOffer()) {
                         setUpRowEventHandlersAndListeners();
-                        if (item.getOffer().getDirection().mirror().isBuy()) {
+                        if (displayDirection.mirror().isBuy()) {
                             myOfferLabelBox.getStyleClass().add("my-offer-to-buy");
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-green-dim-10;");
                         } else {
@@ -641,7 +643,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         boolean canTakeOffer = item.isCanTakeOffer();
                         takeOfferButton.setOpacity(canTakeOffer ? 1 : 0.2);
-                        if (item.getOffer().getDirection().mirror().isBuy()) {
+                        if (displayDirection.mirror().isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");
@@ -989,9 +991,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
 
     private void trySelectingMuSigOfferListItem(MuSigOfferListItem muSigOfferListItem) {
         if (muSigOfferListItem != null) {
-            boolean isBuyOfferWithSellFilter = muSigOfferListItem.getDirection().isBuy()
+            Direction displayDirection = muSigOfferListItem.getDisplayDirection();
+            boolean isBuyOfferWithSellFilter = displayDirection.isBuy()
                     && model.getSelectedMuSigOffersFilter().get() == MuSigFilters.MuSigOffersFilter.SELL;
-            boolean isSellOfferWithBuyFilter = muSigOfferListItem.getDirection().isSell()
+            boolean isSellOfferWithBuyFilter = displayDirection.isSell()
                     && model.getSelectedMuSigOffersFilter().get() == MuSigFilters.MuSigOffersFilter.BUY;
             if (isBuyOfferWithSellFilter || isSellOfferWithBuyFilter) {
                 model.getSelectedMuSigOffersFilter().set(MuSigFilters.MuSigOffersFilter.ALL);

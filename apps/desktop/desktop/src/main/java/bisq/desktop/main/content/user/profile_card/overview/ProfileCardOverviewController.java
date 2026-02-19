@@ -67,11 +67,13 @@ public class ProfileCardOverviewController implements Controller {
         model.setStatement(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
 
         String userProfileId = userProfile.getId();
-        long totalBaseOfferAmountToBuy = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isBuy());
+        // TODO Need to add support for swapping base and quote currency when crypto market is used
+        long totalBaseOfferAmountToBuy = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isBuy());
         String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
         model.setTotalBaseOfferAmountToBuy(formattedTotalBaseOfferAmountToBuy);
 
-        long totalBaseOfferAmountToSell = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isSell());
+        // TODO Need to add support for swapping base and quote currency when crypto market is used
+        long totalBaseOfferAmountToSell = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isSell());
         String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
         model.setTotalBaseOfferAmountToSell(formattedTotalBaseOfferAmountToSell);
 

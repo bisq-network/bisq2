@@ -306,10 +306,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return Collections.emptyList();
     }
 
-    private boolean hasBisqEasyOfferWithDirection(Direction direction) {
+    private boolean hasBisqEasyOfferWithDirection(Direction displayDirection) {
         if (chatMessage instanceof BisqEasyOfferMessage bisqEasyOfferMessage) {
             if (bisqEasyOfferMessage.hasBisqEasyOffer() && bisqEasyOfferMessage.getBisqEasyOffer().isPresent()) {
-                return bisqEasyOfferMessage.getBisqEasyOffer().get().getDirection() == direction;
+                return bisqEasyOfferMessage.getBisqEasyOffer().get().getDisplayDirection() == displayDirection;
             }
         }
         return false;

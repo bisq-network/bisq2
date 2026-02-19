@@ -171,7 +171,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
         String makersUserProfileId = muSigOffer.getMakersUserProfileId();
         if (model.getSellersReputationBasedQuoteSideAmount() == null) {
-            String sellersProfileId = muSigOffer.getDirection().isSell() ? makersUserProfileId : myProfileId;
+            String sellersProfileId = muSigOffer.getDisplayDirection().isSell() ? makersUserProfileId : myProfileId;
             long sellersReputationScore = reputationService.getReputationScore(sellersProfileId).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)

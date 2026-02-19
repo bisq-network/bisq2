@@ -25,6 +25,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediationCaseListItem;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.mu_sig.MuSigOffer;
@@ -118,13 +119,14 @@ public class MuSigMediationCaseDetailSection {
 
             MuSigMediationCaseListItem.Trader maker = muSigMediationCaseListItem.getMaker();
             MuSigMediationCaseListItem.Trader taker = muSigMediationCaseListItem.getTaker();
-            MuSigMediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
-            MuSigMediationCaseListItem.Trader seller = offer.getDirection().isSell() ? maker : taker;
+            Direction displayDirection = offer.getDisplayDirection();
+            MuSigMediationCaseListItem.Trader buyer = displayDirection.isBuy() ? maker : taker;
+            MuSigMediationCaseListItem.Trader seller = displayDirection.isSell() ? maker : taker;
 
             model.setTradeId(tradeId);
             model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
-            model.setOfferType(offer.getDirection().isBuy()
+            model.setOfferType(displayDirection.isBuy()
                     ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                     : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
             model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",

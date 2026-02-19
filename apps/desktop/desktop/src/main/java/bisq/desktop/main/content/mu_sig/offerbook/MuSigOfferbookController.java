@@ -281,9 +281,9 @@ public class MuSigOfferbookController implements Controller {
                 if (filter == MuSigFilters.MuSigOffersFilter.ALL) {
                     model.setMuSigOffersFilterPredicate(item -> true);
                 } else if (filter == MuSigFilters.MuSigOffersFilter.BUY) {
-                    model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.BUY);
+                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection() == Direction.BUY);
                 } else if (filter == MuSigFilters.MuSigOffersFilter.SELL) {
-                    model.setMuSigOffersFilterPredicate(item -> item.getDirection() == Direction.SELL);
+                    model.setMuSigOffersFilterPredicate(item -> item.getDisplayDirection() == Direction.SELL);
                 } else if (filter == MuSigFilters.MuSigOffersFilter.MINE) {
                     Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
                     model.setMuSigOffersFilterPredicate(item -> myUserProfileIds.contains(item.getMakerUserProfile().getId()));
