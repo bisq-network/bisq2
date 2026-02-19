@@ -43,6 +43,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
@@ -403,7 +404,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 mediator,
                 priceSpec,
                 marketPrice);
-        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
         MuSigTrade muSigTrade = new MuSigTrade(contract, isBuyer, true, takerIdentity, muSigOffer, takerNetworkId, makerNetworkId);
         checkArgument(findProtocol(muSigTrade.getId()).isEmpty(),
@@ -548,7 +549,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         // We only create the data required for the protocol creation.
         // Verification will happen in the MuSigTakeOfferRequestHandler
         MuSigOffer offer = contract.getOffer();
-        boolean isBuyer = offer.getMakersDirection().isBuy();
+        Direction makersDirection = offer.getDisplayDirection();
+        boolean isBuyer = makersDirection.isBuy();
         Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
         MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
 

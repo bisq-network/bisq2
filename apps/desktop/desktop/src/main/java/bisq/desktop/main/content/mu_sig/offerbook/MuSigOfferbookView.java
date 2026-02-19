@@ -627,10 +627,10 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 resetStyles();
 
                 if (item != null && !empty) {
-                    Direction displayDirection = item.getOffer().getDisplayDirection();
+                    Direction takersDisplayDirection = item.getOffer().getTakersDisplayDirection();
                     if (item.isMyOffer()) {
                         setUpRowEventHandlersAndListeners();
-                        if (displayDirection.mirror().isBuy()) {
+                        if (takersDisplayDirection.isBuy()) {
                             myOfferLabelBox.getStyleClass().add("my-offer-to-buy");
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-green-dim-10;");
                         } else {
@@ -643,7 +643,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         boolean canTakeOffer = item.isCanTakeOffer();
                         takeOfferButton.setOpacity(canTakeOffer ? 1 : 0.2);
-                        if (displayDirection.mirror().isBuy()) {
+                        if (takersDisplayDirection.isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
                             takeOfferButton.getStyleClass().add("sell-button");

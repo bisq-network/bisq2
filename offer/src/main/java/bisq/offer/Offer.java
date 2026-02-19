@@ -198,6 +198,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         return direction.mirror();
     }
 
+    public Direction getTakersDisplayDirection() {
+        return getDisplayDirection().mirror();
+    }
+
     public Direction getDisplayDirection() {
         return market.isBaseCurrencyBitcoin() ? direction : direction.mirror();
     }

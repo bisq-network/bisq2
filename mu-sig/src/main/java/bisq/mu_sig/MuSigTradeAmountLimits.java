@@ -125,7 +125,7 @@ public class MuSigTradeAmountLimits {
                                                  UserIdentityService userIdentityService,
                                                  UserProfileService userProfileService,
                                                  BisqEasyOffer peersOffer) {
-        UserProfile sellersUserProfile = peersOffer.getTakersDirection().isBuy()
+        UserProfile sellersUserProfile = peersOffer.getTakersDisplayDirection().isBuy()
                 ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
                 : userIdentityService.getSelectedUserIdentity().getUserProfile();
         return reputationService.getReputationScore(sellersUserProfile).getTotalScore();
@@ -243,7 +243,7 @@ public class MuSigTradeAmountLimits {
                 .collect(Collectors.toSet());
         List<BisqEasyOffer> filteredOffers = channel.getBisqEasyOffers()
                 .filter(offer -> {
-                    if (!offer.getTakersDirection().equals(direction)) {
+                    if (!offer.getTakersDisplayDirection().equals(direction)) {
                         return false;
                     }
                     if (!isValidMakerProfile(userProfileService, userIdentityService, offer, myUserIdentityIds)) {

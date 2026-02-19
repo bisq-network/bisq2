@@ -71,7 +71,7 @@ public class MuSigTakeOfferAmountController implements Controller {
     public void init(MuSigOffer muSigOffer) {
         model.setMuSigOffer(muSigOffer);
 
-        Direction takersDisplayDirection = muSigOffer.getDisplayDirection().mirror();
+        Direction takersDisplayDirection = muSigOffer.getTakersDisplayDirection();
         model.setHeadline(takersDisplayDirection.isBuy()
                 ? Res.get("bisqEasy.takeOffer.amount.headline.buyer")
                 : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
@@ -191,7 +191,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setMinMaxRange(minRangeValue, maxAmount);
 
-        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
         if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.learnMore"));

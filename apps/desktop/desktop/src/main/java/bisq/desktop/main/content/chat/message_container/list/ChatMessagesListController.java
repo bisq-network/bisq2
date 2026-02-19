@@ -69,6 +69,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -390,7 +391,8 @@ public class ChatMessagesListController implements Controller {
             boolean isAmountRangeOffer = bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec;
             long sellersScore;
             String learnMore = Res.get("chat.message.takeOffer.reputation.warning.learnMore");
-            if (bisqEasyOffer.getTakersDirection().isBuy()) {
+            Direction takersDisplayDirection = bisqEasyOffer.getTakersDisplayDirection();
+            if (takersDisplayDirection.isBuy()) {
                 // I am as taker the buyer. We check if seller has the required reputation
                 sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)

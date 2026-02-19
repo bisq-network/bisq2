@@ -301,7 +301,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
         String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
-        Direction takersDirection = model.getMuSigOffer().getTakersDirection();
+        Direction takersDirection = model.getMuSigOffer().getTakersDisplayDirection();
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");

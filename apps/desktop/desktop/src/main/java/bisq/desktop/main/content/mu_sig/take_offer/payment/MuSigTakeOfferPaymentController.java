@@ -31,6 +31,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
@@ -73,8 +74,10 @@ public class MuSigTakeOfferPaymentController implements Controller {
         Market market = muSigOffer.getMarket();
         model.setMarket(market);
         model.setPaymentMethodCurrencyCode(market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode());
-        model.setDisplayDirection(muSigOffer.getDisplayDirection());
-        model.setHeadline(getPaymentMethodsHeadline(muSigOffer.getTakersDirection().isBuy()));
+        Direction displayDirection = muSigOffer.getDisplayDirection();
+        model.setDisplayDirection(displayDirection);
+        Direction takersDisplayDirection = muSigOffer.getTakersDisplayDirection();
+        model.setHeadline(getPaymentMethodsHeadline(takersDisplayDirection.isBuy()));
 
         Map<? extends PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = accountService.getAccounts().stream()
                 .filter(account -> !(account instanceof UserDefinedFiatAccount))
