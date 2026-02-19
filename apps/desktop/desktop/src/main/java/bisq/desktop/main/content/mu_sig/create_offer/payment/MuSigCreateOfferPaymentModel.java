@@ -42,7 +42,7 @@ import java.util.Map;
 @Getter
 public class MuSigCreateOfferPaymentModel implements Model {
     @Setter
-    private Direction direction;
+    private Direction displayDirection;
     @Setter
     private String paymentMethodCurrencyCode;
 
@@ -70,7 +70,7 @@ public class MuSigCreateOfferPaymentModel implements Model {
     }
 
     void reset() {
-        direction = null;
+        displayDirection = null;
         paymentMethodCurrencyCode = null;
         accountsByPaymentMethod.clear();
         paymentMethods.clear();

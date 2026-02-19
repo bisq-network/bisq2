@@ -71,11 +71,11 @@ public class MuSigTakeOfferAmountController implements Controller {
     public void init(MuSigOffer muSigOffer) {
         model.setMuSigOffer(muSigOffer);
 
-        Direction takersDirection = muSigOffer.getTakersDirection();
-        model.setHeadline(takersDirection.isBuy()
+        Direction takersDisplayDirection = muSigOffer.getDisplayDirection().mirror();
+        model.setHeadline(takersDisplayDirection.isBuy()
                 ? Res.get("bisqEasy.takeOffer.amount.headline.buyer")
                 : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
-        amountSelectionController.setDirection(takersDirection);
+        amountSelectionController.setDirection(takersDisplayDirection);
         Market market = muSigOffer.getMarket();
         amountSelectionController.setMarket(market);
 
@@ -84,7 +84,7 @@ public class MuSigTakeOfferAmountController implements Controller {
 
         applyQuoteSideMinMaxRange();
 
-        String btcAmount = takersDirection.isBuy()
+        String btcAmount = takersDisplayDirection.isBuy()
                 ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
                 : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
         Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getMuSigOffer())

@@ -31,14 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class MuSigCreateOfferAmountAndPriceModel implements Model {
     private String headline;
-    private Direction direction;
+    private Direction displayDirection;
     private Market market;
     private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isPriceOverlayVisible = new SimpleBooleanProperty();
 
     void reset() {
         headline = "";
-        direction = null;
+        displayDirection = null;
         market = null;
         isAmountOverlayVisible.set(false);
         isPriceOverlayVisible.set(false);

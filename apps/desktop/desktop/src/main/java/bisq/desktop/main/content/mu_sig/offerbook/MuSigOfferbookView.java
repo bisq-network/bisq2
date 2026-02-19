@@ -333,7 +333,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         BisqTableColumn<MuSigOfferListItem> priceColumn = new BisqTableColumn.Builder<MuSigOfferListItem>()
                 .titleProperty(model.getPriceTitle())
                 .left()
-                .comparator(Comparator.comparing(MuSigOfferListItem::getPrice))
+                .comparator(Comparator.comparingLong(MuSigOfferListItem::getPriceAsLong).reversed())
                 .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .minWidth(200)
                 .build();
@@ -737,7 +737,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     .forEach(selectableMenuItem -> {
                         selectableMenuItem.getSelectableItem().ifPresent(cryptoAsset ->
                                 selectableMenuItem.updateSelection(cryptoAsset.equals(selectedBaseCryptoAsset)));
-            });
+                    });
         }
     }
 

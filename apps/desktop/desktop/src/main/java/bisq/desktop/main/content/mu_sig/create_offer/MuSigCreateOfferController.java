@@ -73,7 +73,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final MuSigCreateOfferPaymentController muSigCreateOfferPaymentController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription directionPin, marketPin, priceSpecPin;
+    private Subscription displayDirectionPin, marketPin, priceSpecPin;
     private Pin selectedAccountByPaymentMethodPin;
     private boolean isPaymentStepSkipped = false;
 
@@ -116,9 +116,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
         updateChildTargets();
         model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
-        directionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDirection(), direction -> {
-            muSigCreateOfferAmountAndPriceController.setDirection(direction);
-            muSigCreateOfferPaymentController.setDirection(direction);
+        displayDirectionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDisplayDirection(), displayDirection -> {
+            muSigCreateOfferAmountAndPriceController.setDisplayDirection(displayDirection);
+            muSigCreateOfferPaymentController.setDisplayDirection(displayDirection);
         });
         marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
             isPaymentStepSkipped = false;
@@ -145,7 +145,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-        directionPin.unsubscribe();
+        displayDirectionPin.unsubscribe();
         marketPin.unsubscribe();
         priceSpecPin.unsubscribe();
         selectedAccountByPaymentMethodPin.unbind();
@@ -181,7 +181,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
-                    muSigCreateOfferDirectionAndMarketController.getDirection().get(),
+                    muSigCreateOfferDirectionAndMarketController.getDisplayDirection().get(),
                     muSigCreateOfferDirectionAndMarketController.getMarket().get(),
                     muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod(),
                     muSigCreateOfferAmountAndPriceController.getBaseSideAmountSpec().get(),

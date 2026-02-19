@@ -85,10 +85,10 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         model.reset();
     }
 
-    public void setDirection(Direction direction) {
-        muSigCreateOfferAmountController.setDirection(direction);
-        muSigCreateOfferPriceController.setDirection(direction);
-        model.setDirection(direction);
+    public void setDisplayDirection(Direction displayDirection) {
+        muSigCreateOfferAmountController.setDisplayDirection(displayDirection);
+        muSigCreateOfferPriceController.setDisplayDirection(displayDirection);
+        model.setDisplayDirection(displayDirection);
     }
 
     public void setMarket(Market market) {
@@ -120,7 +120,7 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
 
     private String getHeadline() {
         String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
-        return model.getDirection().isBuy()
+        return model.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.tradeWizard.amountAtPrice.buy.headline", quoteCurrencyCode)
                 : Res.get("bisqEasy.tradeWizard.amountAtPrice.sell.headline", quoteCurrencyCode);
     }

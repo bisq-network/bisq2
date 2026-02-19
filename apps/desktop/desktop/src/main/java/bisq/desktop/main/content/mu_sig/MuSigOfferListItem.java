@@ -85,7 +85,9 @@ public class MuSigOfferListItem {
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
-    private String formattedPercentagePrice = Res.get("data.na"), price = Res.get("data.na"), priceTooltip = Res.get("data.na"),
+    private String formattedPercentagePrice = Res.get("data.na"),
+            price = Res.get("data.na"),
+            priceTooltip = Res.get("data.na"),
             offerPriceWithSpec = Res.get("data.na");
     private Pair<String, String> pricePair;
     private long priceAsLong = 0;
