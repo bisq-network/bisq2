@@ -51,9 +51,4 @@ public enum Direction implements ProtoEnum {
     public String getDisplayString() {
         return Res.get("offer." + name().toLowerCase(Locale.ROOT));
     }
-
-    public String getDirectionalTitle() {
-        return isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
-                Res.get("bisqEasy.openTrades.table.direction.seller");
-    }
 }

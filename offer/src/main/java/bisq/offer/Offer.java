@@ -24,6 +24,7 @@ import bisq.common.market.Market;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
@@ -199,5 +200,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
 
     public Direction getDisplayDirection() {
         return market.isBaseCurrencyBitcoin() ? direction : direction.mirror();
+    }
+
+    public String getDirectionalTitle() {
+        return getDisplayDirection().isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
+                Res.get("bisqEasy.openTrades.table.direction.seller");
     }
 }

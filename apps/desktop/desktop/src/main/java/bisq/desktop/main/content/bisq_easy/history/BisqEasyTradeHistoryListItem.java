@@ -95,7 +95,7 @@ public class BisqEasyTradeHistoryListItem {
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
         paymentAsString = String.format("%s / %s", paymentMethod, settlementMethod);
 
-        String direction = BisqEasyTradeFormatter.getDirection(trade).isBuy()
+        String direction = trade.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.history.table.myRole.buyer")
                 : Res.get("bisqEasy.history.table.myRole.seller");
         String role = BisqEasyTradeFormatter.getMakerTakerRole(trade);
