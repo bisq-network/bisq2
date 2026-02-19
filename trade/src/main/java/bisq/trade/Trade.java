@@ -24,6 +24,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
+import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -319,5 +320,34 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public String getShortId() {
         return id.substring(0, 8);
+    }
+
+    public Direction getDirection() {
+        return switch (tradeRole) {
+            case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
+            case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
+        };
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Display context
+    /* --------------------------------------------------------------------- */
+
+    public Direction getDisplayDirection() {
+        boolean isBaseCurrencyBitcoin = getOffer().getMarket().isBaseCurrencyBitcoin();
+        Direction domainDirection = getDirection();
+        return isBaseCurrencyBitcoin ? domainDirection : domainDirection.mirror();
+    }
+
+
+    public boolean isBuyerInDisplayContext() {
+        boolean isBaseCurrencyBitcoin = getOffer().getMarket().isBaseCurrencyBitcoin();
+        return isBaseCurrencyBitcoin ? tradeRole.isBuyer() : tradeRole.isSeller();
+    }
+
+    public boolean isSellerInDisplayContext() {
+        boolean isBaseCurrencyBitcoin = getOffer().getMarket().isBaseCurrencyBitcoin();
+        return isBaseCurrencyBitcoin ? tradeRole.isSeller() : tradeRole.isBuyer();
     }
 }

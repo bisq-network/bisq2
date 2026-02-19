@@ -104,12 +104,12 @@ public class MuSigCreateOfferAmountController implements Controller {
         view = new MuSigCreateOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
-    public void setDirection(Direction direction) {
-        if (direction == null) {
+    public void setDisplayDirection(Direction displayDirection) {
+        if (displayDirection == null) {
             return;
         }
-        model.setDirection(direction);
-        amountSelectionController.setDirection(direction);
+        model.setDisplayDirection(displayDirection);
+        amountSelectionController.setDirection(displayDirection);
     }
 
     public void setMarket(Market market) {
@@ -193,7 +193,7 @@ public class MuSigCreateOfferAmountController implements Controller {
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
         model.getIsRangeAmountEnabled().set(cookieValue);
-        model.getShouldShowHowToBuildReputationButton().set(model.getDirection().isSell());
+        model.getShouldShowHowToBuildReputationButton().set(model.getDisplayDirection().isSell());
 
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinBaseSideAmount(),
                 value -> {
@@ -367,7 +367,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private void quoteSideAmountsChanged(boolean maxAmountChanged) {
-        boolean isSeller = model.getDirection().isSell();
+        boolean isSeller = model.getDisplayDirection().isSell();
         if (isSeller) {
             return;
         }
@@ -448,7 +448,7 @@ public class MuSigCreateOfferAmountController implements Controller {
                 ? MuSigTradeAmountLimits.usdToBtc(marketPriceService, defaultUsdAmount).orElseThrow()
                 : MuSigTradeAmountLimits.usdToFiat(marketPriceService, market, defaultUsdAmount)
                     .orElseThrow().round(0);
-        boolean isBuyer = model.getDirection().isBuy();
+        boolean isBuyer = model.getDisplayDirection().isBuy();
         Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
         amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
         model.getLearnMoreVisible().set(true);

@@ -35,7 +35,7 @@ import lombok.Getter;
 
 @Getter
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
+    private final ObjectProperty<Direction> displayDirection = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headlineText = new SimpleStringProperty();
     private final StringProperty buyButtonText = new SimpleStringProperty();
@@ -56,7 +56,7 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final SortedList<MuSigCreateOfferDirectionAndMarketView.BaseCryptoAssetListItem> sortedBaseCryptoAssetListItems = new SortedList<>(filteredBaseCryptoAssetListItems);
 
     void reset() {
-        direction.set(Direction.BUY);
+        displayDirection.set(Direction.BUY);
         buyButtonDisabled.set(false);
         headlineText.set("");
         selectedMarketListItem.set(null);

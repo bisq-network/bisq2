@@ -69,7 +69,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
     private final Label headlineLabel, tradePairIconLabel;
     private final BisqPopup marketSelectionPopup;
     private final HBox tradePairBox;
-    private Subscription directionPin, marketPin, marketSelectionPin, selectedMarketListItemPin,
+    private Subscription displayDirectionPin, marketPin, marketSelectionPin, selectedMarketListItemPin,
             selectedBaseCryptoAssetListItemPin;
 
     public MuSigCreateOfferDirectionAndMarketView(MuSigCreateOfferDirectionAndMarketModel model,
@@ -164,10 +164,10 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         selectedBaseCryptoAssetListItemPin = EasyBind.subscribe(model.getSelectedBaseCryptoAssetListItem(),
                 selected -> baseCryptoAssetsTableView.getSelectionModel().select(selected));
 
-        directionPin = EasyBind.subscribe(model.getDirection(), direction -> {
+        displayDirectionPin = EasyBind.subscribe(model.getDisplayDirection(), direction -> {
             if (direction != null) {
-                buyButton.setDefaultButton(direction == Direction.BUY);
-                sellButton.setDefaultButton(direction == Direction.SELL);
+                buyButton.setDefaultButton(direction.isBuy());
+                sellButton.setDefaultButton(direction.isSell());
             }
         });
 
@@ -208,7 +208,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
         selectedMarketListItemPin.unsubscribe();
         selectedBaseCryptoAssetListItemPin.unsubscribe();
-        directionPin.unsubscribe();
+        displayDirectionPin.unsubscribe();
         marketPin.unsubscribe();
         marketSelectionPin.unsubscribe();
     }

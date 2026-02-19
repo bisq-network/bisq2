@@ -45,7 +45,7 @@ public class MuSigCreateOfferPriceModel implements Model {
     @Setter
     private Market market = null;
     @Setter
-    private Direction direction;
+    private Direction displayDirection;
     @Setter
     private boolean shouldFocusPriceComponent = false;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
@@ -68,7 +68,7 @@ public class MuSigCreateOfferPriceModel implements Model {
 
     public void reset() {
         market = null;
-        direction = null;
+        displayDirection = null;
         shouldFocusPriceComponent = false;
         percentage.set(0d);
         percentageInput.set(null);

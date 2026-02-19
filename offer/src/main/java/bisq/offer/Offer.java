@@ -17,19 +17,20 @@
 
 package bisq.offer;
 
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.market.Market;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.OfferOption;
-import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -177,6 +178,18 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         return id.substring(0, 8);
     }
 
+    public boolean hasAmountRange() {
+        return amountSpec instanceof RangeAmountSpec;
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Direction
+    /* --------------------------------------------------------------------- */
+
+    public Direction getDirection() {
+        return direction;
+    }
+
     public Direction getMakersDirection() {
         return direction;
     }
@@ -185,7 +198,16 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         return direction.mirror();
     }
 
-    public boolean hasAmountRange() {
-        return amountSpec instanceof RangeAmountSpec;
+    public Direction getTakersDisplayDirection() {
+        return getDisplayDirection().mirror();
+    }
+
+    public Direction getDisplayDirection() {
+        return market.isBaseCurrencyBitcoin() ? direction : direction.mirror();
+    }
+
+    public String getDirectionalTitle() {
+        return getDisplayDirection().isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
+                Res.get("bisqEasy.openTrades.table.direction.seller");
     }
 }

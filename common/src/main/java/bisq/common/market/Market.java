@@ -145,4 +145,16 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     public int compareTo(@NotNull Market o) {
         return this.getMarketCodes().compareTo(o.getMarketCodes());
     }
+
+    /* --------------------------------------------------------------------- */
+    // Display context
+    /* --------------------------------------------------------------------- */
+
+    public String getNonBtcCurrencyCode() {
+        return isBaseCurrencyBitcoin() ? quoteCurrencyCode : baseCurrencyCode;
+    }
+
+    public String getNonBtcCurrencyName() {
+        return isBaseCurrencyBitcoin() ? quoteCurrencyName : baseCurrencyName;
+    }
 }

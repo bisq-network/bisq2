@@ -23,6 +23,7 @@ import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
@@ -106,6 +107,8 @@ public abstract class BaseState {
         protected final MuSigTrade trade;
         protected final MuSigOpenTradeChannel channel;
         protected final String quoteCode;
+        protected final Market market;
+        protected final String nonBtcCurrencyCode;
         @Setter
         protected String baseAmount;
         @Setter
@@ -119,7 +122,9 @@ public abstract class BaseState {
             this.trade = trade;
             this.channel = channel;
 
-            quoteCode = trade.getContract().getOffer().getMarket().getQuoteCurrencyCode();
+            market = trade.getContract().getOffer().getMarket();
+            quoteCode = market.getQuoteCurrencyCode();
+            nonBtcCurrencyCode = market.getNonBtcCurrencyCode();
         }
 
         protected MuSigOffer getMuSigOffer() {

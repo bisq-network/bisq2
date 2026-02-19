@@ -83,9 +83,9 @@ public class MuSigCreateOfferPriceController implements Controller {
         model.setMarket(market);
     }
 
-    public void setDirection(Direction direction) {
-        if (direction != null) {
-            model.setDirection(direction);
+    public void setDisplayDirection(Direction displayDirection) {
+        if (displayDirection != null) {
+            model.setDisplayDirection(displayDirection);
         }
     }
 
@@ -159,7 +159,7 @@ public class MuSigCreateOfferPriceController implements Controller {
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
 
-        model.getShouldShowFeedback().set(model.getDirection().isBuy());
+        model.getShouldShowFeedback().set(model.getDisplayDirection().isBuy());
 
         applyPriceSpec();
     }
@@ -414,7 +414,7 @@ public class MuSigCreateOfferPriceController implements Controller {
     }
 
     private String getFeedbackSentence(String adjective) {
-        return model.getDirection().isBuy()
+        return model.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.price.feedback.buyOffer.sentence", adjective)
                 : Res.get("bisqEasy.price.feedback.sellOffer.sentence", adjective);
     }

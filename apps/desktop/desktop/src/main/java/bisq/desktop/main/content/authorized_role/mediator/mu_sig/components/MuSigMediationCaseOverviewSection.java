@@ -23,6 +23,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediationCaseListItem;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
@@ -99,8 +100,9 @@ public class MuSigMediationCaseOverviewSection {
 
             MuSigMediationCaseListItem.Trader maker = muSigMediationCaseListItem.getMaker();
             MuSigMediationCaseListItem.Trader taker = muSigMediationCaseListItem.getTaker();
-            MuSigMediationCaseListItem.Trader buyer = offer.getDirection().isBuy() ? maker : taker;
-            MuSigMediationCaseListItem.Trader seller = offer.getDirection().isSell() ? maker : taker;
+            Direction displayDirection = offer.getDisplayDirection();
+            MuSigMediationCaseListItem.Trader buyer = displayDirection.isBuy() ? maker : taker;
+            MuSigMediationCaseListItem.Trader seller = displayDirection.isSell() ? maker : taker;
 
             model.setBuyerUserName(buyer.getUserName());
             model.setSellerUserName(seller.getUserName());

@@ -41,7 +41,7 @@ import java.util.Optional;
 @Getter
 public class MuSigCreateOfferAmountModel implements Model {
     @Setter
-    private Direction direction;
+    private Direction displayDirection;
     @Setter
     private Market market = MarketRepository.getDefaultBtcFiatMarket();
     private final List<PaymentMethod<?>> paymentMethods = new ArrayList<>();
@@ -69,7 +69,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     private final StringProperty errorMessage = new SimpleStringProperty();
 
     public void reset() {
-        direction = null;
+        displayDirection = null;
         market = MarketRepository.getDefaultBtcFiatMarket();
         paymentMethods.clear();
         amountLimitInfo.set(null);

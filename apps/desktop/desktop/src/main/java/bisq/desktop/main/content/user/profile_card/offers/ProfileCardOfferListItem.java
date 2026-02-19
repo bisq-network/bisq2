@@ -18,19 +18,18 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -99,7 +98,7 @@ public class ProfileCardOfferListItem {
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
         marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
-        offerType = bisqEasyOffer.getDirection().isBuy()
+        offerType = bisqEasyOffer.getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 
@@ -117,10 +116,6 @@ public class ProfileCardOfferListItem {
 
     void dispose() {
         marketPriceByCurrencyMapPin.unbind();
-    }
-
-    boolean isBuyOffer() {
-        return bisqEasyOffer.getDirection() == Direction.BUY;
     }
 
     private void updatePriceSpecAsPercent() {

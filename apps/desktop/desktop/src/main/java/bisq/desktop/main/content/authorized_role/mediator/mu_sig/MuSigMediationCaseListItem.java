@@ -96,7 +96,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
-        directionalTitle = offer.getDirection().getDirectionalTitle();
+        directionalTitle = offer.getDirectionalTitle();
         date = contract.getTakeOfferDate();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);

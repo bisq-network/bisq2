@@ -93,7 +93,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
 
         model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), MuSigTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
-        model.setOfferType(trade.getOffer().getDirection().isBuy()
+        model.setOfferType(trade.getOffer().getDisplayDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",

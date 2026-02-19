@@ -107,9 +107,9 @@ public class MuSigCreateOfferPaymentController implements Controller {
         return true;
     }
 
-    public void setDirection(Direction direction) {
-        if (direction != null) {
-            model.setDirection(direction);
+    public void setDisplayDirection(Direction displayDirection) {
+        if (displayDirection != null) {
+            model.setDisplayDirection(displayDirection);
         }
     }
 

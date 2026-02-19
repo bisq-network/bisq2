@@ -43,7 +43,7 @@ import java.util.Map;
 @Getter
 public class MuSigTakeOfferPaymentModel implements Model {
     @Setter
-    private Direction direction;
+    private Direction displayDirection;
     @Setter
     private Market market;
     @Setter
@@ -79,7 +79,7 @@ public class MuSigTakeOfferPaymentModel implements Model {
     }
 
     void reset() {
-        direction = null;
+        displayDirection = null;
         market = null;
         headline = null;
         subtitle = null;

@@ -74,7 +74,7 @@ public class MuSigOfferListItem {
             offerDateString, deposit, paymentMethodCurrencyCode;
     private final boolean isMyOffer, hasAnyMatchingAccount, canTakeOffer, hasFixPrice, isBaseAmountBtc, hasAmountRange;
     private final Market market;
-    private final Direction direction;
+    private final Direction displayDirection;
     private final List<PaymentMethod<?>> paymentMethods;
     private final UserProfile makerUserProfile;
     private final ReputationScore reputationScore;
@@ -85,7 +85,9 @@ public class MuSigOfferListItem {
 
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
-    private String formattedPercentagePrice = Res.get("data.na"), price = Res.get("data.na"), priceTooltip = Res.get("data.na"),
+    private String formattedPercentagePrice = Res.get("data.na"),
+            price = Res.get("data.na"),
+            priceTooltip = Res.get("data.na"),
             offerPriceWithSpec = Res.get("data.na");
     private Pair<String, String> pricePair;
     private long priceAsLong = 0;
@@ -116,11 +118,11 @@ public class MuSigOfferListItem {
                 OfferAmountFormatter.formatBaseSideMinAmount(marketPriceService, offer, false),
                 OfferAmountFormatter.formatBaseSideMaxAmount(marketPriceService, offer, false));
 
-        takeOfferButtonText = offer.getDirection().isBuy()
+        displayDirection = offer.getDisplayDirection();
+        takeOfferButtonText = displayDirection.isBuy()
                 ? Res.get("muSig.offerbook.table.cell.offer.intent.sell", market.getBaseCurrencyName())
                 : Res.get("muSig.offerbook.table.cell.offer.intent.buy", market.getBaseCurrencyName());
-        direction = offer.getDirection();
-        offerIntentText = offer.getDirection().isBuy()
+        offerIntentText = displayDirection.isBuy()
                 ? Res.get("muSig.myOffers.table.cell.offerType.buying")
                 : Res.get("muSig.myOffers.table.cell.offerType.selling");
         offerId = offer.getShortId().toUpperCase(Locale.ROOT);
@@ -169,7 +171,8 @@ public class MuSigOfferListItem {
 
         // authorUserProfileId = offerbookMessage.getAuthorUserProfileId();
 
-        String offerType = offer.getDirection().isBuy()
+        // TODO not used
+        String offerType = displayDirection.isBuy()
                 ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
                 : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 

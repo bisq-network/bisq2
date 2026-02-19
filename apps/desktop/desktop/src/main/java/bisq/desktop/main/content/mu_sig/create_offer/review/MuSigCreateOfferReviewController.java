@@ -119,7 +119,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setMarket(market);
     }
 
-    public void setDataForCreateOffer(Direction direction,
+    public void setDataForCreateOffer(Direction displayDirection,
                                       Market market,
                                       ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod,
                                       AmountSpec amountSpec,
@@ -148,7 +148,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         verifyPaymentMethods(paymentMethods);
 
-        applyData(direction,
+        applyData(displayDirection,
                 market,
                 amountSpec,
                 priceSpec);
@@ -169,8 +169,9 @@ public class MuSigCreateOfferReviewController implements Controller {
         // We use static values for both traders of 25%
         offerOptions.add(new CollateralOption(model.getSecurityDepositAsPercent(), model.getSecurityDepositAsPercent()));
 
+        Direction domainDirection = market.isBaseCurrencyBitcoin() ? displayDirection : displayDirection.mirror();
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
-                direction,
+                domainDirection,
                 market,
                 amountSpec,
                 priceSpec,
@@ -210,7 +211,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     // direction is from user perspective not offer direction
-    private void applyData(Direction direction,
+    private void applyData(Direction displayDirection,
                            Market market,
                            AmountSpec amountSpec,
                            PriceSpec priceSpec) {
@@ -257,7 +258,7 @@ public class MuSigCreateOfferReviewController implements Controller {
             String formattedMinBaseAmount = AmountFormatter.formatBaseAmount(minBaseSideAmount);
             String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
             String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
-            if (direction.isSell()) {
+            if (displayDirection.isSell()) {
                 currentToSendMinAmount = formattedMinBaseAmount;
                 currentToSendMaxOrFixedAmount = formattedMaxBaseAmount;
                 currentToReceiveMinAmount = formattedMinQuoteAmount;
@@ -286,7 +287,7 @@ public class MuSigCreateOfferReviewController implements Controller {
             model.setFixQuoteSideAmount(fixQuoteSideAmount);
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
 
-            if (direction.isSell()) {
+            if (displayDirection.isSell()) {
                 currentToSendMaxOrFixedAmount = formattedBaseAmount;
                 toSendCode = fixBaseSideAmount.getCode();
                 currentToReceiveMaxOrFixedAmount = formattedQuoteAmount;
@@ -305,7 +306,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
 
         model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
-        if (direction.isSell()) {
+        if (displayDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
         } else {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
@@ -313,7 +314,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
 
         String directionString = String.format("%s %s",
-                Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
+                Res.get(displayDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
                 model.getMarket().getBaseCurrencyDisplayName());
 
         applyHeaderPaymentMethod();
@@ -343,8 +344,8 @@ public class MuSigCreateOfferReviewController implements Controller {
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
 
-        Direction direction = model.getOffer().getDirection();
-        if (direction.isSell()) {
+        Direction displayDirection = model.getOffer().getDisplayDirection();
+        if (displayDirection.isSell()) {
             model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
             model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
         } else {

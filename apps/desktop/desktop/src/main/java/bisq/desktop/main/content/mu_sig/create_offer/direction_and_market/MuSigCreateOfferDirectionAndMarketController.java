@@ -59,15 +59,15 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
         model = new MuSigCreateOfferDirectionAndMarketModel();
         view = new MuSigCreateOfferDirectionAndMarketView(model, this);
-        setDirection(Direction.BUY);
+        setDisplayDirection(Direction.BUY);
     }
 
     public void setMarket(Market market) {
         model.getSelectedMarket().set(market);
     }
 
-    public ReadOnlyObjectProperty<Direction> getDirection() {
-        return model.getDirection();
+    public ReadOnlyObjectProperty<Direction> getDisplayDirection() {
+        return model.getDisplayDirection();
     }
 
     public ReadOnlyObjectProperty<Market> getMarket() {
@@ -80,7 +80,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     @Override
     public void onActivate() {
-        setDirection(Direction.BUY);
+        setDisplayDirection(Direction.BUY);
 
         model.getPaymentCurrencySearchText().set("");
         model.getCryptoCurrencySearchText().set("");
@@ -162,7 +162,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     }
 
     void onSelectDirection(Direction direction) {
-        setDirection(direction);
+        setDisplayDirection(direction);
         onNextHandler.run();
     }
 
@@ -238,7 +238,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model.getSellButtonText().set(Res.get("muSig.createOffer.directionAndMarket.sellButton", market.getBaseCurrencyName()));
     }
 
-    private void setDirection(Direction direction) {
-        model.getDirection().set(direction);
+    private void setDisplayDirection(Direction direction) {
+        model.getDisplayDirection().set(direction);
     }
 }

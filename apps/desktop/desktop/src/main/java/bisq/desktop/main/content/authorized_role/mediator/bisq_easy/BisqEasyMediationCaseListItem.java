@@ -95,7 +95,7 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
-        directionalTitle = offer.getDirection().getDirectionalTitle();
+        directionalTitle = offer.getDirectionalTitle();
         date = contract.getTakeOfferDate();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);

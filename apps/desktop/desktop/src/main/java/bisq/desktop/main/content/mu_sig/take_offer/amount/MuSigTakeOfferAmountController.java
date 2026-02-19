@@ -71,11 +71,11 @@ public class MuSigTakeOfferAmountController implements Controller {
     public void init(MuSigOffer muSigOffer) {
         model.setMuSigOffer(muSigOffer);
 
-        Direction takersDirection = muSigOffer.getTakersDirection();
-        model.setHeadline(takersDirection.isBuy()
+        Direction takersDisplayDirection = muSigOffer.getTakersDisplayDirection();
+        model.setHeadline(takersDisplayDirection.isBuy()
                 ? Res.get("bisqEasy.takeOffer.amount.headline.buyer")
                 : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
-        amountSelectionController.setDirection(takersDirection);
+        amountSelectionController.setDirection(takersDisplayDirection);
         Market market = muSigOffer.getMarket();
         amountSelectionController.setMarket(market);
 
@@ -84,7 +84,7 @@ public class MuSigTakeOfferAmountController implements Controller {
 
         applyQuoteSideMinMaxRange();
 
-        String btcAmount = takersDirection.isBuy()
+        String btcAmount = takersDisplayDirection.isBuy()
                 ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
                 : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
         Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getMuSigOffer())
@@ -171,7 +171,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
         String makersUserProfileId = muSigOffer.getMakersUserProfileId();
         if (model.getSellersReputationBasedQuoteSideAmount() == null) {
-            String sellersProfileId = muSigOffer.getDirection().isSell() ? makersUserProfileId : myProfileId;
+            String sellersProfileId = muSigOffer.getDisplayDirection().isSell() ? makersUserProfileId : myProfileId;
             long sellersReputationScore = reputationService.getReputationScore(sellersProfileId).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)
@@ -191,7 +191,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setMinMaxRange(minRangeValue, maxAmount);
 
-        boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
+        boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
         if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.learnMore"));
