@@ -65,7 +65,7 @@ public final class MuSigTradeFormatter {
     }
 
     public static String getDirectionalTitle(MuSigTrade trade) {
-        Direction displayDirection = trade.getDisplayDirection();
+        Direction displayDirection = trade.getDisplayOfferDirection();
         return getDirectionalTitle(displayDirection);
     }
 

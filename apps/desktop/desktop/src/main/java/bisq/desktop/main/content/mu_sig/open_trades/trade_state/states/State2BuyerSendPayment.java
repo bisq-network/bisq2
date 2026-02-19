@@ -106,7 +106,7 @@ public class State2BuyerSendPayment extends BaseState {
                 model.getAccountDataBannedValidator().setIsInvalid(false);
             }
 
-            model.setSellersAccountData(trade.getPeer().getAccountPayload().orElseThrow().getAccountDataDisplayString());
+            model.setSellersAccountData(peersAccountPayload.getAccountDataDisplayString());
 
             AccountPayload<?> myAccountPayload = trade.getMyself().getAccountPayload().orElseThrow();
             PaymentRail paymentRail = myAccountPayload.getPaymentMethod().getPaymentRail();

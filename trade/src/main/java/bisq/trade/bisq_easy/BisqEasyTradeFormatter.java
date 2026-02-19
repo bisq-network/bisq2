@@ -57,7 +57,7 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String getDirectionalTitle(BisqEasyTrade trade) {
-        Direction displayDirection = trade.getDisplayDirection();
+        Direction displayDirection = trade.getDisplayOfferDirection();
         return getDirectionalTitle(displayDirection);
     }
 
