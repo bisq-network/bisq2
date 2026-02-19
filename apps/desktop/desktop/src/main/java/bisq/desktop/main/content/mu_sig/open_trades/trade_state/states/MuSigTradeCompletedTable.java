@@ -50,9 +50,9 @@ public class MuSigTradeCompletedTable extends VBox {
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
     private final MuSigWaitingAnimation waitingAnimation;
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
-    private Label btcSideDirection, nonBtcSideDirection, nonBtcAmountValue, nonBtcCode,
+    private final Label btcSideDirection, nonBtcSideDirection, nonBtcAmountValue, nonBtcCode,
             paymentMethodLabel, paymentMethodValue;
-    private HBox btcAmountDisplayHBox, nonBtcHBox;
+    private final HBox btcAmountDisplayHBox, nonBtcHBox;
 
     public MuSigTradeCompletedTable() {
         waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.TRADE_COMPLETED);
@@ -156,7 +156,6 @@ public class MuSigTradeCompletedTable extends VBox {
         tradeWith.getStyleClass().addAll("dimmed-text");
         headerGridPane.add(tradeWith, col, rowTitle);
         headerGridPane.add(tradeWithValue, col, rowValue);
-
 
         nonBtcCode.setText("  " + market.getNonBtcCurrencyCode().toUpperCase());
         bitcoinAmountDisplay.setBtcAmount(btcAmount);
