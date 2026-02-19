@@ -68,6 +68,14 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
             super.onActivate();
             MuSigTrade trade = model.getTrade();
 
+            Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
+            Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
+            String accountName = account.orElseThrow().getAccountName();
+            model.setMyAccountName(accountName);
+
+            AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
+            model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
+
             if (model.getMarket().isBaseCurrencyBitcoin()) {
                 String paymentReasonPart = model.getPaymentReason()
                         .map(e -> "\n" + Res.get("muSig.tradeState.info.seller.phase3a.verifyReceipt.reasonForPayment", e))
@@ -75,19 +83,9 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
                 model.setInfo(Res.get("muSig.tradeState.info.seller.fiat.phase3a.verifyReceipt.account",
                         model.getMyAccountName(), paymentReasonPart));
             } else {
-                AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
                 model.setInfo(Res.get("muSig.tradeState.info.seller.crypto.phase3a.verifyReceipt.account",
                         model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
             }
-
-            Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
-            Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
-            String accountName = account.orElseThrow().getAccountName();
-            model.setMyAccountName(accountName);
-
-            AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
-
-            model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
         }
 
         @Override

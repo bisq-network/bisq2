@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.common.data.Pair;
+import bisq.common.market.Market;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.containers.Spacer;
@@ -49,6 +50,8 @@ public class MuSigTradeCompletedTable extends VBox {
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
     private final MuSigWaitingAnimation waitingAnimation;
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
+    private Label btcSideDirection, nonBtcSideDirection, nonBtcAmountValue, nonBtcCode;
+    private HBox btcAmountDisplayHBox, nonBtcHBox;
 
     public MuSigTradeCompletedTable() {
         waitingAnimation = new MuSigWaitingAnimation(MuSigWaitingState.TRADE_COMPLETED);
@@ -76,7 +79,22 @@ public class MuSigTradeCompletedTable extends VBox {
         bodyGridPane.getColumnConstraints().add(valueCol);
 
         bitcoinAmountDisplay = new BitcoinAmountDisplay();
+        btcAmountDisplayHBox = new HBox(5, bitcoinAmountDisplay);
+        btcAmountDisplayHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
         configureBitcoinAmountDisplay(bitcoinAmountDisplay);
+
+        btcSideDirection = new Label();
+        btcSideDirection.getStyleClass().addAll("dimmed-text");
+        nonBtcSideDirection = new Label();
+        nonBtcSideDirection.getStyleClass().addAll("dimmed-text");
+        nonBtcAmountValue = new Label();
+        nonBtcAmountValue.getStyleClass().add("medium-text");
+
+        nonBtcCode = new Label();
+        nonBtcCode.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
+        nonBtcHBox = new HBox(nonBtcAmountValue, nonBtcCode);
+        nonBtcHBox.setAlignment(Pos.BASELINE_LEFT);
 
         copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
         copyTxIdButton.useIconOnly();
@@ -105,11 +123,11 @@ public class MuSigTradeCompletedTable extends VBox {
         setAlignment(Pos.CENTER);
     }
 
-    public void initialize(UserProfileDisplay tradeWithValue,
+    public void initialize(Market market,
+                           UserProfileDisplay tradeWithValue,
                            boolean isBuyer,
-                           String baseAmount,
-                           String quoteAmount,
-                           String quoteCurrency,
+                           String btcAmount,
+                           String nonBtcAmount,
                            String paymentMethod,
                            String tradeId,
                            String tradeDate,
@@ -122,41 +140,47 @@ public class MuSigTradeCompletedTable extends VBox {
         // Header
         int rowTitle = 0;
         int rowValue = 1;
-
         int col = 0;
+
         Label tradeWith = new Label(Res.get("bisqEasy.tradeCompleted.header.tradeWith").toUpperCase());
         tradeWith.getStyleClass().addAll("dimmed-text");
         headerGridPane.add(tradeWith, col, rowTitle);
         headerGridPane.add(tradeWithValue, col, rowValue);
 
-        ++col;
-        Label myDirection = isBuyer
-                ? new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase())
-                : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
-        myDirection.getStyleClass().addAll("dimmed-text");
 
-        bitcoinAmountDisplay.setBtcAmount(baseAmount);
-
-        HBox btcBox = new HBox(5, bitcoinAmountDisplay);
-        btcBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
-
-        headerGridPane.add(myDirection, col, rowTitle);
-        headerGridPane.add(btcBox, col, rowValue);
+        nonBtcCode.setText("  " + market.getNonBtcCurrencyCode().toUpperCase());
+        bitcoinAmountDisplay.setBtcAmount(btcAmount);
+        nonBtcAmountValue.setText(nonBtcAmount);
 
         ++col;
-        Label myOutcome = isBuyer
-                ? new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase())
-                : new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
-        myOutcome.getStyleClass().addAll("dimmed-text");
-        Label myOutcomeValue = new Label(quoteAmount);
-        myOutcomeValue.getStyleClass().add("medium-text");
-        Label fiat = new Label(quoteCurrency.toUpperCase());
-        fiat.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
-        HBox fiatBox = new HBox(5, myOutcomeValue, fiat);
-        fiatBox.setAlignment(Pos.BASELINE_LEFT);
-        headerGridPane.add(myOutcome, col, rowTitle);
-        headerGridPane.add(fiatBox, col, rowValue);
+        if (market.isBaseCurrencyBitcoin()) {
+            if (isBuyer) {
+                btcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase());
+                nonBtcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase());
+            } else {
+                btcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
+                nonBtcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
+            }
+            headerGridPane.add(btcSideDirection, col, rowTitle);
+            headerGridPane.add(btcAmountDisplayHBox, col, rowValue);
+            ++col;
+            headerGridPane.add(nonBtcSideDirection, col, rowTitle);
+            headerGridPane.add(nonBtcHBox, col, rowValue);
+
+        } else {
+            if (isBuyer) {
+                nonBtcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase());
+                btcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase());
+            } else {
+                nonBtcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
+                btcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
+            }
+            headerGridPane.add(nonBtcSideDirection, col, rowTitle);
+            headerGridPane.add(nonBtcHBox, col, rowValue);
+            ++col;
+            headerGridPane.add(btcSideDirection, col, rowTitle);
+            headerGridPane.add(btcAmountDisplayHBox, col, rowValue);
+        }
 
         ++col;
         Label tradePriceLabel = new Label(Res.get("bisqEasy.tradeCompleted.header.tradePrice").toUpperCase());

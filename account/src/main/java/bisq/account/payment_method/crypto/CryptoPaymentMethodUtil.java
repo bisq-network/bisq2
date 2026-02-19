@@ -60,7 +60,11 @@ public class CryptoPaymentMethodUtil {
     }
 
     public static CryptoPaymentRail getCryptoPaymentRail(String code) {
-        return CRYPTO_PAYMENT_RAIL_BY_CODE.getOrDefault(code, CryptoPaymentRail.UNDEFINED);
+        return getCryptoPaymentRail(code, CryptoPaymentRail.UNDEFINED);
+    }
+
+    public static CryptoPaymentRail getCryptoPaymentRail(String code, CryptoPaymentRail defaultRail) {
+        return CRYPTO_PAYMENT_RAIL_BY_CODE.getOrDefault(code, defaultRail);
     }
 
     public static List<CryptoPaymentMethod> getPaymentMethods(String code) {

@@ -87,17 +87,6 @@ public class State2BuyerSendPayment extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
-            String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
-            if (model.getMarket().isBaseCurrencyBitcoin()) {
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.headline",
-                        formattedNonBtcAmount, model.getPaymentMethodName()));
-                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.sellersAccount"));
-            } else {
-                model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.headline",
-                        formattedNonBtcAmount, model.getNonBtcCurrencyCode()));
-                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.sellersAccount",
-                        model.getNonBtcCurrencyCode()));
-            }
 
             model.setPaymentMethodName(trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
@@ -136,6 +125,18 @@ public class State2BuyerSendPayment extends BaseState {
             model.setPaymentReason(myAccount
                     .map(Account::getAccountPayload)
                     .flatMap(AccountPayload::getReasonForPaymentString));
+
+            String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
+            if (model.getMarket().isBaseCurrencyBitcoin()) {
+                model.setHeadline(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.headline",
+                        formattedNonBtcAmount, model.getPaymentMethodName()));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.fiat.phase2a.sellersAccount"));
+            } else {
+                model.setHeadline(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.headline",
+                        formattedNonBtcAmount, model.getNonBtcCurrencyCode()));
+                model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.buyer.crypto.phase2a.sellersAccount",
+                        model.getNonBtcCurrencyCode()));
+            }
         }
 
         @Override
@@ -163,9 +164,9 @@ public class State2BuyerSendPayment extends BaseState {
         @Setter
         private Optional<String> paymentReason = Optional.empty();
         @Setter
-        String peersAccountDataDescription;
+        private String peersAccountDataDescription;
         @Setter
-        String headline;
+        private String headline;
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);

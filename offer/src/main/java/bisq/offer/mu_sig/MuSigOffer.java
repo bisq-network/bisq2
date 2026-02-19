@@ -112,8 +112,8 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
 
     private static List<PaymentMethodSpec<?>> createBitcoinMainChainPaymentMethodSpec() {
         return PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().stream()
-                        .map(spec -> (PaymentMethodSpec<?>) spec)
-                        .collect(Collectors.toList());
+                .map(spec -> (PaymentMethodSpec<?>) spec)
+                .collect(Collectors.toList());
     }
 
     @Override

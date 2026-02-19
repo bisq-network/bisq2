@@ -62,7 +62,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 class MuSigTradePhaseBox {
@@ -139,7 +138,7 @@ class MuSigTradePhaseBox {
             long maxTradeDurationTime = tradeDuration.getTime();
             unbindSecondTickPin();
             secondTickPin = UIClock.observeSecondTick(() ->
-                    applyRemainingTime(trade.getTradeStartedDate(), maxTradeDurationTime));
+                    applyRemainingTime(trade.getTakeOfferDate(), maxTradeDurationTime));
 
             model.getPhase1Info().set(Res.get("muSig.tradeState.phase1").toUpperCase());
             model.getPhase2Info().set(Res.get("muSig.tradeState.phase2").toUpperCase());
@@ -180,21 +179,16 @@ class MuSigTradePhaseBox {
             }));
         }
 
-        private void applyRemainingTime(Optional<Long> tradeStartedDate, long maxTradeDurationTime) {
-            if (tradeStartedDate.isPresent()) {
-                long passed = System.currentTimeMillis() - tradeStartedDate.get();
-                long remaining = Math.max(0, maxTradeDurationTime - passed);
-                double progress = 1 - remaining / (double) maxTradeDurationTime;
-                model.getRemainingTime().set(progress);
-                if (progress < 1) {
-                    String formatted = TimeFormatter.formatAge(remaining);
-                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime", formatted));
-                } else {
-                    model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.exceeded"));
-                }
+        private void applyRemainingTime(long takeOfferDate, long maxTradeDurationTime) {
+            long passed = System.currentTimeMillis() - takeOfferDate;
+            long remaining = Math.max(0, maxTradeDurationTime - passed);
+            double progress = 1 - remaining / (double) maxTradeDurationTime;
+            model.getRemainingTime().set(progress);
+            if (progress < 1) {
+                String formatted = TimeFormatter.formatAge(remaining);
+                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime", formatted));
             } else {
-                model.getRemainingTime().set(0);
-                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.notStarted"));
+                model.getFormattedRemainingTime().set(Res.get("muSig.tradeState.remainingTime.exceeded"));
             }
         }
 

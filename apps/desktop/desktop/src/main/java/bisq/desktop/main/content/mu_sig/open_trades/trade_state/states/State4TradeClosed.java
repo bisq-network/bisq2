@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.PaymentRail;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.data.Pair;
@@ -97,11 +95,11 @@ public class State4TradeClosed extends BaseState {
             super.onActivate();
 
             MuSigTrade trade = model.getTrade();
+            trade.setTradeCompletedDate(System.currentTimeMillis());
+
             MuSigContract contract = trade.getContract();
-            PaymentRail basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-            String name = basePaymentRail.name();
-            model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
-            model.setBlockExplorerLinkVisible(basePaymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
+            model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof.MAIN_CHAIN"));
+            model.setBlockExplorerLinkVisible(true);
             String paymentProof = trade.getDepositTxId();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
@@ -233,9 +231,18 @@ public class State4TradeClosed extends BaseState {
             }
             peerProfileDisplay.setUserProfile(model.getTradePeer());
             peerProfileDisplay.setReputationScore(model.getTradePeerReputationScore());
-            muSigTradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBtcAmount(),
-                    model.getNonBtcAmount(), model.getQuoteCurrency(), model.getPaymentMethod(), model.getTradeId(),
-                    model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
+            muSigTradeCompletedTable.initialize(model.getMarket(),
+                    peerProfileDisplay,
+                    model.isBuyer(),
+                    model.getBtcAmount(),
+                    model.getNonBtcAmount(),
+                    model.getPaymentMethod(),
+                    model.getTradeId(),
+                    model.getTradeDate(),
+                    model.getTradeDuration(),
+                    model.getPrice(),
+                    model.getPriceSymbol(),
+                    txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
                 muSigTradeCompletedTable.showBlockExplorerLink();
                 muSigTradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
