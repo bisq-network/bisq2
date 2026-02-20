@@ -58,7 +58,6 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     @Nullable
     private Scheduler scheduler;
     private long initialDelay = 0;
-    private long timeSinceLastResponse;
 
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newSingleThreadExecutor(MarketPriceRequestService.class.getSimpleName());
@@ -86,6 +85,9 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     }
 
     private void startRequesting() {
+        if (shutdownStarted) {
+            return;
+        }
         disposeScheduler();
         scheduler = Scheduler.run(this::periodicRequest)
                 .host(this)
@@ -103,12 +105,14 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
                         log.warn("Failed to fetch market prices, retrying in {} seconds", initialDelay);
                         startRequesting();
                     } else {
+                        initialDelay = 0;
                         // We only use those market prices for which we have a market in the repository
                         Map<Market, MarketPrice> filtered = map.entrySet().stream()
                                 .filter(e -> e.getValue().isValidDate())
-                                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
-                                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
-                                        Map.Entry::getValue));
+                                .flatMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes())
+                                        .map(market -> Map.entry(market, e.getValue()))
+                                        .stream())
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         marketPriceByCurrencyMap.clear();
                         marketPriceByCurrencyMap.putAll(filtered);
                     }
@@ -127,7 +131,7 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
 
     @Override
     protected String getParam(HttpRequestUrlProvider provider, Void requestData) {
-        return "getAllMarketPrices";
+        return provider.getApiPath();
     }
 
     Map<Market, MarketPrice> loadStaticDevMarketPrice() {
@@ -207,8 +211,8 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     @ToString
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
-            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
+            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"), "getAllMarketPrices");
+            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"), "getAllMarketPrices");
             long interval = typesafeConfig.getLong("interval");
             long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
             return new Config(providers, fallbackProviders, interval, timeoutInSeconds);

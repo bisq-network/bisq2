@@ -122,25 +122,27 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
         }
     }
 
-    public interface RequestData {
+    public sealed interface RequestData permits TxRequestData, AddressRequestData {
     }
 
+    @EqualsAndHashCode
+    @ToString
     @Getter
     public static final class TxRequestData implements RequestData {
         private final String txId;
 
         public TxRequestData(String txId) {
-            super();
             this.txId = txId;
         }
     }
 
+    @EqualsAndHashCode
+    @ToString
     @Getter
     public static final class AddressRequestData implements RequestData {
         private final String address;
 
         public AddressRequestData(String address) {
-            super();
             this.address = address;
         }
     }

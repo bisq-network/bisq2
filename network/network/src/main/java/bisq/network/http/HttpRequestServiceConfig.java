@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 public class HttpRequestServiceConfig {
-    public static HttpRequestServiceConfig from(Config typesafeConfig) {
+    public static HttpRequestServiceConfig from(Config typesafeConfig, String apiPath) {
         long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-        Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
-        Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
+        Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"), apiPath);
+        Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"), apiPath);
         return new HttpRequestServiceConfig(timeoutInSeconds, providers, fallbackProviders);
     }
 
@@ -51,13 +51,13 @@ public class HttpRequestServiceConfig {
         this.fallbackProviders = fallbackProviders;
     }
 
-    public static Set<HttpRequestUrlProvider> parseProviders(List<? extends Config> configList) {
+    public static Set<HttpRequestUrlProvider> parseProviders(List<? extends Config> configList, String apiPath) {
         return configList.stream()
                 .map(config -> {
                     String url = config.getString("url");
                     String operator = config.getString("operator");
                     TransportType transportType = getTransportTypeFromUrl(url);
-                    return new HttpRequestUrlProvider(url, operator, transportType);
+                    return new HttpRequestUrlProvider(url, operator, apiPath, transportType);
                 })
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -72,6 +72,8 @@ public class HttpRequestServiceConfig {
                 } else if (host.endsWith(".onion")) {
                     return TransportType.TOR;
                 }
+            } else {
+                log.warn("Could not determine host from URL '{}', defaulting to CLEAR transport", url);
             }
         } catch (IllegalArgumentException e) {
             log.warn("Failed to parse URL for transport type detection: {}", url);

@@ -28,13 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-// TODO extract super class
-// TODO WIP
-
 @Slf4j
 public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, String> {
     private static final String SUCCESS = "success";
-    private static final String ENDPOINT = "relay";
 
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
@@ -56,7 +52,7 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
 
     @Override
     protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
-        return ENDPOINT + "?" +
+        return provider.getApiPath() + "?" +
                 "isAndroid=" + requestData.isAndroid() +
                 "&token=" + requestData.getDeviceTokenHex() +
                 "&msg=" + requestData.getEncryptedMessageHex();

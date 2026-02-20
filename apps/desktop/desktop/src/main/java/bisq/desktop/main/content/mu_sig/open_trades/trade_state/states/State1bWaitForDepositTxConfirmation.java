@@ -140,10 +140,13 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
         }
 
         public void openExplorer() {
-            explorerService.getExplorerServiceProvider().ifPresent(provider -> {
-                String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getTxId();
-                Browser.open(url);
-            });
+            explorerService.getExplorerServiceProvider()
+                    .ifPresentOrElse(provider -> {
+                        String txPath = provider.getTxPath();
+                        String txId = model.getTxId();
+                        String url = provider.getBaseUrl() + "/" + txPath + "/" + txId;
+                        Browser.open(url);
+                    }, () -> log.warn("No explorer provider available to open transaction URL"));
         }
 
         void onSkipWaitForConfirmation() {

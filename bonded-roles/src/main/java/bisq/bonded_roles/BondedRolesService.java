@@ -81,7 +81,7 @@ public class BondedRolesService implements Service {
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
-        mobileNotificationRelayClient = new MobileNotificationRelayClient(HttpRequestServiceConfig.from(config.getMobileNotifications()), networkService);
+        mobileNotificationRelayClient = new MobileNotificationRelayClient(HttpRequestServiceConfig.from(config.getMobileNotifications(), "relay"), networkService);
     }
 
     /* --------------------------------------------------------------------- */

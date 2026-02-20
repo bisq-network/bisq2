@@ -60,11 +60,12 @@ public abstract class HttpRequestService<T, R> implements Service {
     }
 
     protected final ExecutorService executorService;
-    @Getter
-    protected final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
     protected final HttpRequestServiceConfig conf;
     protected final NetworkService networkService;
     protected final String userAgent;
+
+    @Getter
+    protected final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
     protected final Set<HttpRequestUrlProvider> candidates = new HashSet<>();
     protected final Set<HttpRequestUrlProvider> providersFromConfig = new HashSet<>();
     protected final Set<HttpRequestUrlProvider> fallbackProviders = new HashSet<>();
@@ -77,7 +78,8 @@ public abstract class HttpRequestService<T, R> implements Service {
     protected volatile boolean shutdownStarted;
     private volatile long timeSinceLastResponse;
 
-    public HttpRequestService(HttpRequestServiceConfig conf, NetworkService networkService,
+    public HttpRequestService(HttpRequestServiceConfig conf,
+                              NetworkService networkService,
                               ExecutorService executorService) {
         this.conf = conf;
         this.networkService = networkService;

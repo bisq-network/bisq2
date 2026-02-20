@@ -31,11 +31,6 @@ public class HttpRequestUrlProvider {
     private final String apiPath;
     private final TransportType transportType;
 
-    public HttpRequestUrlProvider(String baseUrl, String operator, TransportType transportType) {
-        // Returns json with server time and major fiat prices. We are only interested in the server time.
-        this(baseUrl, operator, "api/v1/prices", transportType);
-    }
-
     public HttpRequestUrlProvider(String baseUrl,
                                   String operator,
                                   String apiPath,
