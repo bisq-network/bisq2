@@ -36,6 +36,7 @@ import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
+import bisq.network.http.utils.HttpRequestUrlProvider;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -387,7 +388,7 @@ public class MarketPriceComponent {
         public String getProviderUrl() {
             return marketPriceService.getMarketPriceRequestService()
                     .flatMap(MarketPriceRequestService::getMostRecentProvider)
-                    .map(MarketPriceRequestService.Provider::getBaseUrl)
+                    .map(HttpRequestUrlProvider::getBaseUrl)
                     .orElseGet(() -> Res.get("data.na"));
         }
 
