@@ -18,11 +18,13 @@
 package bisq.network.http;
 
 import bisq.common.network.TransportType;
+import com.typesafe.config.Config;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,29 +32,37 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 public class HttpRequestServiceConfig {
-    public static HttpRequestServiceConfig from(com.typesafe.config.Config typesafeConfig) {
+    public static HttpRequestServiceConfig from(Config typesafeConfig) {
         long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-        Set<HttpRequestUrlProvider> providers = typesafeConfig.getConfigList("providers").stream()
-                .map(config -> {
-                    String url = config.getString("url");
-                    String operator = config.getString("operator");
-                    TransportType transportType = getTransportTypeFromUrl(url);
-                    return new HttpRequestUrlProvider(url, operator, transportType);
-                })
-                .collect(Collectors.toUnmodifiableSet());
-
-        Set<HttpRequestUrlProvider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                .map(config -> {
-                    String url = config.getString("url");
-                    String operator = config.getString("operator");
-                    TransportType transportType = getTransportTypeFromUrl(url);
-                    return new HttpRequestUrlProvider(url, operator, transportType);
-                })
-                .collect(Collectors.toUnmodifiableSet());
+        Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
+        Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
         return new HttpRequestServiceConfig(timeoutInSeconds, providers, fallbackProviders);
     }
 
-    public static TransportType getTransportTypeFromUrl(String url) {
+    private final Set<? extends HttpRequestUrlProvider> providers;
+    private final Set<? extends HttpRequestUrlProvider> fallbackProviders;
+    private final long timeoutInSeconds;
+
+    public HttpRequestServiceConfig(long timeoutInSeconds,
+                                    Set<? extends HttpRequestUrlProvider> providers,
+                                    Set<? extends HttpRequestUrlProvider> fallbackProviders) {
+        this.timeoutInSeconds = timeoutInSeconds;
+        this.providers = providers;
+        this.fallbackProviders = fallbackProviders;
+    }
+
+    public static Set<HttpRequestUrlProvider> parseProviders(List<? extends Config> configList) {
+        return configList.stream()
+                .map(config -> {
+                    String url = config.getString("url");
+                    String operator = config.getString("operator");
+                    TransportType transportType = getTransportTypeFromUrl(url);
+                    return new HttpRequestUrlProvider(url, operator, transportType);
+                })
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static TransportType getTransportTypeFromUrl(String url) {
         try {
             URI uri = URI.create(url);
             String host = uri.getHost();
@@ -69,16 +79,4 @@ public class HttpRequestServiceConfig {
         return TransportType.CLEAR;
     }
 
-
-    private final Set<? extends HttpRequestUrlProvider> providers;
-    private final Set<? extends HttpRequestUrlProvider> fallbackProviders;
-    private final long timeoutInSeconds;
-
-    public HttpRequestServiceConfig(long timeoutInSeconds,
-                                    Set<? extends HttpRequestUrlProvider> providers,
-                                    Set<? extends HttpRequestUrlProvider> fallbackProviders) {
-        this.timeoutInSeconds = timeoutInSeconds;
-        this.providers = providers;
-        this.fallbackProviders = fallbackProviders;
-    }
 }

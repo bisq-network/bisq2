@@ -22,7 +22,6 @@ import bisq.common.file.FileReaderUtils;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.network.TransportType;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
@@ -208,24 +207,8 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     @ToString
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            Set<HttpRequestUrlProvider> providers = typesafeConfig.getConfigList("providers").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new HttpRequestUrlProvider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            Set<HttpRequestUrlProvider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new HttpRequestUrlProvider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
+            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
+            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
             long interval = typesafeConfig.getLong("interval");
             long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
             return new Config(providers, fallbackProviders, interval, timeoutInSeconds);
