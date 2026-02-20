@@ -31,10 +31,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ExplorerService extends HttpRequestService<ExplorerService.RequestData, Tx> {
@@ -89,13 +91,24 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
-            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
+            Set<Provider> providers = parseExplorerProviders(typesafeConfig.getConfigList("providers"));
+            Set<Provider> fallbackProviders = parseExplorerProviders(typesafeConfig.getConfigList("fallbackProviders"));
             return new Config(timeoutInSeconds, providers, fallbackProviders);
         }
 
-        public Config(long timeoutInSeconds, Set<HttpRequestUrlProvider> providers, Set<HttpRequestUrlProvider> fallbackProviders) {
+        public Config(long timeoutInSeconds, Set<Provider> providers, Set<Provider> fallbackProviders) {
             super(timeoutInSeconds, providers, fallbackProviders);
+        }
+
+        private static Set<Provider> parseExplorerProviders(List<? extends com.typesafe.config.Config> configList) {
+            return configList.stream()
+                    .map(config -> {
+                        String url = config.getString("url");
+                        String operator = config.getString("operator");
+                        TransportType transportType = getTransportTypeFromUrl(url);
+                        return new Provider(url, operator, transportType);
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
         }
     }
 

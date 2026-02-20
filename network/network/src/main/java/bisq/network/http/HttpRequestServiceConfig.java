@@ -62,7 +62,7 @@ public class HttpRequestServiceConfig {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    private static TransportType getTransportTypeFromUrl(String url) {
+    public static TransportType getTransportTypeFromUrl(String url) {
         try {
             URI uri = URI.create(url);
             String host = uri.getHost();
