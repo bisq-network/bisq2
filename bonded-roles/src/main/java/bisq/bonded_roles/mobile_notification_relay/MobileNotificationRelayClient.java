@@ -17,7 +17,6 @@
 
 package bisq.bonded_roles.mobile_notification_relay;
 
-import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
 import bisq.network.http.utils.HttpRequestService;
@@ -38,7 +37,7 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     private static final String ENDPOINT = "relay";
 
     private static ExecutorService getExecutorService() {
-        return ExecutorFactory.newCachedThreadPool(ExplorerService.class.getSimpleName(),
+        return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
                 1,
                 5,
                 60);
