@@ -23,6 +23,7 @@ import bisq.common.json.JsonMapperProvider;
 import bisq.common.util.ExceptionUtil;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.market_price.QuotesResponse;
+import bisq.network.http.utils.HttpRequestUrlProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -74,7 +75,7 @@ public class ExplorerRestApi extends RestApiBase {
     )
     public Response getSelected() {
         try {
-            ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
+            HttpRequestUrlProvider provider = explorerService.getSelectedProvider().get();
             if (provider == null) {
                 return buildNotFoundResponse("No provider found.");
             }

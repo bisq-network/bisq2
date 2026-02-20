@@ -30,6 +30,7 @@ import bisq.common.platform.MemoryReportService;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
+import bisq.network.http.utils.HttpRequestServiceConfig;
 import bisq.network.http.utils.ReferenceTimeService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
@@ -182,7 +183,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 memoryReportService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
 
-        referenceTimeService = new ReferenceTimeService(ReferenceTimeService.Config.from(config.getReferenceTimeService()), this);
+        referenceTimeService = new ReferenceTimeService(HttpRequestServiceConfig.from(config.getReferenceTimeService()), this);
     }
 
     @Override

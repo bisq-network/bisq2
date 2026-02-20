@@ -27,6 +27,7 @@ import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
+import bisq.network.http.utils.HttpRequestServiceConfig;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class BondedRolesService implements Service {
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
-        mobileNotificationRelayClient = new MobileNotificationRelayClient(MobileNotificationRelayClient.Config.from(config.getMobileNotifications()), networkService);
+        mobileNotificationRelayClient = new MobileNotificationRelayClient(HttpRequestServiceConfig.from(config.getMobileNotifications()), networkService);
     }
 
     /* --------------------------------------------------------------------- */

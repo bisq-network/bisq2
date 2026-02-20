@@ -163,12 +163,10 @@ public class State4TradeClosed extends BaseState {
         }
 
         protected String getBlockExplorerUrl() {
-            ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            if (provider == null) {
-                log.warn("SelectedProvider is null");
-                return Res.get("data.na");
-            }
-            return provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
+            return explorerService.getExplorerServiceProvider()
+                    .map(provider ->
+                            provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof())
+                    .orElse(Res.get("data.na"));
         }
     }
 
