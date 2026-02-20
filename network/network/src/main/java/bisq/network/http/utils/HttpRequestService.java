@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
@@ -109,8 +110,13 @@ public abstract class HttpRequestService<T, R> implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
+
         return httpClient.map(BaseHttpClient::shutdown)
-                .orElse(CompletableFuture.completedFuture(true));
+                .orElse(CompletableFuture.completedFuture(true))
+                .thenApply(result -> {
+                    ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
+                    return result;
+                });
     }
 
     public CompletableFuture<R> request(T requestData) {
