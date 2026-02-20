@@ -68,6 +68,8 @@ public abstract class HttpRequestService<T, R> implements Service {
     protected final Set<HttpRequestUrlProvider> providersFromConfig = new HashSet<>();
     protected final Set<HttpRequestUrlProvider> fallbackProviders = new HashSet<>();
     protected final Set<HttpRequestUrlProvider> failedProviders = new HashSet<>();
+    @Getter
+    protected Optional<HttpRequestUrlProvider> mostRecentProvider = Optional.empty();
     protected Optional<BaseHttpClient> httpClient = Optional.empty();
     protected final int numTotalCandidates;
     protected final boolean noProviderAvailable;
@@ -163,6 +165,8 @@ public abstract class HttpRequestService<T, R> implements Service {
                             timeSinceLastResponse = receivedAt;
 
                             R result = parseResult(json);
+
+                            mostRecentProvider = Optional.of(selectedProvider.get());
 
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
