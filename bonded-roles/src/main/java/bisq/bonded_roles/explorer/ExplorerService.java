@@ -61,10 +61,15 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     @Override
     protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
         if (provider instanceof Provider explorerServiceProvider) {
+            String apiPath = provider.getApiPath();
             if (requestData instanceof TxRequestData txRequestData) {
-                return provider.getApiPath() + explorerServiceProvider.getTxPath() + txRequestData.getTxId();
+                String txPath = explorerServiceProvider.getTxPath();
+                String txId = txRequestData.getTxId();
+                return apiPath + "/" + txPath + "/" + txId;
             } else if (requestData instanceof AddressRequestData addressRequestData) {
-                return provider.getApiPath() + explorerServiceProvider.getAddressPath() + addressRequestData.getAddress();
+                String addressPath = explorerServiceProvider.getAddressPath();
+                String address = addressRequestData.getAddress();
+                return apiPath + "/" + addressPath + "/" + address;
             } else {
                 throw new IllegalArgumentException("requestData of unsupported type. requestData = " + requestData);
             }
@@ -105,8 +110,11 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
                     .map(config -> {
                         String url = config.getString("url");
                         String operator = config.getString("operator");
+                        String apiPath = config.getString("apiPath");
+                        String txPath = config.getString("txPath");
+                        String addressPath = config.getString("addressPath");
                         TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
+                        return new Provider(url, operator, apiPath, txPath, addressPath, transportType);
                     })
                     .collect(Collectors.toUnmodifiableSet());
         }
@@ -118,10 +126,6 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     public static final class Provider extends HttpRequestUrlProvider {
         private final String txPath;
         private final String addressPath;
-
-        public Provider(String baseUrl, String operator, TransportType transportType) {
-            this(baseUrl, operator, "api/", "tx/", "address/", transportType);
-        }
 
         public Provider(String baseUrl,
                         String operator,

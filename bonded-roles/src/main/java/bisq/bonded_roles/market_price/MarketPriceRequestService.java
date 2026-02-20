@@ -211,8 +211,8 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     @ToString
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"), "getAllMarketPrices");
-            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"), "getAllMarketPrices");
+            Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
+            Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
             long interval = typesafeConfig.getLong("interval");
             long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
             return new Config(providers, fallbackProviders, interval, timeoutInSeconds);

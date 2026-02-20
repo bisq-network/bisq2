@@ -183,7 +183,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 memoryReportService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
 
-        referenceTimeService = new ReferenceTimeService(HttpRequestServiceConfig.from(config.getReferenceTimeService(), "api/v1/prices"), this);
+        referenceTimeService = new ReferenceTimeService(HttpRequestServiceConfig.from(config.getReferenceTimeService()), this);
     }
 
     @Override

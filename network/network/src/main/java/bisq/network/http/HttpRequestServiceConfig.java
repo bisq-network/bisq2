@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 public class HttpRequestServiceConfig {
-    public static HttpRequestServiceConfig from(Config typesafeConfig, String apiPath) {
+    public static HttpRequestServiceConfig from(Config typesafeConfig) {
         long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-        Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"), apiPath);
-        Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"), apiPath);
+        Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));
+        Set<HttpRequestUrlProvider> fallbackProviders = parseProviders(typesafeConfig.getConfigList("fallbackProviders"));
         return new HttpRequestServiceConfig(timeoutInSeconds, providers, fallbackProviders);
     }
 
@@ -51,11 +51,12 @@ public class HttpRequestServiceConfig {
         this.fallbackProviders = fallbackProviders;
     }
 
-    public static Set<HttpRequestUrlProvider> parseProviders(List<? extends Config> configList, String apiPath) {
+    public static Set<HttpRequestUrlProvider> parseProviders(List<? extends Config> configList) {
         return configList.stream()
                 .map(config -> {
                     String url = config.getString("url");
                     String operator = config.getString("operator");
+                    String apiPath = config.getString("apiPath");
                     TransportType transportType = getTransportTypeFromUrl(url);
                     return new HttpRequestUrlProvider(url, operator, apiPath, transportType);
                 })
