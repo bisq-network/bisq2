@@ -58,20 +58,21 @@ public abstract class HttpRequestService<T, R> implements Service {
         }
     }
 
-    private final ExecutorService executorService;
+    protected final ExecutorService executorService;
     @Getter
-    private final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
-    private final HttpRequestServiceConfig conf;
-    private final NetworkService networkService;
-    private final String userAgent;
-    private final Set<HttpRequestUrlProvider> candidates = new HashSet<>();
-    private final Set<HttpRequestUrlProvider> providersFromConfig = new HashSet<>();
-    private final Set<HttpRequestUrlProvider> fallbackProviders = new HashSet<>();
-    private final Set<HttpRequestUrlProvider> failedProviders = new HashSet<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
-    private final int numTotalCandidates;
-    private final boolean noProviderAvailable;
-    private volatile boolean shutdownStarted;
+    protected final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
+    protected final HttpRequestServiceConfig conf;
+    protected final NetworkService networkService;
+    protected final String userAgent;
+    protected final Set<HttpRequestUrlProvider> candidates = new HashSet<>();
+    protected final Set<HttpRequestUrlProvider> providersFromConfig = new HashSet<>();
+    protected final Set<HttpRequestUrlProvider> fallbackProviders = new HashSet<>();
+    protected final Set<HttpRequestUrlProvider> failedProviders = new HashSet<>();
+    protected Optional<BaseHttpClient> httpClient = Optional.empty();
+    protected final int numTotalCandidates;
+    protected final boolean noProviderAvailable;
+    protected volatile boolean shutdownStarted;
+    private volatile long timeSinceLastResponse;
 
     public HttpRequestService(HttpRequestServiceConfig conf, NetworkService networkService,
                               ExecutorService executorService) {
@@ -148,16 +149,21 @@ public abstract class HttpRequestService<T, R> implements Service {
                         HttpRequestUrlProvider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                         BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
                         httpClient = Optional.of(client);
-                        long ts = System.currentTimeMillis();
+                        long requestedAt = System.currentTimeMillis();
                         String param = getParam(provider, request);
                         try {
-                            log.info("Request reference time from {}", client.getBaseUrl() + "/" + param);
+                            log.info("Start Http request to {}", client.getBaseUrl());
 
                             String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
 
+                            long receivedAt = System.currentTimeMillis();
+                            String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (receivedAt - timeSinceLastResponse) / 1000 + " sec";
+                            log.info("Received response from {} after {} ms. {}",
+                                    client.getBaseUrl(), receivedAt - requestedAt, sinceLastResponse);
+                            timeSinceLastResponse = receivedAt;
+
                             R result = parseResult(json);
 
-                            log.info("Received result {} from {}/{} after {} ms", result, client.getBaseUrl(), param, System.currentTimeMillis() - ts);
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
                             return result;
