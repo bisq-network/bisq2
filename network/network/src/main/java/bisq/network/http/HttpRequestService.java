@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.utils;
+package bisq.network.http;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
@@ -27,7 +27,7 @@ import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.http.BaseHttpClient;
+import bisq.network.http.utils.HttpException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

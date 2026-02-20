@@ -36,7 +36,7 @@ import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import bisq.network.http.utils.HttpRequestUrlProvider;
+import bisq.network.http.HttpRequestUrlProvider;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;

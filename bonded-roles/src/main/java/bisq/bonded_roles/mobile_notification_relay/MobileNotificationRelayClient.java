@@ -19,9 +19,9 @@ package bisq.bonded_roles.mobile_notification_relay;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
-import bisq.network.http.utils.HttpRequestService;
-import bisq.network.http.utils.HttpRequestServiceConfig;
-import bisq.network.http.utils.HttpRequestUrlProvider;
+import bisq.network.http.HttpRequestService;
+import bisq.network.http.HttpRequestServiceConfig;
+import bisq.network.http.HttpRequestUrlProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

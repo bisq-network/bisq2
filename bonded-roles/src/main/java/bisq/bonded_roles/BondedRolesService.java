@@ -27,7 +27,7 @@ import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
-import bisq.network.http.utils.HttpRequestServiceConfig;
+import bisq.network.http.HttpRequestServiceConfig;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

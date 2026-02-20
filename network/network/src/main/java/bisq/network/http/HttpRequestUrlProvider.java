@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.utils;
+package bisq.network.http;
 
 import bisq.common.network.TransportType;
 import lombok.EqualsAndHashCode;

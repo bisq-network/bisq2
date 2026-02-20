@@ -23,7 +23,7 @@ import bisq.common.json.JsonMapperProvider;
 import bisq.common.util.ExceptionUtil;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.market_price.QuotesResponse;
-import bisq.network.http.utils.HttpRequestUrlProvider;
+import bisq.network.http.HttpRequestUrlProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
