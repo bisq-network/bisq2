@@ -39,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -224,9 +225,9 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
                         }
                     }, executorService)
-                    .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
-                    .thenCompose(result -> {
-                        if (result == null) {
+                    .orTimeout(conf.getTimeoutInSeconds(), SECONDS)
+                    .exceptionallyCompose(throwable -> {
+                        if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
                             // Timeout occurred - add provider to failed list before retrying
                             HttpRequestUrlProvider currentProvider = selectedProvider.get();
                             if (currentProvider != null) {
@@ -236,7 +237,7 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
                             return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
                         }
-                        return CompletableFuture.completedFuture(result);
+                        return CompletableFuture.failedFuture(throwable);
                     });
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected requesting reference time task.", e);
