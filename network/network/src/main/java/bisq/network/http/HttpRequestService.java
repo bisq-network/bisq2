@@ -158,7 +158,21 @@ public abstract class HttpRequestService<T, R> implements Service {
             return CompletableFuture.supplyAsync(() -> {
                         HttpRequestUrlProvider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                         BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
+
+                        if (client.hasPendingRequest()) {
+                            selectedProvider.set(selectNextProvider());
+                            int numRecursions = recursionDepth.incrementAndGet();
+                            if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
+                                log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
+                                throw new RetryException("Client busy, retrying with next provider", recursionDepth);
+                            } else {
+                                log.warn("We exhausted all possible providers and give up");
+                                throw new RuntimeException("We failed at all possible providers and give up");
+                            }
+                        }
+
                         httpClient = Optional.of(client);
+
                         long requestedAt = System.currentTimeMillis();
                         String param = getParam(provider, request);
                         try {
