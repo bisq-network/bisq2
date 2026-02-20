@@ -211,6 +211,13 @@ public abstract class HttpRequestService<T, R> implements Service {
                     .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
                     .thenCompose(result -> {
                         if (result == null) {
+                            // Timeout occurred - add provider to failed list before retrying
+                            HttpRequestUrlProvider currentProvider = selectedProvider.get();
+                            if (currentProvider != null) {
+                                failedProviders.add(currentProvider);
+                                log.warn("Request to provider {} timed out after {} seconds",
+                                        currentProvider.getBaseUrl(), conf.getTimeoutInSeconds());
+                            }
                             return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
                         }
                         return CompletableFuture.completedFuture(result);
@@ -225,7 +232,15 @@ public abstract class HttpRequestService<T, R> implements Service {
         if (candidates.isEmpty()) {
             fillCandidates(0);
         }
+        // Guard against null return from getRandomElement (can happen if candidates is empty)
         HttpRequestUrlProvider selected = CollectionUtil.getRandomElement(candidates);
+        if (selected == null) {
+            log.error("No provider available - candidates list is empty after fillCandidates");
+            // Return first available provider from config as fallback
+            return providersFromConfig.stream().findFirst()
+                    .orElseGet(() -> fallbackProviders.stream().findFirst()
+                            .orElse(null));
+        }
         candidates.remove(selected);
         return selected;
     }

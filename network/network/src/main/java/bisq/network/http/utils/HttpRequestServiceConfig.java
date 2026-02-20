@@ -20,10 +20,13 @@ package bisq.network.http.utils;
 import bisq.common.network.TransportType;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import java.net.URI;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 @ToString
 public class HttpRequestServiceConfig {
@@ -49,14 +52,21 @@ public class HttpRequestServiceConfig {
         return new HttpRequestServiceConfig(timeoutInSeconds, providers, fallbackProviders);
     }
 
-    public static TransportType getTransportTypeFromUrl(String url) {
-        if (url.endsWith(".i2p")) {
-            return TransportType.I2P;
-        } else if (url.endsWith(".onion")) {
-            return TransportType.TOR;
-        } else {
-            return TransportType.CLEAR;
+    private static TransportType getTransportTypeFromUrl(String url) {
+        try {
+            URI uri = URI.create(url);
+            String host = uri.getHost();
+            if (host != null) {
+                if (host.endsWith(".i2p")) {
+                    return TransportType.I2P;
+                } else if (host.endsWith(".onion")) {
+                    return TransportType.TOR;
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to parse URL for transport type detection: {}", url);
         }
+        return TransportType.CLEAR;
     }
 
 
