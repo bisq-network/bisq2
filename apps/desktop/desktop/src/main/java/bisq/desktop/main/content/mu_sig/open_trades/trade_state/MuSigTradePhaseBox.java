@@ -130,7 +130,7 @@ class MuSigTradePhaseBox {
             }
 
             TradeDuration tradeDuration = trade.getContract()
-                    .getQuoteSidePaymentMethodSpec()
+                    .getNonBtcSidePaymentMethodSpec()
                     .getPaymentMethod()
                     .getPaymentRail()
                     .getTradeDuration();

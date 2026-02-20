@@ -88,8 +88,6 @@ public class State2BuyerSendPayment extends BaseState {
 
             MuSigTrade trade = model.getTrade();
 
-            String paymentMethodName = trade.getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString();
-            model.setPaymentMethodName(paymentMethodName);
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             if (muSigService.isAccountDataBanned(peersAccountPayload)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
@@ -129,6 +127,7 @@ public class State2BuyerSendPayment extends BaseState {
 
             String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
             if (model.getMarket().isBaseCurrencyBitcoin()) {
+                String paymentMethodName = trade.getContract().getNonBtcSidePaymentMethodSpec().getShortDisplayString();
                 model.setHeadline(Res.get("muSig.tradeState.info.fiat.phase2a.headline",
                         formattedNonBtcAmount, paymentMethodName));
                 model.setPeersAccountDataDescription(Res.get("muSig.tradeState.info.fiat.phase2a.sellersAccount"));
@@ -157,8 +156,6 @@ public class State2BuyerSendPayment extends BaseState {
     private static class Model extends BaseState.Model {
         private final BooleanProperty confirmFiatSentButtonDisabled = new SimpleBooleanProperty();
         private final SettableErrorValidator accountDataBannedValidator = new SettableErrorValidator(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBannedError"));
-        @Setter
-        private String paymentMethodName;
         @Setter
         private String sellersAccountData;
         @Setter

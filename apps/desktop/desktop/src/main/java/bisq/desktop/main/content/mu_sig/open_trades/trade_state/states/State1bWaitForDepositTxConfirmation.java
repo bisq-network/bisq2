@@ -21,7 +21,6 @@ import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
 import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -33,7 +32,6 @@ import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
 import bisq.desktop.main.content.mu_sig.components.MuSigWaitingAnimation;
 import bisq.desktop.main.content.mu_sig.components.MuSigWaitingState;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
@@ -200,10 +198,6 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
                                     ExceptionUtil.getRootCauseMessage(rootCause)));
                         }
                     }));
-        }
-
-        private static String getFormattedBaseAmount(long value) {
-            return AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(value));
         }
 
         private List<Long> findTxOutputValuesForAddress(Tx tx, String address) {
