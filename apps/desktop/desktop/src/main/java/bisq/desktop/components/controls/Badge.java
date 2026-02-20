@@ -136,6 +136,9 @@ public class Badge extends StackPane {
 
     public void setControl(Node control) {
         if (control != null) {
+            if (this.control != null) {
+                getChildren().remove(this.control);
+            }
             this.control = control;
             getChildren().add(0, control);
 

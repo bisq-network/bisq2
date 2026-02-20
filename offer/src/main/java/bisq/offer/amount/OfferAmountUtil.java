@@ -281,20 +281,19 @@ public class OfferAmountUtil {
     // Deposit Amount
     /* --------------------------------------------------------------------- */
 
-    public static Monetary calculateSecurityDeposit(Monetary monetary, double securityDeposit) {
-        return Monetary.from(MathUtils.roundDoubleToLong(monetary.getValue() * securityDeposit), monetary.getCode());
-    }
-
     public static Monetary calculateSecurityDepositAsBTC(Market market,
                                                          Monetary baseSideMonetary,
                                                          Monetary quoteSideMonetary,
                                                          double securityDeposit) {
-        if (market.isBaseCurrencyBitcoin()) {
-            checkArgument(baseSideMonetary.getCode().equals("BTC"));
-            return calculateSecurityDeposit(baseSideMonetary, securityDeposit);
-        } else {
-            checkArgument(quoteSideMonetary.getCode().equals("BTC"));
-            return calculateSecurityDeposit(quoteSideMonetary, securityDeposit);
-        }
+        Monetary btcSideMonetary = market.isBaseCurrencyBitcoin()
+                ? baseSideMonetary
+                : quoteSideMonetary;
+        return calculateSecurityDepositAsBTC(btcSideMonetary, securityDeposit);
+    }
+
+    public static Monetary calculateSecurityDepositAsBTC(Monetary btcSideMonetary,
+                                                         double securityDeposit) {
+        checkArgument(btcSideMonetary.getCode().equals("BTC"));
+        return Monetary.from(MathUtils.roundDoubleToLong(btcSideMonetary.getValue() * securityDeposit), btcSideMonetary.getCode());
     }
 }

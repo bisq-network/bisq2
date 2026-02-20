@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
@@ -112,7 +111,7 @@ public class MuSigMediationCaseDetailSection {
                 double securityDeposit = collateralOption.get().getBuyerSecurityDeposit();
                 model.setSecurityDepositInfo(Optional.of(new Model.SecurityDepositInfo(
                         securityDeposit,
-                        calculateSecurityDeposit(offer.getMarket(), contract, securityDeposit),
+                        calculateSecurityDeposit(contract, securityDeposit),
                         PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0),
                         true)));
             }
@@ -141,12 +140,10 @@ public class MuSigMediationCaseDetailSection {
             model.setSecurityDepositInfo(Optional.empty());
         }
 
-        private static String calculateSecurityDeposit(Market market,
-                                                       MuSigContract contract,
+        private static String calculateSecurityDeposit(MuSigContract contract,
                                                        double securityDepositAsPercent) {
-            Monetary baseSideMonetary = MuSigTradeUtils.getBaseSideMonetary(contract);
-            Monetary quoteSideMonetary = MuSigTradeUtils.getQuoteSideMonetary(contract);
-            Monetary securityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(market, baseSideMonetary, quoteSideMonetary, securityDepositAsPercent);
+            Monetary securityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(
+                    MuSigTradeUtils.getBtcSideMonetary(contract), securityDepositAsPercent);
             return OfferAmountFormatter.formatDepositAmountAsBTC(securityDeposit);
         }
     }

@@ -66,7 +66,6 @@ public class AmountFormatter {
                 .orElse("");
     }
 
-
     // Base amount
     public static String formatBaseAmount(Monetary amount) {
         return formatAmountByMonetaryType(amount);
@@ -85,11 +84,11 @@ public class AmountFormatter {
         return formatAmountWithCodeByMonetaryType(amount);
     }
 
-    private static String formatAmountByMonetaryType(Monetary amount) {
+    public static String formatAmountByMonetaryType(Monetary amount) {
         return formatAmount(amount, amount instanceof Fiat);
     }
 
-    private static String formatAmountWithCodeByMonetaryType(Monetary amount) {
+    public static String formatAmountWithCodeByMonetaryType(Monetary amount) {
         return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), amount instanceof Fiat);
     }
 

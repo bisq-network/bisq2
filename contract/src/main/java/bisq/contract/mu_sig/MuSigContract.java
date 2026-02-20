@@ -184,4 +184,12 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     public PaymentMethodSpec<?> getNonBtcSidePaymentMethodSpec() {
         return offer.getMarket().isBaseCurrencyBitcoin() ? quoteSidePaymentMethodSpec : baseSidePaymentMethodSpec;
     }
+
+    public long getBtcSideAmount() {
+        return offer.getMarket().isBaseCurrencyBitcoin() ? baseSideAmount : quoteSideAmount;
+    }
+
+    public long getNonBtcSideAmount() {
+        return offer.getMarket().isBaseCurrencyBitcoin() ? quoteSideAmount : baseSideAmount;
+    }
 }

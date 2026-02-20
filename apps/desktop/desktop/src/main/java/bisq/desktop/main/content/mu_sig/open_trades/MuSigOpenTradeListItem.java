@@ -92,14 +92,10 @@ class MuSigOpenTradeListItem implements DateTableItem {
         market = trade.getOffer().getMarket().toString();
         price = MuSigTradeUtils.getPriceQuote(trade).getValue();
         priceString = MuSigTradeFormatter.formatPriceWithCode(trade);
-        boolean isBaseCurrencyBitcoin = trade.getOffer().getMarket().isBaseCurrencyBitcoin();
-        btcAmount = isBaseCurrencyBitcoin ? contract.getBaseSideAmount() : contract.getQuoteSideAmount();
-        btcAmountString = isBaseCurrencyBitcoin ? MuSigTradeFormatter.formatBaseSideAmount(trade) : MuSigTradeFormatter.formatQuoteSideAmount(trade);
-        nonBtcAmount = isBaseCurrencyBitcoin ? contract.getQuoteSideAmount() : contract.getBaseSideAmount();
-        nonBtcAmountString = AmountFormatter.formatAmountWithCode(
-                isBaseCurrencyBitcoin ? MuSigTradeUtils.getQuoteSideMonetary(trade) : MuSigTradeUtils.getBaseSideMonetary(trade),
-                true
-        );
+        btcAmount = contract.getBtcSideAmount();
+        btcAmountString = MuSigTradeFormatter.formatBtcSideAmount(trade);
+        nonBtcAmount = contract.getNonBtcSideAmount();
+        nonBtcAmountString = AmountFormatter.formatAmountWithCode(MuSigTradeUtils.getNonBtcSideMonetary(trade), true);
         basePaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         quotePaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
         paymentMethodDisplayName = contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString();

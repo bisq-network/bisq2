@@ -420,6 +420,7 @@ class BisqEasyMediationTableView extends VBox {
                                                              boolean isRequester,
                                                              BisqEasyMediationCaseListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile(), false);
+        userProfileDisplay.setReputationScore(trader.getReputationScore());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }

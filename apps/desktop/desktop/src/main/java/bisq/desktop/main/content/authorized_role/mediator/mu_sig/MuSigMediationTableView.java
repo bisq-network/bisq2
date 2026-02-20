@@ -214,8 +214,8 @@ class MuSigMediationTableView extends VBox {
                         item.getMarket().toLowerCase().contains(string) ||
                         item.getPaymentMethod().toLowerCase().contains(string) ||
                         item.getPriceString().toLowerCase().contains(string) ||
-                        item.getQuoteAmountString().toLowerCase().contains(string) ||
-                        item.getBaseAmountString().toLowerCase().contains(string) ||
+                        item.getNonBtcAmountString().toLowerCase().contains(string) ||
+                        item.getBtcAmountString().toLowerCase().contains(string) ||
                         item.getDateString().toLowerCase().contains(string) ||
                         item.getTimeString().toLowerCase().contains(string) ||
                         item.getCloseCaseDateString().toLowerCase().contains(string) ||
@@ -287,14 +287,14 @@ class MuSigMediationTableView extends VBox {
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MuSigMediationCaseListItem::getQuoteAmount))
-                .valueSupplier(MuSigMediationCaseListItem::getQuoteAmountString)
+                .comparator(Comparator.comparing(MuSigMediationCaseListItem::getNonBtcAmount))
+                .valueSupplier(MuSigMediationCaseListItem::getNonBtcAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(MuSigMediationCaseListItem::getBaseAmount))
-                .valueSupplier(MuSigMediationCaseListItem::getBaseAmountString)
+                .comparator(Comparator.comparing(MuSigMediationCaseListItem::getBtcAmount))
+                .valueSupplier(MuSigMediationCaseListItem::getBtcAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
@@ -420,6 +420,7 @@ class MuSigMediationTableView extends VBox {
                                                              boolean isRequester,
                                                              MuSigMediationCaseListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile(), false);
+        userProfileDisplay.setReputationScore(trader.getReputationScore());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }

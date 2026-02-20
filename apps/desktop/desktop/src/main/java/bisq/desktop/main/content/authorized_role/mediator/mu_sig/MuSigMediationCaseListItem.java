@@ -29,6 +29,7 @@ import bisq.desktop.components.table.ActivatableTableItem;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
@@ -60,9 +61,9 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final ReputationService reputationService;
 
     private final Trader maker, taker;
-    private final long date, price, baseAmount, quoteAmount;
+    private final long date, price, btcAmount, nonBtcAmount;
     private final String dateString, timeString, tradeId, shortTradeId, directionalTitle, market,
-            priceString, baseAmountString, quoteAmountString, paymentMethod;
+            priceString, btcAmountString, nonBtcAmountString, paymentMethod;
     private final boolean isMakerRequester;
     private final Badge makersBadge = new Badge();
     private final Badge takersBadge = new Badge();
@@ -103,11 +104,11 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
         market = offer.getMarket().toString();
         price = MuSigTradeUtils.getPriceQuote(contract).getValue();
         priceString = MuSigTradeFormatter.formatPriceWithCode(contract);
-        baseAmount = contract.getBaseSideAmount();
-        baseAmountString = MuSigTradeFormatter.formatBaseSideAmount(contract);
-        quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = MuSigTradeFormatter.formatQuoteSideAmountWithCode(contract);
-        paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+        btcAmount = contract.getBtcSideAmount();
+        btcAmountString = MuSigTradeFormatter.formatBtcSideAmount(contract);
+        nonBtcAmount = contract.getNonBtcSideAmount();
+        nonBtcAmountString = AmountFormatter.formatAmountWithCode(MuSigTradeUtils.getNonBtcSideMonetary(contract), true);
+        paymentMethod = offer.getMarket().isBaseCurrencyBitcoin() ? contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString() : "";
 
         onActivate();
     }
