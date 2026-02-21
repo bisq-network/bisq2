@@ -161,12 +161,10 @@ public abstract class HttpRequestService<T, R> implements Service {
                         BaseHttpClient client = networkService.getHttpClient(providerForThisRequest.getBaseUrl(), userAgent, providerForThisRequest.getTransportType());
 
                         if (client.hasPendingRequest()) {
-                            HttpRequestUrlProvider nextProvider = selectNextProvider();
-                            selectedProvider.set(nextProvider);
-                            int numRecursions = recursionDepth.incrementAndGet();
-                            if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                                log.warn("Client had a pending request. We retry the request with new provider {}", nextProvider.getBaseUrl());
-                                throw new RetryException("Client had a pending request. Retrying with next provider", recursionDepth);
+                            boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, false);
+                            if (shouldRetry) {
+                                log.warn("Client had a pending request. We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
+                                throw new RetryException("Client had a pending request. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
                             } else {
                                 log.warn("Client had a pending request. We exhausted all possible providers and give up. Provider={}",
                                         providerForThisRequest.getBaseUrl());
@@ -204,7 +202,6 @@ public abstract class HttpRequestService<T, R> implements Service {
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
                             log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
-
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
                                 // If not server error we pass the error to the client
@@ -215,16 +212,11 @@ public abstract class HttpRequestService<T, R> implements Service {
                                 }
                             }
 
-                            int numRecursions = recursionDepth.incrementAndGet();
-                            if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                                failedProviders.add(providerForThisRequest);
-                                HttpRequestUrlProvider nextProvider = selectNextProvider();
-                                selectedProvider.set(nextProvider);
-                                log.warn("Provider {} failed, retrying with {}", providerForThisRequest.getBaseUrl(), nextProvider.getBaseUrl());
-                                throw new RetryException("Retrying with next provider", recursionDepth);
+                            boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
+                            if (shouldRetry) {
+                                throw new RetryException("Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
                             } else {
-                                log.warn("We exhausted all possible providers and give up");
-                                throw new RuntimeException("We failed at all possible providers and give up");
+                                throw new RuntimeException("We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
                             }
                         }
                     }, executorService)
@@ -242,6 +234,25 @@ public abstract class HttpRequestService<T, R> implements Service {
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected request task.", e);
             return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    private boolean shouldRetry(AtomicInteger recursionDepth,
+                                HttpRequestUrlProvider providerForThisRequest,
+                                boolean addToFailed) {
+        int numRecursions = recursionDepth.incrementAndGet();
+        if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
+            if (addToFailed) {
+                failedProviders.add(providerForThisRequest);
+            }
+            HttpRequestUrlProvider nextProvider = selectNextProvider();
+            selectedProvider.set(nextProvider);
+
+            log.warn("Provider {} failed or was busy, retrying with {}", providerForThisRequest.getBaseUrl(), nextProvider.getBaseUrl());
+            return true;
+        } else {
+            log.warn("We exhausted all possible providers and give up");
+            return false;
         }
     }
 
