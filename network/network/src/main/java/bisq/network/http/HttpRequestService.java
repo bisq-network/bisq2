@@ -32,11 +32,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -67,13 +67,13 @@ public abstract class HttpRequestService<T, R> implements Service {
 
     @Getter
     protected final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
-    protected final Set<HttpRequestUrlProvider> candidates = new HashSet<>();
-    protected final Set<HttpRequestUrlProvider> providersFromConfig = new HashSet<>();
-    protected final Set<HttpRequestUrlProvider> fallbackProviders = new HashSet<>();
-    protected final Set<HttpRequestUrlProvider> failedProviders = new HashSet<>();
+    protected final Set<HttpRequestUrlProvider> candidates = new CopyOnWriteArraySet<>();
+    protected final Set<HttpRequestUrlProvider> providersFromConfig = new CopyOnWriteArraySet<>();
+    protected final Set<HttpRequestUrlProvider> fallbackProviders = new CopyOnWriteArraySet<>();
+    protected final Set<HttpRequestUrlProvider> failedProviders = new CopyOnWriteArraySet<>();
     @Getter
     protected Optional<HttpRequestUrlProvider> mostRecentProvider = Optional.empty();
-    protected Optional<BaseHttpClient> httpClient = Optional.empty();
+    protected volatile Optional<BaseHttpClient> httpClient = Optional.empty();
     protected final int numTotalCandidates;
     protected final boolean noProviderAvailable;
     protected volatile boolean shutdownStarted;
@@ -147,7 +147,6 @@ public abstract class HttpRequestService<T, R> implements Service {
 
     protected abstract String getParam(HttpRequestUrlProvider provider, T requestData);
 
-
     private CompletableFuture<R> request(T request, AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             return CompletableFuture.failedFuture(new RuntimeException("No provider available"));
@@ -155,29 +154,32 @@ public abstract class HttpRequestService<T, R> implements Service {
         if (shutdownStarted) {
             return CompletableFuture.failedFuture(new RuntimeException("Shutdown has already started"));
         }
+
+        HttpRequestUrlProvider providerForThisRequest = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
         try {
             return CompletableFuture.supplyAsync(() -> {
-                        HttpRequestUrlProvider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-                        BaseHttpClient client = networkService.getHttpClient(provider.getBaseUrl(), userAgent, provider.getTransportType());
+                        BaseHttpClient client = networkService.getHttpClient(providerForThisRequest.getBaseUrl(), userAgent, providerForThisRequest.getTransportType());
 
                         if (client.hasPendingRequest()) {
-                            selectedProvider.set(selectNextProvider());
+                            HttpRequestUrlProvider nextProvider = selectNextProvider();
+                            selectedProvider.set(nextProvider);
                             int numRecursions = recursionDepth.incrementAndGet();
                             if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                                log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                                throw new RetryException("Client busy, retrying with next provider", recursionDepth);
+                                log.warn("Client had a pending request. We retry the request with new provider {}", nextProvider.getBaseUrl());
+                                throw new RetryException("Client had a pending request. Retrying with next provider", recursionDepth);
                             } else {
-                                log.warn("We exhausted all possible providers and give up");
-                                throw new RuntimeException("We failed at all possible providers and give up");
+                                log.warn("Client had a pending request. We exhausted all possible providers and give up. Provider={}",
+                                        providerForThisRequest.getBaseUrl());
+                                throw new RuntimeException("Client had a pending request. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
                             }
                         }
 
                         httpClient = Optional.of(client);
 
                         long requestedAt = System.currentTimeMillis();
-                        String param = getParam(provider, request);
+                        String param = getParam(providerForThisRequest, request);
                         try {
-                            log.info("Start Http request to {}", client.getBaseUrl());
+                            log.info("Start Http request to {}", client.getBaseUrl() + "/" + param);
 
                             String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
 
@@ -189,7 +191,7 @@ public abstract class HttpRequestService<T, R> implements Service {
 
                             R result = parseResult(json);
 
-                            mostRecentProvider = Optional.of(selectedProvider.get());
+                            mostRecentProvider = Optional.of(providerForThisRequest);
 
                             selectedProvider.set(selectNextProvider());
                             shutdownHttpClient(client);
@@ -201,7 +203,7 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            log.warn("Encountered exception requesting reference time from provider {}", provider.getBaseUrl(), rootCause);
+                            log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
 
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
@@ -215,9 +217,10 @@ public abstract class HttpRequestService<T, R> implements Service {
 
                             int numRecursions = recursionDepth.incrementAndGet();
                             if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                                failedProviders.add(provider);
-                                selectedProvider.set(selectNextProvider());
-                                log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
+                                failedProviders.add(providerForThisRequest);
+                                HttpRequestUrlProvider nextProvider = selectNextProvider();
+                                selectedProvider.set(nextProvider);
+                                log.warn("Provider {} failed, retrying with {}", providerForThisRequest.getBaseUrl(), nextProvider.getBaseUrl());
                                 throw new RetryException("Retrying with next provider", recursionDepth);
                             } else {
                                 log.warn("We exhausted all possible providers and give up");
@@ -229,18 +232,15 @@ public abstract class HttpRequestService<T, R> implements Service {
                     .exceptionallyCompose(throwable -> {
                         if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
                             // Timeout occurred - add provider to failed list before retrying
-                            HttpRequestUrlProvider currentProvider = selectedProvider.get();
-                            if (currentProvider != null) {
-                                failedProviders.add(currentProvider);
-                                log.warn("Request to provider {} timed out after {} seconds",
-                                        currentProvider.getBaseUrl(), conf.getTimeoutInSeconds());
-                            }
+                            failedProviders.add(providerForThisRequest);
+                            log.warn("Request to provider {} timed out after {} seconds",
+                                    providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
                             return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
                         }
                         return CompletableFuture.failedFuture(throwable);
                     });
         } catch (RejectedExecutionException e) {
-            log.error("Executor rejected requesting reference time task.", e);
+            log.error("Executor rejected request task.", e);
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -255,8 +255,8 @@ public abstract class HttpRequestService<T, R> implements Service {
             log.error("No provider available - candidates list is empty after fillCandidates");
             // Return first available provider from config as fallback
             return providersFromConfig.stream().findFirst()
-                    .orElseGet(() -> fallbackProviders.stream().findFirst()
-                            .orElse(null));
+                    .or(() -> fallbackProviders.stream().findFirst())
+                    .orElseThrow(() -> new IllegalStateException("No providers available"));
         }
         candidates.remove(selected);
         return selected;
