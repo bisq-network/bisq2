@@ -38,6 +38,22 @@ public final class MuSigTradeUtils {
         return Monetary.from(contract.getQuoteSideAmount(), contract.getOffer().getMarket().getQuoteCurrencyCode());
     }
 
+    public static Monetary getBtcSideMonetary(MuSigTrade trade) {
+        return getBtcSideMonetary(trade.getContract());
+    }
+
+    public static Monetary getBtcSideMonetary(MuSigContract contract) {
+        return contract.getOffer().getMarket().isBaseCurrencyBitcoin() ? getBaseSideMonetary(contract) : getQuoteSideMonetary(contract);
+    }
+
+    public static Monetary getNonBtcSideMonetary(MuSigTrade trade) {
+        return getNonBtcSideMonetary(trade.getContract());
+    }
+
+    public static Monetary getNonBtcSideMonetary(MuSigContract contract) {
+        return contract.getOffer().getMarket().isBaseCurrencyBitcoin() ? getQuoteSideMonetary(contract) : getBaseSideMonetary(contract);
+    }
+
     public static PriceQuote getPriceQuote(MuSigTrade trade) {
         return PriceQuote.from(getBaseSideMonetary(trade), getQuoteSideMonetary(trade));
     }

@@ -17,26 +17,61 @@
 
 package bisq.offer.amount;
 
+import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OfferAmountUtilTest {
 
     @Test
-    void calculateSecurityDepositUsesPercentageAndCode() {
+    void calculateSecurityDepositAsBTCUsesPercentageAndCode() {
         Monetary input = Coin.asBtcFromValue(100_000_000L);
-        Monetary deposit = OfferAmountUtil.calculateSecurityDeposit(input, 0.25);
+        Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(input, 0.25);
         assertEquals("BTC", deposit.getCode());
         assertEquals(25_000_000L, deposit.getValue());
     }
 
     @Test
-    void calculateSecurityDepositRoundsHalfUp() {
+    void calculateSecurityDepositAsBTCRoundsHalfUp() {
         Monetary input = Coin.asBtcFromValue(3L);
-        Monetary deposit = OfferAmountUtil.calculateSecurityDeposit(input, 0.5);
+        Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(input, 0.5);
         assertEquals(2L, deposit.getValue());
+    }
+
+    @Test
+    void calculateSecurityDepositAsBTCUsesBaseSideForBtcFiatMarket() {
+        Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
+        Monetary baseSideMonetary = Coin.asBtcFromValue(100_000_000L);
+        Monetary quoteSideMonetary = Fiat.fromValue(5_000_000L, "USD");
+
+        Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(market, baseSideMonetary, quoteSideMonetary, 0.10);
+
+        assertEquals("BTC", deposit.getCode());
+        assertEquals(10_000_000L, deposit.getValue());
+    }
+
+    @Test
+    void calculateSecurityDepositAsBTCUsesQuoteSideForCryptoBtcMarket() {
+        Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
+        Monetary baseSideMonetary = Coin.fromValue(10_000_000_000L, "XMR");
+        Monetary quoteSideMonetary = Coin.asBtcFromValue(50_000_000L);
+
+        Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(market, baseSideMonetary, quoteSideMonetary, 0.10);
+
+        assertEquals("BTC", deposit.getCode());
+        assertEquals(5_000_000L, deposit.getValue());
+    }
+
+    @Test
+    void calculateSecurityDepositAsBTCThrowsWhenCodeIsNotBtc() {
+        Monetary nonBtcMonetary = Fiat.fromValue(10_000L, "USD");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.calculateSecurityDepositAsBTC(nonBtcMonetary, 0.10));
     }
 }

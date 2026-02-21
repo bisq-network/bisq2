@@ -41,15 +41,19 @@ public final class MuSigTradeFormatter {
     }
 
     public static String formatBtcSideAmount(MuSigTrade trade) {
-        return trade.getMarket().isBaseCurrencyBitcoin()
-                ? formatBaseSideAmount(trade)
-                : formatQuoteSideAmount(trade);
+        return formatBtcSideAmount(trade.getContract());
+    }
+
+    public static String formatBtcSideAmount(MuSigContract contract) {
+        return AmountFormatter.formatAmountByMonetaryType(MuSigTradeUtils.getBtcSideMonetary(contract));
     }
 
     public static String formatNonBtcSideAmount(MuSigTrade trade) {
-        return trade.getMarket().isBaseCurrencyBitcoin()
-                ? formatQuoteSideAmount(trade)
-                : formatBaseSideAmount(trade);
+        return formatNonBtcSideAmount(trade.getContract());
+    }
+
+    public static String formatNonBtcSideAmount(MuSigContract contract) {
+        return AmountFormatter.formatAmountByMonetaryType(MuSigTradeUtils.getNonBtcSideMonetary(contract));
     }
 
     public static String formatQuoteSideAmount(MuSigTrade trade) {
