@@ -19,10 +19,12 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -33,12 +35,13 @@ import bisq.i18n.Res;
 import bisq.support.moderator.ModerationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.user.profile.UserProfile;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -121,9 +124,7 @@ public class State2BuyerSendPayment extends BaseState {
                 model.setMyAccountName(Optional.empty());
             }
 
-            model.setPaymentReason(myAccount
-                    .map(Account::getAccountPayload)
-                    .flatMap(AccountPayload::getReasonForPaymentString));
+            model.setPaymentReasonVisible(AccountUtils.showReasonForPayment(myAccountPayload));
 
             String formattedNonBtcAmount = model.getFormattedNonBtcAmount();
             if (model.getMarket().isBaseCurrencyBitcoin()) {
@@ -161,7 +162,7 @@ public class State2BuyerSendPayment extends BaseState {
         @Setter
         private Optional<String> myAccountName = Optional.empty();
         @Setter
-        private Optional<String> paymentReason = Optional.empty();
+        private boolean paymentReasonVisible;
         @Setter
         private String peersAccountDataDescription;
         @Setter
@@ -175,9 +176,9 @@ public class State2BuyerSendPayment extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button confirmFiatSentButton;
         private final MaterialTextArea sellersAccountData;
-        private final MaterialTextField quoteAmount, paymentReason, myAccountName;
+        private final MaterialTextField quoteAmount, myAccountName;
         private final WrappingText headline;
-        private final HBox myAccountNameAndPaymentReason;
+        private final HBox paymentReasonHbox;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -186,22 +187,31 @@ public class State2BuyerSendPayment extends BaseState {
 
             quoteAmount = MuSigFormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
             myAccountName = MuSigFormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.myAccountName"), "", false);
-            paymentReason = MuSigFormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"), "", false);
-            HBox.setHgrow(myAccountName, Priority.ALWAYS);
-            HBox.setHgrow(paymentReason, Priority.ALWAYS);
-            myAccountNameAndPaymentReason = new HBox(10, myAccountName, paymentReason);
             sellersAccountData = MuSigFormUtils.addTextArea("", "", false);
             sellersAccountData.setValidator(model.getAccountDataBannedValidator());
 
+            Label paymentReason = new Label(Res.get("muSig.tradeState.info.phase2a.paymentReason"));
+            paymentReason.setWrapText(true);
+            paymentReason.getStyleClass().add("text-fill-grey-dimmed");
+
+            Label warningIcon = new Label();
+            warningIcon.getStyleClass().add("text-fill-grey-dimmed");
+            Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "0.85em");
+
+            HBox.setMargin(warningIcon, new Insets(2.5, 0, 0, 0));
+            paymentReasonHbox = new HBox(7.5, warningIcon, paymentReason);
+
             confirmFiatSentButton = new Button();
             confirmFiatSentButton.setDefaultButton(true);
-            VBox.setMargin(confirmFiatSentButton, new Insets(0, 0, 5, 0));
 
+            VBox.setMargin(paymentReasonHbox, new Insets(10, 0, 10, 0));
+            VBox.setMargin(confirmFiatSentButton, new Insets(0, 0, 5, 0));
             root.getChildren().addAll(
                     headline,
                     quoteAmount,
-                    myAccountNameAndPaymentReason,
+                    myAccountName,
                     sellersAccountData,
+                    paymentReasonHbox,
                     confirmFiatSentButton);
         }
 
@@ -215,21 +225,11 @@ public class State2BuyerSendPayment extends BaseState {
             model.getMyAccountName().ifPresent(myAccountName::setText);
             myAccountName.setVisible(model.getMyAccountName().isPresent());
             myAccountName.setManaged(myAccountName.isVisible());
-
-            model.getPaymentReason().ifPresent(text -> {
-                paymentReason.setText(text);
-                paymentReason.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(text));
-            });
-            paymentReason.setVisible(model.getPaymentReason().isPresent());
-            paymentReason.setManaged(paymentReason.isVisible());
-
-            myAccountNameAndPaymentReason.setVisible(model.getMyAccountName().isPresent() ||
-                    model.getPaymentReason().isPresent());
-            myAccountNameAndPaymentReason.setManaged(myAccountNameAndPaymentReason.isVisible());
-
             sellersAccountData.setDescription(model.getPeersAccountDataDescription());
             sellersAccountData.setText(model.getSellersAccountData());
             sellersAccountData.validate();
+            paymentReasonHbox.setVisible(model.isPaymentReasonVisible());
+            paymentReasonHbox.setManaged(model.isPaymentReasonVisible());
             confirmFiatSentButton.setText(Res.get("muSig.tradeState.info.phase2a.confirmFiatSent"));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
             confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
@@ -242,7 +242,6 @@ public class State2BuyerSendPayment extends BaseState {
             confirmFiatSentButton.disableProperty().unbind();
             confirmFiatSentButton.setOnAction(null);
             quoteAmount.getIconButton().setOnAction(null);
-            paymentReason.getIconButton().setOnAction(null);
         }
     }
 }

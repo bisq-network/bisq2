@@ -70,18 +70,15 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
             Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
-            String accountName = account.orElseThrow().getAccountName();
-            model.setMyAccountName(accountName);
 
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
             model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
 
             if (model.getMarket().isBaseCurrencyBitcoin()) {
-                String paymentReasonPart = model.getPaymentReason()
-                        .map(e -> "\n" + Res.get("muSig.tradeState.info.phase3a.verifyReceipt.reasonForPayment", e))
-                        .orElse("");
-                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account",
-                        model.getMyAccountName(), paymentReasonPart));
+                String accountName = account
+                        .map(Account::getAccountName)
+                        .orElse(Res.get("data.na"));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account", accountName));
             } else {
                 model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3a.verifyReceipt.account",
                         model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
@@ -104,8 +101,6 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         private String info;
-        @Setter
-        private String myAccountName;
         @Setter
         private Optional<String> paymentReason = Optional.empty();
 
