@@ -223,11 +223,13 @@ public abstract class HttpRequestService<T, R> implements Service {
                     .orTimeout(conf.getTimeoutInSeconds(), SECONDS)
                     .exceptionallyCompose(throwable -> {
                         if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
-                            // Timeout occurred - add provider to failed list before retrying
-                            failedProviders.add(providerForThisRequest);
                             log.warn("Request to provider {} timed out after {} seconds",
                                     providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
-                            return CompletableFuture.failedFuture(new ProviderFailoverException("Timeout", recursionDepth));
+                            boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
+                            Exception exception = shouldRetry
+                                    ? new ProviderFailoverException("Timeout. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth)
+                                    : new RuntimeException("Timeout. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
+                            return CompletableFuture.failedFuture(exception);
                         }
                         return CompletableFuture.failedFuture(throwable);
                     });
