@@ -29,6 +29,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -43,14 +44,17 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
     private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, nonBtcAmountLabel,
             nonBtcCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodValue,
             tradeIdLabel, peerNetworkAddressLabel,
-            depositTxTitleLabel, depositTxDetailsLabel,peersAccountPayloadDescription,
-            peersPaymentAccountData, assignedMediatorLabel;
+            peersPaymentAccountData, depositTxDetailsLabel, peersAccountPayloadDescription,
+            assignedMediatorLabel;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
             depositTxCopyButton, peersAccountDataCopyButton;
     private final HBox assignedMediatorBox, depositTxBox, tradeDurationBox, paymentMethodsBox;
 
     public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(10), model, controller);
+
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
         closeButton = BisqIconButton.createIconButton("close");
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
@@ -60,6 +64,17 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         headline.getStyleClass().add("bisq-text-17");
         headline.setAlignment(Pos.CENTER);
         headline.setMaxWidth(Double.MAX_VALUE);
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox.setMargin(scrollPane, new Insets(0, 80, 40, 80));
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        root.getChildren().addAll(closeButtonRow, headline, scrollPane);
+
+
+        // Content
 
         // Trade date
         tradeDateLabel = getValueLabel();
@@ -146,7 +161,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 peersPaymentAccountData, peersAccountDataCopyButton);
 
         // DepositTx
-        depositTxTitleLabel = getDescriptionLabel(Res.get("muSig.openTrades.tradeDetails.depositTxId"));
+        Label depositTxTitleLabel = getDescriptionLabel(Res.get("muSig.openTrades.tradeDetails.depositTxId"));
         depositTxDetailsLabel = getValueLabel();
         depositTxCopyButton = getTradeIdCopyButton(Res.get("muSig.openTrades.tradeDetails.depositTxId.copy"));
         depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
@@ -167,7 +182,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
         VBox.setMargin(detailsLabel, new Insets(15, 0, -5, 0));
         VBox content = new VBox(10,
-                headline,
                 overviewLabel,
                 overviewLine,
                 tradersAndRoleBox,
@@ -184,15 +198,9 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 peerNetworkAddressBox,
                 assignedMediatorBox
         );
-        content.setAlignment(Pos.CENTER_LEFT);
+        content.setPadding(new Insets(0, 20, 0, 0));
 
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT);
-
-        VBox.setMargin(content, new Insets(-40, 80, 0, 80));
-        VBox.setVgrow(content, Priority.ALWAYS);
-        root.getChildren().addAll(closeButtonRow, content);
+        scrollPane.setContent(content);
     }
 
     private static BisqMenuItem getTradeIdCopyButton(String tooltip) {
