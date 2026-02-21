@@ -107,11 +107,6 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(sortCode.getBytes(StandardCharsets.UTF_8),
                 accountNr.getBytes(StandardCharsets.UTF_8));

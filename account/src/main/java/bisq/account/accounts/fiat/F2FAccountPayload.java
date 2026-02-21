@@ -136,11 +136,6 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.empty();
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(contact.getBytes(StandardCharsets.UTF_8),
                 city.getBytes(StandardCharsets.UTF_8));

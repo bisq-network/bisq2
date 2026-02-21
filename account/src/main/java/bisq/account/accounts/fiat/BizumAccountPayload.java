@@ -96,11 +96,6 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(mobileNr);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(mobileNr.getBytes(StandardCharsets.UTF_8));
     }

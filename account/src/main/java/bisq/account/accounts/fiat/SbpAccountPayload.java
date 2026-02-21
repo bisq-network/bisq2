@@ -118,11 +118,6 @@ public final class SbpAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(mobileNumber.getBytes(StandardCharsets.UTF_8),
                 bankName.getBytes(StandardCharsets.UTF_8));

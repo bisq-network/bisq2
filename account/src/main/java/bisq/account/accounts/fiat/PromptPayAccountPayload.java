@@ -99,11 +99,6 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(promptPayId);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = promptPayId.getBytes(StandardCharsets.UTF_8);
         // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with

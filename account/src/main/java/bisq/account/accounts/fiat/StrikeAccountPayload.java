@@ -84,11 +84,6 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
     }

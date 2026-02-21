@@ -123,11 +123,6 @@ public final class InteracETransferAccountPayload extends CountryBasedAccountPay
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
                 question.getBytes(StandardCharsets.UTF_8),

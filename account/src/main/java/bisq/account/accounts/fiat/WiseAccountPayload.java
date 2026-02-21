@@ -123,11 +123,6 @@ public final class WiseAccountPayload extends AccountPayload<FiatPaymentMethod> 
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(email.getBytes(StandardCharsets.UTF_8),
                 holderName.getBytes(StandardCharsets.UTF_8));

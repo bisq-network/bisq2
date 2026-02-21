@@ -116,11 +116,6 @@ public final class ImpsAccountPayload extends CountryBasedAccountPayload impleme
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(accountNr.getBytes(StandardCharsets.UTF_8));
     }

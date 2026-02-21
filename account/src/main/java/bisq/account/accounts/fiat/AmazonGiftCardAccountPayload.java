@@ -112,11 +112,6 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(emailOrMobileNr);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ("AmazonGiftCard" + emailOrMobileNr).getBytes(StandardCharsets.UTF_8);
         // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with

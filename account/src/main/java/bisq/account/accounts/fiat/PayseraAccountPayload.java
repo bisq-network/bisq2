@@ -110,11 +110,6 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(email);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(email.getBytes(StandardCharsets.UTF_8));
     }
