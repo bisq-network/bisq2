@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -30,10 +31,13 @@ import bisq.i18n.Res;
 import bisq.support.moderator.ModerationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,8 +83,9 @@ public class BuyerState2a extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            BisqEasyTrade bisqEasyTrade = model.getTrade();
-            String sellersAccountData = bisqEasyTrade.getPaymentAccountData().get();
+            BisqEasyTrade trade = model.getTrade();
+            String sellersAccountData = trade.getPaymentAccountData().get();
+
             if (bisqEasyService.isAccountDataBanned(sellersAccountData)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
                 model.getAccountDataBannedValidator().setIsInvalid(true);
@@ -93,7 +98,7 @@ public class BuyerState2a extends BaseState {
                 moderationRequestService.reportUserProfile(peer, message);
 
                 // We reject the trade to avoid the banned user can continue
-                bisqEasyTradeService.cancelTrade(bisqEasyTrade);
+                bisqEasyTradeService.cancelTrade(trade);
 
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
             } else {
@@ -118,7 +123,6 @@ public class BuyerState2a extends BaseState {
     private static class Model extends BaseState.Model {
         private final BooleanProperty confirmFiatSentButtonDisabled = new SimpleBooleanProperty();
         private final SettableErrorValidator accountDataBannedValidator = new SettableErrorValidator(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBannedError"));
-
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
@@ -127,8 +131,9 @@ public class BuyerState2a extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button confirmFiatSentButton;
         private final MaterialTextArea account;
-        private final MaterialTextField quoteAmount, paymentReason;
+        private final MaterialTextField quoteAmount;
         private final WrappingText headline;
+        private final HBox paymentReasonHbox;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -136,19 +141,29 @@ public class BuyerState2a extends BaseState {
             headline = FormUtils.getHeadline();
 
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
-            paymentReason = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"), "", false);
             account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
             account.setValidator(model.getAccountDataBannedValidator());
 
+            Label paymentReason = new Label(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"));
+            paymentReason.setWrapText(true);
+            paymentReason.getStyleClass().add("text-fill-grey-dimmed");
+
+            Label warningIcon = new Label();
+            warningIcon.getStyleClass().add("text-fill-grey-dimmed");
+            Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "0.85em");
+
+            HBox.setMargin(warningIcon, new Insets(2.5, 0, 0, 0));
+            paymentReasonHbox = new HBox(7.5, warningIcon, paymentReason);
+
             confirmFiatSentButton = new Button();
             confirmFiatSentButton.setDefaultButton(true);
-            VBox.setMargin(confirmFiatSentButton, new Insets(0, 0, 5, 0));
 
+            VBox.setMargin(confirmFiatSentButton, new Insets(10, 0, 5, 0));
             root.getChildren().addAll(
                     headline,
                     quoteAmount,
-                    paymentReason,
                     account,
+                    paymentReasonHbox,
                     confirmFiatSentButton);
         }
 
@@ -159,8 +174,6 @@ public class BuyerState2a extends BaseState {
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
-            paymentReason.setText(model.getTrade().getShortId());
-            paymentReason.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTrade().getShortId()));
             account.setText(model.getTrade().getPaymentAccountData().get());
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
@@ -175,7 +188,6 @@ public class BuyerState2a extends BaseState {
             confirmFiatSentButton.disableProperty().unbind();
             confirmFiatSentButton.setOnAction(null);
             quoteAmount.getIconButton().setOnAction(null);
-            paymentReason.getIconButton().setOnAction(null);
         }
     }
 }

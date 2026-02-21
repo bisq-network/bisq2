@@ -204,8 +204,7 @@ public class State2BuyerSendPayment extends BaseState {
             confirmFiatSentButton = new Button();
             confirmFiatSentButton.setDefaultButton(true);
 
-            VBox.setMargin(paymentReasonHbox, new Insets(10, 0, 10, 0));
-            VBox.setMargin(confirmFiatSentButton, new Insets(0, 0, 5, 0));
+            VBox.setMargin(confirmFiatSentButton, new Insets(10, 0, 5, 0));
             root.getChildren().addAll(
                     headline,
                     quoteAmount,
