@@ -43,17 +43,17 @@ public final class WiseUsdAccount extends CountryBasedAccount<WiseUsdAccountPayl
     }
 
     @Override
-    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
-        return super.getAccountBuilder(serializeForHash)
-                .setWiseAccount(toWiseAccountProto(serializeForHash));
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setWiseUsdAccount(
+                toWiseUsdAccountProto(serializeForHash));
     }
 
-    private bisq.account.protobuf.WiseAccount toWiseAccountProto(boolean serializeForHash) {
-        return resolveBuilder(getWiseAccountBuilder(serializeForHash), serializeForHash).build();
+    private bisq.account.protobuf.WiseUsdAccount toWiseUsdAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getWiseUsdAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.account.protobuf.WiseAccount.Builder getWiseAccountBuilder(boolean serializeForHash) {
-        return bisq.account.protobuf.WiseAccount.newBuilder();
+    private bisq.account.protobuf.WiseUsdAccount.Builder getWiseUsdAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.WiseUsdAccount.newBuilder();
     }
 
     public static WiseUsdAccount fromProto(bisq.account.protobuf.Account proto) {

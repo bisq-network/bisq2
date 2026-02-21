@@ -59,11 +59,11 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
     }
 
     public WiseUsdAccountPayload(String id,
-                                  byte[] salt,
-                                  String countryCode,
-                                  String holderName,
-                                  String email,
-                                  String beneficiaryAddress
+                                 byte[] salt,
+                                 String countryCode,
+                                 String holderName,
+                                 String email,
+                                 String beneficiaryAddress
     ) {
         super(id, salt, countryCode);
         this.holderName = holderName;
