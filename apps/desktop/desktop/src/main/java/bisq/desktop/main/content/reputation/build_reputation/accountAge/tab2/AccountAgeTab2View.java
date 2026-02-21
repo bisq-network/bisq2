@@ -50,7 +50,11 @@ public class AccountAgeTab2View extends View<VBox, AccountAgeTab2Model, AccountA
 
         Label formulaHeadline = new Label(Res.get("reputation.score.formulaHeadline"));
         formulaHeadline.getStyleClass().addAll("bisq-text-1");
-        VBox formulaBox = new VBox(10, formulaHeadline, getField("weight", String.valueOf(AccountAgeService.WEIGHT)), getField("totalScore"));
+        VBox formulaBox = new VBox(10,
+                formulaHeadline,
+                getField("weight", String.valueOf(AccountAgeService.WEIGHT)),
+                getField("totalScore"),
+                getField("tradeLimit", Res.get("reputation.tradeLimit.formula")));
 
         HBox hBox = new HBox(20, formulaBox, simulation);
 
