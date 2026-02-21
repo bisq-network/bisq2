@@ -26,7 +26,6 @@ import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.SepaInstantAccountPayload;
-import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.common.util.ByteArrayUtils;
 
 import java.util.ArrayList;
@@ -87,7 +86,6 @@ public class AccountUtils {
         boolean isCrypto = accountPayload instanceof CryptoAssetAccountPayload;
         boolean isF2F = accountPayload instanceof F2FAccountPayload;
         boolean isCashByMail = accountPayload instanceof CashByMailAccountPayload;
-        boolean isUserDefined = accountPayload instanceof UserDefinedFiatAccountPayload;
-        return !isCrypto && !isF2F && !isCashByMail && !isUserDefined;
+        return !isCrypto && !isF2F && !isCashByMail;
     }
 }
