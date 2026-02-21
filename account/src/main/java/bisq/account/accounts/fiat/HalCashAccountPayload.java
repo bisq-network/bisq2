@@ -99,11 +99,6 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(mobileNr);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
         // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with

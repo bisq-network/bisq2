@@ -111,11 +111,6 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(userName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(userName.getBytes(StandardCharsets.UTF_8));
     }

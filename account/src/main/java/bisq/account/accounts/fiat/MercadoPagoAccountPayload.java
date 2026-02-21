@@ -108,11 +108,6 @@ public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentM
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(COUNTRY_CODE.getBytes(StandardCharsets.UTF_8),
                 holderId.getBytes(StandardCharsets.UTF_8),

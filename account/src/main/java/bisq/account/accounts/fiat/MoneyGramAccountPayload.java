@@ -135,11 +135,6 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         String data = countryCode + state + holderName + email;
         // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with

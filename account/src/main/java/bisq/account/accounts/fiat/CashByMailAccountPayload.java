@@ -118,11 +118,6 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.empty();
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(contact.getBytes(StandardCharsets.UTF_8),
                 postalAddress.getBytes(StandardCharsets.UTF_8));

@@ -125,11 +125,6 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(holderName.getBytes(StandardCharsets.UTF_8));
     }

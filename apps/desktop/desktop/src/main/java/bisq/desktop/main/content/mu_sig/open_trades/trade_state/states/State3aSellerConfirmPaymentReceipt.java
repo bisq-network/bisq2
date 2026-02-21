@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
@@ -70,21 +71,16 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
 
             Optional<AccountPayload<?>> accountPayload = trade.getMyself().getAccountPayload();
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
-            String accountName = account.orElseThrow().getAccountName();
-            model.setMyAccountName(accountName);
 
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
-            model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
-
-            if (model.getMarket().isBaseCurrencyBitcoin()) {
-                String paymentReasonPart = model.getPaymentReason()
-                        .map(e -> "\n" + Res.get("muSig.tradeState.info.phase3a.verifyReceipt.reasonForPayment", e))
-                        .orElse("");
-                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account",
-                        model.getMyAccountName(), paymentReasonPart));
-            } else {
+            if (peersAccountPayload instanceof CryptoAssetAccountPayload cryptoAssetAccountPayload) {
                 model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3a.verifyReceipt.account",
-                        model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
+                        model.getNonBtcCurrencyCode(), cryptoAssetAccountPayload.getAddress()));
+            } else {
+                String accountName = account
+                        .map(Account::getAccountName)
+                        .orElse(Res.get("data.na"));
+                model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account", accountName));
             }
         }
 
@@ -104,10 +100,6 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         private String info;
-        @Setter
-        private String myAccountName;
-        @Setter
-        private Optional<String> paymentReason = Optional.empty();
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);

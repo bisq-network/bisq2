@@ -122,11 +122,6 @@ public final class UpholdAccountPayload extends AccountPayload<FiatPaymentMethod
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.ofNullable(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(accountId.getBytes(StandardCharsets.UTF_8));
     }

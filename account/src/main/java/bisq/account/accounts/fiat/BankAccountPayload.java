@@ -184,12 +184,4 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
                 nationalAccountIdValue;
         return super.getFingerprint(all.getBytes(StandardCharsets.UTF_8));
     }
-
-    @Override
-    public Optional<String> getReasonForPaymentString() {
-        return holderName
-                .or(() -> holderId)
-                .or(() -> nationalAccountId)
-                .or(() -> Optional.of(accountNr));
-    }
 }

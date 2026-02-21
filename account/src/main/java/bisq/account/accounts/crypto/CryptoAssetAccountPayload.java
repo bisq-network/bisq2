@@ -115,10 +115,4 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
         String codeAndAddress = currencyCode + address;
         return super.getFingerprint(ByteArrayUtils.concat(codeAndAddress.getBytes(StandardCharsets.UTF_8), data));
     }
-
-    @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.empty();
-    }
-
 }

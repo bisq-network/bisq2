@@ -142,11 +142,6 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(iban.getBytes(StandardCharsets.UTF_8), bic.getBytes(StandardCharsets.UTF_8));
         return super.getFingerprint(data);

@@ -281,11 +281,6 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(beneficiaryName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         // We do not call super.getFingerprint(data) to not include the countryCode to stay compatible with
         // Bisq 1 account age fingerprint.

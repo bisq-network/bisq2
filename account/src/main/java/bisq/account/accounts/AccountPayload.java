@@ -139,7 +139,5 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         };
     }
 
-    public abstract Optional<String> getReasonForPaymentString();
-
     public abstract String getAccountDataDisplayString();
 }

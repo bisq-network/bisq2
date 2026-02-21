@@ -86,11 +86,6 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(virtualPaymentAddress);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(virtualPaymentAddress.getBytes(StandardCharsets.UTF_8));
     }

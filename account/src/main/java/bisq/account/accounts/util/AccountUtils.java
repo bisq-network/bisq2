@@ -18,8 +18,11 @@
 package bisq.account.accounts.util;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.accounts.fiat.BankAccountPayload;
+import bisq.account.accounts.fiat.CashByMailAccountPayload;
 import bisq.account.accounts.fiat.CountryBasedAccountPayload;
+import bisq.account.accounts.fiat.F2FAccountPayload;
 import bisq.account.accounts.fiat.SameBankAccountPayload;
 import bisq.account.accounts.fiat.SepaAccountPayload;
 import bisq.account.accounts.fiat.SepaInstantAccountPayload;
@@ -77,5 +80,12 @@ public class AccountUtils {
             return Collections.singletonList(countryBasedAccountPayload.getCountry().getCode());
         }
         return List.of();
+    }
+
+    public static boolean showReasonForPayment(AccountPayload<?> accountPayload) {
+        boolean isCrypto = accountPayload instanceof CryptoAssetAccountPayload;
+        boolean isF2F = accountPayload instanceof F2FAccountPayload;
+        boolean isCashByMail = accountPayload instanceof CashByMailAccountPayload;
+        return !isCrypto && !isF2F && !isCashByMail;
     }
 }

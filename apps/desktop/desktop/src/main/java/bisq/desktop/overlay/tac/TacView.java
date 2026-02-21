@@ -75,8 +75,7 @@ public class TacView extends View<VBox, TacModel, TacController> {
                 "other software), even if such developer, copyright holder and/or other party has been advised of the possibility of such damages.\n\n" +
 
                 "6. The user confirms that they have read and agreed to the rules regarding the dispute process:";
-
-        String rules = "- Use the trade ID for the \"reason for payment\" field. NEVER include terms like 'Bisq' or 'Bitcoin'" +
+        String rules = "- Leave the 'reason for payment' field blank if possible; otherwise use your name. Never include 'Bisq' or 'Bitcoin'." +
                 "- If the bank of the fiat sender charges fees, the sender (BTC buyer) has to cover the fees." +
                 "- In case of mediation, you must cooperate with the mediator and respond to each message within 48 hours." +
                 "- The mediator has no enforcement power over the trade. They can only help the traders to come to a cooperative resolution. " +

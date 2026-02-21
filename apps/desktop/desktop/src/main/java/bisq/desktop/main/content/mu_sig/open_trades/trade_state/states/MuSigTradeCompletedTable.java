@@ -79,8 +79,9 @@ public class MuSigTradeCompletedTable extends VBox {
         bodyGridPane.getColumnConstraints().add(valueCol);
 
         bitcoinAmountDisplay = new BitcoinAmountDisplay();
-        HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
+        GridPane.setMargin(bitcoinAmountDisplay, new Insets(-5.5, 0, 0, 0));
         configureBitcoinAmountDisplay(bitcoinAmountDisplay);
+        bitcoinAmountDisplay.setAlignment(Pos.BASELINE_LEFT);
 
         btcSideDirection = new Label();
         btcSideDirection.getStyleClass().addAll("dimmed-text");
@@ -160,7 +161,6 @@ public class MuSigTradeCompletedTable extends VBox {
         nonBtcAmountValue.setText(nonBtcAmount);
 
         ++col;
-
         if (isBaseCurrencyBitcoin) {
             if (isBuyer) {
                 btcSideDirection.setText(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase());

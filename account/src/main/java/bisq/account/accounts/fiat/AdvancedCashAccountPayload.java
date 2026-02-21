@@ -111,11 +111,6 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(accountNr);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(accountNr.getBytes(StandardCharsets.UTF_8));
     }

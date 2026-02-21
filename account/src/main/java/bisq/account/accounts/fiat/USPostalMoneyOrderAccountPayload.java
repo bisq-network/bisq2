@@ -93,11 +93,6 @@ public final class USPostalMoneyOrderAccountPayload extends CountryBasedAccountP
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.of(holderName);
-    }
-
-    @Override
     public byte[] getFingerprint() {
         byte[] data = ByteArrayUtils.concat(holderName.getBytes(StandardCharsets.UTF_8),
                 postalAddress.getBytes(StandardCharsets.UTF_8));

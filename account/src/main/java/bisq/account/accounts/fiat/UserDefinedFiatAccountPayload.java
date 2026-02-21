@@ -96,11 +96,6 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     }
 
     @Override
-    public Optional<String> getReasonForPaymentString() {
-        return Optional.empty();
-    }
-
-    @Override
     public byte[] getFingerprint() {
         return super.getFingerprint(accountData.getBytes(StandardCharsets.UTF_8));
     }
