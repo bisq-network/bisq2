@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
@@ -72,16 +73,14 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
             Optional<Account<? extends PaymentMethod<?>, ?>> account = accountService.findAccount(accountPayload.orElseThrow());
 
             AccountPayload<?> peersAccountPayload = trade.getPeer().getAccountPayload().orElseThrow();
-            model.setPaymentReason(peersAccountPayload.getReasonForPaymentString());
-
-            if (model.getMarket().isBaseCurrencyBitcoin()) {
+            if (peersAccountPayload instanceof CryptoAssetAccountPayload cryptoAssetAccountPayload) {
+                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3a.verifyReceipt.account",
+                        model.getNonBtcCurrencyCode(), cryptoAssetAccountPayload.getAddress()));
+            } else {
                 String accountName = account
                         .map(Account::getAccountName)
                         .orElse(Res.get("data.na"));
                 model.setInfo(Res.get("muSig.tradeState.info.fiat.phase3a.verifyReceipt.account", accountName));
-            } else {
-                model.setInfo(Res.get("muSig.tradeState.info.crypto.phase3a.verifyReceipt.account",
-                        model.getNonBtcCurrencyCode(), peersAccountPayload.getAccountDataDisplayString()));
             }
         }
 
@@ -101,8 +100,6 @@ public class State3aSellerConfirmPaymentReceipt extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         private String info;
-        @Setter
-        private Optional<String> paymentReason = Optional.empty();
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
