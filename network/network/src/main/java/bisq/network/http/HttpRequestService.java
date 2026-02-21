@@ -50,11 +50,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 @Slf4j
 public abstract class HttpRequestService<T, R> implements Service {
-    private static class RetryException extends RuntimeException {
+    private static class ProviderFailoverException extends RuntimeException {
         @Getter
         private final AtomicInteger recursionDepth;
 
-        public RetryException(String message, AtomicInteger recursionDepth) {
+        public ProviderFailoverException(String message, AtomicInteger recursionDepth) {
             super(message);
             this.recursionDepth = recursionDepth;
         }
@@ -126,10 +126,10 @@ public abstract class HttpRequestService<T, R> implements Service {
         try {
             return request(requestData, new AtomicInteger(0))
                     .exceptionallyCompose(throwable -> {
-                        if (throwable instanceof RetryException retryException) {
-                            return request(requestData, retryException.getRecursionDepth());
-                        } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
-                            return request(requestData, retryException.getRecursionDepth());
+                        if (throwable instanceof ProviderFailoverException providerFailoverException) {
+                            return request(requestData, providerFailoverException.getRecursionDepth());
+                        } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException providerFailoverException) {
+                            return request(requestData, providerFailoverException.getRecursionDepth());
                         } else {
                             return CompletableFuture.failedFuture(throwable);
                         }
@@ -164,7 +164,7 @@ public abstract class HttpRequestService<T, R> implements Service {
                             boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, false);
                             if (shouldRetry) {
                                 log.warn("Client had a pending request. We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                                throw new RetryException("Client had a pending request. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
+                                throw new ProviderFailoverException("Client had a pending request. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
                             } else {
                                 log.warn("Client had a pending request. We exhausted all possible providers and give up. Provider={}",
                                         providerForThisRequest.getBaseUrl());
@@ -214,7 +214,7 @@ public abstract class HttpRequestService<T, R> implements Service {
 
                             boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
                             if (shouldRetry) {
-                                throw new RetryException("Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
+                                throw new ProviderFailoverException("Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth);
                             } else {
                                 throw new RuntimeException("We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
                             }
@@ -227,7 +227,7 @@ public abstract class HttpRequestService<T, R> implements Service {
                             failedProviders.add(providerForThisRequest);
                             log.warn("Request to provider {} timed out after {} seconds",
                                     providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
-                            return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
+                            return CompletableFuture.failedFuture(new ProviderFailoverException("Timeout", recursionDepth));
                         }
                         return CompletableFuture.failedFuture(throwable);
                     });
