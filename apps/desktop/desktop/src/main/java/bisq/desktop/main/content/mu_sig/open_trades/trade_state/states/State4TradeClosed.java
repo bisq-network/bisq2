@@ -156,12 +156,12 @@ public class State4TradeClosed extends BaseState {
 
         public void openExplorer() {
             explorerService.getExplorerServiceProvider()
-                    .ifPresentOrElse(provider -> {
+                    .ifPresent(provider -> {
                         String txPath = provider.getTxPath();
                         String txId = model.getPaymentProof();
                         String url = provider.getBaseUrl() + "/" + txPath + "/" + txId;
                         Browser.open(url);
-                    }, () -> log.warn("No explorer provider available to open transaction URL"));
+                    });
         }
 
         protected void onCopyExplorerLink() {
