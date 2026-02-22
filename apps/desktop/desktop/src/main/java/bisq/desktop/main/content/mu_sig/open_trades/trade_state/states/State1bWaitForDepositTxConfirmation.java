@@ -108,10 +108,9 @@ public class State1bWaitForDepositTxConfirmation extends BaseState {
             if (trade.isBuyer()) {
                 model.setInfo(Res.get("muSig.tradeState.info.phase1b.info.buyer", model.getNonBtcCurrencyCode()));
             } else {
-                String peersRole = trade.isBuyerInDisplayContext()
-                        ? Res.get("offer.seller").toLowerCase()
-                        : Res.get("offer.buyer").toLowerCase();
-                model.setInfo(Res.get("muSig.tradeState.info.phase1b.info.seller", peersRole, model.getNonBtcCurrencyCode()));
+                model.setInfo(trade.getOffer().getMarket().isBaseCurrencyBitcoin()
+                        ? Res.get("muSig.tradeState.info.phase1b.info.seller.fiat", model.getNonBtcCurrencyCode())
+                        : Res.get("muSig.tradeState.info.phase1b.info.seller.crypto", model.getNonBtcCurrencyCode()));
             }
 
             if (model.getConfirmationState().get() == null) {
