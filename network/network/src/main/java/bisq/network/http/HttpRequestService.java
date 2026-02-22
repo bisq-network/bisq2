@@ -122,30 +122,38 @@ public abstract class HttpRequestService<T, R> implements Service {
                 });
     }
 
-    public CompletableFuture<R> request(T requestData) {
-        try {
-            return request(requestData, new AtomicInteger(0))
-                    .exceptionallyCompose(throwable -> {
-                        if (throwable instanceof ProviderFailoverException providerFailoverException) {
-                            return request(requestData, providerFailoverException.getRecursionDepth());
-                        } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException providerFailoverException) {
-                            return request(requestData, providerFailoverException.getRecursionDepth());
-                        } else {
-                            return CompletableFuture.failedFuture(throwable);
-                        }
-                    });
-        } catch (RejectedExecutionException e) {
-            return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
-        }
-    }
+    protected abstract R parseResult(String json) throws JsonProcessingException;
+
+    protected abstract String getParam(HttpRequestUrlProvider provider, T requestData);
 
     public String getSelectedProviderBaseUrl() {
         return Optional.ofNullable(selectedProvider.get()).map(HttpRequestUrlProvider::getBaseUrl).orElse(Res.get("data.na"));
     }
 
-    protected abstract R parseResult(String json) throws JsonProcessingException;
+    public CompletableFuture<R> request(T requestData) {
+        try {
+            return requestWithFailover(requestData, new AtomicInteger(0));
+        } catch (RejectedExecutionException e) {
+            return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
+        }
+    }
 
-    protected abstract String getParam(HttpRequestUrlProvider provider, T requestData);
+    private CompletableFuture<R> requestWithFailover(T requestData, AtomicInteger recursionDepth) {
+        return request(requestData, recursionDepth)
+                .exceptionallyCompose(throwable -> {
+                    ProviderFailoverException providerFailoverException = null;
+                    if (throwable instanceof ProviderFailoverException e1) {
+                        providerFailoverException = e1;
+                    } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException e2) {
+                        providerFailoverException = e2;
+                    }
+                    if (providerFailoverException != null) {
+                        return requestWithFailover(requestData, providerFailoverException.getRecursionDepth());
+                    }
+
+                    return CompletableFuture.failedFuture(throwable);
+                });
+    }
 
     private CompletableFuture<R> request(T request, AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
