@@ -48,7 +48,7 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     @Override
     protected Long parseResult(String json) throws JsonProcessingException {
         JsonNode timeNode = JsonMapperProvider.get().readTree(json).get("time");
-        if (timeNode == null || timeNode.isNull()) {
+        if (timeNode == null || timeNode.isNull() || !timeNode.isNumber()) {
             throw new RuntimeException("Response JSON missing 'time' field");
         }
         return timeNode.asLong() * 1000;
