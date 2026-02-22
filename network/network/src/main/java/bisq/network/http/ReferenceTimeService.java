@@ -27,9 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Derived from ExplorerService
- */
 @Slf4j
 public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     private static ExecutorService getExecutorService() {

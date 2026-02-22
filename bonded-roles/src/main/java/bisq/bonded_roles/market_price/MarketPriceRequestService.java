@@ -208,7 +208,7 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     }
 
     @Getter
-    @ToString
+    @ToString(callSuper = true)
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             Set<HttpRequestUrlProvider> providers = parseProviders(typesafeConfig.getConfigList("providers"));

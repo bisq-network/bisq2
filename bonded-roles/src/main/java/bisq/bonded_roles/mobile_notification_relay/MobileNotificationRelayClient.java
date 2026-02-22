@@ -65,7 +65,7 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
                 deviceTokenHex,
                 encryptedMessageHex);
         return request(requestData)
-                .thenApply(result -> result.equals(SUCCESS));
+                .thenApply(SUCCESS::equals);
     }
 
     @Getter

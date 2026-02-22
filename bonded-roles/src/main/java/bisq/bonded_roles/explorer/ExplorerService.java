@@ -61,7 +61,7 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     @Override
     protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
         if (provider instanceof Provider explorerServiceProvider) {
-            String apiPath = provider.getApiPath();
+            String apiPath = explorerServiceProvider.getApiPath();
             if (requestData instanceof TxRequestData txRequestData) {
                 String txPath = explorerServiceProvider.getTxPath();
                 String txId = txRequestData.getTxId();
@@ -92,7 +92,7 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     }
 
     @Getter
-    @ToString
+    @ToString(callSuper = true)
     public static final class Config extends HttpRequestServiceConfig {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
