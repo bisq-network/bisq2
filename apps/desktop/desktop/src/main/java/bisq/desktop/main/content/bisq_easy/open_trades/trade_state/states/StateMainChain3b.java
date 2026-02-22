@@ -126,13 +126,13 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         }
 
         public void openExplorer() {
-            ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            if (provider == null) {
-                log.warn("SelectedProvider is null");
-                return;
-            }
-            String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
-            Browser.open(url);
+            explorerService.getExplorerServiceProvider()
+                    .ifPresent(provider -> {
+                        String txPath = provider.getTxPath();
+                        String txId = model.getPaymentProof();
+                        String url = provider.getBaseUrl() + "/" + txPath + "/" + txId;
+                        Browser.open(url);
+                    });
         }
 
         void onCompleteTrade() {

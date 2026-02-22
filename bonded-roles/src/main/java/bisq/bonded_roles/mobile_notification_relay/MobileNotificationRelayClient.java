@@ -17,328 +17,68 @@
 
 package bisq.bonded_roles.mobile_notification_relay;
 
-import bisq.common.application.ApplicationVersion;
-import bisq.common.application.Service;
-import bisq.common.data.Pair;
-import bisq.common.network.TransportType;
-import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CollectionUtil;
-import bisq.common.util.ExceptionUtil;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.http.BaseHttpClient;
-import bisq.network.http.utils.HttpException;
-import lombok.EqualsAndHashCode;
+import bisq.network.http.HttpRequestService;
+import bisq.network.http.HttpRequestServiceConfig;
+import bisq.network.http.HttpRequestUrlProvider;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-// TODO extract super class
-// TODO WIP
 
 @Slf4j
-public class MobileNotificationRelayClient implements Service {
+public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, String> {
     private static final String SUCCESS = "success";
-    private static final String ENDPOINT = "relay";
 
-    private static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("MobileNotificationsService", 1, 5, 60);
-
-    private static class RetryException extends RuntimeException {
-        @Getter
-        private final AtomicInteger recursionDepth;
-
-        public RetryException(String message, AtomicInteger recursionDepth) {
-            super(message);
-            this.recursionDepth = recursionDepth;
-        }
+    private static ExecutorService getExecutorService() {
+        return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
+                1,
+                5,
+                60);
     }
 
-    @Getter
-    @ToString
-    public static final class Config {
-        public static Config from(com.typesafe.config.Config typesafeConfig) {
-            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
-            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            Set<Provider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
-                    .map(config -> {
-                        String url = config.getString("url");
-                        String operator = config.getString("operator");
-                        TransportType transportType = getTransportTypeFromUrl(url);
-                        return new Provider(url, operator, transportType);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-            return new Config(timeoutInSeconds, providers, fallbackProviders);
-        }
-
-        private static TransportType getTransportTypeFromUrl(String url) {
-            try {
-                java.net.URI uri = java.net.URI.create(url);
-                String host = uri.getHost();
-                if (host != null) {
-                    if (host.endsWith(".i2p")) {
-                        return TransportType.I2P;
-                    } else if (host.endsWith(".onion")) {
-                        return TransportType.TOR;
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                log.warn("Failed to parse URL for transport type detection: {}", url);
-            }
-            return TransportType.CLEAR;
-        }
-
-        private final Set<Provider> providers;
-        private final Set<Provider> fallbackProviders;
-        private final long timeoutInSeconds;
-
-        public Config(long timeoutInSeconds, Set<Provider> providers, Set<Provider> fallbackProviders) {
-            this.timeoutInSeconds = timeoutInSeconds;
-            this.providers = providers;
-            this.fallbackProviders = fallbackProviders;
-        }
-    }
-
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    public static final class Provider {
-        private final String baseUrl;
-        private final String operator;
-        private final TransportType transportType;
-
-        public Provider(String baseUrl,
-                        String operator,
-                        TransportType transportType) {
-            this.baseUrl = baseUrl;
-            this.operator = operator;
-            this.transportType = transportType;
-        }
-    }
-
-    @Getter
-    private final Observable<Provider> selectedProvider = new Observable<>();
-    private final MobileNotificationRelayClient.Config conf;
-    private final NetworkService networkService;
-    private final String userAgent;
-    private final Set<Provider> candidates = new HashSet<>();
-    private final Set<Provider> providersFromConfig = new HashSet<>();
-    private final Set<Provider> fallbackProviders = new HashSet<>();
-    private final Set<Provider> failedProviders = new HashSet<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
-    private final int numTotalCandidates;
-    private final boolean noProviderAvailable;
-    private volatile boolean shutdownStarted;
-
-    public MobileNotificationRelayClient(Config conf, NetworkService networkService) {
-        this.conf = conf;
-        this.networkService = networkService;
-        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        conf.providers.stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(providersFromConfig::add);
-        conf.getFallbackProviders().stream()
-                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
-                .forEach(fallbackProviders::add);
-
-        if (providersFromConfig.isEmpty()) {
-            candidates.addAll(fallbackProviders);
-        } else {
-            candidates.addAll(providersFromConfig);
-        }
-        noProviderAvailable = candidates.isEmpty();
-        numTotalCandidates = providersFromConfig.size() + fallbackProviders.size();
-        if (noProviderAvailable) {
-            log.warn("We do not have any matching provider setup for supportedTransportTypes {}", supportedTransportTypes);
-        } else {
-            selectedProvider.set(selectNextProvider());
-        }
+    public MobileNotificationRelayClient(HttpRequestServiceConfig conf, NetworkService networkService) {
+        super(conf,
+                networkService,
+                getExecutorService());
     }
 
     @Override
-    public CompletableFuture<Boolean> shutdown() {
-        shutdownStarted = true;
-        return httpClient.map(BaseHttpClient::shutdown)
-                .orElse(CompletableFuture.completedFuture(true));
+    protected String parseResult(String json) {
+        return json;
+    }
+
+    @Override
+    protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
+        return provider.getApiPath() + "?" +
+                "isAndroid=" + requestData.isAndroid() +
+                "&token=" + requestData.getDeviceTokenHex() +
+                "&msg=" + requestData.getEncryptedMessageHex();
     }
 
     public CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
                                                         String deviceTokenHex,
                                                         String encryptedMessageHex) {
-        try {
-            return sendToRelayServer(isAndroid,
-                    deviceTokenHex,
-                    encryptedMessageHex,
-                    new AtomicInteger(0))
-                    .exceptionallyCompose(throwable -> {
-                        if (throwable instanceof RetryException retryException) {
-                            return sendToRelayServer(isAndroid,
-                                    deviceTokenHex,
-                                    encryptedMessageHex,
-                                    retryException.getRecursionDepth());
-                        } else if (ExceptionUtil.getRootCause(throwable) instanceof RetryException retryException) {
-                            return sendToRelayServer(isAndroid,
-                                    deviceTokenHex,
-                                    encryptedMessageHex,
-                                    retryException.getRecursionDepth());
-                        } else {
-                            return CompletableFuture.failedFuture(throwable);
-                        }
-                    });
-        } catch (RejectedExecutionException e) {
-            return CompletableFuture.failedFuture(new RejectedExecutionException("Too many requests. Try again later."));
+        RequestData requestData = new RequestData(isAndroid,
+                deviceTokenHex,
+                encryptedMessageHex);
+        return request(requestData)
+                .thenApply(SUCCESS::equals);
+    }
+
+    @Getter
+    public static class RequestData {
+        private final boolean isAndroid;
+        private final String deviceTokenHex;
+        private final String encryptedMessageHex;
+
+        public RequestData(boolean isAndroid, String deviceTokenHex, String encryptedMessageHex) {
+            this.isAndroid = isAndroid;
+            this.deviceTokenHex = deviceTokenHex;
+            this.encryptedMessageHex = encryptedMessageHex;
         }
     }
 
-    public String getSelectedProviderBaseUrl() {
-        return Optional.ofNullable(selectedProvider.get()).map(MobileNotificationRelayClient.Provider::getBaseUrl).orElse(Res.get("data.na"));
-    }
-
-    private CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
-                                                         String deviceTokenHex,
-                                                         String encryptedMessageHex,
-                                                         AtomicInteger recursionDepth) {
-        if (noProviderAvailable) {
-            return CompletableFuture.failedFuture(new RuntimeException("No mobile notification relay provider available"));
-        }
-        if (shutdownStarted) {
-            return CompletableFuture.failedFuture(new RuntimeException("Shutdown has already started"));
-        }
-
-        try {
-            return CompletableFuture.supplyAsync(() -> {
-                        Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
-                        BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
-                        httpClient = Optional.of(client);
-                        long ts = System.currentTimeMillis();
-                        try {
-                            String param = ENDPOINT + "?" +
-                                    "isAndroid=" + isAndroid +
-                                    "&token=" + deviceTokenHex +
-                                    "&msg=" + encryptedMessageHex;
-
-                            Pair<String, String> header = new Pair<>("User-Agent", userAgent);
-                            String result = client.get(param, Optional.of(header));
-
-                            log.info("Received response from {}/{} after {} ms", client.getBaseUrl(), ENDPOINT, System.currentTimeMillis() - ts);
-                            selectedProvider.set(selectNextProvider());
-                            shutdownHttpClient(client);
-                            return result.equals(SUCCESS);
-                        } catch (Exception e) {
-                            shutdownHttpClient(client);
-                            if (shutdownStarted) {
-                                throw new RuntimeException("Shutdown has already started");
-                            }
-
-                            Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            log.warn("Encountered exception from provider {}", provider.getBaseUrl(), rootCause);
-
-                            if (rootCause instanceof HttpException httpException) {
-                                int responseCode = httpException.getResponseCode();
-                                // If not server error we pass the error to the client
-                                // 408 (Request Timeout) and 429 (Too Many Requests) are usually transient
-                                // and should rotate to another provider.
-                                if (responseCode < 500 && responseCode != 408 && responseCode != 429) {
-                                    throw new CompletionException(e);
-                                }
-                            }
-
-                            int numRecursions = recursionDepth.incrementAndGet();
-                            if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
-                                failedProviders.add(provider);
-                                selectedProvider.set(selectNextProvider());
-                                log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
-                                throw new RetryException("Retrying with next provider", recursionDepth);
-                            } else {
-                                log.warn("We exhausted all possible providers and give up");
-                                throw new RuntimeException("We failed at all possible providers and give up");
-                            }
-                        }
-                    }, POOL)
-                    .completeOnTimeout(null, conf.getTimeoutInSeconds(), SECONDS)
-                    .thenCompose(result -> {
-                        if (result == null) {
-                            // Timeout occurred - add provider to failed list before retrying
-                            Provider currentProvider = selectedProvider.get();
-                            if (currentProvider != null) {
-                                failedProviders.add(currentProvider);
-                                log.warn("Request to provider {} timed out after {} seconds",
-                                        currentProvider.getBaseUrl(), conf.getTimeoutInSeconds());
-                            }
-                            return CompletableFuture.failedFuture(new RetryException("Timeout", recursionDepth));
-                        }
-                        return CompletableFuture.completedFuture(result);
-                    });
-        } catch (RejectedExecutionException e) {
-            log.error("Executor rejected task.", e);
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    private Provider selectNextProvider() {
-        if (candidates.isEmpty()) {
-            fillCandidates(0);
-        }
-        // Guard against null return from getRandomElement (can happen if candidates is empty)
-        Provider selected = CollectionUtil.getRandomElement(candidates);
-        if (selected == null) {
-            log.error("No provider available - candidates list is empty after fillCandidates");
-            // Return first available provider from config as fallback
-            return providersFromConfig.stream().findFirst()
-                    .orElseGet(() -> fallbackProviders.stream().findFirst()
-                            .orElse(null));
-        }
-        candidates.remove(selected);
-        return selected;
-    }
-
-    private void fillCandidates(int recursionDepth) {
-        providersFromConfig.stream()
-                .filter(provider -> !failedProviders.contains(provider))
-                .forEach(candidates::add);
-        if (candidates.isEmpty()) {
-            log.info("We do not have any provider which has not already failed. We add the fall back providers to our candidates list.");
-            fallbackProviders.stream()
-                    .filter(provider -> !failedProviders.contains(provider))
-                    .forEach(candidates::add);
-        }
-        if (candidates.isEmpty()) {
-            log.info("All our providers from config and fallback have failed. We reset the failedProviders and fill from scratch.");
-            failedProviders.clear();
-            if (recursionDepth == 0) {
-                fillCandidates(1);
-            } else {
-                log.error("recursion at fillCandidates");
-            }
-        }
-    }
-
-    private void shutdownHttpClient(BaseHttpClient client) {
-        try {
-            client.shutdown();
-        } catch (Exception ignore) {
-        }
-    }
 }

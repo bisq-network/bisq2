@@ -147,8 +147,14 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             OpenTradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
         }
 
-        protected void openExplorer() {
-            Browser.open(getBlockExplorerUrl());
+        public void openExplorer() {
+            explorerService.getExplorerServiceProvider()
+                    .ifPresent(provider -> {
+                        String txPath = provider.getTxPath();
+                        String txId = model.getPaymentProof();
+                        String url = provider.getBaseUrl() + "/" + txPath + "/" + txId;
+                        Browser.open(url);
+                    });
         }
 
         protected void onCopyExplorerLink() {
@@ -156,12 +162,10 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected String getBlockExplorerUrl() {
-            ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            if (provider == null) {
-                log.warn("SelectedProvider is null");
-                return Res.get("data.na");
-            }
-            return provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
+            return explorerService.getExplorerServiceProvider()
+                    .map(provider ->
+                            provider.getBaseUrl() + "/" + provider.getTxPath() + "/" + model.getPaymentProof())
+                    .orElse(Res.get("data.na"));
         }
     }
 
