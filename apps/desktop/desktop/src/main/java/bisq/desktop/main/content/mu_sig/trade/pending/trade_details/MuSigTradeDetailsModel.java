@@ -19,6 +19,8 @@ package bisq.desktop.main.content.mu_sig.trade.pending.trade_details;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.main.content.mu_sig.trade.pending.trade_details.MuSigTradeDetailsRecords.SecurityDepositInfo;
+import bisq.desktop.main.content.mu_sig.trade.pending.trade_details.MuSigTradeDetailsRecords.TradeFeeInfo;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.trade.mu_sig.MuSigTrade;
 import lombok.Getter;
@@ -30,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @Setter
-public class MuSigTradeDetailsModel extends NavigationModel {
+class MuSigTradeDetailsModel extends NavigationModel {
     private MuSigTrade trade;
     private MuSigOpenTradeChannel channel;
 
@@ -53,11 +55,14 @@ public class MuSigTradeDetailsModel extends NavigationModel {
     private String depositTxId;
     private boolean isDepositTxIdEmpty;
     private boolean isDepositTxIdVisible;
+    private boolean isBlockExplorerLinkVisible;
     private String peersPaymentAccountDataDescription;
     private String peersPaymentAccountData;
     private boolean isPaymentAccountDataEmpty;
     private String assignedMediator;
     private boolean hasMediatorBeenAssigned;
+    private Optional<SecurityDepositInfo> securityDepositInfo = Optional.empty();
+    private Optional<TradeFeeInfo> tradeFeeInfo = Optional.empty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
