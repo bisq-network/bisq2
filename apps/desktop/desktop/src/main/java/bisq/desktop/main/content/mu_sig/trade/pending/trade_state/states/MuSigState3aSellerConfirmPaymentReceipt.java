@@ -23,6 +23,7 @@ import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -81,6 +82,8 @@ public class MuSigState3aSellerConfirmPaymentReceipt extends MuSigBaseState {
                         .map(Account::getAccountName)
                         .orElse(Res.get("data.na"));
                 model.setInfo(Res.get("muSig.trade.state.phase3a.verifyReceipt.account.fiat", accountName));
+                model.setPeersAccountDataDescription(Res.get("muSig.trade.state.phase3a.buyersAccount.fiat"));
+                model.setBuyersAccountData(peersAccountPayload.getAccountDataDisplayString());
             }
         }
 
@@ -100,6 +103,10 @@ public class MuSigState3aSellerConfirmPaymentReceipt extends MuSigBaseState {
     private static class Model extends MuSigBaseState.Model {
         @Setter
         private String info;
+        @Setter
+        private String buyersAccountData;
+        @Setter
+        private String peersAccountDataDescription;
 
         protected Model(MuSigTrade trade, MuSigOpenTradeChannel channel) {
             super(trade, channel);
@@ -110,16 +117,20 @@ public class MuSigState3aSellerConfirmPaymentReceipt extends MuSigBaseState {
         private final WrappingText headline;
         private final Button confirmPaymentReceiptButton;
         private final WrappingText info;
+        private final MaterialTextArea buyersAccountData;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
             headline = MuSigFormUtils.getHeadline();
             info = MuSigFormUtils.getInfo();
+            buyersAccountData = MuSigFormUtils.addTextArea("", "", false);
+            buyersAccountData.visibleProperty().bind(buyersAccountData.textProperty().isNotEmpty());
+            buyersAccountData.managedProperty().bind(buyersAccountData.visibleProperty());
             confirmPaymentReceiptButton = new Button();
             confirmPaymentReceiptButton.setDefaultButton(true);
             VBox.setMargin(confirmPaymentReceiptButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, info, confirmPaymentReceiptButton);
+            root.getChildren().addAll(headline, info, buyersAccountData, confirmPaymentReceiptButton);
         }
 
         @Override
@@ -128,6 +139,8 @@ public class MuSigState3aSellerConfirmPaymentReceipt extends MuSigBaseState {
 
             headline.setText(Res.get("muSig.trade.state.phase3a.headline", model.getFormattedNonBtcAmount()));
             info.setText(model.getInfo());
+            buyersAccountData.setText(model.getBuyersAccountData());
+            buyersAccountData.setDescription(model.getPeersAccountDataDescription());
             confirmPaymentReceiptButton.setText(Res.get("muSig.trade.state.phase3a.fiatReceivedButton"));
             confirmPaymentReceiptButton.setOnAction(e -> controller.onPaymentReceiptConfirmed());
         }
