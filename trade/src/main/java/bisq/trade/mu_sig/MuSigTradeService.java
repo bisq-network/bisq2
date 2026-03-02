@@ -54,9 +54,9 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.support.mediation.mu_sig.MuSigMediationStateMessage;
+import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
-import bisq.trade.DisputeState;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
@@ -290,8 +290,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             }
         } else if (envelopePayloadMessage instanceof MuSigMediatorsResponse muSigMediatorsResponse) {
             maybeApplyDisputeStateFromMediationOpenSignal(muSigMediatorsResponse.getTradeId());
-        } else if (envelopePayloadMessage instanceof MuSigMediationStateMessage message) {
-            maybeApplyDisputeStateFromMediationStateMessage(message);
+        } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage message) {
+            maybeApplyDisputeStateFromMediationStateChangeMessage(message);
         }
     }
 
@@ -365,7 +365,17 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     public void maybeApplyDisputeStateFromMediationRequest(String tradeId) {
-        maybeApplyDisputeStateFromMediationOpenSignal(tradeId);
+        findTrade(tradeId).ifPresent(trade -> {
+            MuSigDisputeState current = trade.getDisputeState();
+            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
+                return;
+            }
+
+            if (current == MuSigDisputeState.NO_DISPUTE) {
+                trade.setDisputeState(MuSigDisputeState.MEDIATION_REQUESTED);
+                persist();
+            }
+        });
     }
 
     public void removeTrade(MuSigTrade trade) {
@@ -656,16 +666,16 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
     private void maybeApplyDisputeStateFromMediationOpenSignal(String tradeId) {
         findTrade(tradeId).ifPresent(trade -> {
-            DisputeState current = trade.getDisputeState();
-            if (current == DisputeState.ARBITRATION_OPEN || current == DisputeState.ARBITRATION_CLOSED) {
+            MuSigDisputeState current = trade.getDisputeState();
+            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
                 return;
             }
 
-            DisputeState next = current;
-            if (current == DisputeState.NO_DISPUTE) {
-                next = DisputeState.MEDIATION_OPEN;
-            } else if (current == DisputeState.MEDIATION_CLOSED) {
-                next = DisputeState.MEDIATION_RE_OPENED;
+            MuSigDisputeState next = current;
+            if (current == MuSigDisputeState.NO_DISPUTE || current == MuSigDisputeState.MEDIATION_REQUESTED) {
+                next = MuSigDisputeState.MEDIATION_OPEN;
+            } else if (current == MuSigDisputeState.MEDIATION_CLOSED) {
+                next = MuSigDisputeState.MEDIATION_RE_OPENED;
             }
 
             if (next != current) {
@@ -675,24 +685,24 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         });
     }
 
-    private void maybeApplyDisputeStateFromMediationStateMessage(MuSigMediationStateMessage message) {
+    private void maybeApplyDisputeStateFromMediationStateChangeMessage(MuSigMediationStateChangeMessage message) {
         findTrade(message.getTradeId()).ifPresent(trade -> {
-            DisputeState current = trade.getDisputeState();
-            if (current == DisputeState.ARBITRATION_OPEN || current == DisputeState.ARBITRATION_CLOSED) {
+            MuSigDisputeState current = trade.getDisputeState();
+            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
                 return;
             }
 
             MediationCaseState mediationCaseState = message.getMediationCaseState();
             boolean resultChanged = false;
-            DisputeState next = current;
+            MuSigDisputeState next = current;
 
             if (mediationCaseState == MediationCaseState.RE_OPENED) {
-                next = DisputeState.MEDIATION_RE_OPENED;
+                next = MuSigDisputeState.MEDIATION_RE_OPENED;
             } else if (mediationCaseState == MediationCaseState.CLOSED) {
-                next = DisputeState.MEDIATION_CLOSED;
+                next = MuSigDisputeState.MEDIATION_CLOSED;
                 Optional<MuSigMediationResult> incomingResult = message.getMuSigMediationResult();
                 if (incomingResult.isEmpty()) {
-                    log.warn("Ignoring CLOSED MuSigMediationStateMessage without MuSigMediationResult for trade {}.",
+                    log.warn("Ignoring CLOSED MuSigMediationStateChangeMessage without MuSigMediationResult for trade {}.",
                             message.getTradeId());
                     return;
                 }

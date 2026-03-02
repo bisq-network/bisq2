@@ -20,8 +20,9 @@ package bisq.trade;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 
-public enum DisputeState implements ProtoEnum {
+public enum MuSigDisputeState implements ProtoEnum {
     NO_DISPUTE,
+    MEDIATION_REQUESTED,
     MEDIATION_OPEN,
     MEDIATION_CLOSED,
     MEDIATION_RE_OPENED,
@@ -29,11 +30,11 @@ public enum DisputeState implements ProtoEnum {
     ARBITRATION_CLOSED;
 
     @Override
-    public bisq.trade.protobuf.DisputeState toProtoEnum() {
-        return bisq.trade.protobuf.DisputeState.valueOf(getProtobufEnumPrefix() + name());
+    public bisq.trade.protobuf.MuSigDisputeState toProtoEnum() {
+        return bisq.trade.protobuf.MuSigDisputeState.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static DisputeState fromProto(bisq.trade.protobuf.DisputeState proto) {
-        return ProtobufUtils.enumFromProto(DisputeState.class, proto.name(), NO_DISPUTE);
+    public static MuSigDisputeState fromProto(bisq.trade.protobuf.MuSigDisputeState proto) {
+        return ProtobufUtils.enumFromProto(MuSigDisputeState.class, proto.name(), NO_DISPUTE);
     }
 }

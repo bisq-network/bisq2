@@ -47,7 +47,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
-import bisq.trade.DisputeState;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.trade.mu_sig.protocol.MuSigTradeState;
@@ -381,9 +381,10 @@ public class MuSigTradeStateController implements Controller {
         }
     }
 
-    private static boolean shouldShowMediationBanner(DisputeState disputeState) {
-        return disputeState == DisputeState.MEDIATION_OPEN ||
-                disputeState == DisputeState.MEDIATION_CLOSED ||
-                disputeState == DisputeState.MEDIATION_RE_OPENED;
+    private static boolean shouldShowMediationBanner(MuSigDisputeState disputeState) {
+        return disputeState == MuSigDisputeState.MEDIATION_REQUESTED ||
+                disputeState == MuSigDisputeState.MEDIATION_OPEN ||
+                disputeState == MuSigDisputeState.MEDIATION_CLOSED ||
+                disputeState == MuSigDisputeState.MEDIATION_RE_OPENED;
     }
 }

@@ -26,7 +26,7 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.trade.DisputeState;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
@@ -56,7 +56,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
-    private final Observable<DisputeState> disputeState = new Observable<>(DisputeState.NO_DISPUTE);
+    private final Observable<MuSigDisputeState> disputeState = new Observable<>(MuSigDisputeState.NO_DISPUTE);
     private Optional<MuSigMediationResult> muSigMediationResult = Optional.empty();
 
     public MuSigTrade(MuSigContract contract,
@@ -154,7 +154,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
             trade.setDepositTxId(muSigTradeProto.getDepositTxId());
         }
 
-        trade.setDisputeState(DisputeState.fromProto(muSigTradeProto.getDisputeState()));
+        trade.setDisputeState(MuSigDisputeState.fromProto(muSigTradeProto.getDisputeState()));
 
         if (muSigTradeProto.hasMuSigMediationResult()) {
             trade.setMuSigMediationResult(MuSigMediationResult.fromProto(muSigTradeProto.getMuSigMediationResult()));
@@ -217,15 +217,15 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return getOffer().getMarket();
     }
 
-    public void setDisputeState(DisputeState disputeState) {
+    public void setDisputeState(MuSigDisputeState disputeState) {
         this.disputeState.set(disputeState);
     }
 
-    public DisputeState getDisputeState() {
+    public MuSigDisputeState getDisputeState() {
         return disputeState.get();
     }
 
-    public ReadOnlyObservable<DisputeState> disputeStateObservable() {
+    public ReadOnlyObservable<MuSigDisputeState> disputeStateObservable() {
         return disputeState;
     }
 

@@ -30,7 +30,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.observable.Pin;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.trade.DisputeState;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.MuSigTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -227,27 +227,34 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
     private void updateMediationBannerLabel(MessageDeliveryStatus status) {
         MuSigTrade trade = model.getTrade().get();
         if (trade != null) {
-            DisputeState disputeState = trade.getDisputeState();
-            if (disputeState == DisputeState.MEDIATION_CLOSED) {
+            MuSigDisputeState disputeState = trade.getDisputeState();
+            if (disputeState == MuSigDisputeState.MEDIATION_CLOSED) {
                 String details = trade.getMuSigMediationResult()
                         .map(result -> getMediationResultDetailsText(trade, result))
                         .orElse(Res.get("data.na"));
                 String text = Res.get("muSig.trade.pending.inMediation.closed", details);
                 mediationBannerLabel.setText(text);
                 return;
-            } else if (disputeState == DisputeState.MEDIATION_RE_OPENED) {
+            } else if (disputeState == MuSigDisputeState.MEDIATION_RE_OPENED) {
                 String details = trade.getMuSigMediationResult()
                         .map(result -> getMediationResultDetailsText(trade, result))
                         .orElse(Res.get("data.na"));
                 String text = Res.get("muSig.trade.pending.inMediation.reOpened", details);
                 mediationBannerLabel.setText(text);
                 return;
+            } else if (disputeState == MuSigDisputeState.MEDIATION_OPEN) {
+                mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.info"));
+                return;
+            } else if (disputeState != MuSigDisputeState.MEDIATION_REQUESTED) {
+                mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.info"));
+                return;
             }
         }
 
+        // In MEDIATION_REQUESTED we reflect transport status of the request message.
         // If the peer had sent the request we do not get any requestMediationDeliveryStatus; status is null.
         if (status == null || status == MessageDeliveryStatus.ACK_RECEIVED || status == MessageDeliveryStatus.MAILBOX_MSG_RECEIVED) {
-            mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.info"));
+            mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.requested"));
         } else {
             String deliveryStatus = getMessageDeliveryStatusDisplayString(status);
             if (status == MessageDeliveryStatus.FAILED) {

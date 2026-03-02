@@ -188,16 +188,12 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     }
 
     public void addMediatorsResponseMessage(MuSigOpenTradeChannel channel, String text) {
-        addMediationCaseStateMessage(channel, text, true);
-    }
-
-    public void addMediationCaseStateMessage(MuSigOpenTradeChannel channel, String text, boolean isInMediation) {
-        setIsInMediation(channel, isInMediation);
+        setIsInMediation(channel, true);
         checkArgument(channel.getMediator().isPresent());
-        addLocalProtocolLogMessage(channel, channel.getMediator().orElseThrow(), text);
+        addChatMessage(channel, channel.getMediator().orElseThrow(), text);
     }
 
-    private void addLocalProtocolLogMessage(MuSigOpenTradeChannel channel, UserProfile senderUserProfile, String text) {
+    private void addChatMessage(MuSigOpenTradeChannel channel, UserProfile senderUserProfile, String text) {
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         MuSigOpenTradeMessage tradeLogMessage = new MuSigOpenTradeMessage(
                 channel.getTradeId(),

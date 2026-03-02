@@ -64,16 +64,6 @@ enum TradeProtocolFailure {
   TRADEPROTOCOLFAILURE_MEDIATORS_NOT_MATCHING = 4;
 }
 
-enum DisputeState {
-  DISPUTESTATE_UNSPECIFIED = 0;
-  DISPUTESTATE_NO_DISPUTE = 1;
-  DISPUTESTATE_MEDIATION_OPEN = 2;
-  DISPUTESTATE_MEDIATION_CLOSED = 3;
-  DISPUTESTATE_MEDIATION_RE_OPENED = 4;
-  DISPUTESTATE_ARBITRATION_OPEN = 5;
-  DISPUTESTATE_ARBITRATION_CLOSED = 6;
-}
-
 message Trade {
   string state = 1;
   string id = 2;
@@ -233,10 +223,21 @@ message MuSigTradeParty {
   optional account.AccountPayload accountPayload = 13;
 }
 
+enum MuSigDisputeState {
+  MUSIGDISPUTESTATE_UNSPECIFIED = 0;
+  MUSIGDISPUTESTATE_NO_DISPUTE = 1;
+  MUSIGDISPUTESTATE_MEDIATION_REQUESTED = 2;
+  MUSIGDISPUTESTATE_MEDIATION_OPEN = 3;
+  MUSIGDISPUTESTATE_MEDIATION_CLOSED = 4;
+  MUSIGDISPUTESTATE_MEDIATION_RE_OPENED = 5;
+  MUSIGDISPUTESTATE_ARBITRATION_OPEN = 6;
+  MUSIGDISPUTESTATE_ARBITRATION_CLOSED = 7;
+}
+
 message MuSigTrade {
   optional string depositTxId = 1;
   optional sint64 tradeCompletedDate = 2;
-  DisputeState disputeState = 3;
+  MuSigDisputeState disputeState = 3;
   optional support.MuSigMediationResult muSigMediationResult = 4;
 }
 

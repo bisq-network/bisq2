@@ -67,7 +67,7 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
     private final Set<MuSigMediatorsResponse> pendingMuSigMediatorsResponseMessages = new CopyOnWriteArraySet<>();
-    private final Set<MuSigMediationStateMessage> pendingMuSigMediationStateMessages = new CopyOnWriteArraySet<>();
+    private final Set<MuSigMediationStateChangeMessage> pendingMuSigMediationStateChangeMessages = new CopyOnWriteArraySet<>();
     @Nullable
     private Pin channeldPin;
     @Nullable
@@ -109,7 +109,7 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
             throttleUpdatesScheduler = null;
         }
         pendingMuSigMediatorsResponseMessages.clear();
-        pendingMuSigMediationStateMessages.clear();
+        pendingMuSigMediationStateChangeMessages.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -121,8 +121,8 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigMediatorsResponse) {
             processMediationResponse((MuSigMediatorsResponse) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof MuSigMediationStateMessage) {
-            processMediationStateMessage((MuSigMediationStateMessage) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage) {
+            processMediationStateChangeMessage((MuSigMediationStateChangeMessage) envelopePayloadMessage);
         }
     }
 
@@ -251,37 +251,34 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
                         });
     }
 
-    private void processMediationStateMessage(MuSigMediationStateMessage message) {
+    private void processMediationStateChangeMessage(MuSigMediationStateChangeMessage message) {
         muSigOpenTradeChannelService.findChannelByTradeId(message.getTradeId())
                 .ifPresentOrElse(channel -> {
                             MediationCaseState mediationCaseState = message.getMediationCaseState();
                             if (mediationCaseState == MediationCaseState.RE_OPENED) {
-                                muSigOpenTradeChannelService.addMediationCaseStateMessage(channel,
-                                        Res.encode("authorizedRole.mediator.message.mediationCaseReOpened"),
-                                        true);
+                                muSigOpenTradeChannelService.setIsInMediation(channel, true);
                             } else if (mediationCaseState == MediationCaseState.CLOSED) {
                                 if (message.getMuSigMediationResult().isEmpty()) {
-                                    log.warn("Ignoring MuSigMediationStateMessage with CLOSED state and missing MuSigMediationResult for trade {}.",
+                                    log.warn("Ignoring MuSigMediationStateChangeMessage with CLOSED state and missing MuSigMediationResult for trade {}.",
                                             message.getTradeId());
-                                    pendingMuSigMediationStateMessages.remove(message);
+                                    pendingMuSigMediationStateChangeMessages.remove(message);
                                     return;
                                 }
-                                muSigOpenTradeChannelService.addMediationCaseStateMessage(channel,
-                                        Res.encode("authorizedRole.mediator.message.mediationCaseClosed"),
-                                        false);
+                                // Closed mediation case still keeps mediator chat participation active.
+                                muSigOpenTradeChannelService.setIsInMediation(channel, true);
                             } else {
-                                log.warn("Ignoring MuSigMediationStateMessage with unsupported state {} for trade {}.",
+                                log.warn("Ignoring MuSigMediationStateChangeMessage with unsupported state {} for trade {}.",
                                         mediationCaseState, message.getTradeId());
-                                pendingMuSigMediationStateMessages.remove(message);
+                                pendingMuSigMediationStateChangeMessages.remove(message);
                                 return;
                             }
-                            pendingMuSigMediationStateMessages.remove(message);
+                            pendingMuSigMediationStateChangeMessages.remove(message);
                         },
                         () -> {
-                            log.warn("We received a MuSigMediationStateMessage but did not find a matching muSigOpenTradeChannel for trade ID {}.\n" +
-                                            "We add it to the pendingMuSigMediationStateMessages set and reprocess it once a new trade channel has been added.",
+                            log.warn("We received a MuSigMediationStateChangeMessage but did not find a matching muSigOpenTradeChannel for trade ID {}.\n" +
+                                            "We add it to the pendingMuSigMediationStateChangeMessages set and reprocess it once a new trade channel has been added.",
                                     message.getTradeId());
-                            pendingMuSigMediationStateMessages.add(message);
+                            pendingMuSigMediationStateChangeMessages.add(message);
                             if (channeldPin == null) {
                                 channeldPin = muSigOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
                                     @Override
@@ -310,6 +307,6 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
 
     private void maybeProcessPendingMessages() {
         new ArrayList<>(pendingMuSigMediatorsResponseMessages).forEach(this::processMediationResponse);
-        new ArrayList<>(pendingMuSigMediationStateMessages).forEach(this::processMediationStateMessage);
+        new ArrayList<>(pendingMuSigMediationStateChangeMessages).forEach(this::processMediationStateChangeMessage);
     }
 }

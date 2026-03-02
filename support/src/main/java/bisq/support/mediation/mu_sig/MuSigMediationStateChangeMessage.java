@@ -39,17 +39,17 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MuSigMediationStateMessage implements MailboxMessage, ExternalNetworkMessage {
+public final class MuSigMediationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage {
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String id;
     private final String tradeId;
     private final MediationCaseState mediationCaseState;
     private final Optional<MuSigMediationResult> muSigMediationResult;
 
-    public MuSigMediationStateMessage(String id,
-                                      String tradeId,
-                                      MediationCaseState mediationCaseState,
-                                      Optional<MuSigMediationResult> muSigMediationResult) {
+    public MuSigMediationStateChangeMessage(String id,
+                                            String tradeId,
+                                            MediationCaseState mediationCaseState,
+                                            Optional<MuSigMediationResult> muSigMediationResult) {
         this.id = id;
         this.tradeId = tradeId;
         this.mediationCaseState = mediationCaseState;
@@ -68,8 +68,8 @@ public final class MuSigMediationStateMessage implements MailboxMessage, Externa
     }
 
     @Override
-    public bisq.support.protobuf.MuSigMediationStateMessage.Builder getValueBuilder(boolean serializeForHash) {
-        bisq.support.protobuf.MuSigMediationStateMessage.Builder builder = bisq.support.protobuf.MuSigMediationStateMessage.newBuilder()
+    public bisq.support.protobuf.MuSigMediationStateChangeMessage.Builder getValueBuilder(boolean serializeForHash) {
+        bisq.support.protobuf.MuSigMediationStateChangeMessage.Builder builder = bisq.support.protobuf.MuSigMediationStateChangeMessage.newBuilder()
                 .setId(id)
                 .setTradeId(tradeId)
                 .setMediationCaseState(mediationCaseState.toProtoEnum());
@@ -77,8 +77,8 @@ public final class MuSigMediationStateMessage implements MailboxMessage, Externa
         return builder;
     }
 
-    public static MuSigMediationStateMessage fromProto(bisq.support.protobuf.MuSigMediationStateMessage proto) {
-        return new MuSigMediationStateMessage(
+    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto) {
+        return new MuSigMediationStateChangeMessage(
                 proto.getId(),
                 proto.getTradeId(),
                 MediationCaseState.fromProto(proto.getMediationCaseState()),
@@ -91,8 +91,8 @@ public final class MuSigMediationStateMessage implements MailboxMessage, Externa
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.support.protobuf.MuSigMediationStateMessage proto = any.unpack(bisq.support.protobuf.MuSigMediationStateMessage.class);
-                return MuSigMediationStateMessage.fromProto(proto);
+                bisq.support.protobuf.MuSigMediationStateChangeMessage proto = any.unpack(bisq.support.protobuf.MuSigMediationStateChangeMessage.class);
+                return MuSigMediationStateChangeMessage.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

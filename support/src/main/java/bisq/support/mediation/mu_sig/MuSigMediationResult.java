@@ -17,7 +17,9 @@
 
 package bisq.support.mediation.mu_sig;
 
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
 import lombok.EqualsAndHashCode;
@@ -26,10 +28,12 @@ import lombok.Getter;
 import java.util.Optional;
 
 import static java.lang.System.currentTimeMillis;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @EqualsAndHashCode
-public class MuSigMediationResult implements PersistableProto {
+public class MuSigMediationResult implements NetworkProto, PersistableProto {
+    public static final int MAX_SUMMARY_NOTES_LENGTH = 1_000;
 
     private final long date;
     private final MediationResultReason mediationResultReason;
@@ -68,6 +72,18 @@ public class MuSigMediationResult implements PersistableProto {
         this.mediationPayoutDistributionType = mediationPayoutDistributionType;
         this.payoutAdjustmentPercentage = payoutAdjustmentPercentage;
         this.summaryNotes = summaryNotes;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateDate(date);
+        checkArgument(mediationResultReason != null, "mediationResultReason must not be null");
+        checkArgument(mediationPayoutDistributionType != null, "mediationPayoutDistributionType must not be null");
+        checkArgument(proposedBuyerPayoutAmount >= 0, "proposedBuyerPayoutAmount must not be negative");
+        checkArgument(proposedSellerPayoutAmount >= 0, "proposedSellerPayoutAmount must not be negative");
+        NetworkDataValidation.validateText(summaryNotes, MAX_SUMMARY_NOTES_LENGTH);
     }
 
     @Override

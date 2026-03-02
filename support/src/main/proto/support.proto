@@ -87,7 +87,7 @@ message MuSigMediationResult {
   optional double payoutAdjustmentPercentage = 7;
 }
 
-message MuSigMediationStateMessage {
+message MuSigMediationStateChangeMessage {
   string id = 1;
   string tradeId = 2;
   MediationCaseState mediationCaseState = 3;
