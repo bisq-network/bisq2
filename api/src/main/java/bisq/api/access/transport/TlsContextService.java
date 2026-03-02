@@ -36,8 +36,11 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -74,14 +77,15 @@ public class TlsContextService {
                     "TLS password does not have required min. length of " + MIN_PASSWORD_LENGTH);
             char[] password = tlsKeyStorePassword.toCharArray();
 
-            List<String> tlsKeyStoreSan = apiConfig.getTlsKeyStoreSan();
-            checkNotNull(tlsKeyStoreSan, "tlsKeyStoreSan must not be null");
-            checkArgument(!tlsKeyStoreSan.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
+            List<String> configuredSans = apiConfig.getTlsKeyStoreSan();
+            checkNotNull(configuredSans, "tlsKeyStoreSan must not be null");
+            checkArgument(!configuredSans.isEmpty(), "tlsKeyStoreSan must have at least one entry.");
+            List<String> tlsKeyStoreSan = augmentSansWithBindHost(configuredSans);
 
             KeyStore keyStore;
             Optional<KeyStore> optionalKeyStore;
             try {
-                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password, tlsKeyStoreSan);
+                optionalKeyStore = TlsKeyStore.readKeyStore(keyStorePath, password);
                 if (optionalKeyStore.isPresent()) {
                     keyStore = optionalKeyStore.get();
                     if (!SanUtils.isMatchingPersistedSan(keyStore, tlsKeyStoreSan)) {
@@ -103,6 +107,26 @@ public class TlsContextService {
         } catch (Exception e) {
             throw new TlsException(e);
         }
+    }
+
+    /**
+     * Augments the configured SANs with the bind host from config so the TLS certificate
+     * is valid for connections to the admin's chosen bind address.
+     * <p>
+     * Does not auto-detect LAN IPs — admins should add any extra SANs they need
+     * to the certificate.san config. For 0.0.0.0, a warning is logged suggesting
+     * the admin add the target IP to the san list manually.
+     */
+    private List<String> augmentSansWithBindHost(List<String> configuredSans) {
+        Set<String> sans = new LinkedHashSet<>(configuredSans);
+        String bindHost = apiConfig.getBindHost();
+        if ("0.0.0.0".equals(bindHost)) {
+            log.warn("Bind host is 0.0.0.0 — cannot add wildcard to TLS certificate SANs. " +
+                    "Add the specific IP(s) clients will connect to in the certificate.san config.");
+        } else if (sans.add(bindHost)) {
+            log.info("Added configured bind host {} to TLS certificate SANs", bindHost);
+        }
+        return new ArrayList<>(sans);
     }
 
     private KeyStore createNewKeyStore(List<String> tlsKeyStoreSan, char[] password) throws TlsException {

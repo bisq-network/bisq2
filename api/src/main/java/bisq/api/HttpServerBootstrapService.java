@@ -93,9 +93,30 @@ public class HttpServerBootstrapService implements Service {
 
         setState(State.STARTING);
 
+        String bindHost = apiConfig.getBindHost();
+
+        if (ApiConfig.isLoopbackHost(bindHost) && !apiConfig.useTor()) {
+            log.warn("NETWORK: Bind host is set to {} (loopback). " +
+                    "In clearnet mode this will only be reachable from emulators on the same machine. " +
+                    "To allow real devices on your LAN, set bind.host to your LAN IP " +
+                    "(e.g. 192.168.x.x) and enable tls.required=true.", bindHost);
+        } else if ("0.0.0.0".equals(bindHost)) {
+            log.warn("NETWORK: Bind host is set to 0.0.0.0 — the server will listen on ALL network interfaces. " +
+                    "For better security, set bind.host to the specific LAN IP you want to expose " +
+                    "(e.g. 192.168.x.x) so only that interface is bound.");
+        }
+
+        // Warn about cleartext binding on non-loopback interfaces when not using Tor.
+        // Tor encrypts traffic via the onion service, so cleartext on loopback is fine.
+        if (!apiConfig.useTor() && !ApiConfig.isLoopbackHost(bindHost) && !apiConfig.isTlsRequired()) {
+            log.warn("SECURITY WARNING: Binding to {} without TLS. " +
+                    "Pairing tokens and session credentials will be transmitted in cleartext, " +
+                    "exposing them to interception on shared networks. " +
+                    "Consider setting tls.required=true or binding to 127.0.0.1.", bindHost);
+        }
+
         return CompletableFuture.supplyAsync(() -> {
                     String webSocketProtocol = apiConfig.getWebSocketProtocol();
-                    String bindHost = apiConfig.getBindHost();
                     int bindPort = apiConfig.getBindPort();
 
                     URI baseUri = UriBuilder
@@ -145,13 +166,16 @@ public class HttpServerBootstrapService implements Service {
 
                     try {
                         server.start();
-                        log.info("Server started at {}", baseUri);
-                        log.info("WebSocket endpoint available at '{}://{}:{}/websocket'", apiConfig.getWebSocketProtocol(), bindHost, bindPort);
+                        log.info("Server started at {} (advertised as {})", baseUri, bindHost);
+                        if (websocketEnabled) {
+                            log.info("WebSocket endpoint available at '{}://{}:{}/websocket'", apiConfig.getWebSocketProtocol(), bindHost, bindPort);
+                        }
                         if (apiConfig.isRestEnabled()) {
-                            log.info("Rest API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
+                            log.info("REST API endpoints available at '{}'", apiConfig.getRestServerApiBasePath());
+                        } else if (websocketEnabled) {
+                            log.info("REST API registered for WebSocket bridge (direct REST access disabled)");
                         } else {
-                            log.info("Rest API is disabled but pairing endpoint is available at '{}/pairing'",
-                                    apiConfig.getRestServerApiBasePath());
+                            log.info("Only pairing resources registered");
                         }
                         return true;
                     } catch (IOException e) {

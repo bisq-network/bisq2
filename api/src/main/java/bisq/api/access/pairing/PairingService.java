@@ -89,18 +89,20 @@ public class PairingService {
         if (version != VERSION) {
             throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
         }
-        PairingCode pairingCode = pairingCodeByIdMap.get(pairingCodeId);
+
+        // Atomic remove to prevent race conditions - ensures only one request can use the code
+        PairingCode pairingCode = pairingCodeByIdMap.remove(pairingCodeId);
         if (pairingCode == null) {
             throw new InvalidPairingRequestException("Pairing code not found or already used");
         }
 
         if (isExpired(pairingCode)) {
-            pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
             throw new InvalidPairingRequestException("Pairing code is expired");
         }
 
-        // Mark used by removing it
-        pairingCodeByIdMap.remove(pairingCodeId, pairingCode);
+        // Signal that the active code was consumed so observers can regenerate
+        log.info("Pairing code {} consumed, signalling observers for regeneration", pairingCodeId);
+        this.pairingCode.set(null);
 
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
@@ -127,6 +129,23 @@ public class PairingService {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
     }
 
+    /**
+     * Removes all expired pairing codes from the map.
+     * Should be called periodically or when creating new pairing codes.
+     */
+    public void cleanupExpiredPairingCodes() {
+        int removed = 0;
+        for (Map.Entry<String, PairingCode> entry : pairingCodeByIdMap.entrySet()) {
+            if (isExpired(entry.getValue())) {
+                pairingCodeByIdMap.remove(entry.getKey());
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            log.debug("Cleaned up {} expired pairing codes", removed);
+        }
+    }
+
     public void createPairingQrCode(PairingCode pairingCode,
                                     String webSocketUrl,
                                     Optional<TlsContext> tlsContext,
@@ -150,8 +169,9 @@ public class PairingService {
         try {
             Path path = appDataDirPath.resolve("pairing_qr_code.txt");
             FileMutatorUtils.writeToPath(pairingQrCode, path);
+            log.info("Pairing QR code written to {}", path);
         } catch (IOException e) {
-            log.error("Error at write pairing QR code to disk", e);
+            log.error("Error at write pairing QR code to disk at {}", appDataDirPath.resolve("pairing_qr_code.txt"), e);
         }
     }
 }

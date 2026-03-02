@@ -45,12 +45,9 @@ public final class SessionAuthenticationService {
             checkNotNull(sessionId, "Missing sessionId");
             checkNotNull(clientId, "Missing clientId");
 
-            SessionToken sessionToken = sessionService.find(sessionId)
+            // find() atomically evicts expired tokens, so a returned token is guaranteed valid
+            SessionToken sessionToken = sessionService.findNotExpiredToken(sessionId)
                     .orElseThrow(() -> new AuthenticationException("Invalid session"));
-
-            if (sessionToken.isExpired()) {
-                throw new AuthenticationException("Session expired");
-            }
 
             checkArgument(clientId.equals(sessionToken.getClientId()),
                     "ClientId from header not matching client ID from session");

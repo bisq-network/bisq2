@@ -4,10 +4,12 @@ import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.error.CustomExceptionMapper;
 import bisq.api.rest_api.error.RestApiException;
 import bisq.common.json.JsonMapperProvider;
+import jakarta.ws.rs.ApplicationPath;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 
+@ApplicationPath("/api/v1")
 public class PairingApiResourceConfig extends ResourceConfig {
     public PairingApiResourceConfig(AccessApi accessApi) {
         super();

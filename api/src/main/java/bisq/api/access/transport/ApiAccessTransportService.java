@@ -93,6 +93,7 @@ public class ApiAccessTransportService implements Service {
 
     public CompletableFuture<Address> publishAndGetTorAddress() {
         if (networkService.findServiceNode(TransportType.TOR).isEmpty()) {
+            log.error("TOR ServiceNode not found in NetworkService. Check that network.supportedTransportTypes includes TOR in the config.");
             return CompletableFuture.failedFuture(new IllegalStateException("ApiAccessTorTransportService is initialized without TOR set as TransportType"));
         }
 
