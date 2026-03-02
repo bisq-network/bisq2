@@ -291,10 +291,10 @@ public class TradeStateController implements Controller {
     }
 
     void onCloseTrade() {
-        new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.warning.interrupted"))
-                .actionButtonText(Res.get("confirmation.yes"))
+        new Popup().information(Res.get("bisqEasy.openTrades.closeTrade.info"))
+                .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
                 .onAction(this::doCloseTrade)
-                .closeButtonText(Res.get("confirmation.no"))
+                .closeButtonText(Res.get("action.cancel"))
                 .show();
     }
 
@@ -304,6 +304,11 @@ public class TradeStateController implements Controller {
         BisqEasyOpenTradeChannel chatChannel = model.getChannel().get();
         bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get(), chatChannel.getMyUserIdentity().getUserProfile(), chatChannel.getPeer());
         leavePrivateChatManager.leaveChannel(chatChannel);
+        goToTradeHistory();
+    }
+
+    private void goToTradeHistory() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_HISTORY);
     }
 
     void onExportTrade() {

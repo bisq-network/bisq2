@@ -34,7 +34,6 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.settings.DontShowAgainService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -51,8 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.settings.DontShowAgainKey.CONFIRM_CLOSE_MU_SIG_TRADE;
-
 @Slf4j
 public class MuSigState4TradeClosed extends MuSigBaseState {
     protected final Controller controller;
@@ -68,7 +65,6 @@ public class MuSigState4TradeClosed extends MuSigBaseState {
     protected static class Controller extends MuSigBaseState.Controller<Model, View> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
-        private final DontShowAgainService dontShowAgainService;
 
         protected Controller(ServiceProvider serviceProvider,
                              MuSigTrade trade,
@@ -77,7 +73,6 @@ public class MuSigState4TradeClosed extends MuSigBaseState {
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
-            dontShowAgainService = serviceProvider.getDontShowAgainService();
         }
 
         @Override
@@ -129,20 +124,20 @@ public class MuSigState4TradeClosed extends MuSigBaseState {
         }
 
         protected void onCloseCompletedTrade() {
-            if (dontShowAgainService.showAgain(CONFIRM_CLOSE_MU_SIG_TRADE)) {
-                new Popup().feedback(Res.get("muSig.trade.pending.closeTrade.warning.completed"))
-                        .actionButtonText(Res.get("muSig.trade.pending.confirmCloseTrade"))
-                        .onAction(this::doCloseCompletedTrade)
-                        .closeButtonText(Res.get("action.cancel"))
-                        .dontShowAgainId(CONFIRM_CLOSE_MU_SIG_TRADE)
-                        .show();
-            } else {
-                doCloseCompletedTrade();
-            }
+            new Popup().information(Res.get("muSig.trade.closeTrade.info"))
+                    .actionButtonText(Res.get("muSig.trade.closeTrade.info.actionButton"))
+                    .onAction(this::doCloseCompletedTrade)
+                    .closeButtonText(Res.get("action.cancel"))
+                    .show();
         }
 
         private void doCloseCompletedTrade() {
             muSigService.closeTrade(model.getTrade(), model.getChannel());
+            goToTradeHistory();
+        }
+
+        private void goToTradeHistory() {
+            Navigation.navigateTo(NavigationTarget.MU_SIG_HISTORY);
         }
 
         protected void onShowDetails() {
