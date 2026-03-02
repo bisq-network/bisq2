@@ -25,7 +25,6 @@ import lombok.Getter;
  */
 public enum DontShowAgainKey {
     WELCOME("welcome"),
-    CONFIRM_CLOSE_MU_SIG_TRADE,
     OFFER_ALREADY_TAKEN_WARN("offerAlreadyTaken.warn"),
     MEDIATOR_REMOVE_CASE_WARNING("mediator.removeCase.warning"),
     MEDIATOR_CLOSE_WARNING("mediator.close.warning"),

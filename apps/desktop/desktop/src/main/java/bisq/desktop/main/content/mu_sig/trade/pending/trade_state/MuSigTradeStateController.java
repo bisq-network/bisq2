@@ -220,15 +220,20 @@ public class MuSigTradeStateController implements Controller {
     }
 
     void onCloseTrade() {
-        new Popup().warning(Res.get("muSig.trade.pending.closeTrade.warning.interrupted"))
-                .actionButtonText(Res.get("confirmation.yes"))
+        new Popup().information(Res.get("muSig.trade.closeTrade.info"))
+                .actionButtonText(Res.get("muSig.trade.closeTrade.info.actionButton"))
                 .onAction(this::doCloseTrade)
-                .closeButtonText(Res.get("confirmation.no"))
+                .closeButtonText(Res.get("action.cancel"))
                 .show();
     }
 
     private void doCloseTrade() {
         muSigService.closeTrade(model.getTrade().get(), model.getChannel().get());
+        goToTradeHistory();
+    }
+
+    private void goToTradeHistory() {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_HISTORY);
     }
 
     void onExportTrade() {
