@@ -22,6 +22,9 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
@@ -93,6 +96,12 @@ public class BisqEasyHistoryController implements Controller {
 //                        || item.getPrice().contains(string)
 //                        || item.getPaymentMethodsAsString().toLowerCase().contains(string));
         applyPredicates();
+    }
+
+    void onShowTradeDetails(BisqEasyTradeHistoryListItem item) {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
+                new TradeDetailsController.InitData(item.getTrade(), item.getMyUserProfile(), item.getPeerProfile(),
+                        item.getTrade().getContract().getMediator()));
     }
 
     private void applyPredicates() {

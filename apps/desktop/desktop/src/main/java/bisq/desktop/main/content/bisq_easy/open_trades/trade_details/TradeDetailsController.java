@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -50,11 +49,17 @@ public class TradeDetailsController extends NavigationController implements Init
     @ToString
     public static class InitData {
         private final BisqEasyTrade bisqEasyTrade;
-        private final BisqEasyOpenTradeChannel channel;
+        private final UserProfile myUserProfile, peerProfile;
+        private final Optional<UserProfile> mediator;
 
-        public InitData(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        public InitData(BisqEasyTrade bisqEasyTrade,
+                        UserProfile myUserProfile,
+                        UserProfile peerProfile,
+                        Optional<UserProfile> mediator) {
             this.bisqEasyTrade = bisqEasyTrade;
-            this.channel = channel;
+            this.myUserProfile = myUserProfile;
+            this.peerProfile = peerProfile;
+            this.mediator = mediator;
         }
     }
 
@@ -74,13 +79,14 @@ public class TradeDetailsController extends NavigationController implements Init
     @Override
     public void initWithData(InitData initData) {
         model.setTrade(initData.bisqEasyTrade);
-        model.setChannel(initData.channel);
+        model.setMyUserProfile(initData.myUserProfile);
+        model.setPeerProfile(initData.peerProfile);
+        model.setMediator(initData.mediator);
     }
 
     @Override
     public void onActivate() {
         BisqEasyTrade trade = model.getTrade();
-        BisqEasyOpenTradeChannel channel = model.getChannel();
         BisqEasyContract contract = trade.getContract();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
@@ -90,8 +96,8 @@ public class TradeDetailsController extends NavigationController implements Init
                 .map(TimeFormatter::formatAge);
         model.setTradeDuration(tradeDuration);
 
-        model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
-        model.setPeer(channel.getPeer().getUserName());
+        model.setMe(String.format("%s (%s)", model.getMyUserProfile().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
+        model.setPeer(model.getPeerProfile().getUserName());
         model.setOfferType(trade.getOffer().getDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
@@ -108,11 +114,11 @@ public class TradeDetailsController extends NavigationController implements Init
         model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
         model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.setTradeId(trade.getId());
-        model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
+        model.setPeerNetworkAddress(model.getPeerProfile().getAddressByTransportDisplayString(50));
 
         model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
-        model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
-        model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
+        model.setAssignedMediator(model.getMediator().map(UserProfile::getUserName).orElse(""));
+        model.setHasMediatorBeenAssigned(model.getMediator().isPresent());
 
         model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
