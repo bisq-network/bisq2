@@ -147,6 +147,30 @@
     -fx-background-color: -bisq-green-pressed;
 }
 
+.accept-button {
+    -fx-background-color: -fx-default-button;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-border-color: transparent;
+}
+
+.accept-button > .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.accept-button:hover {
+    -fx-background-color: -bisq-green-hover;
+}
+
+.accept-button:pressed {
+    -fx-background-color: -bisq-green-pressed;
+}
+
+.accept-button:disabled {
+    -fx-background-color: -bisq-green-pressed;
+}
+
 .sell-button {
     -fx-background-color: -bisq2-red-dim-20;
     -fx-fill: -fx-light-text-color;
@@ -168,6 +192,30 @@
 }
 
 .sell-button:disabled {
+    -fx-background-color: -bisq2-red-dim-30;
+}
+
+.reject-button {
+    -fx-background-color: -bisq2-red-dim-20;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-border-color: transparent;
+}
+
+.reject-button > .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.reject-button:hover {
+    -fx-background-color: -bisq2-red-dim-10;
+}
+
+.reject-button:pressed {
+    -fx-background-color: -bisq2-red-dim-30;
+}
+
+.reject-button:disabled {
     -fx-background-color: -bisq2-red-dim-30;
 }
 

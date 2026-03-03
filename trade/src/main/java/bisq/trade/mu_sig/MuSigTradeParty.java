@@ -18,6 +18,8 @@
 package bisq.trade.mu_sig;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
@@ -54,6 +56,7 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
     private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
     private Optional<AccountPayload<?>> accountPayload = Optional.empty();
+    private final transient Observable<Optional<Boolean>> mediationResultAcceptanceObservable = new Observable<>(Optional.empty());
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
@@ -72,7 +75,8 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<SwapTxSignature> peersSwapTxSignature,
                            Optional<CloseTradeResponse> myCloseTradeResponse,
                            Optional<ByteArray> peersOutputPrvKeyShare,
-                           Optional<AccountPayload<?>> accountPayload) {
+                           Optional<AccountPayload<?>> accountPayload,
+                           Optional<Boolean> mediationResultAcceptance) {
         super(networkId);
 
         this.myPubKeySharesResponse = myPubKeySharesResponse;
@@ -88,6 +92,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.myCloseTradeResponse = myCloseTradeResponse;
         this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
         this.accountPayload = accountPayload;
+        mediationResultAcceptanceObservable.set(mediationResultAcceptance);
     }
 
     @Override
@@ -106,6 +111,7 @@ public final class MuSigTradeParty extends TradeParty {
         myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
         peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
         accountPayload.ifPresent(e -> builder.setAccountPayload(e.toProto(serializeForHash)));
+        mediationResultAcceptanceObservable.get().ifPresent(builder::setMediationResultAcceptance);
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -151,6 +157,9 @@ public final class MuSigTradeParty extends TradeParty {
                         : Optional.empty(),
                 muSigTradePartyProto.hasAccountPayload()
                         ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getAccountPayload()))
+                        : Optional.empty(),
+                muSigTradePartyProto.hasMediationResultAcceptance()
+                        ? Optional.of(muSigTradePartyProto.getMediationResultAcceptance())
                         : Optional.empty()
         );
     }
@@ -205,5 +214,21 @@ public final class MuSigTradeParty extends TradeParty {
 
     public void setAccountPayload(AccountPayload<?> accountPayload) {
         this.accountPayload = Optional.of(accountPayload);
+    }
+
+    public boolean setMediationResultAcceptance(boolean mediationResultAccepted) {
+        if (mediationResultAcceptanceObservable.get().isPresent()) {
+            return false;
+        }
+        mediationResultAcceptanceObservable.set(Optional.of(mediationResultAccepted));
+        return true;
+    }
+
+    public Optional<Boolean> getMediationResultAcceptance() {
+        return mediationResultAcceptanceObservable.get();
+    }
+
+    public ReadOnlyObservable<Optional<Boolean>> mediationResultAcceptanceObservable() {
+        return mediationResultAcceptanceObservable;
     }
 }

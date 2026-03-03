@@ -77,7 +77,7 @@ public class MuSigTradeStateController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private final Optional<ResendMessageService> resendMessageService;
     private Pin tradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
-            requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
+            requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin, mediationResultAcceptancePin;
     private Subscription channelPin;
 
     public MuSigTradeStateController(ServiceProvider serviceProvider) {
@@ -126,9 +126,12 @@ public class MuSigTradeStateController implements Controller {
 
             MuSigTrade trade = optionalMuSigTrade.get();
             model.getTrade().set(trade);
+            model.getMyMediationResultAcceptance().set(trade.getMyself().getMediationResultAcceptance());
 
             isInMediationPin = trade.disputeStateObservable().addObserver(disputeState ->
                     UIThread.run(() -> model.getIsInMediation().set(shouldShowMediationBanner(disputeState))));
+            mediationResultAcceptancePin = trade.getMyself().mediationResultAcceptanceObservable().addObserver(acceptance ->
+                    UIThread.run(() -> model.getMyMediationResultAcceptance().set(acceptance)));
 
             muSigTradePhaseBox.setMuSigTrade(trade);
 
@@ -254,6 +257,20 @@ public class MuSigTradeStateController implements Controller {
         }
     }
 
+    public void onAcceptMediationResult() {
+        MuSigTrade trade = model.getTrade().get();
+        if (trade != null) {
+            muSigService.acceptMediationResult(trade);
+        }
+    }
+
+    public void onRejectMediationResult() {
+        MuSigTrade trade = model.getTrade().get();
+        if (trade != null) {
+            muSigService.rejectMediationResult(trade);
+        }
+    }
+
     public boolean canManuallyResendMessage(String messageId) {
         return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
     }
@@ -375,6 +392,10 @@ public class MuSigTradeStateController implements Controller {
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
             isInMediationPin = null;
+        }
+        if (mediationResultAcceptancePin != null) {
+            mediationResultAcceptancePin.unbind();
+            mediationResultAcceptancePin = null;
         }
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();

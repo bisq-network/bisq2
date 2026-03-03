@@ -31,6 +31,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 @Getter
 public class MuSigTradeStateModel implements Model {
@@ -45,6 +47,7 @@ public class MuSigTradeStateModel implements Model {
     private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
     private final ObjectProperty<MessageDeliveryStatus> requestMediationDeliveryStatus = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShowTryRequestMediationAgain = new SimpleBooleanProperty();
+    private final ObjectProperty<Optional<Boolean>> myMediationResultAcceptance = new SimpleObjectProperty<>(Optional.empty());
 
     void resetAll() {
         reset();
@@ -62,5 +65,6 @@ public class MuSigTradeStateModel implements Model {
         isTradeCompleted.set(false);
         requestMediationDeliveryStatus.set(null);
         shouldShowTryRequestMediationAgain.set(false);
+        myMediationResultAcceptance.set(Optional.empty());
     }
 }

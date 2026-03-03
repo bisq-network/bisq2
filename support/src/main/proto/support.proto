@@ -94,6 +94,12 @@ message MuSigMediationStateChangeMessage {
   optional MuSigMediationResult muSigMediationResult = 4;
 }
 
+message MuSigMediationResultAcceptanceMessage {
+  string tradeId = 1;
+  bool mediationResultAccepted = 2;
+  string senderUserProfileId = 3;
+}
+
 message MuSigMediationCase {
   MuSigMediationRequest muSigMediationRequest = 1;
   sint64 requestDate = 2;
