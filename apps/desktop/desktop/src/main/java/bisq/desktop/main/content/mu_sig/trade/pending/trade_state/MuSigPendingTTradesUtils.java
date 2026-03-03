@@ -12,6 +12,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
@@ -70,13 +71,15 @@ public class MuSigPendingTTradesUtils {
     public static void requestMediation(MuSigOpenTradeChannel channel,
                                         MuSigContract contract,
                                         MuSigMediationRequestService muSigMediationRequestService,
-                                        MuSigOpenTradeChannelService channelService) {
+                                        MuSigOpenTradeChannelService channelService,
+                                        MuSigTradeService tradeService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("muSig.mediation.request.confirm.headline"))
                     .information(Res.get("muSig.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("muSig.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
+                        tradeService.maybeApplyDisputeStateFromMediationRequest(channel.getTradeId());
                         String encoded = Res.encode("muSig.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
                         channel.setIsInMediation(true);

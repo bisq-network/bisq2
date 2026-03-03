@@ -87,6 +87,13 @@ message MuSigMediationResult {
   optional double payoutAdjustmentPercentage = 7;
 }
 
+message MuSigMediationStateChangeMessage {
+  string id = 1;
+  string tradeId = 2;
+  MediationCaseState mediationCaseState = 3;
+  optional MuSigMediationResult muSigMediationResult = 4;
+}
+
 message MuSigMediationCase {
   MuSigMediationRequest muSigMediationRequest = 1;
   sint64 requestDate = 2;

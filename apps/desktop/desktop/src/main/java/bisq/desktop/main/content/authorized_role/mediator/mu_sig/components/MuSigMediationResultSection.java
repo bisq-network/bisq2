@@ -24,6 +24,7 @@ import bisq.desktop.common.converters.PercentageStringConverter;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediationCaseListItem;
@@ -158,8 +159,9 @@ public class MuSigMediationResultSection {
                             model.getSelectedPayoutDistributionType(),
                             model.getBuyerPayoutAmountAsCoin(),
                             model.getSellerPayoutAmountAsCoin(),
+                            model.getSummaryNotes(),
                             model.getPayoutAdjustmentPercentageValue(),
-                            (selectedReason, selectedPayoutDistributionType, buyerPayoutAmountAsCoin, sellerPayoutAmountAsCoin, payoutAdjustmentPercentageValue) ->
+                            (selectedReason, selectedPayoutDistributionType, buyerPayoutAmountAsCoin, sellerPayoutAmountAsCoin, summaryNotes, payoutAdjustmentPercentageValue) ->
                                     hasRequiredSelections()),
                     model.getHasRequiredSelections()::set));
 
@@ -337,6 +339,7 @@ public class MuSigMediationResultSection {
             MediationPayoutDistributionType payoutDistributionType = model.getSelectedPayoutDistributionType().get();
             return model.getSelectedReason().get() != null &&
                     payoutDistributionType != null &&
+                    hasValidSummaryNotesLength(model.getSummaryNotes().get()) &&
                     hasValidPayoutAmounts(
                             payoutDistributionType,
                             Optional.ofNullable(model.getBuyerPayoutAmountAsCoin().get()).map(Coin::getValue),
@@ -370,6 +373,10 @@ public class MuSigMediationResultSection {
                             sellerPayoutAmount >= context.minPayoutAmount() &&
                             sellerPayoutAmount <= context.maxPayoutAmount())
                     .orElse(false);
+        }
+
+        private static boolean hasValidSummaryNotesLength(String summaryNotes) {
+            return summaryNotes != null && summaryNotes.length() <= MuSigMediationResult.MAX_SUMMARY_NOTES_LENGTH;
         }
 
         private static boolean hasValidPayoutAdjustmentPercentage(MediationPayoutDistributionType payoutDistributionType,
@@ -451,6 +458,9 @@ public class MuSigMediationResultSection {
         private final BooleanProperty usePenaltyDescription = new SimpleBooleanProperty(false);
         private final BooleanProperty payoutAmountsEditable = new SimpleBooleanProperty(false);
         private final BooleanProperty hasRequiredSelections = new SimpleBooleanProperty(false);
+        private final TextMaxLengthValidator summaryNotesMaxLengthValidator = new TextMaxLengthValidator(
+                Res.get("validation.tooLong", MuSigMediationResult.MAX_SUMMARY_NOTES_LENGTH),
+                MuSigMediationResult.MAX_SUMMARY_NOTES_LENGTH);
     }
 
     @Slf4j
@@ -543,6 +553,7 @@ public class MuSigMediationResultSection {
             // summary notes
 
             summaryNotes = new MaterialTextArea(Res.get("authorizedRole.mediator.mediationResult.summaryNotes"));
+            summaryNotes.setValidator(model.getSummaryNotesMaxLengthValidator());
             summaryNotes.setFixedHeight(70);
 
             VBox content = new VBox(10,

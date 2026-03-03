@@ -25,6 +25,8 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.support.mediation.mu_sig.MuSigMediationResult;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
@@ -54,6 +56,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
+    private final Observable<MuSigDisputeState> disputeState = new Observable<>(MuSigDisputeState.NO_DISPUTE);
+    private Optional<MuSigMediationResult> muSigMediationResult = Optional.empty();
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -107,6 +111,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
         Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
+        builder.setDisputeState(disputeState.get().toProtoEnum());
+        muSigMediationResult.ifPresent(result -> builder.setMuSigMediationResult(result.toProto(serializeForHash)));
         return builder;
     }
 
@@ -147,6 +153,13 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         if (muSigTradeProto.hasDepositTxId()) {
             trade.setDepositTxId(muSigTradeProto.getDepositTxId());
         }
+
+        trade.setDisputeState(MuSigDisputeState.fromProto(muSigTradeProto.getDisputeState()));
+
+        if (muSigTradeProto.hasMuSigMediationResult()) {
+            trade.setMuSigMediationResult(MuSigMediationResult.fromProto(muSigTradeProto.getMuSigMediationResult()));
+        }
+
         return trade;
     }
 
@@ -202,5 +215,29 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
 
     public Market getMarket() {
         return getOffer().getMarket();
+    }
+
+    public void setDisputeState(MuSigDisputeState disputeState) {
+        this.disputeState.set(disputeState);
+    }
+
+    public MuSigDisputeState getDisputeState() {
+        return disputeState.get();
+    }
+
+    public ReadOnlyObservable<MuSigDisputeState> disputeStateObservable() {
+        return disputeState;
+    }
+
+    public boolean setMuSigMediationResult(MuSigMediationResult muSigMediationResult) {
+        if (this.muSigMediationResult.isPresent()) {
+            return false;
+        }
+        this.muSigMediationResult = Optional.of(muSigMediationResult);
+        return true;
+    }
+
+    public Optional<MuSigMediationResult> getMuSigMediationResult() {
+        return muSigMediationResult;
     }
 }

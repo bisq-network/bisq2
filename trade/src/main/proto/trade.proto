@@ -26,6 +26,7 @@ import "account.proto";
 import "network_identity.proto";
 import "offer.proto";
 import "rpc.proto";
+import "support.proto";
 import "user.proto";
 
 option java_package = "bisq.trade.protobuf";
@@ -40,7 +41,7 @@ message TradeParty {
   }
 }
 
-enum TradeRole{
+enum TradeRole {
   TRADEROLE_UNSPECIFIED = 0;
   TRADEROLE_BUYER_AS_TAKER = 1;
   TRADEROLE_BUYER_AS_MAKER = 2;
@@ -222,9 +223,22 @@ message MuSigTradeParty {
   optional account.AccountPayload accountPayload = 13;
 }
 
+enum MuSigDisputeState {
+  MUSIGDISPUTESTATE_UNSPECIFIED = 0;
+  MUSIGDISPUTESTATE_NO_DISPUTE = 1;
+  MUSIGDISPUTESTATE_MEDIATION_REQUESTED = 2;
+  MUSIGDISPUTESTATE_MEDIATION_OPEN = 3;
+  MUSIGDISPUTESTATE_MEDIATION_CLOSED = 4;
+  MUSIGDISPUTESTATE_MEDIATION_RE_OPENED = 5;
+  MUSIGDISPUTESTATE_ARBITRATION_OPEN = 6;
+  MUSIGDISPUTESTATE_ARBITRATION_CLOSED = 7;
+}
+
 message MuSigTrade {
   optional string depositTxId = 1;
   optional sint64 tradeCompletedDate = 2;
+  MuSigDisputeState disputeState = 3;
+  optional support.MuSigMediationResult muSigMediationResult = 4;
 }
 
 message MuSigTradeStore {

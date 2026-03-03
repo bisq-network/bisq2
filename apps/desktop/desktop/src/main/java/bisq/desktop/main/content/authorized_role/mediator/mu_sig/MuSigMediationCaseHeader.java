@@ -19,7 +19,6 @@ package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
@@ -82,7 +81,6 @@ public class MuSigMediationCaseHeader {
         @Getter
         private final View view;
         private final Model model;
-        private final MuSigOpenTradeChannelService channelService;
         private final MuSigMediatorService muSigMediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
@@ -93,7 +91,6 @@ public class MuSigMediationCaseHeader {
             this.onCloseHandler = onCloseHandler;
             this.onReOpenHandler = onReOpenHandler;
             ChatService chatService = serviceProvider.getChatService();
-            channelService = chatService.getMuSigOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
             muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
@@ -195,10 +192,6 @@ public class MuSigMediationCaseHeader {
         private void doReOpen() {
             MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
-                MuSigOpenTradeChannel channel = listItem.getChannel();
-                if (channel != null) {
-                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
-                }
                 muSigMediatorService.reOpenMediationCase(listItem.getMuSigMediationCase());
                 onReOpenHandler.run();
             }

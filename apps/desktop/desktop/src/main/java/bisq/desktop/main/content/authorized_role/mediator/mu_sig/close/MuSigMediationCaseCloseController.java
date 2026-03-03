@@ -17,9 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig.close;
 
-import bisq.chat.ChatService;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -30,7 +27,6 @@ import bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSi
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationResultSection;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
-import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +50,6 @@ public class MuSigMediationCaseCloseController extends NavigationController impl
     }
 
     private Runnable onCloseHandler;
-    private final MuSigOpenTradeChannelService channelService;
 
     @Getter
     private final MuSigMediationCaseCloseModel model;
@@ -67,9 +62,6 @@ public class MuSigMediationCaseCloseController extends NavigationController impl
 
     public MuSigMediationCaseCloseController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_MEDIATION_CASE_CLOSE);
-
-        ChatService chatService = serviceProvider.getChatService();
-        channelService = chatService.getMuSigOpenTradeChannelService();
 
         muSigMediationCaseOverviewSection = new MuSigMediationCaseOverviewSection(serviceProvider, true);
         muSigMediationCaseDetailSection = new MuSigMediationCaseDetailSection(serviceProvider, true);
@@ -117,10 +109,6 @@ public class MuSigMediationCaseCloseController extends NavigationController impl
     }
 
     private void doClose() {
-        MuSigOpenTradeChannel channel = model.getMuSigMediationCaseListItem().getChannel();
-        if (channel != null) {
-            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
-        }
         muSigMediationResultSection.closeCase();
         if (onCloseHandler != null) {
             onCloseHandler.run();

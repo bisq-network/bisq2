@@ -35,6 +35,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.security.DigestUtil;
+import bisq.support.mediation.MediationCaseState;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -47,7 +48,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -67,6 +67,7 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
     private final Set<MuSigMediatorsResponse> pendingMuSigMediatorsResponseMessages = new CopyOnWriteArraySet<>();
+    private final Set<MuSigMediationStateChangeMessage> pendingMuSigMediationStateChangeMessages = new CopyOnWriteArraySet<>();
     @Nullable
     private Pin channeldPin;
     @Nullable
@@ -108,6 +109,7 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
             throttleUpdatesScheduler = null;
         }
         pendingMuSigMediatorsResponseMessages.clear();
+        pendingMuSigMediationStateChangeMessages.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -119,6 +121,8 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigMediatorsResponse) {
             processMediationResponse((MuSigMediatorsResponse) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage) {
+            processMediationStateChangeMessage((MuSigMediationStateChangeMessage) envelopePayloadMessage);
         }
     }
 
@@ -228,7 +232,7 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
                                         // Delay and ignore too frequent updates
                                         if (throttleUpdatesScheduler == null) {
                                             throttleUpdatesScheduler = Scheduler.run(() -> {
-                                                        maybeProcessPendingMediatorsResponseMessages();
+                                                        maybeProcessPendingMessages();
                                                         throttleUpdatesScheduler = null;
                                                     })
                                                     .after(1000);
@@ -247,8 +251,62 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
                         });
     }
 
-    private void maybeProcessPendingMediatorsResponseMessages() {
-        new HashSet<>(pendingMuSigMediatorsResponseMessages).forEach(this::processMediationResponse);
+    private void processMediationStateChangeMessage(MuSigMediationStateChangeMessage message) {
+        muSigOpenTradeChannelService.findChannelByTradeId(message.getTradeId())
+                .ifPresentOrElse(channel -> {
+                            MediationCaseState mediationCaseState = message.getMediationCaseState();
+                            if (mediationCaseState == MediationCaseState.RE_OPENED) {
+                                muSigOpenTradeChannelService.setIsInMediation(channel, true);
+                            } else if (mediationCaseState == MediationCaseState.CLOSED) {
+                                if (message.getMuSigMediationResult().isEmpty()) {
+                                    log.warn("Ignoring MuSigMediationStateChangeMessage with CLOSED state and missing MuSigMediationResult for trade {}.",
+                                            message.getTradeId());
+                                    pendingMuSigMediationStateChangeMessages.remove(message);
+                                    return;
+                                }
+                                // Closed mediation case still keeps mediator chat participation active.
+                                muSigOpenTradeChannelService.setIsInMediation(channel, true);
+                            } else {
+                                log.warn("Ignoring MuSigMediationStateChangeMessage with unsupported state {} for trade {}.",
+                                        mediationCaseState, message.getTradeId());
+                                pendingMuSigMediationStateChangeMessages.remove(message);
+                                return;
+                            }
+                            pendingMuSigMediationStateChangeMessages.remove(message);
+                        },
+                        () -> {
+                            log.warn("We received a MuSigMediationStateChangeMessage but did not find a matching muSigOpenTradeChannel for trade ID {}.\n" +
+                                            "We add it to the pendingMuSigMediationStateChangeMessages set and reprocess it once a new trade channel has been added.",
+                                    message.getTradeId());
+                            pendingMuSigMediationStateChangeMessages.add(message);
+                            if (channeldPin == null) {
+                                channeldPin = muSigOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+                                    @Override
+                                    public void onAdded(MuSigOpenTradeChannel element) {
+                                        // Delay and ignore too frequent updates
+                                        if (throttleUpdatesScheduler == null) {
+                                            throttleUpdatesScheduler = Scheduler.run(() -> {
+                                                        maybeProcessPendingMessages();
+                                                        throttleUpdatesScheduler = null;
+                                                    })
+                                                    .after(1000);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onRemoved(Object element) {
+                                    }
+
+                                    @Override
+                                    public void onCleared() {
+                                    }
+                                });
+                            }
+                        });
+    }
+
+    private void maybeProcessPendingMessages() {
+        new ArrayList<>(pendingMuSigMediatorsResponseMessages).forEach(this::processMediationResponse);
+        new ArrayList<>(pendingMuSigMediationStateChangeMessages).forEach(this::processMediationStateChangeMessage);
     }
 }
-

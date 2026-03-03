@@ -38,6 +38,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -98,11 +99,13 @@ class MuSigTradePhaseBox {
         private final View view;
         private final MuSigMediationRequestService muSigMediationRequestService;
         private final MuSigOpenTradeChannelService channelService;
+        private final MuSigTradeService tradeService;
         private Pin muSigTradeStatePin, isInMediationPin, secondTickPin;
 
         private Controller(ServiceProvider serviceProvider) {
             muSigMediationRequestService = serviceProvider.getSupportService().getMuSigMediationRequestService();
             channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
+            tradeService = serviceProvider.getTradeService().getMuSigTradeService();
 
             model = new Model();
             view = new View(model, this);
@@ -230,7 +233,7 @@ class MuSigTradePhaseBox {
         void onRequestMediation() {
             MuSigPendingTTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getTrade().getContract(),
-                    muSigMediationRequestService, channelService);
+                    muSigMediationRequestService, channelService, tradeService);
         }
 
         private void unbindSecondTickPin() {

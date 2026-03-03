@@ -89,8 +89,12 @@ public class MuSigMediationCase implements PersistableProto {
     }
 
     public boolean setMuSigMediationResult(MuSigMediationResult result) {
+        Optional<MuSigMediationResult> currentResult = muSigMediationResult.get();
+        if (currentResult.isPresent() && !currentResult.get().equals(result)) {
+            throw new IllegalArgumentException("MuSigMediationResult cannot be changed once set.");
+        }
         var newResult = Optional.of(result);
-        if (muSigMediationResult.get().equals(newResult)) {
+        if (currentResult.equals(newResult)) {
             return false;
         }
         muSigMediationResult.set(newResult);
