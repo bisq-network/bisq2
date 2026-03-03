@@ -41,6 +41,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -360,6 +361,24 @@ public class MuSigService extends LifecycleService {
         leavePrivateChatManager.leaveChannel(channel);
     }
 
+    public boolean acceptMediationResult(MuSigTrade muSigTrade) {
+        checkArgument(isActivated());
+        if (muSigTradeService.acceptMediationResult(muSigTrade, true)) {
+            addMediationResultTradeLogMessage(muSigTrade, true);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean rejectMediationResult(MuSigTrade muSigTrade) {
+        checkArgument(isActivated());
+        if (muSigTradeService.acceptMediationResult(muSigTrade, false)) {
+            addMediationResultTradeLogMessage(muSigTrade, false);
+            return true;
+        }
+        return false;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Markets API
@@ -388,6 +407,16 @@ public class MuSigService extends LifecycleService {
         if (bannedUserService.isRateLimitExceeding(userProfileId)) {
             throw new RateLimitExceededException(userProfileId);
         }
+    }
+
+    private void addMediationResultTradeLogMessage(MuSigTrade muSigTrade, boolean mediationResultAccepted) {
+        muSigOpenTradeChannelService.findChannelByTradeId(muSigTrade.getId()).ifPresent(channel -> {
+            String key = mediationResultAccepted
+                    ? "muSig.mediation.result.accepted.tradeLogMessage"
+                    : "muSig.mediation.result.rejected.tradeLogMessage";
+            String encoded = Res.encode(key, channel.getMyUserIdentity().getUserName());
+            muSigOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+        });
     }
 
     public boolean isAccountDataBanned(AccountPayload<?> accountPayload) {
