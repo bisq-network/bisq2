@@ -262,7 +262,7 @@ public class TradeStateController implements Controller {
 
         BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                new TradeDetailsController.InitData(bisqEasyTrade, channel));
+                new TradeDetailsController.InitData(bisqEasyTrade, channel.getMyUserIdentity().getUserProfile(), channel.getPeer(), channel.getMediator()));
     }
 
     void onRejectPrice() {

@@ -134,8 +134,9 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onShowDetails() {
+            BisqEasyOpenTradeChannel channel = model.getChannel();
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                    new TradeDetailsController.InitData(model.getTrade(), model.getChannel()));
+                    new TradeDetailsController.InitData(model.getTrade(), channel.getMyUserIdentity().getUserProfile(), channel.getPeer(), channel.getMediator()));
         }
 
         protected void onExportTrade() {

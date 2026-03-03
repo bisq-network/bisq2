@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.history;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
@@ -29,11 +30,13 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -159,10 +162,17 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.myRole"))
                 .left()
-                .minWidth(140)
+                .minWidth(100)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyRole))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
+                .build());
+
+        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .setCellFactory(getActionButtonsCellFactory())
+                .left()
+                .minWidth(50)
+                .includeForCsv(false)
                 .build());
     }
 
@@ -302,6 +312,95 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 } else {
                     setGraphic(null);
                 }
+            }
+        };
+    }
+
+    private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>,
+            TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getActionButtonsCellFactory() {
+        return column -> new TableCell<>() {
+            private static final double PREF_WIDTH = 30;
+            private static final double PREF_HEIGHT = 26;
+
+            private final HBox tradeMainBox = new HBox();
+            private final HBox tradeActionsMenuBox = new HBox(5);
+            private final BisqMenuItem showTradeDetailsMenuItem = new BisqMenuItem("icon-info-grey", "icon-info-white");
+            private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
+                boolean shouldShow = newValue || getTableRow().isHover();
+                tradeActionsMenuBox.setVisible(shouldShow);
+                tradeActionsMenuBox.setManaged(shouldShow);
+            };
+
+            {
+                tradeMainBox.setMinWidth(PREF_WIDTH);
+                tradeMainBox.setPrefWidth(PREF_WIDTH);
+                tradeMainBox.setMaxWidth(PREF_WIDTH);
+                tradeMainBox.setMinHeight(PREF_HEIGHT);
+                tradeMainBox.setPrefHeight(PREF_HEIGHT);
+                tradeMainBox.setMaxHeight(PREF_HEIGHT);
+                tradeMainBox.getChildren().addAll(tradeActionsMenuBox);
+
+                tradeActionsMenuBox.setMinWidth(PREF_WIDTH);
+                tradeActionsMenuBox.setPrefWidth(PREF_WIDTH);
+                tradeActionsMenuBox.setMaxWidth(PREF_WIDTH);
+                tradeActionsMenuBox.setMinHeight(PREF_HEIGHT);
+                tradeActionsMenuBox.setPrefHeight(PREF_HEIGHT);
+                tradeActionsMenuBox.setMaxHeight(PREF_HEIGHT);
+                tradeActionsMenuBox.getChildren().addAll(showTradeDetailsMenuItem);
+                tradeActionsMenuBox.setAlignment(Pos.CENTER);
+
+                showTradeDetailsMenuItem.useIconOnly();
+                showTradeDetailsMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.showTradeDetails.tooltip"));
+            }
+
+            @Override
+            protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                resetRowEventHandlersAndListeners();
+                resetVisibilities();
+
+                if (item != null && !empty) {
+                    setUpRowEventHandlersAndListeners();
+                    setGraphic(tradeMainBox);
+                    showTradeDetailsMenuItem.setOnAction(e -> controller.onShowTradeDetails(item));
+                } else {
+                    resetRowEventHandlersAndListeners();
+                    resetVisibilities();
+                    showTradeDetailsMenuItem.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+
+            private void setUpRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(e -> {
+                        boolean shouldShow = row.isSelected() || row.isHover();
+                        tradeActionsMenuBox.setVisible(shouldShow);
+                        tradeActionsMenuBox.setManaged(shouldShow);
+                    });
+                    row.setOnMouseExited(e -> {
+                        boolean shouldShow = row.isSelected();
+                        tradeActionsMenuBox.setVisible(shouldShow);
+                        tradeActionsMenuBox.setManaged(shouldShow);
+                    });
+                    row.selectedProperty().addListener(selectedListener);
+                }
+            }
+
+            private void resetRowEventHandlersAndListeners() {
+                TableRow<?> row = getTableRow();
+                if (row != null) {
+                    row.setOnMouseEntered(null);
+                    row.setOnMouseExited(null);
+                    row.selectedProperty().removeListener(selectedListener);
+                }
+            }
+
+            private void resetVisibilities() {
+                tradeActionsMenuBox.setVisible(false);
+                tradeActionsMenuBox.setManaged(false);
             }
         };
     }
