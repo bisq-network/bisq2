@@ -6,6 +6,7 @@ import "user.proto";
 import "chat.proto";
 import "offer.proto";
 import "contract.proto";
+import "account.proto";
 import "network.proto";
 import "network_identity.proto";
 
@@ -100,11 +101,25 @@ message MuSigMediationResultAcceptanceMessage {
   string senderUserProfileId = 3;
 }
 
+message MuSigPaymentDetailsRequest {
+  string tradeId = 1;
+  string senderUserProfileId = 2;
+}
+
+message MuSigPaymentDetailsResponse {
+  string tradeId = 1;
+  account.AccountPayload takerAccountPayload = 2;
+  account.AccountPayload makerAccountPayload = 3;
+  string senderUserProfileId = 4;
+}
+
 message MuSigMediationCase {
   MuSigMediationRequest muSigMediationRequest = 1;
   sint64 requestDate = 2;
   MediationCaseState mediationCaseState = 3;
   optional MuSigMediationResult muSigMediationResult = 4;
+  optional account.AccountPayload takerAccountPayload = 5;
+  optional account.AccountPayload makerAccountPayload = 6;
 }
 
 message MuSigMediatorStore {

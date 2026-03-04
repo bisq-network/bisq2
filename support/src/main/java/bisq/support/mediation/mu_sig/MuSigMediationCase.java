@@ -17,6 +17,7 @@
 
 package bisq.support.mediation.mu_sig;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.support.mediation.MediationCaseState;
@@ -35,20 +36,31 @@ public class MuSigMediationCase implements PersistableProto {
     private final long requestDate;
     private final Observable<MediationCaseState> mediationCaseState = new Observable<>();
     private final Observable<Optional<MuSigMediationResult>> muSigMediationResult = new Observable<>();
+    private final Observable<Optional<AccountPayload<?>>> takerAccountPayload = new Observable<>(Optional.empty());
+    private final Observable<Optional<AccountPayload<?>>> makerAccountPayload = new Observable<>(Optional.empty());
 
 
     public MuSigMediationCase(MuSigMediationRequest muSigMediationRequest) {
-        this(muSigMediationRequest, currentTimeMillis(), MediationCaseState.OPEN, Optional.empty());
+        this(muSigMediationRequest,
+                currentTimeMillis(),
+                MediationCaseState.OPEN,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty());
     }
 
     private MuSigMediationCase(MuSigMediationRequest muSigMediationRequest,
                                long requestDate,
                                MediationCaseState mediationCaseState,
-                               Optional<MuSigMediationResult> muSigMediationResult) {
+                               Optional<MuSigMediationResult> muSigMediationResult,
+                               Optional<AccountPayload<?>> takerAccountPayload,
+                               Optional<AccountPayload<?>> makerAccountPayload) {
         this.muSigMediationRequest = muSigMediationRequest;
         this.requestDate = requestDate;
         this.mediationCaseState.set(mediationCaseState);
         this.muSigMediationResult.set(muSigMediationResult);
+        this.takerAccountPayload.set(takerAccountPayload);
+        this.makerAccountPayload.set(makerAccountPayload);
     }
 
     /**
@@ -63,6 +75,8 @@ public class MuSigMediationCase implements PersistableProto {
                 .setMediationCaseState(mediationCaseState.get().toProtoEnum());
         muSigMediationResult.get().ifPresent(item ->
                 builder.setMuSigMediationResult(item.toProto(serializeForHash)));
+        takerAccountPayload.get().ifPresent(item -> builder.setTakerAccountPayload(item.toProto(serializeForHash)));
+        makerAccountPayload.get().ifPresent(item -> builder.setMakerAccountPayload(item.toProto(serializeForHash)));
         return builder;
     }
 
@@ -77,6 +91,12 @@ public class MuSigMediationCase implements PersistableProto {
                 MediationCaseState.fromProto(proto.getMediationCaseState()),
                 proto.hasMuSigMediationResult() ?
                         Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult())) :
+                        Optional.empty(),
+                proto.hasTakerAccountPayload() ?
+                        Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
+                        Optional.empty(),
+                proto.hasMakerAccountPayload() ?
+                        Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
                         Optional.empty());
     }
 
@@ -100,4 +120,16 @@ public class MuSigMediationCase implements PersistableProto {
         muSigMediationResult.set(newResult);
         return true;
     }
+
+    public boolean setPaymentAccountPayloads(AccountPayload<?> takerAccountPayload, AccountPayload<?> makerAccountPayload) {
+        Optional<AccountPayload<?>> newTakerValue = Optional.of(takerAccountPayload);
+        Optional<AccountPayload<?>> newMakerValue = Optional.of(makerAccountPayload);
+        if (this.takerAccountPayload.get().equals(newTakerValue) && this.makerAccountPayload.get().equals(newMakerValue)) {
+            return false;
+        }
+        this.takerAccountPayload.set(newTakerValue);
+        this.makerAccountPayload.set(newMakerValue);
+        return true;
+    }
+
 }

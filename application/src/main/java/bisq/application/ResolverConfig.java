@@ -52,6 +52,8 @@ import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
+import bisq.support.mediation.mu_sig.MuSigPaymentDetailsRequest;
+import bisq.support.mediation.mu_sig.MuSigPaymentDetailsResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
@@ -132,6 +134,8 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MuSigMediatorsResponse", MuSigMediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigMediationStateChangeMessage", MuSigMediationStateChangeMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigMediationResultAcceptanceMessage", MuSigMediationResultAcceptanceMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsRequest", MuSigPaymentDetailsRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsResponse", MuSigPaymentDetailsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampRequest", AuthorizeAccountTimestampRequest.getNetworkMessageResolver());
 

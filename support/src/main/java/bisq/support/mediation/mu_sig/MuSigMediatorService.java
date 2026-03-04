@@ -25,8 +25,8 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.application.Service;
-import bisq.common.util.StringUtils;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.util.StringUtils;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -108,6 +108,8 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigMediationRequest) {
             processMediationRequest((MuSigMediationRequest) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof MuSigPaymentDetailsResponse) {
+            processPaymentDetailsResponse((MuSigPaymentDetailsResponse) envelopePayloadMessage);
         }
     }
 
@@ -153,6 +155,30 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
             sendMediationCaseStateChangeMessage(muSigMediationCase, Optional.empty());
             sendMediationCaseStateChangeTradeLogMessage(muSigMediationCase);
         }
+    }
+
+    public boolean requestPaymentDetails(MuSigMediationCase muSigMediationCase) {
+        MuSigMediationRequest muSigMediationRequest = muSigMediationCase.getMuSigMediationRequest();
+        Optional<UserIdentity> myMediatorUserIdentity = findMyMediatorUserIdentity(muSigMediationRequest.getContract().getMediator());
+        if (myMediatorUserIdentity.isEmpty()) {
+            log.warn("Cannot request payment details for trade {} because mediator identity was not found.",
+                    muSigMediationRequest.getTradeId());
+            return false;
+        }
+
+        UserIdentity myUserIdentity = myMediatorUserIdentity.orElseThrow();
+        MuSigPaymentDetailsRequest message = new MuSigPaymentDetailsRequest(
+                muSigMediationRequest.getTradeId(),
+                myUserIdentity.getUserProfile().getId()
+        );
+        NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+        networkService.confidentialSend(message,
+                muSigMediationRequest.getRequester().getNetworkId(),
+                networkIdWithKeyPair);
+        networkService.confidentialSend(message,
+                muSigMediationRequest.getPeer().getNetworkId(),
+                networkIdWithKeyPair);
+        return true;
     }
 
     public void closeReOpenedMediationCase(MuSigMediationCase muSigMediationCase) {
@@ -232,6 +258,37 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
                     networkIdWithKeyPair);
             muSigOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
         });
+    }
+
+    private void processPaymentDetailsResponse(MuSigPaymentDetailsResponse response) {
+        String tradeId = response.getTradeId();
+        findMediationCase(tradeId).ifPresentOrElse(mediationCase -> {
+                    String senderUserProfileId = response.getSenderUserProfileId();
+                    MuSigMediationRequest muSigMediationRequest = mediationCase.getMuSigMediationRequest();
+                    boolean isRequester = muSigMediationRequest.getRequester().getId().equals(senderUserProfileId);
+                    boolean isPeer = muSigMediationRequest.getPeer().getId().equals(senderUserProfileId);
+                    if (!isRequester && !isPeer) {
+                        log.warn("Ignoring MuSigPaymentDetailsResponse for trade {} with unknown senderUserProfileId {}.",
+                                tradeId, senderUserProfileId);
+                        return;
+                    }
+                    if (bannedUserService.isUserProfileBanned(senderUserProfileId)) {
+                        log.warn("Ignoring MuSigPaymentDetailsResponse for trade {} from banned senderUserProfileId {}.",
+                                tradeId, senderUserProfileId);
+                        return;
+                    }
+                    if (mediationCase.setPaymentAccountPayloads(response.getTakerAccountPayload(),
+                            response.getMakerAccountPayload())) {
+                        persist();
+                    }
+                },
+                () -> log.warn("Ignoring MuSigPaymentDetailsResponse for unknown trade {}.", tradeId));
+    }
+
+    private Optional<MuSigMediationCase> findMediationCase(String tradeId) {
+        return getMediationCases().stream()
+                .filter(mediationCase -> mediationCase.getMuSigMediationRequest().getTradeId().equals(tradeId))
+                .findAny();
     }
 
     private void addNewMediationCase(MuSigMediationCase muSigMediationCase) {
