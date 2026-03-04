@@ -73,6 +73,7 @@ public class TabButton extends Pane implements Toggle {
     private ImageView iconHover;
     @Getter
     private final Badge numMessagesBadge;
+    private final Label newBadge;
 
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> labelWidthListener = new ChangeListener<>() {
@@ -80,6 +81,7 @@ public class TabButton extends Pane implements Toggle {
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
             if (newValue.doubleValue() > 0) {
                 numMessagesBadgeBox.setLayoutX(label.getWidth() + BADGE_PADDING);
+                newBadge.setLayoutX(label.getWidth() + BADGE_PADDING);
             }
         }
     };
@@ -133,7 +135,13 @@ public class TabButton extends Pane implements Toggle {
         numMessagesBadgeBox.setManaged(false);
         numMessagesBadgeBox.setLayoutY(BADGE_PADDING);
 
-        getChildren().addAll(label, numMessagesBadgeBox);
+        newBadge = new Label();
+        newBadge.setGraphic(ImageUtil.getImageViewById("new-badge"));
+        newBadge.setVisible(false);
+        newBadge.setManaged(false);
+        newBadge.setLayoutY(BADGE_PADDING);
+
+        getChildren().addAll(label, numMessagesBadgeBox, newBadge);
 
         selectedProperty().addListener(new WeakChangeListener<>(selectedListener));
         hoverProperty().addListener(new WeakChangeListener<>(hoverListener));
@@ -184,6 +192,11 @@ public class TabButton extends Pane implements Toggle {
                 });
             }, false);
         });
+    }
+
+    public void showNewBadge() {
+        newBadge.setVisible(true);
+        newBadge.setManaged(true);
     }
 
     public void disposeClearButton() {
