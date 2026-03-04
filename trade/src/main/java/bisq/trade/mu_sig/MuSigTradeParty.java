@@ -56,7 +56,7 @@ public final class MuSigTradeParty extends TradeParty {
     private Optional<CloseTradeResponse> myCloseTradeResponse = Optional.empty();
     private Optional<ByteArray> peersOutputPrvKeyShare = Optional.empty();
     private Optional<AccountPayload<?>> accountPayload = Optional.empty();
-    private final transient Observable<Optional<Boolean>> mediationResultAcceptanceObservable = new Observable<>(Optional.empty());
+    private final transient Observable<Optional<Boolean>> mediationResultAcceptedObservable = new Observable<>(Optional.empty());
 
     public MuSigTradeParty(NetworkId networkId) {
         super(networkId);
@@ -76,7 +76,7 @@ public final class MuSigTradeParty extends TradeParty {
                            Optional<CloseTradeResponse> myCloseTradeResponse,
                            Optional<ByteArray> peersOutputPrvKeyShare,
                            Optional<AccountPayload<?>> accountPayload,
-                           Optional<Boolean> mediationResultAcceptance) {
+                           Optional<Boolean> mediationResultAccepted) {
         super(networkId);
 
         this.myPubKeySharesResponse = myPubKeySharesResponse;
@@ -92,7 +92,7 @@ public final class MuSigTradeParty extends TradeParty {
         this.myCloseTradeResponse = myCloseTradeResponse;
         this.peersOutputPrvKeyShare = peersOutputPrvKeyShare;
         this.accountPayload = accountPayload;
-        mediationResultAcceptanceObservable.set(mediationResultAcceptance);
+        mediationResultAcceptedObservable.set(mediationResultAccepted);
     }
 
     @Override
@@ -111,7 +111,7 @@ public final class MuSigTradeParty extends TradeParty {
         myCloseTradeResponse.ifPresent(e -> builder.setMyCloseTradeResponse(e.toProto(serializeForHash)));
         peersOutputPrvKeyShare.ifPresent(e -> builder.setPeersOutputPrvKeyShare(e.toProto(serializeForHash)));
         accountPayload.ifPresent(e -> builder.setAccountPayload(e.toProto(serializeForHash)));
-        mediationResultAcceptanceObservable.get().ifPresent(builder::setMediationResultAcceptance);
+        mediationResultAcceptedObservable.get().ifPresent(builder::setMediationResultAccepted);
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
@@ -158,8 +158,8 @@ public final class MuSigTradeParty extends TradeParty {
                 muSigTradePartyProto.hasAccountPayload()
                         ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getAccountPayload()))
                         : Optional.empty(),
-                muSigTradePartyProto.hasMediationResultAcceptance()
-                        ? Optional.of(muSigTradePartyProto.getMediationResultAcceptance())
+                muSigTradePartyProto.hasMediationResultAccepted()
+                        ? Optional.of(muSigTradePartyProto.getMediationResultAccepted())
                         : Optional.empty()
         );
     }
@@ -216,19 +216,19 @@ public final class MuSigTradeParty extends TradeParty {
         this.accountPayload = Optional.of(accountPayload);
     }
 
-    public boolean setMediationResultAcceptance(boolean mediationResultAccepted) {
-        if (mediationResultAcceptanceObservable.get().isPresent()) {
+    public boolean setMediationResultAccepted(boolean mediationResultAccepted) {
+        if (mediationResultAcceptedObservable.get().isPresent()) {
             return false;
         }
-        mediationResultAcceptanceObservable.set(Optional.of(mediationResultAccepted));
+        mediationResultAcceptedObservable.set(Optional.of(mediationResultAccepted));
         return true;
     }
 
-    public Optional<Boolean> getMediationResultAcceptance() {
-        return mediationResultAcceptanceObservable.get();
+    public Optional<Boolean> getMediationResultAccepted() {
+        return mediationResultAcceptedObservable.get();
     }
 
-    public ReadOnlyObservable<Optional<Boolean>> mediationResultAcceptanceObservable() {
-        return mediationResultAcceptanceObservable;
+    public ReadOnlyObservable<Optional<Boolean>> mediationResultAcceptedObservable() {
+        return mediationResultAcceptedObservable;
     }
 }

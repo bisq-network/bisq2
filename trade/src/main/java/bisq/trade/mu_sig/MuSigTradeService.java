@@ -373,7 +373,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     trade.getId());
             return false;
         }
-        if (!trade.getMyself().setMediationResultAcceptance(mediationResultAccepted)) {
+        if (!trade.getMyself().setMediationResultAccepted(mediationResultAccepted)) {
             return false;
         }
 
@@ -758,7 +758,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 return;
             }
 
-            if (trade.getPeer().setMediationResultAcceptance(message.isMediationResultAccepted())) {
+            if (trade.getPeer().setMediationResultAccepted(message.isMediationResultAccepted())) {
                 persist();
             }
         });
