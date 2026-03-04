@@ -18,10 +18,15 @@
 package bisq.desktop.main.content.mu_sig.trade.pending.trade_details;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.PaymentRail;
+import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.market.Market;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
@@ -44,6 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static bisq.desktop.main.content.mu_sig.trade.pending.trade_details.MuSigTradeDetailsHelper.createSecurityDepositInfo;
+import static bisq.desktop.main.content.mu_sig.trade.pending.trade_details.MuSigTradeDetailsHelper.createTradeFeeInfo;
+
 @Slf4j
 public class MuSigTradeDetailsController extends NavigationController implements InitWithDataController<MuSigTradeDetailsController.InitData> {
     @Getter
@@ -64,9 +72,13 @@ public class MuSigTradeDetailsController extends NavigationController implements
     @Getter
     private final MuSigTradeDetailsView view;
 
+    private final ExplorerService explorerService;
+
 
     public MuSigTradeDetailsController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_TRADE_DETAILS);
+
+        explorerService = serviceProvider.getBondedRolesService().getExplorerService();
 
         model = new MuSigTradeDetailsModel();
         view = new MuSigTradeDetailsView(model, this);
@@ -131,16 +143,28 @@ public class MuSigTradeDetailsController extends NavigationController implements
         model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
 
+        String depositTxId = trade.getDepositTxId();
+        boolean hasDepositTxId = depositTxId != null && !depositTxId.isBlank();
+        model.setDepositTxId(hasDepositTxId
+                ? depositTxId
+                : Res.get("muSig.trade.details.dataNotYetProvided"));
+        model.setDepositTxIdEmpty(!hasDepositTxId);
+        model.setDepositTxIdVisible(hasDepositTxId);
 
-        model.setDepositTxId(trade.getDepositTxId() == null
-                ? Res.get("muSig.trade.details.dataNotYetProvided")
-                : trade.getDepositTxId());
-        model.setDepositTxIdEmpty(trade.getDepositTxId() == null);
-        model.setDepositTxIdVisible(trade.getDepositTxId() != null);
+        // Isn't the payment rail always MAIN_CHAIN here?
+        PaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+        boolean isOnChainSettlement = BitcoinPaymentRail.MAIN_CHAIN.equals(paymentRail);
+        boolean hasExplorerProvider = explorerService.getExplorerServiceProvider().isPresent();
+        model.setBlockExplorerLinkVisible(hasDepositTxId && isOnChainSettlement && hasExplorerProvider);
+
+        model.setSecurityDepositInfo(createSecurityDepositInfo(contract, trade));
+        model.setTradeFeeInfo(createTradeFeeInfo(contract, trade));
     }
 
     @Override
     public void onDeactivate() {
+        model.setSecurityDepositInfo(Optional.empty());
+        model.setTradeFeeInfo(Optional.empty());
     }
 
     @Override
@@ -151,4 +175,17 @@ public class MuSigTradeDetailsController extends NavigationController implements
     void onClose() {
         OverlayController.hide();
     }
+
+    void openExplorer() {
+        Browser.open(getBlockExplorerUrl());
+    }
+
+    void onCopyExplorerLink() {
+        ClipboardUtil.copyToClipboard(getBlockExplorerUrl());
+    }
+
+    private String getBlockExplorerUrl() {
+        return MuSigTradeDetailsHelper.getBlockExplorerUrl(explorerService, model.getDepositTxId());
+    }
 }
+
