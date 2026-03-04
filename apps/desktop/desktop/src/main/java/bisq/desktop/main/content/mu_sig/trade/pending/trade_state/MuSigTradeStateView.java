@@ -54,7 +54,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
     private final BisqMenuItem tryAgainMenuItem;
     private Pin disputeStatePin;
     private Subscription stateInfoVBoxPin, requestMediationDeliveryStatusPin,
-            shouldShowTryRequestMediationAgainPin, tradePin, mediationResultAcceptancePin;
+            shouldShowTryRequestMediationAgainPin, tradePin, mediationResultAcceptedPin;
 
     public MuSigTradeStateView(MuSigTradeStateModel model,
                                MuSigTradeStateController controller,
@@ -176,7 +176,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
 
         requestMediationDeliveryStatusPin = EasyBind.subscribe(model.getRequestMediationDeliveryStatus(),
                 this::updateMediationBannerLabel);
-        mediationResultAcceptancePin = EasyBind.subscribe(model.getMyMediationResultAcceptance(),
+        mediationResultAcceptedPin = EasyBind.subscribe(model.getMyMediationResultAccepted(),
                 update -> updateMediationBannerLabel(model.getRequestMediationDeliveryStatus().get()));
         tradePin = EasyBind.subscribe(model.getTrade(), trade -> {
             if (disputeStatePin != null) {
@@ -222,7 +222,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         requestMediationDeliveryStatusPin.unsubscribe();
         shouldShowTryRequestMediationAgainPin.unsubscribe();
         tradePin.unsubscribe();
-        mediationResultAcceptancePin.unsubscribe();
+        mediationResultAcceptedPin.unsubscribe();
         if (disputeStatePin != null) {
             disputeStatePin.unbind();
             disputeStatePin = null;
@@ -305,7 +305,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
             showDecisionControls = disputeState == MuSigDisputeState.MEDIATION_CLOSED ||
                     disputeState == MuSigDisputeState.MEDIATION_RE_OPENED;
         }
-        boolean myDecisionKnown = model.getMyMediationResultAcceptance().get().isPresent();
+        boolean myDecisionKnown = model.getMyMediationResultAccepted().get().isPresent();
 
         boolean showDecisionButtons = showDecisionControls && !myDecisionKnown;
         acceptMediationResultButton.setVisible(showDecisionButtons);
