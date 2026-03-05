@@ -19,7 +19,10 @@ package bisq.oracle_node.bisq1_bridge;
 
 import bisq.account.timestamp.AccountTimestamp;
 import bisq.account.timestamp.AccountTimestampService;
-import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
+import bisq.account.timestamp.AuthorizeAccountTimestampV1Payload;
+import bisq.account.timestamp.AuthorizeAccountTimestampV1Request;
+import bisq.account.timestamp.AuthorizeAccountTimestampV2Payload;
+import bisq.account.timestamp.AuthorizeAccountTimestampV2Request;
 import bisq.account.timestamp.AuthorizedAccountTimestamp;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -158,8 +161,10 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
             processAuthorizeAccountAgeRequest(request);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
             processAuthorizeSignedWitnessRequest(request);
-        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampRequest request) {
-            processAuthorizeAccountTimestampRequest(request);
+        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampV1Request request) {
+            processAuthorizeAccountTimestampV1Request(request);
+        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampV2Request request) {
+            processAuthorizeAccountTimestampV2Request(request);
         }
     }
 
@@ -203,83 +208,6 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 log.error("processAuthorizeSignedWitnessRequest failed", e);
             }
         }, executor);
-    }
-
-    private void processAuthorizeAccountTimestampRequest(AuthorizeAccountTimestampRequest request) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                AccountTimestampService.verifyHash(request);
-                AccountTimestampService.verifySignature(request);
-
-                byte[] hash = request.getAccountTimestamp().getHash();
-                ByteArray requestHash = new ByteArray(hash);
-                Long persistedDate = persistableStore.getAccountTimestampDateByHash().get(requestHash);
-                boolean hasPersistedTimestamp = persistedDate != null && persistedDate > 0;
-                AccountTimestamp accountTimestamp;
-                if (hasPersistedTimestamp) {
-                    accountTimestamp = new AccountTimestamp(hash, persistedDate);
-                } else {
-                    switch (request.getTimestampType()) {
-                        case BISQ2_NEW -> {
-                            // Fresh request, we check if users date is inside a tolerance range of +- 2 hours.
-                            // We tolerate future timestamps, as we need a deterministic date for supporting
-                            // multiple oracle nodes. A future time does not provide a benefit to the user.
-                            long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
-                            long date = request.getAccountTimestamp().getDate();
-                            if (Math.abs(System.currentTimeMillis() - date) > maxTimeDrift) {
-                                log.warn("AuthorizeAccountTimestampRequest is invalid, timestamp is too far from our current time");
-                                return;
-                            }
-                            accountTimestamp = request.getAccountTimestamp();
-                            persistAccountTimestamp(accountTimestamp);
-                        }
-                        case BISQ1_IMPORTED -> {
-                            // Fresh request, we look up the account age witness from Bisq 1
-                            Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(hash);
-                            if (result.isFailure()) {
-                                log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
-                                return;
-                            }
-
-                            // The date we get from the request is the account creation date from the imported account.
-                            // The account age is the date of the account age witness object.
-                            // It is expected that there is a slight difference in those 2 dates.
-                            long dateFromBisq1AccountAge = result.getOrThrow();
-                            long accountCreationDate = request.getAccountTimestamp().getDate();
-                            long ageDiff = dateFromBisq1AccountAge - accountCreationDate;
-                            if (dateFromBisq1AccountAge > accountCreationDate) {
-                                log.warn("The account age is newer then the account creation date. " +
-                                                "This could be due out of sync clock at user who created the account. " +
-                                                "dateFromBisq1AccountAge={}; accountCreationDate={}",
-                                        new Date(dateFromBisq1AccountAge), new Date(accountCreationDate));
-                            }
-                            if (ageDiff > TimeUnit.HOURS.toMillis(1)) {
-                                log.warn("The account creation date is more then 1 hour different to the account age date. " +
-                                                "This is probably because the account was created on Bisq 1 before the " +
-                                                "account age feature was implemented or there was some unusual delay when publishing the account age. " +
-                                                "ageDiff={} sec; dateFromBisq1AccountAge={}; accountCreationDate={}",
-                                        ageDiff / 1000, new Date(dateFromBisq1AccountAge), new Date(accountCreationDate));
-                            }
-
-                            accountTimestamp = new AccountTimestamp(hash, dateFromBisq1AccountAge);
-                            persistAccountTimestamp(accountTimestamp);
-                        }
-                        default -> throw new IllegalArgumentException("Unsupported timestamp type: " +
-                                request.getTimestampType());
-                    }
-                }
-
-                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
-            } catch (Exception e) {
-                log.warn("AuthorizeAccountTimestampRequest is invalid", e);
-            }
-        }, executor);
-    }
-
-    private void persistAccountTimestamp(AccountTimestamp accountTimestamp) {
-        ByteArray hash = new ByteArray(accountTimestamp.getHash());
-        persistableStore.getAccountTimestampDateByHash().put(hash, accountTimestamp.getDate());
-        persist();
     }
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,
@@ -343,6 +271,100 @@ public class Bisq1BridgeRequestService extends RateLimitedPersistenceClient<Bisq
                 log.error("Request BondedRoleVerification failed", e);
             }
         }, executor);
+    }
+
+    private void processAuthorizeAccountTimestampV1Request(AuthorizeAccountTimestampV1Request request) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                AuthorizeAccountTimestampV1Payload payload = request.getPayload();
+                AccountTimestampService.verifyHashV1(payload);
+                AccountTimestampService.verifySignatureV1(request);
+
+                byte[] hash = payload.getHash();
+                Long persistedDate = persistableStore.getAccountTimestampDateByHash().get(new ByteArray(hash));
+                boolean hasPersistedTimestamp = persistedDate != null && persistedDate > 0;
+                AccountTimestamp accountTimestamp;
+                if (hasPersistedTimestamp) {
+                    accountTimestamp = new AccountTimestamp(hash, persistedDate);
+                } else {
+                    // Fresh request, we look up the account age witness from Bisq 1
+                    Result<Long> result = accountTimestampGrpcService.requestAccountTimestamp(hash);
+                    if (result.isFailure()) {
+                        log.error("requestAccountTimestamp from Bisq 1 failed", result.exceptionOrNull());
+                        return;
+                    }
+
+                    // The date we get from the request is the account creation date from the imported account.
+                    // The account age is the date of the account age witness object.
+                    // It is expected that there is a slight difference in those 2 dates.
+                    long dateFromBisq1AccountAge = result.getOrThrow();
+                    long accountCreationDate = payload.getDate();
+                    long ageDiff = dateFromBisq1AccountAge - accountCreationDate;
+                    if (dateFromBisq1AccountAge > accountCreationDate) {
+                        log.warn("The account age is newer then the account creation date. " +
+                                        "This could be due out of sync clock at user who created the account. " +
+                                        "dateFromBisq1AccountAge={}; accountCreationDate={}",
+                                new Date(dateFromBisq1AccountAge), new Date(accountCreationDate));
+                    }
+                    if (ageDiff > TimeUnit.HOURS.toMillis(1)) {
+                        log.warn("The account creation date is more then 1 hour different to the account age date. " +
+                                        "This is probably because the account was created on Bisq 1 before the " +
+                                        "account age feature was implemented or there was some unusual delay when publishing the account age. " +
+                                        "ageDiff={} sec; dateFromBisq1AccountAge={}; accountCreationDate={}",
+                                ageDiff / 1000, new Date(dateFromBisq1AccountAge), new Date(accountCreationDate));
+                    }
+
+                    accountTimestamp = new AccountTimestamp(hash, dateFromBisq1AccountAge);
+                    persistAccountTimestamp(accountTimestamp);
+                }
+
+                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+            } catch (Exception e) {
+                log.warn("AuthorizeAccountTimestampV1Request is invalid", e);
+            }
+        }, executor);
+    }
+
+
+    private void processAuthorizeAccountTimestampV2Request(AuthorizeAccountTimestampV2Request request) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                AuthorizeAccountTimestampV2Payload payload = request.getPayload();
+                AccountTimestampService.verifyHashV2(payload);
+                AccountTimestampService.verifySignatureV2(request);
+
+                byte[] hash = payload.getHash();
+                Long persistedDate = persistableStore.getAccountTimestampDateByHash().get(new ByteArray(hash));
+                boolean hasPersistedTimestamp = persistedDate != null && persistedDate > 0;
+                AccountTimestamp accountTimestamp;
+                if (hasPersistedTimestamp) {
+                    accountTimestamp = new AccountTimestamp(hash, persistedDate);
+                } else {
+                    // Fresh request, we check if users date is inside a tolerance range of +- 2 hours.
+                    // We also do not tolerate too far future timestamps, as we need a deterministic date for supporting
+                    // multiple oracle nodes.
+                    long maxTimeDrift = TimeUnit.HOURS.toMillis(2);
+                    long date = payload.getDate();
+                    if (Math.abs(System.currentTimeMillis() - date) > maxTimeDrift) {
+                        log.warn("AuthorizeAccountTimestampV2Request is invalid, timestamp is too far from our current time." +
+                                "date={}, now={}", new Date(date), new Date(System.currentTimeMillis()));
+                        return;
+                    }
+                    accountTimestamp = new AccountTimestamp(hash, date);
+                    persistAccountTimestamp(accountTimestamp);
+                }
+
+                publishAuthorizedData(new AuthorizedAccountTimestamp(accountTimestamp, staticPublicKeysProvided));
+            } catch (Exception e) {
+                log.warn("AuthorizeAccountTimestampV2Request is invalid", e);
+            }
+        }, executor);
+    }
+
+    private void persistAccountTimestamp(AccountTimestamp accountTimestamp) {
+        ByteArray hash = new ByteArray(accountTimestamp.getHash());
+        persistableStore.getAccountTimestampDateByHash().put(hash, accountTimestamp.getDate());
+        persist();
     }
 
     private CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData data) {

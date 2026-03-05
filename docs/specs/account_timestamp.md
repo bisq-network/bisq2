@@ -83,11 +83,20 @@ Examples of identifying data include:
 
 The fingerprint is salted with the per-account `salt` from `AccountPayload` to prevent public correlation.
 
+Two fingerprint variants are used:
+
+* **Bisq 1 compatible fingerprint (V1)**: raw bytes from `AccountPayload.getBisq1CompatibleFingerprint()`.
+* **Bisq 2 fingerprint hash (V2)**: 20-byte hash from `AccountPayload.getBisq2FingerprintHash()`.
+
 ---
 
 ## Hash Construction
 
 ### Inputs
+
+`hash()` denotes `RIPEMD160(sha256(x))` (see `DigestUtil.hash`).
+
+#### V1 (BISQ1_IMPORTED)
 
 * `fingerprint`: `AccountPayload.getBisq1CompatibleFingerprint()`
 * `salt`: `AccountPayload.getSalt()` (32 bytes)
@@ -100,10 +109,24 @@ saltedFingerprint = concat(fingerprint, salt)
 
 preimage = concat(saltedFingerprint, publicKeyBytes)
 
-hash = RIPEMD160(sha256(preimage))
+hash = hash(preimage)
 ```
 
 This `hash` serves as the unique key for the payment account.
+
+#### V2 (BISQ2_NEW)
+
+* `fingerprintHash`: `AccountPayload.getBisq2FingerprintHash()` (20 bytes)
+* `salt`: `AccountPayload.getSalt()` (32 bytes)
+* `publicKeyBytes`: public key bound to the account
+
+```
+saltedFingerprintHash = hash(concat(fingerprintHash, salt))
+
+preimage = concat(saltedFingerprintHash, publicKeyBytes)
+
+hash = hash(preimage)
+```
 
 ---
 
@@ -114,16 +137,17 @@ An `AccountTimestamp` contains:
 * `hash`
 * `date`: user-defined account creation timestamp (milliseconds since epoch)
 
-The user signs the serialized `AccountTimestamp`.
+The user signs the serialized authorization payload (`AuthorizeAccountTimestampV1Payload` or
+`AuthorizeAccountTimestampV2Payload`). The signature is carried in the corresponding request message.
 The date is defined by the user and not the oracle to allow deterministic attestation by multiple oracle nodes.
 
 ---
 
 ## Protocol Modes
 
-Bisq supports two timestamp origins via `TimestampType`:
+Bisq supports two timestamp origins:
 
-### 1. `BISQ1_IMPORTED`
+### 1. Imported Bisq 1 account
 
 The user imports from Bisq 1:
 
@@ -133,9 +157,15 @@ The user imports from Bisq 1:
 
 This mode is externally auditable. Trust is based on Bisq 1 seed nodes not having backdated data.
 
+Request details:
+
+* **Key type**: DSA
+* **Payload**: raw `fingerprint` and `saltedFingerprint`
+
 ---
 
-### 2. `BISQ2_NEW`
+### 2. Newly created account in Bisq 2
+
 
 The user creates a new account and requests timestamp issuance.
 
@@ -156,6 +186,11 @@ Default tolerance:
 
 If the timestamp is in the future, it is treated as the processing node’s current time.
 
+Request details:
+
+* **Key type**: EC
+* **Payload**: `fingerprintHash` and `saltedFingerprintHash` (20 bytes each)
+
 ---
 
 ## Request Message
@@ -163,13 +198,30 @@ If the timestamp is in the future, it is treated as the processing node’s curr
 The user sends a request to all available oracle nodes as an HTTP request over Tor:
 
 ```proto
-message AuthorizeAccountTimestampRequest {
-  TimestampType timestampType = 1;
-  AccountTimestamp accountTimestamp = 2;
-  bytes saltedFingerprint = 3;
-  bytes publicKey = 4;
-  bytes signature = 5;
-  KeyType keyType = 6;
+message AuthorizeAccountTimestampV1Payload {
+  uint64 date = 1;
+  bytes hash = 2;
+  bytes fingerprint = 3;
+  bytes saltedFingerprint = 4;
+  bytes publicKey = 5;
+}
+
+message AuthorizeAccountTimestampV1Request {
+  AuthorizeAccountTimestampV1Payload payload = 1;
+  bytes signature = 2;
+}
+
+message AuthorizeAccountTimestampV2Payload {
+  uint64 date = 1;
+  bytes hash = 2;
+  bytes fingerprintHash = 3;
+  bytes saltedFingerprintHash = 4;
+  bytes publicKey = 5;
+}
+
+message AuthorizeAccountTimestampV2Request {
+  AuthorizeAccountTimestampV2Payload payload = 1;
+  bytes signature = 2;
 }
 ```
 
@@ -179,23 +231,42 @@ message AuthorizeAccountTimestampRequest {
 
 The oracle verifies:
 
-* that the hash in `AccountTimestamp` matches the hash derived from the request data:
+* that the hash in the payload matches the hash derived from the request data:
+
+For V1:
 
 ```
 preimage = concat(
-  AuthorizeAccountTimestampRequest.saltedFingerprint,
-  AuthorizeAccountTimestampRequest.publicKey
+  payload.saltedFingerprint,
+  payload.publicKey
 )
 
-hash = RIPEMD160(sha256(preimage))
+hash = hash(preimage)
+```
+
+For V2:
+
+```
+preimage = concat(
+  payload.saltedFingerprintHash,
+  payload.publicKey
+)
+
+hash = hash(preimage)
 ```
 
 * that the signature proves key ownership
 
-If `TimestampType` is `BISQ1_IMPORTED`:
+If the oracle node has a persisted entry with that hash, it publishes an `AuthorizedAccountTimestamp` message using the persisted date.
+
+If request is `AuthorizeAccountTimestampV1Request`:
 
 * the oracle requests the date via gRPC from the Bisq 1 bridge node using the hash
-* the returned date must equal the date in the request’s `AccountTimestamp`
+* the returned date must equal the date in the request payload
+
+If request is `AuthorizeAccountTimestampV2Request`:
+
+* The oracle node publishes an `AuthorizedAccountTimestamp` with the date from the request.
 
 ---
 
@@ -212,7 +283,7 @@ Authorization is expressed through the Bisq network’s `AuthorizedDistributedDa
 
 ## Network TTL and Renewal
 
-* `AuthorizeAccountTimestampRequest` uses a TTL of 10 days.
+* `AuthorizeAccountTimestampV1Request` uses a TTL of 10 days.
 * `AuthorizedAccountTimestamp` uses a TTL of 20 days. This must be longer than the TTL of the `UserProfile`, which is 15 days.
 
 To ensure reliable availability of `AuthorizedAccountTimestamp`, the user requests re-publication from oracle nodes after half of its TTL has elapsed.
@@ -224,12 +295,21 @@ To ensure reliable availability of `AuthorizedAccountTimestamp`, the user reques
 During the trade protocol, the peer verifies:
 
 1. The user shares the `salt` from `AccountPayload`
-2. The peer computes:
+2. The peer computes (V1/BISQ1_IMPORTED):
 
 ```
 saltedFingerprint = concat(AccountPayload.fingerprint, AccountPayload.salt)
 preimage = concat(saltedFingerprint, publicKeyBytes)
-hash = RIPEMD160(sha256(preimage))
+hash = hash(preimage)
+```
+
+For V2/BISQ2_NEW:
+
+```
+fingerprintHash = AccountPayload.getBisq2FingerprintHash()
+saltedFingerprintHash = hash(concat(fingerprintHash, AccountPayload.salt))
+preimage = concat(saltedFingerprintHash, publicKeyBytes)
+hash = hash(preimage)
 ```
 
 3. The peer checks:
@@ -355,6 +435,26 @@ Oracle statements are not anchored unless future improvements are added.
 ### Small Oracle Set Limits Quorum Options
 
 Currently, only a small number of oracle nodes exist, so threshold signing is not yet feasible.
+
+### Bisq 1 Bank Account Fingerprint Drift
+
+Bisq 1 bank account fingerprints are not fully stable across versions and locales. In Bisq 1:
+
+* **Bank account type uses translated strings**, so fingerprints depend on the UI language at creation time.
+* **Holder ID is prefixed with a localized description** and includes a newline, so translations affect the hash.
+* **Required-field rules differ by country and have evolved**, which can change whether bank name, bank ID,
+  branch ID, account type, holder ID, or national account ID are included.
+* **Missing required branch IDs were encoded as the literal string `"null"`**, which can cause mismatches if
+  older clients handled this differently.
+
+Result: imported Bisq 1 bank accounts may fail to match their historical account-age witness if the
+original Bisq 1 version or language does not align with current Bisq 2 fingerprint construction.
+
+
+#### Mitigation:
+
+We will show a warning popup if the user has imported an payment account of type `bankAccount` as only those seem 
+to have those issues. The user is advised to create a new account and switch to that new account once account has aged enough.
 
 ---
 

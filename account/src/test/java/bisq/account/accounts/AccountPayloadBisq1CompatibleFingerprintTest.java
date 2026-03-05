@@ -316,7 +316,7 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
         // Bisq 1 compatibility: ACH uses bank account fields with country prefix.
         AchTransferAccountPayload payload = new AchTransferAccountPayload(
                 "id", SALT, "Alice", "123 Main St", "Bank", "111000025", "123456789", BankAccountType.CHECKING);
-        assertArrayEquals(expected("ACH_TRANSFER", "US", "Bank", "111000025", "", "123456789", "CHECKING", "", ""),
+        assertArrayEquals(expected("ACH_TRANSFER", "US", "Bank", "", "null", "123456789", "Checking", "", ""),
                 payload.getBisq1CompatibleFingerprint());
     }
 
@@ -326,7 +326,7 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
         CashDepositAccountPayload payload = new CashDepositAccountPayload(
                 "id", SALT, "US", "USD", "Alice", Optional.empty(), "Bank", Optional.of("111000025"),
                 Optional.empty(), "123456789", Optional.of(BankAccountType.CHECKING), Optional.empty(), Optional.empty());
-        assertArrayEquals(expected("CASH_DEPOSIT", "US", "Bank", "111000025", "", "123456789", "CHECKING", "", ""),
+        assertArrayEquals(expected("CASH_DEPOSIT", "US", "Bank", "", "null", "123456789", "Checking", "", ""),
                 payload.getBisq1CompatibleFingerprint());
     }
 
@@ -335,7 +335,7 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
         // Bisq 1 compatibility: Domestic wire uses bank account fields with country prefix.
         DomesticWireTransferAccountPayload payload = new DomesticWireTransferAccountPayload(
                 "id", SALT, "Alice", "123 Main St", "Bank", "111000025", "123456789");
-        assertArrayEquals(expected("DOMESTIC_WIRE_TRANSFER", "US", "Bank", "111000025", "", "123456789", "", "", ""),
+        assertArrayEquals(expected("DOMESTIC_WIRE_TRANSFER", "US", "Bank", "", "null", "123456789", "", "", ""),
                 payload.getBisq1CompatibleFingerprint());
     }
 
@@ -367,7 +367,7 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
                 Optional.of(BankAccountType.CHECKING), Optional.of("NAT"));
         payload.verify();
 
-        assertArrayEquals(expected("NATIONAL_BANK", "US", "Bank", "111000025", "", "123456789", "CHECKING", "", ""),
+        assertArrayEquals(expected("NATIONAL_BANK", "US", "Bank", "", "001", "123456789", "Checking", "", ""),
                 payload.getBisq1CompatibleFingerprint());
     }
 
@@ -381,7 +381,8 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
                 Optional.of(BankAccountType.SAVINGS), Optional.of("NAT"));
         payload.verify();
 
-        assertArrayEquals(expected("NATIONAL_BANK", "SE", "1234567"), payload.getBisq1CompatibleFingerprint());
+        assertArrayEquals(expected("NATIONAL_BANK", "SE", "Bank", "1234567"),
+                payload.getBisq1CompatibleFingerprint());
     }
 
     @Test
@@ -400,7 +401,8 @@ public class AccountPayloadBisq1CompatibleFingerprintTest {
                 Optional.empty(),
                 Optional.of("CBU123"));
         payload.verify();
-        assertArrayEquals(expected("NATIONAL_BANK", "AR", "BankXYZ", "", "BRANCH", "1234567", "", "CUIT123", "CBU123"),
+        assertArrayEquals(expected("NATIONAL_BANK", "AR", "BankXYZ", "", "BRANCH", "1234567", "",
+                        "CUIL/CUIT CUIT123\n", "CBU123"),
                 payload.getBisq1CompatibleFingerprint());
     }
 

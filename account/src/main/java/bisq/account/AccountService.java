@@ -27,8 +27,8 @@ import bisq.account.payment_method.PaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.observable.map.HashMapObserver;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
 import bisq.persistence.DbSubDirectory;
@@ -54,6 +54,8 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     private final Persistence<AccountStore> persistence;
     private final NetworkService networkService;
     private final AccountTimestampService accountTimestampService;
+    @Nullable
+    private Pin accountPin;
 
     public AccountService(PersistenceService persistenceService,
                           NetworkService networkService,
@@ -72,14 +74,11 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
     public CompletableFuture<Boolean> initialize() {
         return accountTimestampService.initialize()
                 .thenApply(result -> {
-                    persistableStore.getAccountByName().addObserver(new HashMapObserver<String, Account<? extends PaymentMethod<?>, ?>>() {
-                        @Override
-                        public void put(String key, Account<? extends PaymentMethod<?>, ?> account) {
-                            try {
-                                accountTimestampService.handleAddedAccount(account);
-                            } catch (Exception e) {
-                                log.error("handleAddedAccount failed", e);
-                            }
+                    accountPin = persistableStore.getAccountByName().addObserver((key, account) -> {
+                        try {
+                            accountTimestampService.handleAddedAccount(account);
+                        } catch (Exception e) {
+                            log.error("handleAddedAccount failed", e);
                         }
                     });
                     return result;
@@ -88,6 +87,10 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (accountPin != null) {
+            accountPin.unbind();
+            accountPin = null;
+        }
         return accountTimestampService.shutdown();
     }
 
