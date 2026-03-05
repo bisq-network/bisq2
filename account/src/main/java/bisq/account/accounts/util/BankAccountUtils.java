@@ -17,11 +17,14 @@
 
 package bisq.account.accounts.util;
 
+import bisq.account.accounts.fiat.BankAccountType;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class BankAccountUtils {

@@ -160,22 +160,25 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
 
     @Override
     public byte[] getBisq1CompatibleFingerprint() {
-        String bankNameValue = BankAccountUtils.isBankNameRequired(countryCode) ? bankName.orElse("") : "";
-        String bankIdValue = BankAccountUtils.isBankIdRequired(countryCode) ? bankId.orElse("") : "";
-        String branchIdValue = BankAccountUtils.isBranchIdRequired(countryCode) ? branchId.orElse("") : "";
+        @SuppressWarnings("ConstantValue") String bankNameValue = BankAccountUtils.isBankNameRequired(countryCode, true) ? bankName.orElse("") : "";
+        String bankIdValue = BankAccountUtils.isBankIdRequired(countryCode, true) ? bankId.orElse("") : "";
 
-        // In Bisq 1 bankAccountType was using the translated strings (Checking, Savings).
-        // This was a bug and cannot be ported to Bisq 2. Users with account age for such accounts would have
-        // problems on Bisq 1 as well as verification depends on language. We assume there are few accounts
-        // affected by that.
-        String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode)
-                ? bankAccountType.map(BankAccountType::name).orElse("")
+        // Bisq 1 used null if not set instead of empty string
+        String branchIdValue = BankAccountUtils.isBranchIdRequired(countryCode, true) ? branchId.orElse("null") : "";
+
+        // i18n string is used, thus the resulting hash will be unreliable
+        String accountTypeValue = BankAccountUtils.isBankAccountTypeRequired(countryCode, true)
+                ? bankAccountType.map(BankAccountUtils::getBisq1CompatibleI18nAccountTypeName).orElse("")
                 : "";
 
-        // We also have to break compatibility with Bisq 1 holderIdValue as it uses i18n strings.
-        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode) ? holderId.orElse("") : "";
+        // i18n string is used, thus the resulting hash will be unreliable
+        // The line break is also part of Bisq 1 string.
+        String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode, true)
+                ? BankAccountUtils.getHolderIdDescription(countryCode) + " " + holderId.orElse("") + "\n"
+                : "";
 
-        String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";
+        String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode, true) ? nationalAccountId.orElse("") : "";
+
         String all = bankNameValue +
                 bankIdValue +
                 branchIdValue +
