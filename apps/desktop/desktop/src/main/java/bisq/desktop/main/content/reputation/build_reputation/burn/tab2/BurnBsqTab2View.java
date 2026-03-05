@@ -52,7 +52,8 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         formulaHeadline.getStyleClass().addAll("bisq-text-1");
         VBox formulaBox = new VBox(10, formulaHeadline,
                 getField(Res.get("reputation.weight"), String.valueOf(ProofOfBurnService.WEIGHT)),
-                getFormulaField("totalScore"));
+                getFormulaField("totalScore"),
+                getField(Res.get("reputation.tradeLimit"), Res.get("reputation.tradeLimit.formula")));
 
         HBox hBox = new HBox(20, formulaBox, simulation);
 

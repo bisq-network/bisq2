@@ -95,6 +95,7 @@ public class BurnScoreSimulation {
                 long totalScore = ProofOfBurnService.doCalculateScore(amountAsLong, blockTime);
                 String score = String.valueOf(totalScore);
                 model.getScore().set(score);
+                model.getTradeLimit().set(String.valueOf(totalScore / 200));
             } catch (Exception e) {
                 log.error("Failed to calculate simScore", e);
             }
@@ -107,6 +108,7 @@ public class BurnScoreSimulation {
         private final IntegerProperty age = new SimpleIntegerProperty();
         private final StringProperty ageAsString = new SimpleStringProperty();
         private final StringProperty score = new SimpleStringProperty();
+        private final StringProperty tradeLimit = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -114,6 +116,7 @@ public class BurnScoreSimulation {
 
         private final MaterialTextField amount;
         private final MaterialTextField score;
+        private final MaterialTextField tradeLimit;
         private final AgeSlider simAgeSlider;
         private final MaterialTextField ageField;
 
@@ -124,6 +127,7 @@ public class BurnScoreSimulation {
             simHeadline.getStyleClass().addAll("bisq-text-1");
             amount = getInputField("reputation.sim.burnAmount");
             score = getField(Res.get("reputation.sim.score"));
+            tradeLimit = getField(Res.get("reputation.sim.tradeLimit"));
             ageField = getInputField("reputation.sim.age");
             simAgeSlider = new AgeSlider(0, ProofOfBurnService.MAX_AGE_BOOST_DAYS, 0);
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
@@ -131,7 +135,8 @@ public class BurnScoreSimulation {
                     amount,
                     ageField,
                     simAgeSlider.getView().getRoot(),
-                    score);
+                    score,
+                    tradeLimit);
         }
 
         @Override
@@ -140,6 +145,7 @@ public class BurnScoreSimulation {
             ageField.textProperty().bindBidirectional(model.getAgeAsString());
             amount.textProperty().bindBidirectional(model.getAmount());
             score.textProperty().bind(model.getScore());
+            tradeLimit.textProperty().bind(model.getTradeLimit());
         }
 
         @Override
@@ -148,6 +154,7 @@ public class BurnScoreSimulation {
             ageField.textProperty().unbindBidirectional(model.getAgeAsString());
             amount.textProperty().unbindBidirectional(model.getAmount());
             score.textProperty().unbind();
+            tradeLimit.textProperty().unbind();
         }
 
         private MaterialTextField getField(String description) {
