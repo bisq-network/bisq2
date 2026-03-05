@@ -37,7 +37,7 @@ message AuthorizeAccountTimestampRequest {
   bytes saltedFingerprint = 3;
   bytes publicKey = 4;
   bytes signature = 5;
-  KeyAlgorithm keyAlgorithm = 6;
+  KeyType keyType = 6;
 }
 message AuthorizedAccountTimestamp {
   AccountTimestamp accountTimestamp = 1;
@@ -413,10 +413,10 @@ enum BankAccountType {
   BANKACCOUNTTYPE_CHECKING = 1;
   BANKACCOUNTTYPE_SAVINGS = 2;
 }
-enum KeyAlgorithm{
-  KEYALGORITHM_UNSPECIFIED = 0;
-  KEYALGORITHM_DSA = 1;
-  KEYALGORITHM_EC = 2;
+enum KeyType{
+  KEYTYPE_UNSPECIFIED = 0;
+  KEYTYPE_DSA = 1;
+  KEYTYPE_EC = 2;
 }
 enum AccountOrigin{
   ACCOUNTORIGIN_UNSPECIFIED = 0;
@@ -430,7 +430,7 @@ message Account {
   PaymentMethod paymentMethod = 4;
   string id = 5;
   security.KeyPair keyPair = 6;
-  KeyAlgorithm keyAlgorithm = 7;
+  KeyType keyType = 7;
   AccountOrigin accountOrigin = 8;
 
   oneof message {

@@ -18,7 +18,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,9 +37,9 @@ public final class PromptPayAccount extends CountryBasedAccount<PromptPayAccount
                             String accountName,
                             PromptPayAccountPayload accountPayload,
                             KeyPair keyPair,
-                            KeyAlgorithm keyAlgorithm,
+                            KeyType keyType,
                             AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
     }
 
     @Override
@@ -57,14 +57,14 @@ public final class PromptPayAccount extends CountryBasedAccount<PromptPayAccount
     }
 
     public static PromptPayAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new PromptPayAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PromptPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
-                keyAlgorithm,
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                keyType,
                 accountOrigin);
     }
 }

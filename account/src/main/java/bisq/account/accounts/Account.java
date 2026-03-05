@@ -31,7 +31,7 @@ import bisq.account.accounts.fiat.UpholdAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.WiseAccount;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.security.SignatureUtil;
@@ -57,7 +57,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     protected final String accountName;
     protected final P accountPayload;
     protected final KeyPair keyPair; // account specific key pair used for account age verification for proof of ownership
-    protected final KeyAlgorithm keyAlgorithm; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
+    protected final KeyType keyType; // DSA for Bisq 1 imported accounts or EC for new Bisq 2 accounts
     protected final AccountOrigin accountOrigin;
 
     public Account(String id,
@@ -65,14 +65,14 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                    String accountName,
                    P accountPayload,
                    KeyPair keyPair,
-                   KeyAlgorithm keyAlgorithm,
+                   KeyType keyType,
                    AccountOrigin accountOrigin) {
         this.id = id;
         this.creationDate = creationDate;
         this.accountName = accountName;
         this.accountPayload = accountPayload;
         this.keyPair = keyPair;
-        this.keyAlgorithm = keyAlgorithm;
+        this.keyType = keyType;
         this.accountOrigin = accountOrigin;
     }
 
@@ -88,7 +88,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setAccountName(accountName)
                 .setAccountPayload(accountPayload.toProto(serializeForHash))
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
-                .setKeyAlgorithm(keyAlgorithm.toProtoEnum())
+                .setKeyType(keyType.toProtoEnum())
                 .setAccountOrigin(accountOrigin.toProtoEnum());
     }
 
@@ -121,11 +121,11 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     }
 
     public String getSignatureAlgorithm() {
-        return getSignatureAlgorithm(keyAlgorithm);
+        return getSignatureAlgorithm(keyType);
     }
 
-    public static String getSignatureAlgorithm(KeyAlgorithm keyAlgorithm) {
-        return keyAlgorithm == KeyAlgorithm.EC
+    public static String getSignatureAlgorithm(KeyType keyType) {
+        return keyType == KeyType.EC
                 ? SignatureUtil.SHA256withECDSA
                 : SignatureUtil.SHA256withDSA;
     }

@@ -23,7 +23,7 @@ import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.util.StringUtils;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.account.UserDefinedFiatAccountDto;
@@ -145,14 +145,14 @@ public class PaymentAccountsRestApi extends RestApiBase {
         });
         try {
             KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-            KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
+            KeyType keyType = KeyType.EC;
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), request.accountData());
             accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(),
                     System.currentTimeMillis(),
                     request.accountName(),
                     accountPayload,
                     keyPair,
-                    keyAlgorithm,
+                    keyType,
                     AccountOrigin.BISQ2_NEW));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
         } catch (Exception e) {

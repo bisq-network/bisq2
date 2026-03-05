@@ -20,7 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.locale.Country;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -42,9 +42,9 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
                                String accountName,
                                P accountPayload,
                                KeyPair keyPair,
-                               KeyAlgorithm keyAlgorithm,
+                               KeyType keyType,
                                AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
         this.country = accountPayload.getCountry();
     }
 

@@ -67,7 +67,7 @@ import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -281,14 +281,14 @@ public class FiatPaymentAccountsController implements Controller {
                 long creationDate = userDefinedFiatAccount.getCreationDate();
                 String accountName = userDefinedFiatAccount.getAccountName();
                 KeyPair keyPair = userDefinedFiatAccount.getKeyPair();
-                KeyAlgorithm keyAlgorithm = userDefinedFiatAccount.getKeyAlgorithm();
+                KeyType keyType = userDefinedFiatAccount.getKeyType();
                 UserDefinedFiatAccountPayload newAccountPayload = new UserDefinedFiatAccountPayload(accountId, accountData);
                 UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountId,
                         creationDate,
                         accountName,
                         newAccountPayload,
                         keyPair,
-                        keyAlgorithm,
+                        keyType,
                         userDefinedFiatAccount.getAccountOrigin());
                 accountService.removePaymentAccount(selectedAccount);
                 accountService.addPaymentAccount(newAccount);

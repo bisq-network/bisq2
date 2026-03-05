@@ -20,7 +20,7 @@ package bisq.account.accounts.crypto;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,9 +39,9 @@ public abstract class CryptoAssetAccount<P extends CryptoAssetAccountPayload> ex
                               String accountName,
                               P accountPayload,
                               KeyPair keyPair,
-                              KeyAlgorithm keyAlgorithm,
+                              KeyType keyType,
                               AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
     }
 
 

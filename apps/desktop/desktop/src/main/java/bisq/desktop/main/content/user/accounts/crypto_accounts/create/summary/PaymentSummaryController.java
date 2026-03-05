@@ -25,7 +25,7 @@ import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccount;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -105,14 +105,14 @@ public class PaymentSummaryController implements Controller {
         Account<? extends DigitalAssetPaymentMethod, ?> account;
         CryptoAssetAccountPayload accountPayload = model.getAccountPayload();
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
+        KeyType keyType = KeyType.EC;
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload) {
             account = new MoneroAccount(StringUtils.createUid(),
                     System.currentTimeMillis(),
                     accountName,
                     moneroAccountPayload,
                     keyPair,
-                    keyAlgorithm,
+                    keyType,
                     AccountOrigin.BISQ2_NEW);
         } else if (accountPayload instanceof OtherCryptoAssetAccountPayload otherCryptoAssetAccountPayload) {
             account = new OtherCryptoAssetAccount(StringUtils.createUid(),
@@ -120,7 +120,7 @@ public class PaymentSummaryController implements Controller {
                     accountName,
                     otherCryptoAssetAccountPayload,
                     keyPair,
-                    keyAlgorithm,
+                    keyType,
                     AccountOrigin.BISQ2_NEW);
         } else {
             throw new UnsupportedOperationException("Unsupported accountPayload " + accountPayload.getClass().getSimpleName());

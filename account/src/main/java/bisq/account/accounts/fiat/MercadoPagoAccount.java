@@ -20,7 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,9 +39,9 @@ public final class MercadoPagoAccount extends Account<FiatPaymentMethod, Mercado
                               String accountName,
                               MercadoPagoAccountPayload accountPayload,
                               KeyPair keyPair,
-                              KeyAlgorithm keyAlgorithm,
+                              KeyType keyType,
                               AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
     }
 
     @Override
@@ -59,14 +59,14 @@ public final class MercadoPagoAccount extends Account<FiatPaymentMethod, Mercado
     }
 
     public static MercadoPagoAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new MercadoPagoAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 MercadoPagoAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
-                keyAlgorithm,
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                keyType,
                 accountOrigin);
     }
 }
