@@ -127,7 +127,7 @@ public final class SbpAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 mobileNumber,

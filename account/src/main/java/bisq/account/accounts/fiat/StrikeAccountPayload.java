@@ -89,7 +89,7 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = holderName.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

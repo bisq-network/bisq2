@@ -187,7 +187,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         String holderNameValue = holderName.orElse("");
         String holderIdValue = BankAccountUtils.isHolderIdRequired(countryCode) ? holderId.orElse("") : "";
         String nationalAccountIdValue = BankAccountUtils.isNationalAccountIdRequired(countryCode) ? nationalAccountId.orElse("") : "";

@@ -148,7 +148,7 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 iban,

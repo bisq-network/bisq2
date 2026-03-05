@@ -101,7 +101,7 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = accountData.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

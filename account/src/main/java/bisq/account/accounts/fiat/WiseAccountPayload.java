@@ -132,7 +132,7 @@ public final class WiseAccountPayload extends AccountPayload<FiatPaymentMethod> 
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 email

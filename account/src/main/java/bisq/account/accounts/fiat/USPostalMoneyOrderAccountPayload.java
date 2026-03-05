@@ -102,7 +102,7 @@ public final class USPostalMoneyOrderAccountPayload extends CountryBasedAccountP
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 postalAddress

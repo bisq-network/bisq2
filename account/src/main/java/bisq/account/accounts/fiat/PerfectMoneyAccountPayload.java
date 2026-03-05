@@ -114,7 +114,7 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = accountNr.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

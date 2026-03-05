@@ -91,7 +91,7 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = virtualPaymentAddress.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }
