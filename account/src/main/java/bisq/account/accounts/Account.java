@@ -119,14 +119,4 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
     public List<String> getSupportedCurrencyCodes() {
         return getPaymentMethod().getSupportedCurrencyCodes();
     }
-
-    public String getSignatureAlgorithm() {
-        return getSignatureAlgorithm(keyType);
-    }
-
-    public static String getSignatureAlgorithm(KeyType keyType) {
-        return keyType == KeyType.EC
-                ? SignatureUtil.SHA256withECDSA
-                : SignatureUtil.SHA256withDSA;
-    }
 }

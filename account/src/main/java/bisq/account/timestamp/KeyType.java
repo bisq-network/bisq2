@@ -19,17 +19,22 @@ package bisq.account.timestamp;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.security.SignatureUtil;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 
 public enum KeyType implements ProtoEnum {
-    DSA("DSA"),
-    EC("EC");
+    DSA(KeyGeneration.DSA, SignatureUtil.SHA256withDSA),
+    EC(KeyGeneration.EC, SignatureUtil.SHA256withECDSA);
 
     @Getter
     private final String keyAlgorithm;
+    @Getter
+    private final String signatureAlgorithm;
 
-    KeyType(String keyAlgorithm) {
+    KeyType(String keyAlgorithm, String signatureAlgorithm) {
         this.keyAlgorithm = keyAlgorithm;
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 
     @Override

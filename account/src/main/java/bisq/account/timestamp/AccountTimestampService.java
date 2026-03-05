@@ -194,7 +194,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] saltedFingerprint = getSaltedFingerprint(account.getAccountPayload());
         byte[] message = accountTimestamp.toProto(true).toByteArray();
         try {
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getSignatureAlgorithm());
+            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getKeyType().getSignatureAlgorithm());
             TimestampType timestampType = account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED
                     ? TimestampType.BISQ1_IMPORTED
                     : TimestampType.BISQ2_NEW;
@@ -290,7 +290,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         boolean isValid = SignatureUtil.verify(message,
                 signature,
                 publicKey,
-                Account.getSignatureAlgorithm(keyType));
+                keyType.getSignatureAlgorithm());
         checkArgument(isValid, "Signature verification failed");
     }
 
