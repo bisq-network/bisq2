@@ -34,7 +34,6 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyType;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
