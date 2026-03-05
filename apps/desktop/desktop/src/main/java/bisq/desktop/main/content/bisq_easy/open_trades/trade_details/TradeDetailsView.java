@@ -26,7 +26,6 @@ import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -35,7 +34,11 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createAndGetDescriptionAndValueBox;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createSeparatorLine;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getDescriptionLabel;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getValueLabel;
 
 @Slf4j
 public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
@@ -81,7 +84,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         peerLabel = getValueLabel();
         HBox tradersAndRoleDetailsHBox = new HBox(5, mePrefixLabel, meLabel, offerTypeAndRoleSlashLabel, peerPrefixLabel, peerLabel);
         tradersAndRoleDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-        tradersAndRoleCopyButton = getBisqMenuItem(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.copy"));
+        tradersAndRoleCopyButton = getCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.copy"));
         HBox tradersAndRoleBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradersAndRole",
                 tradersAndRoleDetailsHBox, tradersAndRoleCopyButton);
 
@@ -135,33 +138,33 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
 
         // Trade ID
         tradeIdLabel = getValueLabel();
-        tradeIdCopyButton = getBisqMenuItem(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
+        tradeIdCopyButton = getCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
         HBox tradeIdBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeId",
                 tradeIdLabel, tradeIdCopyButton);
 
         // Peer network address
         peerNetworkAddressLabel = getValueLabel();
-        peerNetworkAddressCopyButton = getBisqMenuItem(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress.copy"));
+        peerNetworkAddressCopyButton = getCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress.copy"));
         HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.peerNetworkAddress",
                 peerNetworkAddressLabel, peerNetworkAddressCopyButton);
 
         // Payment account data
         paymentAccountDataLabel = getValueLabel();
-        paymentAccountDataCopyButton = getBisqMenuItem(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
+        paymentAccountDataCopyButton = getCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
         HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
                 paymentAccountDataLabel, paymentAccountDataCopyButton);
 
         // BTC payment address
         btcPaymentAddressTitleLabel = getDescriptionLabel("");
         btcPaymentAddressDetailsLabel = getValueLabel();
-        btcPaymentAddressCopyButton = getBisqMenuItem("");
+        btcPaymentAddressCopyButton = getCopyButton("");
         HBox btcPaymentAddressBox = createAndGetDescriptionAndValueBox(btcPaymentAddressTitleLabel,
                 btcPaymentAddressDetailsLabel, btcPaymentAddressCopyButton);
 
         // Payment proof (tx ID or optional LN pre-image)
         paymentProofTitleLabel = getDescriptionLabel("");
         paymentProofDetailsLabel = getValueLabel();
-        paymentProofCopyButton = getBisqMenuItem("");
+        paymentProofCopyButton = getCopyButton("");
         paymentProofBox = createAndGetDescriptionAndValueBox(paymentProofTitleLabel,
                 paymentProofDetailsLabel, paymentProofCopyButton);
 
@@ -169,12 +172,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         assignedMediatorLabel = getValueLabel();
         assignedMediatorBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
 
-        Region overviewLine = getLine();
+        Region overviewLine = createSeparatorLine();
         Label overviewLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.overview").toUpperCase());
         overviewLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         Label detailsLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.details").toUpperCase());
         detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
-        Region detailsLine = getLine();
+        Region detailsLine = createSeparatorLine();
 
         VBox.setMargin(headline, new Insets(-5, 0, 5, 0));
         VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
@@ -298,69 +301,4 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         paymentProofCopyButton.setOnAction(null);
     }
 
-    private HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node valueNode) {
-        return createAndGetDescriptionAndValueBox(descriptionKey, valueNode, Optional.empty());
-    }
-
-    private HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node detailsNode, BisqMenuItem button) {
-        return createAndGetDescriptionAndValueBox(descriptionKey, detailsNode, Optional.of(button));
-    }
-
-    private HBox createAndGetDescriptionAndValueBox(String descriptionKey,
-                                                    Node detailsNode,
-                                                    Optional<BisqMenuItem> button) {
-        return createAndGetDescriptionAndValueBox(getDescriptionLabel(Res.get(descriptionKey)), detailsNode, button);
-    }
-
-    private HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
-                                                    Node detailsNode,
-                                                    BisqMenuItem button) {
-        return createAndGetDescriptionAndValueBox(descriptionLabel, detailsNode, Optional.of(button));
-    }
-
-    private HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
-                                                    Node detailsNode,
-                                                    Optional<BisqMenuItem> button) {
-        double width = 180;
-        descriptionLabel.setMaxWidth(width);
-        descriptionLabel.setMinWidth(width);
-        descriptionLabel.setPrefWidth(width);
-
-        HBox hBox = new HBox(descriptionLabel, detailsNode);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
-
-        if (button.isPresent()) {
-            button.get().useIconOnly(17);
-            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
-            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
-        }
-        return hBox;
-    }
-
-    private static BisqMenuItem getBisqMenuItem(String tooltip) {
-        BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
-        bisqMenuItem.setTooltip(tooltip);
-        return bisqMenuItem;
-    }
-
-    private static Label getDescriptionLabel(String description) {
-        Label label = new Label(description);
-        label.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text", "font-light");
-        return label;
-    }
-
-    private static Label getValueLabel() {
-        Label label = new Label();
-        label.getStyleClass().addAll("text-fill-white", "normal-text", "font-light");
-        return label;
-    }
-
-    private Region getLine() {
-        Region line = new Region();
-        line.setMinHeight(1);
-        line.setMaxHeight(1);
-        line.getStyleClass().add("separator-line");
-        line.setPadding(new Insets(9, 0, 8, 0));
-        return line;
-    }
 }
