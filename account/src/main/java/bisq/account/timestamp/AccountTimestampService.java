@@ -140,7 +140,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
                                                          AccountPayload<?> accountPayload,
                                                          PublicKey publicKey,
                                                          byte[] signature,
-                                                         KeyAlgorithm keyAlgorithm) {
+                                                         KeyType keyType) {
         try {
             byte[] fingerprint = accountPayload.getBisq1CompatibleFingerprint();
             byte[] salt = accountPayload.getSalt();
@@ -149,7 +149,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
             verifySignature(accountTimestamp,
                     publicKey,
                     signature,
-                    keyAlgorithm);
+                    keyType);
             return Result.success(true);
         } catch (Exception e) {
             log.warn("verifyAccountTimestamp failed", e);
@@ -203,7 +203,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
                     saltedFingerprint,
                     publicKeyEncoded,
                     signature,
-                    account.getKeyAlgorithm());
+                    account.getKeyType());
 
             authorizedBondedRolesService.getAuthorizedOracleNodes()
                     .forEach(oracleNode ->
@@ -274,23 +274,23 @@ public class AccountTimestampService implements Service, DataService.Listener {
     }
 
     public static void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
-        KeyAlgorithm keyAlgorithm = request.getKeyAlgorithm();
-        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyAlgorithm.getAlgorithm());
+        KeyType keyType = request.getKeyType();
+        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyType.getKeyAlgorithm());
         verifySignature(request.getAccountTimestamp(),
                 publicKey,
                 request.getSignature(),
-                keyAlgorithm);
+                keyType);
     }
 
     public static void verifySignature(AccountTimestamp accountTimestamp,
                                        PublicKey publicKey,
                                        byte[] signature,
-                                       KeyAlgorithm keyAlgorithm) throws GeneralSecurityException {
+                                       KeyType keyType) throws GeneralSecurityException {
         byte[] message = accountTimestamp.toProto(true).toByteArray();
         boolean isValid = SignatureUtil.verify(message,
                 signature,
                 publicKey,
-                Account.getSignatureAlgorithm(keyAlgorithm));
+                Account.getSignatureAlgorithm(keyType));
         checkArgument(isValid, "Signature verification failed");
     }
 

@@ -22,7 +22,7 @@ import bisq.account.accounts.fiat.CashDepositAccount;
 import bisq.account.accounts.fiat.CashDepositAccountPayload;
 import bisq.account.accounts.fiat.BankAccountType;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,7 +68,7 @@ public final class ImportCashDepositAccountParser extends ImportBankAccountParse
                 accountName,
                 accountPayload,
                 dsaKeyPair,
-                KeyAlgorithm.DSA,
+                KeyType.DSA,
                 AccountOrigin.BISQ1_IMPORTED);
     }
 }

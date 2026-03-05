@@ -1,7 +1,7 @@
 package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 
@@ -14,9 +14,9 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
                               String accountName,
                               AchTransferAccountPayload accountPayload,
                               KeyPair keyPair,
-                              KeyAlgorithm keyAlgorithm,
+                              KeyType keyType,
                               AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
     }
 
     @Override
@@ -34,14 +34,14 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
     }
 
     public static AchTransferAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyAlgorithm keyAlgorithm = KeyAlgorithm.fromProto(proto.getKeyAlgorithm());
+        KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new AchTransferAccount(proto.getId(),
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 AchTransferAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyAlgorithm.getAlgorithm()),
-                keyAlgorithm,
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                keyType,
                 accountOrigin);
     }
 }

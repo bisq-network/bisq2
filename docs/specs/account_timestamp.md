@@ -169,7 +169,7 @@ message AuthorizeAccountTimestampRequest {
   bytes saltedFingerprint = 3;
   bytes publicKey = 4;
   bytes signature = 5;
-  KeyAlgorithm keyAlgorithm = 6;
+  KeyTypr keyType = 6;
 }
 ```
 

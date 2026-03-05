@@ -19,7 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.protobuf.Account;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 import java.security.KeyPair;
@@ -30,9 +30,9 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
                        String accountName,
                        P accountPayload,
                        KeyPair keyPair,
-                       KeyAlgorithm keyAlgorithm,
+                       KeyType keyType,
                        AccountOrigin accountOrigin) {
-        super(id, creationDate, accountName, accountPayload, keyPair, keyAlgorithm, accountOrigin);
+        super(id, creationDate, accountName, accountPayload, keyPair, keyType, accountOrigin);
     }
 
     protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {

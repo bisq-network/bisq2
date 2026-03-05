@@ -21,7 +21,7 @@ import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UpiAccount;
 import bisq.account.accounts.fiat.UpiAccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +48,7 @@ public final class ImportUpiAccountParser extends ImportCountryBasedAccountParse
                 accountName,
                 accountPayload,
                 dsaKeyPair,
-                KeyAlgorithm.DSA,
+                KeyType.DSA,
                 AccountOrigin.BISQ1_IMPORTED);
     }
 }

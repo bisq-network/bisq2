@@ -21,7 +21,7 @@ import bisq.account.AccountService;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -91,14 +91,14 @@ public class LegacyCreatePaymentAccountController implements Controller {
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH,
                     "Account data must not be longer than 1000 characters");
             KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-            KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
+            KeyType keyType = KeyType.EC;
             UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), accountData);
             UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(StringUtils.createUid(),
                     System.currentTimeMillis(),
                     model.getAccountName(),
                     accountPayload,
                     keyPair,
-                    keyAlgorithm,
+                    keyType,
                     AccountOrigin.BISQ2_NEW);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);

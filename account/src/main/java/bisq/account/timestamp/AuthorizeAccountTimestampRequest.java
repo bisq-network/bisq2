@@ -47,20 +47,20 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     private final byte[] saltedFingerprint;
     private final byte[] publicKey;
     private final byte[] signature;
-    private final KeyAlgorithm keyAlgorithm;
+    private final KeyType keyType;
 
     public AuthorizeAccountTimestampRequest(TimestampType timestampType,
                                             AccountTimestamp accountTimestamp,
                                             byte[] saltedFingerprint,
                                             byte[] publicKey,
                                             byte[] signature,
-                                            KeyAlgorithm keyAlgorithm) {
+                                            KeyType keyType) {
         this.timestampType = timestampType;
         this.accountTimestamp = accountTimestamp;
         this.saltedFingerprint = saltedFingerprint;
         this.publicKey = publicKey;
         this.signature = signature;
-        this.keyAlgorithm = keyAlgorithm;
+        this.keyType = keyType;
 
         verify();
     }
@@ -80,7 +80,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
                 .setSaltedFingerprint(ByteString.copyFrom(saltedFingerprint))
                 .setPublicKey(ByteString.copyFrom(publicKey))
                 .setSignature(ByteString.copyFrom(signature))
-                .setKeyAlgorithm(keyAlgorithm.toProtoEnum());
+                .setKeyType(keyType.toProtoEnum());
     }
 
     @Override
@@ -95,7 +95,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
                 proto.getSaltedFingerprint().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getSignature().toByteArray(),
-                KeyAlgorithm.fromProto(proto.getKeyAlgorithm())
+                KeyType.fromProto(proto.getKeyType())
         );
     }
 
@@ -119,7 +119,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
     public boolean equals(Object o) {
         if (!(o instanceof AuthorizeAccountTimestampRequest that)) return false;
 
-        return Objects.equals(metaData, that.metaData) && timestampType == that.timestampType && Objects.equals(accountTimestamp, that.accountTimestamp) && Arrays.equals(saltedFingerprint, that.saltedFingerprint) && Arrays.equals(publicKey, that.publicKey) && Arrays.equals(signature, that.signature) && keyAlgorithm == that.keyAlgorithm;
+        return Objects.equals(metaData, that.metaData) && timestampType == that.timestampType && Objects.equals(accountTimestamp, that.accountTimestamp) && Arrays.equals(saltedFingerprint, that.saltedFingerprint) && Arrays.equals(publicKey, that.publicKey) && Arrays.equals(signature, that.signature) && keyType == that.keyType;
     }
 
     @Override
@@ -130,7 +130,7 @@ public final class AuthorizeAccountTimestampRequest implements MailboxMessage, E
         result = 31 * result + Arrays.hashCode(saltedFingerprint);
         result = 31 * result + Arrays.hashCode(publicKey);
         result = 31 * result + Arrays.hashCode(signature);
-        result = 31 * result + Objects.hashCode(keyAlgorithm);
+        result = 31 * result + Objects.hashCode(keyType);
         return result;
     }
 }

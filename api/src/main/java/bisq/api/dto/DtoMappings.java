@@ -21,7 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.timestamp.KeyAlgorithm;
+import bisq.account.timestamp.KeyType;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
@@ -1171,14 +1171,14 @@ public class DtoMappings {
                                 payloadDto.accountData()
                         );
                         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-                        KeyAlgorithm keyAlgorithm = KeyAlgorithm.EC;
+                        KeyType keyType = KeyType.EC;
                         yield new UserDefinedFiatAccount(
                                 bisq.common.util.StringUtils.createUid(),
                                 System.currentTimeMillis(),
                                 userDefinedDto.accountName(),
                                 payload,
                                 keyPair,
-                                keyAlgorithm,
+                                keyType,
                                 AccountOrigin.BISQ2_NEW
                         );
                     }
