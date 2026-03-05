@@ -57,6 +57,8 @@ import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
+import bisq.support.mediation.mu_sig.MuSigPaymentDetailsRequest;
+import bisq.support.mediation.mu_sig.MuSigPaymentDetailsResponse;
 import bisq.trade.MuSigDisputeState;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
@@ -294,7 +296,17 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage message) {
             maybeApplyDisputeStateFromMediationStateChangeMessage(message);
         } else if (envelopePayloadMessage instanceof MuSigMediationResultAcceptanceMessage message) {
+            if (bannedUserService.isUserProfileBanned(message.getSenderUserProfileId())) {
+                log.warn("Ignoring MuSigMediationResultAcceptanceMessage as sender is banned");
+                return;
+            }
             maybeApplyMediationResultAcceptanceMessage(message);
+        } else if (envelopePayloadMessage instanceof MuSigPaymentDetailsRequest message) {
+            if (bannedUserService.isUserProfileBanned(message.getSenderUserProfileId())) {
+                log.warn("Ignoring MuSigPaymentDetailsRequest as sender is banned");
+                return;
+            }
+            maybeReplyWithPaymentDetails(message);
         }
     }
 
@@ -373,7 +385,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     trade.getId());
             return false;
         }
-        if (!trade.getMyself().setMediationResultAcceptance(mediationResultAccepted)) {
+        if (!trade.getMyself().setMediationResultAccepted(mediationResultAccepted)) {
             return false;
         }
 
@@ -758,9 +770,43 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 return;
             }
 
-            if (trade.getPeer().setMediationResultAcceptance(message.isMediationResultAccepted())) {
+            if (trade.getPeer().setMediationResultAccepted(message.isMediationResultAccepted())) {
                 persist();
             }
         });
+    }
+
+    private void maybeReplyWithPaymentDetails(MuSigPaymentDetailsRequest message) {
+        findTrade(message.getTradeId()).ifPresentOrElse(trade -> {
+            Optional<UserProfile> mediator = trade.getContract().getMediator();
+            if (mediator.isEmpty()) {
+                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} because mediator is missing in contract.",
+                        message.getTradeId());
+                return;
+            }
+            UserProfile mediatorUserProfile = mediator.orElseThrow();
+            if (!mediatorUserProfile.getId().equals(message.getSenderUserProfileId())) {
+                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} with unexpected senderUserProfileId {}.",
+                        message.getTradeId(), message.getSenderUserProfileId());
+                return;
+            }
+
+            if (trade.getMyself().getAccountPayload().isEmpty() || trade.getPeer().getAccountPayload().isEmpty()) {
+                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} because account payloads are incomplete.",
+                        message.getTradeId());
+                return;
+            }
+
+            Identity myIdentity = identityService.findAnyIdentityByNetworkId(trade.getMyself().getNetworkId()).orElseThrow();
+            MuSigPaymentDetailsResponse paymentDetailsResponse = new MuSigPaymentDetailsResponse(
+                    message.getTradeId(),
+                    trade.getTaker().getAccountPayload().orElseThrow(),
+                    trade.getMaker().getAccountPayload().orElseThrow(),
+                    myIdentity.getId()
+            );
+            networkService.confidentialSend(paymentDetailsResponse,
+                    mediatorUserProfile.getNetworkId(),
+                    myIdentity.getNetworkIdWithKeyPair());
+        }, () -> log.warn("Ignoring MuSigPaymentDetailsRequest for unknown trade {}.", message.getTradeId()));
     }
 }

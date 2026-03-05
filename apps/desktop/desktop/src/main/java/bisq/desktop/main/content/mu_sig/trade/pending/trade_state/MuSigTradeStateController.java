@@ -77,7 +77,7 @@ public class MuSigTradeStateController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private final Optional<ResendMessageService> resendMessageService;
     private Pin tradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
-            requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin, mediationResultAcceptancePin;
+            requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin, mediationResultAcceptedPin;
     private Subscription channelPin;
 
     public MuSigTradeStateController(ServiceProvider serviceProvider) {
@@ -126,12 +126,12 @@ public class MuSigTradeStateController implements Controller {
 
             MuSigTrade trade = optionalMuSigTrade.get();
             model.getTrade().set(trade);
-            model.getMyMediationResultAcceptance().set(trade.getMyself().getMediationResultAcceptance());
+            model.getMyMediationResultAccepted().set(trade.getMyself().getMediationResultAccepted());
 
             isInMediationPin = trade.disputeStateObservable().addObserver(disputeState ->
                     UIThread.run(() -> model.getIsInMediation().set(shouldShowMediationBanner(disputeState))));
-            mediationResultAcceptancePin = trade.getMyself().mediationResultAcceptanceObservable().addObserver(acceptance ->
-                    UIThread.run(() -> model.getMyMediationResultAcceptance().set(acceptance)));
+            mediationResultAcceptedPin = trade.getMyself().mediationResultAcceptedObservable().addObserver(accepted ->
+                    UIThread.run(() -> model.getMyMediationResultAccepted().set(accepted)));
 
             muSigTradePhaseBox.setMuSigTrade(trade);
 
@@ -393,9 +393,9 @@ public class MuSigTradeStateController implements Controller {
             isInMediationPin.unbind();
             isInMediationPin = null;
         }
-        if (mediationResultAcceptancePin != null) {
-            mediationResultAcceptancePin.unbind();
-            mediationResultAcceptancePin = null;
+        if (mediationResultAcceptedPin != null) {
+            mediationResultAcceptedPin.unbind();
+            mediationResultAcceptedPin = null;
         }
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();

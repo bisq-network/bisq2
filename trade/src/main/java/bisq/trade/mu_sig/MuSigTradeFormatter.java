@@ -97,4 +97,10 @@ public final class MuSigTradeFormatter {
             case BUYER_AS_MAKER, SELLER_AS_MAKER -> Res.get("bisqEasy.openTrades.table.makerTakerRole.maker");
         };
     }
+
+    public static String getMakerTakerRole(boolean isMaker) {
+        return isMaker
+                ? Res.get("bisqEasy.openTrades.table.makerTakerRole.maker")
+                : Res.get("bisqEasy.openTrades.table.makerTakerRole.taker");
+    }
 }

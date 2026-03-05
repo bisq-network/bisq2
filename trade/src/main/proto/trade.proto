@@ -221,7 +221,7 @@ message MuSigTradeParty {
   optional musigrpc.CloseTradeResponse myCloseTradeResponse = 11;
   optional common.ByteArray peersOutputPrvKeyShare = 12;
   optional account.AccountPayload accountPayload = 13;
-  optional bool mediationResultAcceptance = 14;
+  optional bool mediationResultAccepted = 14;
 }
 
 enum MuSigDisputeState {

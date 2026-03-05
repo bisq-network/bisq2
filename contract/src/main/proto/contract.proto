@@ -95,5 +95,5 @@ message MuSigContract {
   account.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
   optional user.UserProfile mediator = 5;
   offer.PriceSpec priceSpec =6;
-  sint64 marketPrice =7;
+  sint64 marketPrice = 7;
 }
