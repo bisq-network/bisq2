@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getLine;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createSeparatorLine;
 
 @Slf4j
 public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMediationCaseDetailsModel, MuSigMediationCaseDetailsController> {
@@ -107,7 +107,7 @@ public class MuSigMediationCaseDetailsView extends NavigationView<VBox, MuSigMed
         Label sectionLabel = new Label(sectionLabelText.toUpperCase());
         sectionLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         VBox.setMargin(sectionLabel, new Insets(sectionLabelTopMargin, 0, -5, 0));
-        Region sectionLine = getLine();
+        Region sectionLine = createSeparatorLine();
         VBox section = new VBox(10, sectionLabel, sectionLine, sectionContent);
         section.setAlignment(Pos.CENTER_LEFT);
         return section;

@@ -54,10 +54,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
 
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.createAndGetDescriptionAndValueBox;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getCopyButton;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getDescriptionLabel;
-import static bisq.desktop.main.content.authorized_role.mediator.mu_sig.components.MuSigMediationCaseDetailsViewHelper.getValueLabel;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createAndGetDescriptionAndValueBox;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getDescriptionLabel;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getValueLabel;
 
 public class MuSigMediationCaseOverviewSection {
 

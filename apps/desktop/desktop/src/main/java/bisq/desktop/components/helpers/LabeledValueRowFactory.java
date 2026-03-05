@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
+package bisq.desktop.components.helpers;
 
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -29,7 +29,7 @@ import javafx.scene.layout.Region;
 
 import java.util.Optional;
 
-public class MuSigMediationCaseDetailsViewHelper {
+public class LabeledValueRowFactory {
 
     public static HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node valueNode) {
         return createAndGetDescriptionAndValueBox(descriptionKey, valueNode, Optional.empty());
@@ -90,7 +90,7 @@ public class MuSigMediationCaseDetailsViewHelper {
         return bisqMenuItem;
     }
 
-    public static Region getLine() {
+    public static Region createSeparatorLine() {
         Region line = new Region();
         line.setMinHeight(1);
         line.setMaxHeight(1);

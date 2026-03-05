@@ -39,6 +39,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createSeparatorLine;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
+
 // Use offer creation review screen as design template
 @Slf4j
 public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsModel, BisqEasyOfferDetailsController> {
@@ -83,7 +86,7 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
         gridPane.add(overviewHeadline, 0, rowIndex);
 
         rowIndex++;
-        Region line1 = getLine();
+        Region line1 = createSeparatorLine();
         GridPane.setMargin(line1, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line1, 4);
         gridPane.add(line1, 0, rowIndex);
@@ -181,7 +184,7 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
         gridPane.add(detailsHeadline, 0, rowIndex);
 
         rowIndex++;
-        Region line2 = getLine();
+        Region line2 = createSeparatorLine();
         GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
         GridPane.setColumnSpan(line2, 4);
         gridPane.add(line2, 0, rowIndex);
@@ -195,7 +198,7 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
 
         offerId = new Label();
         offerId.getStyleClass().add(valueStyle);
-        offerIdCopyButton = getBisqMenuItem(Res.get("action.copyToClipboard"));
+        offerIdCopyButton = getCopyButton(Res.get("action.copyToClipboard"));
         HBox offerIdBox = new HBox(offerId, Spacer.fillHBox(), offerIdCopyButton);
         GridPane.setColumnSpan(offerIdBox, 3);
         gridPane.add(offerIdBox, 1, rowIndex);
@@ -276,18 +279,4 @@ public class BisqEasyOfferDetailsView extends View<VBox, BisqEasyOfferDetailsMod
         offerIdCopyButton.setOnAction(null);
     }
 
-    private static BisqMenuItem getBisqMenuItem(String tooltip) {
-        BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
-        bisqMenuItem.setTooltip(tooltip);
-        return bisqMenuItem;
-    }
-
-    private Region getLine() {
-        Region line = new Region();
-        line.setMinHeight(1);
-        line.setMaxHeight(1);
-        line.getStyleClass().add("separator-line");
-        line.setPadding(new Insets(9, 0, 8, 0));
-        return line;
-    }
 }
