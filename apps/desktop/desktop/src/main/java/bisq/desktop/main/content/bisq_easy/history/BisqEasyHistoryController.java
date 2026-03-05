@@ -24,6 +24,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -102,6 +103,10 @@ public class BisqEasyHistoryController implements Controller {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
                 new TradeDetailsController.InitData(item.getTrade(), item.getMyUserProfile(), item.getPeerProfile(),
                         item.getTrade().getContract().getMediator()));
+    }
+
+    void onExportTradeData(BisqEasyTrade trade) {
+        OpenTradesUtils.exportTrade(trade, getView().getRoot().getScene());
     }
 
     private void applyPredicates() {
