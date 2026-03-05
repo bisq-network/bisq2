@@ -25,7 +25,6 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
@@ -134,27 +133,6 @@ public class AccountTimestampService implements Service, DataService.Listener {
                     AccountTimestamp accountTimestamp = new AccountTimestamp(hash, account.getCreationDate());
                     sendAccountTimestampRequest(account, accountTimestamp);
                 });
-    }
-
-    public static Result<Boolean> verifyAccountTimestamp(AccountTimestamp accountTimestamp,
-                                                         AccountPayload<?> accountPayload,
-                                                         PublicKey publicKey,
-                                                         byte[] signature,
-                                                         KeyType keyType) {
-        try {
-            byte[] fingerprint = accountPayload.getBisq1CompatibleFingerprint();
-            byte[] salt = accountPayload.getSalt();
-            byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
-            verifyHash(saltedFingerprint, publicKey.getEncoded(), accountTimestamp);
-            verifySignature(accountTimestamp,
-                    publicKey,
-                    signature,
-                    keyType);
-            return Result.success(true);
-        } catch (Exception e) {
-            log.warn("verifyAccountTimestamp failed", e);
-            return Result.failure(e);
-        }
     }
 
     public ReadOnlyObservableMap<ByteArray, AccountTimestamp> getAccountTimestampByHash() {
