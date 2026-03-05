@@ -54,6 +54,7 @@ public class NetworkDataValidation {
                 "Signature not of the expected size. signature=" + Arrays.toString(signature));
     }
 
+    // ECPubKey is usually 88–91 bytes
     public static void validateECPubKey(byte[] pubKey) {
         checkArgument(pubKey.length > 50 && pubKey.length < 100,
                 "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
@@ -121,6 +122,13 @@ public class NetworkDataValidation {
     }
 
     public static void validateByteArray(byte[] bytes, int maxLength) {
+        checkArgument(bytes.length <= maxLength,
+                "Byte array must not be longer than " + maxLength + ". bytes.length=" + bytes.length);
+    }
+
+    public static void validateByteArray(byte[] bytes, int minLength, int maxLength) {
+        checkArgument(bytes.length >= minLength,
+                "Byte array must not be shorter than " + minLength + ". bytes.length=" + bytes.length);
         checkArgument(bytes.length <= maxLength,
                 "Byte array must not be longer than " + maxLength + ". bytes.length=" + bytes.length);
     }
