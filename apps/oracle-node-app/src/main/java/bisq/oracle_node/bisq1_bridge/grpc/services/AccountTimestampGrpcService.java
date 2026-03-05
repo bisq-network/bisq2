@@ -42,7 +42,7 @@ public class AccountTimestampGrpcService implements Service {
             AccountTimestampResponse response = AccountTimestampResponse.fromProto(protoResponse);
             return Result.success(response.getDate());
         } catch (StatusRuntimeException e) {
-            log.info("requestAccountTimestamp failed with StatusRuntimeException", e);
+            log.info("requestAccountTimestamp failed with StatusRuntimeException. Status={}", e.getStatus(), e);
             return Result.failure(e);
         } catch (Exception e) {
             log.warn("requestAccountTimestamp failed", e);

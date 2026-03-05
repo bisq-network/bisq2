@@ -115,13 +115,17 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
 
     protected byte[] getBisq2Fingerprint(byte[] data) {
         byte[] paymentMethodId = getPaymentMethodName().getBytes(StandardCharsets.UTF_8);
-        byte[] bytes = ByteArrayUtils.concat(
+        return ByteArrayUtils.concat(
                 FINGERPRINT_PREFIX, FINGERPRINT_SEPARATOR,
                 paymentMethodId, FINGERPRINT_SEPARATOR,
                 data
         );
-        return DigestUtil.hash(bytes);
     }
+
+    public byte[] getBisq2FingerprintHash() {
+        return DigestUtil.hash(getBisq2Fingerprint());
+    }
+
 
     /**
      * Joins an array of strings into a single byte array, using a predefined separator
@@ -129,7 +133,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
      *
      * @param values An array of strings to be joined. Null or empty strings are ignored.
      * @return A byte array resulting from the concatenation of the provided strings, separated by
-     *         a predefined byte sequence. Returns an empty byte array if all input strings are null or empty.
+     * a predefined byte sequence. Returns an empty byte array if all input strings are null or empty.
      */
     protected byte[] joinWithSeparator(String... values) {
         byte[] result = new byte[]{};

@@ -30,6 +30,7 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -37,6 +38,7 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -123,7 +125,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         byte[] hash = createHash(account);
         findAuthorizedAccountTimestamp(hash).findAny()
                 .ifPresentOrElse(authorizedAccountTimestamp -> {
-                    if (isHalfExpired(authorizedAccountTimestamp)) {
+                    if (shouldRepublish(authorizedAccountTimestamp)) {
                         // Republish
                         sendAccountTimestampRequest(account, authorizedAccountTimestamp.getAccountTimestamp());
                     }
@@ -139,7 +141,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
         return accountTimestampByHash;
     }
 
-    public Optional<Long> findAccountTimestamp(Account<?, ?> account) {
+    public Optional<Long> findAccountTimestampDate(Account<?, ?> account) {
         byte[] hash = createHash(account);
         AccountTimestamp accountTimestamp = accountTimestampByHash.get(new ByteArray(hash));
         return Optional.ofNullable(accountTimestamp).map(AccountTimestamp::getDate);
@@ -152,12 +154,19 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
     private void handleAuthorizedAccountTimestampAdded(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
         AccountTimestamp accountTimestamp = authorizedAccountTimestamp.getAccountTimestamp();
-        ByteArray accountTimestampHash = getAccountTimestampHash(accountTimestamp);
+        ByteArray accountTimestampHash = new ByteArray(accountTimestamp.getHash());
+        AccountTimestamp existing = accountTimestampByHash.get(accountTimestampHash);
+        if (existing != null && existing.getDate() != accountTimestamp.getDate()) {
+            log.warn("Our existing accountTimestamp date is different to the date of the newly added. " +
+                    "This should never happen. existing={} , authorizedAccountTimestamp={}", existing, authorizedAccountTimestamp);
+        }
         accountTimestampByHash.putIfAbsent(accountTimestampHash, accountTimestamp);
     }
 
     private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
-        accountTimestampByHash.remove(getAccountTimestampHash(authorizedAccountTimestamp.getAccountTimestamp()));
+        AccountTimestamp accountTimestamp = authorizedAccountTimestamp.getAccountTimestamp();
+        ByteArray accountTimestampHash = new ByteArray(accountTimestamp.getHash());
+        accountTimestampByHash.remove(accountTimestampHash);
     }
 
     private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
@@ -169,28 +178,64 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
         KeyPair keyPair = account.getKeyPair();
         byte[] publicKeyEncoded = keyPair.getPublic().getEncoded();
-        byte[] saltedFingerprint = getSaltedFingerprint(account.getAccountPayload());
-        byte[] message = accountTimestamp.toProto(true).toByteArray();
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+        long date = accountTimestamp.getDate();
+        byte[] hash = accountTimestamp.getHash();
+        byte[] salt = accountPayload.getSalt();
+        KeyType keyType = account.getKeyType();
+        String signatureAlgorithm = keyType.getSignatureAlgorithm();
         try {
-            byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), account.getKeyType().getSignatureAlgorithm());
-            TimestampType timestampType = account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED
-                    ? TimestampType.BISQ1_IMPORTED
-                    : TimestampType.BISQ2_NEW;
-            AuthorizeAccountTimestampRequest request = new AuthorizeAccountTimestampRequest(timestampType,
-                    accountTimestamp,
-                    saltedFingerprint,
-                    publicKeyEncoded,
-                    signature,
-                    account.getKeyType());
+            if (account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED) {
+                checkArgument(KeyType.DSA == keyType,
+                        "KeyType must be DSA for imported accounts");
+                // To ensure compatibility with Bisq 1 imported data, we use the byte arrays
+                // This has weaknesses to reveal the salt as it has a fixed length
+                byte[] fingerprint = accountPayload.getBisq1CompatibleFingerprint();
+                byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
+                AuthorizeAccountTimestampV1Payload payload = new AuthorizeAccountTimestampV1Payload(
+                        date,
+                        hash,
+                        fingerprint,
+                        saltedFingerprint,
+                        publicKeyEncoded
+                );
 
-            authorizedBondedRolesService.getAuthorizedOracleNodes()
-                    .forEach(oracleNode ->
-                            networkService.confidentialSend(request,
-                                    oracleNode.getNetworkId(),
-                                    selectedUserIdentity.getNetworkIdWithKeyPair()));
-        } catch (GeneralSecurityException e) {
+                byte[] message = payload.toProto(true).toByteArray();
+                byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), signatureAlgorithm);
+                AuthorizeAccountTimestampV1Request request = new AuthorizeAccountTimestampV1Request(payload, signature);
+                sendAuthorizeAccountTimestampRequest(request, selectedUserIdentity);
+            } else {
+                checkArgument(KeyType.EC == keyType,
+                        "KeyType must be EC for new accounts created in Bisq2.");
+                // We use 20 byte hashes instead of the byte arrays
+                byte[] fingerprintHash = accountPayload.getBisq2FingerprintHash();
+                byte[] saltedFingerprintHash = DigestUtil.hash(ByteArrayUtils.concat(fingerprintHash, salt));
+                AuthorizeAccountTimestampV2Payload payload = new AuthorizeAccountTimestampV2Payload(
+                        date,
+                        hash,
+                        fingerprintHash,
+                        saltedFingerprintHash,
+                        publicKeyEncoded
+                );
+
+                byte[] message = payload.toProto(true).toByteArray();
+                byte[] signature = SignatureUtil.sign(message, keyPair.getPrivate(), signatureAlgorithm);
+                AuthorizeAccountTimestampV2Request request = new AuthorizeAccountTimestampV2Request(payload, signature);
+                sendAuthorizeAccountTimestampRequest(request, selectedUserIdentity);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send accountTimestamp request", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private void sendAuthorizeAccountTimestampRequest(EnvelopePayloadMessage request,
+                                                      UserIdentity selectedUserIdentity) {
+        authorizedBondedRolesService.getAuthorizedOracleNodes()
+                .forEach(oracleNode ->
+                        networkService.confidentialSend(request,
+                                oracleNode.getNetworkId(),
+                                selectedUserIdentity.getNetworkIdWithKeyPair()));
     }
 
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
@@ -206,76 +251,100 @@ public class AccountTimestampService implements Service, DataService.Listener {
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
-    private static ByteArray getAccountTimestampHash(AccountTimestamp accountTimestamp) {
-        return new ByteArray(accountTimestamp.getHash());
-    }
-
-    private static byte[] getSaltedFingerprint(AccountPayload<?> accountPayload) {
-        byte[] salt = accountPayload.getSalt();
-        byte[] preimage = accountPayload.getBisq1CompatibleFingerprint();
-        return ByteArrayUtils.concat(preimage, salt);
-    }
-
     private static byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
         KeyPair keyPair = account.getKeyPair();
-        PublicKey publicKey = keyPair.getPublic();
-        byte[] publicKeyBytes = publicKey.getEncoded();
+        byte[] publicKey = keyPair.getPublic().getEncoded();
         AccountPayload<?> accountPayload = account.getAccountPayload();
 
         byte[] salt = accountPayload.getSalt();
-        byte[] fingerprint = accountPayload.getBisq1CompatibleFingerprint();
-        byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
-        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
-        byte[] hash = DigestUtil.hash(preimage);
 
-        log.debug("createHash:\npublicKeyBytes={}\n" +
-                        "salt={}\n" +
-                        "fingerprint={}\n" +
-                        "saltedFingerprint={}\n" +
-                        "preimage={}\n" +
-                        "hash={}", Hex.encode(publicKeyBytes), Hex.encode(salt),
-                Hex.encode(fingerprint), Hex.encode(saltedFingerprint),
-                Hex.encode(preimage), Hex.encode(hash));
-        return hash;
+        if (account.getAccountOrigin() == AccountOrigin.BISQ1_IMPORTED) {
+            byte[] fingerprint = accountPayload.getBisq1CompatibleFingerprint();
+            byte[] saltedFingerprint = ByteArrayUtils.concat(fingerprint, salt);
+            byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKey);
+            byte[] hash = DigestUtil.hash(preimage);
+            log.debug("createHashV1:\npublicKey={}\n" +
+                            "salt={}\n" +
+                            "fingerprint={}\n" +
+                            "saltedFingerprint={}\n" +
+                            "preimage={}\n" +
+                            "hash={}",
+                    Hex.encode(publicKey), Hex.encode(salt),
+                    Hex.encode(fingerprint), Hex.encode(saltedFingerprint),
+                    Hex.encode(preimage), Hex.encode(hash));
+            return hash;
+        } else {
+            byte[] fingerprintHash = accountPayload.getBisq2FingerprintHash();
+            byte[] saltedFingerprintHash = DigestUtil.hash(ByteArrayUtils.concat(fingerprintHash, salt));
+            byte[] preimage = ByteArrayUtils.concat(saltedFingerprintHash, publicKey);
+            byte[] hash = DigestUtil.hash(preimage);
+            log.debug("createHashV2:\npublicKey={}\n" +
+                            "salt={}\n" +
+                            "fingerprintHash={}\n" +
+                            "saltedFingerprintHash={}\n" +
+                            "preimage={}\n" +
+                            "hash={}",
+                    Hex.encode(publicKey), Hex.encode(salt),
+                    Hex.encode(fingerprintHash), Hex.encode(saltedFingerprintHash),
+                    Hex.encode(preimage), Hex.encode(hash));
+            return hash;
+        }
     }
 
-    public static void verifyHash(AuthorizeAccountTimestampRequest request) {
-        verifyHash(request.getSaltedFingerprint(), request.getPublicKey(), request.getAccountTimestamp());
+    public static void verifyHashV1(AuthorizeAccountTimestampV1Payload payload) {
+        verifyHash(payload.getSaltedFingerprint(), payload.getPublicKey(), payload.getHash());
     }
 
-    public static void verifyHash(byte[] saltedFingerprint, byte[] publicKeyBytes, AccountTimestamp accountTimestamp) {
-        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKeyBytes);
+    public static void verifyHashV2(AuthorizeAccountTimestampV2Payload payload) {
+        verifyHash(payload.getSaltedFingerprintHash(), payload.getPublicKey(), payload.getHash());
+    }
+
+    public static void verifyHash(byte[] saltedFingerprint,
+                                  byte[] publicKey,
+                                  byte[] payloadHash) {
+        byte[] preimage = ByteArrayUtils.concat(saltedFingerprint, publicKey);
         byte[] hash = DigestUtil.hash(preimage);
 
-        checkArgument(Arrays.equals(accountTimestamp.getHash(), hash),
+        checkArgument(Arrays.equals(payloadHash, hash),
                 "AccountTimestamp hash is not matching the hash from the calculated preimage");
     }
 
-    public static void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
-        KeyType keyType = request.getKeyType();
-        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyType.getKeyAlgorithm());
-        verifySignature(request.getAccountTimestamp(),
+    public static void verifySignatureV1(AuthorizeAccountTimestampV1Request request) throws GeneralSecurityException {
+        AuthorizeAccountTimestampV1Payload payload = request.getPayload();
+        KeyType keyType = KeyType.DSA;
+        PublicKey publicKey = KeyGeneration.generatePublic(payload.getPublicKey(), keyType.getKeyAlgorithm());
+        byte[] message = payload.toProto(true).toByteArray();
+        verifySignature(message,
                 publicKey,
                 request.getSignature(),
-                keyType);
+                keyType.getSignatureAlgorithm());
     }
 
-    public static void verifySignature(AccountTimestamp accountTimestamp,
-                                       PublicKey publicKey,
-                                       byte[] signature,
-                                       KeyType keyType) throws GeneralSecurityException {
-        byte[] message = accountTimestamp.toProto(true).toByteArray();
+    public static void verifySignatureV2(AuthorizeAccountTimestampV2Request request) throws GeneralSecurityException {
+        AuthorizeAccountTimestampV2Payload payload = request.getPayload();
+        KeyType keyType = KeyType.EC;
+        PublicKey publicKey = KeyGeneration.generatePublic(payload.getPublicKey(), keyType.getKeyAlgorithm());
+        byte[] message = payload.toProto(true).toByteArray();
+        verifySignature(message,
+                publicKey,
+                request.getSignature(),
+                keyType.getSignatureAlgorithm());
+    }
+
+    private static void verifySignature(byte[] message,
+                                        PublicKey publicKey,
+                                        byte[] signature,
+                                        String signatureAlgorithm) throws GeneralSecurityException {
         boolean isValid = SignatureUtil.verify(message,
                 signature,
                 publicKey,
-                keyType.getSignatureAlgorithm());
+                signatureAlgorithm);
         checkArgument(isValid, "Signature verification failed");
     }
 
-    private static boolean isHalfExpired(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+    private static boolean shouldRepublish(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
         long ttl = authorizedAccountTimestamp.getMetaData().getTtl();
         long halfExpiryDate = System.currentTimeMillis() - ttl / 2;
         return authorizedAccountTimestamp.getPublishDate() <= halfExpiryDate;
     }
-
 }

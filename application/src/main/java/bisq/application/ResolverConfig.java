@@ -18,7 +18,8 @@
 package bisq.application;
 
 import bisq.account.timestamp.AccountTimestamp;
-import bisq.account.timestamp.AuthorizeAccountTimestampRequest;
+import bisq.account.timestamp.AuthorizeAccountTimestampV1Request;
+import bisq.account.timestamp.AuthorizeAccountTimestampV2Request;
 import bisq.account.timestamp.AuthorizedAccountTimestamp;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
@@ -137,7 +138,8 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsRequest", MuSigPaymentDetailsRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsResponse", MuSigPaymentDetailsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampRequest", AuthorizeAccountTimestampRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV1Request", AuthorizeAccountTimestampV1Request.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV2Request", AuthorizeAccountTimestampV2Request.getNetworkMessageResolver());
 
 
         // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.

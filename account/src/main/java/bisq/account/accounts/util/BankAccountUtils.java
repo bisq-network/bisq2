@@ -237,12 +237,14 @@ public class BankAccountUtils {
     // support those where we expect users to have accounts like Brazil.
     // Note that the account age will only work for users who have the same language selected. This is also true for Bisq 1.
     public static String getBisq1CompatibleI18nAccountTypeName(BankAccountType bankAccountType) {
-        String language = LanguageRepository.getDefaultLanguageTag().toLowerCase(Locale.ROOT);
+        // Ensure that any region variants are covered (e.g. pt-BR, pt-PT -> pt)
+        Locale locale = Locale.forLanguageTag(LanguageRepository.getDefaultLanguageTag());
+        String language = locale.getLanguage().toLowerCase(Locale.ROOT);
         return switch (language) {
             case "en" -> bankAccountType == BankAccountType.CHECKING ? "Checking" : "Savings";
             case "cs" -> bankAccountType == BankAccountType.CHECKING ? "Kontrola" : "Úspory";
             case "es" -> bankAccountType == BankAccountType.CHECKING ? "Comprobando" : "Ahorros";
-            case "pt-br", "pt" -> bankAccountType == BankAccountType.CHECKING ? "Conta Corrente" : "Poupança";
+            case "pt" -> bankAccountType == BankAccountType.CHECKING ? "Conta Corrente" : "Poupança";
             default -> Res.get("paymentAccounts.bank.bankAccountType." + bankAccountType.name());
         };
     }

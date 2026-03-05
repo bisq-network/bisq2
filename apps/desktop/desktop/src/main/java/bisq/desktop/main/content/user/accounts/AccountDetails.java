@@ -151,7 +151,7 @@ public abstract class AccountDetails<A extends Account<?, ?>, R extends PaymentR
     protected void addAccountAge() {
         Label accountAgeLabel = addDescriptionAndValue(Res.get("paymentAccounts.accountAge"), Res.get("data.na"));
         accountTimestampByHashPin = accountTimestampService.getAccountTimestampByHash().addObserver(() -> {
-            accountTimestampService.findAccountTimestamp(account)
+            accountTimestampService.findAccountTimestampDate(account)
                     .ifPresent(date -> UIThread.run(() -> {
                         String accountAge = TimeFormatter.formatAgeInDays(date);
                         accountAgeLabel.setText(accountAge);

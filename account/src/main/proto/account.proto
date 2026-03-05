@@ -25,20 +25,40 @@ import "common.proto";
 import "security.proto";
 
 
-// TimestampType
-enum TimestampType {
-  TIMESTAMPTYPE_UNSPECIFIED = 0;
-  TIMESTAMPTYPE_BISQ1_IMPORTED = 1;
-  TIMESTAMPTYPE_BISQ2_NEW = 2;
+// AccountTimestamp
+
+message AccountTimestamp {
+  bytes hash = 1;
+  uint64 date = 2;
 }
-message AuthorizeAccountTimestampRequest {
-  TimestampType timestampType = 1;
-  AccountTimestamp accountTimestamp = 2;
-  bytes saltedFingerprint = 3;
-  bytes publicKey = 4;
-  bytes signature = 5;
-  KeyType keyType = 6;
+
+message AuthorizeAccountTimestampV1Payload {
+  uint64 date = 1;
+  bytes hash = 2;
+  bytes fingerprint = 3;
+  bytes saltedFingerprint = 4;
+  bytes publicKey = 5;
 }
+
+message AuthorizeAccountTimestampV1Request {
+  AuthorizeAccountTimestampV1Payload payload = 1;
+  bytes signature = 2;
+}
+
+
+message AuthorizeAccountTimestampV2Payload {
+  uint64 date = 1;
+  bytes hash = 2;
+  bytes fingerprintHash = 3;
+  bytes saltedFingerprintHash = 4;
+  bytes publicKey = 5;
+}
+
+message AuthorizeAccountTimestampV2Request {
+  AuthorizeAccountTimestampV2Payload payload = 1;
+  bytes signature = 2;
+}
+
 message AuthorizedAccountTimestamp {
   AccountTimestamp accountTimestamp = 1;
   bool staticPublicKeysProvided = 2;
@@ -595,8 +615,4 @@ message ZelleAccount {
 message AccountStore {
   map<string, Account> accountByName = 1;
   optional Account selectedAccount = 2;
-}
-message AccountTimestamp {
-  bytes hash = 1;
-  uint64 date = 2;
 }
