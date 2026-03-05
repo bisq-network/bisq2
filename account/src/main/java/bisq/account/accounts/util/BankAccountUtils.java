@@ -17,26 +17,51 @@
 
 package bisq.account.accounts.util;
 
+import bisq.account.accounts.fiat.BankAccountType;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class BankAccountUtils {
     public static boolean isBankAccountTypeRequired(String countryCode) {
-        return switch (countryCode) {
-            case "US", "BR", "CA", "IN" -> true;
-            default -> false;
-        };
+        return isBankAccountTypeRequired(countryCode, false);
+    }
+
+    public static boolean isBankAccountTypeRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return switch (countryCode) {
+                case "US", "BR", "CA" -> true;
+                default -> false;
+            };
+        } else {
+            return switch (countryCode) {
+                case "US", "BR", "CA", "IN" -> true;
+                default -> false;
+            };
+        }
     }
 
     public static boolean isHolderIdRequired(String countryCode) {
-        return switch (countryCode) {
-            case "BR", "CL", "AR", "IN", "SA", "ID" -> true;
-            default -> false;
-        };
+        return isHolderIdRequired(countryCode, false);
+    }
+
+    public static boolean isHolderIdRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return switch (countryCode) {
+                case "BR", "CL", "AR" -> true;
+                default -> false;
+            };
+        } else {
+            return switch (countryCode) {
+                case "BR", "CL", "AR", "IN", "SA", "ID" -> true;
+                default -> false;
+            };
+        }
     }
 
     public static String getHolderIdDescription(String countryCode) {
@@ -64,15 +89,34 @@ public class BankAccountUtils {
     }
 
     public static boolean isBankNameRequired(String countryCode) {
-        Set<String> notRequired = new HashSet<>(FiatPaymentRailUtil.getSepaNonEuroCountries());
-        return !notRequired.contains(countryCode);
+        return isBankNameRequired(countryCode, false);
+    }
+
+    public static boolean isBankNameRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return true;
+        } else {
+            Set<String> notRequired = new HashSet<>(FiatPaymentRailUtil.getSepaNonEuroCountries());
+            return !notRequired.contains(countryCode);
+        }
     }
 
     public static boolean isBankIdRequired(String countryCode) {
-        return switch (countryCode) {
-            case "BR", "SE", "CL", "AR", "NO" -> false;
-            default -> true;
-        };
+        return isBankIdRequired(countryCode, false);
+    }
+
+    public static boolean isBankIdRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return switch (countryCode) {
+                case "GB", "US", "BR", "NZ", "AU", "SE", "CL", "NO", "AR" -> false;
+                default -> true;
+            };
+        } else {
+            return switch (countryCode) {
+                case "BR", "SE", "CL", "AR", "NO" -> false;
+                default -> true;
+            };
+        }
     }
 
     public static String getBankIdDescription(String countryCode) {
@@ -99,10 +143,21 @@ public class BankAccountUtils {
     }
 
     public static boolean isBranchIdRequired(String countryCode) {
-        Set<String> notRequired = new HashSet<>(FiatPaymentRailUtil.getSepaNonEuroCountries());
-        notRequired.remove("GB");
-        notRequired.addAll(Set.of("NZ", "AU", "MX", "HK", "SE", "NO", "US", "IN", "JP"));
-        return !notRequired.contains(countryCode);
+        return isBranchIdRequired(countryCode, false);
+    }
+
+    public static boolean isBranchIdRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return switch (countryCode) {
+                case "NZ", "MX", "HK", "SE", "NO" -> false;
+                default -> true;
+            };
+        } else {
+            Set<String> notRequired = new HashSet<>(FiatPaymentRailUtil.getSepaNonEuroCountries());
+            notRequired.remove("GB");
+            notRequired.addAll(Set.of("NZ", "AU", "MX", "HK", "SE", "NO", "US", "IN", "JP"));
+            return !notRequired.contains(countryCode);
+        }
     }
 
     public static String getBranchIdDescription(String countryCode) {
@@ -141,11 +196,19 @@ public class BankAccountUtils {
     }
 
     public static boolean isNationalAccountIdRequired(String countryCode) {
-        //noinspection SwitchStatementWithTooFewBranches
-        return switch (countryCode) {
-            case "AR", "IN" -> true;
-            default -> false;
-        };
+        return isNationalAccountIdRequired(countryCode, false);
+    }
+
+    public static boolean isNationalAccountIdRequired(String countryCode, boolean useBisq1CompatibleVersion) {
+        if (useBisq1CompatibleVersion) {
+            return countryCode.equals("AR");
+        } else {
+            //noinspection SwitchStatementWithTooFewBranches
+            return switch (countryCode) {
+                case "AR", "IN" -> true;
+                default -> false;
+            };
+        }
     }
 
     public static String getNationalAccountIdDescription(String countryCode) {
@@ -165,6 +228,22 @@ public class BankAccountUtils {
             case "AR" -> "CBU";
             case "IN" -> "IFSC";
             default -> "";
+        };
+    }
+
+    // In Bisq 1 bankAccountType was using the translated strings (Checking, Savings).
+    // To support that, we use the selected language to select the i18n string, but we use copied values from Bisq1 instead of the i18n files
+    // to avoid breaking things when i18n files get updated. As national bank accounts are not used in many countries, we only
+    // support those where we expect users to have accounts like Brazil.
+    // Note that the account age will only work for users who have the same language selected. This is also true for Bisq 1.
+    public static String getBisq1CompatibleI18nAccountTypeName(BankAccountType bankAccountType) {
+        String language = LanguageRepository.getDefaultLanguageTag().toLowerCase(Locale.ROOT);
+        return switch (language) {
+            case "en" -> bankAccountType == BankAccountType.CHECKING ? "Checking" : "Savings";
+            case "cs" -> bankAccountType == BankAccountType.CHECKING ? "Kontrola" : "Úspory";
+            case "es" -> bankAccountType == BankAccountType.CHECKING ? "Comprobando" : "Ahorros";
+            case "pt-br", "pt" -> bankAccountType == BankAccountType.CHECKING ? "Conta Corrente" : "Poupança";
+            default -> Res.get("paymentAccounts.bank.bankAccountType." + bankAccountType.name());
         };
     }
 
