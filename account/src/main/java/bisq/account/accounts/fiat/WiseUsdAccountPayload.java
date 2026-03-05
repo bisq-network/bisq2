@@ -131,7 +131,7 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = ByteArrayUtils.concat(
                 holderName.getBytes(StandardCharsets.UTF_8), FINGERPRINT_SEPARATOR,
                 email.getBytes(StandardCharsets.UTF_8)

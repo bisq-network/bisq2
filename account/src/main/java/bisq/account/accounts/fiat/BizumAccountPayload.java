@@ -101,7 +101,7 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

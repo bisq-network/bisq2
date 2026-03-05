@@ -116,7 +116,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 sortCode,

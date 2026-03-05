@@ -124,7 +124,7 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 postalAddress,
                 contact

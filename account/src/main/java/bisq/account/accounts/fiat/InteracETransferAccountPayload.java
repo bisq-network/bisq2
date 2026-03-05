@@ -133,7 +133,7 @@ public final class InteracETransferAccountPayload extends CountryBasedAccountPay
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 email,

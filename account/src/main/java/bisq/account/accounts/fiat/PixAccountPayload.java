@@ -112,7 +112,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 pixKey

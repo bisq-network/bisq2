@@ -142,7 +142,7 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 city,
                 contact

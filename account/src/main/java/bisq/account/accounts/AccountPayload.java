@@ -111,7 +111,7 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         return ByteArrayUtils.concat(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
     }
 
-    public abstract byte[] getBisq2Fingerprint();
+    protected abstract byte[] getBisq2Fingerprint();
 
     protected byte[] getBisq2Fingerprint(byte[] data) {
         byte[] paymentMethodId = getPaymentMethodName().getBytes(StandardCharsets.UTF_8);

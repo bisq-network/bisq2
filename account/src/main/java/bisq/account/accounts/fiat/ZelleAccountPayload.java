@@ -114,7 +114,7 @@ public final class ZelleAccountPayload extends CountryBasedAccountPayload implem
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 emailOrMobileNr

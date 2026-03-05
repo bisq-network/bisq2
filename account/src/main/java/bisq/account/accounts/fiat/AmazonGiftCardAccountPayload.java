@@ -121,7 +121,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = emailOrMobileNr.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

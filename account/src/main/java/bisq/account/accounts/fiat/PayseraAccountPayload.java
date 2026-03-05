@@ -115,7 +115,7 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = email.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

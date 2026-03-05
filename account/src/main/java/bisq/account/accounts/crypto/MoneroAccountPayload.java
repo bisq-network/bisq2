@@ -161,7 +161,7 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] mainAddressBytes = mainAddress
                 .map(e -> e.getBytes(StandardCharsets.UTF_8))
                 .orElse(new byte[]{});

@@ -290,7 +290,7 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 beneficiaryName,
                 beneficiaryAccountNr,

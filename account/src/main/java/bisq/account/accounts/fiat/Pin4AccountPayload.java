@@ -102,7 +102,7 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = mobileNr.getBytes(StandardCharsets.UTF_8);
         return super.getBisq2Fingerprint(data);
     }

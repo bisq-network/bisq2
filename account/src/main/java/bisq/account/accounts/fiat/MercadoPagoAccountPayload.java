@@ -115,7 +115,7 @@ public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentM
     }
 
     @Override
-    public byte[] getBisq2Fingerprint() {
+    protected byte[] getBisq2Fingerprint() {
         byte[] data = joinWithSeparator(
                 holderName,
                 holderId
