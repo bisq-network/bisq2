@@ -63,7 +63,7 @@ public final class MoneyGramAccount extends CountryBasedAccount<MoneyGramAccount
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 MoneyGramAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

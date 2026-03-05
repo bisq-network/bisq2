@@ -64,7 +64,7 @@ public final class NeftAccount extends CountryBasedAccount<NeftAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 NeftAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

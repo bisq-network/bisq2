@@ -65,7 +65,7 @@ public final class PerfectMoneyAccount extends Account<FiatPaymentMethod, Perfec
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PerfectMoneyAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

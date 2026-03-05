@@ -64,7 +64,7 @@ public final class ImpsAccount extends CountryBasedAccount<ImpsAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 ImpsAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

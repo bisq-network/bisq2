@@ -63,7 +63,7 @@ public final class AliPayAccount extends CountryBasedAccount<AliPayAccountPayloa
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 AliPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

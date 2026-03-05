@@ -63,7 +63,7 @@ public final class SepaInstantAccount extends CountryBasedAccount<SepaInstantAcc
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SepaInstantAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

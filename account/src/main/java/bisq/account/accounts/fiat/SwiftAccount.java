@@ -63,7 +63,7 @@ public final class SwiftAccount extends CountryBasedAccount<SwiftAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SwiftAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

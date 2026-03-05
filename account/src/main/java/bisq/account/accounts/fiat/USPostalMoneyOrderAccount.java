@@ -63,7 +63,7 @@ public final class USPostalMoneyOrderAccount extends CountryBasedAccount<USPosta
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 USPostalMoneyOrderAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

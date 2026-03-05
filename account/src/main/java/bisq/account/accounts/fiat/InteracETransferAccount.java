@@ -63,7 +63,7 @@ public final class InteracETransferAccount extends CountryBasedAccount<InteracET
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 InteracETransferAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

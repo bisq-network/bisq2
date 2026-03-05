@@ -64,7 +64,7 @@ public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 BizumAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

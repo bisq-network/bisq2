@@ -65,7 +65,7 @@ public final class WiseAccount extends Account<FiatPaymentMethod, WiseAccountPay
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 WiseAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

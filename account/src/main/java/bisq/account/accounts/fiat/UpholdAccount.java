@@ -65,7 +65,7 @@ public final class UpholdAccount extends Account<FiatPaymentMethod, UpholdAccoun
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 UpholdAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

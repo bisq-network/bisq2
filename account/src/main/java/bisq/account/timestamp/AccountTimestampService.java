@@ -275,7 +275,7 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
     public static void verifySignature(AuthorizeAccountTimestampRequest request) throws GeneralSecurityException {
         KeyType keyType = request.getKeyType();
-        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyType.getAlgorithm());
+        PublicKey publicKey = KeyGeneration.generatePublic(request.getPublicKey(), keyType.getKeyAlgorithm());
         verifySignature(request.getAccountTimestamp(),
                 publicKey,
                 request.getSignature(),

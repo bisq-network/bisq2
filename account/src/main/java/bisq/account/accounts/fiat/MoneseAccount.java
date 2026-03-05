@@ -65,7 +65,7 @@ public final class MoneseAccount extends Account<FiatPaymentMethod, MoneseAccoun
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 MoneseAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

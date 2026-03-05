@@ -63,7 +63,7 @@ public final class PayIdAccount extends CountryBasedAccount<PayIdAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PayIdAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

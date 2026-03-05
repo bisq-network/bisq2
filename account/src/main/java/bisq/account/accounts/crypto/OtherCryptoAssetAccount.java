@@ -60,7 +60,7 @@ public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCrypt
         var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm());
+        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
         return new OtherCryptoAssetAccount(
                 proto.getId(),
                 proto.getCreationDate(),

@@ -63,7 +63,7 @@ public final class DomesticWireTransferAccount extends BankAccount<DomesticWireT
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 DomesticWireTransferAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

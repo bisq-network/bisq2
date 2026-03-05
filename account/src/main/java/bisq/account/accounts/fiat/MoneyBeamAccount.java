@@ -64,7 +64,7 @@ public final class MoneyBeamAccount extends CountryBasedAccount<MoneyBeamAccount
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 MoneyBeamAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

@@ -61,7 +61,7 @@ public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SameBankAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

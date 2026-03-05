@@ -65,7 +65,7 @@ public final class PayseraAccount extends Account<FiatPaymentMethod, PayseraAcco
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PayseraAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

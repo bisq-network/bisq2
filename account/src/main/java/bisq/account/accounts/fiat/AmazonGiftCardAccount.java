@@ -71,7 +71,7 @@ public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftC
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 AmazonGiftCardAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

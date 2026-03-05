@@ -40,7 +40,7 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 AchTransferAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

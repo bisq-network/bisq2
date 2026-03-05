@@ -63,7 +63,7 @@ public final class WeChatPayAccount extends CountryBasedAccount<WeChatPayAccount
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 WeChatPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

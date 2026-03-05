@@ -63,7 +63,7 @@ public final class SwishAccount extends CountryBasedAccount<SwishAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SwishAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

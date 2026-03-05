@@ -63,7 +63,7 @@ public final class PromptPayAccount extends CountryBasedAccount<PromptPayAccount
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PromptPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

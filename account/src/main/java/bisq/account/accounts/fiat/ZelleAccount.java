@@ -63,7 +63,7 @@ public final class ZelleAccount extends CountryBasedAccount<ZelleAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 ZelleAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

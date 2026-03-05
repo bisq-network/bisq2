@@ -63,7 +63,7 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 F2FAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

@@ -65,7 +65,7 @@ public final class MercadoPagoAccount extends Account<FiatPaymentMethod, Mercado
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 MercadoPagoAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

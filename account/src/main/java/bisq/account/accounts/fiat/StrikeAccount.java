@@ -64,7 +64,7 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 StrikeAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

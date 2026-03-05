@@ -65,7 +65,7 @@ public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAcco
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 RevolutAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

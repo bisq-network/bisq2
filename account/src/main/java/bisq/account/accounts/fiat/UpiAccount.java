@@ -64,7 +64,7 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 UpiAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

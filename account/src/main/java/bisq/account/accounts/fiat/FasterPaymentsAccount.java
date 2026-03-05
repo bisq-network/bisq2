@@ -64,7 +64,7 @@ public final class FasterPaymentsAccount extends CountryBasedAccount<FasterPayme
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 FasterPaymentsAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

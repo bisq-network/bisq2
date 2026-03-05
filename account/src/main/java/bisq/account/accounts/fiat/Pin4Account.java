@@ -63,7 +63,7 @@ public final class Pin4Account extends CountryBasedAccount<Pin4AccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 Pin4AccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

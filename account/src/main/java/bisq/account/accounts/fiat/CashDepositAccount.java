@@ -63,7 +63,7 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 CashDepositAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

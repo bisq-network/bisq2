@@ -64,7 +64,7 @@ public final class SbpAccount extends CountryBasedAccount<SbpAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SbpAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

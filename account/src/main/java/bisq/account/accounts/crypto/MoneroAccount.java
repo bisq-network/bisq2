@@ -60,7 +60,7 @@ public final class MoneroAccount extends CryptoAssetAccount<MoneroAccountPayload
         var monero = cryptoAssetAccount.getMoneroAccount();
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm());
+        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
         return new MoneroAccount(
                 proto.getId(),
                 proto.getCreationDate(),

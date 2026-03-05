@@ -65,7 +65,7 @@ public final class SatispayAccount extends Account<FiatPaymentMethod, SatispayAc
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 SatispayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

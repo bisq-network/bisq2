@@ -26,10 +26,10 @@ public enum KeyType implements ProtoEnum {
     EC("EC");
 
     @Getter
-    private final String algorithm;
+    private final String keyAlgorithm;
 
-    KeyType(String algorithm) {
-        this.algorithm = algorithm;
+    KeyType(String keyAlgorithm) {
+        this.keyAlgorithm = keyAlgorithm;
     }
 
     @Override

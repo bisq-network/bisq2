@@ -65,7 +65,7 @@ public final class AdvancedCashAccount extends Account<FiatPaymentMethod, Advanc
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 AdvancedCashAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

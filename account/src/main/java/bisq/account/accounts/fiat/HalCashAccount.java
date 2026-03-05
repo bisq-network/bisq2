@@ -63,7 +63,7 @@ public final class HalCashAccount extends CountryBasedAccount<HalCashAccountPayl
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 HalCashAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

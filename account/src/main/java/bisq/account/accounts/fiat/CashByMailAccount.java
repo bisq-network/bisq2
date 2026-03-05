@@ -65,7 +65,7 @@ public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMa
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 CashByMailAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin
         );

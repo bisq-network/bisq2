@@ -63,7 +63,7 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload> {
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 PixAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }

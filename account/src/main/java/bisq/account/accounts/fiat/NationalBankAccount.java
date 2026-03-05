@@ -63,7 +63,7 @@ public class NationalBankAccount extends BankAccount<NationalBankAccountPayload>
                 proto.getCreationDate(),
                 proto.getAccountName(),
                 NationalBankAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getAlgorithm()),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
                 keyType,
                 accountOrigin);
     }
