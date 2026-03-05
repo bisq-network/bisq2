@@ -113,6 +113,12 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 Delay.run(this::request)
                         .withExecutor(commonForkJoinPool())
                         .after(10, TimeUnit.SECONDS);
+            } else if (status.getCode() == Status.Code.UNIMPLEMENTED) {
+                log.warn("Request rejected because the grpc server does not implement the method. " +
+                                "Check that the Bisq1 grpc service is running on the configured port and is up to date. " +
+                                "Status: {}{}",
+                        status.getCode(),
+                        status.getDescription() == null ? "" : " (" + status.getDescription() + ")");
             } else if (status.getCode() == Status.Code.INTERNAL) {
                 log.warn("Request rejected because of grpc server error.", exception);
                 retryRequest();

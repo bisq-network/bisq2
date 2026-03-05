@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountTimestampRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountTimestampResponse;
+import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,11 +36,14 @@ public class AccountTimestampGrpcService implements Service {
 
     public Result<Long> requestAccountTimestamp(byte[] hash) {
         try {
-            log.info("requestAccountTimestamp for hash {}", Hex.encode(hash));
+            log.debug("requestAccountTimestamp for hash {}", Hex.encode(hash));
             var protoRequest = new AccountTimestampRequest(hash).completeProto();
             var protoResponse = grpcClient.getAccountTimestampBlockingStub().requestAccountTimestamp(protoRequest);
             AccountTimestampResponse response = AccountTimestampResponse.fromProto(protoResponse);
             return Result.success(response.getDate());
+        } catch (StatusRuntimeException e) {
+            log.info("requestAccountTimestamp failed with StatusRuntimeException", e);
+            return Result.failure(e);
         } catch (Exception e) {
             log.warn("requestAccountTimestamp failed", e);
             return Result.failure(e);
