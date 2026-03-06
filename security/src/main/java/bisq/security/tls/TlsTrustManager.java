@@ -33,7 +33,13 @@ public final class TlsTrustManager implements X509TrustManager {
         if (fingerprintBase64 == null || fingerprintBase64.isEmpty()) {
             throw new IllegalArgumentException("tlsFingerprint must be a non-empty Base64 string");
         }
-        byte[] fingerprintBytes = Base64.decode(fingerprintBase64);
+        byte[] fingerprintBytes;
+        try {
+            fingerprintBytes = Base64.decode(fingerprintBase64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "tlsFingerprint must be a valid Base64-encoded SHA-256 hash", e);
+        }
         if (fingerprintBytes.length != 32) {
             throw new IllegalArgumentException("tlsFingerprint must be a SHA-256 hash (32 bytes)");
         }

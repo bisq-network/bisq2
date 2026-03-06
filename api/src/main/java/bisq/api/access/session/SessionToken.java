@@ -38,10 +38,10 @@ public class SessionToken {
         this.ttlInMinutes = ttlInMinutes;
         this.sessionId = UUID.randomUUID().toString();
         this.clientId = clientId;
-        this.expiresAt = Instant.now().plusSeconds(ttlInMinutes * 60L);
+        this.expiresAt = ttlInMinutes < 0 ? Instant.MAX : Instant.now().plusSeconds(ttlInMinutes * 60L);
     }
 
     public boolean isExpired() {
-        return Instant.now().isAfter(expiresAt);
+        return ttlInMinutes >= 0 && Instant.now().isAfter(expiresAt);
     }
 }

@@ -82,6 +82,7 @@ tasks.register("publishAll") {
             ":identity:publishToMavenLocal",
             ":network:publishToMavenLocal",
             ":network:tor:publishToMavenLocal",
+            ":notifications:publishToMavenLocal",
             ":offer:publishToMavenLocal",
             ":persistence:publishToMavenLocal",
             ":platform:publishToMavenLocal",

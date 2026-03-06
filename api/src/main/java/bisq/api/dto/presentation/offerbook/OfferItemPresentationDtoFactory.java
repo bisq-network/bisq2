@@ -44,24 +44,32 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class OfferItemPresentationDtoFactory {
-    public static OfferItemPresentationDto create(UserProfileService userProfileService,
-                                                  UserIdentityService userIdentityService,
-                                                  ReputationService reputationService,
-                                                  MarketPriceService marketPriceService,
-                                                  BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+    public static Optional<OfferItemPresentationDto> create(UserProfileService userProfileService,
+                                                            UserIdentityService userIdentityService,
+                                                            ReputationService reputationService,
+                                                            MarketPriceService marketPriceService,
+                                                            BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
-        boolean isMyOffer = bisqEasyOfferbookMessage.isMyMessage(userIdentityService);
-        Direction direction = bisqEasyOffer.getDirection();
-        String messageId = bisqEasyOfferbookMessage.getId();
-        String offerId = bisqEasyOffer.getId();
-        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.fromBisq2Model(bisqEasyOffer);
         String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
+
+        Optional<UserProfile> userProfileOpt = userProfileService.findUserProfile(authorUserProfileId);
+        if (userProfileOpt.isEmpty()) {
+            log.debug("User profile not found for authorUserProfileId={}, skipping offer creation", authorUserProfileId);
+            return Optional.empty();
+        }
+
+        boolean isMyOffer = bisqEasyOfferbookMessage.isMyMessage(userIdentityService);
+        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.fromBisq2Model(bisqEasyOffer);
 
         // For now, we send also the formatted values as we have not the complex formatters in mobile impl. yet.
         // We might need to replicate the formatters anyway later and then those fields could be removed
@@ -102,11 +110,10 @@ public class OfferItemPresentationDtoFactory {
                 .map(PaymentMethod::getPaymentRailName)
                 .collect(Collectors.toList());
 
-        UserProfile userProfile = userProfileService.findUserProfile(authorUserProfileId).orElseThrow();
-        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfileOpt.get());
         ReputationScore reputationScore = reputationService.getReputationScore(authorUserProfileId);
         ReputationScoreDto reputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationScore);
-        return new OfferItemPresentationDto(bisqEasyOfferDto,
+        return Optional.of(new OfferItemPresentationDto(bisqEasyOfferDto,
                 isMyOffer,
                 userProfileDto,
                 formattedDate,
@@ -116,6 +123,6 @@ public class OfferItemPresentationDtoFactory {
                 formattedPriceSpec,
                 quoteSidePaymentMethods,
                 baseSidePaymentMethods,
-                reputationScoreDto);
+                reputationScoreDto));
     }
 }

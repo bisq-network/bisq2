@@ -58,7 +58,7 @@ public class WebSocketRestApiService implements Service {
 
     public WebSocketRestApiService(ApiConfig apiConfig, TlsContextService tlsContextService) {
         this.apiConfig = apiConfig;
-        this.restServerUrl = apiConfig.getRestServerUrl();
+        this.restServerUrl = apiConfig.getRestProtocol() + "://" + apiConfig.getBindHost() + ":" + apiConfig.getBindPort();
         this.tlsContextService = tlsContextService;
     }
 
@@ -108,6 +108,8 @@ public class WebSocketRestApiService implements Service {
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
                     .method(method, body == null
                             ? HttpRequest.BodyPublishers.noBody()
                             : HttpRequest.BodyPublishers.ofString(body));

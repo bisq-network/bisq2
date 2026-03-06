@@ -148,6 +148,10 @@ public final class ApiConfig {
         return getWebSocketProtocol() + "://" + bindHost + ":" + bindPort;
     }
 
+    public static boolean isLoopbackHost(String host) {
+        return "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
+    }
+
     public String getRestProtocol() {
         return tlsRequired ? "https" : "http";
     }
