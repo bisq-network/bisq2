@@ -33,7 +33,8 @@ public enum Permission implements ProtoEnum {
     SETTINGS(6),
     TRADES(7),
     USER_IDENTITIES(8),
-    USER_PROFILES(9);
+    USER_PROFILES(9),
+    MOBILE_DEVICES(10);
 
     @Getter
     private final int id;
