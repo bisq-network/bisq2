@@ -39,7 +39,8 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identities(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),
-                new PermissionRule("^/user-profiles(/.*)?$", Optional.empty(), Permission.USER_PROFILES)
+                new PermissionRule("^/user-profiles(/.*)?$", Optional.empty(), Permission.USER_PROFILES),
+                new PermissionRule("^/mobile-devices(/.*)?$", Optional.empty(), Permission.MOBILE_DEVICES)
         );
     }
 

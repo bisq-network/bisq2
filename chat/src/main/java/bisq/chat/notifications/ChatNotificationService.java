@@ -542,10 +542,17 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     }
 
     private void maybeDispatchNotification(ChatNotification chatNotification) {
-        if (!isApplicationFocussed &&
-                isReceivedAfterStartUp(chatNotification) &&
-                testChatChannelDomainPredicate(chatNotification)) {
+        boolean afterStartUp = isReceivedAfterStartUp(chatNotification);
+        boolean domainMatches = testChatChannelDomainPredicate(chatNotification);
+        if (!isApplicationFocussed && afterStartUp && domainMatches) {
+            log.debug("Dispatching notification for channel '{}': {}", chatNotification.getChatChannelDomain(), chatNotification.getTitle());
             notificationService.dispatchNotification(chatNotification);
+        } else {
+            log.debug("Skipping notification dispatch for '{}' (focused={}, afterStartUp={}, domainPredicate={})",
+                    chatNotification.getTitle(),
+                    isApplicationFocussed,
+                    afterStartUp,
+                    domainMatches);
         }
     }
 
