@@ -38,6 +38,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.offer.MuSigOfferListItem;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.offer.offer_details.MuSigOfferDetailsController;
 import bisq.desktop.main.content.mu_sig.offer.take_offer.MuSigTakeOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -367,6 +368,10 @@ public class MuSigOfferbookController implements Controller {
                 .onAction(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void onShowOfferDetails(MuSigOffer muSigOffer) {
+        Navigation.navigateTo(NavigationTarget.MU_SIG_OFFER_DETAILS, new MuSigOfferDetailsController.InitData(muSigOffer));
     }
 
     void onRemoveOffer(MuSigOffer muSigOffer) {

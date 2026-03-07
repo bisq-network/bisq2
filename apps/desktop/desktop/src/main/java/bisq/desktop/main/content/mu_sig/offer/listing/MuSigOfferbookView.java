@@ -564,6 +564,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
             private final HBox myOfferLabelBox = new HBox();
             private final Label myOfferLabel = new Label(Res.get("muSig.offer.listing.table.cell.myOffer"));
             private final HBox myOfferActionsMenuBox = new HBox(5);
+            private final BisqMenuItem showOfferDetails = new BisqMenuItem("offer-details-grey", "offer-details-white");
             private final BisqMenuItem removeOfferMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
             private final BisqMenuItem copyOfferMenuItem = new BisqMenuItem("copy-grey", "copy-white");
             private final BisqMenuItem editOfferMenuItem = new BisqMenuItem("edit-grey", "edit-white");
@@ -605,8 +606,11 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                 myOfferActionsMenuBox.setMinHeight(PREF_HEIGHT);
                 myOfferActionsMenuBox.setPrefHeight(PREF_HEIGHT);
                 myOfferActionsMenuBox.setMaxHeight(PREF_HEIGHT);
-                myOfferActionsMenuBox.getChildren().addAll(editOfferMenuItem, copyOfferMenuItem, removeOfferMenuItem);
+                myOfferActionsMenuBox.getChildren().addAll(showOfferDetails, editOfferMenuItem, copyOfferMenuItem, removeOfferMenuItem);
                 myOfferActionsMenuBox.setAlignment(Pos.CENTER);
+
+                showOfferDetails.useIconOnly();
+                showOfferDetails.setTooltip(Res.get("muSig.offer.listing.table.cell.showOfferDetails"));
 
                 removeOfferMenuItem.useIconOnly();
                 removeOfferMenuItem.setTooltip(Res.get("offer.delete"));
@@ -638,6 +642,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                             myOfferLabel.setStyle("-fx-text-fill: -bisq2-red-lit-10;");
                         }
                         setGraphic(myOfferMainBox);
+                        showOfferDetails.setOnAction(e -> controller.onShowOfferDetails(item.getOffer()));
                         removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
@@ -653,6 +658,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         } else {
                             takeOfferButton.setOnAction(e -> controller.onHandleCannotTakeOfferCase(item.getCannotTakeOfferReason().get()));
                         }
+                        takeOfferButton.setOnContextMenuRequested(e -> controller.onShowOfferDetails(item.getOffer()));
                         setGraphic(takeOfferButton);
                     }
                 } else {
@@ -660,6 +666,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
                     takeOfferButton.setOnAction(null);
+                    takeOfferButton.setOnContextMenuRequested(null);
+                    showOfferDetails.setOnAction(null);
                     removeOfferMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
