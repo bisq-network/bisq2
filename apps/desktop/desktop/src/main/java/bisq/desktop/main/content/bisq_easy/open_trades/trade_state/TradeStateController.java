@@ -379,6 +379,7 @@ public class TradeStateController implements Controller {
         model.getInterruptedTradeInfo().set(false);
         model.getInterruptTradeButtonVisible().set(true);
         model.getIsTradeCompleted().set(false);
+        updateShouldShowInterruptedBox();
 
         boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         switch (state) {
@@ -470,6 +471,7 @@ public class TradeStateController implements Controller {
                 model.getPhaseAndInfoVisible().set(false);
                 model.getInterruptedTradeInfo().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
+                updateShouldShowInterruptedBox();
                 applyTradeInterruptedInfo(trade, false);
                 break;
 
@@ -478,6 +480,7 @@ public class TradeStateController implements Controller {
                 model.getPhaseAndInfoVisible().set(false);
                 model.getInterruptedTradeInfo().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
+                updateShouldShowInterruptedBox();
                 applyTradeInterruptedInfo(trade, true);
                 break;
 
@@ -488,6 +491,7 @@ public class TradeStateController implements Controller {
                 model.getShowReportToMediatorButton().set(false);
                 model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed.errorMessage",
                         model.getBisqEasyTrade().get().getErrorMessage()));
+                updateShouldShowInterruptedBox();
                 break;
             case FAILED_AT_PEER:
                 model.getPhaseAndInfoVisible().set(false);
@@ -496,6 +500,7 @@ public class TradeStateController implements Controller {
                 model.getError().set(true);
                 model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer.errorMessage",
                         model.getBisqEasyTrade().get().getPeersErrorMessage()));
+                updateShouldShowInterruptedBox();
                 break;
 
             default:
@@ -637,5 +642,11 @@ public class TradeStateController implements Controller {
             messageDeliveryStatusByMessageIdPin.unbind();
             messageDeliveryStatusByMessageIdPin = null;
         }
+    }
+
+    private void updateShouldShowInterruptedBox() {
+        boolean shouldShowInterruptedBox = model.getInterruptedTradeInfo().get() || model.getError().get();
+        model.getShouldShowInterruptedBox().set(shouldShowInterruptedBox);
+        model.getShouldShowTradeDetailsHeaderButton().set(!shouldShowInterruptedBox);
     }
 }
