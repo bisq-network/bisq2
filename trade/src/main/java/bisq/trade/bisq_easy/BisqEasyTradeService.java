@@ -388,8 +388,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.getClosedTrades();
     }
 
-    public void removeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
-        persistableStore.removeTrade(trade, myUserProfile, peerUserProfile);
+    public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
+        persistableStore.closeTrade(trade, myUserProfile, peerUserProfile);
         tradeProtocolById.remove(trade.getId());
         persist();
     }
