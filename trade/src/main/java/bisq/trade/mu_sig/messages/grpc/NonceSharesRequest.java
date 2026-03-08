@@ -30,6 +30,7 @@ public final class NonceSharesRequest implements Proto {
     private final String tradeId;
     private final byte[] buyerOutputPeersPubKeyShare;
     private final byte[] sellerOutputPeersPubKeyShare;
+    private final byte[] peersMultisigScriptKey;
     private final long depositTxFeeRate;
     private final long preparedTxFeeRate;
     private final long tradeAmount;
@@ -40,6 +41,7 @@ public final class NonceSharesRequest implements Proto {
     public NonceSharesRequest(String tradeId,
                               byte[] buyerOutputPeersPubKeyShare,
                               byte[] sellerOutputPeersPubKeyShare,
+                              byte[] peersMultisigScriptKey,
                               long depositTxFeeRate,
                               long preparedTxFeeRate,
                               long tradeAmount,
@@ -49,6 +51,7 @@ public final class NonceSharesRequest implements Proto {
         this.tradeId = tradeId;
         this.buyerOutputPeersPubKeyShare = buyerOutputPeersPubKeyShare;
         this.sellerOutputPeersPubKeyShare = sellerOutputPeersPubKeyShare;
+        this.peersMultisigScriptKey = peersMultisigScriptKey;
         this.depositTxFeeRate = depositTxFeeRate;
         this.preparedTxFeeRate = preparedTxFeeRate;
         this.tradeAmount = tradeAmount;
@@ -63,6 +66,7 @@ public final class NonceSharesRequest implements Proto {
                 .setTradeId(tradeId)
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(buyerOutputPeersPubKeyShare))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(sellerOutputPeersPubKeyShare))
+                .setPeersMultisigScriptKey(ByteString.copyFrom(peersMultisigScriptKey))
                 .setDepositTxFeeRate(depositTxFeeRate)
                 .setPreparedTxFeeRate(preparedTxFeeRate)
                 .setTradeAmount(tradeAmount)
@@ -81,6 +85,7 @@ public final class NonceSharesRequest implements Proto {
         return new NonceSharesRequest(proto.getTradeId(),
                 proto.getBuyerOutputPeersPubKeyShare().toByteArray(),
                 proto.getSellerOutputPeersPubKeyShare().toByteArray(),
+                proto.getPeersMultisigScriptKey().toByteArray(),
                 proto.getDepositTxFeeRate(),
                 proto.getPreparedTxFeeRate(),
                 proto.getTradeAmount(),
@@ -103,6 +108,7 @@ public final class NonceSharesRequest implements Proto {
                 Objects.equals(tradeId, that.tradeId) &&
                 Arrays.equals(buyerOutputPeersPubKeyShare, that.buyerOutputPeersPubKeyShare) &&
                 Arrays.equals(sellerOutputPeersPubKeyShare, that.sellerOutputPeersPubKeyShare) &&
+                Arrays.equals(peersMultisigScriptKey, that.peersMultisigScriptKey) &&
                 Objects.equals(tradeFeeReceiver, that.tradeFeeReceiver);
     }
 
@@ -111,6 +117,7 @@ public final class NonceSharesRequest implements Proto {
         int result = Objects.hashCode(tradeId);
         result = 31 * result + Arrays.hashCode(buyerOutputPeersPubKeyShare);
         result = 31 * result + Arrays.hashCode(sellerOutputPeersPubKeyShare);
+        result = 31 * result + Arrays.hashCode(peersMultisigScriptKey);
         result = 31 * result + Long.hashCode(depositTxFeeRate);
         result = 31 * result + Long.hashCode(preparedTxFeeRate);
         result = 31 * result + Long.hashCode(tradeAmount);

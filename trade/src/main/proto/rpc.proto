@@ -72,6 +72,7 @@ message PubKeySharesRequest {
 message PubKeySharesResponse {
   bytes buyerOutputPubKeyShare = 1;
   bytes sellerOutputPubKeyShare = 2;
+  bytes multisigScriptKey = 4;
   uint32 currentBlockHeight = 3;
 }
 
@@ -79,6 +80,7 @@ message NonceSharesRequest {
   string tradeId = 1;
   bytes buyerOutputPeersPubKeyShare = 2;
   bytes sellerOutputPeersPubKeyShare = 3;
+  bytes peersMultisigScriptKey = 10;
   uint64 depositTxFeeRate = 4;       // sats per kwu
   uint64 preparedTxFeeRate = 5;      // sats per kwu
   uint64 tradeAmount = 6;            // sats
