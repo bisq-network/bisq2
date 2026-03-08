@@ -124,7 +124,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
         private void doCloseCompletedTrade() {
             BisqEasyOpenTradeChannel channel = model.getChannel();
-            bisqEasyTradeService.removeTrade(model.getTrade(), channel.getMyUserIdentity().getUserProfile(), channel.getPeer());
+            bisqEasyTradeService.closeTrade(model.getTrade(), channel.getMyUserIdentity().getUserProfile(), channel.getPeer());
             leavePrivateChatManager.leaveChannel(channel);
             goToTradeHistory();
         }

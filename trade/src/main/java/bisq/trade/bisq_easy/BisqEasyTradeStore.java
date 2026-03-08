@@ -148,7 +148,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         tradeIds.add(trade.getId());
     }
 
-    void removeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
+    void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
         trades.remove(trade);
         closedTrades.add(new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile));
     }
