@@ -51,6 +51,19 @@ enum Role {
   BUYER_AS_TAKER = 3;
 }
 
+message ReceiverAddressAndAmount {
+  string address = 1;
+  uint64 amount = 2; // sats
+}
+
+message ContractualTxIds {
+  string depositTxId = 1;
+  string buyersWarningTxId = 2;
+  string sellersWarningTxId = 3;
+  string buyersRedirectTxId = 4;
+  string sellersRedirectTxId = 5;
+}
+
 message PubKeySharesRequest {
   string tradeId = 1;
   Role myRole = 2;
@@ -91,11 +104,6 @@ message NonceSharesMessage {
   bytes sellersClaimTxInputNonceShare = 13;
 }
 
-message ReceiverAddressAndAmount {
-  string address = 1;
-  uint64 amount = 2; // sats
-}
-
 message PartialSignaturesRequest {
   string tradeId = 1;
   NonceSharesMessage peersNonceShares = 2;
@@ -110,6 +118,7 @@ message PartialSignaturesMessage {
   bytes peersClaimTxInputPartialSignature = 6;
   optional bytes swapTxInputPartialSignature = 4;
   optional bytes swapTxInputSighash = 5;
+  ContractualTxIds contractualTxIds = 7;
 }
 
 message DepositTxSignatureRequest {
