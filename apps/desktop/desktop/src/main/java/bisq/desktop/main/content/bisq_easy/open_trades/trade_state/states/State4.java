@@ -35,6 +35,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -65,11 +66,14 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
     protected static abstract class Controller<M extends State4.Model, V extends State4.View<?, ?>> extends BaseState.Controller<M, V> {
         private final ReputationService reputationService;
         protected final ExplorerService explorerService;
+        private final DontShowAgainService dontShowAgainService;
 
         protected Controller(ServiceProvider serviceProvider,
                              BisqEasyTrade bisqEasyTrade,
                              BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
+
+            dontShowAgainService = serviceProvider.getDontShowAgainService();
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             reputationService = serviceProvider.getUserService().getReputationService();
@@ -114,11 +118,19 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onArchiveTrade() {
-            new Popup().information(Res.get("bisqEasy.openTrades.closeTrade.info"))
-                    .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
-                    .onAction(this::doArchiveTrade)
-                    .closeButtonText(Res.get("action.cancel"))
-                    .show();
+            String key = "archiveTradeInfo";
+            if (dontShowAgainService.showAgain(key)) {
+                new Popup()
+                        .backgroundInfo(Res.get("bisqEasy.openTrades.closeTrade.info"))
+                        .headline(Res.get("popup.headline.information"))
+                        .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
+                        .onAction(this::doArchiveTrade)
+                        .closeButtonText(Res.get("action.cancel"))
+                        .dontShowAgainId(key)
+                        .show();
+            } else {
+                doArchiveTrade();
+            }
         }
 
         private void doArchiveTrade() {
