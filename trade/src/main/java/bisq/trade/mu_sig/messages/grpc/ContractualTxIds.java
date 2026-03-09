@@ -20,8 +20,10 @@ package bisq.trade.mu_sig.messages.grpc;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString
 @EqualsAndHashCode
 public class ContractualTxIds implements Proto {
     private final String depositTxId;

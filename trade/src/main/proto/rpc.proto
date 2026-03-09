@@ -86,7 +86,7 @@ message NonceSharesRequest {
   uint64 tradeAmount = 6;            // sats
   uint64 buyersSecurityDeposit = 7;  // sats
   uint64 sellersSecurityDeposit = 8; // sats
-  ReceiverAddressAndAmount tradeFeeReceiver = 9;
+  optional ReceiverAddressAndAmount tradeFeeReceiver = 9;
 }
 
 message NonceSharesMessage {
@@ -108,7 +108,7 @@ message NonceSharesMessage {
 
 message PartialSignaturesRequest {
   string tradeId = 1;
-  NonceSharesMessage peersNonceShares = 2;
+  optional NonceSharesMessage peersNonceShares = 2;
   repeated ReceiverAddressAndAmount redirectionReceivers = 3;
   bool buyerReadyToRelease = 4;
 }
@@ -120,7 +120,7 @@ message PartialSignaturesMessage {
   bytes peersClaimTxInputPartialSignature = 6;
   optional bytes swapTxInputPartialSignature = 4;
   optional bytes swapTxInputSighash = 5;
-  ContractualTxIds contractualTxIds = 7;
+  optional ContractualTxIds contractualTxIds = 7;
 }
 
 message DepositTxSignatureRequest {
