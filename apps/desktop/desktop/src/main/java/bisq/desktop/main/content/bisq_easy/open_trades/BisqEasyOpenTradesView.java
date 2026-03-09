@@ -347,7 +347,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
                 .comparator(Comparator.comparing(OpenTradeListItem::getBaseAmount))
-                .setCellFactory(getBaseCellFactory())
+                .setCellFactory(getBaseAmountCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
@@ -376,7 +376,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .build());
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseCellFactory() {
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseAmountCellFactory() {
         return column -> new TableCell<>() {
             private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 

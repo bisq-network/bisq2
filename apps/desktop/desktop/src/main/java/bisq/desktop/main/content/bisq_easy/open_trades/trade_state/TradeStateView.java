@@ -39,7 +39,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
+    private final Button interruptTradeButton, archiveTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton, tradeDetailsButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay,
             sellerPriceDescriptionApprovalOverlay, mediationBannerLabel;
@@ -96,9 +96,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         reportToMediatorButton = new Button(Res.get("bisqEasy.openTrades.reportToMediator"));
         reportToMediatorButton.getStyleClass().add("outlined-button");
 
-        closeTradeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
-        closeTradeButton.setMinWidth(160);
-        closeTradeButton.setDefaultButton(true);
+        archiveTradeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
+        archiveTradeButton.setMinWidth(160);
+        archiveTradeButton.setDefaultButton(true);
 
         cancelledHBox = new HBox(10, tradeInterruptedIcon, cancelledInfo);
         cancelledHBox.setAlignment(Pos.CENTER_LEFT);
@@ -111,7 +111,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         errorHBox = new HBox(10, errorIcon, errorMessage);
         errorHBox.setAlignment(Pos.CENTER_LEFT);
 
-        HBox buttonHBox = new HBox(10, reportToMediatorButton, exportButton, closeTradeButton);
+        HBox buttonHBox = new HBox(10, reportToMediatorButton, exportButton, archiveTradeButton);
         interruptedHBox = new HBox(10, cancelledHBox, errorHBox, Spacer.fillHBox(), buttonHBox);
         interruptedHBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -221,7 +221,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         interruptTradeButton.setOnAction(e -> controller.onInterruptTrade());
         tradeDetailsButton.setOnAction(e -> controller.onShowTradeDetails());
-        closeTradeButton.setOnAction(e -> controller.onCloseTrade());
+        archiveTradeButton.setOnAction(e -> controller.onArchiveTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
         rejectPriceButton.setOnAction(e -> controller.onRejectPrice());
         reportToMediatorButton.setOnAction(e -> controller.onRequestMediation());
@@ -266,7 +266,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         interruptTradeButton.setOnAction(null);
         tradeDetailsButton.setOnAction(null);
-        closeTradeButton.setOnAction(null);
+        archiveTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
         rejectPriceButton.setOnAction(null);
         reportToMediatorButton.setOnAction(null);
