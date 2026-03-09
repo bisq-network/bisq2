@@ -49,6 +49,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<BisqEasyTradeHistoryListItem> bisqEasyTradeHistoryListView;
+    private final Label placeholderLabel = new Label();
 
     public BisqEasyHistoryView(BisqEasyHistoryModel model, BisqEasyHistoryController controller) {
         super(new VBox(), model, controller);
@@ -58,6 +59,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 Res.get("bisqEasy.history.headline"),
                 Res.get("bisqEasy.history.numTrades"),
                 controller::applySearchPredicate);
+        bisqEasyTradeHistoryListView.getTableView().setPlaceholder(placeholderLabel);
         bisqEasyTradeHistoryListView.getStyleClass().add("bisq-easy-history-table");
         configTableView();
 
@@ -67,11 +69,13 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
 
     @Override
     protected void onViewAttached() {
+        placeholderLabel.textProperty().bind(model.getPlaceholderText());
         bisqEasyTradeHistoryListView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        placeholderLabel.textProperty().unbind();
         bisqEasyTradeHistoryListView.dispose();
     }
 
