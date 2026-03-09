@@ -153,6 +153,18 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         closedTrades.add(new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile));
     }
 
+    boolean deleteTrade(BisqEasyTrade trade) {
+        Optional<BisqEasyClosedTrade> closedTrade = closedTrades.stream()
+                .filter(ct -> ct.trade().getId().equals(trade.getId()))
+                .findFirst();
+        if (closedTrade.isPresent()) {
+            closedTrades.remove(closedTrade.get());
+            return true;
+        }
+        log.warn("Could not delete trade {}", trade.getId());
+        return false;
+    }
+
     Optional<BisqEasyTrade> findTrade(String tradeId) {
         return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
     }
