@@ -59,6 +59,8 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 Res.get("bisqEasy.history.numTrades"),
                 controller::applySearchPredicate);
         bisqEasyTradeHistoryListView.getStyleClass().add("bisq-easy-history-table");
+        bisqEasyTradeHistoryListView.getExportButton().setVisible(false);
+        bisqEasyTradeHistoryListView.getExportButton().setManaged(false);
         configTableView();
 
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
