@@ -291,11 +291,19 @@ public class TradeStateController implements Controller {
     }
 
     void onArchiveTrade() {
-        new Popup().information(Res.get("bisqEasy.openTrades.closeTrade.info"))
-                .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
-                .onAction(this::doArchiveTrade)
-                .closeButtonText(Res.get("action.cancel"))
-                .show();
+        String key = "archiveTradeInfo";
+        if (dontShowAgainService.showAgain(key)) {
+            new Popup()
+                    .headline(Res.get("popup.headline.information"))
+                    .backgroundInfo(Res.get("bisqEasy.openTrades.closeTrade.info"))
+                    .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
+                    .onAction(this::doArchiveTrade)
+                    .closeButtonText(Res.get("action.cancel"))
+                    .dontShowAgainId(key)
+                    .show();
+        } else {
+            doArchiveTrade();
+        }
     }
 
     private void doArchiveTrade() {
