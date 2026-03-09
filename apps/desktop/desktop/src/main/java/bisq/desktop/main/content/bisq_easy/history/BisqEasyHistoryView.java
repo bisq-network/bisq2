@@ -325,7 +325,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
             private final HBox tradeMainBox = new HBox();
             private final HBox tradeActionsMenuBox = new HBox(5);
             private final BisqMenuItem showTradeDetailsMenuItem = new BisqMenuItem("icon-info-grey", "icon-info-white");
-            private final BisqMenuItem exportTradeDataMenuItem = new BisqMenuItem("icon-info-grey", "icon-info-white");
+            private final BisqMenuItem exportTradeDataMenuItem = new BisqMenuItem("download-grey", "download-white");
             private final BisqMenuItem deleteTradeMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
             private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
                 boolean shouldShow = newValue || getTableRow().isHover();
