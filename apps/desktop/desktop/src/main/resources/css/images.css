@@ -1237,6 +1237,18 @@
     -fx-image: url("/images/icons/btcoins-green.png");
 }
 
+#download-grey {
+    -fx-image: url("/images/icons/download-grey.png");
+}
+
+#download-white {
+    -fx-image: url("/images/icons/download-white.png");
+}
+
+#download-green {
+    -fx-image: url("/images/icons/download-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
