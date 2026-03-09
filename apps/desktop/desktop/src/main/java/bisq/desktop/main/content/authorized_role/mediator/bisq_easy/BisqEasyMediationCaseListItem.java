@@ -33,7 +33,6 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -100,7 +99,7 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = offer.getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(contract).getValue();
+        price = contract.getPriceQuote().getValue();
         priceString = BisqEasyTradeFormatter.formatPriceWithCode(contract);
         baseAmount = contract.getBaseSideAmount();
         baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(contract);

@@ -32,7 +32,6 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -84,13 +83,13 @@ public class BisqEasyTradeHistoryListItem {
         quoteAmountAsString = BisqEasyTradeFormatter.formatQuoteSideAmount(trade);
         quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
 
-        price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
+        price = trade.getPriceQuote().getValue();
         BisqEasyOffer offer = contract.getOffer();
         PriceSpec priceSpec = offer.getPriceSpec();
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
 
-        String tradePrice = PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(trade));
+        String tradePrice = PriceFormatter.format(trade.getPriceQuote());
         priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, tradePrice);
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();

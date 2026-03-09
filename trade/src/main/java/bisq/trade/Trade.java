@@ -19,6 +19,8 @@ package bisq.trade;
 
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
@@ -327,6 +329,18 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
             case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
             case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
         };
+    }
+
+    public Monetary getBaseSideMonetary() {
+        return contract.getBaseSideMonetary();
+    }
+
+    public Monetary getQuoteSideMonetary() {
+        return contract.getQuoteSideMonetary();
+    }
+
+    public PriceQuote getPriceQuote() {
+        return contract.getPriceQuote();
     }
 
 

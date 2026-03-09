@@ -29,7 +29,6 @@ import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -90,7 +89,7 @@ class OpenTradeListItem implements DateTableItem {
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = trade.getOffer().getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
+        price = trade.getPriceQuote().getValue();
         priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);
         baseAmount = contract.getBaseSideAmount();
         baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);

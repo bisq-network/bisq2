@@ -36,7 +36,6 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -104,7 +103,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
                     .orElse("");
             model.setTradeDuration(tradeDuration);
 
-            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(bisqEasyTrade)));
+            model.setPrice(PriceFormatter.format(bisqEasyTrade.getPriceQuote()));
             model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
             model.setTradePeerReputationScore(reputationService.findReputationScore(tradePeer).orElse(ReputationScore.NONE));
         }
