@@ -29,8 +29,6 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationScore;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -220,32 +218,6 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                     bitcoinAmountDisplay.setBtcAmount(item.getBaseAmountString());
                     setGraphic(bitcoinAmountDisplay);
                 } else {
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    public static Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>,
-            TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getUserProfileCellFactory(boolean isMyUserProfile) {
-        return column -> new TableCell<>() {
-            private UserProfileDisplay userProfileDisplay;
-
-            @Override
-            protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    UserProfile userProfile = isMyUserProfile ? item.getMyUserProfile() : item.getPeersUserProfile();
-                    userProfileDisplay = new UserProfileDisplay(userProfile, true, true);
-                    ReputationScore reputationScore = isMyUserProfile ? item.getMyReputationScore() : item.getPeerReputationScore();
-                    userProfileDisplay.setReputationScore(reputationScore);
-                    setGraphic(userProfileDisplay);
-                } else {
-                    if (userProfileDisplay != null) {
-                        userProfileDisplay.dispose();
-                        userProfileDisplay = null;
-                    }
                     setGraphic(null);
                 }
             }
