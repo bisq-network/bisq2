@@ -29,6 +29,7 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
@@ -88,8 +89,9 @@ public class BisqEasyTradeHistoryListItem {
         PriceSpec priceSpec = offer.getPriceSpec();
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
-        String priceAsString = BisqEasyTradeFormatter.formatQuoteSideAmount(contract);
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, priceAsString);
+
+        String tradePrice = PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(trade));
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, tradePrice);
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
