@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.history;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -32,6 +34,7 @@ public class BisqEasyHistoryModel implements Model {
     private final ObservableList<BisqEasyTradeHistoryListItem> bisqEasyTradeHistoryListItems = FXCollections.observableArrayList();
     private final FilteredList<BisqEasyTradeHistoryListItem> filteredBisqEasyTradeHistoryListItems = new FilteredList<>(bisqEasyTradeHistoryListItems);
     private final SortedList<BisqEasyTradeHistoryListItem> sortedBisqEasyTradeHistoryListItems = new SortedList<>(filteredBisqEasyTradeHistoryListItems);
+    private final StringProperty placeholderText = new SimpleStringProperty("");
 
     private final Predicate<BisqEasyTradeHistoryListItem> bisqEasyTradeHistoryListItemsPredicate = item ->
             getSearchStringPredicate().test(item);
