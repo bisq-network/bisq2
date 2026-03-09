@@ -103,7 +103,7 @@ public class BisqEasyHistoryController implements Controller {
 
     void onShowTradeDetails(BisqEasyTradeHistoryListItem item) {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                new TradeDetailsController.InitData(item.getTrade(), item.getMyUserProfile(), item.getPeerProfile(),
+                new TradeDetailsController.InitData(item.getTrade(), item.getMyUserProfile(), item.getPeersUserProfile(),
                         item.getTrade().getContract().getMediator()));
     }
 

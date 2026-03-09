@@ -48,39 +48,39 @@ import java.util.Comparator;
 public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEasyHistoryController> {
     private static final double SIDE_PADDING = 40;
 
-    private final RichTableView<BisqEasyTradeHistoryListItem> bisqEasyTradeHistoryListView;
+    private final RichTableView<BisqEasyTradeHistoryListItem> tableView;
 
     public BisqEasyHistoryView(BisqEasyHistoryModel model, BisqEasyHistoryController controller) {
         super(new VBox(), model, controller);
 
-        bisqEasyTradeHistoryListView = new RichTableView<>(
+        tableView = new RichTableView<>(
                 model.getSortedBisqEasyTradeHistoryListItems(),
                 Res.get("bisqEasy.history.headline"),
                 Res.get("bisqEasy.history.numTrades"),
                 controller::applySearchPredicate);
-        bisqEasyTradeHistoryListView.getStyleClass().add("bisq-easy-history-table");
-        bisqEasyTradeHistoryListView.getExportButton().setVisible(false);
-        bisqEasyTradeHistoryListView.getExportButton().setManaged(false);
+        tableView.getStyleClass().add("bisq-easy-history-table");
+        tableView.getExportButton().setVisible(false);
+        tableView.getExportButton().setManaged(false);
         configTableView();
 
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        root.getChildren().addAll(bisqEasyTradeHistoryListView);
+        root.getChildren().addAll(tableView);
     }
 
     @Override
     protected void onViewAttached() {
-        bisqEasyTradeHistoryListView.initialize();
+        tableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
-        bisqEasyTradeHistoryListView.dispose();
+        tableView.dispose();
     }
 
     private void configTableView() {
-        bisqEasyTradeHistoryListView.getColumns().add(bisqEasyTradeHistoryListView.getSelectionMarkerColumn());
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.market"))
                 .left()
                 .fixWidth(81)
@@ -89,7 +89,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.tradeId"))
                 .minWidth(80)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
@@ -97,7 +97,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.myProfile"))
                 .left()
                 .minWidth(140)
@@ -106,11 +106,11 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.peerProfile"))
                 .left()
                 .minWidth(140)
-                .comparator(Comparator.comparing(item -> item.getPeerProfile().getNickName()))
+                .comparator(Comparator.comparing(item -> item.getPeersUserProfile().getNickName()))
                 .setCellFactory(getUserProfileCellFactory(false))
                 .includeForCsv(false)
                 .build());
@@ -123,10 +123,10 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .valueSupplier(BisqEasyTradeHistoryListItem::getDateString)
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build();
-        bisqEasyTradeHistoryListView.getColumns().add(dateColumn);
-        bisqEasyTradeHistoryListView.getSortOrder().add(dateColumn);
+        tableView.getColumns().add(dateColumn);
+        tableView.getSortOrder().add(dateColumn);
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.baseAmount"))
                 .left()
                 .minWidth(100)
@@ -135,7 +135,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.quoteAmount"))
                 .left()
                 .minWidth(100)
@@ -143,7 +143,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountWithSymbol)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.price"))
                 .left()
                 .fixWidth(220)
@@ -152,7 +152,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.payment"))
                 .left()
                 .fixWidth(100)
@@ -161,7 +161,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.myRole"))
                 .left()
                 .minWidth(100)
@@ -170,7 +170,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .build());
 
-        bisqEasyTradeHistoryListView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .setCellFactory(getActionButtonsCellFactory())
                 .left()
                 .minWidth(120)
@@ -206,7 +206,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfile userProfile = isMyUserProfile ? item.getMyUserProfile() : item.getPeerProfile();
+                    UserProfile userProfile = isMyUserProfile ? item.getMyUserProfile() : item.getPeersUserProfile();
                     userProfileDisplay = new UserProfileDisplay(userProfile, true, true);
                     ReputationScore reputationScore = isMyUserProfile ? item.getMyReputationScore() : item.getPeerReputationScore();
                     userProfileDisplay.setReputationScore(reputationScore);
