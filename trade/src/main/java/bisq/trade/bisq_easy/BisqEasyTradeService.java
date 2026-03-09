@@ -394,6 +394,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         persist();
     }
 
+    public void deleteTrade(BisqEasyTrade trade) {
+        boolean isDeleted = persistableStore.deleteTrade(trade);
+        if (isDeleted) {
+            persist();
+        }
+    }
+
 
     /* --------------------------------------------------------------------- */
     // TradeProtocol factory
