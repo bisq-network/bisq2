@@ -51,6 +51,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
     private static final double SIDE_PADDING = 40;
 
     private final RichTableView<BisqEasyTradeHistoryListItem> tableView;
+    private final Label placeholderLabel = new Label();
 
     public BisqEasyHistoryView(BisqEasyHistoryModel model, BisqEasyHistoryController controller) {
         super(new VBox(), model, controller);
@@ -63,6 +64,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getStyleClass().add("bisq-easy-history-table");
         tableView.getExportButton().setVisible(false);
         tableView.getExportButton().setManaged(false);
+        tableView.getTableView().setPlaceholder(placeholderLabel);
         configTableView();
 
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
@@ -71,11 +73,13 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
 
     @Override
     protected void onViewAttached() {
+        placeholderLabel.textProperty().bind(model.getPlaceholderText());
         tableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        placeholderLabel.textProperty().unbind();
         tableView.dispose();
     }
 
