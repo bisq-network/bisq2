@@ -72,38 +72,38 @@ message PubKeySharesRequest {
 message PubKeySharesResponse {
   bytes buyerOutputPubKeyShare = 1;
   bytes sellerOutputPubKeyShare = 2;
-  bytes multisigScriptKey = 4;
-  uint32 currentBlockHeight = 3;
+  bytes multisigScriptKey = 3;
+  uint32 currentBlockHeight = 4;
 }
 
 message NonceSharesRequest {
   string tradeId = 1;
   bytes buyerOutputPeersPubKeyShare = 2;
   bytes sellerOutputPeersPubKeyShare = 3;
-  bytes peersMultisigScriptKey = 10;
-  uint64 depositTxFeeRate = 4;       // sats per kwu
-  uint64 preparedTxFeeRate = 5;      // sats per kwu
-  uint64 tradeAmount = 6;            // sats
-  uint64 buyersSecurityDeposit = 7;  // sats
-  uint64 sellersSecurityDeposit = 8; // sats
-  optional ReceiverAddressAndAmount tradeFeeReceiver = 9;
+  bytes peersMultisigScriptKey = 4;
+  uint64 depositTxFeeRate = 5;       // sats per kwu
+  uint64 preparedTxFeeRate = 6;      // sats per kwu
+  uint64 tradeAmount = 7;            // sats
+  uint64 buyersSecurityDeposit = 8;  // sats
+  uint64 sellersSecurityDeposit = 9; // sats
+  optional ReceiverAddressAndAmount tradeFeeReceiver = 10;
 }
 
 message NonceSharesMessage {
   string warningTxFeeBumpAddress = 1;
   string redirectTxFeeBumpAddress = 2;
-  string claimTxPayoutAddress = 11;
-  bytes halfDepositPsbt = 3;
-  uint64 redirectionAmountMsat = 14; // (millisatoshis)
-  bytes swapTxInputNonceShare = 4;
-  bytes buyersWarningTxBuyerInputNonceShare = 5;
-  bytes buyersWarningTxSellerInputNonceShare = 6;
-  bytes sellersWarningTxBuyerInputNonceShare = 7;
-  bytes sellersWarningTxSellerInputNonceShare = 8;
-  bytes buyersRedirectTxInputNonceShare = 9;
-  bytes sellersRedirectTxInputNonceShare = 10;
-  bytes buyersClaimTxInputNonceShare = 12;
-  bytes sellersClaimTxInputNonceShare = 13;
+  string claimTxPayoutAddress = 3;
+  bytes halfDepositPsbt = 4;
+  uint64 redirectionAmountMsat = 5; // (millisatoshis)
+  bytes swapTxInputNonceShare = 6;
+  bytes buyersWarningTxBuyerInputNonceShare = 7;
+  bytes buyersWarningTxSellerInputNonceShare = 8;
+  bytes sellersWarningTxBuyerInputNonceShare = 9;
+  bytes sellersWarningTxSellerInputNonceShare = 10;
+  bytes buyersRedirectTxInputNonceShare = 11;
+  bytes sellersRedirectTxInputNonceShare = 12;
+  bytes buyersClaimTxInputNonceShare = 13;
+  bytes sellersClaimTxInputNonceShare = 14;
 }
 
 message PartialSignaturesRequest {
@@ -117,9 +117,9 @@ message PartialSignaturesMessage {
   bytes peersWarningTxBuyerInputPartialSignature = 1;
   bytes peersWarningTxSellerInputPartialSignature = 2;
   bytes peersRedirectTxInputPartialSignature = 3;
-  bytes peersClaimTxInputPartialSignature = 6;
-  optional bytes swapTxInputPartialSignature = 4;
-  optional bytes swapTxInputSighash = 5;
+  bytes peersClaimTxInputPartialSignature = 4;
+  optional bytes swapTxInputPartialSignature = 5;
+  optional bytes swapTxInputSighash = 6;
   optional ContractualTxIds contractualTxIds = 7;
 }
 
