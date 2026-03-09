@@ -51,7 +51,7 @@ public class BisqEasyTradeHistoryListItem {
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
-    private final UserProfile myUserProfile, peerProfile;
+    private final UserProfile myUserProfile, peersUserProfile;
     private final ReputationScore myReputationScore, peerReputationScore;
     private final Pair<String, String> pricePair;
     private final FiatPaymentMethod paymentMethod;
@@ -73,8 +73,8 @@ public class BisqEasyTradeHistoryListItem {
 
         myUserProfile = closedTrade.myUserProfile();
         myReputationScore = reputationService.getReputationScore(myUserProfile);
-        peerProfile = closedTrade.peerUserProfile();
-        peerReputationScore = reputationService.getReputationScore(peerProfile);
+        peersUserProfile = closedTrade.peerUserProfile();
+        peerReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         baseAmount = contract.getBaseSideAmount();
         baseAmountAsString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);

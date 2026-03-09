@@ -113,15 +113,15 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             super.onDeactivate();
         }
 
-        protected void onCloseCompletedTrade() {
+        protected void onArchiveTrade() {
             new Popup().information(Res.get("bisqEasy.openTrades.closeTrade.info"))
                     .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
-                    .onAction(this::doCloseCompletedTrade)
+                    .onAction(this::doArchiveTrade)
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
         }
 
-        private void doCloseCompletedTrade() {
+        private void doArchiveTrade() {
             BisqEasyOpenTradeChannel channel = model.getChannel();
             bisqEasyTradeService.closeTrade(model.getTrade(), channel.getMyUserIdentity().getUserProfile(), channel.getPeer());
             leavePrivateChatManager.leaveChannel(channel);
@@ -190,7 +190,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
     public static abstract class View<M extends State4.Model, C extends State4.Controller<?, ?>> extends BaseState.View<M, C> {
         private final UserProfileDisplay peerProfileDisplay;
-        protected final Button closeTradeButton, exportButton, detailsButton;
+        protected final Button archiveTradeButton, exportButton, detailsButton;
         protected final TradeCompletedTable tradeCompletedTable;
 
         protected View(M model, C controller) {
@@ -201,9 +201,9 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
             detailsButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.showDetails"));
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
-            closeTradeButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
-            closeTradeButton.setDefaultButton(true);
-            HBox buttons = new HBox(20, detailsButton, exportButton, closeTradeButton);
+            archiveTradeButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
+            archiveTradeButton.setDefaultButton(true);
+            HBox buttons = new HBox(20, detailsButton, exportButton, archiveTradeButton);
             buttons.setAlignment(Pos.BOTTOM_RIGHT);
             VBox.setMargin(buttons, new Insets(0, 0, 20, 0));
 
@@ -233,7 +233,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             }
             detailsButton.setOnAction(e -> controller.onShowDetails());
             exportButton.setOnAction(e -> controller.onExportTrade());
-            closeTradeButton.setOnAction(e -> controller.onCloseCompletedTrade());
+            archiveTradeButton.setOnAction(e -> controller.onArchiveTrade());
         }
 
         @Override
@@ -245,7 +245,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
             detailsButton.setOnAction(null);
             exportButton.setOnAction(null);
-            closeTradeButton.setOnAction(null);
+            archiveTradeButton.setOnAction(null);
         }
     }
 }
