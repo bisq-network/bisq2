@@ -47,7 +47,7 @@ public class BisqEasyTradeHistoryListItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
     private final String tradeId, shortTradeId, dateString, tradeCompletedDateString, baseAmountAsString,
-            baseAmountWithSymbol, quoteAmountAsString, quoteAmountWithSymbol, priceTooltip, myRole, paymentAsString;
+            baseAmountWithSymbol, quoteAmountAsString, quoteAmountWithSymbol, priceString, priceTooltip, myRole, paymentAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
@@ -89,8 +89,8 @@ public class BisqEasyTradeHistoryListItem {
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
 
-        String tradePrice = PriceFormatter.format(trade.getPriceQuote());
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, tradePrice);
+        priceString = PriceFormatter.formatWithCode(trade.getPriceQuote());
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceString);
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
