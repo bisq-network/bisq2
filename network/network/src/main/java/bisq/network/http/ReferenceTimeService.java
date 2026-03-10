@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -48,7 +49,12 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
         if (timeNode == null || timeNode.isNull() || !timeNode.isNumber()) {
             throw new RuntimeException("Response JSON missing 'time' field");
         }
-        return timeNode.asLong() * 1000;
+        long referenceTime = timeNode.asLong() * 1000;
+        log.info("Reference time from {}: {} (epoche time in seconds: {})",
+                selectedProvider.get().getBaseUrl(),
+                new Date(referenceTime),
+                referenceTime);
+        return referenceTime;
     }
 
     @Override
