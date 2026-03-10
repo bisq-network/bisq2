@@ -95,6 +95,7 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
                 .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
                 .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
                 .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))

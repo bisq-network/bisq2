@@ -66,6 +66,7 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
                 .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
                 .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
                 .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
