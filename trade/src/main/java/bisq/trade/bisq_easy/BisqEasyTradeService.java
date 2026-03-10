@@ -28,7 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -376,29 +376,37 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         );
     }
 
-    public ObservableSet<BisqEasyTrade> getTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
     }
 
-    public ObservableSet<BisqEasyTrade> getAllTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
         return persistableStore.getAllTrades();
     }
 
-    public ObservableSet<BisqEasyClosedTrade> getClosedTrades() {
+    public ReadOnlyObservableSet<BisqEasyClosedTrade> getClosedTrades() {
         return persistableStore.getClosedTrades();
     }
 
     public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
-        persistableStore.closeTrade(trade, myUserProfile, peerUserProfile);
+        persistableStore.getTrades().remove(trade);
+        BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
+        persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
+
         tradeProtocolById.remove(trade.getId());
         persist();
     }
 
     public void deleteTrade(BisqEasyTrade trade) {
-        boolean isDeleted = persistableStore.deleteTrade(trade);
-        if (isDeleted) {
+        Set<BisqEasyClosedTrade> closedTrades = persistableStore.getClosedTrades();
+        Optional<BisqEasyClosedTrade> closedTrade = closedTrades.stream()
+                .filter(ct -> ct.trade().getId().equals(trade.getId()))
+                .findFirst();
+        if (closedTrade.isPresent()) {
+            closedTrades.remove(closedTrade.get());
             persist();
         }
+        log.warn("Could not delete trade {}", trade.getId());
     }
 
 
