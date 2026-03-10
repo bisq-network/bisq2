@@ -201,7 +201,7 @@ public class DesktopController extends NavigationController {
         onActivatedHandler.run();
 
         referenceTimePin = serviceProvider.getNetworkService().getReferenceTime().addObserver(referenceTime -> {
-            if (referenceTime != null) {
+            if (referenceTime != null && referenceTime > 0) {
                 UIThread.run(() -> {
                     long systemTime = System.currentTimeMillis();
                     String formattedSystemTime = DateFormatter.formatDateTime(new Date(systemTime));
