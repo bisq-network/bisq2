@@ -97,18 +97,16 @@ public class ProfileCardOverviewController implements Controller {
         livenessUpdateScheduler = UIScheduler.run(() -> {
                     // We need to use the userprofile from our userProfileService as only
                     // that will have a publishDate (set by the p2p network storage layer).
-                    // For users we have persisted in the contact list and which are
+                    // For userProfiles we have persisted in the contact list and which are
                     // expired (have not been online in the past 15 days), we set it
                     // to 0 and display "N/A".
-                    long publishDate = userProfileService.findUserProfile(userProfile.getId())
+                    String lastUserActivity = userProfileService.findUserProfile(userProfile.getId())
                             .map(UserProfile::getPublishDate)
-                            .orElse(0L);
-                    if (publishDate == 0) {
-                        model.getLastUserActivity().set(Res.get("data.na"));
-                    } else {
-                        long age = Math.max(0, System.currentTimeMillis() - publishDate);
-                        model.getLastUserActivity().set(TimeFormatter.formatAgeCompact(age));
-                    }
+                            .filter(publishDate -> publishDate > 0)
+                            .map(publishDate -> System.currentTimeMillis() - publishDate)
+                            .map(TimeFormatter::formatAgeCompact)
+                            .orElse(Res.get("data.na"));
+                    model.getLastUserActivity().set(lastUserActivity);
                 })
                 .periodically(0, 1, TimeUnit.MINUTES);
     }
