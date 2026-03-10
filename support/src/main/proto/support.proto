@@ -63,6 +63,7 @@ enum MediationPayoutDistributionType {
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT = 5;
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION = 6;
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY = 7;
+  MEDIATIONPAYOUTDISTRIBUTIONTYPE_NO_PAYOUT = 8;
 }
 
 message MuSigMediationRequest {
@@ -81,11 +82,11 @@ message MuSigMediatorsResponse {
 message MuSigMediationResult {
   uint64 date = 1;
   MediationResultReason mediationResultReason = 2;
-  sint64 proposedBuyerPayoutAmount = 3;
-  sint64 proposedSellerPayoutAmount = 4;
-  optional string summaryNotes = 5;
-  MediationPayoutDistributionType mediationPayoutDistributionType = 6;
-  optional double payoutAdjustmentPercentage = 7;
+  MediationPayoutDistributionType mediationPayoutDistributionType = 3;
+  optional sint64 proposedBuyerPayoutAmount = 4;
+  optional sint64 proposedSellerPayoutAmount = 5;
+  optional double payoutAdjustmentPercentage = 6;
+  optional string summaryNotes = 7;
 }
 
 message MuSigMediationStateChangeMessage {

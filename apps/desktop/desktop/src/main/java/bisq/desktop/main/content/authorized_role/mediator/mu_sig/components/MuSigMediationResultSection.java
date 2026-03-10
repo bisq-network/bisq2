@@ -131,13 +131,25 @@ public class MuSigMediationResultSection {
                     muSigMediationResult
                             .map(i -> i.getSummaryNotes().orElse("")).orElse(""));
             model.getBuyerPayoutAmountAsCoin().set(
-                    muSigMediationResult.map(MuSigMediationResult::getProposedBuyerPayoutAmount).map(Coin::asBtcFromValue).orElse(null));
+                    muSigMediationResult
+                            .flatMap(MuSigMediationResult::getProposedBuyerPayoutAmount)
+                            .map(Coin::asBtcFromValue)
+                            .orElse(null));
             model.getSellerPayoutAmountAsCoin().set(
-                    muSigMediationResult.map(MuSigMediationResult::getProposedSellerPayoutAmount).map(Coin::asBtcFromValue).orElse(null));
+                    muSigMediationResult
+                            .flatMap(MuSigMediationResult::getProposedSellerPayoutAmount)
+                            .map(Coin::asBtcFromValue)
+                            .orElse(null));
             model.getBuyerPayoutAmount().set(
-                    muSigMediationResult.map(MuSigMediationResult::getProposedBuyerPayoutAmount).map(Controller::formatSatsAsBtc).orElse(""));
+                    muSigMediationResult
+                            .flatMap(MuSigMediationResult::getProposedBuyerPayoutAmount)
+                            .map(Controller::formatSatsAsBtc)
+                            .orElse(""));
             model.getSellerPayoutAmount().set(
-                    muSigMediationResult.map(MuSigMediationResult::getProposedSellerPayoutAmount).map(Controller::formatSatsAsBtc).orElse(""));
+                    muSigMediationResult
+                            .flatMap(MuSigMediationResult::getProposedSellerPayoutAmount)
+                            .map(Controller::formatSatsAsBtc)
+                            .orElse(""));
             model.getPayoutAdjustmentPercentageValue().set(
                     muSigMediationResult.flatMap(MuSigMediationResult::getPayoutAdjustmentPercentage).orElse(null));
             model.getPayoutAdjustmentPercentage().set(
@@ -146,8 +158,10 @@ public class MuSigMediationResultSection {
                             .map(value -> PercentageFormatter.formatToPercent(value, 0))
                             .orElse(""));
             MediationPayoutDistributionType payoutDistributionType = model.getSelectedPayoutDistributionType().get();
+            boolean showPayoutAmounts = payoutDistributionType != null && shouldShowPayoutAmounts(payoutDistributionType);
             boolean showPayoutAdjustmentPercentage = payoutDistributionType != null &&
                     shouldShowPayoutAdjustmentPercentage(payoutDistributionType);
+            model.getShowPayoutAmounts().set(showPayoutAmounts);
             model.getShowPayoutAdjustmentPercentage().set(showPayoutAdjustmentPercentage);
             model.getUsePenaltyDescription().set(
                     payoutDistributionType != null && shouldUsePenaltyDescription(payoutDistributionType));
@@ -207,9 +221,14 @@ public class MuSigMediationResultSection {
             }
 
             boolean showPayoutAdjustmentPercentage = shouldShowPayoutAdjustmentPercentage(payoutDistributionType);
+            boolean showPayoutAmounts = shouldShowPayoutAmounts(payoutDistributionType);
+            model.getShowPayoutAmounts().set(showPayoutAmounts);
             if (!showPayoutAdjustmentPercentage) {
                 model.getPayoutAdjustmentPercentageValue().set(null);
                 model.getPayoutAdjustmentPercentage().set("");
+            }
+            if (!showPayoutAmounts) {
+                clearPayoutAmounts();
             }
             model.getShowPayoutAdjustmentPercentage().set(showPayoutAdjustmentPercentage);
             model.getUsePenaltyDescription().set(shouldUsePenaltyDescription(payoutDistributionType));
@@ -250,6 +269,10 @@ public class MuSigMediationResultSection {
         }
 
         private void applyPayoutAmountsForType(MediationPayoutDistributionType payoutDistributionType) {
+            if (payoutDistributionType == MediationPayoutDistributionType.NO_PAYOUT) {
+                clearPayoutAmounts();
+                return;
+            }
             if (payoutDistributionType == MediationPayoutDistributionType.CUSTOM_PAYOUT) {
                 return;
             }
@@ -335,6 +358,10 @@ public class MuSigMediationResultSection {
             return payoutDistributionType == MediationPayoutDistributionType.CUSTOM_PAYOUT;
         }
 
+        private static boolean shouldShowPayoutAmounts(MediationPayoutDistributionType payoutDistributionType) {
+            return payoutDistributionType != MediationPayoutDistributionType.NO_PAYOUT;
+        }
+
         private boolean hasRequiredSelections() {
             MediationPayoutDistributionType payoutDistributionType = model.getSelectedPayoutDistributionType().get();
             return model.getSelectedReason().get() != null &&
@@ -352,6 +379,10 @@ public class MuSigMediationResultSection {
         private boolean hasValidPayoutAmounts(MediationPayoutDistributionType payoutDistributionType,
                                               Optional<Long> optionalBuyerPayoutAmount,
                                               Optional<Long> optionalSellerPayoutAmount) {
+            if (payoutDistributionType == MediationPayoutDistributionType.NO_PAYOUT) {
+                return optionalBuyerPayoutAmount.isEmpty() && optionalSellerPayoutAmount.isEmpty();
+            }
+
             if (optionalBuyerPayoutAmount.isEmpty() || optionalSellerPayoutAmount.isEmpty()) {
                 return false;
             }
@@ -416,8 +447,11 @@ public class MuSigMediationResultSection {
                         Optional.ofNullable(model.getBuyerPayoutAmountAsCoin().get()).map(Coin::getValue);
                 Optional<Long> optionalSellerPayoutAmount =
                         Optional.ofNullable(model.getSellerPayoutAmountAsCoin().get()).map(Coin::getValue);
+                boolean payoutAmountsRequired = selectedPayoutDistributionType != null &&
+                        shouldShowPayoutAmounts(selectedPayoutDistributionType);
                 if (selectedReason == null || selectedPayoutDistributionType == null ||
-                        optionalBuyerPayoutAmount.isEmpty() || optionalSellerPayoutAmount.isEmpty()) {
+                        (payoutAmountsRequired &&
+                                (optionalBuyerPayoutAmount.isEmpty() || optionalSellerPayoutAmount.isEmpty()))) {
                     log.warn("Cannot close MuSig mediation case because required fields are missing");
                     return;
                 }
@@ -425,9 +459,9 @@ public class MuSigMediationResultSection {
                 String summaryNotes = model.getSummaryNotes().get();
                 MuSigMediationResult muSigMediationResult = muSigMediatorService.createMuSigMediationResult(
                         selectedReason,
-                        optionalBuyerPayoutAmount.orElseThrow(),
-                        optionalSellerPayoutAmount.orElseThrow(),
                         selectedPayoutDistributionType,
+                        optionalBuyerPayoutAmount,
+                        optionalSellerPayoutAmount,
                         getPayoutAdjustmentPercentageValue(),
                         summaryNotes.isEmpty() ? Optional.empty() : Optional.of(summaryNotes));
                 muSigMediatorService.closeMediationCase(muSigMediationCase, muSigMediationResult);
@@ -454,6 +488,7 @@ public class MuSigMediationResultSection {
         private final ObjectProperty<Coin> sellerPayoutAmountAsCoin = new SimpleObjectProperty<>();
         private final StringProperty payoutAdjustmentPercentage = new SimpleStringProperty("");
         private final ObjectProperty<Double> payoutAdjustmentPercentageValue = new SimpleObjectProperty<>();
+        private final BooleanProperty showPayoutAmounts = new SimpleBooleanProperty(true);
         private final BooleanProperty showPayoutAdjustmentPercentage = new SimpleBooleanProperty(false);
         private final BooleanProperty usePenaltyDescription = new SimpleBooleanProperty(false);
         private final BooleanProperty payoutAmountsEditable = new SimpleBooleanProperty(false);
@@ -629,6 +664,10 @@ public class MuSigMediationResultSection {
             buyerPayoutAmount.textProperty().bindBidirectional(model.getBuyerPayoutAmount());
             sellerPayoutAmount.textProperty().bindBidirectional(model.getSellerPayoutAmount());
             payoutAdjustmentPercentage.textProperty().bindBidirectional(model.getPayoutAdjustmentPercentage());
+            buyerPayoutAmount.visibleProperty().bind(model.getShowPayoutAmounts());
+            buyerPayoutAmount.managedProperty().bind(model.getShowPayoutAmounts());
+            sellerPayoutAmount.visibleProperty().bind(model.getShowPayoutAmounts());
+            sellerPayoutAmount.managedProperty().bind(model.getShowPayoutAmounts());
             payoutAdjustmentPercentage.visibleProperty().bind(model.getShowPayoutAdjustmentPercentage());
             payoutAdjustmentPercentage.managedProperty().bind(model.getShowPayoutAdjustmentPercentage());
             applyPayoutAdjustmentPercentageDescription(model.getUsePenaltyDescription().get());
@@ -661,8 +700,16 @@ public class MuSigMediationResultSection {
             buyerPayoutAmount.textProperty().unbindBidirectional(model.getBuyerPayoutAmount());
             sellerPayoutAmount.textProperty().unbindBidirectional(model.getSellerPayoutAmount());
             payoutAdjustmentPercentage.textProperty().unbindBidirectional(model.getPayoutAdjustmentPercentage());
+            buyerPayoutAmount.visibleProperty().unbind();
+            buyerPayoutAmount.managedProperty().unbind();
+            sellerPayoutAmount.visibleProperty().unbind();
+            sellerPayoutAmount.managedProperty().unbind();
             payoutAdjustmentPercentage.visibleProperty().unbind();
             payoutAdjustmentPercentage.managedProperty().unbind();
+            buyerPayoutAmount.setVisible(true);
+            buyerPayoutAmount.setManaged(true);
+            sellerPayoutAmount.setVisible(true);
+            sellerPayoutAmount.setManaged(true);
             payoutDistributionTypeSelection.setVisible(true);
             payoutDistributionTypeSelection.setManaged(true);
             reasonSelection.setVisible(true);

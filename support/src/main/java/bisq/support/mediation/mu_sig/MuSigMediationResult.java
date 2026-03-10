@@ -27,8 +27,8 @@ import lombok.Getter;
 
 import java.util.Optional;
 
-import static java.lang.System.currentTimeMillis;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.System.currentTimeMillis;
 
 @Getter
 @EqualsAndHashCode
@@ -37,39 +37,39 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
 
     private final long date;
     private final MediationResultReason mediationResultReason;
-    private final long proposedBuyerPayoutAmount;
-    private final long proposedSellerPayoutAmount;
     private final MediationPayoutDistributionType mediationPayoutDistributionType;
+    private final Optional<Long> proposedBuyerPayoutAmount;
+    private final Optional<Long> proposedSellerPayoutAmount;
     private final Optional<Double> payoutAdjustmentPercentage;
     private final Optional<String> summaryNotes;
 
     public MuSigMediationResult(MediationResultReason mediationResultReason,
-                                long proposedBuyerPayoutAmount,
-                                long proposedSellerPayoutAmount,
                                 MediationPayoutDistributionType mediationPayoutDistributionType,
+                                Optional<Long> proposedBuyerPayoutAmount,
+                                Optional<Long> proposedSellerPayoutAmount,
                                 Optional<Double> payoutAdjustmentPercentage,
                                 Optional<String> summaryNotes) {
         this(currentTimeMillis(),
                 mediationResultReason,
+                mediationPayoutDistributionType,
                 proposedBuyerPayoutAmount,
                 proposedSellerPayoutAmount,
-                mediationPayoutDistributionType,
                 payoutAdjustmentPercentage,
                 summaryNotes);
     }
 
     private MuSigMediationResult(long date,
                                  MediationResultReason mediationResultReason,
-                                 long proposedBuyerPayoutAmount,
-                                 long proposedSellerPayoutAmount,
                                  MediationPayoutDistributionType mediationPayoutDistributionType,
+                                 Optional<Long> proposedBuyerPayoutAmount,
+                                 Optional<Long> proposedSellerPayoutAmount,
                                  Optional<Double> payoutAdjustmentPercentage,
                                  Optional<String> summaryNotes) {
         this.date = date;
         this.mediationResultReason = mediationResultReason;
+        this.mediationPayoutDistributionType = mediationPayoutDistributionType;
         this.proposedBuyerPayoutAmount = proposedBuyerPayoutAmount;
         this.proposedSellerPayoutAmount = proposedSellerPayoutAmount;
-        this.mediationPayoutDistributionType = mediationPayoutDistributionType;
         this.payoutAdjustmentPercentage = payoutAdjustmentPercentage;
         this.summaryNotes = summaryNotes;
 
@@ -81,8 +81,15 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
         NetworkDataValidation.validateDate(date);
         checkArgument(mediationResultReason != null, "mediationResultReason must not be null");
         checkArgument(mediationPayoutDistributionType != null, "mediationPayoutDistributionType must not be null");
-        checkArgument(proposedBuyerPayoutAmount >= 0, "proposedBuyerPayoutAmount must not be negative");
-        checkArgument(proposedSellerPayoutAmount >= 0, "proposedSellerPayoutAmount must not be negative");
+        boolean noPayout = mediationPayoutDistributionType == MediationPayoutDistributionType.NO_PAYOUT;
+        checkArgument(noPayout
+                ? proposedBuyerPayoutAmount.isEmpty() && proposedSellerPayoutAmount.isEmpty()
+                : proposedBuyerPayoutAmount.isPresent() && proposedSellerPayoutAmount.isPresent(),
+                "payout amounts must be present for payout distributions and absent for NO_PAYOUT");
+        proposedBuyerPayoutAmount.ifPresent(value ->
+                checkArgument(value >= 0, "proposedBuyerPayoutAmount must not be negative"));
+        proposedSellerPayoutAmount.ifPresent(value ->
+                checkArgument(value >= 0, "proposedSellerPayoutAmount must not be negative"));
         NetworkDataValidation.validateText(summaryNotes, MAX_SUMMARY_NOTES_LENGTH);
     }
 
@@ -91,9 +98,9 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
         var builder = bisq.support.protobuf.MuSigMediationResult.newBuilder()
                 .setDate(date)
                 .setMediationResultReason(mediationResultReason.toProtoEnum())
-                .setProposedBuyerPayoutAmount(proposedBuyerPayoutAmount)
-                .setProposedSellerPayoutAmount(proposedSellerPayoutAmount)
                 .setMediationPayoutDistributionType(mediationPayoutDistributionType.toProtoEnum());
+        proposedBuyerPayoutAmount.ifPresent(builder::setProposedBuyerPayoutAmount);
+        proposedSellerPayoutAmount.ifPresent(builder::setProposedSellerPayoutAmount);
         payoutAdjustmentPercentage.ifPresent(builder::setPayoutAdjustmentPercentage);
         summaryNotes.ifPresent(builder::setSummaryNotes);
         return builder;
@@ -109,9 +116,9 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
         return new MuSigMediationResult(
                 proto.getDate(),
                 MediationResultReason.fromProto(proto.getMediationResultReason()),
-                proto.getProposedBuyerPayoutAmount(),
-                proto.getProposedSellerPayoutAmount(),
                 MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
+                proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
+                proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
                 proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
                 proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
     }

@@ -118,13 +118,14 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
     /* --------------------------------------------------------------------- */
 
     public MuSigMediationResult createMuSigMediationResult(MediationResultReason mediationResultReason,
-                                                           long proposedBuyerPayoutAmount,
-                                                           long proposedSellerPayoutAmount,
                                                            MediationPayoutDistributionType mediationPayoutDistributionType,
+                                                           Optional<Long> proposedBuyerPayoutAmount,
+                                                           Optional<Long> proposedSellerPayoutAmount,
                                                            Optional<Double> payoutAdjustmentPercentage,
                                                            Optional<String> summaryNotes) {
-        return new MuSigMediationResult(mediationResultReason, proposedBuyerPayoutAmount, proposedSellerPayoutAmount,
-                mediationPayoutDistributionType, payoutAdjustmentPercentage, summaryNotes);
+        return new MuSigMediationResult(mediationResultReason, mediationPayoutDistributionType,
+                proposedBuyerPayoutAmount, proposedSellerPayoutAmount,
+                payoutAdjustmentPercentage, summaryNotes);
     }
 
     public void closeMediationCase(MuSigMediationCase muSigMediationCase, MuSigMediationResult muSigMediationResult) {
