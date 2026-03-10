@@ -33,6 +33,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
@@ -47,6 +48,7 @@ public class ProfileCardOverviewController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
+    private final UserProfileService userProfileService;
 
     private UIScheduler livenessUpdateScheduler;
 
@@ -55,6 +57,7 @@ public class ProfileCardOverviewController implements Controller {
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         model = new ProfileCardOverviewModel();
         view = new ProfileCardOverviewView(model, this);
@@ -92,13 +95,18 @@ public class ProfileCardOverviewController implements Controller {
             livenessUpdateScheduler.stop();
         }
         livenessUpdateScheduler = UIScheduler.run(() -> {
-                    long publishDate = userProfile.getPublishDate();
-                    if (publishDate == 0) {
-                        model.getLastUserActivity().set(Res.get("data.na"));
-                    } else {
-                        long age = Math.max(0, System.currentTimeMillis() - publishDate);
-                        model.getLastUserActivity().set(TimeFormatter.formatAgeCompact(age));
-                    }
+                    // We need to use the userprofile from our userProfileService as only
+                    // that will have a publishDate (set by the p2p network storage layer).
+                    // For userProfiles we have persisted in the contact list and which are
+                    // expired (have not been online in the past 15 days), we set it
+                    // to 0 and display "N/A".
+                    String lastUserActivity = userProfileService.findUserProfile(userProfile.getId())
+                            .map(UserProfile::getPublishDate)
+                            .filter(publishDate -> publishDate > 0)
+                            .map(publishDate -> System.currentTimeMillis() - publishDate)
+                            .map(TimeFormatter::formatAgeCompact)
+                            .orElse(Res.get("data.na"));
+                    model.getLastUserActivity().set(lastUserActivity);
                 })
                 .periodically(0, 1, TimeUnit.MINUTES);
     }
