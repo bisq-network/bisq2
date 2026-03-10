@@ -33,6 +33,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
@@ -47,6 +48,7 @@ public class ProfileCardOverviewController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
+    private final UserProfileService userProfileService;
 
     private UIScheduler livenessUpdateScheduler;
 
@@ -55,6 +57,7 @@ public class ProfileCardOverviewController implements Controller {
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         model = new ProfileCardOverviewModel();
         view = new ProfileCardOverviewView(model, this);
@@ -92,7 +95,14 @@ public class ProfileCardOverviewController implements Controller {
             livenessUpdateScheduler.stop();
         }
         livenessUpdateScheduler = UIScheduler.run(() -> {
-                    long publishDate = userProfile.getPublishDate();
+                    // We need to use the userprofile from our userProfileService as only
+                    // that will have a publishDate (set by the p2p network storage layer).
+                    // For users we have persisted in the contact list and which are
+                    // expired (have not been online in the past 15 days), we set it
+                    // to 0 and display "N/A".
+                    long publishDate = userProfileService.findUserProfile(userProfile.getId())
+                            .map(UserProfile::getPublishDate)
+                            .orElse(0L);
                     if (publishDate == 0) {
                         model.getLastUserActivity().set(Res.get("data.na"));
                     } else {
