@@ -28,7 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -376,15 +376,15 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         );
     }
 
-    public ObservableSet<BisqEasyTrade> getTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
     }
 
-    public ObservableSet<BisqEasyTrade> getAllTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
         return persistableStore.getAllTrades();
     }
 
-    public ObservableSet<BisqEasyClosedTrade> getClosedTrades() {
+    public ReadOnlyObservableSet<BisqEasyClosedTrade> getClosedTrades() {
         return persistableStore.getClosedTrades();
     }
 
