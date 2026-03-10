@@ -130,7 +130,7 @@ public class PriceSpecFormatter {
         }
 
         // Market price
-        return new Pair<>(PriceFormatter.format(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
+        return new Pair<>(PriceFormatter.formatWithCode(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
     }
 
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec,

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.history;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -87,17 +88,19 @@ public class BisqEasyHistoryController implements Controller {
     }
 
     void applySearchPredicate(String searchText) {
-        String string = searchText == null ? "" : searchText.toLowerCase();
-//        model.setSearchStringPredicate(item ->
-//                StringUtils.isEmpty(string)
-//                        || item.getMarket().getMarketDisplayName().toLowerCase().contains(string)
-//                        || item.getMakerUserProfile().getUserName().toLowerCase().contains(string)
-//                        || item.getOfferId().toLowerCase().contains(string)
-//                        || item.getOfferDate().toLowerCase().contains(string)
-//                        || item.getBaseAmountAsString().contains(string)
-//                        || item.getQuoteAmountAsString().contains(string)
-//                        || item.getPrice().contains(string)
-//                        || item.getPaymentMethodsAsString().toLowerCase().contains(string));
+        String string = searchText == null ? "" : searchText.trim().toLowerCase();
+        model.setSearchStringPredicate(item ->
+                StringUtils.isEmpty(string)
+                        || item.getMarket().getMarketDisplayName().toLowerCase().contains(string)
+                        || item.getMyUserProfile().getUserName().toLowerCase().contains(string)
+                        || item.getPeersUserProfile().getUserName().toLowerCase().contains(string)
+                        || item.getDateString().toLowerCase().contains(string)
+                        || item.getTradeId().toLowerCase().contains(string)
+                        || item.getBaseAmountAsString().toLowerCase().contains(string)
+                        || item.getQuoteAmountAsString().toLowerCase().contains(string)
+                        || item.getPriceString().toLowerCase().contains(string)
+                        || item.getPaymentAsString().toLowerCase().contains(string)
+                        || item.getMyRole().toLowerCase().contains(string));
         applyPredicates();
     }
 
