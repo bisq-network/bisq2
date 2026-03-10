@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.bisq_easy.details;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
@@ -25,6 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediationCaseListItem;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -33,10 +33,9 @@ import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationCase;
-import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -99,7 +98,7 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
         model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(contract));
         model.setFiatCurrency(offer.getMarket().getQuoteCurrencyCode());
         model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(contract));
-        model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
+        model.setPrice(PriceFormatter.format(contract.getPriceQuote()));
         model.setPriceCodes(offer.getMarket().getMarketCodes());
         model.setPriceSpec(offer.getPriceSpec() instanceof FixPriceSpec
                 ? ""
