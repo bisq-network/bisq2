@@ -45,6 +45,8 @@ public class TradeStateModel implements Model {
     private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty interruptedTradeInfo = new SimpleBooleanProperty();
     private final BooleanProperty error = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowInterruptedBox = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowTradeDetailsHeaderButton = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty isInMediation = new SimpleBooleanProperty();
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
@@ -71,6 +73,8 @@ public class TradeStateModel implements Model {
         interruptTradeButtonVisible.set(true);
         interruptedTradeInfo.set(false);
         error.set(false);
+        shouldShowInterruptedBox.set(false);
+        shouldShowTradeDetailsHeaderButton.set(false);
         phaseAndInfoVisible.set(false);
         isInMediation.set(false);
         showReportToMediatorButton.set(false);

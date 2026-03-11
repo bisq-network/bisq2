@@ -287,7 +287,7 @@ public class TradeRestApi extends RestApiBase {
     }
 
     private void handleCloseTrade(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade) throws Exception {
-        bisqEasyTradeService.removeTrade(trade, channel.getMyUserIdentity().getUserProfile(), channel.getPeer());
+        bisqEasyTradeService.closeTrade(trade, channel.getMyUserIdentity().getUserProfile(), channel.getPeer());
         leavePrivateChatManager.leaveChannel(channel);
     }
 
