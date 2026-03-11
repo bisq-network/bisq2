@@ -78,6 +78,7 @@ final class MuSigMediationPayoutDistributionCalculator {
                                                     PayoutContext context,
                                                     Optional<Double> payoutAdjustmentPercentageValue) {
         return switch (payoutDistributionType) {
+            case NO_PAYOUT -> Optional.empty();
             case CUSTOM_PAYOUT -> Optional.empty();
             case BUYER_GETS_TRADE_AMOUNT -> Optional.of(new PayoutAmounts(
                     context.tradeAmount() + context.buyerSecurityDeposit(),

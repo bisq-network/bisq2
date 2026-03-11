@@ -29,6 +29,7 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Pin;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -317,12 +318,19 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
     }
 
     private static String getMediationResultDetailsText(MuSigTrade trade, MuSigMediationResult result) {
+        if (result.getProposedBuyerPayoutAmount().isEmpty() || result.getProposedSellerPayoutAmount().isEmpty()) {
+            if (result.getMediationPayoutDistributionType() == MediationPayoutDistributionType.NO_PAYOUT) {
+                return Res.get("muSig.trade.pending.inMediation.resultDetails.noPayout");
+            }
+            return Res.get("muSig.trade.pending.inMediation.resultDetails", Res.get("data.na"), Res.get("data.na"));
+        }
+
         String myPayoutAmount = trade.isBuyer()
-                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount()))
-                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount()));
+                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount().orElseThrow()))
+                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount().orElseThrow()));
         String peerPayoutAmount = trade.isBuyer()
-                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount()))
-                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount()));
+                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount().orElseThrow()))
+                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount().orElseThrow()));
         return Res.get("muSig.trade.pending.inMediation.resultDetails",
                 myPayoutAmount,
                 peerPayoutAmount);

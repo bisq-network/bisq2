@@ -40,6 +40,16 @@ class MuSigMediationPayoutDistributionCalculatorTest {
                     TOTAL_PAYOUT_SATS);
 
     @Test
+    void calculateForTypeNoPayoutReturnsEmpty() {
+        Optional<MuSigMediationPayoutDistributionCalculator.PayoutAmounts> payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+                MediationPayoutDistributionType.NO_PAYOUT,
+                CONTEXT,
+                Optional.empty());
+
+        assertTrue(payoutAmounts.isEmpty());
+    }
+
+    @Test
     void calculateForTypeBuyerGetsTradeAmount() {
         MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
