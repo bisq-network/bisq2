@@ -96,4 +96,5 @@ message MuSigContract {
   optional user.UserProfile mediator = 5;
   offer.PriceSpec priceSpec =6;
   sint64 marketPrice = 7;
+  bytes takerSaltedAccountPayloadHash = 8;
 }

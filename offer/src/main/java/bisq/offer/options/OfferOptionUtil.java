@@ -18,7 +18,9 @@
 package bisq.offer.options;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.encoding.Hex;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -110,6 +112,12 @@ public class OfferOptionUtil {
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
         log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
+    }
+
+    public static byte[] createSaltedAccountPayloadHash(AccountPayload<?> accountPayload, String offerId) {
+        return DigestUtil.hash(ByteArrayUtils.concat(
+                accountPayload.serializeForHash(),
+                offerId.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static Optional<Account<? extends PaymentMethod<?>, ?>> findAccountFromSaltedAccountId(Set<Account<? extends PaymentMethod<?>, ?>> accounts,

@@ -20,6 +20,7 @@ package bisq.contract.mu_sig;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.common.market.Market;
 import bisq.contract.Party;
 import bisq.contract.Role;
@@ -28,17 +29,16 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @Getter
-@EqualsAndHashCode(callSuper = true)
 public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     private final long baseSideAmount;
@@ -48,6 +48,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     private final Optional<UserProfile> mediator;
     private final PriceSpec priceSpec;
     private final long marketPrice;
+    private final byte[] takerSaltedAccountPayloadHash;
 
     public MuSigContract(long takeOfferDate,
                          MuSigOffer offer,
@@ -55,6 +56,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long baseSideAmount,
                          long quoteSideAmount,
                          PaymentMethodSpec<?> paymentMethodSpec,
+                         byte[] takerSaltedAccountPayloadHash,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -66,6 +68,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 quoteSideAmount,
                 getBaseSidePaymentMethodSpec(offer, paymentMethodSpec),
                 getQuoteSidePaymentMethodSpec(offer, paymentMethodSpec),
+                takerSaltedAccountPayloadHash,
                 mediator,
                 priceSpec,
                 marketPrice);
@@ -79,6 +82,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long quoteSideAmount,
                          PaymentMethodSpec<?> baseSidePaymentMethodSpec,
                          PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
+                         byte[] takerSaltedAccountPayloadHash,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
@@ -87,6 +91,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
         this.quoteSidePaymentMethodSpec = quoteSidePaymentMethodSpec;
+        this.takerSaltedAccountPayloadHash = takerSaltedAccountPayloadHash.clone();
         this.mediator = mediator;
         this.priceSpec = priceSpec;
         this.marketPrice = marketPrice;
@@ -97,6 +102,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     @Override
     public void verify() {
         super.verify();
+        NetworkDataValidation.validateHash(takerSaltedAccountPayloadHash);
     }
 
     @Override
@@ -121,7 +127,8 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto(serializeForHash))
                 .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto(serializeForHash))
                 .setPriceSpec(priceSpec.toProto(serializeForHash))
-                .setMarketPrice(marketPrice);
+                .setMarketPrice(marketPrice)
+                .setTakerSaltedAccountPayloadHash(com.google.protobuf.ByteString.copyFrom(takerSaltedAccountPayloadHash));
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
         return builder;
     }
@@ -148,6 +155,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 PaymentMethodSpec.fromProto(
                         muSigContractProto.getQuoteSidePaymentMethodSpec(),
                         PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market)),
+                muSigContractProto.getTakerSaltedAccountPayloadHash().toByteArray(),
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
                         Optional.empty(),
@@ -191,5 +199,39 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     public long getNonBtcSideAmount() {
         return offer.getMarket().isBaseCurrencyBitcoin() ? quoteSideAmount : baseSideAmount;
+    }
+
+    public byte[] getTakerSaltedAccountPayloadHash() {
+        return takerSaltedAccountPayloadHash.clone();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MuSigContract that)) {
+            return false;
+        }
+        return super.equals(o) &&
+                baseSideAmount == that.baseSideAmount &&
+                quoteSideAmount == that.quoteSideAmount &&
+                marketPrice == that.marketPrice &&
+                baseSidePaymentMethodSpec.equals(that.baseSidePaymentMethodSpec) &&
+                quoteSidePaymentMethodSpec.equals(that.quoteSidePaymentMethodSpec) &&
+                mediator.equals(that.mediator) &&
+                priceSpec.equals(that.priceSpec) &&
+                Arrays.equals(takerSaltedAccountPayloadHash, that.takerSaltedAccountPayloadHash);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Long.hashCode(baseSideAmount);
+        result = 31 * result + Long.hashCode(quoteSideAmount);
+        result = 31 * result + baseSidePaymentMethodSpec.hashCode();
+        result = 31 * result + quoteSidePaymentMethodSpec.hashCode();
+        result = 31 * result + mediator.hashCode();
+        result = 31 * result + priceSpec.hashCode();
+        result = 31 * result + Long.hashCode(marketPrice);
+        result = 31 * result + Arrays.hashCode(takerSaltedAccountPayloadHash);
+        return result;
     }
 }

@@ -114,6 +114,18 @@ message MuSigPaymentDetailsResponse {
   string senderUserProfileId = 4;
 }
 
+enum MuSigMediationIssueType {
+  MUSIGMEDIATIONISSUETYPE_UNSPECIFIED = 0;
+  MUSIGMEDIATIONISSUETYPE_MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 1;
+  MUSIGMEDIATIONISSUETYPE_TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 2;
+}
+
+message MuSigMediationIssue {
+  uint64 date = 1;
+  contract.Role reportingRole = 2;
+  MuSigMediationIssueType type = 3;
+}
+
 message MuSigMediationCase {
   MuSigMediationRequest muSigMediationRequest = 1;
   sint64 requestDate = 2;
@@ -121,6 +133,7 @@ message MuSigMediationCase {
   optional MuSigMediationResult muSigMediationResult = 4;
   optional account.AccountPayload takerAccountPayload = 5;
   optional account.AccountPayload makerAccountPayload = 6;
+  repeated MuSigMediationIssue issues = 7;
 }
 
 message MuSigMediatorStore {

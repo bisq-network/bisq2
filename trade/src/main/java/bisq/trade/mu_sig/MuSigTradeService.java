@@ -458,6 +458,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 paymentMethodSpec,
+                OfferOptionUtil.createSaltedAccountPayloadHash(takersAccountPayload, muSigOffer.getId()),
                 mediator,
                 priceSpec,
                 marketPrice);

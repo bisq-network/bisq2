@@ -102,6 +102,7 @@ message AccountOption {
   repeated string acceptedCountryCodes = 4;
   optional string bankId = 5;
   repeated string acceptedBanks = 6;
+  bytes saltedAccountPayloadHash = 7;
 }
 
 message OfferOption {
@@ -156,4 +157,3 @@ message MyMuSigOffersStore {
 message MuSigOfferMessage {
   Offer offer = 1;
 }
-

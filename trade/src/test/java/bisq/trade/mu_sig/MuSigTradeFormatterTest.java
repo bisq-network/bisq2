@@ -30,6 +30,7 @@ import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.price.spec.MarketPriceSpec;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -140,8 +141,9 @@ class MuSigTradeFormatterTest {
                 quoteSideAmount,
                 baseSpec,
                 quoteSpec,
+                new byte[20],
                 Optional.empty(),
-                null,
+                new MarketPriceSpec(),
                 0);
     }
 

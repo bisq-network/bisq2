@@ -162,7 +162,13 @@ public class MuSigCreateOfferReviewController implements Controller {
                     List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
                     Optional<String> bankId = AccountUtils.getBankId(accountPayload);
                     List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
-                    return new AccountOption(account.getPaymentMethod(), saltedAccountId, countryCode, acceptedCountryCodes, bankId, acceptedBanks);
+                    return new AccountOption(account.getPaymentMethod(),
+                            saltedAccountId,
+                            countryCode,
+                            acceptedCountryCodes,
+                            bankId,
+                            acceptedBanks,
+                            OfferOptionUtil.createSaltedAccountPayloadHash(accountPayload, offerId));
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
 

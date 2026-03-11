@@ -126,7 +126,6 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
         return DigestUtil.hash(getBisq2Fingerprint());
     }
 
-
     /**
      * Joins an array of strings into a single byte array, using a predefined separator
      * between non-null and non-empty strings. Strings are converted to bytes using UTF-8 encoding.

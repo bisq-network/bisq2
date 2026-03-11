@@ -24,17 +24,29 @@ import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.market.Market;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.contract.Party;
 import bisq.contract.Role;
+import bisq.network.identity.NetworkId;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
 
+import java.security.KeyPair;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MuSigContractTest {
     @Test
@@ -62,31 +74,76 @@ class MuSigContractTest {
         assertSame(baseSpec, contract.getNonBtcSidePaymentMethodSpec());
     }
 
+    @Test
+    void keepsTakerSaltedAccountPayloadHashAtProtoRoundTrip() {
+        byte[] hash = new byte[20];
+        hash[0] = 1;
+        hash[19] = 2;
+        PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
+        PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
+        MuSigContract contract = createContract(createBtcFiatMarket(), 111L, 222L, baseSpec, quoteSpec, hash);
+
+        MuSigContract fromProto = MuSigContract.fromProto(contract.toProto(false));
+        assertArrayEquals(hash, fromProto.getTakerSaltedAccountPayloadHash());
+    }
+
+    @Test
+    void rejectsNon20ByteTakerSaltedAccountPayloadHash() {
+        PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
+        PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                createContract(createBtcFiatMarket(), 111L, 222L, baseSpec, quoteSpec, new byte[19]));
+    }
+
     private MuSigContract createContract(Market market,
                                          long baseSideAmount,
                                          long quoteSideAmount,
                                          PaymentMethodSpec<?> baseSpec,
                                          PaymentMethodSpec<?> quoteSpec) {
+        return createContract(market, baseSideAmount, quoteSideAmount, baseSpec, quoteSpec, new byte[20]);
+    }
+
+    private MuSigContract createContract(Market market,
+                                         long baseSideAmount,
+                                         long quoteSideAmount,
+                                         PaymentMethodSpec<?> baseSpec,
+                                         PaymentMethodSpec<?> quoteSpec,
+                                         byte[] takerSaltedAccountPayloadHash) {
+        NetworkId makerNetworkId = createNetworkId(18001);
+        NetworkId takerNetworkId = createNetworkId(18002);
         MuSigOffer offer = new MuSigOffer("test-id",
-                null,
+                makerNetworkId,
                 Direction.BUY,
                 market,
-                null,
-                null,
+                new BaseSideFixedAmountSpec(baseSideAmount),
+                new MarketPriceSpec(),
                 List.of(),
                 List.of(),
                 "1.0.0");
         return new MuSigContract(System.currentTimeMillis(),
                 offer,
                 TradeProtocolType.MU_SIG,
-                new Party(Role.TAKER, null),
+                new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
                 quoteSideAmount,
                 baseSpec,
                 quoteSpec,
+                takerSaltedAccountPayloadHash,
                 Optional.empty(),
-                null,
+                new MarketPriceSpec(),
                 0);
+    }
+
+    private NetworkId createNetworkId(int port) {
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+        PubKey pubKey = new PubKey(keyPair.getPublic(), "mu-sig-contract-test-key-" + port);
+        AddressByTransportTypeMap addresses = new AddressByTransportTypeMap(
+                Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(port))
+        );
+        return new NetworkId(addresses, pubKey);
     }
 
     private Market createBtcFiatMarket() {

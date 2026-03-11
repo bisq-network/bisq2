@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.common.observable.Pin;
+import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -30,9 +32,10 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.common.observable.Pin;
 import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.support.mediation.mu_sig.MuSigMediationIssue;
+import bisq.support.mediation.mu_sig.MuSigMediationIssueType;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
@@ -44,6 +47,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -52,7 +56,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.createAndGetDescriptionAndValueBox;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
@@ -83,8 +92,7 @@ public class MuSigMediationCaseOverviewSection {
         private final Model model;
 
         private final MuSigMediatorService muSigMediatorService;
-        private Pin takerPaymentAccountDataPin;
-        private Pin makerPaymentAccountDataPin;
+        private final Set<Pin> pins = new HashSet<>();
 
         private Controller(ServiceProvider serviceProvider, boolean isCompactView) {
             model = new Model();
@@ -142,6 +150,10 @@ public class MuSigMediationCaseOverviewSection {
             model.getWaitingForPaymentAccountDataResponse().set(false);
             model.getTakerPaymentAccountData().set("");
             model.getMakerPaymentAccountData().set("");
+            model.getTakerPaymentAccountIssueVisible().set(false);
+            model.getMakerPaymentAccountIssueVisible().set(false);
+            model.getTakerPaymentAccountIssueTooltip().set("");
+            model.getMakerPaymentAccountIssueTooltip().set("");
             maybeAddPaymentAccountDataObservers();
 
             model.setDepositTxId(Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided"));
@@ -154,22 +166,13 @@ public class MuSigMediationCaseOverviewSection {
                 return;
             }
             model.getHasPaymentAccountData().set(false);
-            model.getTakerPaymentAccountData().set("");
-            model.getMakerPaymentAccountData().set("");
             boolean requestSent = muSigMediatorService.requestPaymentDetails(muSigMediationCaseListItem.getMuSigMediationCase());
             model.getWaitingForPaymentAccountDataResponse().set(requestSent);
         }
 
         @Override
         public void onDeactivate() {
-            if (takerPaymentAccountDataPin != null) {
-                takerPaymentAccountDataPin.unbind();
-                takerPaymentAccountDataPin = null;
-            }
-            if (makerPaymentAccountDataPin != null) {
-                makerPaymentAccountDataPin.unbind();
-                makerPaymentAccountDataPin = null;
-            }
+            clearPins();
         }
 
         private CaseCounts getCaseCounts(UserProfile userProfile) {
@@ -202,14 +205,7 @@ public class MuSigMediationCaseOverviewSection {
             if (model.isCompactView()) {
                 return;
             }
-            if (takerPaymentAccountDataPin != null) {
-                takerPaymentAccountDataPin.unbind();
-                takerPaymentAccountDataPin = null;
-            }
-            if (makerPaymentAccountDataPin != null) {
-                makerPaymentAccountDataPin.unbind();
-                makerPaymentAccountDataPin = null;
-            }
+            clearPins();
 
             MuSigMediationCaseListItem muSigMediationCaseListItem = model.getMuSigMediationCaseListItem();
             if (muSigMediationCaseListItem == null) {
@@ -217,14 +213,21 @@ public class MuSigMediationCaseOverviewSection {
             }
 
             MuSigMediationCase caseModel = muSigMediationCaseListItem.getMuSigMediationCase();
-            takerPaymentAccountDataPin = caseModel.getTakerAccountPayload().addObserver(payload -> UIThread.run(() -> {
+            pins.add(caseModel.getTakerAccountPayload().addObserver(payload -> UIThread.run(() -> {
                 model.getTakerPaymentAccountData().set(payload.map(AccountPayload::getAccountDataDisplayString).orElse(""));
                 applyHasPaymentAccountDataState(caseModel);
-            }));
-            makerPaymentAccountDataPin = caseModel.getMakerAccountPayload().addObserver(payload -> UIThread.run(() -> {
+            })));
+            pins.add(caseModel.getMakerAccountPayload().addObserver(payload -> UIThread.run(() -> {
                 model.getMakerPaymentAccountData().set(payload.map(AccountPayload::getAccountDataDisplayString).orElse(""));
                 applyHasPaymentAccountDataState(caseModel);
-            }));
+            })));
+            pins.add(caseModel.getIssues().addObserver(issues ->
+                    UIThread.run(() -> applyPaymentAccountIssueState(issues))));
+        }
+
+        private void clearPins() {
+            pins.forEach(Pin::unbind);
+            pins.clear();
         }
 
         private void applyHasPaymentAccountDataState(MuSigMediationCase muSigMediationCase) {
@@ -234,6 +237,46 @@ public class MuSigMediationCaseOverviewSection {
             if (hasBothPayloads) {
                 model.getWaitingForPaymentAccountDataResponse().set(false);
             }
+        }
+
+        private void applyPaymentAccountIssueState(List<MuSigMediationIssue> issues) {
+            List<MuSigMediationIssue> takerIssues = findFirstIssuesByTypeAndRole(issues, MuSigMediationIssueType.TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH);
+            List<MuSigMediationIssue> makerIssues = findFirstIssuesByTypeAndRole(issues, MuSigMediationIssueType.MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH);
+            boolean hasIssue = !takerIssues.isEmpty() || !makerIssues.isEmpty();
+
+            model.getTakerPaymentAccountIssueVisible().set(!takerIssues.isEmpty());
+            model.getMakerPaymentAccountIssueVisible().set(!makerIssues.isEmpty());
+            model.getTakerPaymentAccountIssueTooltip().set(takerIssues.isEmpty() ? "" : toIssueTooltip(takerIssues));
+            model.getMakerPaymentAccountIssueTooltip().set(makerIssues.isEmpty() ? "" : toIssueTooltip(makerIssues));
+            if (hasIssue) {
+                model.getWaitingForPaymentAccountDataResponse().set(false);
+            }
+            if (!takerIssues.isEmpty() && model.getTakerPaymentAccountData().get().isEmpty()) {
+                model.getTakerPaymentAccountData().set(Res.get("data.na"));
+            }
+            if (!makerIssues.isEmpty() && model.getMakerPaymentAccountData().get().isEmpty()) {
+                model.getMakerPaymentAccountData().set(Res.get("data.na"));
+            }
+        }
+
+        private List<MuSigMediationIssue> findFirstIssuesByTypeAndRole(List<MuSigMediationIssue> issues,
+                                                                       MuSigMediationIssueType type) {
+            return Stream.of(Role.TAKER, Role.MAKER)
+                    .flatMap(role -> issues.stream()
+                            .filter(issue -> issue.getType() == type && issue.getReportingRole() == role)
+                            .findFirst()
+                            .stream())
+                    .toList();
+        }
+
+        private String toIssueTooltip(List<MuSigMediationIssue> issues) {
+            String key = "authorizedRole.mediator.mediationCaseDetails.paymentAccountData.issue.accountPayloadHashMismatch";
+            List<String> lines = new ArrayList<>();
+            for (MuSigMediationIssue issue : issues) {
+                String reportingRole = MuSigTradeFormatter.getMakerTakerRole(issue.getReportingRole() == Role.MAKER).toLowerCase();
+                lines.add(Res.get(key, reportingRole));
+            }
+            return String.join("\n", lines);
         }
     }
 
@@ -271,10 +314,13 @@ public class MuSigMediationCaseOverviewSection {
         private final BooleanProperty waitingForPaymentAccountDataResponse = new SimpleBooleanProperty(false);
         private final StringProperty takerPaymentAccountData = new SimpleStringProperty("");
         private final StringProperty makerPaymentAccountData = new SimpleStringProperty("");
+        private final BooleanProperty takerPaymentAccountIssueVisible = new SimpleBooleanProperty(false);
+        private final BooleanProperty makerPaymentAccountIssueVisible = new SimpleBooleanProperty(false);
+        private final StringProperty takerPaymentAccountIssueTooltip = new SimpleStringProperty("");
+        private final StringProperty makerPaymentAccountIssueTooltip = new SimpleStringProperty("");
 
         private String depositTxId;
         private boolean isDepositTxIdEmpty;
-
     }
 
     @Slf4j
@@ -284,6 +330,8 @@ public class MuSigMediationCaseOverviewSection {
                 priceCodesLabel, priceSpecLabel;
         private Label buyerUserNameLabel, sellerUserNameLabel, paymentMethodLabel, depositTxTitleLabel, depositTxDetailsLabel;
         private Label paymentAccountDataWaitingLabel, takerPaymentAccountDataLabel, makerPaymentAccountDataLabel;
+        private Button takerPaymentAccountIssueButton, makerPaymentAccountIssueButton;
+        private Tooltip takerPaymentAccountIssueTooltip, makerPaymentAccountIssueTooltip;
         private BisqMenuItem buyerUserNameCopyButton, sellerUserNameCopyButton, depositTxCopyButton,
                 paymentAccountDataRefreshButton;
         private HBox paymentMethodsBox, paymentAccountDataBox, takerPaymentAccountDataBox, makerPaymentAccountDataBox;
@@ -351,6 +399,8 @@ public class MuSigMediationCaseOverviewSection {
                 takerPaymentAccountDataLabel = getValueLabel();
                 paymentAccountDataRefreshButton = new BisqMenuItem("try-again-grey", "try-again-white");
                 paymentAccountDataRefreshButton.setTooltip(Res.get("authorizedRole.mediator.mediationCaseDetails.paymentAccountData.fetch"));
+                takerPaymentAccountIssueTooltip = new Tooltip();
+                makerPaymentAccountIssueTooltip = new Tooltip();
                 HBox paymentAccountDataDetailsBox = new HBox(8, paymentAccountDataRefreshButton, paymentAccountDataWaitingLabel);
                 paymentAccountDataDetailsBox.setAlignment(Pos.BASELINE_LEFT);
                 paymentAccountDataBox = createAndGetDescriptionAndValueBox(
@@ -359,12 +409,12 @@ public class MuSigMediationCaseOverviewSection {
                 );
                 takerPaymentAccountDataBox = createAndGetDescriptionAndValueBox(
                         "authorizedRole.mediator.mediationCaseDetails.paymentAccountData.taker",
-                        takerPaymentAccountDataLabel
+                        createPaymentAccountDataWithIssueBox(true)
                 );
                 makerPaymentAccountDataLabel = getValueLabel();
                 makerPaymentAccountDataBox = createAndGetDescriptionAndValueBox(
                         "authorizedRole.mediator.mediationCaseDetails.paymentAccountData.maker",
-                        makerPaymentAccountDataLabel
+                        createPaymentAccountDataWithIssueBox(false)
                 );
                 paymentAccountDataWaitingLabel.setText(Res.get("authorizedRole.mediator.mediationCaseDetails.paymentAccountData.waitingForResponse"));
                 paymentAccountDataWaitingLabel.getStyleClass().clear();
@@ -429,8 +479,16 @@ public class MuSigMediationCaseOverviewSection {
                         : "text-fill-white");
                 depositTxDetailsLabel.getStyleClass().add("normal-text");
                 depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
-                paymentAccountDataBox.visibleProperty().bind(model.getHasPaymentAccountData().not());
-                paymentAccountDataBox.managedProperty().bind(model.getHasPaymentAccountData().not());
+                paymentAccountDataBox.visibleProperty().bind(
+                        model.getHasPaymentAccountData().not()
+                                .and(model.getTakerPaymentAccountIssueVisible().not())
+                                .and(model.getMakerPaymentAccountIssueVisible().not())
+                );
+                paymentAccountDataBox.managedProperty().bind(
+                        model.getHasPaymentAccountData().not()
+                                .and(model.getTakerPaymentAccountIssueVisible().not())
+                                .and(model.getMakerPaymentAccountIssueVisible().not())
+                );
                 paymentAccountDataRefreshButton.visibleProperty().bind(
                         model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse().not())
                 );
@@ -443,12 +501,34 @@ public class MuSigMediationCaseOverviewSection {
                 paymentAccountDataWaitingLabel.managedProperty().bind(
                         model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse())
                 );
-                takerPaymentAccountDataBox.visibleProperty().bind(model.getHasPaymentAccountData());
-                takerPaymentAccountDataBox.managedProperty().bind(model.getHasPaymentAccountData());
-                makerPaymentAccountDataBox.visibleProperty().bind(model.getHasPaymentAccountData());
-                makerPaymentAccountDataBox.managedProperty().bind(model.getHasPaymentAccountData());
+                takerPaymentAccountDataBox.visibleProperty().bind(
+                        model.getHasPaymentAccountData()
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                );
+                takerPaymentAccountDataBox.managedProperty().bind(
+                        model.getHasPaymentAccountData()
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                );
+                makerPaymentAccountDataBox.visibleProperty().bind(
+                        model.getHasPaymentAccountData()
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                );
+                makerPaymentAccountDataBox.managedProperty().bind(
+                        model.getHasPaymentAccountData()
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                );
                 takerPaymentAccountDataLabel.textProperty().bind(model.getTakerPaymentAccountData());
                 makerPaymentAccountDataLabel.textProperty().bind(model.getMakerPaymentAccountData());
+                takerPaymentAccountIssueButton.visibleProperty().bind(model.getTakerPaymentAccountIssueVisible());
+                takerPaymentAccountIssueButton.managedProperty().bind(model.getTakerPaymentAccountIssueVisible());
+                makerPaymentAccountIssueButton.visibleProperty().bind(model.getMakerPaymentAccountIssueVisible());
+                makerPaymentAccountIssueButton.managedProperty().bind(model.getMakerPaymentAccountIssueVisible());
+                takerPaymentAccountIssueTooltip.textProperty().bind(model.getTakerPaymentAccountIssueTooltip());
+                makerPaymentAccountIssueTooltip.textProperty().bind(model.getMakerPaymentAccountIssueTooltip());
                 paymentAccountDataRefreshButton.setOnAction(e -> controller.requestPaymentAccountData());
             }
 
@@ -479,7 +559,31 @@ public class MuSigMediationCaseOverviewSection {
                 makerPaymentAccountDataBox.managedProperty().unbind();
                 takerPaymentAccountDataLabel.textProperty().unbind();
                 makerPaymentAccountDataLabel.textProperty().unbind();
+                takerPaymentAccountIssueButton.visibleProperty().unbind();
+                takerPaymentAccountIssueButton.managedProperty().unbind();
+                makerPaymentAccountIssueButton.visibleProperty().unbind();
+                makerPaymentAccountIssueButton.managedProperty().unbind();
+                takerPaymentAccountIssueTooltip.textProperty().unbind();
+                makerPaymentAccountIssueTooltip.textProperty().unbind();
             }
+        }
+
+        private HBox createPaymentAccountDataWithIssueBox(boolean taker) {
+            Button issueButton = bisq.desktop.components.controls.BisqIconButton.createInfoIconButton();
+            issueButton.getGraphic().getStyleClass().add("error");
+            issueButton.setVisible(false);
+            issueButton.setManaged(false);
+            if (taker) {
+                takerPaymentAccountIssueButton = issueButton;
+                issueButton.setTooltip(takerPaymentAccountIssueTooltip);
+            } else {
+                makerPaymentAccountIssueButton = issueButton;
+                issueButton.setTooltip(makerPaymentAccountIssueTooltip);
+            }
+            Label valueLabel = taker ? takerPaymentAccountDataLabel : makerPaymentAccountDataLabel;
+            HBox box = new HBox(6, valueLabel, issueButton);
+            box.setAlignment(Pos.BASELINE_LEFT);
+            return box;
         }
     }
 }
