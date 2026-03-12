@@ -83,6 +83,7 @@ class MuSigTradeUtilsTest {
         return new MuSigContract(System.currentTimeMillis(),
                 offer,
                 TradeProtocolType.MU_SIG,
+                new Party(Role.MAKER, offer.getMakerNetworkId()),
                 new Party(Role.TAKER, null),
                 baseSideAmount,
                 quoteSideAmount,

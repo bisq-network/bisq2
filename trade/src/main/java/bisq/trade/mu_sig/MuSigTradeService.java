@@ -97,6 +97,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.offer.options.OfferOptionUtil.createSaltedAccountPayloadHash;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -458,6 +459,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 paymentMethodSpec,
+                createSaltedAccountPayloadHash(takersAccountPayload, muSigOffer.getId()),
                 mediator,
                 priceSpec,
                 marketPrice);

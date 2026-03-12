@@ -36,6 +36,7 @@ enum Role {
 message Party {
   Role role = 1;
   network.identity.NetworkId networkId = 2;
+  optional bytes saltedAccountPayloadHash = 3;
 }
 message Contract {
   uint64 takeOfferDate = 1;
