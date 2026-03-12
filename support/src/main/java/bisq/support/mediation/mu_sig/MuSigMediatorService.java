@@ -27,12 +27,14 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
+import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -48,6 +50,8 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -278,12 +282,69 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
                                 tradeId, senderUserProfileId);
                         return;
                     }
-                    if (mediationCase.setPaymentAccountPayloads(response.getTakerAccountPayload(),
-                            response.getMakerAccountPayload())) {
+                    Role causingRole = resolveCausingRole(muSigMediationRequest.getContract(), senderUserProfileId);
+                    PaymentDetailsVerification verification = verifyPaymentDetails(muSigMediationRequest.getContract(),
+                            response,
+                            causingRole);
+                    boolean changed = false;
+                    if (verification.takerAccountPayloadMatches()) {
+                        changed |= mediationCase.setTakerPaymentAccountPayload(response.getTakerAccountPayload());
+                    }
+                    if (verification.makerAccountPayloadMatches()) {
+                        changed |= mediationCase.setMakerPaymentAccountPayload(response.getMakerAccountPayload());
+                    }
+                    if (!verification.issues().isEmpty()) {
+                        changed |= mediationCase.addIssues(verification.issues());
+                        log.warn("MuSigPaymentDetailsResponse for trade {} has verification issues: {}",
+                                tradeId, verification.issues());
+                    }
+                    if (changed) {
                         persist();
                     }
                 },
                 () -> log.warn("Ignoring MuSigPaymentDetailsResponse for unknown trade {}.", tradeId));
+    }
+
+    private PaymentDetailsVerification verifyPaymentDetails(MuSigContract contract,
+                                                            MuSigPaymentDetailsResponse response,
+                                                            Role causingRole) {
+        List<MuSigMediationIssue> issues = new ArrayList<>();
+        String offerId = contract.getOffer().getId();
+        boolean takerAccountPayloadMatches = true;
+        boolean makerAccountPayloadMatches = true;
+
+        byte[] takerSaltedAccountPayloadHash = OfferOptionUtil.createSaltedAccountPayloadHash(response.getTakerAccountPayload(), offerId);
+        if (contract.getTaker().getSaltedAccountPayloadHash()
+                .filter(expectedHash -> Arrays.equals(takerSaltedAccountPayloadHash, expectedHash))
+                .isEmpty()) {
+            takerAccountPayloadMatches = false;
+            issues.add(new MuSigMediationIssue(
+                    causingRole,
+                    MuSigMediationIssueType.TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH,
+                    Optional.of(response.getTakerAccountPayload().getAccountDataDisplayString())));
+        }
+
+        byte[] makerSaltedAccountPayloadHash = OfferOptionUtil.createSaltedAccountPayloadHash(response.getMakerAccountPayload(), offerId);
+        if (contract.getMaker().getSaltedAccountPayloadHash()
+                .filter(expectedHash -> Arrays.equals(makerSaltedAccountPayloadHash, expectedHash))
+                .isEmpty()) {
+            makerAccountPayloadMatches = false;
+            issues.add(new MuSigMediationIssue(
+                    causingRole,
+                    MuSigMediationIssueType.MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH,
+                    Optional.of(response.getMakerAccountPayload().getAccountDataDisplayString())));
+        }
+
+        return new PaymentDetailsVerification(takerAccountPayloadMatches, makerAccountPayloadMatches, issues);
+    }
+
+    private Role resolveCausingRole(MuSigContract contract, String senderUserProfileId) {
+        return senderUserProfileId.equals(contract.getOffer().getMakersUserProfileId()) ? Role.MAKER : Role.TAKER;
+    }
+
+    private record PaymentDetailsVerification(boolean takerAccountPayloadMatches,
+                                              boolean makerAccountPayloadMatches,
+                                              List<MuSigMediationIssue> issues) {
     }
 
     private Optional<MuSigMediationCase> findMediationCase(String tradeId) {

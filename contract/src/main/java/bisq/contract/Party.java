@@ -91,8 +91,8 @@ public final class Party implements NetworkProto {
 
     @Override
     public int hashCode() {
-        int result = role.hashCode();
-        result = 31 * result + networkId.hashCode();
+        int result = Objects.hashCode(role);
+        result = 31 * result + Objects.hashCode(networkId);
         result = 31 * result + saltedAccountPayloadHash.map(Arrays::hashCode).orElse(0);
         return result;
     }
