@@ -48,7 +48,7 @@ public class BisqEasyTradeHistoryListItem  implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
     private final String tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
-             quoteAmountString, priceString, priceTooltip, myRole, paymentAsString;
+             quoteAmountString, priceString, priceTooltip, myRole, paymentMethodAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
@@ -97,7 +97,7 @@ public class BisqEasyTradeHistoryListItem  implements DateTableItem {
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
-        paymentAsString = String.format("%s / %s", paymentMethod, settlementMethod);
+        paymentMethodAsString = String.format("%s / %s", paymentMethod, settlementMethod);
 
         String direction = trade.getDisplayOfferDirection().isBuy()
                 ? Res.get("bisqEasy.history.table.myRole.buyer")

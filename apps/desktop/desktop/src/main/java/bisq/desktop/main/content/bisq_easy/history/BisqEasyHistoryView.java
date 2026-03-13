@@ -150,7 +150,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .title(Res.get("bisqEasy.history.table.payment"))
                 .left()
                 .fixWidth(100)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPaymentAsString))
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPaymentMethodAsString))
                 .setCellFactory(getPaymentCellFactory())
                 .includeForCsv(false)
                 .build());
