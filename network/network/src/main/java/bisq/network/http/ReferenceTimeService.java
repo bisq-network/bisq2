@@ -68,8 +68,7 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     protected Long parseResult(String json) throws JsonProcessingException {
         JsonNode jsonNode = JsonMapperProvider.get().readTree(json);
 
-        // We drop the 3 outliers on both ends and take the average of the rest.
-        double averageTimestamp = TIMESTAMP_KEYS.stream()
+        List<Long> validTimestamps = TIMESTAMP_KEYS.stream()
                 .mapToLong(key -> {
                     try {
                         return parseTimestamp(jsonNode, key);
@@ -79,8 +78,20 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
                 })
                 .filter(ts -> ts > 0)
                 .sorted()
-                .limit(TIMESTAMP_KEYS.size() - 3)
-                .skip(3)
+                .boxed()
+                .toList();
+
+        int size = validTimestamps.size();
+        if (size == 0) {
+            throw new RuntimeException("No valid timestamps found in response");
+        }
+
+        // Drop up to 3 outliers from each end, ensuring at least 1 remains
+        int dropCount = Math.min(3, (size - 1) / 2);
+        double averageTimestamp = validTimestamps.stream()
+                .skip(dropCount)
+                .limit(size - 2 * dropCount)
+                .mapToLong(Long::longValue)
                 .average()
                 .orElse(0d);
 
@@ -92,7 +103,7 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     private Long parseTimestamp(JsonNode jsonNode, String key) throws JsonProcessingException {
         JsonNode timestampNode = jsonNode.get(key);
         if (timestampNode == null || timestampNode.isNull() || !timestampNode.isNumber()) {
-            throw new RuntimeException("Response JSON missing 'time' field");
+            throw new RuntimeException("Response JSON missing or invalid field: '" + key + "'");
         }
         long referenceTime = timestampNode.asLong();
         log.debug("Timestamp from latest price request from {}: {} (epoche time in seconds: {})",

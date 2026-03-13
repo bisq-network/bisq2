@@ -55,7 +55,7 @@ class MuSigPendingTradeListItem implements DateTableItem {
             market, priceString, btcAmountString, nonBtcAmountString, myRole, paymentMethodDisplayName;
     private final long date, price, btcAmount, nonBtcAmount;
     private final ChatNotificationService chatNotificationService;
-    private final ReputationScore reputationScore;
+    private final ReputationScore peersReputationScore;
     private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
@@ -102,7 +102,7 @@ class MuSigPendingTradeListItem implements DateTableItem {
         paymentMethod = contract.getNonBtcSidePaymentMethodSpec().getPaymentMethod();
 
         myRole = MuSigTradeFormatter.getMakerTakerRole(trade);
-        reputationScore = reputationService.getReputationScore(peersUserProfile);
+        peersReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
