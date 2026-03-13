@@ -127,7 +127,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
+                .title(Res.get("bisqEasy.history.table.quoteAmount"))
                 .minWidth(120)
                 .right()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getQuoteAmount))
@@ -135,7 +135,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
+                .title(Res.get("bisqEasy.history.table.baseAmount"))
                 .fixWidth(120)
                 .right()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getBaseAmount))
@@ -145,7 +145,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.price"))
                 .left()
-                .minWidth(240)
+                .minWidth(260)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPrice))
                 .setCellFactory(getPriceCellFactory())
                 .build());
@@ -369,7 +369,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 exportTradeDataMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.exportTradeData.tooltip"));
 
                 deleteTradeMenuItem.useIconOnly();
-                deleteTradeMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.deleteTrade.tooltip"));
+                deleteTradeMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.deleteArchivedTrade.tooltip"));
             }
 
             @Override
