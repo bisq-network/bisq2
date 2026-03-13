@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.RichTableView;
@@ -119,20 +120,17 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.baseAmount"))
-                .left()
-                .minWidth(100)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getBaseAmount))
-                .setCellFactory(getBaseAmountCellFactory(true))
-                .includeForCsv(false)
+                .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
+                .fixWidth(120)
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getQuoteAmount))
+                .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountString)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.quoteAmount"))
-                .left()
-                .minWidth(100)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getQuoteAmount))
-                .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountWithSymbol)
+                .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
+                .fixWidth(120)
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getBaseAmount))
+                .setCellFactory(getBaseAmountCellFactory())
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -260,19 +258,15 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         };
     }
 
-    public static Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>,
-            TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getBaseAmountCellFactory(boolean showSymbol) {
+    private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>, TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getBaseAmountCellFactory() {
         return column -> new TableCell<>() {
-            @SuppressWarnings("UnnecessaryUnicodeEscape")
-            private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
-
-            private final HBox hbox = new HBox(5);
-            private final Label dashLabel = new Label(DASH_SYMBOL);
+            private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 
             {
-                hbox.setAlignment(Pos.CENTER_LEFT);
-                dashLabel.setAlignment(Pos.CENTER);
-                dashLabel.setStyle("-fx-text-fill: -fx-mid-text-color;");
+                bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.setTranslateY(5);
             }
 
             @Override
@@ -280,12 +274,10 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    hbox.getChildren().clear();
-                    setGraphic(new Label(showSymbol
-                            ? item.getBaseAmountWithSymbol()
-                            : item.getBaseAmountAsString()));
+                    bitcoinAmountDisplay.applySmallCompactConfig();
+                    bitcoinAmountDisplay.setBtcAmount(item.getBaseAmountString());
+                    setGraphic(bitcoinAmountDisplay);
                 } else {
-                    hbox.getChildren().clear();
                     setGraphic(null);
                 }
             }
