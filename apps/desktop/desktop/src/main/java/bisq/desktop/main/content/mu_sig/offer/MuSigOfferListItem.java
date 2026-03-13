@@ -34,7 +34,6 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -197,9 +196,8 @@ public class MuSigOfferListItem {
                 .ifPresent(priceSpecAsPercent -> {
                     this.priceSpecAsPercent = priceSpecAsPercent;
                     formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
-                    String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, offer);
                     PriceSpec priceSpec = offer.getPriceSpec();
-                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, offerPrice);
+                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, marketPriceService, offer);
                     offerPriceWithSpec = priceTooltip.replace("\n", ": ");
                     price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
                     pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());

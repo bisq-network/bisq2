@@ -18,17 +18,16 @@
 package bisq.api.dto.presentation.open_trades;
 
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
 import bisq.api.dto.trade.bisq_easy.BisqEasyTradeDto;
 import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.api.dto.user.reputation.ReputationScoreDto;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -52,7 +51,7 @@ public class TradeItemPresentationDtoFactory {
         String dateString = DateFormatter.formatDate(date);
         String timeString = DateFormatter.formatTime(date);
         String market = trade.getOffer().getMarket().toString();
-        long price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
+        long price = trade.getPriceQuote().getValue();
         String priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);
         long baseAmount = contract.getBaseSideAmount();
         String baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);

@@ -19,16 +19,38 @@ package bisq.network.http;
 
 import bisq.common.json.JsonMapperProvider;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class ReferenceTimeService extends HttpRequestService<Void, Long> {
+    // coinmarketcapTs and btcAverageTs are excluded as we use longer request time intervals for those.
+    // coinbaseproTs has a timestamp of 0. independentreserveTs has a ts with 1 hour in future
+    private static final List<String> TIMESTAMP_KEYS = List.of(
+            "bitstampTs",
+            "btcmarketsTs",
+            "coingeckoTs",
+            "binanceTs",
+            "poloniexTs",
+            "krakenTs",
+            "bitflyerTs",
+            "cryptoyaTs",
+            "paribuTs",
+            "bitfinexTs",
+            "lunoTs",
+            "yadioTs",
+            "coinoneTs",
+            "mercadobitcoinTs"
+    );
+
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(ReferenceTimeService.class.getSimpleName(),
                 1,
@@ -44,11 +66,40 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
 
     @Override
     protected Long parseResult(String json) throws JsonProcessingException {
-        JsonNode timeNode = JsonMapperProvider.get().readTree(json).get("time");
-        if (timeNode == null || timeNode.isNull() || !timeNode.isNumber()) {
+        JsonNode jsonNode = JsonMapperProvider.get().readTree(json);
+
+        // We drop the 3 outliers on both ends and take the average of the rest.
+        double averageTimestamp = TIMESTAMP_KEYS.stream()
+                .mapToLong(key -> {
+                    try {
+                        return parseTimestamp(jsonNode, key);
+                    } catch (JsonProcessingException ignore) {
+                        return 0;
+                    }
+                })
+                .filter(ts -> ts > 0)
+                .sorted()
+                .limit(TIMESTAMP_KEYS.size() - 3)
+                .skip(3)
+                .average()
+                .orElse(0d);
+
+        long referenceTime = MathUtils.roundDoubleToLong(averageTimestamp);
+        log.info("Reference time from {}: {} ({})", selectedProvider.get().getBaseUrl(), new Date(referenceTime), referenceTime);
+        return referenceTime;
+    }
+
+    private Long parseTimestamp(JsonNode jsonNode, String key) throws JsonProcessingException {
+        JsonNode timestampNode = jsonNode.get(key);
+        if (timestampNode == null || timestampNode.isNull() || !timestampNode.isNumber()) {
             throw new RuntimeException("Response JSON missing 'time' field");
         }
-        return timeNode.asLong() * 1000;
+        long referenceTime = timestampNode.asLong();
+        log.debug("Timestamp from latest price request from {}: {} (epoche time in seconds: {})",
+                key.replace("Ts", ""),
+                new Date(referenceTime),
+                referenceTime);
+        return referenceTime;
     }
 
     @Override

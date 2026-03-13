@@ -28,7 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -81,6 +81,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -89,6 +90,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyTradeStore> implements Service, ConfidentialMessageService.Listener {
+    private final static long REDACT_AFTER = TimeUnit.DAYS.toMillis(30);
+
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -112,6 +115,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private boolean wasRedacted;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -129,10 +133,44 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
 
     /* --------------------------------------------------------------------- */
+    // dPersistenceClient
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public BisqEasyTradeStore prunePersisted(BisqEasyTradeStore persisted) {
+        long redactCutoffDate = System.currentTimeMillis() - REDACT_AFTER;
+        Set<BisqEasyClosedTrade> closedTrades = persisted.getClosedTrades().stream()
+                //BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile
+                .map(bisqEasyClosedTrade -> {
+                    BisqEasyTrade trade = bisqEasyClosedTrade.trade();
+                    // If trade was canceled, we do not have a completion date and use the take offer date instead.
+                    Long date = trade.getTradeCompletedDate().orElse(trade.getContract().getTakeOfferDate());
+                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) || date > redactCutoffDate) {
+                        return bisqEasyClosedTrade;
+                    }
+
+                    wasRedacted = true;
+                    trade.getPaymentAccountData().set("");
+                    log.info("PaymentAccountData for trade with ID {} was redacted as the completion date is older than 30 days.", trade.getShortId());
+                    return new BisqEasyClosedTrade(trade,
+                            bisqEasyClosedTrade.myUserProfile(),
+                            bisqEasyClosedTrade.peerUserProfile());
+                })
+                .collect(Collectors.toSet());
+
+        return new BisqEasyTradeStore(persisted.getTrades(), persisted.getTradeIds(), closedTrades);
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
+        if (wasRedacted) {
+            persist();
+        }
+
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
         networkService.getConfidentialMessageServices().stream()
@@ -376,29 +414,37 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         );
     }
 
-    public ObservableSet<BisqEasyTrade> getTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
     }
 
-    public ObservableSet<BisqEasyTrade> getAllTrades() {
+    public ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
         return persistableStore.getAllTrades();
     }
 
-    public ObservableSet<BisqEasyClosedTrade> getClosedTrades() {
+    public ReadOnlyObservableSet<BisqEasyClosedTrade> getClosedTrades() {
         return persistableStore.getClosedTrades();
     }
 
     public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
-        persistableStore.closeTrade(trade, myUserProfile, peerUserProfile);
+        persistableStore.getTrades().remove(trade);
+        BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
+        persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
+
         tradeProtocolById.remove(trade.getId());
         persist();
     }
 
     public void deleteTrade(BisqEasyTrade trade) {
-        boolean isDeleted = persistableStore.deleteTrade(trade);
-        if (isDeleted) {
+        Set<BisqEasyClosedTrade> closedTrades = persistableStore.getClosedTrades();
+        Optional<BisqEasyClosedTrade> closedTrade = closedTrades.stream()
+                .filter(ct -> ct.trade().getId().equals(trade.getId()))
+                .findFirst();
+        if (closedTrade.isPresent()) {
+            closedTrades.remove(closedTrade.get());
             persist();
         }
+        log.warn("Could not delete trade {}", trade.getId());
     }
 
 

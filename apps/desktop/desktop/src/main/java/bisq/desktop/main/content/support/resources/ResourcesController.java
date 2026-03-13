@@ -30,6 +30,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.mu_sig.MuSigService;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.presentation.formatters.TimeFormatter;
@@ -61,6 +62,7 @@ public class ResourcesController implements Controller {
     private final String appName;
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
+    private final MuSigService muSigService;
     private Pin backupLocationPin;
 
     public ResourcesController(ServiceProvider serviceProvider) {
@@ -68,6 +70,7 @@ public class ResourcesController implements Controller {
         appName = serviceProvider.getConfig().getAppName();
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
+        muSigService = serviceProvider.getMuSigService();
 
         model = new ResourcesModel();
         view = new ResourcesView(model, this);
@@ -79,6 +82,8 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
         backupLocationPin = FxBindings.bindBiDir(model.getBackupLocation())
                 .to(settingsService.getBackupLocation(), settingsService::setBackupLocation);
+
+        model.setMusigEnabled(muSigService.isActivated());
 
         fillBackupSnapshots();
     }
