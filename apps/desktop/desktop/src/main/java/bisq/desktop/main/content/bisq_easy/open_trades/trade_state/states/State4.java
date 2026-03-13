@@ -121,8 +121,8 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             String key = "archiveTradeInfo";
             if (dontShowAgainService.showAgain(key)) {
                 new Popup()
-                        .backgroundInfo(Res.get("bisqEasy.openTrades.closeTrade.info"))
                         .headline(Res.get("popup.headline.information"))
+                        .backgroundInfo(Res.get("bisqEasy.openTrades.closeTrade.info"))
                         .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
                         .onAction(this::doArchiveTrade)
                         .closeButtonText(Res.get("action.cancel"))

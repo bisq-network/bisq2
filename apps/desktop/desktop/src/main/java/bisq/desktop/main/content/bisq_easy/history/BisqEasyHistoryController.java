@@ -35,6 +35,7 @@ import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -96,7 +97,7 @@ public class BisqEasyHistoryController implements Controller {
     }
 
     void applySearchPredicate(String searchText) {
-        this.searchText = searchText == null ? "" : searchText.trim().toLowerCase();
+        this.searchText = searchText == null ? "" : searchText.trim().toLowerCase(Locale.ROOT);
         model.setSearchStringPredicate(createSearchPredicate());
         applyPredicates();
         updatePlaceholderText();
