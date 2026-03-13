@@ -20,6 +20,8 @@ package bisq.notifications.mobile;
 
 import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
 import bisq.common.application.Service;
+import bisq.common.encoding.Base64;
+import bisq.common.encoding.Hex;
 import bisq.common.json.JsonMapperProvider;
 import bisq.notifications.Notification;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
@@ -56,21 +58,40 @@ public class MobileNotificationService implements Service {
     }
 
     public void dispatchNotification(Notification notification) {
-        deviceRegistrationService.getMobileDeviceProfiles()
-                .forEach(mobileDeviceProfile -> {
+        var profiles = deviceRegistrationService.getMobileDeviceProfiles();
+        if (profiles.isEmpty()) {
+            log.debug("No mobile devices registered — skipping push notification for '{}'", notification.getTitle());
+            return;
+        }
+        log.info("Dispatching push notification '{}' to {} registered device(s)", notification.getTitle(), profiles.size());
+        profiles.forEach(mobileDeviceProfile -> {
                     boolean isAndroid = mobileDeviceProfile.getPlatform() == MobileDevicePlatform.ANDROID;
                     String deviceTokenHex = mobileDeviceProfile.getDeviceToken();
+                    String platform = isAndroid ? "Android" : "iOS";
                     MobileNotificationPayload payload = new MobileNotificationPayload(notification.getId(),
                             notification.getTitle(),
                             notification.getMessage());
                     try {
                         String json = JsonMapperProvider.get().writeValueAsString(payload);
-                        String encryptedMessageHex = MobileNotificationEncryption.encrypt(mobileDeviceProfile.getPublicKeyBase64(), json);
+                        String encryptedBase64 = MobileNotificationEncryption.encrypt(mobileDeviceProfile.getPublicKeyBase64(), json);
+                        // The bisq-relay server expects hex-encoded encrypted messages.
+                        // MobileNotificationEncryption.encrypt() returns Base64, so we
+                        // convert here to match the relay's expected format.
+                        String encryptedMessageHex = Hex.encode(Base64.decode(encryptedBase64));
                         mobileNotificationRelayClient.sendToRelayServer(isAndroid,
-                                deviceTokenHex,
-                                encryptedMessageHex);
+                                        deviceTokenHex,
+                                        encryptedMessageHex)
+                                .whenComplete((success, throwable) -> {
+                                    if (throwable != null) {
+                                        log.warn("Failed to send push notification to {} device", platform, throwable);
+                                    } else if (Boolean.TRUE.equals(success)) {
+                                        log.info("Push notification sent to {} device (token: {}...)", platform, deviceTokenHex.substring(0, Math.min(8, deviceTokenHex.length())));
+                                    } else {
+                                        log.warn("Push notification relay returned failure for {} device", platform);
+                                    }
+                                });
                     } catch (Exception e) {
-                        log.error("Could not send notification to relay server", e);
+                        log.error("Could not send notification to relay server for {} device", platform, e);
                     }
                 });
     }
