@@ -24,6 +24,8 @@ import bisq.support.mediation.MediationCaseState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static java.lang.System.currentTimeMillis;
@@ -38,7 +40,7 @@ public class MuSigMediationCase implements PersistableProto {
     private final Observable<Optional<MuSigMediationResult>> muSigMediationResult = new Observable<>();
     private final Observable<Optional<AccountPayload<?>>> takerAccountPayload = new Observable<>(Optional.empty());
     private final Observable<Optional<AccountPayload<?>>> makerAccountPayload = new Observable<>(Optional.empty());
-
+    private final Observable<List<MuSigMediationIssue>> issues = new Observable<>(List.of());
 
     public MuSigMediationCase(MuSigMediationRequest muSigMediationRequest) {
         this(muSigMediationRequest,
@@ -46,7 +48,8 @@ public class MuSigMediationCase implements PersistableProto {
                 MediationCaseState.OPEN,
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty());
+                Optional.empty(),
+                List.of());
     }
 
     private MuSigMediationCase(MuSigMediationRequest muSigMediationRequest,
@@ -54,13 +57,15 @@ public class MuSigMediationCase implements PersistableProto {
                                MediationCaseState mediationCaseState,
                                Optional<MuSigMediationResult> muSigMediationResult,
                                Optional<AccountPayload<?>> takerAccountPayload,
-                               Optional<AccountPayload<?>> makerAccountPayload) {
+                               Optional<AccountPayload<?>> makerAccountPayload,
+                               List<MuSigMediationIssue> issues) {
         this.muSigMediationRequest = muSigMediationRequest;
         this.requestDate = requestDate;
         this.mediationCaseState.set(mediationCaseState);
         this.muSigMediationResult.set(muSigMediationResult);
         this.takerAccountPayload.set(takerAccountPayload);
         this.makerAccountPayload.set(makerAccountPayload);
+        this.issues.set(issues);
     }
 
     /**
@@ -77,6 +82,9 @@ public class MuSigMediationCase implements PersistableProto {
                 builder.setMuSigMediationResult(item.toProto(serializeForHash)));
         takerAccountPayload.get().ifPresent(item -> builder.setTakerAccountPayload(item.toProto(serializeForHash)));
         makerAccountPayload.get().ifPresent(item -> builder.setMakerAccountPayload(item.toProto(serializeForHash)));
+        builder.addAllIssues(issues.get().stream()
+                .map(item -> item.toProto(serializeForHash))
+                .toList());
         return builder;
     }
 
@@ -97,7 +105,10 @@ public class MuSigMediationCase implements PersistableProto {
                         Optional.empty(),
                 proto.hasMakerAccountPayload() ?
                         Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
-                        Optional.empty());
+                        Optional.empty(),
+                proto.getIssuesList().stream()
+                        .map(MuSigMediationIssue::fromProto)
+                        .toList());
     }
 
     public boolean setMediationCaseState(MediationCaseState state) {
@@ -121,15 +132,39 @@ public class MuSigMediationCase implements PersistableProto {
         return true;
     }
 
-    public boolean setPaymentAccountPayloads(AccountPayload<?> takerAccountPayload, AccountPayload<?> makerAccountPayload) {
-        Optional<AccountPayload<?>> newTakerValue = Optional.of(takerAccountPayload);
-        Optional<AccountPayload<?>> newMakerValue = Optional.of(makerAccountPayload);
-        if (this.takerAccountPayload.get().equals(newTakerValue) && this.makerAccountPayload.get().equals(newMakerValue)) {
+    public boolean setTakerPaymentAccountPayload(AccountPayload<?> takerAccountPayload) {
+        Optional<AccountPayload<?>> newValue = Optional.of(takerAccountPayload);
+        if (this.takerAccountPayload.get().equals(newValue)) {
             return false;
         }
-        this.takerAccountPayload.set(newTakerValue);
-        this.makerAccountPayload.set(newMakerValue);
+        this.takerAccountPayload.set(newValue);
         return true;
     }
 
+    public boolean setMakerPaymentAccountPayload(AccountPayload<?> makerAccountPayload) {
+        Optional<AccountPayload<?>> newValue = Optional.of(makerAccountPayload);
+        if (this.makerAccountPayload.get().equals(newValue)) {
+            return false;
+        }
+        this.makerAccountPayload.set(newValue);
+        return true;
+    }
+
+    public synchronized boolean addIssues(List<MuSigMediationIssue> newIssues) {
+        if (newIssues.isEmpty()) {
+            return false;
+        }
+        List<MuSigMediationIssue> updated = new ArrayList<>(issues.get());
+        boolean changed = false;
+        for (MuSigMediationIssue issue : newIssues) {
+            boolean alreadyPresent = updated.stream()
+                    .anyMatch(existing -> existing.getCausingRole() == issue.getCausingRole()
+                            && existing.getType() == issue.getType());
+            if (!alreadyPresent) {
+                updated.add(issue);
+                changed = true;
+            }
+        }
+        return changed && issues.set(List.copyOf(updated));
+    }
 }
