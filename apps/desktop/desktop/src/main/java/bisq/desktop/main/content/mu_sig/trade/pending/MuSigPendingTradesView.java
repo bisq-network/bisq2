@@ -485,6 +485,9 @@ public final class MuSigPendingTradesView extends ChatView<MuSigPendingTradesVie
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(mediator, false);
 
                     badge = new Badge(userProfileDisplay);

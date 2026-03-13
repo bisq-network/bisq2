@@ -74,7 +74,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -477,26 +476,24 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     private void maybeRedactDataOfCompletedTrades() {
-        Set<BisqEasyTrade> trades = new HashSet<>(getAllTrades());
-        getClosedTrades().stream()
-                .map(BisqEasyClosedTrade::trade)
-                .forEach(trades::add);
-
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
         // We use a more constrained duration of 45-90 days.
         int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
-        long numChanges = trades.stream()
+        String redactedMarker = Res.get("data.redacted");
+        long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get())) {
+                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) ||
+                            trade.getPaymentAccountData().get().equals(redactedMarker)) {
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     if (doRedaction) {
-                        trade.getPaymentAccountData().set(Res.get("data.redacted"));
+
+                        trade.getPaymentAccountData().set(redactedMarker);
                     }
                     return doRedaction;
                 })
