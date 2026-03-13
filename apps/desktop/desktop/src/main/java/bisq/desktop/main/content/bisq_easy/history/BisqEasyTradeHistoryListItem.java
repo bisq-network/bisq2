@@ -23,6 +23,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -43,10 +44,10 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class BisqEasyTradeHistoryListItem {
+public class BisqEasyTradeHistoryListItem  implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
-    private final String tradeId, shortTradeId, dateString, tradeCompletedDateString, baseAmountAsString,
+    private final String tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountAsString,
             baseAmountWithSymbol, quoteAmountAsString, quoteAmountWithSymbol, priceString, priceTooltip, myRole, paymentAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
@@ -66,8 +67,11 @@ public class BisqEasyTradeHistoryListItem {
         market = trade.getOffer().getMarket();
 
         BisqEasyContract contract = trade.getContract();
+
         date = contract.getTakeOfferDate();
-        dateString = DateFormatter.formatDateTime(date);
+        dateString = DateFormatter.formatDate(date);
+        timeString = DateFormatter.formatTime(date);
+
         // btc confirmed
         tradeCompletedDateString = trade.getTradeCompletedDate().map(DateFormatter::formatDate).orElse("N/A");
 
