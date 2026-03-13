@@ -72,7 +72,7 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
                 .mapToLong(key -> {
                     try {
                         return parseTimestamp(jsonNode, key);
-                    } catch (JsonProcessingException ignore) {
+                    } catch (Exception e) {
                         return 0;
                     }
                 })
@@ -100,13 +100,13 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
         return referenceTime;
     }
 
-    private Long parseTimestamp(JsonNode jsonNode, String key) throws JsonProcessingException {
+    private Long parseTimestamp(JsonNode jsonNode, String key) {
         JsonNode timestampNode = jsonNode.get(key);
         if (timestampNode == null || timestampNode.isNull() || !timestampNode.isNumber()) {
             throw new RuntimeException("Response JSON missing or invalid field: '" + key + "'");
         }
         long referenceTime = timestampNode.asLong();
-        log.debug("Timestamp from latest price request from {}: {} (epoche time in seconds: {})",
+        log.debug("Timestamp from latest price request from {}: {} (epoch time in milliseconds: {})",
                 key.replace("Ts", ""),
                 new Date(referenceTime),
                 referenceTime);
