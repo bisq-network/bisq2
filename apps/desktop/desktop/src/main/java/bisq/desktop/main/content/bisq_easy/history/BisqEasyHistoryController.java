@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.history;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -134,12 +133,12 @@ public class BisqEasyHistoryController implements Controller {
                 || item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(searchText)
                 || item.getTradeId().toLowerCase().contains(searchText)
                 || item.getDateString().toLowerCase().contains(searchText)
-                || item.getBaseAmountAsString().toLowerCase().contains(searchText)
-                || item.getQuoteAmountAsString().toLowerCase().contains(searchText)
+                || item.getBaseAmountString().toLowerCase().contains(searchText)
+                || item.getQuoteAmountString().toLowerCase().contains(searchText)
                 || item.getPaymentAsString().toLowerCase().contains(searchText)
                 || item.getMyRole().toLowerCase().contains(searchText)
                 || item.getMyUserProfile().getNickName().toLowerCase().contains(searchText)
-                || item.getPeerProfile().getNickName().toLowerCase().contains(searchText);
+                || item.getPeersUserProfile().getNickName().toLowerCase().contains(searchText);
     }
 
     private void updatePlaceholderText() {
