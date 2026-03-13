@@ -39,11 +39,11 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
 
     protected transient final Party maker;
 
-    public Contract(long takeOfferDate, T offer, TradeProtocolType protocolType) {
+    public Contract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party maker) {
         this.takeOfferDate = takeOfferDate;
         this.offer = offer;
         this.protocolType = protocolType;
-        this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
+        this.maker = maker;
     }
 
     @Override

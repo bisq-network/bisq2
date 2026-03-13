@@ -26,6 +26,8 @@ import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -55,17 +57,43 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          long baseSideAmount,
                          long quoteSideAmount,
                          PaymentMethodSpec<?> paymentMethodSpec,
+                         byte[] takerSaltedAccountPayloadHash,
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
         this(takeOfferDate,
                 offer,
-                TradeProtocolType.MU_SIG,
-                new Party(Role.TAKER, takerNetworkId),
+                takerNetworkId,
                 baseSideAmount,
                 quoteSideAmount,
+                takerSaltedAccountPayloadHash,
+                mediator,
+                priceSpec,
+                marketPrice,
                 getBaseSidePaymentMethodSpec(offer, paymentMethodSpec),
-                getQuoteSidePaymentMethodSpec(offer, paymentMethodSpec),
+                getQuoteSidePaymentMethodSpec(offer, paymentMethodSpec));
+    }
+
+    private MuSigContract(long takeOfferDate,
+                          MuSigOffer offer,
+                          NetworkId takerNetworkId,
+                          long baseSideAmount,
+                          long quoteSideAmount,
+                          byte[] takerSaltedAccountPayloadHash,
+                          Optional<UserProfile> mediator,
+                          PriceSpec priceSpec,
+                          long marketPrice,
+                          PaymentMethodSpec<?> baseSidePaymentMethodSpec,
+                          PaymentMethodSpec<?> quoteSidePaymentMethodSpec) {
+        this(takeOfferDate,
+                offer,
+                TradeProtocolType.MU_SIG,
+                resolveMakerParty(offer, baseSidePaymentMethodSpec, quoteSidePaymentMethodSpec),
+                new Party(Role.TAKER, takerNetworkId, Optional.of(takerSaltedAccountPayloadHash)),
+                baseSideAmount,
+                quoteSideAmount,
+                baseSidePaymentMethodSpec,
+                quoteSidePaymentMethodSpec,
                 mediator,
                 priceSpec,
                 marketPrice);
@@ -74,6 +102,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     public MuSigContract(long takeOfferDate,
                          MuSigOffer offer,
                          TradeProtocolType protocolType,
+                         Party maker,
                          Party taker,
                          long baseSideAmount,
                          long quoteSideAmount,
@@ -82,7 +111,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          Optional<UserProfile> mediator,
                          PriceSpec priceSpec,
                          long marketPrice) {
-        super(takeOfferDate, offer, protocolType, taker);
+        super(takeOfferDate, offer, protocolType, maker, taker);
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
@@ -136,18 +165,21 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
         bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
         MuSigOffer muSigOffer = MuSigOffer.fromProto(proto.getOffer());
         Market market = muSigOffer.getMarket();
+        PaymentMethodSpec<?> baseSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
+                muSigContractProto.getBaseSidePaymentMethodSpec(),
+                PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market));
+        PaymentMethodSpec<?> quoteSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
+                muSigContractProto.getQuoteSidePaymentMethodSpec(),
+                PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market));
         return new MuSigContract(proto.getTakeOfferDate(),
                 muSigOffer,
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
+                resolveMakerParty(muSigOffer, baseSidePaymentMethodSpec, quoteSidePaymentMethodSpec),
                 Party.fromProto(twoPartyContractProto.getTaker()),
                 muSigContractProto.getBaseSideAmount(),
                 muSigContractProto.getQuoteSideAmount(),
-                PaymentMethodSpec.fromProto(
-                        muSigContractProto.getBaseSidePaymentMethodSpec(),
-                        PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market)),
-                PaymentMethodSpec.fromProto(
-                        muSigContractProto.getQuoteSidePaymentMethodSpec(),
-                        PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market)),
+                baseSidePaymentMethodSpec,
+                quoteSidePaymentMethodSpec,
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
                         Optional.empty(),
@@ -175,6 +207,19 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                     "MuSigOffer's quoteSidePaymentMethodSpecs must have exactly 1 item");
             return offer.getQuoteSidePaymentMethodSpecs().get(0);
         }
+    }
+
+    private static Party resolveMakerParty(MuSigOffer offer,
+                                           PaymentMethodSpec<?> baseSidePaymentMethodSpec,
+                                           PaymentMethodSpec<?> quoteSidePaymentMethodSpec) {
+        PaymentMethodSpec<?> nonBtcSidePaymentMethodSpec = offer.getMarket().isBaseCurrencyBitcoin()
+                ? quoteSidePaymentMethodSpec
+                : baseSidePaymentMethodSpec;
+        Optional<byte[]> saltedAccountPayloadHash = OfferOptionUtil.findAccountOptions(offer.getOfferOptions()).stream()
+                .filter(accountOption -> accountOption.getPaymentMethod().equals(nonBtcSidePaymentMethodSpec.getPaymentMethod()))
+                .findFirst()
+                .map(AccountOption::getSaltedAccountPayloadHash);
+        return new Party(Role.MAKER, offer.getMakerNetworkId(), saltedAccountPayloadHash);
     }
 
     public PaymentMethodSpec<?> getBtcSidePaymentMethodSpec() {

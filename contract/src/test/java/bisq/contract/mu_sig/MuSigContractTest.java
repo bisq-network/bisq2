@@ -28,12 +28,16 @@ import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.AccountOption;
+import bisq.offer.options.OfferOption;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class MuSigContractTest {
@@ -62,6 +66,72 @@ class MuSigContractTest {
         assertSame(baseSpec, contract.getNonBtcSidePaymentMethodSpec());
     }
 
+    @Test
+    void derivesMakerSaltedAccountPayloadHashFromNonBtcQuoteSideAccountOption() {
+        FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
+        byte[] expectedHash = hash((byte) 1);
+        MuSigOffer offer = createOffer(createBtcFiatMarket(),
+                List.of(paymentMethod),
+                List.of(accountOption(paymentMethod, expectedHash)));
+
+        MuSigContract contract = new MuSigContract(System.currentTimeMillis(),
+                offer,
+                null,
+                111L,
+                222L,
+                PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "USD"),
+                hash((byte) 9),
+                Optional.empty(),
+                null,
+                0);
+
+        assertArrayEquals(expectedHash, contract.getMaker().getSaltedAccountPayloadHash().orElseThrow());
+    }
+
+    @Test
+    void derivesMakerSaltedAccountPayloadHashFromNonBtcBaseSideAccountOption() {
+        CryptoPaymentMethod paymentMethod = new CryptoPaymentMethod("XMR");
+        byte[] expectedHash = hash((byte) 2);
+        MuSigOffer offer = createOffer(createCryptoBtcMarket(),
+                List.of(paymentMethod),
+                List.of(accountOption(paymentMethod, expectedHash)));
+
+        MuSigContract contract = new MuSigContract(System.currentTimeMillis(),
+                offer,
+                null,
+                111L,
+                222L,
+                PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "XMR"),
+                hash((byte) 9),
+                Optional.empty(),
+                null,
+                0);
+
+        assertArrayEquals(expectedHash, contract.getMaker().getSaltedAccountPayloadHash().orElseThrow());
+    }
+
+    @Test
+    void makerSaltedAccountPayloadHashIsEmptyWhenNoMatchingAccountOptionExists() {
+        FiatPaymentMethod offerPaymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
+        FiatPaymentMethod differentPaymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        MuSigOffer offer = createOffer(createBtcFiatMarket(),
+                List.of(offerPaymentMethod),
+                List.of(accountOption(differentPaymentMethod, hash((byte) 3))));
+
+        MuSigContract contract = new MuSigContract(System.currentTimeMillis(),
+                offer,
+                null,
+                111L,
+                222L,
+                PaymentMethodSpecUtil.createPaymentMethodSpec(offerPaymentMethod, "USD"),
+                hash((byte) 9),
+                Optional.empty(),
+                null,
+                0);
+
+        assertFalse(contract.getMaker().getSaltedAccountPayloadHash().isPresent());
+    }
+
     private MuSigContract createContract(Market market,
                                          long baseSideAmount,
                                          long quoteSideAmount,
@@ -79,6 +149,7 @@ class MuSigContractTest {
         return new MuSigContract(System.currentTimeMillis(),
                 offer,
                 TradeProtocolType.MU_SIG,
+                new Party(Role.MAKER, offer.getMakerNetworkId()),
                 new Party(Role.TAKER, null),
                 baseSideAmount,
                 quoteSideAmount,
@@ -87,6 +158,36 @@ class MuSigContractTest {
                 Optional.empty(),
                 null,
                 0);
+    }
+
+    private MuSigOffer createOffer(Market market,
+                                   List<bisq.account.payment_method.PaymentMethod<?>> paymentMethods,
+                                   List<? extends OfferOption> offerOptions) {
+        return new MuSigOffer("test-id",
+                null,
+                Direction.BUY,
+                market,
+                null,
+                null,
+                paymentMethods,
+                offerOptions,
+                "1.0.0");
+    }
+
+    private AccountOption accountOption(bisq.account.payment_method.PaymentMethod<?> paymentMethod, byte[] saltedAccountPayloadHash) {
+        return new AccountOption(paymentMethod,
+                "0123456789abcdef0123456789abcdef01234567",
+                Optional.empty(),
+                List.of(),
+                Optional.empty(),
+                List.of(),
+                saltedAccountPayloadHash);
+    }
+
+    private byte[] hash(byte value) {
+        byte[] bytes = new byte[20];
+        bytes[0] = value;
+        return bytes;
     }
 
     private Market createBtcFiatMarket() {
