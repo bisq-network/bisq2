@@ -47,8 +47,8 @@ import lombok.ToString;
 public class BisqEasyTradeHistoryListItem  implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
-    private final String tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountAsString,
-            baseAmountWithSymbol, quoteAmountAsString, quoteAmountWithSymbol, priceString, priceTooltip, myRole, paymentAsString;
+    private final String tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
+             quoteAmountString, priceString, priceTooltip, myRole, paymentAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
@@ -81,11 +81,10 @@ public class BisqEasyTradeHistoryListItem  implements DateTableItem {
         peerReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         baseAmount = contract.getBaseSideAmount();
-        baseAmountAsString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
-        baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
+        baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
+
         quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountAsString = BisqEasyTradeFormatter.formatQuoteSideAmount(trade);
-        quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
+        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
 
         price = trade.getPriceQuote().getValue();
         BisqEasyOffer offer = contract.getOffer();
