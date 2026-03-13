@@ -23,15 +23,16 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -43,16 +44,16 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class BisqEasyTradeHistoryListItem {
+public class BisqEasyTradeHistoryListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
-    private final String tradeId, shortTradeId, dateString, tradeCompletedDateString, baseAmountAsString,
-            baseAmountWithSymbol, quoteAmountAsString, quoteAmountWithSymbol, priceTooltip, myRole, paymentAsString;
+    private final String myUserName, directionalTitle, peersUserName, tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
+            quoteAmountString, priceString, priceTooltip, myRole, paymentMethodAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
-    private final UserProfile myUserProfile, peerProfile;
-    private final ReputationScore myReputationScore, peerReputationScore;
+    private final UserProfile myUserProfile, peersUserProfile;
+    private final ReputationScore peersReputationScore;
     private final Pair<String, String> pricePair;
     private final FiatPaymentMethod paymentMethod;
     private final BitcoinPaymentMethod settlementMethod;
@@ -66,34 +67,41 @@ public class BisqEasyTradeHistoryListItem {
         market = trade.getOffer().getMarket();
 
         BisqEasyContract contract = trade.getContract();
-        date = contract.getTakeOfferDate();
-        dateString = DateFormatter.formatDateTime(date);
+
+        date = trade.getTradeCompletedDate().orElse(contract.getTakeOfferDate());
+        dateString = DateFormatter.formatDate(date);
+        timeString = DateFormatter.formatTime(date);
+
         // btc confirmed
         tradeCompletedDateString = trade.getTradeCompletedDate().map(DateFormatter::formatDate).orElse("N/A");
 
         myUserProfile = closedTrade.myUserProfile();
-        myReputationScore = reputationService.getReputationScore(myUserProfile);
-        peerProfile = closedTrade.peerUserProfile();
-        peerReputationScore = reputationService.getReputationScore(peerProfile);
+        myUserName = myUserProfile.getUserName();
+
+        directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
+
+        peersUserProfile = closedTrade.peerUserProfile();
+        peersUserName = peersUserProfile.getUserName();
+        peersReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         baseAmount = contract.getBaseSideAmount();
-        baseAmountAsString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
-        baseAmountWithSymbol = String.format("%s %s", baseAmountAsString, market.getBaseCurrencyCode());
-        quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountAsString = BisqEasyTradeFormatter.formatQuoteSideAmount(trade);
-        quoteAmountWithSymbol = String.format("%s %s", quoteAmountAsString, market.getQuoteCurrencyCode());
+        baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
 
-        price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
+        quoteAmount = contract.getQuoteSideAmount();
+        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
+
+        price = trade.getPriceQuote().getValue();
         BisqEasyOffer offer = contract.getOffer();
         PriceSpec priceSpec = offer.getPriceSpec();
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
-        String priceAsString = BisqEasyTradeFormatter.formatQuoteSideAmount(contract);
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, priceAsString);
+
+        priceString = PriceFormatter.formatWithCode(trade.getPriceQuote());
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceString);
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
-        paymentAsString = String.format("%s / %s", paymentMethod, settlementMethod);
+        paymentMethodAsString = String.format("%s / %s", paymentMethod, settlementMethod);
 
         String direction = trade.getDisplayOfferDirection().isBuy()
                 ? Res.get("bisqEasy.history.table.myRole.buyer")

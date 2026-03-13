@@ -290,15 +290,23 @@ public class TradeStateController implements Controller {
         }
     }
 
-    void onCloseTrade() {
-        new Popup().information(Res.get("bisqEasy.openTrades.closeTrade.info"))
-                .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
-                .onAction(this::doCloseTrade)
-                .closeButtonText(Res.get("action.cancel"))
-                .show();
+    void onArchiveTrade() {
+        String key = "archiveTradeInfo";
+        if (dontShowAgainService.showAgain(key)) {
+            new Popup()
+                    .headline(Res.get("popup.headline.information"))
+                    .backgroundInfo(Res.get("bisqEasy.openTrades.closeTrade.info"))
+                    .actionButtonText(Res.get("bisqEasy.openTrades.closeTrade.info.actionButton"))
+                    .onAction(this::doArchiveTrade)
+                    .closeButtonText(Res.get("action.cancel"))
+                    .dontShowAgainId(key)
+                    .show();
+        } else {
+            doArchiveTrade();
+        }
     }
 
-    private void doCloseTrade() {
+    private void doArchiveTrade() {
         // We need to pin the chatChannel to close as the one in the model would get updated after
         // bisqEasyTradeService.removeTrade, and then we would close the wrong channel.
         BisqEasyOpenTradeChannel chatChannel = model.getChannel().get();

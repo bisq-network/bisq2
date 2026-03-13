@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
@@ -33,12 +32,14 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
+import javafx.collections.transformation.SortedList;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
@@ -363,10 +364,13 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     }
 
     private void maybeSelectFirst() {
-        if (!hasTradeForChannel(selectionService.getSelectedChannel().get()) &&
-                !model.getSortedList().isEmpty()) {
-            UIThread.runOnNextRenderFrame(() -> selectionService.selectChannel(model.getSortedList().get(0).getChannel()));
-        }
+        UIThread.runOnNextRenderFrame(() -> {
+            SortedList<OpenTradeListItem> sortedList = model.getSortedList();
+            if (!hasTradeForChannel(selectionService.getSelectedChannel().get()) &&
+                    !sortedList.isEmpty()) {
+                selectionService.selectChannel(sortedList.getFirst().getChannel());
+            }
+        });
     }
 
     private void updateVisibility() {

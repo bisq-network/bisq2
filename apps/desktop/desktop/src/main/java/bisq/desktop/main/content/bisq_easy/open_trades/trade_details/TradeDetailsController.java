@@ -18,12 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -33,7 +33,6 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -106,7 +105,7 @@ public class TradeDetailsController extends NavigationController implements Init
         model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(trade));
         model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
         model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(trade));
-        model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
+        model.setPrice(PriceFormatter.format(contract.getPriceQuote()));
         model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
         model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
                 ? ""

@@ -29,7 +29,6 @@ import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -55,7 +54,7 @@ class OpenTradeListItem implements DateTableItem {
             fiatPaymentMethod;
     private final long date, price, baseAmount, quoteAmount;
     private final ChatNotificationService chatNotificationService;
-    private final ReputationScore reputationScore;
+    private final ReputationScore peersReputationScore;
     private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
@@ -90,7 +89,7 @@ class OpenTradeListItem implements DateTableItem {
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         market = trade.getOffer().getMarket().toString();
-        price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
+        price = trade.getPriceQuote().getValue();
         priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);
         baseAmount = contract.getBaseSideAmount();
         baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
@@ -103,7 +102,7 @@ class OpenTradeListItem implements DateTableItem {
         isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
         myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-        reputationScore = reputationService.getReputationScore(peersUserProfile);
+        peersReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);

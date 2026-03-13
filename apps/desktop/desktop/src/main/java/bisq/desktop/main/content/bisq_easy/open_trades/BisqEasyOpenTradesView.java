@@ -41,10 +41,19 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -347,7 +356,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
                 .comparator(Comparator.comparing(OpenTradeListItem::getBaseAmount))
-                .setCellFactory(getBaseCellFactory())
+                .setCellFactory(getBaseAmountCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
@@ -376,7 +385,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .build());
     }
 
-    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseCellFactory() {
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseAmountCellFactory() {
         return column -> new TableCell<>() {
             private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 
@@ -434,8 +443,11 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -471,8 +483,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(mediator, false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");

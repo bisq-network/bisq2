@@ -22,6 +22,8 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.i18n.Res;
+import bisq.offer.Offer;
+import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -57,8 +59,8 @@ public class PriceSpecFormatter {
     }
 
     public static String getFormattedPrice(PriceSpec priceSpec,
-                                               MarketPriceService marketPriceService,
-                                               Market market) {
+                                           MarketPriceService marketPriceService,
+                                           Market market) {
         String priceInfo = Res.get("data.na");
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             return PriceFormatter.format(fixPriceSpec.getPriceQuote());
@@ -109,7 +111,7 @@ public class PriceSpecFormatter {
         }
 
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.format(fixPriceSpec.getPriceQuote());
+            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
             String percentage = marketPrice.map(MarketPrice::getPriceQuote)
                     .map(priceQuote -> PriceUtil.getPercentageToMarketPrice(priceQuote, fixPriceSpec.getPriceQuote()))
                     .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
@@ -121,30 +123,38 @@ public class PriceSpecFormatter {
             double percentage = floatPriceSpec.getPercentage();
             String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
                     .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
-                    .map(priceQuote -> PriceFormatter.format(priceQuote, true))
+                    .map(priceQuote -> PriceFormatter.formatWithCode(priceQuote, true))
                     .orElse(missingPriceInfo);
             String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
             return new Pair<>(currentPrice, percentageAsString);
         }
 
         // Market price
-        return new Pair<>(PriceFormatter.format(marketPrice.get().getPriceQuote(), true), "MKT");
+        return new Pair<>(PriceFormatter.formatWithCode(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
     }
 
-    public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec, String offerPrice) {
+    public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec,
+                                                             MarketPriceService marketPriceService,
+                                                             Offer<?, ?> offer) {
+        String priceString = OfferPriceFormatter.formatQuote(marketPriceService, offer);
+        return getFormattedPriceSpecWithPrice(priceSpec, priceString);
+    }
+
+    public static String getFormattedPriceSpecWithPrice(PriceSpec priceSpec, String formattedPrice) {
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
             return Res.get("priceSpecFormatter.fixPrice", price);
         }
+
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
             return Res.get(floatPriceSpec.getPercentage() >= 0
                             ? "priceSpecFormatter.floatPrice.above"
                             : "priceSpecFormatter.floatPrice.below",
                     percent,
-                    offerPrice);
+                    formattedPrice);
         }
         // market price
-        return Res.get("priceSpecFormatter.marketPrice", offerPrice);
+        return Res.get("priceSpecFormatter.marketPrice", formattedPrice);
     }
 }

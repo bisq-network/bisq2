@@ -445,8 +445,11 @@ public final class MuSigPendingTradesView extends ChatView<MuSigPendingTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -482,8 +485,10 @@ public final class MuSigPendingTradesView extends ChatView<MuSigPendingTradesVie
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(mediator, false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");

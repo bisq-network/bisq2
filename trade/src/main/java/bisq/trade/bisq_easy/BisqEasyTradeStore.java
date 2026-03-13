@@ -22,7 +22,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,14 +37,14 @@ import java.util.stream.Collectors;
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
-final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
+public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     private final ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
 
     // We keep track of all trades by storing the trade IDs to avoid that the same trade can be taken again.
     private final ObservableSet<String> tradeIds = new ObservableSet<>();
     private final ObservableSet<BisqEasyClosedTrade> closedTrades = new ObservableSet<>();
 
-    private BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds, Set<BisqEasyClosedTrade> closedTrades) {
+    BisqEasyTradeStore(Set<BisqEasyTrade> trades, Set<String> tradeIds, Set<BisqEasyClosedTrade> closedTrades) {
         this.trades.setAll(trades);
         this.tradeIds.setAll(tradeIds);
         this.closedTrades.setAll(closedTrades);
@@ -146,23 +145,6 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     void addTrade(BisqEasyTrade trade) {
         trades.add(trade);
         tradeIds.add(trade.getId());
-    }
-
-    void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
-        trades.remove(trade);
-        closedTrades.add(new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile));
-    }
-
-    boolean deleteTrade(BisqEasyTrade trade) {
-        Optional<BisqEasyClosedTrade> closedTrade = closedTrades.stream()
-                .filter(ct -> ct.trade().getId().equals(trade.getId()))
-                .findFirst();
-        if (closedTrade.isPresent()) {
-            closedTrades.remove(closedTrade.get());
-            return true;
-        }
-        log.warn("Could not delete trade {}", trade.getId());
-        return false;
     }
 
     Optional<BisqEasyTrade> findTrade(String tradeId) {
