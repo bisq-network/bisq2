@@ -23,6 +23,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -115,16 +116,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .includeForCsv(false)
                 .build());
 
-        BisqTableColumn<BisqEasyTradeHistoryListItem> dateColumn = new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.date"))
-                .left()
-                .minWidth(160)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getDate))
-                .valueSupplier(BisqEasyTradeHistoryListItem::getDateString)
-                .sortType(TableColumn.SortType.DESCENDING)
-                .build();
-        tableView.getColumns().add(dateColumn);
-        tableView.getSortOrder().add(dateColumn);
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.baseAmount"))
