@@ -28,6 +28,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetail
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
@@ -44,6 +45,7 @@ public class BisqEasyHistoryController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
+    private final DontShowAgainService dontShowAgainService;
     private Pin closedTradesPin;
     private String searchText = "";
 
@@ -53,6 +55,7 @@ public class BisqEasyHistoryController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         reputationService = serviceProvider.getUserService().getReputationService();
         marketPriceService = serviceProvider.getBisqEasyService().getMarketPriceService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
     }
 
     @Override
@@ -110,11 +113,17 @@ public class BisqEasyHistoryController implements Controller {
     }
 
     void onDeleteTrade(BisqEasyTrade trade) {
-        new Popup().warning(Res.get("bisqEasy.history.table.actionButtons.deleteTrade.popup.info"))
-                .actionButtonText(Res.get("bisqEasy.history.table.actionButtons.deleteTrade.popup.actionButton"))
-                .onAction(() -> doDeleteTrade(trade))
-                .closeButtonText(Res.get("action.cancel"))
-                .show();
+        String key = "deleteArchivedTrade";
+        if (dontShowAgainService.showAgain(key)) {
+            new Popup().warning(Res.get("bisqEasy.history.table.actionButtons.deleteArchivedTrade.popup.info"))
+                    .actionButtonText(Res.get("bisqEasy.history.table.actionButtons.deleteArchivedTrade.popup.actionButton"))
+                    .onAction(() -> doDeleteTrade(trade))
+                    .closeButtonText(Res.get("action.cancel"))
+                    .dontShowAgainId(key)
+                    .show();
+        } else {
+            doDeleteTrade(trade);
+        }
     }
 
     private void doDeleteTrade(BisqEasyTrade trade) {
