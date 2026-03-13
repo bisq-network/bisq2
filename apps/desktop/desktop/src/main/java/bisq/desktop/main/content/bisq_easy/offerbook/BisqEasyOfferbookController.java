@@ -144,7 +144,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (searchText == null || searchText.trim().isEmpty()) {
                 model.setMarketSearchTextPredicate(item -> true);
             } else {
-                String search = searchText.trim().toLowerCase();
+                String search = searchText.trim().toLowerCase(Locale.ROOT);
                 model.setMarketSearchTextPredicate(item ->
                         item != null &&
                                 (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||

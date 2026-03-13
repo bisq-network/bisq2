@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Locale;
 import java.util.function.Predicate;
 
 @Slf4j
@@ -75,7 +76,7 @@ public class WalletTxsController implements Controller {
             if (searchText == null || searchText.trim().isEmpty()) {
                 model.setSearchTextPredicate(item -> true);
             } else {
-                String search = searchText.trim().toLowerCase();
+                String search = searchText.trim().toLowerCase(Locale.ROOT);
                 model.setSearchTextPredicate(item ->
                         item != null &&
                                 (item.getTrade().toLowerCase().contains(search)

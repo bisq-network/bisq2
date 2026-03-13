@@ -224,6 +224,9 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 

@@ -100,10 +100,11 @@ public class ProfileCardOverviewController implements Controller {
                     // For userProfiles we have persisted in the contact list and which are
                     // expired (have not been online in the past 15 days), we set it
                     // to 0 and display "N/A".
+                    long now = System.currentTimeMillis();
                     String lastUserActivity = userProfileService.findUserProfile(userProfile.getId())
                             .map(UserProfile::getPublishDate)
                             .filter(publishDate -> publishDate > 0)
-                            .map(publishDate -> System.currentTimeMillis() - publishDate)
+                            .map(publishDate -> Math.max(0L, now - publishDate))
                             .map(TimeFormatter::formatAgeCompact)
                             .orElse(Res.get("data.na"));
                     model.getLastUserActivity().set(lastUserActivity);
