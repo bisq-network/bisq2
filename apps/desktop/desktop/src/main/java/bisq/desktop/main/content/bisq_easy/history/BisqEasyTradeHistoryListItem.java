@@ -68,7 +68,7 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
 
         BisqEasyContract contract = trade.getContract();
 
-        date = contract.getTakeOfferDate();
+        date = trade.getTradeCompletedDate().orElse(contract.getTakeOfferDate());
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
 
