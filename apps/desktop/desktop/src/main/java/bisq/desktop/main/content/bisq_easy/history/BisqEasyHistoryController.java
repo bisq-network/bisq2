@@ -128,17 +128,18 @@ public class BisqEasyHistoryController implements Controller {
 
     private Predicate<BisqEasyTradeHistoryListItem> createSearchPredicate() {
         return item -> searchText.isEmpty()
+                || item.getMyUserProfile().getUserName().toLowerCase().contains(searchText)
+                || item.getPeersUserProfile().getUserName().toLowerCase().contains(searchText)
+                || item.getTradeId().toLowerCase().contains(searchText)
+                || item.getDateString().toLowerCase().contains(searchText)
                 || item.getMarket().getMarketDisplayName().toLowerCase().contains(searchText)
                 || item.getMarket().getBaseCurrencyCode().toLowerCase().contains(searchText)
                 || item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(searchText)
-                || item.getTradeId().toLowerCase().contains(searchText)
-                || item.getDateString().toLowerCase().contains(searchText)
                 || item.getBaseAmountString().toLowerCase().contains(searchText)
                 || item.getQuoteAmountString().toLowerCase().contains(searchText)
-                || item.getPaymentAsString().toLowerCase().contains(searchText)
-                || item.getMyRole().toLowerCase().contains(searchText)
-                || item.getMyUserProfile().getNickName().toLowerCase().contains(searchText)
-                || item.getPeersUserProfile().getNickName().toLowerCase().contains(searchText);
+                || item.getPriceString().toLowerCase().contains(searchText)
+                || item.getPaymentMethodAsString().toLowerCase().contains(searchText)
+                || item.getMyRole().toLowerCase().contains(searchText);
     }
 
     private void updatePlaceholderText() {
