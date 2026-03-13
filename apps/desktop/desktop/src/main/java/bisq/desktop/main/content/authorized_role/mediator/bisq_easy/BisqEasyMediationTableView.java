@@ -325,21 +325,27 @@ class BisqEasyMediationTableView extends VBox {
     private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
             TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getCloseDateCellFactory() {
         return column -> new TableCell<>() {
+            private final Label date = new Label();
+            private final Label time = new Label();
+            private final VBox vBox = new VBox(3, date, time);
 
-            private final Label label = new Label();
+            {
+                date.getStyleClass().add("table-view-date-column-date");
+                time.getStyleClass().add("table-view-date-column-time");
+                vBox.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
+            }
 
             @Override
             protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                date.textProperty().unbind();
+                time.textProperty().unbind();
+
                 if (item != null && !empty) {
-                    Label date = new Label(item.getCloseCaseDateString());
-                    date.getStyleClass().add("table-view-date-column-date");
-                    Label time = new Label(item.getCloseCaseTimeString());
-                    time.getStyleClass().add("table-view-date-column-time");
-                    VBox vBox = new VBox(3, date, time);
-                    vBox.setAlignment(Pos.CENTER);
-                    setAlignment(Pos.CENTER);
+                    date.textProperty().bind(item.getCloseCaseDateStringProperty());
+                    time.textProperty().bind(item.getCloseCaseTimeStringProperty());
                     setGraphic(vBox);
                 } else {
                     setGraphic(null);
