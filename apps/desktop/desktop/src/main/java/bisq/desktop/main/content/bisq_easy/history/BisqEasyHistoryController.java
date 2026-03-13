@@ -96,8 +96,8 @@ public class BisqEasyHistoryController implements Controller {
                         || item.getPeersUserProfile().getUserName().toLowerCase().contains(string)
                         || item.getDateString().toLowerCase().contains(string)
                         || item.getTradeId().toLowerCase().contains(string)
-                        || item.getBaseAmountAsString().toLowerCase().contains(string)
-                        || item.getQuoteAmountAsString().toLowerCase().contains(string)
+                        || item.getBaseAmountString().toLowerCase().contains(string)
+                        || item.getQuoteAmountString().toLowerCase().contains(string)
                         || item.getPriceString().toLowerCase().contains(string)
                         || item.getPaymentAsString().toLowerCase().contains(string)
                         || item.getMyRole().toLowerCase().contains(string));
