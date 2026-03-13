@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.history;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -36,6 +35,7 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class BisqEasyHistoryController implements Controller {
     @Getter
@@ -45,6 +45,7 @@ public class BisqEasyHistoryController implements Controller {
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private Pin closedTradesPin;
+    private String searchText = "";
 
     public BisqEasyHistoryController(ServiceProvider serviceProvider) {
         model = new BisqEasyHistoryModel();
@@ -62,6 +63,7 @@ public class BisqEasyHistoryController implements Controller {
                 if (findListItem(closedTrade.trade().getId()).isEmpty()) {
                     model.getBisqEasyTradeHistoryListItems().add(
                             new BisqEasyTradeHistoryListItem(closedTrade, reputationService, marketPriceService));
+                    updatePlaceholderText();
                 }
             }
 
@@ -72,14 +74,17 @@ public class BisqEasyHistoryController implements Controller {
                             .filter(item -> item.getTrade().equals(closedTrade.trade()))
                             .findFirst()
                             .ifPresent(item -> model.getBisqEasyTradeHistoryListItems().remove(item));
+                    updatePlaceholderText();
                 }
             }
 
             @Override
             public void onCleared() {
                 model.getBisqEasyTradeHistoryListItems().clear();
+                updatePlaceholderText();
             }
         });
+        updatePlaceholderText();
     }
 
     @Override
@@ -88,20 +93,10 @@ public class BisqEasyHistoryController implements Controller {
     }
 
     void applySearchPredicate(String searchText) {
-        String string = searchText == null ? "" : searchText.trim().toLowerCase();
-        model.setSearchStringPredicate(item ->
-                StringUtils.isEmpty(string)
-                        || item.getMarket().getMarketDisplayName().toLowerCase().contains(string)
-                        || item.getMyUserProfile().getUserName().toLowerCase().contains(string)
-                        || item.getPeersUserProfile().getUserName().toLowerCase().contains(string)
-                        || item.getDateString().toLowerCase().contains(string)
-                        || item.getTradeId().toLowerCase().contains(string)
-                        || item.getBaseAmountString().toLowerCase().contains(string)
-                        || item.getQuoteAmountString().toLowerCase().contains(string)
-                        || item.getPriceString().toLowerCase().contains(string)
-                        || item.getPaymentAsString().toLowerCase().contains(string)
-                        || item.getMyRole().toLowerCase().contains(string));
+        this.searchText = searchText == null ? "" : searchText.trim().toLowerCase();
+        model.setSearchStringPredicate(createSearchPredicate());
         applyPredicates();
+        updatePlaceholderText();
     }
 
     void onShowTradeDetails(BisqEasyTradeHistoryListItem item) {
@@ -129,6 +124,30 @@ public class BisqEasyHistoryController implements Controller {
     private void applyPredicates() {
         model.getFilteredBisqEasyTradeHistoryListItems().setPredicate(null);
         model.getFilteredBisqEasyTradeHistoryListItems().setPredicate(model.getBisqEasyTradeHistoryListItemsPredicate());
+    }
+
+    private Predicate<BisqEasyTradeHistoryListItem> createSearchPredicate() {
+        return item -> searchText.isEmpty()
+                || item.getMyUserProfile().getUserName().toLowerCase().contains(searchText)
+                || item.getPeersUserProfile().getUserName().toLowerCase().contains(searchText)
+                || item.getTradeId().toLowerCase().contains(searchText)
+                || item.getDateString().toLowerCase().contains(searchText)
+                || item.getMarket().getMarketDisplayName().toLowerCase().contains(searchText)
+                || item.getMarket().getBaseCurrencyCode().toLowerCase().contains(searchText)
+                || item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(searchText)
+                || item.getBaseAmountString().toLowerCase().contains(searchText)
+                || item.getQuoteAmountString().toLowerCase().contains(searchText)
+                || item.getPriceString().toLowerCase().contains(searchText)
+                || item.getPaymentMethodAsString().toLowerCase().contains(searchText)
+                || item.getMyRole().toLowerCase().contains(searchText);
+    }
+
+    private void updatePlaceholderText() {
+        if (model.getBisqEasyTradeHistoryListItems().isEmpty()) {
+            model.getPlaceholderText().set(Res.get("bisqEasy.history.noTrades"));
+        } else if (model.getFilteredBisqEasyTradeHistoryListItems().isEmpty()) {
+            model.getPlaceholderText().set(Res.get("bisqEasy.history.noMatchingTrades"));
+        }
     }
 
     private Optional<BisqEasyTradeHistoryListItem> findListItem(String tradeId) {
