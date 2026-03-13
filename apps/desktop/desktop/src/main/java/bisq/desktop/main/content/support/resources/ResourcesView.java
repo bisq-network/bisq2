@@ -159,6 +159,9 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         backupButton.defaultButtonProperty().bind(model.getBackupButtonDefault());
         backupButton.disableProperty().bind(model.getBackupButtonDisabled());
 
+        muSigTradeGuide.setVisited(model.isMusigEnabled());
+        muSigTradeGuide.setManaged(model.isMusigEnabled());
+
         updateBackupSnapshotTreeView();
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());

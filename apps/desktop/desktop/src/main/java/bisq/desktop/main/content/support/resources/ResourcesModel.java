@@ -29,11 +29,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ResourcesModel implements Model {
+    @Setter
+    private boolean isMusigEnabled;
     private final StringProperty backupLocation = new SimpleStringProperty();
     private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
     private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
