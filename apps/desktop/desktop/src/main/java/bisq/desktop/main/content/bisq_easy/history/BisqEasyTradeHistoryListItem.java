@@ -44,16 +44,16 @@ import lombok.ToString;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class BisqEasyTradeHistoryListItem  implements DateTableItem {
+public class BisqEasyTradeHistoryListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
-    private final String tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
-             quoteAmountString, priceString, priceTooltip, myRole, paymentMethodAsString;
+    private final String myUserName, directionalTitle, peersUserName, tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
+            quoteAmountString, priceString, priceTooltip, myRole, paymentMethodAsString;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
     private final UserProfile myUserProfile, peersUserProfile;
-    private final ReputationScore myReputationScore, peerReputationScore;
+    private final ReputationScore peersReputationScore;
     private final Pair<String, String> pricePair;
     private final FiatPaymentMethod paymentMethod;
     private final BitcoinPaymentMethod settlementMethod;
@@ -76,9 +76,13 @@ public class BisqEasyTradeHistoryListItem  implements DateTableItem {
         tradeCompletedDateString = trade.getTradeCompletedDate().map(DateFormatter::formatDate).orElse("N/A");
 
         myUserProfile = closedTrade.myUserProfile();
-        myReputationScore = reputationService.getReputationScore(myUserProfile);
+        myUserName = myUserProfile.getUserName();
+
+        directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
+
         peersUserProfile = closedTrade.peerUserProfile();
-        peerReputationScore = reputationService.getReputationScore(peersUserProfile);
+        peersUserName = peersUserProfile.getUserName();
+        peersReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         baseAmount = contract.getBaseSideAmount();
         baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);

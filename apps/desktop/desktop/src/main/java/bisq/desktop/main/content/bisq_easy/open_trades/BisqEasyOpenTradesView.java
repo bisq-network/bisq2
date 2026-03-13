@@ -435,7 +435,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty) {
                     userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -472,7 +472,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
                     userProfileDisplay = new UserProfileDisplay(mediator, false);
-                    userProfileDisplay.setReputationScore(item.getReputationScore());
+                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
