@@ -120,7 +120,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.tradeId"))
-                .fixWidth(80)
+                .fixWidth(90)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getShortTradeId)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
