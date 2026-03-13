@@ -74,6 +74,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,7 +82,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -90,8 +90,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyTradeStore> implements Service, ConfidentialMessageService.Listener {
-    private final static long REDACT_AFTER = TimeUnit.DAYS.toMillis(30);
-
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -115,7 +113,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
-    private boolean wasRedacted;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -133,43 +130,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
 
     /* --------------------------------------------------------------------- */
-    // dPersistenceClient
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public BisqEasyTradeStore prunePersisted(BisqEasyTradeStore persisted) {
-        long redactCutoffDate = System.currentTimeMillis() - REDACT_AFTER;
-        Set<BisqEasyClosedTrade> closedTrades = persisted.getClosedTrades().stream()
-                //BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile
-                .map(bisqEasyClosedTrade -> {
-                    BisqEasyTrade trade = bisqEasyClosedTrade.trade();
-                    // If trade was canceled, we do not have a completion date and use the take offer date instead.
-                    Long date = trade.getTradeCompletedDate().orElse(trade.getContract().getTakeOfferDate());
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) || date > redactCutoffDate) {
-                        return bisqEasyClosedTrade;
-                    }
-
-                    wasRedacted = true;
-                    trade.getPaymentAccountData().set("");
-                    log.info("PaymentAccountData for trade with ID {} was redacted as the completion date is older than 30 days.", trade.getShortId());
-                    return new BisqEasyClosedTrade(trade,
-                            bisqEasyClosedTrade.myUserProfile(),
-                            bisqEasyClosedTrade.peerUserProfile());
-                })
-                .collect(Collectors.toSet());
-
-        return new BisqEasyTradeStore(persisted.getTrades(), persisted.getTradeIds(), closedTrades);
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        if (wasRedacted) {
-            persist();
-        }
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
@@ -443,8 +407,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (closedTrade.isPresent()) {
             closedTrades.remove(closedTrade.get());
             persist();
+        } else {
+            log.warn("Could not delete trade {}", trade.getId());
         }
-        log.warn("Could not delete trade {}", trade.getId());
     }
 
 
@@ -512,13 +477,18 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     private void maybeRedactDataOfCompletedTrades() {
+        Set<BisqEasyTrade> trades = new HashSet<>(getAllTrades());
+        getClosedTrades().stream()
+                .map(BisqEasyClosedTrade::trade)
+                .forEach(trades::add);
+
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
         // We use a more constrained duration of 45-90 days.
         int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
-        long numChanges = getAllTrades().stream()
+        long numChanges = trades.stream()
                 .filter(trade -> {
                     if (StringUtils.isEmpty(trade.getPaymentAccountData().get())) {
                         return false;

@@ -41,10 +41,19 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -434,6 +443,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                    }
                     userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
@@ -472,7 +484,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
                     userProfileDisplay = new UserProfileDisplay(mediator, false);
-                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
