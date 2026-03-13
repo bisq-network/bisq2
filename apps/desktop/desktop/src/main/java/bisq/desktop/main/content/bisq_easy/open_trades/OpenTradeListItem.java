@@ -54,7 +54,7 @@ class OpenTradeListItem implements DateTableItem {
             fiatPaymentMethod;
     private final long date, price, baseAmount, quoteAmount;
     private final ChatNotificationService chatNotificationService;
-    private final ReputationScore reputationScore;
+    private final ReputationScore peersReputationScore;
     private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
@@ -102,7 +102,7 @@ class OpenTradeListItem implements DateTableItem {
         isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
         myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-        reputationScore = reputationService.getReputationScore(peersUserProfile);
+        peersReputationScore = reputationService.getReputationScore(peersUserProfile);
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);

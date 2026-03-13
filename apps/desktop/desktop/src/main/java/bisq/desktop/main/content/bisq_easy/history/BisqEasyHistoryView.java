@@ -29,9 +29,8 @@ import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.components.UserProfileDisplay;
+import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationScore;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,6 +39,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -96,36 +96,40 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.me"))
+                .fixWidth(45)
+                .left()
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyUserName))
+                .setCellFactory(getMyUserCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .fixWidth(95)
+                .left()
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getDirectionalTitle))
+                .valueSupplier(BisqEasyTradeHistoryListItem::getDirectionalTitle)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
+                .minWidth(110)
+                .left()
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPeersUserName))
+                .setCellFactory(getTradePeerCellFactory())
+                .build());
+
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.tradeId"))
-                .minWidth(80)
+                .fixWidth(80)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getShortTradeId)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.myProfile"))
-                .left()
-                .minWidth(140)
-                .comparator(Comparator.comparing(item -> item.getMyUserProfile().getNickName()))
-                .setCellFactory(getUserProfileCellFactory(true))
-                .includeForCsv(false)
-                .build());
-
-        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.peerProfile"))
-                .left()
-                .minWidth(140)
-                .comparator(Comparator.comparing(item -> item.getPeersUserProfile().getNickName()))
-                .setCellFactory(getUserProfileCellFactory(false))
-                .includeForCsv(false)
-                .build());
-
-        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
-
-        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .fixWidth(120)
+                .minWidth(120)
+                .right()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getQuoteAmount))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountString)
                 .build());
@@ -133,6 +137,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
+                .right()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getBaseAmount))
                 .setCellFactory(getBaseAmountCellFactory())
                 .build());
@@ -140,10 +145,9 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.price"))
                 .left()
-                .fixWidth(220)
+                .minWidth(240)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPrice))
                 .setCellFactory(getPriceCellFactory())
-                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -152,13 +156,12 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .fixWidth(100)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPaymentMethodAsString))
                 .setCellFactory(getPaymentCellFactory())
-                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.myRole"))
                 .left()
-                .minWidth(100)
+                .fixWidth(100)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyRole))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
@@ -167,7 +170,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .setCellFactory(getActionButtonsCellFactory())
                 .left()
-                .minWidth(120)
+                .fixWidth(120)
                 .includeForCsv(false)
                 .build());
     }
@@ -190,8 +193,29 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         };
     }
 
-    public static Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>,
-            TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getUserProfileCellFactory(boolean isMyUserProfile) {
+    private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>, TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getMyUserCellFactory() {
+        return column -> new TableCell<>() {
+
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
+            private final StackPane stackPane = new StackPane(userProfileIcon);
+
+            @Override
+            protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    userProfileIcon.setUserProfile(item.getMyUserProfile(), false);
+                    // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
+                    setGraphic(stackPane);
+                } else {
+                    userProfileIcon.dispose();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>, TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
             private UserProfileDisplay userProfileDisplay;
 
@@ -200,10 +224,9 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfile userProfile = isMyUserProfile ? item.getMyUserProfile() : item.getPeersUserProfile();
-                    userProfileDisplay = new UserProfileDisplay(userProfile, true, true);
-                    ReputationScore reputationScore = isMyUserProfile ? item.getMyReputationScore() : item.getPeerReputationScore();
-                    userProfileDisplay.setReputationScore(reputationScore);
+                    userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
+                    userProfileDisplay.setReputationScore(item.getPeersReputationScore());
+
                     setGraphic(userProfileDisplay);
                 } else {
                     if (userProfileDisplay != null) {
@@ -252,12 +275,10 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
 
             private void setupPriceIconLabel(boolean hasFixPrice) {
                 String priceIconId = hasFixPrice ? "lock-icon-grey" : "chart-icon-grey";
-                priceIconLabel.setGraphic(ImageUtil.getImageViewById(priceIconId));
-                if (hasFixPrice) {
-                    HBox.setMargin(priceIconLabel, new Insets(0));
-                } else {
-                    HBox.setMargin(priceIconLabel, new Insets(-2, 0, 2, 0));
-                }
+                ImageView icon = ImageUtil.getImageViewById(priceIconId);
+                icon.setScaleX(0.75);
+                icon.setScaleY(0.75);
+                priceIconLabel.setGraphic(icon);
             }
         };
     }
