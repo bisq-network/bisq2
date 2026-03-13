@@ -96,14 +96,6 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
-                .title(Res.get("bisqEasy.history.table.tradeId"))
-                .minWidth(80)
-                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
-                .valueSupplier(BisqEasyTradeHistoryListItem::getShortTradeId)
-                .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
-                .build());
-
-        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.myProfile"))
                 .left()
                 .minWidth(140)
@@ -122,6 +114,14 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .build());
 
         tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .title(Res.get("bisqEasy.history.table.tradeId"))
+                .minWidth(80)
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
+                .valueSupplier(BisqEasyTradeHistoryListItem::getShortTradeId)
+                .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
+                .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
