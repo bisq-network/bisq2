@@ -39,6 +39,8 @@ import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -68,9 +70,10 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final Badge makersBadge = new Badge();
     private final Badge takersBadge = new Badge();
     private Pin changedChatNotificationPin;
+    private Pin muSigMediationResultPin;
     private Long closeCaseDate = 0L;
-    private String closeCaseDateString = "";
-    private String closeCaseTimeString = "";
+    private final StringProperty closeCaseDateString = new SimpleStringProperty("");
+    private final StringProperty closeCaseTimeString = new SimpleStringProperty("");
 
     MuSigMediationCaseListItem(ServiceProvider serviceProvider,
                                MuSigMediationCase muSigMediationCase,
@@ -115,10 +118,8 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
     @Override
     public void onActivate() {
-        Optional<Long> optionalCloseCaseDate = muSigMediationCase.getMuSigMediationResult().get().map(MuSigMediationResult::getDate);
-        closeCaseDate = optionalCloseCaseDate.orElse(0L);
-        closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
-        closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
+        muSigMediationResultPin = muSigMediationCase.getMuSigMediationResult().addObserver(optionalResult ->
+                UIThread.run(() -> applyCloseCaseDate(optionalResult.map(MuSigMediationResult::getDate))));
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
@@ -126,7 +127,33 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
     @Override
     public void onDeactivate() {
+        if (muSigMediationResultPin != null) {
+            muSigMediationResultPin.unbind();
+            muSigMediationResultPin = null;
+        }
         changedChatNotificationPin.unbind();
+    }
+
+    public String getCloseCaseDateString() {
+        return closeCaseDateString.get();
+    }
+
+    public StringProperty getCloseCaseDateStringProperty() {
+        return closeCaseDateString;
+    }
+
+    public String getCloseCaseTimeString() {
+        return closeCaseTimeString.get();
+    }
+
+    public StringProperty getCloseCaseTimeStringProperty() {
+        return closeCaseTimeString;
+    }
+
+    private void applyCloseCaseDate(Optional<Long> optionalCloseCaseDate) {
+        closeCaseDate = optionalCloseCaseDate.orElse(0L);
+        closeCaseDateString.set(optionalCloseCaseDate.map(DateFormatter::formatDate).orElse(""));
+        closeCaseTimeString.set(optionalCloseCaseDate.map(DateFormatter::formatTime).orElse(""));
     }
 
     private void handleNotification(ChatNotification notification) {
