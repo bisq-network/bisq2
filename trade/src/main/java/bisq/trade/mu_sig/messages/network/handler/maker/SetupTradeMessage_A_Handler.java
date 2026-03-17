@@ -17,7 +17,6 @@
 
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
-import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -30,6 +29,7 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.handler.MuSigContractVerifier;
 import bisq.trade.mu_sig.messages.network.handler.NonceSharesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
@@ -41,9 +41,6 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SetupTradeMessage_A> {
@@ -63,10 +60,6 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
         peersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         MuSigContract myContract = trade.getContract();
-        checkArgument(peersContract.equals(myContract),
-                "Peer's contract is not the same as my contract.\n" +
-                        "peersContract=" + peersContract + "\n" +
-                        "myContract=" + myContract);
         try {
             myContractSignatureData = contractService.signContract(myContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
@@ -74,10 +67,11 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
             log.error("Signing contract failed", e);
             throw new MuSigProtocolException(e);
         }
-        checkArgument(Arrays.equals(peersContractSignatureData.getContractHash(), myContractSignatureData.getContractHash()),
-                "Peer's contractHash at contract signature data is not the same as the contractHash at my contract signature data.\n" +
-                        "peersContractSignatureData.contractHash=" + Hex.encode(peersContractSignatureData.getContractHash()) + "\n" +
-                        "myContractSignatureData.contractHash=" + Hex.encode(myContractSignatureData.getContractHash()));
+        MuSigContractVerifier.verifyPeer(contractService,
+                myContract,
+                myContractSignatureData,
+                peersContract,
+                peersContractSignatureData);
     }
 
     @Override
