@@ -1152,6 +1152,9 @@ public class DtoMappings {
      * Supports all FiatPaymentRail types through the FiatAccountDto interface.
      */
     public static class FiatAccountMapping {
+        public static final int MIN_ACCOUNT_NAME_LENGTH = 2;
+        public static final int MAX_ACCOUNT_NAME_LENGTH = 20;
+
         /**
          * Convert a FiatAccountDto to a Bisq2 Account model.
          * Currently only supports CUSTOM (UserDefinedFiatAccount).
@@ -1160,6 +1163,17 @@ public class DtoMappings {
         public static Account<? extends PaymentMethod<?>, ?> toBisq2Model(FiatAccountDto dto) {
             if (dto == null) {
                 throw new IllegalArgumentException("FiatAccountDto cannot be null");
+            }
+
+            String accountName = dto.accountName();
+            if (accountName == null || accountName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Account name is required");
+            }
+            String trimmedName = accountName.trim();
+            if (trimmedName.length() < MIN_ACCOUNT_NAME_LENGTH || trimmedName.length() > MAX_ACCOUNT_NAME_LENGTH) {
+                throw new IllegalArgumentException(
+                        "Account name must be between " + MIN_ACCOUNT_NAME_LENGTH +
+                                " and " + MAX_ACCOUNT_NAME_LENGTH + " characters");
             }
 
             return switch (dto.paymentRail()) {

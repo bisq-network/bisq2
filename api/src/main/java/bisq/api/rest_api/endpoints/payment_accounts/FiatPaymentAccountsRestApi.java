@@ -174,7 +174,7 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
     @DELETE
     @Operation(
             summary = "Delete fiat payment account",
-            description = "Delete a fiat payment account by account name",
+            description = "Delete a fiat payment account by account name (provided as query parameter)",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Fiat payment account successfully deleted"),
                     @ApiResponse(responseCode = "400", description = "Account is not a fiat payment account"),
@@ -183,14 +183,18 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    @Path("/{accountName}")
-    public void removeAccount(@PathParam("accountName") String accountName,
+    public void removeAccount(@QueryParam("accountName") String accountName,
                               @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
+            if (accountName == null || accountName.trim().isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name is required"));
+                return;
+            }
+
             Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
             if (result.isEmpty()) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found"));
@@ -207,6 +211,70 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
             accountService.removePaymentAccount(toRemove);
             asyncResponse.resume(buildNoContentResponse());
         } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PUT
+    @Operation(
+            summary = "Update fiat payment account",
+            description = "Update an existing fiat payment account by replacing it with new data. The account name to update is provided as a query parameter.",
+            requestBody = @RequestBody(
+                    description = "Updated fiat account details including payment rail type, account name, and payload",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = SaveFiatAccountRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Fiat payment account updated successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input data or unsupported payment rail"),
+                    @ApiResponse(responseCode = "404", description = "Fiat payment account not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Request timed out")
+            }
+    )
+    public void saveAccount(@QueryParam("accountName") String accountName,
+                            @Valid SaveFiatAccountRequest request,
+                            @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            if (accountName == null || accountName.trim().isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name query parameter is required"));
+                return;
+            }
+
+            FiatAccountDto accountDto = request.account();
+            if (accountDto == null) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data is required"));
+                return;
+            }
+
+            Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
+            if (result.isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found"));
+                return;
+            }
+
+            Account<? extends PaymentMethod<?>, ?> existingAccount = result.get();
+
+            if (!isFiatAccount(existingAccount)) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account is not a fiat payment account"));
+                return;
+            }
+
+            try {
+                Account<? extends PaymentMethod<?>, ?> newAccount = DtoMappings.FiatAccountMapping.toBisq2Model(accountDto);
+                accountService.updatePaymentAccount(accountName, newAccount);
+            } catch (IllegalArgumentException e) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
+                return;
+            }
+
+            asyncResponse.resume(buildNoContentResponse());
+        } catch (Exception e) {
+            log.error("Failed to save payment account", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }

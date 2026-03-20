@@ -42,7 +42,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
@@ -172,13 +172,17 @@ public class PaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    @Path("/{accountName}")
-    public void removeAccount(@PathParam("accountName") String accountName, @Suspended AsyncResponse asyncResponse) {
+    public void removeAccount(@QueryParam("accountName") String accountName, @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
+            if (accountName == null || accountName.trim().isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name is required"));
+                return;
+            }
+
             Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
             if (result.isPresent()) {
                 Account<? extends PaymentMethod<?>, ?> toRemove = result.get();
