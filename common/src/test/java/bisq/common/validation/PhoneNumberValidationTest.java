@@ -22,6 +22,17 @@ public class PhoneNumberValidationTest {
     }
 
     @Test
+    void testFormattedNumberWithValidDigitsShouldBeAccepted() {
+        // Same German mobile number digits as valid case, but with extra separators/spaces.
+        assertTrue(PhoneNumberValidation.isValid("+49 151 2345 6789", "DE"));
+    }
+
+    @Test
+    void testNumberWithMoreThan15DigitsIsRejected() {
+        assertFalse(PhoneNumberValidation.isValid("+1 202 555 0171 23456", "US"));
+    }
+
+    @Test
     void testValidUSNumbers() {
         assertTrue(PhoneNumberValidation.isValid("+1 202-555-0171", "US"));
         assertTrue(PhoneNumberValidation.isValid("202-555-0171", "US"));
