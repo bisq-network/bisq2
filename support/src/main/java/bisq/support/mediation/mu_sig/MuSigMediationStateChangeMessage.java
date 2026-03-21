@@ -72,6 +72,9 @@ public final class MuSigMediationStateChangeMessage implements MailboxMessage, E
         if (muSigMediationResult.isPresent() && mediationResultSignature.isEmpty()) {
             throw new IllegalArgumentException("MuSig mediation result must contain mediationResultSignature.");
         }
+        if (mediationResultSignature.isPresent() && muSigMediationResult.isEmpty()) {
+            throw new IllegalArgumentException("MuSig mediation result signature requires muSigMediationResult.");
+        }
         mediationResultSignature.ifPresent(NetworkDataValidation::validateECSignature);
     }
 

@@ -22,6 +22,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
+import bisq.support.arbitration.mu_sig.MuSigArbitratorService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
@@ -44,6 +45,7 @@ public class SupportService implements Service {
     private final BisqEasyMediatorService bisqEasyMediatorService;
     private final MuSigMediationRequestService muSigMediationRequestService;
     private final MuSigMediatorService muSigMediatorService;
+    private final MuSigArbitratorService muSigArbitratorService;
     private final SecurityManagerService securityManagerService;
     private final ModeratorService moderatorService;
     private final ReleaseManagerService releaseManagerService;
@@ -95,6 +97,10 @@ public class SupportService implements Service {
                 chatService,
                 userService,
                 bondedRolesService);
+        muSigArbitratorService = new MuSigArbitratorService(persistenceService,
+                networkService,
+                userService,
+                bondedRolesService);
         securityManagerService = new SecurityManagerService(SecurityManagerService.Config.from(config.getSecurityManagerConfig()),
                 networkService,
                 userService,
@@ -126,6 +132,7 @@ public class SupportService implements Service {
                 .thenCompose(result -> bisqEasyMediatorService.initialize())
                 .thenCompose(result -> muSigMediationRequestService.initialize())
                 .thenCompose(result -> muSigMediatorService.initialize())
+                .thenCompose(result -> muSigArbitratorService.initialize())
                 .thenCompose(result -> moderationRequestService.initialize())
                 .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> releaseManagerService.initialize())
@@ -139,6 +146,7 @@ public class SupportService implements Service {
                 .thenCompose(result -> bisqEasyMediatorService.shutdown())
                 .thenCompose(result -> muSigMediationRequestService.shutdown())
                 .thenCompose(result -> muSigMediatorService.shutdown())
+                .thenCompose(result -> muSigArbitratorService.shutdown())
                 .thenCompose(result -> moderationRequestService.shutdown())
                 .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> releaseManagerService.shutdown())
