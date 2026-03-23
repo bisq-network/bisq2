@@ -99,8 +99,9 @@ public class DesktopController extends NavigationController {
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
-    private Pin referenceTimePin, httpServerErrorMessagePin;
+    private Pin referenceTimePin, httpServerErrorMessagePin, languageTagPin;
     private boolean systemClockDriftWarningDisplayed;
+    private boolean skipInitialLanguageTagUpdate;
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -184,6 +185,19 @@ public class DesktopController extends NavigationController {
     @Override
     public void onActivate() {
         preventStandbyModeService.initialize();
+        skipInitialLanguageTagUpdate = true;
+
+        languageTagPin = settingsService.getLanguageTag().addObserver(languageTag -> {
+            if (skipInitialLanguageTagUpdate) {
+                skipInitialLanguageTagUpdate = false;
+                return;
+            }
+
+            if (languageTag != null) {
+                UIThread.run(() -> new Popup().feedback(Res.get("settings.language.restart")).useShutDownButton().show());
+            }
+        });
+
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
 
@@ -252,6 +266,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        languageTagPin.unbind();
         referenceTimePin.unbind();
         httpServerErrorMessagePin.unbind();
         UIClock.shutdown();
