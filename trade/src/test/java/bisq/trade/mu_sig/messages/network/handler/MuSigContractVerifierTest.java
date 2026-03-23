@@ -170,6 +170,7 @@ class MuSigContractVerifierTest {
                 baseSpec,
                 quoteSpec,
                 Optional.empty(),
+                Optional.empty(),
                 offer.getPriceSpec(),
                 0);
     }

@@ -142,6 +142,7 @@ class MuSigTradeFormatterTest {
                 baseSpec,
                 quoteSpec,
                 Optional.empty(),
+                Optional.empty(),
                 null,
                 0);
     }

@@ -51,6 +51,7 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.mu_sig.NoMuSigMediatorAvailableException;
+import bisq.support.arbitration.mu_sig.NoMuSigArbitratorAvailableException;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.user.banned.BannedUserService;
@@ -279,6 +280,11 @@ public class MuSigTakeOfferReviewController implements Controller {
                         }
                     })
                     .show());
+        } catch (NoMuSigArbitratorAvailableException e) {
+            UIThread.run(() -> {
+                new Popup().warning(Res.get("muSig.offer.taker.noArbitratorAvailable.warning")).show();
+                onCancelHandler.run();
+            });
         } catch (NoMarketPriceAvailableException e) {
             UIThread.run(() -> new Popup().warning(e.getMessage()).show());
         }

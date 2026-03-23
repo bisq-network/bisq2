@@ -57,7 +57,9 @@ import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationRequestService;
 import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
+import bisq.support.arbitration.mu_sig.NoMuSigArbitratorAvailableException;
 import bisq.support.mediation.mu_sig.NoMuSigMediatorAvailableException;
 import bisq.trade.TradeService;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -110,6 +112,7 @@ public class MuSigService extends LifecycleService {
     @Getter
     private final Observable<MuSigOffer> selectedMuSigOffer = new Observable<>();
     private final MuSigMediationRequestService muSigMediationRequestService;
+    private final MuSigArbitrationRequestService muSigArbitrationRequestService;
     private final MuSigTradeService muSigTradeService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final UserProfileService userProfileService;
@@ -149,6 +152,7 @@ public class MuSigService extends LifecycleService {
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
         muSigMediationRequestService = supportService.getMuSigMediationRequestService();
+        muSigArbitrationRequestService = supportService.getMuSigArbitrationRequestService();
         alertService = bondedRolesService.getAlertService();
         bannedUserService = userService.getBannedUserService();
         muSigTradeService = tradeService.getMuSigTradeService();
@@ -262,7 +266,7 @@ public class MuSigService extends LifecycleService {
                                               Monetary takersQuoteSideAmount,
                                               PaymentMethodSpec<?> takersPaymentMethodSpec,
                                               Account<?, ?> takersAccount)
-            throws UserProfileBannedException, NoMuSigMediatorAvailableException,
+            throws UserProfileBannedException, NoMuSigMediatorAvailableException, NoMuSigArbitratorAvailableException,
             NoMarketPriceAvailableException, RateLimitExceededException {
 
         checkArgument(isActivated());
@@ -276,6 +280,13 @@ public class MuSigService extends LifecycleService {
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             throw new NoMuSigMediatorAvailableException();
         }
+        Optional<UserProfile> arbitrator = muSigArbitrationRequestService.selectArbitrator(makersUserProfileId,
+                takerIdentity.getId(),
+                muSigOffer.getId(),
+                mediator.map(UserProfile::getId));
+        if (!DevMode.isDevMode() && arbitrator.isEmpty()) {
+            throw new NoMuSigArbitratorAvailableException();
+        }
 
         return takerCreatesProtocol(takerIdentity,
                 muSigOffer,
@@ -283,7 +294,8 @@ public class MuSigService extends LifecycleService {
                 takersQuoteSideAmount,
                 takersPaymentMethodSpec,
                 takersAccount.getAccountPayload(),
-                mediator);
+                mediator,
+                arbitrator);
     }
 
     private MuSigProtocol takerCreatesProtocol(UserIdentity takerIdentity,
@@ -292,10 +304,12 @@ public class MuSigService extends LifecycleService {
                                                Monetary takersQuoteSideAmount,
                                                PaymentMethodSpec<?> takersPaymentMethodSpec,
                                                AccountPayload<?> takersAccountPayload,
-                                               Optional<UserProfile> mediator
+                                               Optional<UserProfile> mediator,
+                                               Optional<UserProfile> arbitrator
                                          ) throws NoMarketPriceAvailableException {
 
         log.info("Selected mediator for trade {}: {}", muSigOffer.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
+        log.info("Selected arbitrator for trade {}: {}", muSigOffer.getShortId(), arbitrator.map(UserProfile::getUserName).orElse("N/A"));
         Optional<Long> marketPrice = marketPriceService.findMarketPrice(muSigOffer.getMarket())
                 .map(price -> price.getPriceQuote().getValue());
         if (marketPrice.isEmpty()) {
@@ -310,6 +324,7 @@ public class MuSigService extends LifecycleService {
                 takersPaymentMethodSpec,
                 takersAccountPayload,
                 mediator,
+                arbitrator,
                 marketPrice.get());
     }
 
@@ -320,6 +335,7 @@ public class MuSigService extends LifecycleService {
                                                PaymentMethodSpec<?> takersPaymentMethodSpec,
                                                AccountPayload<?> takersAccountPayload,
                                                Optional<UserProfile> mediator,
+                                               Optional<UserProfile> arbitrator,
                                                long marketPrice) {
         return muSigTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
                 muSigOffer,
@@ -328,6 +344,7 @@ public class MuSigService extends LifecycleService {
                 takersPaymentMethodSpec,
                 takersAccountPayload,
                 mediator,
+                arbitrator,
                 muSigOffer.getPriceSpec(),
                 marketPrice);
     }

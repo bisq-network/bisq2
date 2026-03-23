@@ -461,6 +461,7 @@ class MuSigMediatorServiceTest {
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0),
                 quoteSidePaymentMethodSpec,
                 Optional.empty(),
+                Optional.empty(),
                 createPriceSpec(),
                 0
         );
@@ -505,6 +506,7 @@ class MuSigMediatorServiceTest {
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0),
                 quoteSidePaymentMethodSpec,
                 Optional.empty(),
+                Optional.empty(),
                 createPriceSpec(),
                 0
         );
@@ -539,6 +541,7 @@ class MuSigMediatorServiceTest {
                 3_500_000L,
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0),
                 quoteSidePaymentMethodSpec,
+                Optional.empty(),
                 Optional.empty(),
                 createPriceSpec(),
                 0

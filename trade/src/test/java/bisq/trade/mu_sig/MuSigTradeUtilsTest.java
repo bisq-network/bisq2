@@ -156,6 +156,7 @@ class MuSigTradeUtilsTest {
                 baseSpec,
                 quoteSpec,
                 Optional.empty(),
+                Optional.empty(),
                 null,
                 0);
     }
@@ -189,6 +190,7 @@ class MuSigTradeUtilsTest {
                 222L,
                 baseSpec,
                 quoteSpec,
+                Optional.empty(),
                 Optional.empty(),
                 null,
                 0);

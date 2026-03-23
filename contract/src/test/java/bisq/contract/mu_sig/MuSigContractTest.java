@@ -82,6 +82,7 @@ class MuSigContractTest {
                 PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "USD"),
                 hash((byte) 9),
                 Optional.empty(),
+                Optional.empty(),
                 null,
                 0);
 
@@ -104,6 +105,7 @@ class MuSigContractTest {
                 PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "XMR"),
                 hash((byte) 9),
                 Optional.empty(),
+                Optional.empty(),
                 null,
                 0);
 
@@ -125,6 +127,7 @@ class MuSigContractTest {
                 222L,
                 PaymentMethodSpecUtil.createPaymentMethodSpec(offerPaymentMethod, "USD"),
                 hash((byte) 9),
+                Optional.empty(),
                 Optional.empty(),
                 null,
                 0);
@@ -155,6 +158,7 @@ class MuSigContractTest {
                 quoteSideAmount,
                 baseSpec,
                 quoteSpec,
+                Optional.empty(),
                 Optional.empty(),
                 null,
                 0);

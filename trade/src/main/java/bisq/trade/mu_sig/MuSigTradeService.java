@@ -448,6 +448,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                                               PaymentMethodSpec<?> paymentMethodSpec,
                                               AccountPayload<?> takersAccountPayload,
                                               Optional<UserProfile> mediator,
+                                              Optional<UserProfile> arbitrator,
                                               PriceSpec priceSpec,
                                               long marketPrice) {
         verifyTradingNotOnHalt();
@@ -463,6 +464,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 paymentMethodSpec,
                 createSaltedAccountPayloadHash(takersAccountPayload, muSigOffer.getId()),
                 mediator,
+                arbitrator,
                 priceSpec,
                 marketPrice);
         boolean isBuyer = muSigOffer.getTakersDirection().isBuy();

@@ -48,6 +48,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     private final PaymentMethodSpec<?> baseSidePaymentMethodSpec;
     private final PaymentMethodSpec<?> quoteSidePaymentMethodSpec;
     private final Optional<UserProfile> mediator;
+    private final Optional<UserProfile> arbitrator;
     private final PriceSpec priceSpec;
     private final long marketPrice;
 
@@ -59,6 +60,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          PaymentMethodSpec<?> paymentMethodSpec,
                          byte[] takerSaltedAccountPayloadHash,
                          Optional<UserProfile> mediator,
+                         Optional<UserProfile> arbitrator,
                          PriceSpec priceSpec,
                          long marketPrice) {
         this(takeOfferDate,
@@ -68,6 +70,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 quoteSideAmount,
                 takerSaltedAccountPayloadHash,
                 mediator,
+                arbitrator,
                 priceSpec,
                 marketPrice,
                 getBaseSidePaymentMethodSpec(offer, paymentMethodSpec),
@@ -81,6 +84,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                           long quoteSideAmount,
                           byte[] takerSaltedAccountPayloadHash,
                           Optional<UserProfile> mediator,
+                          Optional<UserProfile> arbitrator,
                           PriceSpec priceSpec,
                           long marketPrice,
                           PaymentMethodSpec<?> baseSidePaymentMethodSpec,
@@ -95,6 +99,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 baseSidePaymentMethodSpec,
                 quoteSidePaymentMethodSpec,
                 mediator,
+                arbitrator,
                 priceSpec,
                 marketPrice);
     }
@@ -109,6 +114,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                          PaymentMethodSpec<?> baseSidePaymentMethodSpec,
                          PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
                          Optional<UserProfile> mediator,
+                         Optional<UserProfile> arbitrator,
                          PriceSpec priceSpec,
                          long marketPrice) {
         super(takeOfferDate, offer, protocolType, maker, taker);
@@ -117,6 +123,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
         this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
         this.quoteSidePaymentMethodSpec = quoteSidePaymentMethodSpec;
         this.mediator = mediator;
+        this.arbitrator = arbitrator;
         this.priceSpec = priceSpec;
         this.marketPrice = marketPrice;
 
@@ -152,6 +159,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 .setPriceSpec(priceSpec.toProto(serializeForHash))
                 .setMarketPrice(marketPrice);
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        arbitrator.ifPresent(arbitrator -> builder.setArbitrator(arbitrator.toProto(serializeForHash)));
         return builder;
     }
 
@@ -182,6 +190,9 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
                 quoteSidePaymentMethodSpec,
                 muSigContractProto.hasMediator() ?
                         Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
+                        Optional.empty(),
+                muSigContractProto.hasArbitrator() ?
+                        Optional.of(UserProfile.fromProto(muSigContractProto.getArbitrator())) :
                         Optional.empty(),
                 PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
                 muSigContractProto.getMarketPrice());
