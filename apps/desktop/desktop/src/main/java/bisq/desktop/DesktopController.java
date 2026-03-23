@@ -68,6 +68,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
 
@@ -101,7 +102,7 @@ public class DesktopController extends NavigationController {
     private final JavaFxApplicationData applicationJavaFxApplicationData;
     private Pin referenceTimePin, httpServerErrorMessagePin, languageTagPin;
     private boolean systemClockDriftWarningDisplayed;
-    private boolean skipInitialLanguageTagUpdate;
+    private final AtomicBoolean skipInitialLanguageTagUpdate = new AtomicBoolean();
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -185,11 +186,10 @@ public class DesktopController extends NavigationController {
     @Override
     public void onActivate() {
         preventStandbyModeService.initialize();
-        skipInitialLanguageTagUpdate = true;
+        skipInitialLanguageTagUpdate.set(true);
 
         languageTagPin = settingsService.getLanguageTag().addObserver(languageTag -> {
-            if (skipInitialLanguageTagUpdate) {
-                skipInitialLanguageTagUpdate = false;
+            if (skipInitialLanguageTagUpdate.getAndSet(false)) {
                 return;
             }
 
