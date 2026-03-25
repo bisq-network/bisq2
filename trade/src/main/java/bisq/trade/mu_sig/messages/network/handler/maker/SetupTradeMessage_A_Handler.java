@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
 import bisq.common.util.StringUtils;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -37,6 +38,8 @@ import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
+import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,6 +52,8 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
     private NonceSharesMessage myNonceSharesMessage;
     private ContractSignatureData peersContractSignatureData;
     private ContractSignatureData myContractSignatureData;
+    private UserIdentity myUserIdentity;
+    private UserProfile peersUserProfile;
 
     public SetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -77,6 +82,10 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
     @Override
     protected void process(SetupTradeMessage_A message) {
         peersPubKeyShares = message.getPubKeyShares();
+        myUserIdentity = serviceProvider.getUserService().getUserIdentityService().findUserIdentity(trade.getMyIdentity().getId())
+                .orElseThrow();
+        peersUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(message.getSender().getId())
+                .orElseThrow();
 
         Role role = trade.isBuyer() ? Role.BUYER_AS_MAKER : Role.SELLER_AS_MAKER;
         PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
@@ -111,6 +120,12 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
         peer.setPeersPubKeyShares(peersPubKeyShares);
         mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
         mySelf.setMyNonceSharesMessage(myNonceSharesMessage);
+
+        MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
+        openTradeChannelService.traderFindOrCreatesChannel(trade.getId(),
+                myUserIdentity,
+                peersUserProfile,
+                trade.getContract().getMediator());
     }
 
     @Override
