@@ -15,13 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest_api.endpoints.payment_accounts;
+package bisq.api.dto.account.fiat;
 
-import bisq.api.dto.account.UserDefinedFiatAccountDto;
 
-import javax.annotation.Nullable;
-
-public record PaymentAccountChangeRequest(
-        @Nullable UserDefinedFiatAccountDto selectedAccount
+public record FiatPaymentMethodItemDto(
+        FiatPaymentRailDto paymentRail,
+        String name,
+        String supportedCurrencyCodes,
+        String supportedNameAndCodes,
+        String countryNames,
+        String chargebackRisk
 ) {
 }

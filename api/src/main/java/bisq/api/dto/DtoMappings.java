@@ -19,21 +19,67 @@ package bisq.api.dto;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.timestamp.KeyType;
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.api.dto.account.UserDefinedFiatAccountDto;
-import bisq.api.dto.account.UserDefinedFiatAccountPayloadDto;
+import bisq.account.timestamp.KeyType;
+import bisq.api.dto.account.fiat.AchTransferAccountDto;
+import bisq.api.dto.account.fiat.AdvancedCashAccountDto;
+import bisq.api.dto.account.fiat.AliPayAccountDto;
+import bisq.api.dto.account.fiat.AmazonGiftCardAccountDto;
+import bisq.api.dto.account.fiat.BizumAccountDto;
+import bisq.api.dto.account.fiat.CashByMailAccountDto;
+import bisq.api.dto.account.fiat.CashDepositAccountDto;
+import bisq.api.dto.account.fiat.DomesticWireTransferAccountDto;
+import bisq.api.dto.account.fiat.F2FAccountDto;
+import bisq.api.dto.account.fiat.FasterPaymentsAccountDto;
 import bisq.api.dto.account.fiat.FiatAccountDto;
+import bisq.api.dto.account.fiat.FiatPaymentMethodItemDto;
+import bisq.api.dto.account.fiat.FiatPaymentRailDto;
+import bisq.api.dto.account.fiat.HalCashAccountDto;
+import bisq.api.dto.account.fiat.ImpsAccountDto;
+import bisq.api.dto.account.fiat.InteracETransferAccountDto;
+import bisq.api.dto.account.fiat.MercadoPagoAccountDto;
+import bisq.api.dto.account.fiat.MoneseAccountDto;
+import bisq.api.dto.account.fiat.MoneyBeamAccountDto;
+import bisq.api.dto.account.fiat.MoneyGramAccountDto;
+import bisq.api.dto.account.fiat.NationalBankAccountDto;
+import bisq.api.dto.account.fiat.NeftAccountDto;
+import bisq.api.dto.account.fiat.PayIdAccountDto;
+import bisq.api.dto.account.fiat.PayseraAccountDto;
+import bisq.api.dto.account.fiat.PerfectMoneyAccountDto;
+import bisq.api.dto.account.fiat.Pin4AccountDto;
+import bisq.api.dto.account.fiat.PixAccountDto;
+import bisq.api.dto.account.fiat.PromptPayAccountDto;
+import bisq.api.dto.account.fiat.RevolutAccountDto;
+import bisq.api.dto.account.fiat.SameBankAccountDto;
+import bisq.api.dto.account.fiat.SatispayAccountDto;
+import bisq.api.dto.account.fiat.SbpAccountDto;
+import bisq.api.dto.account.fiat.SepaAccountDto;
+import bisq.api.dto.account.fiat.SepaInstantAccountDto;
+import bisq.api.dto.account.fiat.StrikeAccountDto;
+import bisq.api.dto.account.fiat.SwiftAccountDto;
+import bisq.api.dto.account.fiat.SwishAccountDto;
+import bisq.api.dto.account.fiat.USPostalMoneyOrderAccountDto;
+import bisq.api.dto.account.fiat.USPostalMoneyOrderAccountPayloadDto;
+import bisq.api.dto.account.fiat.UpholdAccountDto;
+import bisq.api.dto.account.fiat.UpholdAccountPayloadDto;
+import bisq.api.dto.account.fiat.UpiAccountDto;
+import bisq.api.dto.account.fiat.UpiAccountPayloadDto;
+import bisq.api.dto.account.fiat.WeChatPayAccountDto;
+import bisq.api.dto.account.fiat.WeChatPayAccountPayloadDto;
+import bisq.api.dto.account.fiat.WiseAccountDto;
+import bisq.api.dto.account.fiat.WiseAccountPayloadDto;
+import bisq.api.dto.account.fiat.WiseUsdAccountDto;
+import bisq.api.dto.account.fiat.WiseUsdAccountPayloadDto;
+import bisq.api.dto.account.fiat.ZelleAccountDto;
+import bisq.api.dto.account.fiat.ZelleAccountPayloadDto;
 import bisq.api.dto.account.protocol_type.TradeProtocolTypeDto;
 import bisq.api.dto.chat.ChatChannelDomainDto;
 import bisq.api.dto.chat.ChatMessageTypeDto;
@@ -55,6 +101,41 @@ import bisq.api.dto.contract.PartyDto;
 import bisq.api.dto.contract.RoleDto;
 import bisq.api.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.api.dto.identity.IdentityDto;
+import bisq.api.dto.mappings.fiat.AchTransferAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.AdvancedCashAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.AliPayAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.AmazonGiftCardAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.BizumAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.CashByMailAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.CashDepositAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.DomesticWireTransferAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.F2FAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.FasterPaymentsAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.HalCashAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.ImpsAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.InteracETransferAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.MercadoPagoAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.MoneseAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.MoneyBeamAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.MoneyGramAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.NationalBankAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.NeftAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.PayIdAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.PayseraAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.PerfectMoneyAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.Pin4AccountDtoMapping;
+import bisq.api.dto.mappings.fiat.PixAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.PromptPayAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.RevolutAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SameBankAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SatispayAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SbpAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SepaAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SepaInstantAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.StrikeAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SwiftAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.SwishAccountDtoMapping;
+import bisq.api.dto.mappings.fiat.UserDefinedFiatAccountDtoMapping;
 import bisq.api.dto.network.identity.NetworkIdDto;
 import bisq.api.dto.offer.DirectionDto;
 import bisq.api.dto.offer.amount.spec.AmountSpecDto;
@@ -100,6 +181,8 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.common.encoding.Hex;
+import bisq.common.locale.Country;
+import bisq.common.locale.CountryRepository;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -112,6 +195,7 @@ import bisq.contract.ContractSignatureData;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -1134,15 +1218,27 @@ public class DtoMappings {
     }
 
     // paymentaccount
-    public static class UserDefinedFiatAccountMapping {
-        // toBisq2Model method not implemented, as we get accountName, accountData props for account creation calls
+    public static class FiatPaymentMethodItemMapping {
+        public static FiatPaymentMethodItemDto fromBisq2Model(FiatPaymentMethod paymentMethod) {
+            java.util.List<Country> supportedCountries = paymentMethod.getSupportedCountries();
+            java.util.List<String> countryCodes = supportedCountries.stream()
+                    .map(Country::getCode)
+                    .sorted()
+                    .toList();
+            String countryNames = CountryRepository.matchesAllCountries(countryCodes)
+                    ? Res.get("paymentAccounts.allCountries")
+                    : supportedCountries.stream()
+                    .map(Country::getName)
+                    .sorted()
+                    .collect(Collectors.joining(", "));
 
-        public static UserDefinedFiatAccountDto fromBisq2Model(UserDefinedFiatAccount account) {
-            return new UserDefinedFiatAccountDto(
-                    account.getAccountName(),
-                    new UserDefinedFiatAccountPayloadDto(
-                            account.getAccountPayload().getAccountData()
-                    )
+            return new FiatPaymentMethodItemDto(
+                    FiatPaymentRailMapping.fromBisq2Model(paymentMethod.getPaymentRail()),
+                    paymentMethod.getShortDisplayString(),
+                    paymentMethod.getSupportedCurrencyCodesAsDisplayString(),
+                    paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString(),
+                    countryNames,
+                    paymentMethod.getPaymentRail().getChargebackRisk().toString()
             );
         }
     }
@@ -1151,85 +1247,624 @@ public class DtoMappings {
      * Mapping for polymorphic fiat accounts.
      * Supports all FiatPaymentRail types through the FiatAccountDto interface.
      */
-    public static class FiatAccountMapping {
-        public static final int MIN_ACCOUNT_NAME_LENGTH = 2;
-        public static final int MAX_ACCOUNT_NAME_LENGTH = 20;
+    public static class FiatPaymentRailMapping {
+        public static FiatPaymentRail toBisq2Model(FiatPaymentRailDto value) {
+            if (value == null) {
+                return null;
+            }
+            return FiatPaymentRail.valueOf(value.name());
+        }
 
-        /**
-         * Convert a FiatAccountDto to a Bisq2 Account model.
-         * Currently only supports CUSTOM (UserDefinedFiatAccount).
-         * TODO: Add support for other fiat account types (SEPA, Revolut, Zelle, etc.)
-         */
+        public static FiatPaymentRailDto fromBisq2Model(FiatPaymentRail value) {
+            if (value == null) {
+                return null;
+            }
+            return FiatPaymentRailDto.valueOf(value.name());
+        }
+    }
+
+    public static class FiatAccountMapping {
         public static Account<? extends PaymentMethod<?>, ?> toBisq2Model(FiatAccountDto dto) {
             if (dto == null) {
                 throw new IllegalArgumentException("FiatAccountDto cannot be null");
             }
 
-            String accountName = dto.accountName();
-            if (accountName == null || accountName.trim().isEmpty()) {
-                throw new IllegalArgumentException("Account name is required");
-            }
-            String trimmedName = accountName.trim();
-            if (trimmedName.length() < MIN_ACCOUNT_NAME_LENGTH || trimmedName.length() > MAX_ACCOUNT_NAME_LENGTH) {
-                throw new IllegalArgumentException(
-                        "Account name must be between " + MIN_ACCOUNT_NAME_LENGTH +
-                                " and " + MAX_ACCOUNT_NAME_LENGTH + " characters");
-            }
-
-            return switch (dto.paymentRail()) {
+            return switch (FiatPaymentRailMapping.toBisq2Model(dto.paymentRail())) {
+                case ACH_TRANSFER -> {
+                    if (dto instanceof AchTransferAccountDto typedDto) {
+                        yield AchTransferAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected AchTransferAccountDto for ACH_TRANSFER payment rail");
+                }
+                case ADVANCED_CASH -> {
+                    if (dto instanceof AdvancedCashAccountDto typedDto) {
+                        yield AdvancedCashAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected AdvancedCashAccountDto for ADVANCED_CASH payment rail");
+                }
+                case ALI_PAY -> {
+                    if (dto instanceof AliPayAccountDto typedDto) {
+                        yield AliPayAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected AliPayAccountDto for ALI_PAY payment rail");
+                }
+                case AMAZON_GIFT_CARD -> {
+                    if (dto instanceof AmazonGiftCardAccountDto typedDto) {
+                        yield AmazonGiftCardAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected AmazonGiftCardAccountDto for AMAZON_GIFT_CARD payment rail");
+                }
+                case BIZUM -> {
+                    if (dto instanceof BizumAccountDto typedDto) {
+                        yield BizumAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected BizumAccountDto for BIZUM payment rail");
+                }
+                case CASH_BY_MAIL -> {
+                    if (dto instanceof CashByMailAccountDto typedDto) {
+                        yield CashByMailAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected CashByMailAccountDto for CASH_BY_MAIL payment rail");
+                }
+                case CASH_DEPOSIT -> {
+                    if (dto instanceof CashDepositAccountDto typedDto) {
+                        yield CashDepositAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected CashDepositAccountDto for CASH_DEPOSIT payment rail");
+                }
                 case CUSTOM -> {
-                    if (dto instanceof bisq.api.dto.account.fiat.UserDefinedFiatAccountDto userDefinedDto) {
-                        bisq.api.dto.account.fiat.UserDefinedFiatAccountPayloadDto payloadDto = userDefinedDto.accountPayload();
-                        UserDefinedFiatAccountPayload payload = new UserDefinedFiatAccountPayload(
+                    if (dto instanceof bisq.api.dto.account.fiat.UserDefinedFiatAccountDto typedDto) {
+                        yield UserDefinedFiatAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected UserDefinedFiatAccountDto for CUSTOM payment rail");
+                }
+                case DOMESTIC_WIRE_TRANSFER -> {
+                    if (dto instanceof DomesticWireTransferAccountDto typedDto) {
+                        yield DomesticWireTransferAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected DomesticWireTransferAccountDto for DOMESTIC_WIRE_TRANSFER payment rail");
+                }
+                case F2F -> {
+                    if (dto instanceof F2FAccountDto typedDto) {
+                        yield F2FAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected F2FAccountDto for F2F payment rail");
+                }
+                case FASTER_PAYMENTS -> {
+                    if (dto instanceof FasterPaymentsAccountDto typedDto) {
+                        yield FasterPaymentsAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected FasterPaymentsAccountDto for FASTER_PAYMENTS payment rail");
+                }
+                case HAL_CASH -> {
+                    if (dto instanceof HalCashAccountDto typedDto) {
+                        yield HalCashAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected HalCashAccountDto for HAL_CASH payment rail");
+                }
+                case IMPS -> {
+                    if (dto instanceof ImpsAccountDto typedDto) {
+                        yield ImpsAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected ImpsAccountDto for IMPS payment rail");
+                }
+                case INTERAC_E_TRANSFER -> {
+                    if (dto instanceof InteracETransferAccountDto typedDto) {
+                        yield InteracETransferAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected InteracETransferAccountDto for INTERAC_E_TRANSFER payment rail");
+                }
+                case MERCADO_PAGO -> {
+                    if (dto instanceof MercadoPagoAccountDto typedDto) {
+                        yield MercadoPagoAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected MercadoPagoAccountDto for MERCADO_PAGO payment rail");
+                }
+                case MONESE -> {
+                    if (dto instanceof MoneseAccountDto typedDto) {
+                        yield MoneseAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected MoneseAccountDto for MONESE payment rail");
+                }
+                case MONEY_BEAM -> {
+                    if (dto instanceof MoneyBeamAccountDto typedDto) {
+                        yield MoneyBeamAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected MoneyBeamAccountDto for MONEY_BEAM payment rail");
+                }
+                case MONEY_GRAM -> {
+                    if (dto instanceof MoneyGramAccountDto typedDto) {
+                        yield MoneyGramAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected MoneyGramAccountDto for MONEY_GRAM payment rail");
+                }
+                case NATIONAL_BANK -> {
+                    if (dto instanceof NationalBankAccountDto typedDto) {
+                        yield NationalBankAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected NationalBankAccountDto for NATIONAL_BANK payment rail");
+                }
+                case NEFT -> {
+                    if (dto instanceof NeftAccountDto typedDto) {
+                        yield NeftAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected NeftAccountDto for NEFT payment rail");
+                }
+                case PAYSERA -> {
+                    if (dto instanceof PayseraAccountDto typedDto) {
+                        yield PayseraAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected PayseraAccountDto for PAYSERA payment rail");
+                }
+                case PAY_ID -> {
+                    if (dto instanceof PayIdAccountDto typedDto) {
+                        yield PayIdAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected PayIdAccountDto for PAY_ID payment rail");
+                }
+                case PERFECT_MONEY -> {
+                    if (dto instanceof PerfectMoneyAccountDto typedDto) {
+                        yield PerfectMoneyAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected PerfectMoneyAccountDto for PERFECT_MONEY payment rail");
+                }
+                case PIN_4 -> {
+                    if (dto instanceof Pin4AccountDto typedDto) {
+                        yield Pin4AccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected Pin4AccountDto for PIN_4 payment rail");
+                }
+                case PIX -> {
+                    if (dto instanceof PixAccountDto typedDto) {
+                        yield PixAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected PixAccountDto for PIX payment rail");
+                }
+                case PROMPT_PAY -> {
+                    if (dto instanceof PromptPayAccountDto typedDto) {
+                        yield PromptPayAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected PromptPayAccountDto for PROMPT_PAY payment rail");
+                }
+                case REVOLUT -> {
+                    if (dto instanceof RevolutAccountDto typedDto) {
+                        yield RevolutAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected RevolutAccountDto for REVOLUT payment rail");
+                }
+                case SAME_BANK -> {
+                    if (dto instanceof SameBankAccountDto typedDto) {
+                        yield SameBankAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SameBankAccountDto for SAME_BANK payment rail");
+                }
+                case SATISPAY -> {
+                    if (dto instanceof SatispayAccountDto typedDto) {
+                        yield SatispayAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SatispayAccountDto for SATISPAY payment rail");
+                }
+                case SBP -> {
+                    if (dto instanceof SbpAccountDto typedDto) {
+                        yield SbpAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SbpAccountDto for SBP payment rail");
+                }
+                case SEPA -> {
+                    if (dto instanceof SepaAccountDto typedDto) {
+                        yield SepaAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SepaAccountDto for SEPA payment rail");
+                }
+                case SEPA_INSTANT -> {
+                    if (dto instanceof SepaInstantAccountDto typedDto) {
+                        yield SepaInstantAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SepaInstantAccountDto for SEPA_INSTANT payment rail");
+                }
+                case STRIKE -> {
+                    if (dto instanceof StrikeAccountDto typedDto) {
+                        yield StrikeAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected StrikeAccountDto for STRIKE payment rail");
+                }
+                case SWIFT -> {
+                    if (dto instanceof SwiftAccountDto typedDto) {
+                        yield SwiftAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SwiftAccountDto for SWIFT payment rail");
+                }
+                case SWISH -> {
+                    if (dto instanceof SwishAccountDto typedDto) {
+                        yield SwishAccountDtoMapping.toBisq2Model(typedDto);
+                    }
+                    throw new IllegalArgumentException("Expected SwishAccountDto for SWISH payment rail");
+                }
+                case UPHOLD -> {
+                    if (dto instanceof UpholdAccountDto typedDto) {
+                        UpholdAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.UpholdAccountPayload payload = new bisq.account.accounts.fiat.UpholdAccountPayload(
                                 bisq.common.util.StringUtils.createUid(),
-                                payloadDto.accountData()
+                                payloadDto.selectedCurrencyCodes(),
+                                payloadDto.holderName(),
+                                payloadDto.accountId()
                         );
                         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
                         KeyType keyType = KeyType.EC;
-                        yield new UserDefinedFiatAccount(
+                        yield new bisq.account.accounts.fiat.UpholdAccount(
                                 bisq.common.util.StringUtils.createUid(),
                                 System.currentTimeMillis(),
-                                userDefinedDto.accountName(),
+                                typedDto.accountName(),
                                 payload,
                                 keyPair,
                                 keyType,
                                 AccountOrigin.BISQ2_NEW
                         );
                     }
-                    throw new IllegalArgumentException("Expected UserDefinedFiatAccountDto for CUSTOM payment rail");
+                    throw new IllegalArgumentException("Expected UpholdAccountDto for UPHOLD payment rail");
                 }
-                // TODO: Add cases for other payment rails when implemented:
-                // case SEPA -> { ... }
-                // case REVOLUT -> { ... }
-                // case ZELLE -> { ... }
+                case UPI -> {
+                    if (dto instanceof UpiAccountDto typedDto) {
+                        UpiAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.UpiAccountPayload payload = new bisq.account.accounts.fiat.UpiAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.countryCode(),
+                                payloadDto.virtualPaymentAddress()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.UpiAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected UpiAccountDto for UPI payment rail");
+                }
+                case US_POSTAL_MONEY_ORDER -> {
+                    if (dto instanceof USPostalMoneyOrderAccountDto typedDto) {
+                        USPostalMoneyOrderAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload payload = new bisq.account.accounts.fiat.USPostalMoneyOrderAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.holderName(),
+                                payloadDto.postalAddress()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.USPostalMoneyOrderAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected USPostalMoneyOrderAccountDto for US_POSTAL_MONEY_ORDER payment rail");
+                }
+                case WECHAT_PAY -> {
+                    if (dto instanceof WeChatPayAccountDto typedDto) {
+                        WeChatPayAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.WeChatPayAccountPayload payload = new bisq.account.accounts.fiat.WeChatPayAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.accountNr()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.WeChatPayAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected WeChatPayAccountDto for WECHAT_PAY payment rail");
+                }
+                case WISE -> {
+                    if (dto instanceof WiseAccountDto typedDto) {
+                        WiseAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.WiseAccountPayload payload = new bisq.account.accounts.fiat.WiseAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.selectedCurrencyCodes(),
+                                payloadDto.holderName(),
+                                payloadDto.email()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.WiseAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected WiseAccountDto for WISE payment rail");
+                }
+                case WISE_USD -> {
+                    if (dto instanceof WiseUsdAccountDto typedDto) {
+                        WiseUsdAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.WiseUsdAccountPayload payload = new bisq.account.accounts.fiat.WiseUsdAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.countryCode(),
+                                payloadDto.holderName(),
+                                payloadDto.email(),
+                                payloadDto.beneficiaryAddress()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.WiseUsdAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected WiseUsdAccountDto for WISE_USD payment rail");
+                }
+                case ZELLE -> {
+                    if (dto instanceof ZelleAccountDto typedDto) {
+                        ZelleAccountPayloadDto payloadDto = typedDto.accountPayload();
+                        bisq.account.accounts.fiat.ZelleAccountPayload payload = new bisq.account.accounts.fiat.ZelleAccountPayload(
+                                bisq.common.util.StringUtils.createUid(),
+                                payloadDto.holderName(),
+                                payloadDto.emailOrMobileNr()
+                        );
+                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+                        KeyType keyType = KeyType.EC;
+                        yield new bisq.account.accounts.fiat.ZelleAccount(
+                                bisq.common.util.StringUtils.createUid(),
+                                System.currentTimeMillis(),
+                                typedDto.accountName(),
+                                payload,
+                                keyPair,
+                                keyType,
+                                AccountOrigin.BISQ2_NEW
+                        );
+                    }
+                    throw new IllegalArgumentException("Expected ZelleAccountDto for ZELLE payment rail");
+                }
                 default -> throw new IllegalArgumentException("Unsupported payment rail: " + dto.paymentRail());
             };
         }
 
-        /**
-         * Convert a Bisq2 Account model to a FiatAccountDto.
-         * Currently only supports UserDefinedFiatAccount.
-         * TODO: Add support for other fiat account types (SEPA, Revolut, Zelle, etc.)
-         */
         public static FiatAccountDto fromBisq2Model(Account<? extends PaymentMethod<?>, ?> account) {
             if (account == null) {
                 throw new IllegalArgumentException("Account cannot be null");
             }
 
-            if (account instanceof UserDefinedFiatAccount userDefinedAccount) {
-                return new bisq.api.dto.account.fiat.UserDefinedFiatAccountDto(
-                        userDefinedAccount.getAccountName(),
-                        FiatPaymentRail.CUSTOM,
-                        new bisq.api.dto.account.fiat.UserDefinedFiatAccountPayloadDto(
-                                userDefinedAccount.getAccountPayload().getAccountData()
+            if (account instanceof bisq.account.accounts.fiat.AchTransferAccount typed) {
+                return AchTransferAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.AdvancedCashAccount typed) {
+                return AdvancedCashAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.AliPayAccount typed) {
+                return AliPayAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.AmazonGiftCardAccount typed) {
+                return AmazonGiftCardAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.BizumAccount typed) {
+                return BizumAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.CashByMailAccount typed) {
+                return CashByMailAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.CashDepositAccount typed) {
+                return CashDepositAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.UserDefinedFiatAccount typed) {
+                return UserDefinedFiatAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.DomesticWireTransferAccount typed) {
+                return DomesticWireTransferAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.F2FAccount typed) {
+                return F2FAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.FasterPaymentsAccount typed) {
+                return FasterPaymentsAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.HalCashAccount typed) {
+                return HalCashAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.ImpsAccount typed) {
+                return ImpsAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.InteracETransferAccount typed) {
+                return InteracETransferAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.MercadoPagoAccount typed) {
+                return MercadoPagoAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.MoneseAccount typed) {
+                return MoneseAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.MoneyBeamAccount typed) {
+                return MoneyBeamAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.MoneyGramAccount typed) {
+                return MoneyGramAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.NationalBankAccount typed) {
+                return NationalBankAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.NeftAccount typed) {
+                return NeftAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.PayseraAccount typed) {
+                return PayseraAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.PayIdAccount typed) {
+                return PayIdAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.PerfectMoneyAccount typed) {
+                return PerfectMoneyAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.Pin4Account typed) {
+                return Pin4AccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.PixAccount typed) {
+                return PixAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.PromptPayAccount typed) {
+                return PromptPayAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.RevolutAccount typed) {
+                return RevolutAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SameBankAccount typed) {
+                return SameBankAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SatispayAccount typed) {
+                return SatispayAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SbpAccount typed) {
+                return SbpAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SepaAccount typed) {
+                return SepaAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SepaInstantAccount typed) {
+                return SepaInstantAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.StrikeAccount typed) {
+                return StrikeAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SwiftAccount typed) {
+                return SwiftAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.SwishAccount typed) {
+                return SwishAccountDtoMapping.fromBisq2Model(typed);
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.UpholdAccount typed) {
+                return new UpholdAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.UPHOLD),
+                        new UpholdAccountPayloadDto(
+                                typed.getAccountPayload().getSelectedCurrencyCodes(),
+                                typed.getAccountPayload().getHolderName(),
+                                typed.getAccountPayload().getAccountId()
                         )
                 );
             }
 
-            // TODO: Add conversions for other account types when implemented:
-            // if (account instanceof SepaAccount sepaAccount) { ... }
-            // if (account instanceof RevolutAccount revolutAccount) { ... }
-            // if (account instanceof ZelleAccount zelleAccount) { ... }
+            if (account instanceof bisq.account.accounts.fiat.UpiAccount typed) {
+                return new UpiAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.UPI),
+                        new UpiAccountPayloadDto(
+                                typed.getAccountPayload().getCountryCode(),
+                                typed.getAccountPayload().getVirtualPaymentAddress()
+                        )
+                );
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.USPostalMoneyOrderAccount typed) {
+                return new USPostalMoneyOrderAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.US_POSTAL_MONEY_ORDER),
+                        new USPostalMoneyOrderAccountPayloadDto(
+                                typed.getAccountPayload().getHolderName(),
+                                typed.getAccountPayload().getPostalAddress()
+                        )
+                );
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.WeChatPayAccount typed) {
+                return new WeChatPayAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.WECHAT_PAY),
+                        new WeChatPayAccountPayloadDto(
+                                typed.getAccountPayload().getAccountNr()
+                        )
+                );
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.WiseAccount typed) {
+                return new WiseAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.WISE),
+                        new WiseAccountPayloadDto(
+                                typed.getAccountPayload().getSelectedCurrencyCodes(),
+                                typed.getAccountPayload().getHolderName(),
+                                typed.getAccountPayload().getEmail()
+                        )
+                );
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.WiseUsdAccount typed) {
+                return new WiseUsdAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.WISE_USD),
+                        new WiseUsdAccountPayloadDto(
+                                typed.getAccountPayload().getCountryCode(),
+                                typed.getAccountPayload().getHolderName(),
+                                typed.getAccountPayload().getEmail(),
+                                typed.getAccountPayload().getBeneficiaryAddress()
+                        )
+                );
+            }
+
+            if (account instanceof bisq.account.accounts.fiat.ZelleAccount typed) {
+                return new ZelleAccountDto(
+                        typed.getAccountName(),
+                        FiatPaymentRailMapping.fromBisq2Model(FiatPaymentRail.ZELLE),
+                        new ZelleAccountPayloadDto(
+                                typed.getAccountPayload().getHolderName(),
+                                typed.getAccountPayload().getEmailOrMobileNr()
+                        )
+                );
+            }
 
             throw new IllegalArgumentException("Unsupported account type: " + account.getClass().getSimpleName());
         }

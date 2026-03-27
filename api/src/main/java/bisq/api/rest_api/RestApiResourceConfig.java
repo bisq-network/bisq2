@@ -35,8 +35,8 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
-                                 PaymentAccountsRestApi paymentAccountsRestApi,
                                  FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
+                                 PaymentAccountsRestApi paymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
                                  DevicesRestApi devicesRestApi) {
@@ -53,8 +53,8 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
         register(ExplorerRestApi.class);
-        register(PaymentAccountsRestApi.class);
         register(FiatPaymentAccountsRestApi.class);
+        register(PaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
         register(DevicesRestApi.class);
@@ -69,8 +69,8 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
-                bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(fiatPaymentAccountsRestApi).to(FiatPaymentAccountsRestApi.class);
+                bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
                 bind(devicesRestApi).to(DevicesRestApi.class);

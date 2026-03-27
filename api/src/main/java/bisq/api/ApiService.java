@@ -69,6 +69,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 /**
  * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
@@ -163,8 +163,8 @@ public class ApiService implements Service {
         UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
-        PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
         FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi = new FiatPaymentAccountsRestApi(accountService);
+        PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
                 userService.getUserProfileService(),
                 supportedService.getModerationRequestService(),
@@ -188,8 +188,8 @@ public class ApiService implements Service {
                     marketPriceRestApi,
                     settingsRestApi,
                     explorerRestApi,
-                    paymentAccountsRestApi,
                     fiatPaymentAccountsRestApi,
+                    paymentAccountsRestApi,
                     reputationRestApi,
                     userProfileRestApi,
                     devicesRestApi);

@@ -16,6 +16,7 @@
  */
 package bisq.api.rest_api.util;
 
+import bisq.api.access.AllowUnauthenticated;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.Reader;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -33,6 +34,7 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@AllowUnauthenticated
 @Path("openapi.json")
 @Produces(MediaType.APPLICATION_JSON)
 @Hidden

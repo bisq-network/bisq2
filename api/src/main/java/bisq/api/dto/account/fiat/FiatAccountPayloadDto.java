@@ -21,9 +21,5 @@ package bisq.api.dto.account.fiat;
  * Base interface for all fiat payment account payload DTOs.
  * Each fiat payment rail type (CUSTOM, SEPA, REVOLUT, etc.) will have its own implementation.
  */
-public sealed interface FiatAccountPayloadDto 
-        permits UserDefinedFiatAccountPayloadDto {
-    // TODO: Add more permitted types when implemented:
-    // permits UserDefinedFiatAccountPayloadDto, SepaAccountPayloadDto, RevolutAccountPayloadDto, etc.
+public interface FiatAccountPayloadDto {
 }
-

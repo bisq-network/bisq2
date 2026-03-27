@@ -31,7 +31,15 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
@@ -159,7 +167,12 @@ public class FiatPaymentAccountsRestApi extends RestApiBase {
 
             try {
                 Account<? extends PaymentMethod<?>, ?> account = DtoMappings.FiatAccountMapping.toBisq2Model(accountDto);
-                accountService.addPaymentAccount(account);
+                boolean added = accountService.addPaymentAccount(account);
+                if (!added) {
+                    asyncResponse.resume(buildErrorResponse(Response.Status.CONFLICT,
+                            "Payment account already exists: " + accountDto.accountName()));
+                    return;
+                }
             } catch (IllegalArgumentException e) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
                 return;

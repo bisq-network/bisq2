@@ -19,5 +19,5 @@ package bisq.api.dto.account.fiat;
 
 public record UserDefinedFiatAccountPayloadDto(
         String accountData
-) implements FiatAccountPayloadDto { }
-
+) implements FiatAccountPayloadDto {
+}
