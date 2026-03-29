@@ -17,7 +17,7 @@
 
 package bisq.api.rest_api.endpoints.payment_accounts;
 
-import bisq.api.dto.account.UserDefinedFiatAccountDto;
+import bisq.api.dto.account.fiat.UserDefinedFiatAccountDto;
 
 import javax.annotation.Nullable;
 

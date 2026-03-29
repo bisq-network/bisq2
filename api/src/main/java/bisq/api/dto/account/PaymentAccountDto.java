@@ -15,9 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.account.fiat;
+package bisq.api.dto.account;
 
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.api.dto.account.crypto.MoneroAccountDto;
+import bisq.api.dto.account.crypto.OtherCryptoAssetAccountDto;
+import bisq.api.dto.account.fiat.UserDefinedFiatAccountDto;
+import bisq.api.dto.account.fiat.ZelleAccountDto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -35,19 +38,20 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     visible = true
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = UserDefinedFiatAccountDto.class, name = "CUSTOM")
-    // TODO: Add more when implemented:
-    // @JsonSubTypes.Type(value = SepaAccountDto.class, name = "SEPA"),
-    // @JsonSubTypes.Type(value = RevolutAccountDto.class, name = "REVOLUT"),
-    // @JsonSubTypes.Type(value = ZelleAccountDto.class, name = "ZELLE"),
+        // Fiat
+        @JsonSubTypes.Type(value = UserDefinedFiatAccountDto.class, name = "CUSTOM"),
+        @JsonSubTypes.Type(value = ZelleAccountDto.class, name = "ZELLE"),
+        // Crypto
+        @JsonSubTypes.Type(value = MoneroAccountDto.class, name = "MONERO"),
+        @JsonSubTypes.Type(value = OtherCryptoAssetAccountDto.class, name = "OTHER_CRYPTO_ASSET")
 })
-public sealed interface FiatAccountDto 
-        permits UserDefinedFiatAccountDto {
-    // TODO: Add more permitted types when implemented:
-    // permits UserDefinedFiatAccountDto, SepaAccountDto, RevolutAccountDto, ZelleAccountDto, etc.
-    
+public interface PaymentAccountDto {
     String accountName();
-    FiatPaymentRail paymentRail();
-    FiatAccountPayloadDto accountPayload();
+
+    PaymentRailDto paymentRail();
+
+    PaymentAccountPayloadDto accountPayload();
+
+    Long creationDate();
 }
 

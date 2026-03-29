@@ -17,12 +17,12 @@
 
 package bisq.api.rest_api.endpoints.payment_accounts;
 
-import bisq.api.dto.account.fiat.FiatAccountDto;
+import bisq.api.dto.account.PaymentAccountDto;
 
 import javax.annotation.Nullable;
 
 public record SetSelectedFiatAccountRequest(
-        @Nullable FiatAccountDto selectedAccount
+        @Nullable PaymentAccountDto selectedAccount
 ) {
 }
 

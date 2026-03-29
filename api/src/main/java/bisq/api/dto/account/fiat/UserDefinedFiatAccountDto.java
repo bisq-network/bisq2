@@ -17,11 +17,25 @@
 
 package bisq.api.dto.account.fiat;
 
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.api.dto.account.PaymentAccountDto;
 
 public record UserDefinedFiatAccountDto(
     String accountName,
-    FiatPaymentRail paymentRail,
-    UserDefinedFiatAccountPayloadDto accountPayload
-) implements FiatAccountDto { }
+    FiatPaymentRailDto paymentRail,
+    UserDefinedFiatAccountPayloadDto accountPayload,
+    Long creationDate
+) implements PaymentAccountDto {
+
+    public UserDefinedFiatAccountDto {
+        if (paymentRail != FiatPaymentRailDto.CUSTOM) {
+            throw new IllegalArgumentException("paymentRail must be CUSTOM");
+        }
+    }
+
+    public UserDefinedFiatAccountDto(String accountName,
+                                     UserDefinedFiatAccountPayloadDto accountPayload,
+                                     Long creationDate) {
+        this(accountName, FiatPaymentRailDto.CUSTOM, accountPayload, creationDate);
+    }
+}
 

@@ -10,7 +10,7 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
-import bisq.api.rest_api.endpoints.payment_accounts.FiatPaymentAccountsRestApi;
+import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
@@ -36,7 +36,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  SettingsRestApi settingsRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
-                                 FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
+                                 UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
                                  DevicesRestApi devicesRestApi) {
@@ -54,7 +54,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(SettingsRestApi.class);
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
-        register(FiatPaymentAccountsRestApi.class);
+        register(UserDefinedPaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
         register(DevicesRestApi.class);
@@ -70,7 +70,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(settingsRestApi).to(SettingsRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
-                bind(fiatPaymentAccountsRestApi).to(FiatPaymentAccountsRestApi.class);
+                bind(userDefinedPaymentAccountsRestApi).to(UserDefinedPaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
                 bind(devicesRestApi).to(DevicesRestApi.class);

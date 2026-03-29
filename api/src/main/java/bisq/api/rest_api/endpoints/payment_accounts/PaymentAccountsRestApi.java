@@ -1,36 +1,24 @@
-/*
- * This file is part of Bisq.
- *
- * Bisq is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package bisq.api.rest_api.endpoints.payment_accounts;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.account.timestamp.KeyType;
-import bisq.common.util.StringUtils;
-import bisq.api.dto.DtoMappings;
-import bisq.api.dto.account.UserDefinedFiatAccountDto;
+import bisq.account.payment_method.crypto.CryptoPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.api.dto.account.PaymentAccountDto;
+import bisq.api.dto.account.crypto.CryptoPaymentMethodDto;
+import bisq.api.dto.account.fiat.FiatPaymentMethodDto;
+import bisq.api.dto.mappings.account.PaymentAccountDtoMapping;
+import bisq.api.dto.mappings.account.crypto.CryptoPaymentMethodDtoMapping;
+import bisq.api.dto.mappings.account.fiat.FiatPaymentMethodMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
-import bisq.security.keys.KeyGeneration;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,28 +27,26 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/payment-accounts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Payment Accounts API", description = "API for managing user payment accounts. Right now UserDefinedFiatAccount")
+@Tag(name = "Payment Accounts API", description = "API for retrieving fiat and crypto payment accounts.")
 public class PaymentAccountsRestApi extends RestApiBase {
     private final AccountService accountService;
 
@@ -71,52 +57,26 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @GET
     @Operation(
             summary = "Get payment accounts",
-            description = "Retrieve all the payment accounts (only UserDefinedFiatAccount)",
+            description = "Retrieve fiat and crypto payment accounts",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Payment accounts retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(schema = @Schema(implementation = PaymentAccountDto.class))
+                            )),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
     public Response getPaymentAccounts() {
         try {
-            List<UserDefinedFiatAccountDto> userAccounts = accountService.getAccountByNameMap().values().stream()
-                    .filter(account -> account instanceof UserDefinedFiatAccount)
-                    .map(account -> (UserDefinedFiatAccount) account)
-                    .map(DtoMappings.UserDefinedFiatAccountMapping::fromBisq2Model)
-                    .collect(Collectors.toList());
+            var accounts = accountService.getAccounts();
 
-            return buildOkResponse(userAccounts);
-        } catch (Exception e) {
-            log.error("Failed to retrieve payment accounts", e);
-            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
-        }
-    }
+            List<PaymentAccountDto> paymentAccounts = accounts.stream()
+                    .filter(account -> isFiatAccount(account) || isCryptoAccount(account))
+                    .map(PaymentAccountDtoMapping::fromBisq2Model)
+                    .toList();
 
-    @GET
-    @Operation(
-            summary = "Get selected payment account",
-            description = "Get selected payment account (only UserDefinedFiatAccount)",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Selected payment account retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
-            }
-    )
-    @Path("/selected")
-    public Response getSelectedPaymentAccount() {
-        try {
-            if (accountService.findSelectedAccount().isPresent()) {
-                Account<? extends PaymentMethod<?>, ?> account = accountService.findSelectedAccount().get();
-                if (account instanceof UserDefinedFiatAccount castedAccount) {
-                    UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
-                    return buildOkResponse(userAccount);
-                } else {
-                    return buildNoContentResponse();
-                }
-            }
-
-            return buildNoContentResponse();
+            return buildOkResponse(paymentAccounts);
         } catch (Exception e) {
             log.error("Failed to retrieve payment accounts", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
@@ -126,35 +86,70 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @POST
     @Operation(
             summary = "Add new payment account",
-            description = "Add new payment account (only UserDefinedFiatAccount)",
+            description = "Create a new fiat or crypto payment account.",
             requestBody = @RequestBody(
-                    description = "",
-                    content = @Content(schema = @Schema(implementation = AddAccountRequest.class))
+                    description = "Payment account details",
+                    content = @Content(
+                            schema = @Schema(implementation = PaymentAccountDto.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Zelle account",
+                                            value = "{\n  \"accountName\": \"My Zelle Account\",\n  \"paymentRail\": \"ZELLE\",\n  \"accountPayload\": {\n    \"holderName\": \"John Doe\",\n    \"emailOrMobileNr\": \"john.doe@example.com\"\n  }\n}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "ACH transfer account",
+                                            value = "{\n  \"accountName\": \"My Ach Account\",\n  \"paymentRail\": \"ACH_TRANSFER\",\n  \"accountPayload\": {\n    \"holderName\": \"John Doe\",\n    \"holderAddress\": \"Some Address\",\n    \"bankName\": \"Bank of Test\",\n    \"routingNr\": \"123456789\",\n    \"accountNr\": \"000123456789\",\n    \"bankAccountType\": \"CHECKING\"\n  }\n}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "Monero account",
+                                            value = "{\n  \"accountName\": \"My Monero Account\",\n  \"paymentRail\": \"MONERO\",\n  \"accountPayload\": {\n    \"currencyCode\": \"XMR\",\n    \"address\": \"84f....\",\n    \"isInstant\": false,\n    \"isAutoConf\": false,\n    \"autoConfNumConfirmations\": 1,\n    \"autoConfMaxTradeAmount\": 100000,\n    \"autoConfExplorerUrls\": \"https://xmrchain.net\",\n    \"useSubAddresses\": false,\n    \"mainAddress\": null,\n    \"privateViewKey\": null,\n    \"subAddress\": null,\n    \"accountIndex\": null,\n    \"initialSubAddressIndex\": null\n  }\n}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "Other crypto account",
+                                            value = "{\n  \"accountName\": \"My LTC Account\",\n  \"paymentRail\": \"OTHER_CRYPTO_ASSET\",\n  \"accountPayload\": {\n    \"currencyCode\": \"LTC\",\n    \"address\": \"ltc1....\",\n    \"isInstant\": false,\n    \"isAutoConf\": false,\n    \"autoConfNumConfirmations\": 1,\n    \"autoConfMaxTradeAmount\": 100000,\n    \"autoConfExplorerUrls\": \"https://blockchair.com/litecoin\"\n  }\n}"
+                                    )
+                            }
+                    )
             ),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "",
-                            content = @Content(schema = @Schema(example = ""))),
+                    @ApiResponse(responseCode = "201", description = "Payment account created successfully",
+                            content = @Content(schema = @Schema(implementation = PaymentAccountDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
+                    @ApiResponse(responseCode = "409", description = "Payment account already exists"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    public void addAccount(AddAccountRequest request, @Suspended AsyncResponse asyncResponse) {
+    public void addAccount(@Valid PaymentAccountDto request,
+                           @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
-        asyncResponse.setTimeoutHandler(response -> {
-            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
-        });
+        asyncResponse.setTimeoutHandler(response ->
+                response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out")));
         try {
-            KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-            KeyType keyType = KeyType.EC;
-            UserDefinedFiatAccountPayload accountPayload = new UserDefinedFiatAccountPayload(StringUtils.createUid(), request.accountData());
-            accountService.addPaymentAccount(new UserDefinedFiatAccount(StringUtils.createUid(),
-                    System.currentTimeMillis(),
-                    request.accountName(),
-                    accountPayload,
-                    keyPair,
-                    keyType,
-                    AccountOrigin.BISQ2_NEW));
-            asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
+            if (request == null) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data is required"));
+                return;
+            }
+
+            try {
+                Account<? extends PaymentMethod<?>, ?> account = PaymentAccountDtoMapping.toBisq2Model(request);
+                if (!accountService.addPaymentAccount(account)) {
+                    asyncResponse.resume(buildErrorResponse(Response.Status.CONFLICT,
+                            "Payment account already exists: " + request.accountName()));
+                    return;
+                }
+
+                Optional<Account<? extends PaymentMethod<?>, ?>> createdAccount = accountService.findAccount(account.getAccountName());
+                if (createdAccount.isEmpty()) {
+                    asyncResponse.resume(buildErrorResponse("Account was created but could not be loaded"));
+                    return;
+                }
+
+                PaymentAccountDto createdAccountDto = PaymentAccountDtoMapping.fromBisq2Model(createdAccount.get());
+                asyncResponse.resume(buildResponse(Response.Status.CREATED, createdAccountDto));
+            } catch (IllegalArgumentException e) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
+            }
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
@@ -162,21 +157,21 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @DELETE
     @Operation(
-            summary = "Delete Payment account",
-            description = "Delete Payment account",
+            summary = "Delete payment account",
+            description = "Delete a payment account by account name (fiat or crypto)",
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Offer successfully deleted"),
-                    @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "404", description = "Offer or user identity not found"),
+                    @ApiResponse(responseCode = "204", description = "Payment account successfully deleted"),
+                    @ApiResponse(responseCode = "400", description = "Account name is required"),
+                    @ApiResponse(responseCode = "404", description = "Account not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    public void removeAccount(@QueryParam("accountName") String accountName, @Suspended AsyncResponse asyncResponse) {
+    public void removeAccount(@QueryParam("accountName") String accountName,
+                              @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
-        asyncResponse.setTimeoutHandler(response -> {
-            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
-        });
+        asyncResponse.setTimeoutHandler(response ->
+                response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out")));
         try {
             if (accountName == null || accountName.trim().isEmpty()) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account name is required"));
@@ -184,56 +179,75 @@ public class PaymentAccountsRestApi extends RestApiBase {
             }
 
             Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
-            if (result.isPresent()) {
-                Account<? extends PaymentMethod<?>, ?> toRemove = result.get();
-                accountService.removePaymentAccount(toRemove);
-                asyncResponse.resume(buildNoContentResponse());
-            } else {
-                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found"));
+            if (result.isEmpty()) {
+                asyncResponse.resume(buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found"));
+                return;
             }
+
+            accountService.removePaymentAccount(result.get());
+            asyncResponse.resume(buildNoContentResponse());
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }
 
-    @PATCH
+    @GET
+    @Path("/payment-methods/fiat")
     @Operation(
-            summary = "Update selected payment account",
-            description = "Update selected payment account (only UserDefinedFiatAccount)",
-            requestBody = @RequestBody(
-                    description = "The setting key and value to be updated",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = PaymentAccountChangeRequest.class))
-            ),
+            summary = "Get fiat payment methods",
+            description = "Retrieve all available fiat payment methods as displayed by the desktop payment method selection",
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Selected payment account set successfully"),
-                    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                    @ApiResponse(responseCode = "200", description = "Fiat payment methods retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = FiatPaymentMethodDto.class, type = "array"))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @Path("/selected")
-    public Response setSelectedPaymentAccount(@Valid PaymentAccountChangeRequest request) {
+    @SuppressWarnings("deprecation")
+    public Response getFiatPaymentMethods() {
         try {
-            UserDefinedFiatAccountDto account = request.selectedAccount();
-            if (account != null) {
-                Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(account.accountName());
-                if (result.isPresent()) {
-                    Account<? extends PaymentMethod<?>, ?> foundAccount = result.get();
-                    if (foundAccount instanceof UserDefinedFiatAccount castedAccount) {
-                        accountService.setSelectedAccount(castedAccount);
-                    } else {
-                        return buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found");
-                    }
-                } else {
-                    return buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found");
-                }
-            }
-
-            log.info("Updated selected payment account from request: {}", request);
-            return Response.noContent().build();
+            List<FiatPaymentMethodDto> items = FiatPaymentRailUtil.getPaymentRails().stream()
+                    .filter(rail -> rail != FiatPaymentRail.CUSTOM)
+                    .filter(rail -> rail != FiatPaymentRail.CASH_APP)
+                    .map(FiatPaymentMethod::fromPaymentRail)
+                    .map(FiatPaymentMethodMapping::fromBisq2Model)
+                    .sorted(Comparator.comparing(FiatPaymentMethodDto::name, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+            return buildOkResponse(items);
         } catch (Exception e) {
-            log.error("Error updating select payment account", e);
+            log.error("Failed to retrieve fiat payment methods", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
+    }
+
+    @GET
+    @Path("/payment-methods/crypto")
+    @Operation(
+            summary = "Get crypto payment methods",
+            description = "Retrieve all available crypto payment methods",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Crypto payment methods retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = CryptoPaymentMethodDto.class, type = "array"))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getCryptoPaymentMethods() {
+        try {
+            List<CryptoPaymentMethodDto> items = CryptoPaymentMethodUtil.getPaymentMethods().stream()
+                    .filter(e -> !e.getCode().equals("BTC"))
+                    .map(CryptoPaymentMethodDtoMapping::fromBisq2Model)
+                    .toList();
+            return buildOkResponse(items);
+        } catch (Exception e) {
+            log.error("Failed to retrieve crypto payment methods", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    private boolean isFiatAccount(Account<? extends PaymentMethod<?>, ?> account) {
+        return account.getPaymentMethod() instanceof FiatPaymentMethod;
+    }
+
+    public boolean isCryptoAccount(Account<? extends PaymentMethod<?>, ?> account) {
+        return account instanceof CryptoAssetAccount;
     }
 }
