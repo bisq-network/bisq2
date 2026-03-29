@@ -235,6 +235,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
+                dontShowAgainService,
                 bisqEasyService,
                 openTradeItemsService,
                 accountService,

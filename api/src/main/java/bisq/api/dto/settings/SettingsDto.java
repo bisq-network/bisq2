@@ -19,6 +19,7 @@ package bisq.api.dto.settings;
 
 import bisq.api.dto.common.currency.MarketDto;
 
+import java.util.Map;
 import java.util.Set;
 
 public record SettingsDto(boolean isTacAccepted,
@@ -30,5 +31,6 @@ public record SettingsDto(boolean isTacAccepted,
                           double maxTradePriceDeviation,
                           MarketDto selectedMuSigMarket,
                           int numDaysAfterRedactingTradeData,
-                          boolean useAnimations) {
+                          boolean useAnimations,
+                          Map<String, Boolean> dontShowAgainMap) {
 }

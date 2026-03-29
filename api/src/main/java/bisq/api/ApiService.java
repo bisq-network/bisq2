@@ -60,6 +60,7 @@ import bisq.network.NetworkService;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -124,6 +125,7 @@ public class ApiService implements Service {
                       SupportService supportedService,
                       TradeService tradeService,
                       SettingsService settingsService,
+                      DontShowAgainService dontShowAgainService,
                       BisqEasyService bisqEasyService,
                       OpenTradeItemsService openTradeItemsService,
                       AccountService accountService,
@@ -162,7 +164,7 @@ public class ApiService implements Service {
         TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
         UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
-        SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+        SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService, dontShowAgainService);
         PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
         FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi = new FiatPaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(

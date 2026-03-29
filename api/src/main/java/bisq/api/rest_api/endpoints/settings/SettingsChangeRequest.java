@@ -32,6 +32,10 @@ public record SettingsChangeRequest(
         @Nullable Double maxTradePriceDeviation,
         @Nullable MarketDto selectedMuSigMarket,
         @Nullable Integer numDaysAfterRedactingTradeData,
-        @Nullable Boolean useAnimations
+        @Nullable Boolean useAnimations,
+        @Nullable Boolean webLinkDontShowAgain,
+        @Nullable Boolean resetAllDontShowAgainFlags,
+        @Nullable Integer setCookie,
+        @Nullable Integer unsetCookie
 ) {
 }

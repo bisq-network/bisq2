@@ -23,6 +23,9 @@ import bisq.api.dto.DtoMappings;
 import bisq.api.dto.settings.SettingsApiVersionDto;
 import bisq.api.dto.settings.SettingsDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.settings.CookieKey;
+import bisq.settings.DontShowAgainKey;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,9 +46,13 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Settings API", description = "API for managing user settings")
 public class SettingsRestApi extends RestApiBase {
     private final SettingsService settingsService;
+    private final DontShowAgainService dontShowAgainService;
 
-    public SettingsRestApi(SettingsService settingsService) {
+    public SettingsRestApi(
+            SettingsService settingsService,
+            DontShowAgainService dontShowAgainService) {
         this.settingsService = settingsService;
+        this.dontShowAgainService = dontShowAgainService;
     }
 
     @GET
@@ -64,6 +71,25 @@ public class SettingsRestApi extends RestApiBase {
             return buildOkResponse(settingsDto);
         } catch (Exception e) {
             log.error("Failed to retrieve user settings", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GET
+    @Path("/cookie/{keyIndex}")
+    @Operation(description = "Get the cookie value for the given keyIndex")
+    public Response getCookie(@PathParam("keyIndex") int keyIndex) {
+        try {
+            CookieKey[] keys = CookieKey.values();
+            if (keyIndex < 0 || keyIndex >= keys.length) {
+                return buildErrorResponse(Response.Status.BAD_REQUEST,
+                        "Invalid keyIndex: " + keyIndex + ". Valid range: 0-" + (keys.length - 1));
+            }
+            CookieKey key = keys[keyIndex];
+            Boolean value = settingsService.getCookie().asBoolean(key).orElse(false);
+            return Response.ok(value).build();
+        } catch (Exception e) {
+            log.error("Error getting Cookie(" + keyIndex + ")", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
@@ -120,6 +146,36 @@ public class SettingsRestApi extends RestApiBase {
                 settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else if (request.useAnimations() != null) {
                 settingsService.setUseAnimations(request.useAnimations());
+            } else if (Boolean.TRUE.equals(request.webLinkDontShowAgain())) {
+                dontShowAgainService.dontShowAgain(DontShowAgainKey.HYPERLINKS_OPEN_IN_BROWSER);
+            } else if (Boolean.TRUE.equals(request.resetAllDontShowAgainFlags())) {
+                dontShowAgainService.resetDontShowAgain();
+            } else if (request.setCookie() != null) {
+                int keyIndex = request.setCookie();
+                CookieKey[] keys = CookieKey.values();
+                if (keyIndex < 0 || keyIndex >= keys.length) {
+                    return buildErrorResponse(Response.Status.BAD_REQUEST,
+                            "Invalid keyIndex: " + keyIndex + ". Valid range: 0-" + (keys.length - 1));
+                }
+                CookieKey key = keys[keyIndex];
+                if (key != null) {
+                    settingsService.setCookie(key, true);
+                }
+                Boolean value = settingsService.getCookie().asBoolean(key).orElse(false);
+                return Response.ok(value).build();
+            } else if (request.unsetCookie() != null) {
+                int keyIndex = request.unsetCookie();
+                CookieKey[] keys = CookieKey.values();
+                if (keyIndex < 0 || keyIndex >= keys.length) {
+                    return buildErrorResponse(Response.Status.BAD_REQUEST,
+                            "Invalid keyIndex: " + keyIndex + ". Valid range: 0-" + (keys.length - 1));
+                }
+                CookieKey key = keys[keyIndex];
+                if (key != null) {
+                    settingsService.setCookie(key, false);
+                }
+                Boolean value = settingsService.getCookie().asBoolean(key).orElse(false);
+                return Response.ok(value).build();
             } else {
                 return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid request: " + request);
             }

@@ -1128,7 +1128,8 @@ public class DtoMappings {
                     settingsService.getMaxTradePriceDeviation().get(),
                     MarketMapping.fromBisq2Model(settingsService.getSelectedMuSigMarket().get()),
                     settingsService.getNumDaysAfterRedactingTradeData().get(),
-                    settingsService.getUseAnimations().get()
+                    settingsService.getUseAnimations().get(),
+                    settingsService.getDontShowAgainMap()
             );
         }
     }

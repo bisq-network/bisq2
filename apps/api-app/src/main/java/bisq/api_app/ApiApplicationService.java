@@ -44,6 +44,7 @@ import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.notifications.NotificationService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -82,6 +83,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
     private final UserService userService;
     private final ChatService chatService;
     private final SettingsService settingsService;
+    private final DontShowAgainService dontShowAgainService;
     private final SupportService supportService;
     private final NotificationService notificationService;
     private final TradeService tradeService;
@@ -128,6 +130,8 @@ public class ApiApplicationService extends JavaSeApplicationService {
         accountService = new AccountService(persistenceService, networkService, userService, bondedRolesService);
 
         settingsService = new SettingsService(persistenceService);
+
+        dontShowAgainService = new DontShowAgainService(settingsService);
 
         notificationService = new NotificationService(persistenceService,
                 bondedRolesService.getMobileNotificationRelayClient(),
@@ -178,6 +182,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 supportService,
                 tradeService,
                 settingsService,
+                dontShowAgainService,
                 bisqEasyService,
                 openTradeItemsService,
                 accountService,
@@ -210,6 +215,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> burningmanService.initialize())
                 .thenCompose(result -> settingsService.initialize())
+                .thenCompose(result -> dontShowAgainService.initialize())
                 .thenCompose(result -> notificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
@@ -260,6 +266,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
                 .thenCompose(result -> notificationService.shutdown())
+                .thenCompose(result -> dontShowAgainService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> burningmanService.shutdown())
                 .thenCompose(result -> accountService.shutdown())
