@@ -1,19 +1,19 @@
-package bisq.core.xmr.knaccc.monero.address;
+package bisq.account.accounts.crypto.monero.knaccc.monero.address;
 
-import bisq.core.xmr.knaccc.monero.crypto.CryptoUtil;
-import bisq.core.xmr.knaccc.monero.crypto.Scalar;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedFieldElement;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedGroupElement;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
+import bisq.account.accounts.crypto.monero.knaccc.monero.crypto.CryptoUtil;
+import bisq.account.accounts.crypto.monero.knaccc.monero.crypto.Scalar;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedFieldElement;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedGroupElement;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Arrays;
 
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.concat;
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.hexToBytes;
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.longToLittleEndianUint32ByteArray;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.concat;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.hexToBytes;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.longToLittleEndianUint32ByteArray;
 
 public class WalletAddress {
 

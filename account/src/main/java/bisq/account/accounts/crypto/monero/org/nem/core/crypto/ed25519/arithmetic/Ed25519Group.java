@@ -1,6 +1,6 @@
-package bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic;
+package bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic;
 
-import bisq.core.xmr.org.nem.core.utils.HexEncoder;
+import bisq.account.accounts.crypto.monero.org.nem.core.utils.HexEncoder;
 
 import java.math.BigInteger;
 

@@ -1,7 +1,7 @@
-package bisq.core.xmr.org.nem.core.crypto.ed25519;
+package bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519;
 
-import bisq.core.xmr.org.nem.core.crypto.Curve;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.Curve;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
 
 import java.math.BigInteger;
 

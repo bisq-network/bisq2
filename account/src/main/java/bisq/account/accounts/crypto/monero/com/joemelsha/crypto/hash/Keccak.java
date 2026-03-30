@@ -1,4 +1,4 @@
-package bisq.core.xmr.com.joemelsha.crypto.hash;
+package bisq.account.accounts.crypto.monero.com.joemelsha.crypto.hash;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

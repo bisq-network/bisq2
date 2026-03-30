@@ -28,9 +28,13 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import bisq.account.accounts.crypto.monero.knaccc.monero.address.WalletAddress;
+
 @Slf4j
 public class MoneroFormController extends FormController<MoneroFormView, MoneroFormModel, MoneroAccountPayload> {
     private Subscription createSubAddressPin;
+
 
     public MoneroFormController(ServiceProvider serviceProvider, DigitalAssetPaymentMethod paymentMethod) {
         super(serviceProvider, paymentMethod);
@@ -104,12 +108,45 @@ public class MoneroFormController extends FormController<MoneroFormView, MoneroF
         model.getUseSubAddresses().set(selected);
     }
 
-    // TODO impl. following Bisq 1 `bisq.core.payment.XmrAccountDelegate.createAndSetNewSubAddress`
+    // Bisq 1 reference: bisq.core.payment.XmrAccountDelegate.createAndSetNewSubAddress
     private String createSubAddress(String mainAddress,
                                     String privateViewKey,
                                     String accountIndex,
                                     String initialSubAddressIndex) {
-        return "TODO: SubAddress creation not implemented yet";
-    }
+        if (StringUtils.isEmpty(mainAddress) || StringUtils.isEmpty(privateViewKey)) {
+            return "";
+        }
 
+        long accountIndexValue;
+        long subAddressIndexValue;
+        try {
+            accountIndexValue = StringUtils.isEmpty(accountIndex) ? 0L : Long.parseLong(accountIndex);
+            subAddressIndexValue = StringUtils.isEmpty(initialSubAddressIndex) ? 0L : Long.parseLong(initialSubAddressIndex);
+        } catch (NumberFormatException e) {
+            log.error("Invalid Monero account/subaddress index", e);
+            return "";
+        }
+
+        try {
+            checkArgument(accountIndexValue >= 0, "accountIndex must be >= 0, was: %s", accountIndexValue);
+            checkArgument(subAddressIndexValue >= 0, "subAddressIndex must be >= 0, was: %s", subAddressIndexValue);
+            checkArgument(accountIndexValue > 0 || subAddressIndexValue > 0,
+                    "accountIndex and subAddressIndex cannot both be 0 (would represent main address)");
+
+            WalletAddress walletAddress = new WalletAddress(mainAddress);
+            long start = System.currentTimeMillis();
+            String subAddress = walletAddress.getSubaddressBase58(privateViewKey, accountIndexValue, subAddressIndexValue);
+            log.info("Created new subAddress {}. Took {} ms.", subAddress, System.currentTimeMillis() - start);
+            return subAddress;
+        } catch (IllegalArgumentException e) {
+            log.error("Monero subaddress validation failed", e);
+            return "";
+        } catch (WalletAddress.InvalidWalletAddressException e) {
+            log.error("WalletAddress.getSubaddressBase58 failed", e);
+            return "";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error during subaddress generation", e);
+            return "";
+        }
+    }
 }

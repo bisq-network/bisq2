@@ -1,16 +1,16 @@
-package bisq.core.xmr.knaccc.monero.crypto;
+package bisq.account.accounts.crypto.monero.knaccc.monero.crypto;
 
-import bisq.core.xmr.com.joemelsha.crypto.hash.Keccak;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
-import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
-import bisq.core.xmr.org.nem.core.utils.HexEncoder;
+import bisq.account.accounts.crypto.monero.com.joemelsha.crypto.hash.Keccak;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
+import bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
+import bisq.account.accounts.crypto.monero.org.nem.core.utils.HexEncoder;
 
 import java.math.BigInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.getBigIntegerFromUnsignedLittleEndianByteArray;
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.reverseByteArrayInPlace;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.getBigIntegerFromUnsignedLittleEndianByteArray;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.reverseByteArrayInPlace;
 
 @Slf4j
 public class CryptoUtil {

@@ -1,4 +1,4 @@
-package bisq.core.xmr.knaccc.monero.address;
+package bisq.account.accounts.crypto.monero.knaccc.monero.address;
 
 import java.math.BigInteger;
 

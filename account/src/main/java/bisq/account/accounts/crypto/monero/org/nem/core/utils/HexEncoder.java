@@ -1,6 +1,6 @@
-package bisq.core.xmr.org.nem.core.utils;
+package bisq.account.accounts.crypto.monero.org.nem.core.utils;
 
-import bisq.core.xmr.knaccc.monero.address.ByteUtil;
+import bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil;
 
 // modified to not rely on apache commons
 

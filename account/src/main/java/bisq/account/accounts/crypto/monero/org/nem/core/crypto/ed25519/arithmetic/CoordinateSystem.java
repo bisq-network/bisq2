@@ -1,4 +1,4 @@
-package bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic;
+package bisq.account.accounts.crypto.monero.org.nem.core.crypto.ed25519.arithmetic;
 
 /**
  * Available coordinate systems for a group element.

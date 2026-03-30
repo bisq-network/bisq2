@@ -1,13 +1,13 @@
-package bisq.core.xmr.knaccc.monero.crypto;
+package bisq.account.accounts.crypto.monero.knaccc.monero.crypto;
 
-import bisq.core.xmr.knaccc.monero.address.ByteUtil;
+import bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil;
 
 import java.util.Arrays;
 
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.bytesToHex;
-import static bisq.core.xmr.knaccc.monero.address.ByteUtil.getBigIntegerFromUnsignedLittleEndianByteArray;
-import static bisq.core.xmr.knaccc.monero.crypto.CryptoUtil.ensure32BytesAndConvertToLittleEndian;
-import static bisq.core.xmr.knaccc.monero.crypto.CryptoUtil.l;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.getBigIntegerFromUnsignedLittleEndianByteArray;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.address.ByteUtil.bytesToHex;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.crypto.CryptoUtil.ensure32BytesAndConvertToLittleEndian;
+import static bisq.account.accounts.crypto.monero.knaccc.monero.crypto.CryptoUtil.l;
 
 public class Scalar {
 

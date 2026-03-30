@@ -1,4 +1,4 @@
-package bisq.core.xmr.org.nem.core.utils;
+package bisq.account.accounts.crypto.monero.org.nem.core.utils;
 
 import java.math.BigInteger;
 
