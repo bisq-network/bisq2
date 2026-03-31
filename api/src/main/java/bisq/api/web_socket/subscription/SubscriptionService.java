@@ -34,6 +34,7 @@ import bisq.api.web_socket.domain.user_profile.NumUserProfilesWebSocketService;
 import bisq.api.web_socket.util.JsonUtil;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.trade.TradeService;
@@ -56,8 +57,10 @@ public class SubscriptionService implements Service {
     private final ChatReactionsWebSocketService chatReactionsWebSocketService;
     private final ReputationWebSocketService reputationWebSocketService;
     private final NumUserProfilesWebSocketService numUserProfilesWebSocketService;
+    private final AlertNotificationsWebSocketService alertNotificationsWebSocketService;
 
     public SubscriptionService(BondedRolesService bondedRolesService,
+                               AlertNotificationsService alertNotificationsService,
                                ChatService chatService,
                                TradeService tradeService,
                                UserService userService,
@@ -70,13 +73,14 @@ public class SubscriptionService implements Service {
         offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService);
         tradesWebSocketService = new TradesWebSocketService(subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(subscriberRepository, tradeService);
-        tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService( subscriberRepository,
+        tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService(),
                 userService.getUserProfileService());
-        chatReactionsWebSocketService = new ChatReactionsWebSocketService(  subscriberRepository,
+        chatReactionsWebSocketService = new ChatReactionsWebSocketService(subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService());
         reputationWebSocketService = new ReputationWebSocketService(subscriberRepository, userService.getReputationService());
         numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(subscriberRepository, userService);
+        alertNotificationsWebSocketService = new AlertNotificationsWebSocketService(subscriberRepository, alertNotificationsService);
     }
 
     @Override
@@ -89,7 +93,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradeChatMessagesWebSocketService.initialize())
                 .thenCompose(e -> chatReactionsWebSocketService.initialize())
                 .thenCompose(e -> reputationWebSocketService.initialize())
-                .thenCompose(e -> numUserProfilesWebSocketService.initialize());
+                .thenCompose(e -> numUserProfilesWebSocketService.initialize())
+                .thenCompose(e -> alertNotificationsWebSocketService.initialize());
     }
 
     @Override
@@ -102,7 +107,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> tradeChatMessagesWebSocketService.shutdown())
                 .thenCompose(e -> chatReactionsWebSocketService.shutdown())
                 .thenCompose(e -> reputationWebSocketService.shutdown())
-                .thenCompose(e -> numUserProfilesWebSocketService.shutdown());
+                .thenCompose(e -> numUserProfilesWebSocketService.shutdown())
+                .thenCompose(e -> alertNotificationsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -121,12 +127,44 @@ public class SubscriptionService implements Service {
 
     private void subscribe(SubscriptionRequest request, WebSocket webSocket) {
         log.info("Received subscription request: {}", request);
-        subscriberRepository.add(request, webSocket);
         findWebSocketService(request.getTopic())
-                .flatMap(BaseWebSocketService::getJsonPayload)
-                .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null).toJson())
+                .ifPresent(webSocketService -> {
+                    Subscriber subscriber = null;
+                    try {
+                        webSocketService.validate(request);
+                        subscriber = subscriberRepository.add(request, webSocket);
+                        Optional<String> jsonPayload = webSocketService.getJsonPayload(subscriber);
+                        jsonPayload.ifPresent(json ->
+                                sendSubscriptionResponse(webSocket, request.getRequestId(), json, null));
+                    } catch (IllegalArgumentException e) {
+                        removeSubscriber(subscriber);
+                        sendSubscriptionResponse(webSocket, request.getRequestId(), null, e.getMessage());
+                    } catch (Exception e) {
+                        removeSubscriber(subscriber);
+                        log.error("Unexpected error subscribing {}", request, e);
+                        sendSubscriptionResponse(webSocket,
+                                request.getRequestId(),
+                                null,
+                                String.format("Unexpected error when subscribing to %s", request.getTopic().name()));
+                    }
+                });
+    }
+
+    private void removeSubscriber(Subscriber subscriber) {
+        if (subscriber != null) {
+            subscriberRepository.remove(subscriber);
+        }
+    }
+
+    private void sendSubscriptionResponse(WebSocket webSocket,
+                                          String requestId,
+                                          String payload,
+                                          String errorMessage) {
+        new SubscriptionResponse(requestId, payload, errorMessage)
+                .toJson()
                 .ifPresent(json -> {
-                    log.info("Send SubscriptionResponse json: {}", json);
+                    String responseType = errorMessage == null ? "" : " error";
+                    log.info("Send SubscriptionResponse{} json: {}", responseType, json);
                     webSocket.send(json);
                 });
     }
@@ -163,6 +201,9 @@ public class SubscriptionService implements Service {
             }
             case NUM_USER_PROFILES -> {
                 return Optional.of(numUserProfilesWebSocketService);
+            }
+            case ALERT_NOTIFICATIONS -> {
+                return Optional.of(alertNotificationsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);

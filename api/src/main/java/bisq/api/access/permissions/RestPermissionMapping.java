@@ -36,6 +36,7 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/offerbook(/.*)?$", Optional.empty(), Permission.OFFERBOOK),
                 new PermissionRule("^/payment-accounts(/.*)?$", Optional.empty(), Permission.PAYMENT_ACCOUNTS),
                 new PermissionRule("^/reputation(/.*)?$", Optional.empty(), Permission.REPUTATION),
+                new PermissionRule("^/alert-notifications(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identities(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),
@@ -46,7 +47,7 @@ public final class RestPermissionMapping implements PermissionMapping {
 
     @Override
     public Permission getRequiredPermission(String path, String method) {
-        String normalizedPath = path.replace("/api/v1","");
+        String normalizedPath = path.replace("/api/v1", "");
         return rules.stream()
                 .filter(rule -> rule.matches(normalizedPath, method))
                 .map(PermissionRule::permission)

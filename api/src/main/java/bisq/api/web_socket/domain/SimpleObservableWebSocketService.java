@@ -68,12 +68,25 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
 
     protected void onChange() {
         subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers ->
-                        send(subscribers, getJsonPayload(), topic, ModificationType.REPLACE));
+                .ifPresent(subscribers -> {
+                    if (usesSubscriberSpecificPayload()) {
+                        subscribers.forEach(subscriber ->
+                                getJsonPayload(subscriber)
+                                        .ifPresent(json -> send(json, subscriber, ModificationType.REPLACE)));
+                    } else {
+                        Optional<String> sharedJson = getJsonPayload();
+                        subscribers.forEach(subscriber ->
+                                sharedJson.ifPresent(json -> send(json, subscriber, ModificationType.REPLACE)));
+                    }
+                });
     }
 
     public Optional<String> getJsonPayload() {
         return toJson(toPayload(getObservable()));
+    }
+
+    protected boolean usesSubscriberSpecificPayload() {
+        return false;
     }
 
     protected void send(R payload,

@@ -36,7 +36,7 @@ public class SubscriberRepository {
         findSubscribers(webSocket).forEach(this::remove);
     }
 
-    public void add(SubscriptionRequest request, WebSocket webSocket) {
+    public Subscriber add(SubscriptionRequest request, WebSocket webSocket) {
         Topic topic = request.getTopic();
         Optional<String> parameter = StringUtils.toOptional(request.getParameter());
         Subscriber subscriber = new Subscriber(topic, parameter, request.getRequestId(), webSocket);
@@ -44,6 +44,7 @@ public class SubscriberRepository {
             Set<Subscriber> subscribers = subscribersByTopic.computeIfAbsent(topic, key -> new HashSet<>());
             subscribers.add(subscriber);
         }
+        return subscriber;
     }
 
     public void remove(Subscriber subscriber) {
@@ -66,7 +67,8 @@ public class SubscriberRepository {
     public Optional<Set<Subscriber>> findSubscribers(Topic topic) {
         synchronized (subscribersByTopicLock) {
             return Optional.ofNullable(subscribersByTopic.get(topic))
-                    .filter(subscribers -> !subscribers.isEmpty());
+                    .filter(subscribers -> !subscribers.isEmpty())
+                    .map(HashSet::new);
         }
     }
 

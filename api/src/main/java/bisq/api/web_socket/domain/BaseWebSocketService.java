@@ -21,6 +21,7 @@ package bisq.api.web_socket.domain;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.api.web_socket.subscription.WebSocketEvent;
 import bisq.common.application.Service;
@@ -43,6 +44,17 @@ public abstract class BaseWebSocketService implements Service {
     }
 
     abstract public Optional<String> getJsonPayload();
+
+    public void validate(SubscriptionRequest request) {
+    }
+
+    public Optional<String> getJsonPayload(Subscriber subscriber) {
+        return getJsonPayload();
+    }
+
+    public Optional<String> getJsonPayload(SubscriptionRequest request) {
+        return getJsonPayload();
+    }
 
     //todo
     protected <T> Optional<String> toJson(T payload) {

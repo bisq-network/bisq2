@@ -24,6 +24,7 @@ import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -60,6 +61,7 @@ public class WebSocketService implements Service {
     public WebSocketService(ApiConfig apiConfig,
                             TlsContextService tlsContextService,
                             BondedRolesService bondedRolesService,
+                            AlertNotificationsService alertNotificationsService,
                             ChatService chatService,
                             TradeService tradeService,
                             UserService userService,
@@ -67,6 +69,7 @@ public class WebSocketService implements Service {
                             OpenTradeItemsService openTradeItemsService) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
+                alertNotificationsService,
                 chatService,
                 tradeService,
                 userService,

@@ -13,6 +13,7 @@ import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
+import bisq.api.rest_api.endpoints.alert_notifications.AlertNotificationsRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
@@ -34,6 +35,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  UserIdentityRestApi userIdentityRestApi,
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
+                                 AlertNotificationsRestApi alertNotificationsRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi,
@@ -52,6 +54,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(UserIdentityRestApi.class);
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
+        register(AlertNotificationsRestApi.class);
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
         register(UserDefinedPaymentAccountsRestApi.class);
@@ -68,6 +71,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(userIdentityRestApi).to(UserIdentityRestApi.class);
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);
+                bind(alertNotificationsRestApi).to(AlertNotificationsRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(userDefinedPaymentAccountsRestApi).to(UserDefinedPaymentAccountsRestApi.class);

@@ -15,17 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
+package bisq.bonded_roles.security_manager.alert;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
+import java.util.Comparator;
+
+public final class AuthorizedAlertDataUtils {
+    public static final Comparator<AuthorizedAlertData> RELEVANCE_COMPARATOR =
+            Comparator.comparing(AuthorizedAlertData::getAlertType)
+                    .thenComparing(AuthorizedAlertData::getDate);
+
+    private AuthorizedAlertDataUtils() {
+    }
 }
