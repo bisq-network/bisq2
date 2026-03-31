@@ -131,10 +131,9 @@ public class SubscriptionService implements Service {
                     Subscriber subscriber = null;
                     try {
                         webSocketService.validate(request);
+                        String jsonPayload = webSocketService.getJsonPayload(request).orElse(null);
+                        sendSubscriptionResponse(webSocket, request.getRequestId(), jsonPayload, null);
                         subscriber = subscriberRepository.add(request, webSocket);
-                        Optional<String> jsonPayload = webSocketService.getJsonPayload(subscriber);
-                        jsonPayload.ifPresent(json ->
-                                sendSubscriptionResponse(webSocket, request.getRequestId(), json, null));
                     } catch (IllegalArgumentException e) {
                         removeSubscriber(subscriber);
                         sendSubscriptionResponse(webSocket, request.getRequestId(), null, e.getMessage());
