@@ -29,6 +29,8 @@ class Bi2pAppPlugin : Plugin<Project> {
             destinationDirectory.set(project.layout.buildDirectory.dir("generated"))
             include("bi2p-$version-all.jar")
             from(project.layout.buildDirectory.dir("libs"))
+            isPreserveFileTimestamps = false
+            isReproducibleFileOrder = true
         }
 
         val copyBi2pAppVersionToResources = project.tasks.register<Copy>("copyBi2pAppVersionToResources") {

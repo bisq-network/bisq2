@@ -28,6 +28,8 @@ class WebcamAppPlugin : Plugin<Project> {
             destinationDirectory.set(project.layout.buildDirectory.dir("generated"))
             include("webcam-app-$version-all.jar")
             from(project.layout.buildDirectory.dir("libs"))
+            isPreserveFileTimestamps = false
+            isReproducibleFileOrder = true
         }
 
         val copyWebcamAppVersionToResources = project.tasks.register<Copy>("copyWebcamAppVersionToResources") {
