@@ -6,7 +6,9 @@ public record OtherCryptoAssetAccountDto(
         String accountName,
         CryptoPaymentRailDto paymentRail,
         OtherCryptoAssetAccountPayloadDto accountPayload,
-        Long creationDate
+        String creationDate,
+        String tradeLimitInfo,
+        String tradeDuration
 ) implements PaymentAccountDto {
 
     public OtherCryptoAssetAccountDto {
@@ -17,7 +19,9 @@ public record OtherCryptoAssetAccountDto(
 
     public OtherCryptoAssetAccountDto(String accountName,
                                       OtherCryptoAssetAccountPayloadDto accountPayload,
-                                      Long creationDate) {
-        this(accountName, CryptoPaymentRailDto.OTHER_CRYPTO_ASSET, accountPayload, creationDate);
+                                      String creationDate,
+                                      String tradeLimitInfo,
+                                      String tradeDuration) {
+        this(accountName, CryptoPaymentRailDto.OTHER_CRYPTO_ASSET, accountPayload, creationDate, tradeLimitInfo, tradeDuration);
     }
 }

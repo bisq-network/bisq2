@@ -1,9 +1,11 @@
 package bisq.api.dto.account.fiat;
 
-import bisq.api.dto.account.PaymentAccountPayloadDto;
-
 public record ZelleAccountPayloadDto(
+        FiatPaymentMethodChargebackRiskDto chargebackRisk,
+        String paymentMethodName,
+        String currency,
+        String country,
         String holderName,
         String emailOrMobileNr
-) implements PaymentAccountPayloadDto {
+) implements FiatPaymentAccountPayloadDto {
 }

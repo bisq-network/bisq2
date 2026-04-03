@@ -7,12 +7,13 @@ import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
 import bisq.i18n.Res;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class FiatPaymentMethodMapping {
+public class FiatPaymentMethodDtoMapping {
     public static FiatPaymentMethodDto fromBisq2Model(FiatPaymentMethod paymentMethod) {
-        java.util.List<Country> supportedCountries = paymentMethod.getSupportedCountries();
-        java.util.List<String> countryCodes = supportedCountries.stream()
+        List<Country> supportedCountries = paymentMethod.getSupportedCountries();
+        List<String> countryCodes = supportedCountries.stream()
                 .map(Country::getCode)
                 .sorted()
                 .toList();
@@ -24,7 +25,7 @@ public class FiatPaymentMethodMapping {
                 .collect(Collectors.joining(", "));
 
         return new FiatPaymentMethodDto(
-                FiatPaymentRailMapping.fromBisq2Model(paymentMethod.getPaymentRail()),
+                FiatPaymentRailDtoMapping.fromBisq2Model(paymentMethod.getPaymentRail()),
                 paymentMethod.getShortDisplayString(),
                 paymentMethod.getSupportedCurrencyCodesAsDisplayString(),
                 paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString(),

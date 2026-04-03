@@ -3,7 +3,6 @@ package bisq.api.dto.account.crypto;
 import java.util.Optional;
 
 public record MoneroAccountPayloadDto(
-        String currencyCode,
         String address,
         boolean isInstant,
         Optional<Boolean> isAutoConf,
@@ -15,6 +14,7 @@ public record MoneroAccountPayloadDto(
         Optional<String> privateViewKey,
         Optional<String> subAddress,
         Optional<Integer> accountIndex,
-        Optional<Integer> initialSubAddressIndex
+        Optional<Integer> initialSubAddressIndex,
+        String currencyName
 ) implements CryptoAssetAccountPayloadDto {
 }

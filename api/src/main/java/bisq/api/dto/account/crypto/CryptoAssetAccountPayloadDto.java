@@ -5,7 +5,7 @@ import bisq.api.dto.account.PaymentAccountPayloadDto;
 import java.util.Optional;
 
 public interface CryptoAssetAccountPayloadDto extends PaymentAccountPayloadDto {
-    String currencyCode();
+    String currencyName();
 
     String address();
 

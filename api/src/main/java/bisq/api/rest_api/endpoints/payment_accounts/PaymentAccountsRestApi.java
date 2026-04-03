@@ -13,7 +13,7 @@ import bisq.api.dto.account.crypto.CryptoPaymentMethodDto;
 import bisq.api.dto.account.fiat.FiatPaymentMethodDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMapping;
 import bisq.api.dto.mappings.account.crypto.CryptoPaymentMethodDtoMapping;
-import bisq.api.dto.mappings.account.fiat.FiatPaymentMethodMapping;
+import bisq.api.dto.mappings.account.fiat.FiatPaymentMethodDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -209,7 +209,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
                     .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                     .filter(rail -> rail != FiatPaymentRail.CASH_APP)
                     .map(FiatPaymentMethod::fromPaymentRail)
-                    .map(FiatPaymentMethodMapping::fromBisq2Model)
+                    .map(FiatPaymentMethodDtoMapping::fromBisq2Model)
                     .sorted(Comparator.comparing(FiatPaymentMethodDto::name, String.CASE_INSENSITIVE_ORDER))
                     .toList();
             return buildOkResponse(items);

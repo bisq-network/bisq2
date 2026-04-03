@@ -4,6 +4,7 @@ import java.util.Optional;
 
 public record OtherCryptoAssetAccountPayloadDto(
         String currencyCode,
+        String currencyName,
         String address,
         boolean isInstant,
         Optional<Boolean> isAutoConf,

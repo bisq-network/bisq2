@@ -6,7 +6,9 @@ public record ZelleAccountDto(
         String accountName,
         FiatPaymentRailDto paymentRail,
         ZelleAccountPayloadDto accountPayload,
-        Long creationDate
+        String creationDate,
+        String tradeLimitInfo,
+        String tradeDuration
 ) implements PaymentAccountDto {
 
     public ZelleAccountDto {
@@ -17,7 +19,9 @@ public record ZelleAccountDto(
 
     public ZelleAccountDto(String accountName,
                            ZelleAccountPayloadDto accountPayload,
-                           Long creationDate) {
-        this(accountName, FiatPaymentRailDto.ZELLE, accountPayload, creationDate);
+                           String creationDate,
+                           String tradeLimitInfo,
+                           String tradeDuration) {
+        this(accountName, FiatPaymentRailDto.ZELLE, accountPayload, creationDate, tradeLimitInfo, tradeDuration);
     }
 }

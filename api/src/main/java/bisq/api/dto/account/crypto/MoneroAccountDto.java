@@ -6,7 +6,9 @@ public record MoneroAccountDto(
         String accountName,
         CryptoPaymentRailDto paymentRail,
         MoneroAccountPayloadDto accountPayload,
-        Long creationDate
+        String creationDate,
+        String tradeLimitInfo,
+        String tradeDuration
 ) implements PaymentAccountDto {
 
     public MoneroAccountDto {
@@ -17,7 +19,9 @@ public record MoneroAccountDto(
 
     public MoneroAccountDto(String accountName,
                             MoneroAccountPayloadDto accountPayload,
-                            Long creationDate) {
-        this(accountName, CryptoPaymentRailDto.MONERO, accountPayload, creationDate);
+                            String creationDate,
+                            String tradeLimitInfo,
+                            String tradeDuration) {
+        this(accountName, CryptoPaymentRailDto.MONERO, accountPayload, creationDate, tradeLimitInfo, tradeDuration);
     }
 }

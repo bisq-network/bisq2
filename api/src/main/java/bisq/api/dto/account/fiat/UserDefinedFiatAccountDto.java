@@ -23,7 +23,9 @@ public record UserDefinedFiatAccountDto(
     String accountName,
     FiatPaymentRailDto paymentRail,
     UserDefinedFiatAccountPayloadDto accountPayload,
-    Long creationDate
+    String creationDate,
+    String tradeLimitInfo,
+    String tradeDuration
 ) implements PaymentAccountDto {
 
     public UserDefinedFiatAccountDto {
@@ -34,8 +36,10 @@ public record UserDefinedFiatAccountDto(
 
     public UserDefinedFiatAccountDto(String accountName,
                                      UserDefinedFiatAccountPayloadDto accountPayload,
-                                     Long creationDate) {
-        this(accountName, FiatPaymentRailDto.CUSTOM, accountPayload, creationDate);
+                                     String creationDate,
+                                     String tradeLimitInfo,
+                                     String tradeDuration) {
+        this(accountName, FiatPaymentRailDto.CUSTOM, accountPayload, creationDate, tradeLimitInfo, tradeDuration);
     }
 }
 

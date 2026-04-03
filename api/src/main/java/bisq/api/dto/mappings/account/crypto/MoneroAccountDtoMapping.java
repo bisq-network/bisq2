@@ -3,13 +3,12 @@ package bisq.api.dto.mappings.account.crypto;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
-import bisq.account.timestamp.KeyType;
+import bisq.api.dto.account.AccountMetadataDto;
 import bisq.api.dto.account.crypto.MoneroAccountDto;
 import bisq.api.dto.account.crypto.MoneroAccountPayloadDto;
+import bisq.api.dto.mappings.account.PaymentAccountKeyMapping;
+import bisq.api.dto.mappings.account.PaymentAccountMetadataDtoMapping;
 import bisq.common.util.StringUtils;
-import bisq.security.keys.KeyGeneration;
-
-import java.security.KeyPair;
 
 public class MoneroAccountDtoMapping {
     public static MoneroAccount toBisq2Model(MoneroAccountDto dto) {
@@ -29,25 +28,25 @@ public class MoneroAccountDtoMapping {
                 payloadDto.accountIndex(),
                 payloadDto.initialSubAddressIndex()
         );
-        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        KeyType keyType = KeyType.EC;
+        PaymentAccountKeyMapping.KeyData keyData = PaymentAccountKeyMapping.createDefault();
         return new MoneroAccount(
                 StringUtils.createUid(),
                 System.currentTimeMillis(),
                 dto.accountName(),
                 payload,
-                keyPair,
-                keyType,
+                keyData.keyPair(),
+                keyData.keyType(),
                 AccountOrigin.BISQ2_NEW
         );
     }
 
     public static MoneroAccountDto fromBisq2Model(MoneroAccount account) {
+        AccountMetadataDto accountMetadata = PaymentAccountMetadataDtoMapping.mapAccountMetadata(account);
+
         MoneroAccountPayload payload = account.getAccountPayload();
         return new MoneroAccountDto(
                 account.getAccountName(),
                 new MoneroAccountPayloadDto(
-                        payload.getCurrencyCode(),
                         payload.getAddress(),
                         payload.isInstant(),
                         payload.getIsAutoConf(),
@@ -59,9 +58,12 @@ public class MoneroAccountDtoMapping {
                         payload.getPrivateViewKey(),
                         payload.getSubAddress(),
                         payload.getAccountIndex(),
-                        payload.getInitialSubAddressIndex()
+                        payload.getInitialSubAddressIndex(),
+                        payload.getPaymentMethod().getDisplayString()
                 ),
-                account.getCreationDate()
+                accountMetadata.creationDate(),
+                accountMetadata.tradeLimitInfo(),
+                accountMetadata.tradeDuration()
         );
     }
 }

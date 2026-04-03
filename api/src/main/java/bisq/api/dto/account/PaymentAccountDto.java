@@ -52,6 +52,10 @@ public interface PaymentAccountDto {
 
     PaymentAccountPayloadDto accountPayload();
 
-    Long creationDate();
+    String creationDate();
+
+    String tradeLimitInfo();
+
+    String tradeDuration();
 }
 
