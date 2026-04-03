@@ -97,6 +97,30 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
         }, executor);
     }
 
+    /**
+     * Closes the WebSocket connection for a specific client.
+     * Called after revoking a client profile to force immediate disconnection.
+     *
+     * @param clientId The client ID whose connection should be closed
+     */
+    public void disconnectClient(String clientId) {
+        getWebSockets().stream()
+                .filter(webSocket -> {
+                    if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
+                        HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
+                        if (request != null) {
+                            String wsClientId = request.getHeader(Headers.CLIENT_ID);
+                            return clientId.equals(wsClientId);
+                        }
+                    }
+                    return false;
+                })
+                .forEach(webSocket -> {
+                    log.info("Disconnecting revoked client: {}", clientId);
+                    webSocket.close();
+                });
+    }
+
     private void updateWebsocketClients() {
         try {
             websocketClients.setAll(getWebSockets().stream().map(webSocket -> {

@@ -106,6 +106,10 @@ public class WebSocketService implements Service {
         return webSocketConnectionHandler.getWebsocketClients();
     }
 
+    public void disconnectClient(String clientId) {
+        webSocketConnectionHandler.disconnectClient(clientId);
+    }
+
     public ReadOnlyObservable<State> getState() {
         return state;
     }

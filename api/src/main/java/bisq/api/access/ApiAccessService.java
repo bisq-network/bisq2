@@ -54,6 +54,25 @@ public class ApiAccessService {
         return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
     }
 
+    /**
+     * Revokes a paired client by invalidating all its active sessions and removing
+     * its stored profile and permissions. After revocation the client can no longer
+     * authenticate and must go through the pairing flow again.
+     *
+     * @param clientId The client ID to revoke
+     * @return {@code true} if the client was found and revoked; {@code false} if not found
+     */
+    public boolean revokeClient(String clientId) {
+        boolean removed = pairingService.revokeClientProfile(clientId);
+        sessionService.removeSessionByClientId(clientId);
+        if (removed) {
+            log.info("Revoked client {}", clientId);
+        } else {
+            log.warn("Client profile not found for {}, but session was still invalidated", clientId);
+        }
+        return removed;
+    }
+
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
         ClientProfile clientProfile = pairingService.findClientProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
