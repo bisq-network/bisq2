@@ -23,9 +23,7 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.List;
 import java.util.Map;
@@ -43,26 +41,6 @@ import static org.mockito.Mockito.when;
 class AlertNotificationsRestApiTest {
 
     @Test
-    void getAlertNotificationsDefaultsToMobileClient() {
-        AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
-        AuthorizedAlertData mobileAlert = createAlert("mobile-alert", AppType.MOBILE_CLIENT, 10L, AlertType.INFO);
-        when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT))
-                .thenReturn(Stream.of(mobileAlert));
-
-        AlertNotificationsRestApi restApi = new AlertNotificationsRestApi(alertNotificationsService);
-
-        Response response = restApi.getAlertNotifications(null);
-
-        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-        assertThat(response.getEntity()).isInstanceOf(List.class);
-        @SuppressWarnings("unchecked")
-        List<AuthorizedAlertDataDto> authorizedAlerts = (List<AuthorizedAlertDataDto>) response.getEntity();
-        assertThat(authorizedAlerts).hasSize(1);
-        assertThat(authorizedAlerts.getFirst().appType()).isEqualTo(AppType.MOBILE_CLIENT);
-        verify(alertNotificationsService).getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT);
-    }
-
-    @Test
     void dismissAlertUsesRequestedAppType() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AuthorizedAlertData desktopAlert = createAlert("desktop-alert", AppType.DESKTOP, 20L, AlertType.INFO);
@@ -76,23 +54,6 @@ class AlertNotificationsRestApiTest {
         assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
         verify(alertNotificationsService).getUnconsumedAlertsByAppType(AppType.DESKTOP);
         verify(alertNotificationsService).dismissAlert(desktopAlert);
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void dismissAlertDefaultsToMobileClientWhenAppTypeIsBlank(String appTypeParam) {
-        AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
-        AuthorizedAlertData mobileAlert = createAlert("mobile-alert", AppType.MOBILE_CLIENT, 30L, AlertType.INFO);
-        when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT))
-                .thenReturn(Stream.of(mobileAlert));
-
-        AlertNotificationsRestApi restApi = new AlertNotificationsRestApi(alertNotificationsService);
-
-        Response response = restApi.dismissAlert("mobile-alert", appTypeParam);
-
-        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
-        verify(alertNotificationsService).getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT);
-        verify(alertNotificationsService).dismissAlert(mobileAlert);
     }
 
     @Test

@@ -36,6 +36,7 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/offerbook(/.*)?$", Optional.empty(), Permission.OFFERBOOK),
                 new PermissionRule("^/payment-accounts(/.*)?$", Optional.empty(), Permission.PAYMENT_ACCOUNTS),
                 new PermissionRule("^/reputation(/.*)?$", Optional.empty(), Permission.REPUTATION),
+                new PermissionRule("^/trade-restricting-alert(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/alert-notifications(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),

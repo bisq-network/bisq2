@@ -75,7 +75,7 @@ class SubscriptionServiceTest {
                 .when(webSocket)
                 .send(anyString());
 
-        String requestJson = "{\"type\":\"SubscriptionRequest\",\"requestId\":\"request-1\",\"topic\":\"ALERT_NOTIFICATIONS\"}";
+        String requestJson = "{\"type\":\"SubscriptionRequest\",\"requestId\":\"request-1\",\"topic\":\"ALERT_NOTIFICATIONS\",\"parameter\":\"MOBILE_CLIENT\"}";
 
         service.onMessage(requestJson, webSocket);
 

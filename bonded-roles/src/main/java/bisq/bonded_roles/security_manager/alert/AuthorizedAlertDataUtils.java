@@ -17,7 +17,13 @@
 
 package bisq.bonded_roles.security_manager.alert;
 
+import bisq.bonded_roles.release.AppType;
+
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public final class AuthorizedAlertDataUtils {
     public static final Comparator<AuthorizedAlertData> RELEVANCE_COMPARATOR =
@@ -25,5 +31,39 @@ public final class AuthorizedAlertDataUtils {
                     .thenComparing(AuthorizedAlertData::getDate);
 
     private AuthorizedAlertDataUtils() {
+    }
+
+    /**
+     * Returns the single most important active trade-restricting alert for the given app type.
+     *
+     * <p>Selection policy:
+     * <ol>
+     *   <li>If any {@code haltTrading} alert is present, the most-recent one is returned —
+     *       halt-trading takes precedence over a version requirement, even when that halt alert
+     *       is older. There is no point in showing a min-version requirement when trading is
+     *       already halted.</li>
+     *   <li>Otherwise, the most-recent {@code requireVersionForTrading} alert is returned.</li>
+     * </ol>
+     */
+    public static Optional<AuthorizedAlertData> findMostRecentTradeRestrictingAlert(
+            Stream<AuthorizedAlertData> alerts, AppType appType) {
+        List<AuthorizedAlertData> candidates = alerts
+                .filter(AuthorizedAlertData::isTradeRestrictingAlert)
+                .filter(alert -> alert.getAppType() == appType)
+                .toList();
+
+        Optional<AuthorizedAlertData> mostRecentHalt =
+                findMostRecentAlert(candidates, AuthorizedAlertData::isHaltTrading);
+        if (mostRecentHalt.isPresent()) {
+            return mostRecentHalt;
+        }
+        return findMostRecentAlert(candidates, AuthorizedAlertData::isRequireVersionForTrading);
+    }
+
+    private static Optional<AuthorizedAlertData> findMostRecentAlert(
+            List<AuthorizedAlertData> alerts, Predicate<AuthorizedAlertData> criterion) {
+        return alerts.stream()
+                .filter(criterion)
+                .max(Comparator.comparingLong(AuthorizedAlertData::getDate));
     }
 }

@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.alert_notifications;
 import bisq.api.dto.alert.AuthorizedAlertDataDto;
 import bisq.api.dto.mappings.alert.AuthorizedAlertDataDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.api.util.AppTypeParser;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -31,7 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -42,7 +42,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -50,8 +49,6 @@ import java.util.Optional;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Alert Notifications API", description = "API for retrieving and dismissing visible alert notifications")
 public class AlertNotificationsRestApi extends RestApiBase {
-    private static final AppType DEFAULT_APP_TYPE = AppType.MOBILE_CLIENT;
-
     private final AlertNotificationsService alertNotificationsService;
 
     public AlertNotificationsRestApi(AlertNotificationsService alertNotificationsService) {
@@ -69,9 +66,9 @@ public class AlertNotificationsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response getAlertNotifications(@QueryParam("appType") @DefaultValue("MOBILE_CLIENT") String appTypeParam) {
+    public Response getAlertNotifications(@QueryParam("appType") String appTypeParam) {
         try {
-            AppType appType = parseAppType(appTypeParam);
+            AppType appType = AppTypeParser.parse(appTypeParam);
             return buildOkResponse(getSortedAlertNotifications(appType));
         } catch (IllegalArgumentException e) {
             return buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage());
@@ -94,9 +91,9 @@ public class AlertNotificationsRestApi extends RestApiBase {
             }
     )
     public Response dismissAlert(@PathParam("alertId") String alertId,
-                                 @QueryParam("appType") @DefaultValue("MOBILE_CLIENT") String appTypeParam) {
+                                 @QueryParam("appType") String appTypeParam) {
         try {
-            AppType appType = parseAppType(appTypeParam);
+            AppType appType = AppTypeParser.parse(appTypeParam);
             Optional<AuthorizedAlertData> authorizedAlertData = alertNotificationsService.getUnconsumedAlertsByAppType(appType)
                     .filter(AuthorizedAlertDataDtoMapping::canRepresent)
                     .filter(alert -> alert.getId().equals(alertId))
@@ -117,20 +114,9 @@ public class AlertNotificationsRestApi extends RestApiBase {
 
     private List<AuthorizedAlertDataDto> getSortedAlertNotifications(AppType appType) {
         return alertNotificationsService.getUnconsumedAlertsByAppType(appType)
-                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
                 .filter(AuthorizedAlertDataDtoMapping::canRepresent)
+                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
                 .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
                 .toList();
-    }
-
-    private AppType parseAppType(String appTypeParam) {
-        String normalizedValue = appTypeParam == null || appTypeParam.isBlank()
-                ? DEFAULT_APP_TYPE.name()
-                : appTypeParam.trim().toUpperCase(Locale.ROOT);
-        try {
-            return AppType.valueOf(normalizedValue);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid appType: " + appTypeParam);
-        }
     }
 }

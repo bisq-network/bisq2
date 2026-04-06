@@ -10,6 +10,7 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
+import bisq.api.rest_api.endpoints.trade_restricting_alert.TradeRestrictingAlertRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
@@ -36,6 +37,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
                                  AlertNotificationsRestApi alertNotificationsRestApi,
+                                 TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
                                  UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi,
@@ -55,6 +57,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
         register(AlertNotificationsRestApi.class);
+        register(TradeRestrictingAlertRestApi.class);
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
         register(UserDefinedPaymentAccountsRestApi.class);
@@ -72,6 +75,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);
                 bind(alertNotificationsRestApi).to(AlertNotificationsRestApi.class);
+                bind(tradeRestrictingAlertRestApi).to(TradeRestrictingAlertRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
                 bind(userDefinedPaymentAccountsRestApi).to(UserDefinedPaymentAccountsRestApi.class);

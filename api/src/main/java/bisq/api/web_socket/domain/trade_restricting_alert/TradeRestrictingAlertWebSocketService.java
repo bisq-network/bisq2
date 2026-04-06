@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.domain.alert_notifications;
+package bisq.api.web_socket.domain.trade_restricting_alert;
 
 import bisq.api.dto.alert.AuthorizedAlertDataDto;
 import bisq.api.dto.mappings.alert.AuthorizedAlertDataDtoMapping;
@@ -24,27 +24,23 @@ import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.bonded_roles.release.AppType;
-import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import static bisq.api.web_socket.subscription.Topic.ALERT_NOTIFICATIONS;
+import static bisq.api.web_socket.subscription.Topic.TRADE_RESTRICTING_ALERT;
 
-@Slf4j
-public class AlertNotificationsWebSocketService extends SimpleObservableWebSocketService<ObservableSet<AuthorizedAlertData>, List<AuthorizedAlertDataDto>> {
-    private final AlertNotificationsService alertNotificationsService;
+public class TradeRestrictingAlertWebSocketService extends SimpleObservableWebSocketService<ObservableSet<AuthorizedAlertData>, Optional<AuthorizedAlertDataDto>> {
+    private final AlertService alertService;
 
-    public AlertNotificationsWebSocketService(SubscriberRepository subscriberRepository,
-                                              AlertNotificationsService alertNotificationsService) {
-        super(subscriberRepository, ALERT_NOTIFICATIONS);
-        this.alertNotificationsService = alertNotificationsService;
+    public TradeRestrictingAlertWebSocketService(SubscriberRepository subscriberRepository,
+                                                 AlertService alertService) {
+        super(subscriberRepository, TRADE_RESTRICTING_ALERT);
+        this.alertService = alertService;
     }
 
     @Override
@@ -53,7 +49,7 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
     }
 
     @Override
-    protected List<AuthorizedAlertDataDto> toPayload(ObservableSet<AuthorizedAlertData> observable) {
+    protected Optional<AuthorizedAlertDataDto> toPayload(ObservableSet<AuthorizedAlertData> observable) {
         throw new UnsupportedOperationException("appType parameter is required");
     }
 
@@ -74,24 +70,17 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
 
     @Override
     public Optional<String> getJsonPayload(Optional<String> parameter) {
-        AppType appType = AppTypeParser.parse(parameter);
-        return toJson(buildAlertList(appType));
-    }
-
-    private List<AuthorizedAlertDataDto> buildAlertList(AppType appType) {
-        return getPayload(appType)
-                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
-                .filter(AuthorizedAlertDataDtoMapping::canRepresent)
-                .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
-                .toList();
+        return getPayload(AppTypeParser.parse(parameter)).flatMap(this::toJson);
     }
 
     @Override
     protected ObservableSet<AuthorizedAlertData> getObservable() {
-        return alertNotificationsService.getUnconsumedAlerts();
+        return alertService.getAuthorizedAlertDataSet();
     }
 
-    private Stream<AuthorizedAlertData> getPayload(AppType appType) {
-        return alertNotificationsService.getUnconsumedAlertsByAppType(appType);
+    private Optional<AuthorizedAlertDataDto> getPayload(AppType appType) {
+        return AuthorizedAlertDataUtils
+                .findMostRecentTradeRestrictingAlert(alertService.getAuthorizedAlertDataSet().stream(), appType)
+                .map(AuthorizedAlertDataDtoMapping::fromBisq2Model);
     }
 }

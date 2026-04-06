@@ -45,23 +45,6 @@ class AlertNotificationsWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadDefaultsToMobileClientWhenRequestParameterMissing() throws Exception {
-        AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
-        AuthorizedAlertData mobileAlert = createAlert("mobile-alert", AppType.MOBILE_CLIENT, 20L, AlertType.INFO);
-        when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT))
-                .thenReturn(Stream.of(mobileAlert));
-
-        AlertNotificationsWebSocketService service = new AlertNotificationsWebSocketService(new SubscriberRepository(), alertNotificationsService);
-
-        String json = service.getJsonPayload(Optional.empty()).orElseThrow();
-
-        List<AuthorizedAlertDataDto> payload = JsonMapperProvider.get().readerForListOf(AuthorizedAlertDataDto.class).readValue(json);
-        assertThat(payload).hasSize(1);
-        assertThat(payload.getFirst().appType()).isEqualTo(AppType.MOBILE_CLIENT);
-        verify(alertNotificationsService).getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT);
-    }
-
-    @Test
     void getJsonPayloadRejectsInvalidAppType() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AlertNotificationsWebSocketService service = new AlertNotificationsWebSocketService(new SubscriberRepository(), alertNotificationsService);
@@ -82,7 +65,7 @@ class AlertNotificationsWebSocketServiceTest {
 
         AlertNotificationsWebSocketService service = new AlertNotificationsWebSocketService(new SubscriberRepository(), alertNotificationsService);
 
-        String json = service.getJsonPayload(Optional.empty()).orElseThrow();
+        String json = service.getJsonPayload(Optional.of("mobile_client")).orElseThrow();
 
         List<AuthorizedAlertDataDto> payload = JsonMapperProvider.get().readerForListOf(AuthorizedAlertDataDto.class).readValue(json);
         assertThat(payload)
@@ -100,10 +83,6 @@ class AlertNotificationsWebSocketServiceTest {
         assertThat(service.canonicalizeParameter(Optional.of("MOBILE_CLIENT"))).isEqualTo(Optional.of("MOBILE_CLIENT"));
         assertThat(service.canonicalizeParameter(Optional.of("desktop"))).isEqualTo(Optional.of("DESKTOP"));
         assertThat(service.canonicalizeParameter(Optional.of("DESKTOP"))).isEqualTo(Optional.of("DESKTOP"));
-        // blank / absent → default MOBILE_CLIENT
-        assertThat(service.canonicalizeParameter(Optional.empty())).isEqualTo(Optional.of("MOBILE_CLIENT"));
-        assertThat(service.canonicalizeParameter(Optional.of(""))).isEqualTo(Optional.of("MOBILE_CLIENT"));
-        assertThat(service.canonicalizeParameter(Optional.of("   "))).isEqualTo(Optional.of("MOBILE_CLIENT"));
     }
 
     @Test

@@ -37,6 +37,7 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
+import bisq.api.rest_api.endpoints.trade_restricting_alert.TradeRestrictingAlertRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
@@ -172,6 +173,7 @@ public class ApiService implements Service {
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
         AlertNotificationsRestApi alertNotificationsRestApi = new AlertNotificationsRestApi(alertNotificationsService);
+        TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi = new TradeRestrictingAlertRestApi(bondedRolesService.getAlertService());
         PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
         UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi = new UserDefinedPaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
@@ -197,6 +199,7 @@ public class ApiService implements Service {
                     marketPriceRestApi,
                     settingsRestApi,
                     alertNotificationsRestApi,
+                    tradeRestrictingAlertRestApi,
                     explorerRestApi,
                     paymentAccountsRestApi,
                     userDefinedPaymentAccountsRestApi,
