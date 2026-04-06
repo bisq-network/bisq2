@@ -17,32 +17,32 @@
 
 package bisq.api.web_socket.subscription;
 
-import bisq.common.observable.map.ObservableHashMap;
-import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class SubscriberRepository {
-    private final ObservableHashMap<Topic, Set<Subscriber>> subscribersByTopic = new ObservableHashMap<>();
-    private final Object subscribersByTopicLock = new Object();
+    private final Map<SubscriptionSpecifier, Set<Subscriber>> subscribersBySpecifier = new HashMap<>();
+    private final Object lock = new Object();
 
     public void onConnectionClosed(WebSocket webSocket) {
         findSubscribers(webSocket).forEach(this::remove);
     }
 
-    public Subscriber add(SubscriptionRequest request, WebSocket webSocket) {
+    public Subscriber add(SubscriptionRequest request, Optional<String> canonicalParameter, WebSocket webSocket) {
         Topic topic = request.getTopic();
-        Optional<String> parameter = StringUtils.toOptional(request.getParameter());
-        Subscriber subscriber = new Subscriber(topic, parameter, request.getRequestId(), webSocket);
-        synchronized (subscribersByTopicLock) {
-            Set<Subscriber> subscribers = subscribersByTopic.computeIfAbsent(topic, key -> new HashSet<>());
-            subscribers.add(subscriber);
+        Subscriber subscriber = new Subscriber(topic, canonicalParameter, request.getRequestId(), webSocket);
+        synchronized (lock) {
+            subscribersBySpecifier.computeIfAbsent(new SubscriptionSpecifier(topic, canonicalParameter), k -> new HashSet<>())
+                    .add(subscriber);
         }
         return subscriber;
     }
@@ -52,42 +52,46 @@ public class SubscriberRepository {
     }
 
     public void remove(Topic topic, String subscriberId) {
-        synchronized (subscribersByTopicLock) {
-            Optional.ofNullable(subscribersByTopic.get(topic))
-                    .ifPresent(subscribers -> {
-                        subscribers.removeIf(subscriber ->
-                                subscriber.getSubscriberId().equals(subscriberId));
-                        if (subscribers.isEmpty()) {
-                            subscribersByTopic.remove(topic);
-                        }
-                    });
+        synchronized (lock) {
+            var iterator = subscribersBySpecifier.entrySet().iterator();
+            while (iterator.hasNext()) {
+                var entry = iterator.next();
+                if (entry.getKey().topic() == topic) {
+                    boolean removed = entry.getValue().removeIf(s -> s.getSubscriberId().equals(subscriberId));
+                    if (entry.getValue().isEmpty()) {
+                        iterator.remove();
+                    }
+                    if (removed) {
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    public Optional<Set<Subscriber>> findSubscribers(Topic topic) {
-        synchronized (subscribersByTopicLock) {
-            return Optional.ofNullable(subscribersByTopic.get(topic))
-                    .filter(subscribers -> !subscribers.isEmpty())
-                    .map(HashSet::new);
+    public Set<Subscriber> findSubscribers(Topic topic, Optional<String> parameter) {
+        synchronized (lock) {
+            Set<Subscriber> result = subscribersBySpecifier.get(new SubscriptionSpecifier(topic, parameter));
+            return result == null ? Set.of() : new HashSet<>(result);
         }
     }
 
-    public Optional<Set<Subscriber>> findSubscribers(Topic topic, String parameter) {
-        synchronized (subscribersByTopicLock) {
-            return findSubscribers(topic)
-                    .map(set -> set.stream()
-                            .filter(subscriber -> subscriber.getParameter()
-                                    .map(param -> param.equals(parameter))
-                                    .orElse(true))
-                            .collect(Collectors.toSet()));
+    public Map<SubscriptionSpecifier, Set<Subscriber>> findSubscribers(Topic topic) {
+        synchronized (lock) {
+            return subscribersBySpecifier.entrySet().stream()
+                    .filter(e -> e.getKey().topic() == topic && !e.getValue().isEmpty())
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> new HashSet<>(e.getValue())
+                    ));
         }
     }
 
     public Set<Subscriber> findSubscribers(WebSocket webSocket) {
-        synchronized (subscribersByTopicLock) {
-            return subscribersByTopic.values().stream()
-                    .flatMap(set -> set.stream()
-                            .filter(subscriber -> subscriber.getWebSocket().equals(webSocket)))
+        synchronized (lock) {
+            return subscribersBySpecifier.values().stream()
+                    .flatMap(Collection::stream)
+                    .filter(subscriber -> subscriber.getWebSocket().equals(webSocket))
                     .collect(Collectors.toSet());
         }
     }

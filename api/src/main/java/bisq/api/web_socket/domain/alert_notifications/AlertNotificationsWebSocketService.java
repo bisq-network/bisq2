@@ -20,7 +20,6 @@ package bisq.api.web_socket.domain.alert_notifications;
 import bisq.api.dto.alert.AuthorizedAlertDataDto;
 import bisq.api.dto.mappings.alert.AuthorizedAlertDataDtoMapping;
 import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
-import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.bonded_roles.release.AppType;
@@ -57,11 +56,7 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
 
     @Override
     protected List<AuthorizedAlertDataDto> toPayload(ObservableSet<AuthorizedAlertData> observable) {
-        return getPayload(DEFAULT_APP_TYPE)
-                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
-            .filter(AuthorizedAlertDataDtoMapping::canRepresent)
-            .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
-                .toList();
+        return buildAlertList(DEFAULT_APP_TYPE);
     }
 
     @Override
@@ -70,32 +65,27 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
     }
 
     @Override
-    protected boolean usesSubscriberSpecificPayload() {
-        return true;
+    public Optional<String> canonicalizeParameter(Optional<String> parameter) {
+        return Optional.of(parseAppType(parameter).name());
     }
 
     @Override
-    public Optional<String> getJsonPayload(Subscriber subscriber) {
-        return getJsonPayloadForParameter(subscriber.getParameter());
+    public Optional<String> getJsonPayload(Optional<String> parameter) {
+        AppType appType = parseAppType(parameter);
+        return toJson(buildAlertList(appType));
     }
 
-    @Override
-    public Optional<String> getJsonPayload(SubscriptionRequest request) {
-        return getJsonPayloadForParameter(Optional.ofNullable(request.getParameter()));
+    private List<AuthorizedAlertDataDto> buildAlertList(AppType appType) {
+        return getPayload(appType)
+                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
+                .filter(AuthorizedAlertDataDtoMapping::canRepresent)
+                .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
+                .toList();
     }
 
     @Override
     protected ObservableSet<AuthorizedAlertData> getObservable() {
         return alertNotificationsService.getUnconsumedAlerts();
-    }
-
-    private Optional<String> getJsonPayloadForParameter(Optional<String> parameter) {
-        AppType appType = parseAppType(parameter);
-        return toJson(getPayload(appType)
-                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
-            .filter(AuthorizedAlertDataDtoMapping::canRepresent)
-            .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
-                .toList());
     }
 
     private Stream<AuthorizedAlertData> getPayload(AppType appType) {

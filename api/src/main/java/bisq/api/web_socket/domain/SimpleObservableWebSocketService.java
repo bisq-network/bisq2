@@ -19,12 +19,15 @@ package bisq.api.web_socket.domain;
 
 
 import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.common.observable.Pin;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,16 +71,24 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
 
     protected void onChange() {
         subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers -> {
-                    if (usesSubscriberSpecificPayload()) {
-                        subscribers.forEach(subscriber ->
-                                getJsonPayload(subscriber)
-                                        .ifPresent(json -> send(json, subscriber, ModificationType.REPLACE)));
-                    } else {
-                        Optional<String> sharedJson = getJsonPayload();
-                        subscribers.forEach(subscriber ->
-                                sharedJson.ifPresent(json -> send(json, subscriber, ModificationType.REPLACE)));
+                .forEach((specifier, subscribers) -> {
+                    Optional<String> jsonPayload;
+                    try {
+                        jsonPayload = getJsonPayload(specifier.parameter());
+                    } catch (Exception e) {
+                        log.error("Failed to build payload for parameter group: {}", specifier.parameter(), e);
+                        return;
                     }
+
+                    jsonPayload.ifPresent(json ->
+                            subscribers.forEach(subscriber -> {
+                                try {
+                                    send(json, subscriber, ModificationType.REPLACE);
+                                } catch (Exception e) {
+                                    log.error("Failed to send update to subscriber {} for parameter group: {}",
+                                            subscriber, specifier.parameter(), e);
+                                }
+                            }));
                 });
     }
 
@@ -85,17 +96,23 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
         return toJson(toPayload(getObservable()));
     }
 
-    protected boolean usesSubscriberSpecificPayload() {
-        return false;
-    }
-
     protected void send(R payload,
                         Topic topic,
                         ModificationType modificationType) {
-        subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers -> {
-                    toJson(payload).ifPresent(json ->
-                            send(json, subscribers, topic, modificationType));
-                });
+        List<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
+        if (subscribers.isEmpty()) {
+            return;
+        }
+        toJson(payload).ifPresent(json -> {
+            for (Subscriber subscriber : subscribers) {
+                try {
+                    send(json, subscriber, modificationType);
+                } catch (Exception e) {
+                    log.error("Failed to send update to subscriber={}, json={}", subscriber, json, e);
+                }
+            }
+        });
     }
 }

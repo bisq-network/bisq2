@@ -38,6 +38,7 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.trade.TradeService;
+import bisq.common.util.StringUtils;
 import bisq.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
@@ -132,8 +133,9 @@ public class SubscriptionService implements Service {
                     Subscriber subscriber = null;
                     try {
                         webSocketService.validate(request);
-                        subscriber = subscriberRepository.add(request, webSocket);
-                        Optional<String> jsonPayload = webSocketService.getJsonPayload(request);
+                        Optional<String> canonicalParameter = webSocketService.canonicalizeParameter(StringUtils.toOptional(request.getParameter()));
+                        subscriber = subscriberRepository.add(request, canonicalParameter, webSocket);
+                        Optional<String> jsonPayload = webSocketService.getJsonPayload(canonicalParameter);
                         if (jsonPayload.isPresent()) {
                             sendSubscriptionResponse(webSocket, request.getRequestId(), jsonPayload.get(), null);
                         } else {

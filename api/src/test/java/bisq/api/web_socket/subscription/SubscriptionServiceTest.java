@@ -17,14 +17,14 @@
 
 package bisq.api.web_socket.subscription;
 
-import bisq.api.web_socket.domain.BaseWebSocketService;
-import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
+import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
@@ -36,18 +36,20 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 class SubscriptionServiceTest {
 
@@ -69,9 +71,9 @@ class SubscriptionServiceTest {
 
         WebSocket webSocket = mock(WebSocket.class);
         doThrow(new RuntimeException("send failed"))
-            .doReturn(null)
-            .when(webSocket)
-            .send(anyString());
+                .doReturn(null)
+                .when(webSocket)
+                .send(anyString());
 
         String requestJson = "{\"type\":\"SubscriptionRequest\",\"requestId\":\"request-1\",\"topic\":\"ALERT_NOTIFICATIONS\"}";
 
@@ -107,13 +109,46 @@ class SubscriptionServiceTest {
 
         verify(webSocket, timeout(1000).times(2)).send(anyString());
         assertThat(sentMessages)
-            .anySatisfy(message -> assertThat(message)
-                .contains("\"type\":\"SubscriptionResponse\"")
-                .contains("snapshot"));
+                .anySatisfy(message -> assertThat(message)
+                        .contains("\"type\":\"SubscriptionResponse\"")
+                        .contains("snapshot"));
         assertThat(sentMessages)
-            .anySatisfy(message -> assertThat(message)
-                .contains("\"type\":\"WebSocketEvent\"")
-                .contains("live-event"));
+                .anySatisfy(message -> assertThat(message)
+                        .contains("\"type\":\"WebSocketEvent\"")
+                        .contains("live-event"));
+    }
+
+    @Test
+    void subscribeOffersWithVariantCaseCurrencyCodeLandsInSameBucket() throws Exception {
+        BisqEasyOfferbookChannelService offerbookService = mock(BisqEasyOfferbookChannelService.class);
+        when(offerbookService.getChannels()).thenReturn(new ObservableSet<>());
+        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+        when(chatService.getBisqEasyOfferbookChannelService()).thenReturn(offerbookService);
+
+        SubscriptionService service = new SubscriptionService(
+                mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
+                mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
+                chatService,
+                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
+        );
+
+        service.onMessage(subscriptionJson("r1", "OFFERS", "eur"), mock(WebSocket.class, RETURNS_DEEP_STUBS));
+        service.onMessage(subscriptionJson("r2", "OFFERS", "EUR"), mock(WebSocket.class, RETURNS_DEEP_STUBS));
+
+        Map<SubscriptionSpecifier, Set<Subscriber>> groups =
+                getSubscriberRepository(service).findSubscribers(Topic.OFFERS);
+        assertThat(groups).hasSize(1);
+        assertThat(groups.keySet().iterator().next().parameter()).isEqualTo(Optional.of("EUR"));
+        assertThat(groups.values().iterator().next()).hasSize(2);
+    }
+
+    private static String subscriptionJson(String requestId, String topic, String parameter) {
+        String paramPart = parameter != null ? ",\"parameter\":\"" + parameter + "\"" : "";
+        return "{\"type\":\"SubscriptionRequest\",\"requestId\":\"" + requestId
+                + "\",\"topic\":\"" + topic + "\"" + paramPart + "}";
     }
 
     private SubscriberRepository getSubscriberRepository(SubscriptionService service) throws NoSuchFieldException, IllegalAccessException {
@@ -141,7 +176,7 @@ class SubscriptionServiceTest {
         }
 
         @Override
-        public Optional<String> getJsonPayload(SubscriptionRequest request) {
+        public Optional<String> getJsonPayload(Optional<String> parameter) {
             send(Optional.of("\"live-event\""), topic, ModificationType.REPLACE);
             return getJsonPayload();
         }

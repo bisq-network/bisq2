@@ -17,18 +17,20 @@
 
 package bisq.api.web_socket.domain.trades;
 
+import bisq.api.dto.DtoMappings;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.api.dto.DtoMappings;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -194,6 +196,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             }
         });
     }
+
     private Pin observePeersTradeProtocolFailure(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.peersTradeProtocolFailureObservable().addObserver(value -> {
             if (value != null) {
@@ -243,10 +246,13 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     private void send(List<Map<String, TradePropertiesDto>> maps) {
         // The payload is defined as a list to support batch data delivery at subscribe.
-        toJson(maps).ifPresent(json -> {
-            subscriberRepository.findSubscribers(topic)
-                    .ifPresent(subscribers -> subscribers
-                            .forEach(subscriber -> send(json, subscriber, ModificationType.REPLACE)));
-        });
+        List<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
+        if (subscribers.isEmpty()) {
+            return;
+        }
+        toJson(maps).ifPresent(json ->
+                subscribers.forEach(subscriber -> send(json, subscriber, ModificationType.REPLACE)));
     }
 }
