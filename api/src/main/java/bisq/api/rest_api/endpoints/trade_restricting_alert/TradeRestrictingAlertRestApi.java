@@ -71,7 +71,7 @@ public class TradeRestrictingAlertRestApi extends RestApiBase {
         } catch (IllegalArgumentException e) {
             return buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
-            log.error("Error retrieving alert notifications", e);
+            log.error("Error retrieving trade restricting alert", e);
             return buildErrorResponse("An unexpected error occurred");
         }
     }

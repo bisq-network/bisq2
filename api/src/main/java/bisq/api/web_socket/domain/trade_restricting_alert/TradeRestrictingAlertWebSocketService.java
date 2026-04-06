@@ -50,12 +50,7 @@ public class TradeRestrictingAlertWebSocketService extends SimpleObservableWebSo
 
     @Override
     protected Optional<AuthorizedAlertDataDto> toPayload(ObservableSet<AuthorizedAlertData> observable) {
-        throw new UnsupportedOperationException("appType parameter is required");
-    }
-
-    @Override
-    public Optional<String> getJsonPayload() {
-        throw new UnsupportedOperationException("appType parameter is required");
+        return Optional.empty();
     }
 
     @Override
@@ -70,7 +65,8 @@ public class TradeRestrictingAlertWebSocketService extends SimpleObservableWebSo
 
     @Override
     public Optional<String> getJsonPayload(Optional<String> parameter) {
-        return getPayload(AppTypeParser.parse(parameter)).flatMap(this::toJson);
+        AuthorizedAlertDataDto dto = getPayload(AppTypeParser.parse(parameter)).orElse(null);
+        return toJson(dto);
     }
 
     @Override

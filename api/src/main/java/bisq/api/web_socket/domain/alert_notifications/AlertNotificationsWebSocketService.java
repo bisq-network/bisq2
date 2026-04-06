@@ -54,12 +54,11 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
 
     @Override
     protected List<AuthorizedAlertDataDto> toPayload(ObservableSet<AuthorizedAlertData> observable) {
-        throw new UnsupportedOperationException("appType parameter is required");
-    }
-
-    @Override
-    public Optional<String> getJsonPayload() {
-        throw new UnsupportedOperationException("appType parameter is required");
+        return getPayload(AppType.UNSPECIFIED)
+                .filter(AuthorizedAlertDataDtoMapping::canRepresent)
+                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
+                .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
+                .toList();
     }
 
     @Override
@@ -80,8 +79,8 @@ public class AlertNotificationsWebSocketService extends SimpleObservableWebSocke
 
     private List<AuthorizedAlertDataDto> buildAlertList(AppType appType) {
         return getPayload(appType)
-                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
                 .filter(AuthorizedAlertDataDtoMapping::canRepresent)
+                .sorted(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR.reversed())
                 .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)
                 .toList();
     }

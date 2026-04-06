@@ -82,7 +82,7 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadReturnsEmptyWhenNoTradeRestrictingAlertPresent() {
+    void getJsonPayloadReturnsNullJsonWhenNoTradeRestrictingAlertPresent() throws Exception {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("desktop-info", AppType.DESKTOP, 10L, AlertType.INFO, false, false));
@@ -92,7 +92,8 @@ class TradeRestrictingAlertWebSocketServiceTest {
 
         Optional<String> json = service.getJsonPayload(Optional.of("desktop"));
 
-        assertThat(json).isEmpty();
+        assertThat(json).isPresent();
+        assertThat(JsonMapperProvider.get().readValue(json.get(), AuthorizedAlertDataDto.class)).isNull();
     }
 
     @Test
