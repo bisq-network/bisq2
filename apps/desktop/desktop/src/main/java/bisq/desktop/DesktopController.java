@@ -194,7 +194,7 @@ public class DesktopController extends NavigationController {
             }
 
             if (languageTag != null) {
-                UIThread.run(() -> new Popup().feedback(Res.get("settings.language.restart")).useShutDownButton().show());
+                UIThread.runOnNextRenderFrame(this::reloadUI);
             }
         });
 
@@ -372,6 +372,15 @@ public class DesktopController extends NavigationController {
 
     void onStageHeightChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_H, value);
+    }
+
+    private void reloadUI() {
+        // Clear all cached sub-controllers so their views are rebuilt with the new language strings.
+        // resetResolvedTarget() ensures processNavigationTarget does not short-circuit when it sees
+        // the same resolved child target still set.
+        clearControllerCache();
+        resetResolvedTarget();
+        applyNavigationTarget();
     }
 
     private void onShutdown() {
