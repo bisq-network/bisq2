@@ -21,7 +21,6 @@ public record FiatPaymentMethodDto(
         FiatPaymentRailDto paymentRail,
         String name,
         String supportedCurrencyCodes,
-        String supportedNameAndCodes,
         String countryNames,
         FiatPaymentMethodChargebackRiskDto chargebackRisk
 ) {

@@ -19,8 +19,8 @@ public class FiatPaymentMethodDtoMapping {
                 .toList();
         String countryNames = CountryRepository.matchesAllCountries(countryCodes)
                 ? Res.get("paymentAccounts.allCountries")
-                : supportedCountries.stream()
-                .map(Country::getName)
+                : countryCodes.stream()
+                .map(CountryRepository::getLocalizedCountryDisplayString)
                 .sorted()
                 .collect(Collectors.joining(", "));
 
@@ -28,7 +28,6 @@ public class FiatPaymentMethodDtoMapping {
                 FiatPaymentRailDtoMapping.fromBisq2Model(paymentMethod.getPaymentRail()),
                 paymentMethod.getShortDisplayString(),
                 paymentMethod.getSupportedCurrencyCodesAsDisplayString(),
-                paymentMethod.getSupportedCurrencyDisplayNameAndCodeAsDisplayString(),
                 countryNames,
                 FiatPaymentMethodChargebackRiskDto.valueOf(paymentMethod.getPaymentRail().getChargebackRisk().name())
         );
