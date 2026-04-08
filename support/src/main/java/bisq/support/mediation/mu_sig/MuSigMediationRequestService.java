@@ -204,6 +204,23 @@ public class MuSigMediationRequestService implements Service, ConfidentialMessag
     private void processMediationStateChangeMessage(MuSigMediationStateChangeMessage message) {
         muSigOpenTradeChannelService.findChannelByTradeId(message.getTradeId())
                 .ifPresentOrElse(channel -> {
+                            Optional<UserProfile> mediator = channel.getMediator();
+                            if (mediator.isEmpty()) {
+                                log.warn("Ignoring MuSigMediationStateChangeMessage for trade {} because mediator is missing in contract.",
+                                        message.getTradeId());
+                                return;
+                            }
+                            if (!mediator.orElseThrow().getId().equals(message.getSenderUserProfile().getId())) {
+                                log.warn("Ignoring MuSigMediationStateChangeMessage for trade {} with unexpected senderUserProfile {}.",
+                                        message.getTradeId(), message.getSenderUserProfile());
+                                return;
+                            }
+
+                            if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
+                                log.warn("Ignoring MuSigMediationStateChangeMessage as sender is banned");
+                                return;
+                            }
+
                             MediationCaseState mediationCaseState = message.getMediationCaseState();
                             if (mediationCaseState == MediationCaseState.OPEN) {
                                 // Requester had it activated at request time
