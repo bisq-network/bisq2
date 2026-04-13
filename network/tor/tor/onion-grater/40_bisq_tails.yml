@@ -2,17 +2,17 @@
 ## See the file COPYING for copying conditions
 
 #### meta start
-#### project Whonix
+#### project Tails
 #### category tor-control
 #### description
 ## Shipped but not enabled by default onion-grater profile.
 #### meta end
 
 ---
-- exe-paths:
-    - '*'
+- apparmor-profiles:
+    - '/opt/bisq2/bin/Bisq2'
   users:
-    - '*'
+    - 'amnesia'
   hosts:
     - '*'
   commands:

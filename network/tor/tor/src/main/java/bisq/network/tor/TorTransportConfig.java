@@ -26,9 +26,13 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +52,7 @@ public class TorTransportConfig implements TransportConfig {
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
+                config.hasPath("torrcOverrideFilePath") ? config.getString("torrcOverrideFilePath") : "",
                 config.getInt("sendMessageThrottleTime"),
                 config.getInt("receiveMessageThrottleTime"),
                 config.getBoolean("useExternalTor")
@@ -70,13 +75,49 @@ public class TorTransportConfig implements TransportConfig {
         return allDirectoryAuthorities;
     }
 
-    private static Map<String, String> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
-        Map<String, String> torrcOverrideConfigMap = new HashMap<>();
-        torrcOverrides.entrySet()
-                .forEach(entry -> torrcOverrideConfigMap.put(
-                        entry.getKey(), (String) entry.getValue().unwrapped()
-                ));
-        return torrcOverrideConfigMap;
+    private static Map<String, List<String>> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
+        Map<String, List<String>> result = new LinkedHashMap<>();
+        torrcOverrides.entrySet().forEach(entry -> {
+            Object unwrapped = entry.getValue().unwrapped();
+            if (unwrapped instanceof List<?> values) {
+                List<String> stringValues = new ArrayList<>();
+                values.forEach(v -> stringValues.add(String.valueOf(v)));
+                result.put(entry.getKey(), stringValues);
+            } else {
+                result.put(entry.getKey(), List.of(String.valueOf(unwrapped)));
+            }
+        });
+        return result;
+    }
+
+    /**
+     * Parses a torrc-style override file into a map of key → list of values.
+     * Each non-blank, non-comment line is expected to have the form {@code Key Value}.
+     * Repeated keys (e.g. multiple {@code Bridge} lines) accumulate into a list so that
+     * all entries appear in the generated torrc.
+     */
+    public static Map<String, List<String>> parseTorrcOverrideFile(Path filePath) throws IOException {
+        Map<String, List<String>> result = new LinkedHashMap<>();
+        for (String line : Files.readAllLines(filePath)) {
+            String trimmed = line.strip();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
+            }
+            int spaceIndex = -1;
+            for (int i = 0; i < trimmed.length(); i++) {
+                if (Character.isWhitespace(trimmed.charAt(i))) {
+                    spaceIndex = i;
+                    break;
+                }
+            }
+            if (spaceIndex < 0) {
+                continue; // bare key with no value — skip
+            }
+            String key = trimmed.substring(0, spaceIndex);
+            String value = trimmed.substring(spaceIndex + 1).strip();
+            result.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+        }
+        return result;
     }
 
     private static String getStringFromConfigValue(ConfigValue configValue, String key) {
@@ -94,7 +135,14 @@ public class TorTransportConfig implements TransportConfig {
     private final int socketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
-    private final Map<String, String> torrcOverrides;
+    private final Map<String, List<String>> torrcOverrides;
+    /**
+     * Optional path to a torrc-style file whose entries override {@code torrcOverrides}.
+     * Supports both absolute paths and paths relative to the data directory.
+     * When non-empty this file takes precedence over the inline {@code torrcOverrides} map.
+     * Leave empty (the default) to use {@code torrcOverrides} instead.
+     */
+    private final String torrcOverrideFilePath;
     private final int sendMessageThrottleTime;
     private final int receiveMessageThrottleTime;
     private final boolean useExternalTor;
@@ -106,7 +154,8 @@ public class TorTransportConfig implements TransportConfig {
                               int socketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
-                              Map<String, String> torrcOverrides,
+                              Map<String, List<String>> torrcOverrides,
+                              String torrcOverrideFilePath,
                               int sendMessageThrottleTime,
                               int receiveMessageThrottleTime,
                               boolean useExternalTor) {
@@ -118,6 +167,7 @@ public class TorTransportConfig implements TransportConfig {
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
+        this.torrcOverrideFilePath = torrcOverrideFilePath;
         this.sendMessageThrottleTime = sendMessageThrottleTime;
         this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         this.useExternalTor = useExternalTor;

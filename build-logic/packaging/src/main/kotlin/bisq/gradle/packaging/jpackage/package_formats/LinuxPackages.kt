@@ -3,7 +3,11 @@ package bisq.gradle.packaging.jpackage.package_formats
 import java.nio.file.Path
 import java.util.*
 
-class LinuxPackages(private val resourcesPath: Path, private val appName: String) : JPackagePackageFormatConfigs {
+class LinuxPackages(
+        private val resourcesPath: Path,
+        private val appName: String,
+        private val appContentPaths: List<Path> = emptyList()
+) : JPackagePackageFormatConfigs {
     override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM)
 
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> {
@@ -23,6 +27,11 @@ class LinuxPackages(private val resourcesPath: Path, private val appName: String
                 "--linux-deb-maintainer",
                 "noreply@bisq.network",
         )
+
+        appContentPaths.forEach { contentPath ->
+            arguments.add("--app-content")
+            arguments.add(contentPath.toAbsolutePath().toString())
+        }
 
         if (packageFormat == PackageFormat.DEB) {
             arguments.add("--linux-deb-maintainer")

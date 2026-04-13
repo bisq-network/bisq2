@@ -21,6 +21,7 @@ package bisq.network.tor.common.torrc;
 public class Torrc {
     public static class Keys {
         public static final String CONTROL_PORT = "ControlPort";
+        public static final String CONTROL_SOCKET = "ControlSocket";
         public static final String SOCKS_PORT = "SocksPort";
         public static final String DISABLE_NETWORK = "DisableNetwork";
         public static final String COOKIE_AUTHENTICATION = "CookieAuthentication";
