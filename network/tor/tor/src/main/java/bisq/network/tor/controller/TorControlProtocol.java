@@ -10,11 +10,17 @@ import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.ProtocolFamily;
+import java.net.StandardProtocolFamily;
+import java.net.UnixDomainSocketAddress;
+import java.nio.channels.Channels;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,7 +32,7 @@ import java.util.stream.Stream;
 public class TorControlProtocol implements AutoCloseable {
     private static final int MAX_CONNECTION_ATTEMPTS = 10;
 
-    private Socket controlSocket;
+    private AutoCloseable controlConnection;
     private final TorControlReader torControlReader;
     private Optional<OutputStream> outputStream = Optional.empty();
 
@@ -40,29 +46,63 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     public void initialize(int port) {
+        initialize("127.0.0.1", port);
+    }
+
+    public void initialize(String host, int port) {
         try {
-            this.controlSocket = createAndConnectControlSocket(port);
-            this.outputStream = Optional.of(this.controlSocket.getOutputStream());
-            this.torControlReader.start(this.controlSocket.getInputStream());
-            log.info("TorControlProtocol initialized successfully for port {}", port);
+            SocketChannel socketChannel = createAndConnectTcpControlSocket(host, port);
+            initializeControlConnection(socketChannel,
+                    Channels.newInputStream(socketChannel),
+                    Channels.newOutputStream(socketChannel),
+                    host + ":" + port);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();  // Restore interrupted state
-            log.error("TorControlProtocol initialization for port {} was interrupted.", port, e);
-            close();
-            throw new CannotConnectWithTorException(e);
-        } catch (IOException e) {
-            log.error("TorControlProtocol failed to set up streams for port {}.", port, e);
+            log.error("TorControlProtocol initialization for control endpoint {}:{} was interrupted.", host, port, e);
             close();
             throw new CannotConnectWithTorException(e);
         } catch (CannotConnectWithTorException e) {
-            log.error("TorControlProtocol failed to connect to Tor control port {} (as thrown by createAndConnectControlSocket).", port, e);
+            log.error("TorControlProtocol failed to connect to Tor control endpoint {}:{}.", host, port, e);
             close();
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected exception during TorControlProtocol initialization for port {}.", port, e);
+            log.error("Unexpected exception during TorControlProtocol initialization for control endpoint {}:{}.", host, port, e);
             close();
             throw new CannotConnectWithTorException(e);
         }
+    }
+
+    public void initialize(Path controlSocketPath) {
+        try {
+            SocketChannel socketChannel = createAndConnectUnixControlSocket(controlSocketPath);
+            initializeControlConnection(socketChannel,
+                    Channels.newInputStream(socketChannel),
+                    Channels.newOutputStream(socketChannel),
+                    controlSocketPath.toString());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("TorControlProtocol initialization for control socket {} was interrupted.", controlSocketPath, e);
+            close();
+            throw new CannotConnectWithTorException(e);
+        } catch (CannotConnectWithTorException e) {
+            log.error("TorControlProtocol failed to connect to Tor control socket {}.", controlSocketPath, e);
+            close();
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected exception during TorControlProtocol initialization for control socket {}.", controlSocketPath, e);
+            close();
+            throw new CannotConnectWithTorException(e);
+        }
+    }
+
+    private void initializeControlConnection(AutoCloseable controlConnection,
+                                             InputStream inputStream,
+                                             OutputStream outputStream,
+                                             String endpointDescription) {
+        this.controlConnection = controlConnection;
+        this.outputStream = Optional.of(outputStream);
+        this.torControlReader.start(inputStream);
+        log.info("TorControlProtocol initialized successfully for control endpoint {}", endpointDescription);
     }
 
     @Override
@@ -73,12 +113,12 @@ public class TorControlProtocol implements AutoCloseable {
         closeInProgress = true;
         log.debug("Closing TorControlProtocol resources.");
         try {
-            if (controlSocket != null && !controlSocket.isClosed()) {
-                controlSocket.close();
-                log.debug("Control socket closed.");
+            if (controlConnection != null) {
+                controlConnection.close();
+                log.debug("Control connection closed.");
             }
-        } catch (IOException e) {
-            log.warn("IOException while closing control socket. This may be expected if connection was problematic.", e);
+        } catch (Exception e) {
+            log.warn("Exception while closing control connection. This may be expected if connection was problematic.", e);
         }
         try {
             torControlReader.close();
@@ -86,6 +126,7 @@ public class TorControlProtocol implements AutoCloseable {
         } catch (Exception e) {
             log.warn("Exception while closing TorControlReader.", e);
         }
+        controlConnection = null;
         outputStream = Optional.empty();
         closeInProgress = false;
     }
@@ -262,51 +303,112 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    private Socket createAndConnectControlSocket(int port) throws InterruptedException, CannotConnectWithTorException {
+    private SocketChannel createAndConnectTcpControlSocket(String host,
+                                                           int port) throws InterruptedException, CannotConnectWithTorException {
         int connectionAttempt = 0;
         Exception lastException = null;
 
         while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
-            Socket attemptSocket = new Socket();
+            SocketChannel socketChannel = null;
             try {
-                // The Tor Control Port communication is typically unencrypted. 
+                // The Tor Control Port communication is typically unencrypted.
                 // This is considered safe because the connection is made to 127.0.0.1 (localhost),
-                // ensuring that the communication does not leave the local machine and is not 
-                // exposed to external networks. Authentication (via cookie or password) 
+                // ensuring that the communication does not leave the local machine and is not
+                // exposed to external networks. Authentication (via cookie or password)
                 // is handled by the Tor control protocol itself after connection.
-                var socketAddress = new InetSocketAddress("127.0.0.1", port);
-                log.debug("Attempting to connect to Tor control port {} ({}/{})", socketAddress, connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
-                attemptSocket.connect(socketAddress);
-                log.info("Successfully connected control socket to Tor port {} after {} attempts", port, connectionAttempt + 1);
-                return attemptSocket;
+                //
+                // Explicitly use INET (IPv4) so the socket's local address appears as
+                // "127.0.0.1" in /proc/net/tcp.  Java's default NioSocketImpl creates
+                // AF_INET6 dual-stack sockets, causing the local address to appear as
+                // "::ffff:127.0.0.1" in /proc/net/tcp6.  On Tails, onion-grater resolves
+                // the client PID via psutil.net_connections() matching on local address;
+                // the IPv6-mapped form does not match, so PID lookup fails and
+                // onion-grater silently closes the connection.
+                socketChannel = SocketChannel.open(StandardProtocolFamily.INET);
+                var socketAddress = new InetSocketAddress(host, port);
+                log.debug("Attempting to connect to Tor control endpoint {} ({}/{})", socketAddress, connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
+                socketChannel.connect(socketAddress);
+                log.info("Successfully connected control socket to Tor endpoint {} after {} attempts", socketAddress, connectionAttempt + 1);
+                return socketChannel;
             } catch (ConnectException e) {
                 lastException = e;
-                log.warn("ConnectException on attempt {} to Tor control port {}: {}. Closing attemptSocket.",
-                        connectionAttempt + 1, port, e.getMessage());
-                try {
-                    attemptSocket.close();
-                } catch (IOException closeEx) {
-                    log.warn("Failed to close attemptSocket after ConnectException on port {}: {}", port, closeEx.getMessage(), closeEx);
+                log.warn("ConnectException on attempt {} to Tor control endpoint {}:{}: {}. Closing channel.",
+                        connectionAttempt + 1, host, port, e.getMessage());
+                if (socketChannel != null) {
+                    try {
+                        socketChannel.close();
+                    } catch (IOException closeEx) {
+                        log.warn("Failed to close channel after ConnectException on endpoint {}:{}: {}",
+                                host, port, closeEx.getMessage(), closeEx);
+                    }
                 }
             } catch (IOException e) {
                 lastException = e;
-                log.warn("IOException on attempt {} to Tor control port {}: {}. Closing attemptSocket.",
-                        connectionAttempt + 1, port, e.getMessage());
-                try {
-                    attemptSocket.close();
-                } catch (IOException closeEx) {
-                    log.warn("Failed to close attemptSocket after IOException on port {}: {}", port, closeEx.getMessage(), closeEx);
+                log.warn("IOException on attempt {} to Tor control endpoint {}:{}: {}. Closing channel.",
+                        connectionAttempt + 1, host, port, e.getMessage());
+                if (socketChannel != null) {
+                    try {
+                        socketChannel.close();
+                    } catch (IOException closeEx) {
+                        log.warn("Failed to close channel after IOException on endpoint {}:{}: {}",
+                                host, port, closeEx.getMessage(), closeEx);
+                    }
                 }
             }
 
             connectionAttempt++;
             if (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
-                log.debug("Connection attempt to Tor control port {} failed. Retrying in 200ms...", port);
+                log.debug("Connection attempt to Tor control endpoint {}:{} failed. Retrying in 200ms...", host, port);
                 Thread.sleep(200);
             }
         }
 
-        String errorMessage = "Failed to connect to Tor control port " + port + " after " + MAX_CONNECTION_ATTEMPTS + " attempts.";
+        String errorMessage = "Failed to connect to Tor control endpoint " + host + ":" + port +
+                " after " + MAX_CONNECTION_ATTEMPTS + " attempts.";
+        IOException wrapperException = new IOException(errorMessage, lastException);
+        log.error(errorMessage, wrapperException);
+        throw new CannotConnectWithTorException(wrapperException);
+    }
+
+    private SocketChannel createAndConnectUnixControlSocket(Path controlSocketPath) throws InterruptedException, CannotConnectWithTorException {
+        int connectionAttempt = 0;
+        Exception lastException = null;
+
+        while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
+            SocketChannel socketChannel = null;
+            try {
+                ProtocolFamily protocolFamily = StandardProtocolFamily.UNIX;
+                socketChannel = SocketChannel.open(protocolFamily);
+                UnixDomainSocketAddress socketAddress = UnixDomainSocketAddress.of(controlSocketPath);
+                log.debug("Attempting to connect to Tor control socket {} ({}/{})",
+                        controlSocketPath, connectionAttempt + 1, MAX_CONNECTION_ATTEMPTS);
+                socketChannel.connect(socketAddress);
+                log.info("Successfully connected control socket to Tor socket {} after {} attempts",
+                        controlSocketPath, connectionAttempt + 1);
+                return socketChannel;
+            } catch (IOException | UnsupportedOperationException e) {
+                lastException = e;
+                log.warn("Connection attempt {} to Tor control socket {} failed: {}. Closing channel.",
+                        connectionAttempt + 1, controlSocketPath, e.getMessage());
+                if (socketChannel != null) {
+                    try {
+                        socketChannel.close();
+                    } catch (IOException closeEx) {
+                        log.warn("Failed to close socket channel for control socket {}: {}",
+                                controlSocketPath, closeEx.getMessage(), closeEx);
+                    }
+                }
+            }
+
+            connectionAttempt++;
+            if (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
+                log.debug("Connection attempt to Tor control socket {} failed. Retrying in 200ms...", controlSocketPath);
+                Thread.sleep(200);
+            }
+        }
+
+        String errorMessage = "Failed to connect to Tor control socket " + controlSocketPath +
+                " after " + MAX_CONNECTION_ATTEMPTS + " attempts.";
         IOException wrapperException = new IOException(errorMessage, lastException);
         log.error(errorMessage, wrapperException);
         throw new CannotConnectWithTorException(wrapperException);

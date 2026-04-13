@@ -21,29 +21,41 @@ import bisq.common.file.FileMutatorUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class TorrcFileGenerator {
     private final Path torrcPath;
-    private final Map<String, String> torrcConfigMap;
+    private final List<String> torrcConfigLines;
     private final Set<DirectoryAuthority> customDirectoryAuthorities;
 
     public TorrcFileGenerator(Path torrcPath,
-                              Map<String, String> torrcConfigMap,
+                              List<String> torrcConfigLines,
                               Set<DirectoryAuthority> customDirectoryAuthorities) {
         this.torrcPath = torrcPath;
-        this.torrcConfigMap = torrcConfigMap;
+        this.torrcConfigLines = torrcConfigLines;
         this.customDirectoryAuthorities = customDirectoryAuthorities;
+    }
+
+    // Constructor to keep the change to List<String> smaller in scope
+    public TorrcFileGenerator(Path torrcPath,
+                              Map<String, String> torrcConfigMap,
+                              Set<DirectoryAuthority> customDirectoryAuthorities) {
+        this(torrcPath, mapToLines(torrcConfigMap), customDirectoryAuthorities);
+    }
+
+    private static List<String> mapToLines(Map<String, String> map) {
+        List<String> lines = new ArrayList<>();
+        map.forEach((key, value) -> lines.add(key + " " + value));
+        return lines;
     }
 
     public void generate() {
         StringBuilder torrcStringBuilder = new StringBuilder();
-        torrcConfigMap.forEach((key, value) ->
-                torrcStringBuilder.append(key)
-                        .append(" ")
-                        .append(value)
-                        .append("\n")
+        torrcConfigLines.forEach(line ->
+                torrcStringBuilder.append(line).append("\n")
         );
 
         customDirectoryAuthorities.forEach(dirAuthority ->

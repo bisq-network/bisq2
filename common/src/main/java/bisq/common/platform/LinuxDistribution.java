@@ -25,7 +25,8 @@ import java.nio.file.Paths;
 public enum LinuxDistribution {
     DEBIAN("debian"),
     RED_HAT("redhat"),
-    WHONIX("whonix");
+    WHONIX("whonix"),
+    TAILS("tails");
 
     @Getter
     private final String canonicalName;
@@ -40,6 +41,10 @@ public enum LinuxDistribution {
 
     public static boolean isRedHat() {
         return OS.isLinux() && Files.isRegularFile(Paths.get("/etc/redhat-release"));
+    }
+
+    public static boolean isTails() {
+        return OS.isLinux() && Files.isDirectory(Paths.get("/usr/share/tails"));
     }
 
     public static boolean isWhonix() {
