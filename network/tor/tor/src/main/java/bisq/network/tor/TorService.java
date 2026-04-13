@@ -18,7 +18,6 @@
 package bisq.network.tor;
 
 import bisq.common.application.Service;
-import bisq.common.data.Pair;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
@@ -28,8 +27,9 @@ import bisq.common.platform.OS;
 import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.network.tor.controller.TorControlAuthenticationFailed;
+import bisq.network.tor.controller.TorControlConnectionClosedException;
 import bisq.network.tor.controller.TorController;
+import bisq.network.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
 import bisq.network.tor.process.EmbeddedTorProcess;
@@ -37,19 +37,20 @@ import bisq.network.tor.process.control_port.ControlPortFileParser;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -57,10 +58,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
+import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_SOCKET;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTHENTICATION;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTH_FILE;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -87,6 +88,7 @@ public class TorService implements Service {
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
     private final Map<String, String> externalTorConfigMap = new HashMap<>();
+    private Optional<Path> activeExternalTorConfigPath = Optional.empty();
 
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
@@ -111,13 +113,10 @@ public class TorService implements Service {
             if (connectedToExternalTor(externalTorConfigMap)) {
                 log.info("External Tor will be used");
                 return CompletableFuture.completedFuture(true);
-            } else if (LinuxDistribution.isWhonix()) {
-                // In case we failed at connectedToExternalTor, we do not start the embedded Tor as fallback if we are on Whonix.
-                throw new RuntimeException("Bisq runs on a Whonix system but it could not connect to the Whonix system Tor. " +
-                        "Please check the Bisq external_tor.config and the system Tor torrc config.");
             } else {
-                // In case connectedToExternalTor failed we try embedded Tor (if not running on Whonix)
-                useExternalTor.set(false);
+                isRunning.set(false);
+                throw new RuntimeException("`useExternalTor` is enabled, but Bisq could not connect to the external Tor control " +
+                        "server. Please check " + getExternalTorConfigDescription() + " and your system Tor configuration.");
             }
         }
 
@@ -141,7 +140,7 @@ public class TorService implements Service {
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
 
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
-        Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
+        createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
         // remove the control port file before we launch tor, just in case it exists from
         // a previous run
@@ -187,29 +186,24 @@ public class TorService implements Service {
     }
 
     private boolean evaluateUseExternalTor() {
-        boolean useExternalTor = false;
-        if (LinuxDistribution.isWhonix()) {
-            log.info("Bisq runs on a Whonix system and use the Whonix system Tor");
-            return true;
-        } else {
-            // If environment variable is set we take that.
-            String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
-            if (StringUtils.isNotEmpty(torSkipLaunch)) {
-                log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
-                return torSkipLaunch.equals("1") ||
-                        torSkipLaunch.equalsIgnoreCase("true") ||
-                        torSkipLaunch.equalsIgnoreCase("yes");
-            } else {
-                // We check if external_tor.config value is set. If so we use that value
-                Optional<String> externalTorFromConfigMap = Optional.ofNullable(externalTorConfigMap.get("UseExternalTor"));
-                if (externalTorFromConfigMap.isPresent()) {
-                    return externalTorFromConfigMap.get().equals("1");
-                } else {
-                    // Last we take the value form the JVM config
-                    return transportConfig.isUseExternalTor();
-                }
-            }
+        boolean isWhonixOrTails = LinuxDistribution.isWhonix() || LinuxDistribution.isTails();
+        String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
+        String useExternalTorFromConfig = externalTorConfigMap.get("UseExternalTor");
+        boolean useExternalTorFromJvmConfig = transportConfig.isUseExternalTor();
+
+        boolean useExternalTor = UseExternalTorResolver.evaluateUseExternalTorValue(
+                isWhonixOrTails,
+                torSkipLaunch,
+                useExternalTorFromJvmConfig,
+                useExternalTorFromConfig);
+
+        if (isWhonixOrTails) {
+            log.info("Bisq runs on a Whonix/Tails system and use the system Tor");
+        } else if (StringUtils.isNotEmpty(torSkipLaunch)) {
+            log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
         }
+
+        return useExternalTor;
     }
 
     @Override
@@ -225,6 +219,7 @@ public class TorService implements Service {
             torSocksProxyFactory = Optional.empty();
             publishedOnionServices.clear();
             externalTorConfigMap.clear();
+            activeExternalTorConfigPath = Optional.empty();
             return true;
         }, commonForkJoinPool());
     }
@@ -294,20 +289,24 @@ public class TorService implements Service {
     }
 
     private boolean connectedToExternalTor(Map<String, String> torConfigMap) {
-        Pair<String, Integer> controlHostAndPort = getControlHostAndPort(torConfigMap);
-        String controlHost = controlHostAndPort.getFirst();
-        int controlPort = controlHostAndPort.getSecond();
-        if (!isTorControlAvailable(controlHost, controlPort)) {
-            log.warn("Couldn't connect to external Tor control server. " +
-                    "This could happen if the control port is not correctly set up in 'external_tor.config' file.");
-            return false;
-        }
+        ControlEndpoint controlEndpoint = getControlEndpoint(torConfigMap);
 
         if (torController != null) {
             torController.shutdown();
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
-        torController.initialize(controlPort);
+        try {
+            if (controlEndpoint instanceof UnixSocketControlEndpoint socketControlEndpoint) {
+                torController.initialize(socketControlEndpoint.controlSocketPath());
+            } else if (controlEndpoint instanceof TcpControlEndpoint tcpControlEndpoint) {
+                torController.initialize(tcpControlEndpoint.controlHost(), tcpControlEndpoint.controlPort());
+            }
+        } catch (CannotConnectWithTorException e) {
+            log.warn("Could not connect to external Tor control endpoint.", e);
+            torController.shutdown();
+            torController = null;
+            return false;
+        }
 
         boolean isAuthenticated = false;
         boolean noCookieAuthenticationRequired = Optional.ofNullable(torConfigMap.get(COOKIE_AUTHENTICATION)).orElse("0").equals("0");
@@ -317,23 +316,26 @@ public class TorService implements Service {
             try {
                 torController.authenticate();
                 isAuthenticated = true;
-            } catch (TorControlAuthenticationFailed e) {
-                log.warn("Authentication to Tor Control failed.");
+            } catch (Exception e) {
+                log.warn("Authentication to Tor Control failed.", e);
                 return false;
             }
         }
 
         if (!isAuthenticated) {
             if (torConfigMap.containsKey(COOKIE_AUTH_FILE)) {
-                String authCookiePath = torConfigMap.get(COOKIE_AUTH_FILE);
+                String authCookiePath = StringUtils.unquote(torConfigMap.get(COOKIE_AUTH_FILE));
                 try {
                     byte[] authCookie = Files.readAllBytes(Paths.get(authCookiePath));
                     torController.authenticate(authCookie);
                     isAuthenticated = true;
-                } catch (TorControlAuthenticationFailed e) {
-                    log.warn("Authentication with authCookie failed.");
                 } catch (IOException e) {
                     log.warn("Couldn't read the COOKIE_AUTH_FILE '{}' from the config.", authCookiePath);
+                } catch (TorControlConnectionClosedException e) {
+                    log.warn("Tor control connection was closed unexpectedly when trying to authenticate.", e);
+                    return false; // since pipe is broken
+                } catch (Exception e) {
+                    log.warn("Authentication to Tor Control failed.", e);
                 }
             } else {
                 log.warn("The user did not provide the path to the COOKIE_AUTH_FILE.");
@@ -344,8 +346,8 @@ public class TorService implements Service {
             log.info("We try to call authenticate without parameters for the case that authentication is not required.");
             try {
                 torController.authenticate();
-            } catch (TorControlAuthenticationFailed ex) {
-                log.warn("Authentication to Tor Control failed.");
+            } catch (Exception e) {
+                log.warn("Authentication to Tor Control failed.", e);
                 return false;
             }
         }
@@ -360,8 +362,16 @@ public class TorService implements Service {
         return true;
     }
 
-    private Pair<String, Integer> getControlHostAndPort(Map<String, String> externalTorConfigMap) {
+    private ControlEndpoint getControlEndpoint(Map<String, String> externalTorConfigMap) {
+        String controlSocketString = externalTorConfigMap.get(CONTROL_SOCKET);
+        if (controlSocketString != null && !controlSocketString.isBlank()) {
+            Path controlSocketPath = Path.of(StringUtils.unquote(controlSocketString));
+            return ControlEndpoint.forSocket(controlSocketPath);
+        }
+
         String controlPortString = externalTorConfigMap.get(CONTROL_PORT);
+        checkArgument(controlPortString != null && !controlPortString.isBlank(),
+                "Either ControlSocket or ControlPort must be set in " + getExternalTorConfigDescription());
         String[] tokens = controlPortString.split(":");
         String controlHost;
         int controlPort;
@@ -374,22 +384,16 @@ public class TorService implements Service {
             controlHost = "127.0.0.1";
             controlPort = Integer.parseInt(tokens[0]);
         }
-        return new Pair<>(controlHost, controlPort);
+        return ControlEndpoint.forPort(controlHost, controlPort);
     }
 
     private void readExternalTorConfigMap() {
         try {
-            String torConfigFileName = "external_tor.config";
-            Path torConfigFilePath = transportConfig.getDataDirPath().resolve(torConfigFileName);
-            String torConfig;
-            if (!Files.exists(torConfigFilePath)) {
-                torConfig = FileReaderUtils.readStringFromResource("tor/" + torConfigFileName);
-                FileMutatorUtils.writeToPath(torConfig, torConfigFilePath);
-            } else {
-                torConfig = FileReaderUtils.readUTF8String(torConfigFilePath);
-            }
-            Set<String> lines = torConfig.lines().collect(Collectors.toSet());
-            for (String line : lines) {
+            Path externalTorConfigPath = getExternalTorConfigPath();
+            activeExternalTorConfigPath = Optional.of(externalTorConfigPath);
+            externalTorConfigMap.clear();
+            String torConfig = readExternalTorConfig(externalTorConfigPath);
+            for (String line : torConfig.lines().toList()) {
                 line = line.trim();
                 if (!line.isEmpty() && !line.startsWith("#")) {
                     int firstSpaceIndex = line.indexOf(" ");
@@ -397,6 +401,8 @@ public class TorService implements Service {
                         String key = line.substring(0, firstSpaceIndex);
                         String value = line.substring(firstSpaceIndex + 1);
                         externalTorConfigMap.put(key, value);
+                    } else {
+                        log.warn("Ignoring malformed line (no key/value separator) in external Tor config: '{}'", line);
                     }
                 }
             }
@@ -405,15 +411,35 @@ public class TorService implements Service {
         }
     }
 
-    private boolean isTorControlAvailable(String controlHost, int controlPort) {
-        try (Socket socket = new Socket()) {
-            var socketAddress = new InetSocketAddress(controlHost, controlPort);
-            socket.connect(socketAddress);
-            log.info("Test connection to control server of external tor process successful.");
-            return true;
-        } catch (IOException e) {
-            return false;
+    private String readExternalTorConfig(Path externalTorConfigPath) throws IOException {
+        if (!Files.exists(externalTorConfigPath)) {
+            String fallbackTorConfigFileName = "external_tor.config";
+            Path fallbackTorConfigPath = transportConfig.getDataDirPath().resolve(fallbackTorConfigFileName);
+            String fallbackTorConfigTemplate = FileReaderUtils.readStringFromResource("tor/" + fallbackTorConfigFileName);
+            String fallbackTorConfig = ExternalTorConfigHeuristics.apply(fallbackTorConfigTemplate);
+            FileMutatorUtils.writeToPath(fallbackTorConfig, fallbackTorConfigPath);
+            return fallbackTorConfig;
         }
+        return FileReaderUtils.readUTF8String(externalTorConfigPath);
+    }
+
+    private String getExternalTorConfigDescription() {
+        return activeExternalTorConfigPath
+                .map(path -> "the external Tor config file '" + path + "'")
+                .orElse("the external Tor config file");
+    }
+
+    private Path getExternalTorConfigPath() {
+        String torrcOverrideFilePath = transportConfig.getTorrcOverrideFilePath();
+        if (torrcOverrideFilePath != null && !torrcOverrideFilePath.isBlank()) {
+            Path overrideFilePath = resolveTorrcOverrideFilePath(transportConfig.getDataDirPath(), torrcOverrideFilePath);
+            if (Files.exists(overrideFilePath)) {
+                return overrideFilePath;
+            }
+            log.warn("torrcOverrideFilePath '{}' does not exist. Falling back to external_tor.config.",
+                    torrcOverrideFilePath);
+        }
+        return transportConfig.getDataDirPath().resolve("external_tor.config");
     }
 
     private void makeTorDir() {
@@ -459,21 +485,77 @@ public class TorService implements Service {
         torInstaller.installIfNotUpToDate();
     }
 
-    private Map<String, String> createTorrcConfigFile(Path dataDirPath, PasswordDigest hashedControlPassword) {
+    private List<String> createTorrcConfigFile(Path dataDirPath, PasswordDigest hashedControlPassword) {
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDirPath(dataDirPath)
                 .hashedControlPassword(hashedControlPassword)
                 .build();
 
-        Map<String, String> torrcOverrideConfigs = transportConfig.getTorrcOverrides();
-        Map<String, String> torrcConfigMap = torrcClientConfigFactory.torrcClientConfigMap(torrcOverrideConfigs);
+        Map<String, List<String>> overrides = resolveOverrides(dataDirPath);
+        List<String> torrcConfigLines = torrcClientConfigFactory.torrcClientConfigLines(overrides);
 
         Path torrcPath = dataDirPath.resolve("torrc");
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath,
-                torrcConfigMap,
+                torrcConfigLines,
                 transportConfig.getDirectoryAuthorities());
         torrcFileGenerator.generate();
-        return torrcConfigMap;
+        return torrcConfigLines;
+    }
+
+    /**
+     * Returns the effective torrc overrides.  If {@code torrcOverrideFilePath} is set it is
+     * resolved against the data directory (when relative) and its contents take precedence over
+     * the inline {@code torrcOverrides} map.  Falls back to {@code torrcOverrides} when the
+     * file path is empty or the file cannot be read.
+     */
+    private Map<String, List<String>> resolveOverrides(Path dataDirPath) {
+        String filePathStr = transportConfig.getTorrcOverrideFilePath();
+        if (filePathStr == null || filePathStr.isBlank()) {
+            return transportConfig.getTorrcOverrides();
+        }
+        try {
+            Path overrideFilePath = resolveTorrcOverrideFilePath(dataDirPath, filePathStr);
+            return TorTransportConfig.parseTorrcOverrideFile(overrideFilePath);
+        } catch (IOException e) {
+            log.warn("Could not read torrcOverrideFilePath '{}', falling back to torrcOverrides. Error: {}",
+                    filePathStr, e.getMessage());
+            return transportConfig.getTorrcOverrides();
+        }
+    }
+
+    private Path resolveTorrcOverrideFilePath(Path dataDirPath, String torrcOverrideFilePath) {
+        Path overrideFilePath = Path.of(torrcOverrideFilePath);
+        if (!overrideFilePath.isAbsolute()) {
+            overrideFilePath = dataDirPath.resolve(overrideFilePath);
+        }
+        return overrideFilePath;
+    }
+
+    private sealed interface ControlEndpoint permits TcpControlEndpoint, UnixSocketControlEndpoint {
+
+        static ControlEndpoint forPort(String controlHost, int controlPort) {
+            return new TcpControlEndpoint(controlHost, controlPort);
+        }
+
+        static ControlEndpoint forSocket(Path controlSocketPath) {
+            return new UnixSocketControlEndpoint(controlSocketPath);
+        }
+    }
+
+    private record TcpControlEndpoint(String controlHost, int controlPort) implements ControlEndpoint {
+        @Override
+        @NonNull
+        public String toString() {
+            return String.format("TcpControlEndpoint(host: %s, port: %d)", controlHost, controlPort);
+        }
+    }
+
+    private record UnixSocketControlEndpoint(Path controlSocketPath) implements ControlEndpoint {
+        @Override
+        @NonNull
+        public String toString() {
+            return String.format("UnixSocketControlEndpoint(controlSocketPath: %s)", controlSocketPath);
+        }
     }
 }
