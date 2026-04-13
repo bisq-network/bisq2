@@ -187,6 +187,22 @@ public class StringUtils {
         return Optional.ofNullable(toNullIfEmpty(value));
     }
 
+    public static String unquote(String value) {
+        if (value.length() < 2) {
+            return value;
+        }
+
+        int lastIndex = value.length() - 1;
+        char firstChar = value.charAt(0);
+        char lastChar = value.charAt(lastIndex);
+        boolean isDoubleQuoted = firstChar == '"' && lastChar == '"';
+        boolean isSingleQuoted = firstChar == '\'' && lastChar == '\'';
+        if (isDoubleQuoted || isSingleQuoted) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
+    }
+
     public static String snakeCaseToCamelCase(String value, Locale locale) {
         return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, value.toLowerCase(locale));
     }
