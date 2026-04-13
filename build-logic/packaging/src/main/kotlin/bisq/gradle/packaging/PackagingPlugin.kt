@@ -94,6 +94,12 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
 
+            // Onion-grater profiles for Tails/Whonix packaging
+            val onionGraterPath = File(project.rootProject.projectDir, "network/tor/tor/onion-grater")
+            if (onionGraterPath.isDirectory) {
+                onionGraterDir.set(onionGraterPath)
+            }
+
             runtimeImageDirectory.set(
                 getJPackageJdkDirectory(extension)
             )

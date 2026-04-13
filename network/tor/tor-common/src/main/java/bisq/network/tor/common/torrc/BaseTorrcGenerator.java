@@ -20,11 +20,16 @@ package bisq.network.tor.common.torrc;
 import lombok.Builder;
 
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static bisq.network.tor.common.torrc.Torrc.Keys.*;
-import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.*;
+import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
+import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT_WRITE_TO_FILE;
+import static bisq.network.tor.common.torrc.Torrc.Keys.DATA_DIRECTORY;
+import static bisq.network.tor.common.torrc.Torrc.Keys.HASHED_CONTROL_PASSWORD;
+import static bisq.network.tor.common.torrc.Torrc.Keys.SOCKS_PORT;
+import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.CONTROL_PORT_AUTO;
+import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.SOCKS_PORT_DISABLED;
 
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
     public static final String CONTROL_DIR_NAME = "control";
@@ -44,7 +49,7 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
 
     @Override
     public Map<String, String> generate() {
-        Map<String, String> torConfigMap = new HashMap<>();
+        Map<String, String> torConfigMap = new LinkedHashMap<>();
         torConfigMap.put(DATA_DIRECTORY, dataDirPath.toAbsolutePath().toString());
 
         torConfigMap.put(CONTROL_PORT, CONTROL_PORT_AUTO);
