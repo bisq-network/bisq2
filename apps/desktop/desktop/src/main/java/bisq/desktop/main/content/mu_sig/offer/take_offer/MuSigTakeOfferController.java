@@ -132,9 +132,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
         model.setPaymentMethodVisible(!isSingleAccountForSinglePaymentMethod);
 
         model.getChildTargets().clear();
-        if (model.isAmountVisible()) {
-            model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT);
-        }
+
         if (model.isPaymentMethodVisible()) {
             model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT);
         } else {
@@ -149,7 +147,13 @@ public class MuSigTakeOfferController extends NavigationController implements In
                     : baseSidePaymentMethodSpecs.get(0);
             muSigTakeOfferReviewController.setTakersAccount(accountsForPaymentMethod.iterator().next());
             muSigTakeOfferReviewController.setTakersPaymentMethodSpec(takersPaymentMethodSpec);
+            muSigTakeOfferAmountController.setTakersPaymentMethodSpec(takersPaymentMethodSpec);
         }
+
+        if (model.isAmountVisible()) {
+            model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT);
+        }
+
         model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
     }
 

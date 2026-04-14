@@ -35,7 +35,6 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.PriceUtil;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
@@ -218,19 +217,37 @@ public class MuSigTakeOfferAmountController implements Controller {
                     .round(0);
             model.setSellersReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
         }
-        long sellersReputationScore = model.getSellersReputationScore();
+       // long sellersReputationScore = model.getSellersReputationScore();
         Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
         Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, muSigOffer).orElseThrow().round(0);
         Monetary minRangeValue = optionalQuoteSideMinAmount.get().round(0);
-        Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
+      /*  Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
                 : offersQuoteSideMaxOrFixedAmount;
-
+*/
+        Monetary maxAmount =  offersQuoteSideMaxOrFixedAmount;
         amountSelectionController.setMaxAllowedLimitation(offersQuoteSideMaxOrFixedAmount);
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setQuoteSideTradeAmountLimits(new MonetaryRange(minRangeValue, maxAmount));
 
-        boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
+        //todo
+        model.getIsAmountLimitInfoVisible().set(false);
+
+      /*  model.setAmountLimitInfoLink(Res.get("muSig.offer.taker.amount.limitInfo.learnMore.buyer"));
+        model.setLinkToWikiText(Res.get("muSig.offer.taker.amount.limitInfo.overlay.linkToWikiText.buyer"));
+
+        if (reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)) {
+            // Max amount not covered by security from reputation score
+            model.getIsAmountLimitInfoVisible().set(true);
+            model.getAmountLimitInfo().set(Res.get("muSig.offer.taker.amount.limitInfo.minAmountCovered.buyer", sellersReputationScore));
+            String formattedAmount = AmountFormatter.formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
+            model.getAmountLimitInfoAmount().set(Res.get("muSig.offer.taker.amount.limitInfoAmount.buyer", formattedAmount));
+            model.getAmountLimitInfoOverlayInfo().set(Res.get("muSig.offer.taker.amount.limitInfo.minAmountCovered.overlay.info.buyer", sellersReputationScore, formattedAmount) + "\n\n");
+        } else {
+            model.getIsAmountLimitInfoVisible().set(false);
+        }*/
+
+      /*  boolean isBuyer = muSigOffer.getTakersDisplayDirection().isBuy();
         if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("muSig.offer.taker.amount.limitInfo.learnMore.buyer"));
@@ -266,7 +283,7 @@ public class MuSigTakeOfferAmountController implements Controller {
                         }
                     });
             applyReputationBasedQuoteSideAmount();
-        }
+        }*/
     }
 
     private void applyReputationBasedQuoteSideAmount() {
@@ -277,6 +294,6 @@ public class MuSigTakeOfferAmountController implements Controller {
         if (amountSelectionController.getRightMarkerQuoteSideValue() == null) {
             return;
         }
-        model.getIsWarningIconVisible().set(value.round(0).equals(amountSelectionController.getRightMarkerQuoteSideValue().round(0)));
+       // model.getIsWarningIconVisible().set(value.round(0).equals(amountSelectionController.getRightMarkerQuoteSideValue().round(0)));
     }
 }

@@ -137,17 +137,19 @@ public class MuSigTakeOfferView extends NavigationView<VBox, MuSigTakeOfferModel
 
     @Override
     protected void onViewAttached() {
-        if (model.isPaymentMethodVisible()) {
-            Label paymentMethod = createAndGetProgressLabel(model.getPaymentMethodProgressLabel());
-            progressLabelList.add(0, paymentMethod);
-            progressBox.getChildren().add(0, getHLine());
-            progressBox.getChildren().add(0, paymentMethod);
-        }
+
         if (model.isAmountVisible()) {
             Label amount = createAndGetProgressLabel(Res.get("muSig.offer.taker.progress.amount"));
-            progressLabelList.add(0, amount);
-            progressBox.getChildren().add(0, getHLine());
-            progressBox.getChildren().add(0, amount);
+            progressLabelList.addFirst(amount);
+            progressBox.getChildren().addFirst(getHLine());
+            progressBox.getChildren().addFirst(amount);
+        }
+
+        if (model.isPaymentMethodVisible()) {
+            Label paymentMethod = createAndGetProgressLabel(model.getPaymentMethodProgressLabel());
+            progressLabelList.addFirst( paymentMethod);
+            progressBox.getChildren().addFirst(getHLine());
+            progressBox.getChildren().addFirst(paymentMethod);
         }
 
         nextButton.textProperty().bind(model.getNextButtonText());

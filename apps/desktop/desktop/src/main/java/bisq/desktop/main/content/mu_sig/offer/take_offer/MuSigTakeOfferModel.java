@@ -62,7 +62,7 @@ public class MuSigTakeOfferModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT;
+        return NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT;
     }
 
     void reset() {
