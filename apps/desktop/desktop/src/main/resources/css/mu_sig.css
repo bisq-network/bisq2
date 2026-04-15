@@ -165,3 +165,88 @@
 .time-progress-bar:indeterminate > .bar {
     -fx-background-color: -bisq2-yellow;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * Amount components                                                         *
+ *                                                                             *
+ ******************************************************************************/
+
+
+
+.amount-components {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 8 8 0 0;
+}
+
+
+.amount-components .description,
+.amount-components .description-focused {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
+}
+
+.amount-components .description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.amount-components .description-focused {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+}
+
+.amount-input{
+}
+
+.amount-input .value {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.amount-input-dash {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.amount-input-helper {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-insets: 0;
+}
+
+.amount-input .code {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans" !important;
+    -fx-font-size: 0.95em !important;
+}
+
+
+.amount-display .value {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+    -fx-font-size: 1.25em !important;
+}
+
+.amount-display .code {
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+    -fx-font-size: 0.95em !important;
+}

@@ -147,7 +147,7 @@ public class MuSigAmountSelectionController implements Controller {
         model.getMinQuoteSideAmount().addListener(minQuoteSideAmountFromModelListener);
         model.getMaxOrFixedBaseSideAmount().addListener(maxOrFixedBaseSideAmountFromModelListener);
         model.getMinBaseSideAmount().addListener(minBaseSideAmountFromModelListener);
-        priceInput.getQuote().addListener(quoteListener);
+        priceInput.priceQuoteProperty().addListener(quoteListener);
 
         maxOrFixedBaseSideAmountDisplay.setAmount(null);
         invertedMaxOrFixedBaseSideAmountInput.setAmount(null);
@@ -213,7 +213,7 @@ public class MuSigAmountSelectionController implements Controller {
         subscriptions.add(EasyBind.subscribe(invertedMinQuoteSideAmountDisplay.amountProperty(),
                 amount -> updateMinQuoteSideAmount(amount, invertedMinQuoteSideAmountDisplay)));
 
-        subscriptions.add(EasyBind.subscribe(priceInput.getQuote(), quote -> applyInitialRangeValues()));
+        subscriptions.add(EasyBind.subscribe(priceInput.priceQuoteProperty(), quote -> applyInitialRangeValues()));
 
         subscriptions.add(EasyBind.subscribe(model.getQuoteSideTradeAmountLimits(), value -> applyInitialRangeValues()));
 
@@ -284,7 +284,7 @@ public class MuSigAmountSelectionController implements Controller {
         model.getMinQuoteSideAmount().removeListener(minQuoteSideAmountFromModelListener);
         model.getMaxOrFixedBaseSideAmount().removeListener(maxOrFixedBaseSideAmountFromModelListener);
         model.getMinBaseSideAmount().removeListener(minBaseSideAmountFromModelListener);
-        priceInput.getQuote().removeListener(quoteListener);
+        priceInput.priceQuoteProperty().removeListener(quoteListener);
         model.getMaxOrFixedAmountSliderValue().removeListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().removeListener(minSliderListener);
 
@@ -423,7 +423,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     public ReadOnlyObjectProperty<PriceQuote> getQuote() {
-        return priceInput.getQuote();
+        return priceInput.priceQuoteProperty();
     }
 
     public Monetary getRightMarkerQuoteSideValue() {
@@ -524,7 +524,7 @@ public class MuSigAmountSelectionController implements Controller {
 
     private void initializeQuoteSideAmount(MuSigBigAmountNumberBox quoteSideAmountInput,
                                            MuSigSmallAmountNumberBox smallNumberDisplayBox) {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         MonetaryRange rangeQuoteSideAmount = model.getRangeQuoteSideAmount().get();
         if (rangeQuoteSideAmount == null) {
             return;
@@ -558,7 +558,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     private void applyInitialRangeValues() {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         MonetaryRange quoteSideTradeAmountLimits = model.getQuoteSideTradeAmountLimits().get();
         if (priceQuote == null || quoteSideTradeAmountLimits == null) {
             return;
@@ -718,7 +718,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     private void setMaxOrFixedQuoteFromBase() {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         if (priceQuote == null) {
             return;
         }
@@ -731,7 +731,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     private void setMinQuoteFromBase() {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         if (priceQuote == null) {
             return;
         }
@@ -744,7 +744,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     private void setMaxOrFixedBaseFromQuote() {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         if (priceQuote == null) {
             return;
         }
@@ -757,7 +757,7 @@ public class MuSigAmountSelectionController implements Controller {
     }
 
     private void setMinBaseFromQuote() {
-        PriceQuote priceQuote = priceInput.getQuote().get();
+        PriceQuote priceQuote = priceInput.priceQuoteProperty().get();
         if (priceQuote == null) {
             return;
         }

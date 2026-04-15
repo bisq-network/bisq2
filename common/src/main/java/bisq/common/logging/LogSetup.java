@@ -77,6 +77,6 @@ public class LogSetup {
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
-        logbackLogger.setLevel(logLevel);
+        logbackLogger.setLevel(Level.ERROR);
     }
 }

@@ -58,7 +58,7 @@ public class MuSigPriceInput {
         controller.setMarket(market);
     }
 
-    public ReadOnlyObjectProperty<PriceQuote> getQuote() {
+    public ReadOnlyObjectProperty<PriceQuote> priceQuoteProperty() {
         return controller.model.priceQuote;
     }
 

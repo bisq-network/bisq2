@@ -73,7 +73,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private final MuSigCreateOfferPaymentController muSigCreateOfferPaymentController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription displayDirectionPin, marketPin, priceSpecPin;
+    private Subscription displayDirectionPin, marketPin;
     private Pin selectedAccountByPaymentMethodPin;
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
@@ -137,8 +137,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
             updateNextButtonDisabledState();
         });
-        priceSpecPin = EasyBind.subscribe(muSigCreateOfferAmountAndPriceController.getPriceSpec(),
-                muSigCreateOfferAmountAndPriceController::updateAmountSpecWithPriceSpec);
         handlePaymentMethodsUpdate();
         selectedAccountByPaymentMethodPin = muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod().addObserver(() ->
                 UIThread.run(this::handlePaymentMethodsUpdate));
@@ -151,7 +149,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
         displayDirectionPin.unsubscribe();
         marketPin.unsubscribe();
-        priceSpecPin.unsubscribe();
         selectedAccountByPaymentMethodPin.unbind();
         reset();
     }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.price;
+package bisq.desktop.main.content.mu_sig.offer.create_offer.backup.amount_and_price.price;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
@@ -73,10 +73,6 @@ public class MuSigCreateOfferPriceController implements Controller {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new MuSigCreateOfferPriceModel();
         view = new MuSigCreateOfferPriceView(model, this, priceInput.getRoot());
-    }
-
-    public ReadOnlyObjectProperty<PriceQuote> priceQuoteProperty() {
-        return priceInput.priceQuoteProperty();
     }
 
     public void setMarket(Market market) {

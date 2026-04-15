@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price;
+package bisq.desktop.main.content.mu_sig.offer.create_offer.backup.amount_and_price;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigCreateOfferAmountController;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.price.MuSigCreateOfferPriceController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.backup.amount_and_price.amount.MuSigCreateOfferAmountController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.backup.amount_and_price.price.MuSigCreateOfferPriceController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -32,8 +32,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -45,7 +43,6 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     private final MuSigCreateOfferAmountAndPriceView view;
     private final MuSigCreateOfferAmountController muSigCreateOfferAmountController;
     private final MuSigCreateOfferPriceController muSigCreateOfferPriceController;
-    private Subscription priceSpecPin, priceQuotePin;
 
     public MuSigCreateOfferAmountAndPriceController(ServiceProvider serviceProvider,
                                                     Region owner,
@@ -74,17 +71,10 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         model.setHeadline(getHeadline());
         model.getIsAmountOverlayVisible().bind(muSigCreateOfferAmountController.getIsOverlayVisible());
         model.getIsPriceOverlayVisible().bind(muSigCreateOfferPriceController.getIsOverlayVisible());
-        priceSpecPin = EasyBind.subscribe(muSigCreateOfferPriceController.getPriceSpec(),
-                muSigCreateOfferAmountController::updateAmountSpecWithPriceSpec);
-
-        priceQuotePin = EasyBind.subscribe(muSigCreateOfferPriceController.priceQuoteProperty(),
-                muSigCreateOfferAmountController::setPriceQuote);
     }
 
     @Override
     public void onDeactivate() {
-        priceSpecPin.unsubscribe();
-        priceQuotePin.unsubscribe();
         model.getIsAmountOverlayVisible().unbind();
         model.getIsPriceOverlayVisible().unbind();
     }
@@ -112,6 +102,9 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         model.setMarket(market);
     }
 
+    public void updateAmountSpecWithPriceSpec(PriceSpec priceSpec) {
+        muSigCreateOfferAmountController.updateBaseSideAmountSpecWithPriceSpec(priceSpec);
+    }
 
     public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {
         return muSigCreateOfferAmountController.getBaseSideAmountSpec();

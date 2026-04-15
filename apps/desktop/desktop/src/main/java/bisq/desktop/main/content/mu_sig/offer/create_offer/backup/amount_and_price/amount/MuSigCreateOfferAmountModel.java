@@ -15,39 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount;
+package bisq.desktop.main.content.mu_sig.offer.create_offer.backup.amount_and_price.amount;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
-import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Getter
 public class MuSigCreateOfferAmountModel implements Model {
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
-    private final BooleanProperty useRangeAmount = new SimpleBooleanProperty();
-
-
-    private final ObjectProperty<Direction> displayDirection = new SimpleObjectProperty<>();
-    private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>();
-    private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
-
+    @Setter
+    private Direction displayDirection;
+    @Setter
+    private Market market = MarketRepository.getDefaultBtcFiatMarket();
+    private final List<PaymentMethod<?>> paymentMethods = new ArrayList<>();
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
@@ -64,6 +61,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     private Monetary reputationBasedMaxAmount;
     @Setter
     private long myReputationScore;
+    private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<BaseSideAmountSpec> baseSideAmountSpec = new SimpleObjectProperty<>();
@@ -71,9 +69,8 @@ public class MuSigCreateOfferAmountModel implements Model {
     private final StringProperty errorMessage = new SimpleStringProperty();
 
     public void reset() {
-        displayDirection.set(null);
-        market.set(null);
-        priceSpec.set(null);
+        displayDirection = null;
+        market = MarketRepository.getDefaultBtcFiatMarket();
         paymentMethods.clear();
         amountLimitInfo.set(null);
         amountLimitInfoOverlayInfo.set(null);
@@ -84,7 +81,7 @@ public class MuSigCreateOfferAmountModel implements Model {
         amountLimitInfoLink = null;
         linkToWikiText = null;
         baseSideAmount = Optional.empty();
-        useRangeAmount.set(false);
+        isRangeAmountEnabled.set(false);
         isOverlayVisible.set(false);
         priceTooltip.set(null);
         baseSideAmountSpec.set(null);
