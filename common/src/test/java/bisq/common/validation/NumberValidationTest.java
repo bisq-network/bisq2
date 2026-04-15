@@ -9,6 +9,7 @@ public class NumberValidationTest {
     @Test
     void testValidTokensWithDotSeparator() {
         char decimalSeparator = '.';
+        assertTrue(NumberValidation.isValidNumberInputToken("", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken("0", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken("123", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken(".", decimalSeparator));
@@ -45,6 +46,7 @@ public class NumberValidationTest {
     @Test
     void testValidTokensWithCommaSeparator() {
         char decimalSeparator = ',';
+        assertTrue(NumberValidation.isValidNumberInputToken("", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken("0", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken(",", decimalSeparator));
         assertTrue(NumberValidation.isValidNumberInputToken(",5", decimalSeparator));
