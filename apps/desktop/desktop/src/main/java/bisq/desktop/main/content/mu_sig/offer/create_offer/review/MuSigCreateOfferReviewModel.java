@@ -18,10 +18,8 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.review;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
@@ -33,10 +31,6 @@ import java.util.List;
 
 @Getter
 class MuSigCreateOfferReviewModel implements Model {
-    @Setter
-    private Direction direction;
-    @Setter
-    private Market market;
     @Setter
     private MuSigOffer offer;
     @Setter
@@ -93,11 +87,11 @@ class MuSigCreateOfferReviewModel implements Model {
     private String feeDetails;
     @Setter
     private long marketPrice;
+    @Setter
+    private boolean isCrypto;
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
 
     void reset() {
-        direction = null;
-        market = null;
         offer = null;
         takersSelectedPaymentMethod = null;
         minBaseSideAmount = null;

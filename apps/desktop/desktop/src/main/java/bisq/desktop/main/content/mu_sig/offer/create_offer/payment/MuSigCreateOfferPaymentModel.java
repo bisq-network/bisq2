@@ -19,10 +19,8 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.market.Market;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -33,7 +31,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,16 +38,10 @@ import java.util.Map;
 
 @Getter
 public class MuSigCreateOfferPaymentModel implements Model {
-    @Setter
-    private Direction displayDirection;
-    @Setter
-    private String paymentMethodCurrencyCode;
-
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
     private final SortedList<PaymentMethod<?>> sortedPaymentMethods = new SortedList<>(paymentMethods);
     private final ObservableList<PaymentMethod<?>> selectedPaymentMethods = FXCollections.observableArrayList();
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithoutAccount = new SimpleObjectProperty<>();
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
@@ -71,12 +62,9 @@ public class MuSigCreateOfferPaymentModel implements Model {
     }
 
     void reset() {
-        displayDirection = null;
-        paymentMethodCurrencyCode = null;
         accountsByPaymentMethod.clear();
         paymentMethods.clear();
         selectedPaymentMethods.clear();
-        market.set(null);
         paymentMethodWithoutAccount.set(null);
         paymentMethodWithMultipleAccounts.set(null);
         shouldShowNoAccountOverlay.set(false);

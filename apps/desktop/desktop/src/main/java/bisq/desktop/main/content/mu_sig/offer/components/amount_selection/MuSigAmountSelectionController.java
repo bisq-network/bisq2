@@ -32,6 +32,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.components.MuSigPriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.mu_sig.draft.OfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -71,7 +72,7 @@ public class MuSigAmountSelectionController implements Controller {
     private final Set<UIScheduler> schedulers = new HashSet<>();
     private final SettingsService settingsService;
 
-    public MuSigAmountSelectionController(ServiceProvider serviceProvider) {
+    public MuSigAmountSelectionController(ServiceProvider serviceProvider, OfferDraftWorkflow<?> offerDraftWorkflow) {
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
 
@@ -89,7 +90,7 @@ public class MuSigAmountSelectionController implements Controller {
         invertedMinQuoteSideAmountDisplay = new MuSigSmallAmountNumberBox(false, false);
         invertedMinBaseSideAmountInput = new MuSigBigAmountNumberBox(true, false);
 
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
+        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), offerDraftWorkflow);
 
         model = new MuSigAmountSelectionModel(getWidthByNumCharsMap());
         view = new MuSigAmountSelectionView(model,
@@ -372,7 +373,6 @@ public class MuSigAmountSelectionController implements Controller {
         invertedMinBaseSideAmountInput.setSelectedMarket(market);
         minQuoteSideAmountInput.setSelectedMarket(market);
         invertedMinQuoteSideAmountDisplay.setSelectedMarket(market);
-        priceInput.setMarket(market);
 
         // Reset all amounts to avoid currency mismatch when market changes
         model.getMaxOrFixedQuoteSideAmount().set(null);

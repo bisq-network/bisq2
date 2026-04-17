@@ -27,6 +27,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.offer.components.MuSigPriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -64,11 +65,12 @@ public class MuSigCreateOfferPriceController implements Controller {
     private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, priceSliderValuePin, percentagePin;
 
     public MuSigCreateOfferPriceController(ServiceProvider serviceProvider,
+                                           CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                            Region owner,
                                            Consumer<Boolean> navigationButtonsVisibleHandler) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
+        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), createOfferDraftWorkflow);
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new MuSigCreateOfferPriceModel();
@@ -79,7 +81,7 @@ public class MuSigCreateOfferPriceController implements Controller {
         if (market == null) {
             return;
         }
-        priceInput.setMarket(market);
+       // priceInput.setMarket(market);
         model.setMarket(market);
     }
 

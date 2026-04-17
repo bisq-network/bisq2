@@ -17,10 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.price;
 
-import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
@@ -43,10 +41,6 @@ public class MuSigCreateOfferPriceModel implements Model {
     private final double sliderMin = 0;
     private final double sliderMax = 1;
     @Setter
-    private Market market = null;
-    @Setter
-    private Direction displayDirection;
-    @Setter
     private boolean shouldFocusPriceComponent = false;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageInput = new SimpleStringProperty();
@@ -54,6 +48,7 @@ public class MuSigCreateOfferPriceModel implements Model {
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
     private final StringProperty errorMessage = new SimpleStringProperty();
+    private final StringProperty marketCodes = new SimpleStringProperty();
     @Nullable
     @Setter
     private PriceQuote lastValidPriceQuote;
@@ -67,8 +62,6 @@ public class MuSigCreateOfferPriceModel implements Model {
     private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
 
     public void reset() {
-        market = null;
-        displayDirection = null;
         shouldFocusPriceComponent = false;
         percentage.set(0d);
         percentageInput.set(null);

@@ -17,11 +17,12 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input;
 
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.Pin;
 import bisq.common.validation.NumberValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -43,23 +44,25 @@ public class MuSigAmountTextInputController implements Controller {
     @Getter
     private final MuSigAmountTextInputView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
     public MuSigAmountTextInputController(ServiceProvider serviceProvider,
+                                          CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                           boolean isFixedAmount,
                                           boolean isLeftSideRangeAmount) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         StringConverter<Monetary> stringConverter = new StringConverter<>() {
             @Override
             public String toString(Monetary amount) {
-                String string = formatAmount(amount);
-                log.error("toString");
-                model.getTextInput().set(string);
-                return string;
+                String formatted = formatAmount(amount);
+                model.getInputText().set(formatted);
+                return formatted;
             }
 
             @Override
             public Monetary fromString(String inputText) {
-                log.error("fromString");
-                model.getTextInput().set(inputText);
+                model.getInputText().set(inputText);
                 return parseOrFallback(inputText);
             }
         };
@@ -69,12 +72,12 @@ public class MuSigAmountTextInputController implements Controller {
                 change -> {
                     // Check if added string is valid. Can be a number or the local specific decimal separator.
                     // change.getText() is freshly added string
-                    if (!NumberValidation.isValidNumberInputToken(change.getText())) {
+                    String changeText = change.getText();
+                    if (!changeText.isEmpty() && !NumberValidation.isValidNumberInputToken(changeText)) {
                         return null;
                     }
                     // change.getControlNewText() is full string in input field
                     String controlNewText = change.getControlNewText();
-                    log.error("parseAndApplyAmount");
                     parseAndApplyAmount(controlNewText);
                     return change;
                 });
@@ -90,29 +93,24 @@ public class MuSigAmountTextInputController implements Controller {
 
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getMarket(), market -> {
-            //reset();
-            applyCode();
-        }));
-        subscriptions.add(EasyBind.subscribe(model.getIsBaseCurrency(), isBaseCurrency -> {
-            //reset();
-            applyCode();
-        }));
         subscriptions.add(EasyBind.subscribe(model.getAmount(), amount -> {
-            Monetary amountFromInputField = model.getTextFormatter().getValue();
-            if (model.getFocusedProperty().get()) {
-                return;
+            if (amount != null) {
+                String code = amount.getCode();
+                model.getCode().set(code);
+
+                if (!model.getFocusedProperty().get()) {
+                    model.getTextFormatter().setValue(amount);
+                }
             }
-            model.getTextFormatter().setValue(amount);
         }));
     }
-
 
     @Override
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
-        model.reset();
+        pins.forEach(Pin::unbind);
+        pins.clear();
     }
 
 
@@ -120,24 +118,16 @@ public class MuSigAmountTextInputController implements Controller {
     // Public API
     /* --------------------------------------------------------------------- */
 
-    public void setMarket(Market market) {
-        model.getMarket().set(market);
-    }
-
     public void setAmount(Monetary value) {
         model.getAmount().set(value);
-    }
-
-    public void setIsBaseCurrency(boolean value) {
-        model.getIsBaseCurrency().set(value);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
         return model.getAmount();
     }
 
-    public ReadOnlyStringProperty textInputProperty() {
-        return model.getTextInput();
+    public ReadOnlyStringProperty inputTextProperty() {
+        return model.getInputText();
     }
 
     public ReadOnlyBooleanProperty focusedProperty() {
@@ -156,6 +146,7 @@ public class MuSigAmountTextInputController implements Controller {
         model.getDashFieldWidth().set(value);
     }
 
+
     /* --------------------------------------------------------------------- */
     // UI handlers
     /* --------------------------------------------------------------------- */
@@ -164,15 +155,6 @@ public class MuSigAmountTextInputController implements Controller {
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
-
-    private void applyCode() {
-        Market market = model.getMarket().get();
-        if (market != null) {
-            model.getCode().set(getCode(market));
-        } else {
-            model.getCode().set(null);
-        }
-    }
 
     private String formatAmount(Monetary amount) {
         if (amount != null) {
@@ -197,20 +179,9 @@ public class MuSigAmountTextInputController implements Controller {
     private void parseAndApplyAmount(String inputText) {
         try {
             Monetary amount = parse(inputText);
-            model.getTextInput().set(inputText);
+            model.getInputText().set(inputText);
             model.getAmount().set(amount);
         } catch (Exception ignore) {
         }
     }
-
-    private String getCode(Market market) {
-        boolean isBaseCurrency = model.getIsBaseCurrency().get();
-        return isBaseCurrency ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
-    }
-
-  /*  private void reset() {
-        model.getAmount().set(null);
-        model.getCode().set(null);
-        model.getTextFormatter().setValue(null);
-    }*/
 }

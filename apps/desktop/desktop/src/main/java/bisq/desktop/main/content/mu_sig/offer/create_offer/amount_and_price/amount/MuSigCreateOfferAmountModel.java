@@ -18,12 +18,9 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
-import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -40,11 +37,8 @@ import java.util.Optional;
 
 @Getter
 public class MuSigCreateOfferAmountModel implements Model {
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
     private final BooleanProperty useRangeAmount = new SimpleBooleanProperty();
 
-
-    private final ObjectProperty<Direction> displayDirection = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>();
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
 
@@ -66,13 +60,10 @@ public class MuSigCreateOfferAmountModel implements Model {
     private long myReputationScore;
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
-    private final ObjectProperty<BaseSideAmountSpec> baseSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
     private final StringProperty errorMessage = new SimpleStringProperty();
 
     public void reset() {
-        displayDirection.set(null);
-        market.set(null);
         priceSpec.set(null);
         paymentMethods.clear();
         amountLimitInfo.set(null);
@@ -84,10 +75,8 @@ public class MuSigCreateOfferAmountModel implements Model {
         amountLimitInfoLink = null;
         linkToWikiText = null;
         baseSideAmount = Optional.empty();
-        useRangeAmount.set(false);
         isOverlayVisible.set(false);
         priceTooltip.set(null);
-        baseSideAmountSpec.set(null);
         priceQuote.set(null);
         errorMessage.set(null);
     }

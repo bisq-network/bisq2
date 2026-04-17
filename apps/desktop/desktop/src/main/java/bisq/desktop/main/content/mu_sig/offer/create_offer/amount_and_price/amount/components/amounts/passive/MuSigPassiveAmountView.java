@@ -91,12 +91,12 @@ public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, 
 
         tooltip.textProperty().bind(model.getTooltip());
 
-        isBtcPin = EasyBind.subscribe(model.getIsBtc(), isBtc -> {
-            infoIcon.setTranslateY(model.getIsBtc().get() ? -2 : 0);
-            bitcoinAmountDisplay.setVisible(isBtc);
-            bitcoinAmountDisplay.setManaged(isBtc);
-            amountAndCode.setVisible(!isBtc);
-            amountAndCode.setManaged(!isBtc);
+        isBtcPin = EasyBind.subscribe(model.getUseBitcoinDisplay(), useBitcoinDisplay -> {
+            infoIcon.setTranslateY(model.getUseBitcoinDisplay().get() ? -2 : 0);
+            bitcoinAmountDisplay.setVisible(useBitcoinDisplay);
+            bitcoinAmountDisplay.setManaged(useBitcoinDisplay);
+            amountAndCode.setVisible(!useBitcoinDisplay);
+            amountAndCode.setManaged(!useBitcoinDisplay);
         });
 
     }

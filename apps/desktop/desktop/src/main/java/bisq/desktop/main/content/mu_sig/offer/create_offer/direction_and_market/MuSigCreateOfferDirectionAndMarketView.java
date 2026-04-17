@@ -151,7 +151,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         selectedMarketTypePin = EasyBind.subscribe(model.getSelectedMarketTypeListItem(),
                 selected -> marketTypeTableView.getSelectionModel().select(selected));
 
-        displayDirectionPin = EasyBind.subscribe(model.getDisplayDirection(), direction -> {
+        displayDirectionPin = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
                 buyButton.setDefaultButton(direction.isBuy());
                 sellButton.setDefaultButton(direction.isSell());

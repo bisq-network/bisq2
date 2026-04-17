@@ -45,6 +45,7 @@ public class RangeAmountLayoutHelper extends HBox {
         super(5);
         this.model = model;
 
+        setMouseTransparent(true);
         setMinWidth(WIDTH);
         setMaxWidth(WIDTH);
 
@@ -61,8 +62,8 @@ public class RangeAmountLayoutHelper extends HBox {
     }
 
     void onViewAttached() {
-        minAmount.textProperty().bind(model.getMinAmountString());
-        maxAmount.textProperty().bind(model.getMaxAmountString());
+        minAmount.textProperty().bind(model.getMinAmountInputText());
+        maxAmount.textProperty().bind(model.getMaxAmountInputText());
         model.getMinAmountWidth().bind(minAmount.layoutBoundsProperty().map(Bounds::getWidth));
         model.getDashWidth().bind(dash.layoutBoundsProperty().map(Bounds::getWidth));
         model.getMaxAmountWidth().bind(maxAmount.layoutBoundsProperty().map(Bounds::getWidth));

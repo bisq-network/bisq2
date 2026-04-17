@@ -39,6 +39,7 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -87,6 +88,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     private final Set<Subscription> subscriptions = new HashSet<>();
 
     public MuSigCreateOfferAmountController(ServiceProvider serviceProvider,
+                                            CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                             Region owner,
                                             Consumer<Boolean> navigationButtonsVisibleHandler,
                                             Consumer<NavigationTarget> closeAndNavigateToHandler) {
@@ -99,7 +101,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         model = new MuSigCreateOfferAmountModel();
 
-        amountSelectionController = new MuSigAmountSelectionController(serviceProvider);
+        amountSelectionController = new MuSigAmountSelectionController(serviceProvider, createOfferDraftWorkflow);
         view = new MuSigCreateOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 

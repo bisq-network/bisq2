@@ -21,11 +21,14 @@ import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input.MuSigAmountTextInputController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.slider.MuSigAmountSliderController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.passive.MuSigPassiveAmountController;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ import java.util.Set;
 
 @Slf4j
 public class MuSigFixAmountController implements Controller {
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final MuSigFixAmountModel model;
     @Getter
     private final MuSigFixAmountView view;
@@ -45,13 +49,16 @@ public class MuSigFixAmountController implements Controller {
     private final MuSigPassiveAmountController passiveAmountController;
     private final MuSigAmountSliderController amountSliderController;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
-    public MuSigFixAmountController(ServiceProvider serviceProvider) {
+    public MuSigFixAmountController(ServiceProvider serviceProvider,
+                                    CreateOfferDraftWorkflow createOfferDraftWorkflow) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigFixAmountModel();
 
-        amountTextInputController = new MuSigAmountTextInputController(serviceProvider, true, false);
-        passiveAmountController = new MuSigPassiveAmountController(serviceProvider, false);
-        amountSliderController = new MuSigAmountSliderController(serviceProvider);
+        amountTextInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, true, false);
+        passiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, false);
+        amountSliderController = new MuSigAmountSliderController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigFixAmountView(model, this,
                 amountTextInputController.getView().getRoot(),
@@ -67,60 +74,32 @@ public class MuSigFixAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getInitialTradeAmount(),
-                initialTradeAmount -> {
-                    if (initialTradeAmount != null) {
-                        model.getTradeAmount().set(initialTradeAmount);
-                        if (model.getUseBaseCurrencyForAmountInput().get()) {
-                            amountTextInputController.setAmount(initialTradeAmount.getBaseSideAmount());
-                            passiveAmountController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                        } else {
-                            amountTextInputController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                            passiveAmountController.setAmount(initialTradeAmount.getBaseSideAmount());
-                        }
-                    }
-                }));
+        // Domain specific
+        pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
+            UIThread.run(() -> {
+                applyAllAmounts();
+            });
+        }));
 
-        subscriptions.add(EasyBind.subscribe(model.getMarket(),
-                market -> {
-                    amountTextInputController.setMarket(market);
-                    passiveAmountController.setMarket(market);
-                    applyPassiveAmount();
-                }));
-
-        subscriptions.add(EasyBind.subscribe(model.getUseBaseCurrencyForAmountInput(),
-                useBaseCurrencyForAmountInput -> {
-                    Monetary previousInputAmount = amountTextInputController.amountProperty().get();
-                    Monetary previousDisplayAmount = passiveAmountController.getAmount();
-
-                    amountTextInputController.setIsBaseCurrency(useBaseCurrencyForAmountInput);
-                    amountTextInputController.setAmount(previousDisplayAmount);
-
-                    passiveAmountController.setIsBaseCurrency(!useBaseCurrencyForAmountInput);
-                    passiveAmountController.setAmount(previousInputAmount);
-
-                    applyTradeAmount();
-                }));
-
-        subscriptions.add(EasyBind.subscribe(model.getPriceQuote(),
-                priceQuote -> {
-                    applyPassiveAmount();
-                    applyTradeAmount();
-                }));
+        pins.add(createOfferDraftWorkflow.fixTradeAmountObservable().addObserver(tradeAmount -> {
+            UIThread.run(() -> {
+                applyAllAmounts();
+            });
+        }));
 
         subscriptions.add(EasyBind.subscribe(amountTextInputController.amountProperty(),
                 amount -> {
-                    applyPassiveAmount();
-                    applyTradeAmount();
+                    createOfferDraftWorkflow.setFixTradeAmountFromInputAmount(amount);
                 }));
 
-        subscriptions.add(EasyBind.subscribe(amountTextInputController.textInputProperty(),
-                textInput -> {
-                    model.getAmountString().set(textInput);
+        // UI specific
+        subscriptions.add(EasyBind.subscribe(amountTextInputController.inputTextProperty(),
+                inputText -> {
+                    model.getAmountInputText().set(inputText);
                     applySumNumChars();
                 }));
 
-        subscriptions.add(EasyBind.subscribe(model.getAmountWidth(), width -> {
+        subscriptions.add(EasyBind.subscribe(model.getAmountInputFieldWidth(), width -> {
             if (width != null) {
                 amountTextInputController.setAmountFieldWidth(width.doubleValue());
             }
@@ -133,28 +112,14 @@ public class MuSigFixAmountController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
     }
 
 
     /* --------------------------------------------------------------------- */
     // Public API
     /* --------------------------------------------------------------------- */
-
-    public void setMarket(Market value) {
-        model.getMarket().set(value);
-    }
-
-    public void setPriceQuote(PriceQuote value) {
-        model.getPriceQuote().set(value);
-    }
-
-    public void setInitialTradeAmount(TradeAmount value) {
-        model.getInitialTradeAmount().set(value);
-    }
-
-    public ReadOnlyBooleanProperty getUseBaseCurrencyForAmountInput() {
-        return model.getUseBaseCurrencyForAmountInput();
-    }
 
     public ReadOnlyBooleanProperty getIsTextInputFocused() {
         return model.getIsTextInputFocused();
@@ -166,7 +131,9 @@ public class MuSigFixAmountController implements Controller {
     /* --------------------------------------------------------------------- */
 
     void onToggleInputMode() {
-        model.getUseBaseCurrencyForAmountInput().set(!model.getUseBaseCurrencyForAmountInput().get());
+        boolean useBaseCurrencyForAmountInput = createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
+        boolean value = !useBaseCurrencyForAmountInput;
+        createOfferDraftWorkflow.setUseBaseCurrencyForAmountInput(value);
     }
 
 
@@ -174,23 +141,26 @@ public class MuSigFixAmountController implements Controller {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void applyTradeAmount() {
-        boolean useBaseCurrencyForAmountInput = model.getUseBaseCurrencyForAmountInput().get();
-        TradeAmount tradeAmount = useBaseCurrencyForAmountInput
-                ? new TradeAmount(amountTextInputController.amountProperty().get(), passiveAmountController.getAmount())
-                : new TradeAmount(passiveAmountController.getAmount(), amountTextInputController.amountProperty().get());
-        model.getTradeAmount().set(tradeAmount);
+    private void applyAllAmounts() {
+        applyInputAmount();
+        applyPassiveAmount();
+    }
+
+    private void applyInputAmount() {
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getFixTradeAmount();
+        Monetary inputAmount = createOfferDraftWorkflow.getInputAmount(tradeAmount);
+        amountTextInputController.setAmount(inputAmount);
     }
 
     private void applyPassiveAmount() {
-        Monetary inputAmount = amountTextInputController.amountProperty().get();
-        Monetary passiveAmount = toPassiveAmount(inputAmount, model.getUseBaseCurrencyForAmountInput().get());
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getFixTradeAmount();
+        Monetary passiveAmount = createOfferDraftWorkflow.getPassiveAmount(tradeAmount);
         passiveAmountController.setAmount(passiveAmount);
     }
 
     private void applySumNumChars() {
-        String amountString = amountTextInputController.textInputProperty().get();
-        int AmountStringLength = amountString != null ? amountString.length() : 0;
+        String inputText = amountTextInputController.inputTextProperty().get();
+        int AmountStringLength = inputText != null ? inputText.length() : 0;
         amountTextInputController.setSumOfNumChars(AmountStringLength);
         model.getSumOfNumChars().set(AmountStringLength);
     }
@@ -200,7 +170,7 @@ public class MuSigFixAmountController implements Controller {
         if (inputAmount == null) {
             return null;
         }
-        PriceQuote priceQuote = model.getPriceQuote().get();
+        PriceQuote priceQuote = createOfferDraftWorkflow.getPriceQuote();
         if (priceQuote == null) {
             return null;
         }
@@ -212,7 +182,7 @@ public class MuSigFixAmountController implements Controller {
     }
 
     private String getCode(Market market) {
-        boolean useBaseCurrencyForAmountInput = model.getUseBaseCurrencyForAmountInput().get();
+        boolean useBaseCurrencyForAmountInput = createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
         return useBaseCurrencyForAmountInput ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
     }
 }

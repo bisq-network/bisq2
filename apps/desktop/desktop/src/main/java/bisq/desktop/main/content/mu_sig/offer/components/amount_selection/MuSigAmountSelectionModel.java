@@ -127,7 +127,6 @@ public class MuSigAmountSelectionModel implements Model {
         minAmountSliderFocus.set(false);
         rangeSliderLowThumbFocus.set(false);
         rangeSliderHighThumbFocus.set(false);
-        useRangeAmount.set(false);
         quoteSideTradeAmountLimits.set(null);
         tradeAmountLimitsInUsd.set(null);
         rangeBaseSideAmount.set(null);

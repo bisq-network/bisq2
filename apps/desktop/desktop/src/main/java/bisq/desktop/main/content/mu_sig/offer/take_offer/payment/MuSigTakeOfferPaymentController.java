@@ -33,6 +33,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.mu_sig.draft.TakeOfferDraftWorkflow;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -59,6 +60,7 @@ public class MuSigTakeOfferPaymentController implements Controller {
     private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
 
     public MuSigTakeOfferPaymentController(ServiceProvider serviceProvider,
+                                           TakeOfferDraftWorkflow takeOfferDraftWorkflow,
                                            Consumer<Boolean> navigationButtonsVisibleHandler) {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         accountService = serviceProvider.getAccountService();

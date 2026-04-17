@@ -19,20 +19,21 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amo
 
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input.MuSigAmountTextInputController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.slider.MuSigAmountSliderController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.passive.MuSigPassiveAmountController;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,18 +45,22 @@ public class MuSigRangeAmountController implements Controller {
     private final MuSigAmountTextInputController minAmountInputController;
     private final MuSigPassiveAmountController minPassiveAmountController;
     private final MuSigAmountSliderController amountSliderController;
-    private final Set<Subscription> subscriptions = new HashSet<>();
     private final MuSigAmountTextInputController maxAmountInputController;
     private final MuSigPassiveAmountController maxPassiveAmountController;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
-    public MuSigRangeAmountController(ServiceProvider serviceProvider) {
+    public MuSigRangeAmountController(ServiceProvider serviceProvider,
+                                      CreateOfferDraftWorkflow createOfferDraftWorkflow) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigRangeAmountModel();
 
-        minAmountInputController = new MuSigAmountTextInputController(serviceProvider, false, true);
-        maxAmountInputController = new MuSigAmountTextInputController(serviceProvider, false, false);
-        minPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, true);
-        maxPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, false);
-        amountSliderController = new MuSigAmountSliderController(serviceProvider);
+        minAmountInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, false, true);
+        maxAmountInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, false, false);
+        minPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, true);
+        maxPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, false);
+        amountSliderController = new MuSigAmountSliderController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigRangeAmountView(model, this,
                 minAmountInputController.getView().getRoot(),
@@ -73,81 +78,44 @@ public class MuSigRangeAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getInitialTradeAmount(),
-                initialTradeAmount -> {
-                    if (initialTradeAmount != null) {
-                        model.getMinTradeAmount().set(initialTradeAmount);
-                        model.getMaxTradeAmount().set(initialTradeAmount);
-                        if (model.getUseBaseCurrencyForAmountInput().get()) {
-                            minAmountInputController.setAmount(initialTradeAmount.getBaseSideAmount());
-                            maxAmountInputController.setAmount(initialTradeAmount.getBaseSideAmount());
-                            minPassiveAmountController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                            maxPassiveAmountController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                        } else {
-                            minAmountInputController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                            maxAmountInputController.setAmount(initialTradeAmount.getQuoteSideAmount());
-                            minPassiveAmountController.setAmount(initialTradeAmount.getBaseSideAmount());
-                            maxPassiveAmountController.setAmount(initialTradeAmount.getBaseSideAmount());
-                        }
-                    }
-                }));
+        // Domain specific
+        pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
+            UIThread.run(() -> {
+                applyAllAmounts();
+            });
+        }));
 
-        subscriptions.add(EasyBind.subscribe(model.getMarket(),
-                market -> {
-                    minAmountInputController.setMarket(market);
-                    maxAmountInputController.setMarket(market);
-                    minPassiveAmountController.setMarket(market);
-                    maxPassiveAmountController.setMarket(market);
-                    applyMinPassiveAmount();
-                    applyMaxPassiveAmount();
-                }));
-
-        subscriptions.add(EasyBind.subscribe(model.getUseBaseCurrencyForAmountInput(),
-                useBaseCurrencyForAmountInput -> {
-                    Monetary previousMinInputAmount = minAmountInputController.amountProperty().get();
-                    Monetary previousMaxInputAmount = maxAmountInputController.amountProperty().get();
-                    Monetary previousMinPassiveAmount = minPassiveAmountController.getAmount();
-                    Monetary previousMaxPassiveAmount = maxPassiveAmountController.getAmount();
-
-                    minAmountInputController.setIsBaseCurrency(useBaseCurrencyForAmountInput);
-                    maxAmountInputController.setIsBaseCurrency(useBaseCurrencyForAmountInput);
-                    minAmountInputController.setAmount(previousMinPassiveAmount);
-                    maxAmountInputController.setAmount(previousMaxPassiveAmount);
-
-                    minPassiveAmountController.setIsBaseCurrency(!useBaseCurrencyForAmountInput);
-                    maxPassiveAmountController.setIsBaseCurrency(!useBaseCurrencyForAmountInput);
-                    minPassiveAmountController.setAmount(previousMinInputAmount);
-                    maxPassiveAmountController.setAmount(previousMaxInputAmount);
-
-                    applyMinTradeAmount();
-                    applyMaxTradeAmount();
-                }));
-
-        subscriptions.add(EasyBind.subscribe(model.getPriceQuote(),
-                priceQuote -> {
-                    applyMinPassiveAmount();
-                    applyMaxPassiveAmount();
-                    applyMinTradeAmount();
-                    applyMaxTradeAmount();
-                }));
+        pins.add(createOfferDraftWorkflow.minTradeAmountObservable().addObserver(tradeAmount -> {
+            UIThread.run(() -> {
+                applyAllAmounts();
+            });
+        }));
+        pins.add(createOfferDraftWorkflow.maxTradeAmountObservable().addObserver(tradeAmount -> {
+            UIThread.run(() -> {
+                applyAllAmounts();
+            });
+        }));
 
         subscriptions.add(EasyBind.subscribe(minAmountInputController.amountProperty(),
                 amount -> {
-                    applyMinPassiveAmount();
-                    applyMaxPassiveAmount();
-                    applyMinTradeAmount();
-                    applyMaxTradeAmount();
+                    createOfferDraftWorkflow.setMinTradeAmountFromInputAmount(amount);
                 }));
 
 
-        subscriptions.add(EasyBind.subscribe(minAmountInputController.textInputProperty(),
-                textInput -> {
-                    model.getMinAmountString().set(textInput);
+        subscriptions.add(EasyBind.subscribe(maxAmountInputController.amountProperty(),
+                amount -> {
+                    createOfferDraftWorkflow.setMaxTradeAmountFromInputAmount(amount);
+                }));
+
+        // UI specific
+        subscriptions.add(EasyBind.subscribe(minAmountInputController.inputTextProperty(),
+                inputText -> {
+                    model.getMinAmountInputText().set(inputText);
                     applySumNumChars();
                 }));
-        subscriptions.add(EasyBind.subscribe(maxAmountInputController.textInputProperty(),
-                textInput -> {
-                    model.getMaxAmountString().set(textInput);
+        subscriptions.add(EasyBind.subscribe(maxAmountInputController.inputTextProperty(),
+                inputText -> {
+                    model.getMaxAmountInputText().set(inputText);
                     applySumNumChars();
                 }));
 
@@ -179,26 +147,12 @@ public class MuSigRangeAmountController implements Controller {
                 }));
     }
 
-    @Nullable
-    private Monetary toPassiveAmount(Monetary inputAmount, boolean useBaseCurrencyForAmountInput) {
-        if (inputAmount == null) {
-            return null;
-        }
-        PriceQuote priceQuote = model.getPriceQuote().get();
-        if (priceQuote == null) {
-            return null;
-        }
-        if (useBaseCurrencyForAmountInput) {
-            return priceQuote.toQuoteSideMonetary(inputAmount);
-        } else {
-            return priceQuote.toBaseSideMonetary(inputAmount);
-        }
-    }
-
     @Override
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
     }
 
 
@@ -206,26 +160,9 @@ public class MuSigRangeAmountController implements Controller {
     // Public API
     /* --------------------------------------------------------------------- */
 
-    public void setMarket(Market value) {
-        model.getMarket().set(value);
-    }
-
-    public void setPriceQuote(PriceQuote value) {
-        model.getPriceQuote().set(value);
-    }
-
-    public void setInitialTradeAmount(TradeAmount value) {
-        model.getInitialTradeAmount().set(value);
-    }
-
-    public ReadOnlyBooleanProperty getUseBaseCurrencyForAmountInput() {
-        return model.getUseBaseCurrencyForAmountInput();
-    }
-
     public ReadOnlyBooleanProperty getIsTextInputFocused() {
         return model.getIsTextInputFocused();
     }
-
 
 
     /* --------------------------------------------------------------------- */
@@ -233,7 +170,8 @@ public class MuSigRangeAmountController implements Controller {
     /* --------------------------------------------------------------------- */
 
     void onToggleInputMode() {
-        model.getUseBaseCurrencyForAmountInput().set(!model.getUseBaseCurrencyForAmountInput().get());
+        boolean value = !createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
+        createOfferDraftWorkflow.setUseBaseCurrencyForAmountInput(value);
     }
 
 
@@ -241,39 +179,43 @@ public class MuSigRangeAmountController implements Controller {
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void applyMinTradeAmount() {
-        boolean useBaseCurrencyForAmountInput = model.getUseBaseCurrencyForAmountInput().get();
-        model.getMinTradeAmount().set(useBaseCurrencyForAmountInput
-                ? new TradeAmount(minAmountInputController.amountProperty().get(), minPassiveAmountController.getAmount())
-                : new TradeAmount(minPassiveAmountController.getAmount(), minAmountInputController.amountProperty().get()));
+    private void applyAllAmounts() {
+        applyMinInputAmount();
+        applyMaxInputAAmount();
+        applyMinPassiveAmount();
+        applyMaxPassiveAmount();
     }
 
-    private void applyMaxTradeAmount() {
-        boolean useBaseCurrencyForAmountInput = model.getUseBaseCurrencyForAmountInput().get();
-        model.getMaxTradeAmount().set(useBaseCurrencyForAmountInput
-                ? new TradeAmount(maxAmountInputController.amountProperty().get(), maxPassiveAmountController.getAmount())
-                : new TradeAmount(maxPassiveAmountController.getAmount(), maxAmountInputController.amountProperty().get()));
+    private void applyMinInputAmount() {
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getMinTradeAmount();
+        Monetary inputAmount = createOfferDraftWorkflow.getInputAmount(tradeAmount);
+        minAmountInputController.setAmount(inputAmount);
+    }
+
+    private void applyMaxInputAAmount() {
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getMaxTradeAmount();
+        Monetary inputAmount = createOfferDraftWorkflow.getInputAmount(tradeAmount);
+        maxAmountInputController.setAmount(inputAmount);
     }
 
     private void applyMinPassiveAmount() {
-        Monetary inputAmount = minAmountInputController.amountProperty().get();
-        Monetary passiveAmount = toPassiveAmount(inputAmount, model.getUseBaseCurrencyForAmountInput().get());
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getMinTradeAmount();
+        Monetary passiveAmount = createOfferDraftWorkflow.getPassiveAmount(tradeAmount);
         minPassiveAmountController.setAmount(passiveAmount);
     }
 
     private void applyMaxPassiveAmount() {
-        Monetary inputAmount = maxAmountInputController.amountProperty().get();
-        Monetary passiveAmount = toPassiveAmount(inputAmount, model.getUseBaseCurrencyForAmountInput().get());
+        TradeAmount tradeAmount = createOfferDraftWorkflow.getMaxTradeAmount();
+        Monetary passiveAmount = createOfferDraftWorkflow.getPassiveAmount(tradeAmount);
         maxPassiveAmountController.setAmount(passiveAmount);
     }
 
-
     private void applySumNumChars() {
-        String minAmountString = minAmountInputController.textInputProperty().get();
-        int minAmountStringLength = minAmountString != null ? minAmountString.length() : 0;
-        String maxAmountString = maxAmountInputController.textInputProperty().get();
-        int maxAmountStringLength = maxAmountString != null ? maxAmountString.length() : 0;
-        int sumOfNumChars = minAmountStringLength + maxAmountStringLength + 1; // for dash
+        String minAmountInputText = minAmountInputController.inputTextProperty().get();
+        int minAmountInputTextLength = minAmountInputText != null ? minAmountInputText.length() : 0;
+        String maxAmountInputText = maxAmountInputController.inputTextProperty().get();
+        int maxAmountInputTextLength = maxAmountInputText != null ? maxAmountInputText.length() : 0;
+        int sumOfNumChars = minAmountInputTextLength + maxAmountInputTextLength + 1; // for dash
         minAmountInputController.setSumOfNumChars(sumOfNumChars);
         maxAmountInputController.setSumOfNumChars(sumOfNumChars);
         model.getSumOfNumChars().set(sumOfNumChars);
@@ -285,7 +227,7 @@ public class MuSigRangeAmountController implements Controller {
     }
 
     private String getCode(Market market) {
-        boolean useBaseCurrencyForAmountInput = model.getUseBaseCurrencyForAmountInput().get();
+        boolean useBaseCurrencyForAmountInput = createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
         return useBaseCurrencyForAmountInput ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
     }
 }

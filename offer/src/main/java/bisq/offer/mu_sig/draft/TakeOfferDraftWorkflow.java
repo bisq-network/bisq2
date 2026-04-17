@@ -15,18 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components;
+package bisq.offer.mu_sig.draft;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import lombok.Getter;
+import bisq.offer.mu_sig.MuSigOffer;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class MuSigAmountComponentsModel implements Model {
-    private final BooleanProperty useRangeAmount = new SimpleBooleanProperty();
-    private final StringProperty description = new SimpleStringProperty();
-    private final BooleanProperty isTextInputFocused = new SimpleBooleanProperty();
+@Slf4j
+public class TakeOfferDraftWorkflow extends OfferDraftWorkflow<TakeOfferDraft> {
+
+    public TakeOfferDraftWorkflow() {
+        super(new TakeOfferDraft());
+    }
+
+    @Override
+    protected void initialize() {
+    }
+
+    @Override
+    protected void addObservers() {
+    }
+
+    @Override
+    protected void reset() {
+    }
+
+    public void setOffer(MuSigOffer offer) {
+        this.offerDraft.setOffer(offer);
+    }
 }

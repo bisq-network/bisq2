@@ -18,13 +18,14 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components;
 
 import bisq.common.market.Market;
-import bisq.common.monetary.PriceQuote;
-import bisq.common.monetary.TradeAmount;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.fix.MuSigFixAmountController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.range.MuSigRangeAmountController;
 import bisq.i18n.Res;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,15 +39,19 @@ public class MuSigAmountComponentsController implements Controller {
     private final MuSigAmountComponentsModel model;
     @Getter
     private final MuSigAmountComponentsView view;
+    private final MuSigRangeAmountController muSigRangeAmountController;
     private final MuSigFixAmountController muSigFixAmountController;
     private final Set<Subscription> subscriptions = new HashSet<>();
-    private final MuSigRangeAmountController muSigRangeAmountController;
+    private final Set<Pin> pins = new HashSet<>();
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
-    public MuSigAmountComponentsController(ServiceProvider serviceProvider) {
+    public MuSigAmountComponentsController(ServiceProvider serviceProvider,
+                                           CreateOfferDraftWorkflow createOfferDraftWorkflow) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigAmountComponentsModel();
 
-        muSigFixAmountController = new MuSigFixAmountController(serviceProvider);
-        muSigRangeAmountController = new MuSigRangeAmountController(serviceProvider);
+        muSigFixAmountController = new MuSigFixAmountController(serviceProvider, createOfferDraftWorkflow);
+        muSigRangeAmountController = new MuSigRangeAmountController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigAmountComponentsView(model, this,
                 muSigFixAmountController.getView().getRoot(),
@@ -61,34 +66,34 @@ public class MuSigAmountComponentsController implements Controller {
 
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getMarket(),
-                market -> {
-                    applyDescription();
-                }));
+        pins.add(createOfferDraftWorkflow.marketObservable().addObserver(market -> {
+            UIThread.run(() -> {
+                applyDescription();
+            });
+        }));
 
-        subscriptions.add(EasyBind.subscribe(model.getUseRangeAmount(),
-                useRangeAmount -> {
-                    applyDescription();
-                }));
+        pins.add(createOfferDraftWorkflow.useRangeAmountObservable().addObserver(useRangeAmount -> {
+            UIThread.run(() -> {
+                model.getUseRangeAmount().set(useRangeAmount); applyDescription();
+            });
+        }));
 
-        subscriptions.add(EasyBind.subscribe(muSigFixAmountController.getUseBaseCurrencyForAmountInput(),
-                useBaseCurrencyForAmountInput -> {
-                    applyDescription();
-                }));
-        subscriptions.add(EasyBind.subscribe(muSigRangeAmountController.getUseBaseCurrencyForAmountInput(),
-                useBaseCurrencyForAmountInput -> {
-                    applyDescription();
-                }));
+
+        pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
+            UIThread.run(() -> {
+                applyDescription();
+            });
+        }));
 
         subscriptions.add(EasyBind.subscribe(muSigFixAmountController.getIsTextInputFocused(),
                 isTextInputFocused -> {
-                    if (!model.getUseRangeAmount().get()) {
+                    if (!createOfferDraftWorkflow.getUseRangeAmount()) {
                         model.getIsTextInputFocused().set(isTextInputFocused);
                     }
                 }));
         subscriptions.add(EasyBind.subscribe(muSigRangeAmountController.getIsTextInputFocused(),
                 isTextInputFocused -> {
-                    if (model.getUseRangeAmount().get()) {
+                    if (createOfferDraftWorkflow.getUseRangeAmount()) {
                         model.getIsTextInputFocused().set(isTextInputFocused);
                     }
                 }));
@@ -98,6 +103,8 @@ public class MuSigAmountComponentsController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
 
         model.getIsTextInputFocused().unbind();
     }
@@ -107,25 +114,6 @@ public class MuSigAmountComponentsController implements Controller {
     // Public API
     /* --------------------------------------------------------------------- */
 
-    public void setMarket(Market value) {
-        model.getMarket().set(value);
-        muSigFixAmountController.setMarket(value);
-        muSigRangeAmountController.setMarket(value);
-    }
-
-    public void setPriceQuote(PriceQuote value) {
-        muSigFixAmountController.setPriceQuote(value);
-        muSigRangeAmountController.setPriceQuote(value);
-    }
-
-    public void setUseRangeAmount(boolean value) {
-        model.getUseRangeAmount().set(value);
-    }
-
-    public void setInitialTradeAmount(TradeAmount value) {
-        muSigFixAmountController.setInitialTradeAmount(value);
-        muSigRangeAmountController.setInitialTradeAmount(value);
-    }
 
     /* --------------------------------------------------------------------- */
     // UI handlers
@@ -137,11 +125,11 @@ public class MuSigAmountComponentsController implements Controller {
     /* --------------------------------------------------------------------- */
 
     private void applyDescription() {
-        Market market = model.getMarket().get();
+        Market market = createOfferDraftWorkflow.getMarket();
         if (market == null) {
             return;
         }
-        boolean useRangeAmount = model.getUseRangeAmount().get();
+        boolean useRangeAmount = createOfferDraftWorkflow.getUseRangeAmount();
         String code = getCode(market);
         model.getDescription().set(useRangeAmount
                 ? Res.get("muSig.offer.create.amount.description.range", code)
@@ -149,7 +137,7 @@ public class MuSigAmountComponentsController implements Controller {
     }
 
     private String getCode(Market market) {
-        boolean useBaseCurrencyForAmountInput = muSigFixAmountController.getUseBaseCurrencyForAmountInput().get();
+        boolean useBaseCurrencyForAmountInput = createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
         return useBaseCurrencyForAmountInput ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
     }
 }

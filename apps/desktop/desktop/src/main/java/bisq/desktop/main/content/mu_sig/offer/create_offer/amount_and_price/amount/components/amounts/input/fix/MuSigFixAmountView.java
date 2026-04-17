@@ -51,6 +51,8 @@ public class MuSigFixAmountView extends View<VBox, MuSigFixAmountModel, MuSigFix
         root.setAlignment(Pos.TOP_CENTER);
 
         layoutHelper = new FixAmountLayoutHelper(model);
+        layoutHelper.setVisible(false);
+        layoutHelper.setManaged(false);
 
         amountInput.setMinWidth(WIDTH);
         amountInput.setMaxWidth(WIDTH);
@@ -64,7 +66,6 @@ public class MuSigFixAmountView extends View<VBox, MuSigFixAmountModel, MuSigFix
         passiveAmountAndToggle.setPadding(new Insets(0, 10, 0, 10));
 
         Pane amountInputHBoxPane = new Pane(layoutHelper, amountInput);
-        layoutHelper.setTranslateY(70);
 
         VBox.setMargin(amountSlider, new Insets(40, 0, 0, 0));
         root.getChildren().addAll(amountInputHBoxPane, passiveAmountAndToggle, amountSlider);

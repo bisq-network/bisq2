@@ -50,12 +50,14 @@ public class AmountSpecUtil {
                 .map(amount -> Monetary.from(amount, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findBaseSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+    public static Optional<Monetary> findBaseSideMinOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                          String baseCurrencyCode) {
         return findBaseSideMinAmountFromSpec(amountSpec, baseCurrencyCode)
                 .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findBaseSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                          String baseCurrencyCode) {
         return findBaseSideMaxAmountFromSpec(amountSpec, baseCurrencyCode)
                 .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
     }
@@ -83,12 +85,14 @@ public class AmountSpecUtil {
                 .map(amount -> Monetary.from(amount, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findQuoteSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                           String quoteCurrencyCode) {
         return findQuoteSideMinAmountFromSpec(amountSpec, quoteCurrencyCode)
                 .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findQuoteSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                           String quoteCurrencyCode) {
         return findQuoteSideMaxAmountFromSpec(amountSpec, quoteCurrencyCode)
                 .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
     }

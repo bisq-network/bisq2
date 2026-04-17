@@ -170,7 +170,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         percentageInputBox.managedProperty().bind(model.getUseFixPrice().not());
         percentageInputBox.textProperty().bindBidirectional(model.getPercentageInput());
         percentageInputBox.conversionPriceTextProperty().bind(model.getPriceAsString());
-        percentageInputBox.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
+        percentageInputBox.conversionPriceSymbolTextProperty().set(model.getMarketCodes().get());
         percentageInputBox.initialize();
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());

@@ -49,6 +49,7 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOption;
@@ -66,11 +67,14 @@ import com.google.common.base.Joiner;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -79,6 +83,7 @@ public class MuSigCreateOfferReviewController implements Controller {
     private final MuSigCreateOfferReviewModel model;
     @Getter
     private final MuSigCreateOfferReviewView view;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final MuSigPriceInput priceInput;
@@ -87,17 +92,21 @@ public class MuSigCreateOfferReviewController implements Controller {
     private final MuSigService muSigService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigCreateOfferReviewController(ServiceProvider serviceProvider,
+                                            CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Consumer<NavigationTarget> closeAndNavigateToHandler) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
 
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
+        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), createOfferDraftWorkflow);
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
 
         model = new MuSigCreateOfferReviewModel();
@@ -111,20 +120,11 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    public void setDirection(Direction direction) {
-        model.setDirection(direction);
-    }
-
-    public void setMarket(Market market) {
-        model.setMarket(market);
-    }
-
-    public void setDataForCreateOffer(Direction displayDirection,
-                                      Market market,
-                                      ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod,
+    public void setDataForCreateOffer(ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
-
+        Direction direction = createOfferDraftWorkflow.getDirection();
+        Market market = createOfferDraftWorkflow.getMarket();
         List<PaymentMethod<?>> paymentMethods = new ArrayList<>();
         List<Account<?, ?>> accounts = new ArrayList<>();
         selectedAccountByPaymentMethod.entrySet().stream()
@@ -148,8 +148,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         verifyPaymentMethods(paymentMethods);
 
-        applyData(displayDirection,
-                market,
+        applyData(direction,
                 amountSpec,
                 priceSpec);
 
@@ -177,7 +176,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         // We use static values for both traders of 25%
         offerOptions.add(new CollateralOption(model.getSecurityDepositAsPercent(), model.getSecurityDepositAsPercent()));
 
-        Direction domainDirection = market.isBaseCurrencyBitcoin() ? displayDirection : displayDirection.mirror();
+        Direction domainDirection = market.isBaseCurrencyBitcoin() ? direction : direction.mirror();
         MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
                 domainDirection,
                 market,
@@ -220,13 +219,14 @@ public class MuSigCreateOfferReviewController implements Controller {
 
     // direction is from user perspective not offer direction
     private void applyData(Direction displayDirection,
-                           Market market,
                            AmountSpec amountSpec,
                            PriceSpec priceSpec) {
+        Market market = createOfferDraftWorkflow.getMarket();
         String marketCodes = market.getMarketCodes();
 
+        model.setCrypto(market.isCrypto());
+
         model.setPriceSpec(priceSpec);
-        priceInput.setMarket(market);
         priceInput.setDescription(Res.get("muSig.offer.create.review.priceDescription.taker", marketCodes));
 
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
@@ -323,7 +323,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         String directionString = String.format("%s %s",
                 Res.get(displayDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
-                model.getMarket().getBaseCurrencyDisplayName());
+                market.getBaseCurrencyDisplayName());
 
         applyHeaderPaymentMethod();
 
@@ -341,7 +341,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setPriceDescription(model.getPriceDescription().toUpperCase());
         muSigReviewDataDisplay.setPrice(model.getPrice());
         muSigReviewDataDisplay.setPriceCode(model.getPriceCode());
-        muSigReviewDataDisplay.setIsCryptoMarket(model.getMarket().isCrypto());
+        muSigReviewDataDisplay.setIsCryptoMarket(market.isCrypto());
     }
 
     public void reset() {
@@ -364,6 +364,10 @@ public class MuSigCreateOfferReviewController implements Controller {
 
     @Override
     public void onDeactivate() {
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
         if (errorMessagePin != null) {
             errorMessagePin.unbind();
         }

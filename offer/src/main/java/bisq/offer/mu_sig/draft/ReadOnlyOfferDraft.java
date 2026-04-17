@@ -15,18 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components;
+package bisq.offer.mu_sig.draft;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import lombok.Getter;
+import bisq.common.market.Market;
+import bisq.offer.Direction;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.price.spec.PriceSpec;
 
-@Getter
-public class MuSigAmountComponentsModel implements Model {
-    private final BooleanProperty useRangeAmount = new SimpleBooleanProperty();
-    private final StringProperty description = new SimpleStringProperty();
-    private final BooleanProperty isTextInputFocused = new SimpleBooleanProperty();
+public abstract class ReadOnlyOfferDraft {
+    public ReadOnlyOfferDraft() {
+    }
+
+    public abstract Market getMarket();
+
+    public abstract Direction getDirection();
+
+    public abstract PriceSpec getPriceSpec();
+
+    public abstract AmountSpec getAmountSpec();
+
 }

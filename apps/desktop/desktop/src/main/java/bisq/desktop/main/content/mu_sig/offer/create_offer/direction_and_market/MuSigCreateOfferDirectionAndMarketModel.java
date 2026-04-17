@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.direction_and_market;
 
-import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
@@ -40,7 +39,7 @@ import java.util.Map;
 @Getter
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     static final Map<String, StackPane> MARKET_ICON_CACHE = new HashMap<>();
-    private final ObjectProperty<Direction> displayDirection = new SimpleObjectProperty<>(Direction.BUY);
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headlineText = new SimpleStringProperty();
     private final StringProperty buyButtonText = new SimpleStringProperty();
@@ -49,7 +48,6 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     private final ObjectProperty<MarketTypeListItem> selectedMarketTypeListItem = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty paymentCurrencySearchText = new SimpleStringProperty();
-    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
     private final ObjectProperty<StackPane> tradePairImage = new SimpleObjectProperty<>();
     private final ObservableList<MarketListItem> marketListItems = FXCollections.observableArrayList();
     private final FilteredList<MarketListItem> filteredMarketListItems = new FilteredList<>(marketListItems);
@@ -65,12 +63,10 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     }
 
     void reset() {
-        displayDirection.set(Direction.BUY);
         buyButtonDisabled.set(false);
         headlineText.set("");
         selectedMarketListItem.set(null);
         paymentCurrencySearchText.set(null);
-        selectedMarket.set(null);
         tradePairImage.set(null);
         marketListItems.clear();
     }

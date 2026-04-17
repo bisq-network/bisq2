@@ -17,37 +17,26 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.range;
 
-import bisq.common.market.Market;
-import bisq.common.monetary.PriceQuote;
-import bisq.common.monetary.TradeAmount;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
 public class MuSigRangeAmountModel implements Model {
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
-    private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
-    private final ObjectProperty<TradeAmount> initialTradeAmount = new SimpleObjectProperty<>();
-    private final BooleanProperty useBaseCurrencyForAmountInput = new SimpleBooleanProperty();
     private final BooleanProperty isTextInputFocused = new SimpleBooleanProperty();
     private final IntegerProperty sumOfNumChars = new SimpleIntegerProperty();
 
-    private final ObjectProperty<TradeAmount> minTradeAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<TradeAmount> maxTradeAmount = new SimpleObjectProperty<>();
+    private final StringProperty minAmountInputText = new SimpleStringProperty();
+    private final StringProperty maxAmountInputText = new SimpleStringProperty();
 
-    private final StringProperty minAmountString = new SimpleStringProperty();
     private final DoubleProperty minAmountWidth = new SimpleDoubleProperty();
-    private final StringProperty maxAmountString = new SimpleStringProperty();
     private final DoubleProperty maxAmountWidth = new SimpleDoubleProperty();
     private final DoubleProperty dashWidth = new SimpleDoubleProperty();
 

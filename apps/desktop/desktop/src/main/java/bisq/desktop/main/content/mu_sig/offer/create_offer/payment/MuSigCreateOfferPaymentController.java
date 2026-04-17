@@ -28,6 +28,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
+import bisq.common.observable.Pin;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -39,7 +40,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigTradeAmountLimits;
-import bisq.offer.Direction;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -52,7 +53,9 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -65,16 +68,21 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private final MuSigCreateOfferPaymentModel model;
     @Getter
     private final MuSigCreateOfferPaymentView view;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Region owner;
     private final AccountService accountService;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
     private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigCreateOfferPaymentController(ServiceProvider serviceProvider,
+                                             CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                              Region owner,
                                              Consumer<Boolean> navigationButtonsVisibleHandler) {
         accountService = serviceProvider.getAccountService();
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
 
@@ -90,7 +98,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     }
 
     public List<Account<?, ?>> getEligibleAccounts() {
-        String currencyCode = model.getPaymentMethodCurrencyCode();
+        String currencyCode = getPaymentMethodCurrencyCode();
         if (currencyCode == null) return List.of();
 
         return accountService.getAccounts().stream()
@@ -106,7 +114,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
             navigationButtonsVisibleHandler.accept(false);
             model.getShouldShowNoPaymentMethodSelectedOverlay().set(true);
             model.getNoPaymentMethodSelectedOverlayText().set(
-                    model.getMarket().get().isCrypto()
+                    createOfferDraftWorkflow.getMarket().isCrypto()
                             ? Res.get("muSig.offer.create.paymentMethods.noPaymentMethodSelectedOverlay.subTitle.crypto")
                             : Res.get("muSig.offer.create.paymentMethods.noPaymentMethodSelectedOverlay.subTitle.fiat"));
             return false;
@@ -115,29 +123,16 @@ public class MuSigCreateOfferPaymentController implements Controller {
         return true;
     }
 
-    public void setDisplayDirection(Direction displayDirection) {
-        if (displayDirection != null) {
-            model.setDisplayDirection(displayDirection);
-        }
-    }
-
-    public void setMarket(Market market) {
-        if (market == null) {
-            return;
-        }
-
-        model.getMarket().set(market);
-        model.setPaymentMethodCurrencyCode(market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode());
-    }
-
     public void reset() {
         model.reset();
     }
 
     @Override
     public void onActivate() {
+        Market market = createOfferDraftWorkflow.getMarket();
+        String paymentMethodCurrencyCode = getPaymentMethodCurrencyCode();
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
-        model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(model.getPaymentMethodCurrencyCode()));
+        model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(paymentMethodCurrencyCode));
         model.getAccountsByPaymentMethod().putAll(getEligibleAccounts().stream()
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,
@@ -167,8 +162,17 @@ public class MuSigCreateOfferPaymentController implements Controller {
         updateTradeLimitInfo();
     }
 
+    private String getPaymentMethodCurrencyCode() {
+        Market market = createOfferDraftWorkflow.getMarket();
+        return market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
+    }
+
     @Override
     public void onDeactivate() {
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
         model.getAccountsByPaymentMethod().clear();
         updateShouldShowNoAccountOverlay(false);
         updateShouldShowMultipleAccountsOverlay(false);

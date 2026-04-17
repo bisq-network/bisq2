@@ -17,9 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price;
 
-import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
-import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
@@ -31,15 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class MuSigCreateOfferAmountAndPriceModel implements Model {
     private String headline;
-    private Direction displayDirection;
-    private Market market;
     private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isPriceOverlayVisible = new SimpleBooleanProperty();
 
     void reset() {
         headline = "";
-        displayDirection = null;
-        market = null;
         isAmountOverlayVisible.set(false);
         isPriceOverlayVisible.set(false);
     }

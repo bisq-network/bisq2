@@ -203,7 +203,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
                         shouldShow,
                         controller::onKeyPressedWhileShowingOverlay));
 
-        if (model.isRangeAmount() && model.getMarket().isCrypto()) {
+        if (model.isRangeAmount() && model.isCrypto()) {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
         } else {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));

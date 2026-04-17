@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input;
 
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
@@ -38,13 +37,12 @@ public class MuSigAmountTextInputModel implements Model {
     private final TextFormatter<Monetary> textFormatter;
     private final boolean isFixedAmount;
     private final boolean isLeftSideRangeAmount;
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
-    private final BooleanProperty isBaseCurrency = new SimpleBooleanProperty();
+
     private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
     private final StringProperty code = new SimpleStringProperty();
     private final BooleanProperty focusedProperty = new SimpleBooleanProperty();
+    private final StringProperty inputText = new SimpleStringProperty();
     private final IntegerProperty sumOfNumChars = new SimpleIntegerProperty();
-    private final StringProperty textInput = new SimpleStringProperty();
     private final DoubleProperty amountFieldWidth = new SimpleDoubleProperty();
     private final DoubleProperty dashFieldWidth = new SimpleDoubleProperty();
 
@@ -52,14 +50,5 @@ public class MuSigAmountTextInputModel implements Model {
         this.textFormatter = textFormatter;
         this.isFixedAmount = isFixedAmount;
         this.isLeftSideRangeAmount = isLeftSideRangeAmount;
-    }
-
-    void reset() {
-        textFormatter.setValue(null);
-        market.set(null);
-        isBaseCurrency.set(false);
-        amount.set(null);
-        code.set(null);
-        focusedProperty.set(false);
     }
 }

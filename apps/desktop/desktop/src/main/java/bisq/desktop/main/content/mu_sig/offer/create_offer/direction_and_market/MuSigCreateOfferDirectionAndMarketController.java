@@ -20,21 +20,25 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.direction_and_market
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.mu_sig.offer.listing.MarketType;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.settings.SettingsService;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.main.content.mu_sig.offer.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketModel.MARKET_ICON_CACHE;
@@ -44,14 +48,19 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     private final MuSigCreateOfferDirectionAndMarketModel model;
     @Getter
     private final MuSigCreateOfferDirectionAndMarketView view;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Runnable onNextHandler;
     private final MarketPriceService marketPriceService;
     private final MuSigService muSigService;
     private final SettingsService settingsService;
     private Subscription paymentCurrencySearchTextPin, selectedMarketTypePin;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigCreateOfferDirectionAndMarketController(ServiceProvider serviceProvider,
+                                                        CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                                         Runnable onNextHandler) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         this.onNextHandler = onNextHandler;
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
@@ -60,24 +69,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         model = new MuSigCreateOfferDirectionAndMarketModel(List.of(new MarketTypeListItem(MarketType.FIAT),
                 new MarketTypeListItem(MarketType.OTHER)));
         view = new MuSigCreateOfferDirectionAndMarketView(model, this);
-        setDisplayDirection(Direction.BUY);
-    }
-
-    public void setMarket(Market market) {
-        model.getSelectedMarket().set(market);
-        model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
-
-        model.getSelectedMarketTypeListItem().set(market.isCrypto()
-                ? new MarketTypeListItem(MarketType.OTHER)
-                : new MarketTypeListItem(MarketType.FIAT));
-    }
-
-    public ReadOnlyObjectProperty<Direction> getDisplayDirection() {
-        return model.getDisplayDirection();
-    }
-
-    public ReadOnlyObjectProperty<Market> getMarket() {
-        return model.getSelectedMarket();
+        selectDirection(Direction.BUY);
     }
 
     public void reset() {
@@ -86,9 +78,21 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     @Override
     public void onActivate() {
-        setDisplayDirection(Direction.BUY);
+        Market market = createOfferDraftWorkflow.getMarket();
+        model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
+
+        model.getSelectedMarketTypeListItem().set(market.isCrypto()
+                ? new MarketTypeListItem(MarketType.OTHER)
+                : new MarketTypeListItem(MarketType.FIAT));
+        selectDirection(Direction.BUY);
 
         model.getPaymentCurrencySearchText().set("");
+
+        pins.add(createOfferDraftWorkflow.directionObservable().addObserver(direction -> {
+            UIThread.run(() -> {
+                model.getDirection().set(direction);
+            });
+        }));
 
         selectedMarketTypePin = EasyBind.subscribe(model.getSelectedMarketTypeListItem(), listItem -> {
             if (listItem == null) {
@@ -103,20 +107,19 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
             }
 
             List<MarketListItem> items = markets.stream()
-                    .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
-                    .map(market -> {
+                    .filter(m -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(m))
+                    .map(m -> {
                         long numOffersInMarket = muSigService.getOffers().stream()
-                                .filter(offer -> offer.getMarket().getRelevantCurrencyCode().equals(market.getRelevantCurrencyCode()))
+                                .filter(offer -> offer.getMarket().getRelevantCurrencyCode().equals(m.getRelevantCurrencyCode()))
                                 .count();
-                        MarketListItem item = new MarketListItem(market, numOffersInMarket);
-                        if (market.equals(model.getSelectedMarket().get())) {
+                        MarketListItem item = new MarketListItem(m, numOffersInMarket);
+                        if (m.equals(market)) {
                             model.getSelectedMarketListItem().set(item);
                         }
                         return item;
                     })
                     .collect(Collectors.toList());
             model.getMarketListItems().setAll(items);
-
         });
 
         paymentCurrencySearchTextPin = EasyBind.subscribe(model.getPaymentCurrencySearchText(), searchText -> {
@@ -137,13 +140,16 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     }
 
     @Override
-    public void onDeactivate() {
+    public void onDeactivate() {  subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
         paymentCurrencySearchTextPin.unsubscribe();
         selectedMarketTypePin.unsubscribe();
     }
 
     void onSelectDirection(Direction direction) {
-        setDisplayDirection(direction);
+        selectDirection(direction);
         onNextHandler.run();
     }
 
@@ -199,7 +205,9 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
 
     private void updateSelectedMarket(Market market) {
         if (market != null) {
-            model.getSelectedMarket().set(market);
+            createOfferDraftWorkflow.setMarket(market);
+
+            createOfferDraftWorkflow.setMarket(market);
             model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
 
             MarketListItem item = model.getMarketListItems().stream()
@@ -216,7 +224,7 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         }
     }
 
-    private void setDisplayDirection(Direction direction) {
-        model.getDisplayDirection().set(direction);
+    private void selectDirection(Direction direction) {
+        createOfferDraftWorkflow.setDirection(direction);
     }
 }

@@ -44,6 +44,7 @@ public class FixAmountLayoutHelper extends HBox {
         super(5);
         this.model = model;
 
+        setMouseTransparent(true);
         setMinWidth(WIDTH);
         setMaxWidth(WIDTH);
 
@@ -56,8 +57,8 @@ public class FixAmountLayoutHelper extends HBox {
     }
 
     void onViewAttached() {
-        amount.textProperty().bind(model.getAmountString());
-        model.getAmountWidth().bind(amount.layoutBoundsProperty().map(Bounds::getWidth));
+        amount.textProperty().bind(model.getAmountInputText());
+        model.getAmountInputFieldWidth().bind(amount.layoutBoundsProperty().map(Bounds::getWidth));
 
         subscriptions.add(EasyBind.subscribe(model.getSumOfNumChars(), sumOfNumChars -> {
             if (sumOfNumChars != null) {
@@ -70,7 +71,7 @@ public class FixAmountLayoutHelper extends HBox {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
         amount.textProperty().unbind();
-        model.getAmountWidth().unbind();
+        model.getAmountInputFieldWidth().unbind();
     }
 
     private void updateFontsize(int length) {

@@ -53,6 +53,8 @@ public class MuSigRangeAmountView extends View<VBox, MuSigRangeAmountModel, MuSi
         root.setAlignment(Pos.TOP_CENTER);
 
         layoutHelper = new RangeAmountLayoutHelper(model);
+        layoutHelper.setVisible(false);
+        layoutHelper.setManaged(false);
 
         inputModeToggle = new BisqMenuItem("flip-fields-arrows-green", "flip-fields-arrows-white");
         inputModeToggle.setTooltip(Res.get("muSig.offer.create.amount.selection.flipCurrenciesButton.tooltip"));
@@ -69,7 +71,6 @@ public class MuSigRangeAmountView extends View<VBox, MuSigRangeAmountModel, MuSi
         VBox.setMargin(amountSlider, new Insets(40, 0, 0, 0));
 
         Pane amountInputHBoxPane = new Pane(layoutHelper, amountInputHBox);
-        layoutHelper.setTranslateY(70);
 
         root.getChildren().addAll(amountInputHBoxPane, amountDisplayAndToggle, amountSlider);
     }

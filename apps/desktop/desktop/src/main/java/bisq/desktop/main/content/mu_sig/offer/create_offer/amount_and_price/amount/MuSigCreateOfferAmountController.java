@@ -18,36 +18,28 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
-import bisq.common.monetary.Fiat;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.PriceQuote;
-import bisq.common.monetary.TradeAmount;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.MuSigAmountComponentsController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.mu_sig.MuSigTradeAmountLimits;
-import bisq.offer.Direction;
-import bisq.offer.amount.spec.BaseSideAmountSpec;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
@@ -64,6 +56,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     private final MuSigCreateOfferAmountView view;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Region owner;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
@@ -71,8 +64,10 @@ public class MuSigCreateOfferAmountController implements Controller {
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final MuSigAmountComponentsController muSigAmountComponentsController;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigCreateOfferAmountController(ServiceProvider serviceProvider,
+                                            CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                             Region owner,
                                             Consumer<Boolean> navigationButtonsVisibleHandler,
                                             Consumer<NavigationTarget> closeAndNavigateToHandler) {
@@ -80,12 +75,13 @@ public class MuSigCreateOfferAmountController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         model = new MuSigCreateOfferAmountModel();
 
-        muSigAmountComponentsController = new MuSigAmountComponentsController(serviceProvider);
+        muSigAmountComponentsController = new MuSigAmountComponentsController(serviceProvider, createOfferDraftWorkflow);
         view = new MuSigCreateOfferAmountView(model, this, muSigAmountComponentsController.getView().getRoot());
     }
 
@@ -96,36 +92,14 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        Market market = model.getMarket().get();
+        Market market = createOfferDraftWorkflow.getMarket();
 
-        Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
-        model.getUseRangeAmount().set(cookieValue);
-
-        Fiat minUsdTradeAmount = MuSigTradeAmountLimits.MIN_USD_TRADE_AMOUNT;
-        Monetary minTradeAmountInBtc = MarketBasedAmountConversion.usdToBtc(marketPriceService, minUsdTradeAmount)
-                .orElseThrow();
-
-        if (market.isBtcFiatMarket()) {
-            Monetary minTradeAmountInFiat = MarketBasedAmountConversion.btcToFiat(marketPriceService, market, minTradeAmountInBtc)
-                    .orElseThrow();
-            TradeAmount minTradeAmount = new TradeAmount(minTradeAmountInBtc, minTradeAmountInFiat);
-            muSigAmountComponentsController.setInitialTradeAmount(minTradeAmount);
-        } else {
-            Monetary minTradeAmountInOtherCrypto = MarketBasedAmountConversion.btcToOtherCrypto(marketPriceService, market, minTradeAmountInBtc)
-                    .orElseThrow();
-            TradeAmount minTradeAmount = new TradeAmount(minTradeAmountInOtherCrypto, minTradeAmountInBtc);
-            muSigAmountComponentsController.setInitialTradeAmount(minTradeAmount);
-        }
-
-
-        subscriptions.add(EasyBind.subscribe(model.getMarket(), market1 -> {
-            muSigAmountComponentsController.setMarket(market1);
+        pins.add(createOfferDraftWorkflow.useRangeAmountObservable().addObserver(useRangeAmount -> {
+            UIThread.run(() -> {
+                model.getUseRangeAmount().set(useRangeAmount);
+            });
         }));
 
-        subscriptions.add(EasyBind.subscribe(model.getUseRangeAmount(),
-                useRangeAmount -> {
-                    muSigAmountComponentsController.setUseRangeAmount(useRangeAmount);
-                }));
 
         // model.getShouldShowWarningIcon().set(false);
 
@@ -204,6 +178,8 @@ public class MuSigCreateOfferAmountController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
         navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
     }
@@ -212,18 +188,6 @@ public class MuSigCreateOfferAmountController implements Controller {
     /* --------------------------------------------------------------------- */
     // Public API
     /* --------------------------------------------------------------------- */
-
-    public void setDisplayDirection(Direction displayDirection) {
-        model.getDisplayDirection().set(displayDirection);
-    }
-
-    public void setMarket(Market market) {
-        model.getMarket().set(market);
-    }
-
-    public void setPriceQuote(PriceQuote priceQuote) {
-        muSigAmountComponentsController.setPriceQuote(priceQuote);
-    }
 
     public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
         model.getPaymentMethods().setAll(paymentMethods);
@@ -270,10 +234,6 @@ public class MuSigCreateOfferAmountController implements Controller {
         model.reset();
     }
 
-    public ReadOnlyObjectProperty<BaseSideAmountSpec> getBaseSideAmountSpec() {
-        return model.getBaseSideAmountSpec();
-    }
-
     public ReadOnlyBooleanProperty getIsOverlayVisible() {
         return model.getIsOverlayVisible();
     }
@@ -284,8 +244,7 @@ public class MuSigCreateOfferAmountController implements Controller {
     /* --------------------------------------------------------------------- */
 
     void onSetUseRangeAmount(boolean value) {
-        model.getUseRangeAmount().set(value);
-        settingsService.setCookie(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED, value);
+        createOfferDraftWorkflow.setUseRangeAmount(value);
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {

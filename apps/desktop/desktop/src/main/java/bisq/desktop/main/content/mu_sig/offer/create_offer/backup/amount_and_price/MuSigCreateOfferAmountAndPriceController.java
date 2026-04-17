@@ -27,6 +27,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
@@ -45,14 +46,17 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     private final MuSigCreateOfferPriceController muSigCreateOfferPriceController;
 
     public MuSigCreateOfferAmountAndPriceController(ServiceProvider serviceProvider,
+                                                    CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                                     Region owner,
                                                     Consumer<Boolean> navigationButtonsVisibleHandler,
                                                     Consumer<NavigationTarget> closeAndNavigateToHandler) {
         muSigCreateOfferAmountController = new MuSigCreateOfferAmountController(serviceProvider,
+                createOfferDraftWorkflow,
                 owner,
                 navigationButtonsVisibleHandler,
                 closeAndNavigateToHandler);
         muSigCreateOfferPriceController = new MuSigCreateOfferPriceController(serviceProvider,
+                createOfferDraftWorkflow,
                 owner,
                 navigationButtonsVisibleHandler);
 

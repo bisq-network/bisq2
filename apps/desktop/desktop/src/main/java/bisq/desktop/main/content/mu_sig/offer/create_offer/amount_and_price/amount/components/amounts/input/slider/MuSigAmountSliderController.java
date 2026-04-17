@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.slider;
 
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
@@ -32,8 +34,12 @@ public class MuSigAmountSliderController implements Controller {
     @Getter
     private final MuSigActiveAmountSliderView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
-    public MuSigAmountSliderController(ServiceProvider serviceProvider) {
+    public MuSigAmountSliderController(ServiceProvider serviceProvider,
+                                       CreateOfferDraftWorkflow createOfferDraftWorkflow) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigActiveAmountSliderModel();
         view = new MuSigActiveAmountSliderView(model, this);
     }
@@ -52,6 +58,8 @@ public class MuSigAmountSliderController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
     }
 
 

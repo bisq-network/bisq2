@@ -130,13 +130,10 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
 
     private void updateFontsize(int length) {
         double size = AmountTextInputLayout.computeFontSize(length);
-        log.error("length {}",length);
-        log.error("size {}",size);
         if (Math.abs(size - lastSize) > 0.1) {
             textField.setStyle("-fx-font-size: " + size + "em;");
             dash.setStyle("-fx-font-size: " + size + "em;");
             lastSize = size;
-            log.error("lastSize {}",lastSize);
         }
     }
 

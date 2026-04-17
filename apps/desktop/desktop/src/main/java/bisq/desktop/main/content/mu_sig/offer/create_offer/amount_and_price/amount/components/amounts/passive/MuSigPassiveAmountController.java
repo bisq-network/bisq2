@@ -18,10 +18,11 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.passive;
 
 import bisq.common.asset.Asset;
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
@@ -31,12 +32,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class MuSigPassiveAmountController implements bisq.desktop.common.view.Controller {
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final MuSigPassiveAmountModel model;
     @Getter
     private final MuSigPassiveAmountView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
-    public MuSigPassiveAmountController(ServiceProvider serviceProvider, boolean isLeftSideRangeAmount) {
+    public MuSigPassiveAmountController(ServiceProvider serviceProvider,
+                                        CreateOfferDraftWorkflow createOfferDraftWorkflow,
+                                        boolean isLeftSideRangeAmount) {
+        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigPassiveAmountModel(isLeftSideRangeAmount);
         view = new MuSigPassiveAmountView(model, this);
     }
@@ -46,23 +52,16 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
     // Lifecycle
     /* --------------------------------------------------------------------- */
 
-
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getMarket(), market -> {
-            reset();
-            applyCode();
-            applyFormattedAmount();
-            applyTooltip();
-        }));
-        subscriptions.add(EasyBind.subscribe(model.getIsBaseCurrency(), isBaseCurrency -> {
-            reset();
-            applyCode();
-            applyFormattedAmount();
-            applyTooltip();
-        }));
         subscriptions.add(EasyBind.subscribe(model.getAmount(), amount -> {
-            applyFormattedAmount();
+            if (amount != null) {
+                String code = amount.getCode();
+                model.getCode().set(code);
+                model.getUseBitcoinDisplay().set(Asset.isBtc(code));
+                model.getFormattedAmount().set(AmountFormatter.formatAmountByMonetaryType(amount));
+                model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", model.getCode()));
+            }
         }));
     }
 
@@ -70,23 +69,16 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
-        model.reset();
+        pins.forEach(Pin::unbind);
+        pins.clear();
     }
 
     /* --------------------------------------------------------------------- */
     // Public API
     /* --------------------------------------------------------------------- */
 
-    public void setMarket(Market market) {
-        model.getMarket().set(market);
-    }
-
     public void setAmount(Monetary value) {
         model.getAmount().set(value);
-    }
-
-    public void setIsBaseCurrency(boolean value) {
-        model.getIsBaseCurrency().set(value);
     }
 
     public Monetary getAmount() {
@@ -104,43 +96,4 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void reset() {
-        model.getAmount().set(null);
-        model.getFormattedAmount().set(null);
-        model.getCode().set(null);
-    }
-
-    private void applyFormattedAmount() {
-        Monetary amount = model.getAmount().get();
-        if (amount != null) {
-            model.getFormattedAmount().set(AmountFormatter.formatAmountByMonetaryType(amount));
-        } else {
-            model.getFormattedAmount().set(null);
-        }
-    }
-
-    private void applyCode() {
-        Market market = model.getMarket().get();
-        if (market != null) {
-            String code = getCode(market);
-            model.getCode().set(code);
-            model.getIsBtc().set(Asset.isBtc(code));
-        } else {
-            model.getCode().set(null);
-        }
-    }
-
-    private void applyTooltip() {
-        Market market = model.getMarket().get();
-        if (market != null) {
-            model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", getCode(market)));
-        } else {
-            model.getTooltip().set(null);
-        }
-    }
-
-    private String getCode(Market market) {
-        boolean isBaseCurrency = model.getIsBaseCurrency().get();
-        return isBaseCurrency ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
-    }
 }

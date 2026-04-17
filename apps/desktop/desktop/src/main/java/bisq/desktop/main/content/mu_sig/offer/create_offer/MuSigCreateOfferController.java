@@ -36,18 +36,20 @@ import bisq.desktop.main.content.mu_sig.offer.create_offer.review.MuSigCreateOff
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class MuSigCreateOfferController extends NavigationController implements InitWithDataController<MuSigCreateOfferController.InitData> {
@@ -63,37 +65,45 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     private final ServiceProvider serviceProvider;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final OverlayController overlayController;
     @Getter
     private final MuSigCreateOfferModel model;
     @Getter
     private final MuSigCreateOfferView view;
     private final MuSigCreateOfferDirectionAndMarketController muSigCreateOfferDirectionAndMarketController;
-    private final MuSigCreateOfferAmountAndPriceController muSigCreateOfferAmountAndPriceController;
     private final MuSigCreateOfferPaymentController muSigCreateOfferPaymentController;
+    private final MuSigCreateOfferAmountAndPriceController muSigCreateOfferAmountAndPriceController;
     private final MuSigCreateOfferReviewController muSigCreateOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription displayDirectionPin, marketPin;
     private Pin selectedAccountByPaymentMethodPin;
+    private final Set<Subscription> subscriptions = new HashSet<>();
+    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigCreateOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_CREATE_OFFER);
 
         this.serviceProvider = serviceProvider;
+        createOfferDraftWorkflow = new CreateOfferDraftWorkflow(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                serviceProvider.getSettingsService());
+
         overlayController = OverlayController.getInstance();
 
         model = new MuSigCreateOfferModel();
         view = new MuSigCreateOfferView(model, this);
 
-        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider, this::onNext);
+        muSigCreateOfferDirectionAndMarketController = new MuSigCreateOfferDirectionAndMarketController(serviceProvider, createOfferDraftWorkflow, this::onNext);
+        muSigCreateOfferPaymentController = new MuSigCreateOfferPaymentController(serviceProvider,
+                createOfferDraftWorkflow,
+                view.getRoot(),
+                this::setMainButtonsVisibleState);
         muSigCreateOfferAmountAndPriceController = new MuSigCreateOfferAmountAndPriceController(serviceProvider,
+                createOfferDraftWorkflow,
                 view.getRoot(),
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
-        muSigCreateOfferPaymentController = new MuSigCreateOfferPaymentController(serviceProvider,
-                view.getRoot(),
-                this::setMainButtonsVisibleState);
         muSigCreateOfferReviewController = new MuSigCreateOfferReviewController(serviceProvider,
+                createOfferDraftWorkflow,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
     }
@@ -101,8 +111,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
     @Override
     public void initWithData(InitData data) {
         Market market = data.getMarket();
-        muSigCreateOfferDirectionAndMarketController.setMarket(market);
 
+        createOfferDraftWorkflow.setMarket(market);
 
         boolean isBaseCurrencyBitcoin = market.isBaseCurrencyBitcoin();
         model.setPaymentMethodProgressLabel(isBaseCurrencyBitcoin
@@ -112,6 +122,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void onActivate() {
+        createOfferDraftWorkflow.onActivate();
+
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -121,22 +133,14 @@ public class MuSigCreateOfferController extends NavigationController implements 
         updateChildTargets();
         model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_CREATE_OFFER_DIRECTION_AND_MARKET);
 
-        displayDirectionPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getDisplayDirection(), displayDirection -> {
-            muSigCreateOfferAmountAndPriceController.setDisplayDirection(displayDirection);
-            muSigCreateOfferPaymentController.setDisplayDirection(displayDirection);
-        });
-        marketPin = EasyBind.subscribe(muSigCreateOfferDirectionAndMarketController.getMarket(), market -> {
-            muSigCreateOfferPaymentController.reset();
-            muSigCreateOfferPaymentController.setMarket(market);
-            muSigCreateOfferAmountAndPriceController.setMarket(market);
-            muSigCreateOfferReviewController.setMarket(market);
-
-            if (market != null) {
+        pins.add(createOfferDraftWorkflow.marketObservable().addObserver(market -> {
+            UIThread.run(() -> {
                 tryAutoSelectSinglePaymentMethod();
-            }
+                updateNextButtonDisabledState();
+            });
+        }));
 
-            updateNextButtonDisabledState();
-        });
+
         handlePaymentMethodsUpdate();
         selectedAccountByPaymentMethodPin = muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod().addObserver(() ->
                 UIThread.run(this::handlePaymentMethodsUpdate));
@@ -144,11 +148,14 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void onDeactivate() {
+        createOfferDraftWorkflow.onDeactivate();
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
+        pins.forEach(Pin::unbind);
+        pins.clear();
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-        displayDirectionPin.unsubscribe();
-        marketPin.unsubscribe();
         selectedAccountByPaymentMethodPin.unbind();
         reset();
     }
@@ -175,10 +182,8 @@ public class MuSigCreateOfferController extends NavigationController implements 
     protected void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.setDataForCreateOffer(
-                    muSigCreateOfferDirectionAndMarketController.getDisplayDirection().get(),
-                    muSigCreateOfferDirectionAndMarketController.getMarket().get(),
                     muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod(),
-                    muSigCreateOfferAmountAndPriceController.getBaseSideAmountSpec().get(),
+                    createOfferDraftWorkflow.getAmountSpec(),
                     muSigCreateOfferAmountAndPriceController.getPriceSpec().get()
             );
             model.getNextButtonText().set(Res.get("muSig.offer.create.review.nextButton.createOffer"));

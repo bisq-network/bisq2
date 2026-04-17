@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.passive;
 
-import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -30,25 +29,14 @@ import lombok.Getter;
 @Getter
 public class MuSigPassiveAmountModel implements bisq.desktop.common.view.Model {
     private final boolean isLeftSideRangeAmount;
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
-    private final BooleanProperty isBaseCurrency = new SimpleBooleanProperty();
+
     private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
     private final StringProperty formattedAmount = new SimpleStringProperty();
     private final StringProperty code = new SimpleStringProperty();
     private final StringProperty tooltip = new SimpleStringProperty();
-    private final BooleanProperty isBtc = new SimpleBooleanProperty();
+    private final BooleanProperty useBitcoinDisplay = new SimpleBooleanProperty();
 
     public MuSigPassiveAmountModel(boolean isLeftSideRangeAmount) {
         this.isLeftSideRangeAmount = isLeftSideRangeAmount;
-    }
-
-    void reset() {
-        market.set(null);
-        isBaseCurrency.set(false);
-        amount.set(null);
-        formattedAmount.set(null);
-        code.set(null);
-        tooltip.set(null);
-        isBtc.set(false);
     }
 }
