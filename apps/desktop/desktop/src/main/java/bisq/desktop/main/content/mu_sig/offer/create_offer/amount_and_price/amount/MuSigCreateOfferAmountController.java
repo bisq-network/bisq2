@@ -99,7 +99,11 @@ public class MuSigCreateOfferAmountController implements Controller {
                 model.getUseRangeAmount().set(useRangeAmount);
             });
         }));
+        pins.add(createOfferDraftWorkflow.userSpecificTradeAmountLimitObservable().addObserver(value -> {
+            UIThread.run(() -> {
 
+            });
+        }));
 
         // model.getShouldShowWarningIcon().set(false);
 

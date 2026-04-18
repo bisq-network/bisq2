@@ -20,14 +20,18 @@ package bisq.offer.mu_sig.draft;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
+import bisq.common.monetary.MonetaryRange;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
+import bisq.common.monetary.TradeAmountRange;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.price.spec.PriceSpec;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 public abstract class ReadOnlyCreateOfferDraft extends ReadOnlyOfferDraft {
 
@@ -55,8 +59,6 @@ public abstract class ReadOnlyCreateOfferDraft extends ReadOnlyOfferDraft {
     public abstract ReadOnlyObservable<PriceSpec> priceSpecObservable();
 
 
-
-
     public abstract ReadOnlyObservable<TradeAmount> defaultTradeAmountObservable();
 
     public abstract TradeAmount getDefaultTradeAmount();
@@ -77,10 +79,37 @@ public abstract class ReadOnlyCreateOfferDraft extends ReadOnlyOfferDraft {
     public abstract TradeAmount getMaxTradeAmount();
 
 
-    public abstract ReadOnlyObservable<AmountSpec> amountSpecObservable();
+    public abstract TradeAmountRange getTradeAmountLimits();
 
+    public abstract ReadOnlyObservable<Optional<TradeAmount>> userSpecificTradeAmountLimitObservable();
+
+    public abstract Optional<TradeAmount> getUserSpecificTradeAmountLimit();
+
+    public abstract ReadOnlyObservable<Optional<Double>> userSpecificTradeAmountLimitAsSliderValueObservable();
+
+    public abstract Optional<Double> getUserSpecificTradeAmountLimitAsSliderValue();
+
+    public abstract ReadOnlyObservable<AmountSpec> amountSpecObservable();
 
     public abstract ReadOnlyObservable<Boolean> useRangeAmountObservable();
 
     public abstract boolean getUseRangeAmount();
+
+    public abstract ReadOnlyObservable<TradeAmountRange> tradeAmountLimitsObservable();
+
+    public abstract ReadOnlyObservable<MonetaryRange> inputAmountLimitsObservable();
+
+    public abstract MonetaryRange getInputAmountLimits();
+
+    public abstract ReadOnlyObservable<Double> fixAmountSliderValueObservable();
+
+    public abstract Double getFixAmountSliderValue();
+
+    public abstract ReadOnlyObservable<Double> minAmountSliderValueObservable();
+
+    public abstract Double getMinAmountSliderValue();
+
+    public abstract ReadOnlyObservable<Double> maxAmountSliderValueObservable();
+
+    public abstract Double getMaxAmountSliderValue();
 }

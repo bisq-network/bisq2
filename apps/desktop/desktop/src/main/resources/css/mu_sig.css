@@ -250,3 +250,26 @@
     -fx-font-family: "IBM Plex Sans Light" !important;
     -fx-font-size: 0.95em !important;
 }
+
+
+.amount-slider-limits .value,
+.amount-slider-limits .code {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.amount-slider-limits .value {
+    -fx-font-size: 1.1em;
+}
+
+.amount-slider-limits .code {
+    -fx-font-size: 0.7em;
+}
+
+.amount-slider-limits .value-secondary {
+    -fx-font-size: 1em;
+}
+
+.amount-slider-limits .code-secondary {
+    -fx-font-size: 0.63em;
+}

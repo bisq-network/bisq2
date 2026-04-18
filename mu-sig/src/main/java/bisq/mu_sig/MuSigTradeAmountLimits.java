@@ -19,6 +19,7 @@ package bisq.mu_sig;
 
 import bisq.account.payment_method.PaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -49,21 +50,14 @@ import java.util.stream.Collectors;
 import static bisq.bonded_roles.market_price.MarketBasedAmountConversion.btcToUsd;
 import static bisq.bonded_roles.market_price.MarketBasedAmountConversion.fiatToBtc;
 import static bisq.bonded_roles.market_price.MarketBasedAmountConversion.fiatToUsd;
-import static bisq.bonded_roles.market_price.MarketBasedAmountConversion.usdToFiat;
 
 @Slf4j
 public class MuSigTradeAmountLimits {
-    public static final Fiat MIN_USD_TRADE_AMOUNT = Fiat.fromFaceValue(10, "USD");
-
-
-    /* --------------------------------------------------------------------- */
-    // MaxTradeLimit
-    /* --------------------------------------------------------------------- */
-
-    public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(10000, "USD");
+    public static final Fiat MIN_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10, "USD");
+    public static final Fiat MAX_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10000, "USD");
 
     public static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail) {
-        return getMaxTradeLimitInUsd(paymentRail, MAX_USD_TRADE_AMOUNT);
+        return getMaxTradeLimitInUsd(paymentRail, MAX_TRADE_AMOUNT_IN_USD);
     }
 
     public static String getFormattedMaxTradeLimitInUsd(PaymentRail paymentRail) {
@@ -111,7 +105,7 @@ public class MuSigTradeAmountLimits {
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
-                .map(priceQuote -> priceQuote.toBaseSideMonetary(MIN_USD_TRADE_AMOUNT))
+                .map(priceQuote -> priceQuote.toBaseSideMonetary(MIN_TRADE_AMOUNT_IN_USD))
                 .flatMap(defaultMinBtcTradeAmount -> marketPriceService.findMarketPriceQuote(market)
                         .map(priceQuote -> priceQuote.toQuoteSideMonetary(defaultMinBtcTradeAmount)));
     }
@@ -131,7 +125,7 @@ public class MuSigTradeAmountLimits {
         // A reputation score of 30k gives a max trade amount of 150 USD
         // Upper limit is 600 USD
         Monetary maxAmountAllowedByReputation = getUsdAmountFromReputationScore(totalScore);
-        long value = Math.min(MAX_USD_TRADE_AMOUNT.getValue(), maxAmountAllowedByReputation.getValue());
+        long value = Math.min(MAX_TRADE_AMOUNT_IN_USD.getValue(), maxAmountAllowedByReputation.getValue());
         return Fiat.fromValue(value, "USD");
     }
 
@@ -304,7 +298,7 @@ public class MuSigTradeAmountLimits {
                         // We have a range amount and max amount is higher as rep score. We use rep score based amount as result.
                         // Min amounts are handled by the filtered collection already.
                         Monetary usdAmountFromSellersReputationScore = getUsdAmountFromReputationScore(sellersReputationScore);
-                        Monetary fiatAmountFromSellersReputationScore = usdToFiat(marketPriceService, offerMarket, usdAmountFromSellersReputationScore).orElseThrow();
+                        Monetary fiatAmountFromSellersReputationScore = MarketBasedAmountConversion.usdToFiat(marketPriceService, offerMarket, usdAmountFromSellersReputationScore).orElseThrow();
                         return Optional.of(fiatAmountFromSellersReputationScore);
                     } catch (Exception e) {
                         log.warn("Failed to evaluate highest amount for offer {}: {}", offer.getId(), e.getMessage(), e);

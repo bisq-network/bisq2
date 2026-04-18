@@ -25,21 +25,26 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+
 import static bisq.common.encoding.UniCodeTable.EN_DASH_SYMBOL;
 
+@Slf4j
 public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, MuSigPassiveAmountModel, MuSigPassiveAmountController> {
     private static final double ICON_SCALE = 0.85;
     private static final double ICON_OPACITY = 0.5;
 
-    private final Label amount, code, infoIcon;
+    private final Label amount;
+    private final Label code;
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
-    private final BisqTooltip tooltip;
-    private final HBox amountAndCode;
-    private final Label dash;
-    private Subscription isBtcPin;
+    @Nullable
+    private BisqTooltip tooltip;
+    private final HBox amountBox, bitcoinAmountDisplayBox;
+    private Subscription useBitcoinDisplayPin;
 
     MuSigPassiveAmountView(MuSigPassiveAmountModel model, MuSigPassiveAmountController controller) {
         super(new HBox(), model, controller);
@@ -47,41 +52,55 @@ public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, 
         root.getStyleClass().add("amount-display");
 
         amount = new Label();
-        amount.setPadding(new Insets(0, 7, 3, 0));
         amount.getStyleClass().add("value");
 
         code = new Label();
         code.getStyleClass().add("code");
 
-        dash = new Label(EN_DASH_SYMBOL);
-        dash.getStyleClass().add("value");
-
-        if (model.isLeftSideRangeAmount()) {
-            amountAndCode = new HBox(amount, dash);
-        } else {
-            amountAndCode = new HBox(amount, code);
-        }
-        amountAndCode.setAlignment(Pos.BASELINE_LEFT);
-
-        bitcoinAmountDisplay = new BitcoinAmountDisplay("0", true);
-        bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
-        bitcoinAmountDisplay.setTranslateY(2);
-        bitcoinAmountDisplay.applyCompactConfig(15, 12, 28);
-
-        tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
-
-        infoIcon = new Label();
+        Label infoIcon = new Label();
         infoIcon.setGraphic(ImageUtil.getImageViewById("info"));
-        infoIcon.setTooltip(tooltip);
         infoIcon.setScaleX(ICON_SCALE);
         infoIcon.setScaleY(ICON_SCALE);
         infoIcon.setOpacity(ICON_OPACITY);
-        infoIcon.setPadding(new Insets(0, 0, 5, 0));
 
-        HBox.setMargin(infoIcon, new Insets(0, 0, 0, 4));
-        HBox.setMargin(bitcoinAmountDisplay, new Insets(0, 7, 0, 0));
-        root.getChildren().addAll(amountAndCode, bitcoinAmountDisplay, infoIcon);
+        boolean isLeftSideRangeAmount = model.isLeftSideRangeAmount();
+        bitcoinAmountDisplay = new BitcoinAmountDisplay("0", !isLeftSideRangeAmount);
+        bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
+        bitcoinAmountDisplay.applyCompactConfig(15, 12, 28);
+
+        bitcoinAmountDisplayBox = new HBox(7.5, bitcoinAmountDisplay);
+
+        HBox.setMargin(amount, new Insets(0, 0, 3, 0));
+        if (isLeftSideRangeAmount) {
+            Label dash1 = createDash();
+            HBox.setMargin(dash1, new Insets(0, 0, 0, 2));
+            amountBox = new HBox(5, amount, dash1);
+
+            Label dash2 = createDash();
+            dash2.setTranslateY(-1);
+
+            bitcoinAmountDisplayBox.getChildren().add(dash2);
+        } else {
+            tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+            infoIcon.setTooltip(tooltip);
+            amountBox = new HBox(5, amount, code);
+        }
+        amountBox.setAlignment(Pos.BASELINE_LEFT);
+
+
+        root.setMinHeight(30);
+        root.setMaxHeight(30);
+
+        HBox.setMargin(amountBox, new Insets(0, 6, 0, 0));
+        HBox.setMargin(infoIcon, new Insets(0, 0, 4, 0));
+        HBox.setMargin(bitcoinAmountDisplayBox, new Insets(1.5, 6, 0, 0));
+        if (isLeftSideRangeAmount) {
+            root.getChildren().addAll(amountBox, bitcoinAmountDisplayBox);
+        } else {
+            root.getChildren().addAll(amountBox, bitcoinAmountDisplayBox, infoIcon);
+        }
     }
+
 
     @Override
     protected void onViewAttached() {
@@ -89,26 +108,33 @@ public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, 
         code.textProperty().bind(model.getCode());
         bitcoinAmountDisplay.btcAmountProperty().bind(model.getFormattedAmount());
 
-        tooltip.textProperty().bind(model.getTooltip());
+        if (tooltip != null) {
+            tooltip.textProperty().bind(model.getTooltip());
+        }
 
-        isBtcPin = EasyBind.subscribe(model.getUseBitcoinDisplay(), useBitcoinDisplay -> {
-            infoIcon.setTranslateY(model.getUseBitcoinDisplay().get() ? -2 : 0);
-            bitcoinAmountDisplay.setVisible(useBitcoinDisplay);
-            bitcoinAmountDisplay.setManaged(useBitcoinDisplay);
-            amountAndCode.setVisible(!useBitcoinDisplay);
-            amountAndCode.setManaged(!useBitcoinDisplay);
+        useBitcoinDisplayPin = EasyBind.subscribe(model.getUseBitcoinDisplay(), useBitcoinDisplay -> {
+            bitcoinAmountDisplayBox.setVisible(useBitcoinDisplay);
+            bitcoinAmountDisplayBox.setManaged(useBitcoinDisplay);
+            amountBox.setVisible(!useBitcoinDisplay);
+            amountBox.setManaged(!useBitcoinDisplay);
         });
-
     }
-
 
     @Override
     protected void onViewDetached() {
         amount.textProperty().unbind();
         code.textProperty().unbind();
         bitcoinAmountDisplay.btcAmountProperty().unbind();
-        tooltip.textProperty().unbind();
+        if (tooltip != null) {
+            tooltip.textProperty().unbind();
+        }
 
-        isBtcPin.unsubscribe();
+        useBitcoinDisplayPin.unsubscribe();
+    }
+
+    private Label createDash() {
+        Label dash = new Label(EN_DASH_SYMBOL);
+        dash.getStyleClass().add("value");
+        return dash;
     }
 }

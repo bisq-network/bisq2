@@ -32,10 +32,11 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 import java.util.Set;
 
+import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.WIDTH;
+
 @Slf4j
 public class MuSigAmountComponentsView extends View<VBox, MuSigAmountComponentsModel, MuSigAmountComponentsController> {
-    private static final int WIDTH = 340;
-    private static final int HEIGHT = 125;
+    private static final int HEIGHT = 127;
 
     private final Label description;
     private final Region selectionLine;
@@ -61,14 +62,14 @@ public class MuSigAmountComponentsView extends View<VBox, MuSigAmountComponentsM
         greyLine.setStyle("-fx-background-color: -bisq-mid-grey-20");
         greyLine.setPrefHeight(1);
         greyLine.setPrefWidth(WIDTH);
-        greyLine.setLayoutY(HEIGHT);
+        greyLine.setLayoutY(HEIGHT - 1);
         greyLine.setMouseTransparent(true);
 
         selectionLine = new Region();
         selectionLine.getStyleClass().add("material-text-field-selection-line");
         selectionLine.setPrefHeight(2);
         selectionLine.setPrefWidth(0);
-        selectionLine.setLayoutY(HEIGHT);
+        selectionLine.setLayoutY(HEIGHT - 2);
         selectionLine.setMouseTransparent(true);
 
         Pane inputAndDisplayWithLine = new Pane(description, fixAmount, rangeAmount, greyLine, selectionLine);

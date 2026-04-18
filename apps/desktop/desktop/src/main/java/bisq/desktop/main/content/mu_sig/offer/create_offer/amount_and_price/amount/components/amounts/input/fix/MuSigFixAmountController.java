@@ -25,8 +25,9 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input.MuSigAmountTextInputController;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.slider.MuSigAmountSliderController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.limits.MuSigAmountLimitsController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.text.MuSigAmountTextInputController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.fix.slider.MuSigFixAmountSliderController;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.passive.MuSigPassiveAmountController;
 import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -47,9 +48,10 @@ public class MuSigFixAmountController implements Controller {
     private final MuSigFixAmountView view;
     private final MuSigAmountTextInputController amountTextInputController;
     private final MuSigPassiveAmountController passiveAmountController;
-    private final MuSigAmountSliderController amountSliderController;
+    private final MuSigFixAmountSliderController amountSliderController;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
+    private final MuSigAmountLimitsController amountLimitsController;
 
     public MuSigFixAmountController(ServiceProvider serviceProvider,
                                     CreateOfferDraftWorkflow createOfferDraftWorkflow) {
@@ -58,12 +60,14 @@ public class MuSigFixAmountController implements Controller {
 
         amountTextInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, true, false);
         passiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, false);
-        amountSliderController = new MuSigAmountSliderController(serviceProvider, createOfferDraftWorkflow);
+        amountSliderController = new MuSigFixAmountSliderController(serviceProvider, createOfferDraftWorkflow);
+        amountLimitsController = new MuSigAmountLimitsController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigFixAmountView(model, this,
                 amountTextInputController.getView().getRoot(),
                 passiveAmountController.getView().getRoot(),
-                amountSliderController.getView().getRoot()
+                amountSliderController.getView().getRoot(),
+                amountLimitsController.getView().getRoot()
         );
     }
 
@@ -148,13 +152,13 @@ public class MuSigFixAmountController implements Controller {
 
     private void applyInputAmount() {
         TradeAmount tradeAmount = createOfferDraftWorkflow.getFixTradeAmount();
-        Monetary inputAmount = createOfferDraftWorkflow.getInputAmount(tradeAmount);
+        Monetary inputAmount = createOfferDraftWorkflow.toInputAmount(tradeAmount);
         amountTextInputController.setAmount(inputAmount);
     }
 
     private void applyPassiveAmount() {
         TradeAmount tradeAmount = createOfferDraftWorkflow.getFixTradeAmount();
-        Monetary passiveAmount = createOfferDraftWorkflow.getPassiveAmount(tradeAmount);
+        Monetary passiveAmount = createOfferDraftWorkflow.toPassiveAmount(tradeAmount);
         passiveAmountController.setAmount(passiveAmount);
     }
 

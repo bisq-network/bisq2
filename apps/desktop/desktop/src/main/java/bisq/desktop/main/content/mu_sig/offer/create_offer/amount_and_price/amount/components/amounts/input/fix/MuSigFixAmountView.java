@@ -32,8 +32,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 import java.util.Set;
 
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.PADDING;
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.WIDTH;
+import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.PADDING;
+import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.WIDTH;
 
 @Slf4j
 public class MuSigFixAmountView extends View<VBox, MuSigFixAmountModel, MuSigFixAmountController> {
@@ -45,7 +45,8 @@ public class MuSigFixAmountView extends View<VBox, MuSigFixAmountModel, MuSigFix
                               MuSigFixAmountController controller,
                               HBox amountInput,
                               HBox passiveAmount,
-                              VBox amountSlider) {
+                              VBox amountSlider,
+                              HBox amountLimits) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -67,8 +68,9 @@ public class MuSigFixAmountView extends View<VBox, MuSigFixAmountModel, MuSigFix
 
         Pane amountInputHBoxPane = new Pane(layoutHelper, amountInput);
 
-        VBox.setMargin(amountSlider, new Insets(40, 0, 0, 0));
-        root.getChildren().addAll(amountInputHBoxPane, passiveAmountAndToggle, amountSlider);
+        VBox.setMargin(amountSlider, new Insets(32.5, 0, 0, 0));
+        VBox.setMargin(amountLimits, new Insets(4.5, 0, 0, 0));
+        root.getChildren().addAll(amountInputHBoxPane, passiveAmountAndToggle, amountSlider, amountLimits);
     }
 
     @Override

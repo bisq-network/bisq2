@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.input;
+package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.text;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.BaselineHBox;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.MuSigAmountInputFontSizeHelper;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -34,16 +34,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static bisq.common.encoding.UniCodeTable.EN_DASH_SYMBOL;
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.CODE_SPACING;
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.CODE_WIDTH;
 
 @Slf4j
 public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputModel, MuSigAmountTextInputController> {
     private static final double HEIGHT = 70;
     private static final double DASH_PADDING = 5;
+    private static final double CODE_WIDTH = 30;
+    private static final double CODE_SPACING = 10;
 
 
-    private final Label codeLabel;
+    private final Label code;
     private final TextField textField;
     private final Label dash;
     private double lastSize = 0;
@@ -65,12 +65,12 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
         textField.setPadding(new Insets(0));
         textField.setMinWidth(10);
 
-        codeLabel = new Label();
-        codeLabel.setMinWidth(CODE_WIDTH);
-        codeLabel.setMaxWidth(CODE_WIDTH);
-        codeLabel.setAlignment(Pos.BASELINE_LEFT);
-        codeLabel.getStyleClass().add("code");
-        codeLabel.setPadding(new Insets(0));
+        code = new Label();
+        code.setMinWidth(CODE_WIDTH);
+        code.setMaxWidth(CODE_WIDTH);
+        code.setAlignment(Pos.BASELINE_LEFT);
+        code.getStyleClass().add("code");
+        code.setPadding(new Insets(0));
 
         dash = new Label(EN_DASH_SYMBOL);
         dash.getStyleClass().add("amount-input-dash");
@@ -80,16 +80,17 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
         BaselineHBox textInputNode = new BaselineHBox(textField, baseline);
         if (model.isLeftSideRangeAmount()) {
             BaselineHBox dashNode = new BaselineHBox(dash, baseline);
+            HBox.setMargin(dashNode, new Insets(0, 3, 0, -2));
             root.getChildren().addAll(textInputNode, dashNode);
         } else {
-            BaselineHBox codeLabelNode = new BaselineHBox(codeLabel, baseline);
+            BaselineHBox codeLabelNode = new BaselineHBox(code, baseline);
             root.getChildren().addAll(textInputNode, codeLabelNode);
         }
     }
 
     @Override
     protected void onViewAttached() {
-        codeLabel.textProperty().bind(model.getCode());
+        code.textProperty().bind(model.getCode());
         model.getFocusedProperty().bind(textField.focusedProperty());
         subscriptions.add(EasyBind.subscribe(model.getSumOfNumChars(), sumOfNumChars -> {
             if (sumOfNumChars != null) {
@@ -100,24 +101,14 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
 
         subscriptions.add(EasyBind.subscribe(model.getAmountFieldWidth(), width -> {
             if (width != null) {
-               // textField.setMinWidth(width.doubleValue());
-               // textField.setMaxWidth(width.doubleValue());
                 textField.setPrefWidth(width.doubleValue());
-               /* UIThread.runOnNextRenderFrame(()->{
-                    textField.setMinWidth(width.doubleValue());
-                    textField.setMaxWidth(width.doubleValue());
-                    textField.setPrefWidth(width.doubleValue());
-                });*/
             }
         }));
         subscriptions.add(EasyBind.subscribe(model.getDashFieldWidth(), width -> {
             if (width != null) {
-              //  dash.setMinWidth(width.doubleValue());
-               // dash.setMaxWidth(width.doubleValue());
                 dash.setPrefWidth(width.doubleValue());
             }
         }));
-
 
         if (model.isFixedAmount() || !model.isLeftSideRangeAmount()) {
             UIThread.run(() -> {
@@ -129,17 +120,18 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
 
 
     private void updateFontsize(int length) {
-        double size = AmountTextInputLayout.computeFontSize(length);
+        double size = MuSigAmountInputFontSizeHelper.computeFontSize(length);
         if (Math.abs(size - lastSize) > 0.1) {
-            textField.setStyle("-fx-font-size: " + size + "em;");
-            dash.setStyle("-fx-font-size: " + size + "em;");
+            String style = "-fx-font-size: " + size + "em;";
+            textField.setStyle(style);
+            dash.setStyle(style);
             lastSize = size;
         }
     }
 
     @Override
     protected void onViewDetached() {
-        codeLabel.textProperty().unbind();
+        code.textProperty().unbind();
         model.getFocusedProperty().unbind();
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();

@@ -19,7 +19,7 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amo
 
 import bisq.common.encoding.UniCodeTable;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.MuSigAmountInputFontSizeHelper;
 import javafx.geometry.Bounds;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -31,8 +31,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 import java.util.Set;
 
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.PADDING;
-import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.AmountTextInputLayout.WIDTH;
+import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.PADDING;
+import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.WIDTH;
 
 @Slf4j
 public class RangeAmountLayoutHelper extends HBox {
@@ -64,9 +64,15 @@ public class RangeAmountLayoutHelper extends HBox {
     void onViewAttached() {
         minAmount.textProperty().bind(model.getMinAmountInputText());
         maxAmount.textProperty().bind(model.getMaxAmountInputText());
-        model.getMinAmountWidth().bind(minAmount.layoutBoundsProperty().map(Bounds::getWidth));
         model.getDashWidth().bind(dash.layoutBoundsProperty().map(Bounds::getWidth));
-        model.getMaxAmountWidth().bind(maxAmount.layoutBoundsProperty().map(Bounds::getWidth));
+
+        // Add 2 px for cursor
+        model.getMinAmountInputFieldWidth().bind(minAmount.layoutBoundsProperty()
+                .map(Bounds::getWidth)
+                .map(width -> width + 2));
+        model.getMaxAmountInputFieldWidth().bind(maxAmount.layoutBoundsProperty()
+                .map(Bounds::getWidth)
+                .map(width -> width + 2));
 
         subscriptions.add(EasyBind.subscribe(model.getSumOfNumChars(), sumOfNumChars -> {
             if (sumOfNumChars != null) {
@@ -80,17 +86,18 @@ public class RangeAmountLayoutHelper extends HBox {
         subscriptions.clear();
         minAmount.textProperty().unbind();
         maxAmount.textProperty().unbind();
-        model.getMinAmountWidth().unbind();
+        model.getMinAmountInputFieldWidth().unbind();
         model.getDashWidth().unbind();
-        model.getMaxAmountWidth().unbind();
+        model.getMaxAmountInputFieldWidth().unbind();
     }
 
     private void updateFontsize(int length) {
-        double size = AmountTextInputLayout.computeFontSize(length);
+        double size = MuSigAmountInputFontSizeHelper.computeFontSize(length);
         if (Math.abs(size - lastSize) > 0.1) {
-            minAmount.setStyle("-fx-font-size: " + size + "em;");
-            dash.setStyle("-fx-font-size: " + size + "em;");
-            maxAmount.setStyle("-fx-font-size: " + size + "em;");
+            String style = "-fx-font-size: " + size + "em;";
+            minAmount.setStyle(style);
+            dash.setStyle(style);
+            maxAmount.setStyle(style);
             lastSize = size;
         }
     }

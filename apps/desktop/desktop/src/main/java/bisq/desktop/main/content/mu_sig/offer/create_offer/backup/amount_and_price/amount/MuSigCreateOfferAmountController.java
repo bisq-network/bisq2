@@ -64,9 +64,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_TRADE_AMOUNT_IN_USD;
 import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
-import static bisq.mu_sig.MuSigTradeAmountLimits.MIN_USD_TRADE_AMOUNT;
+import static bisq.mu_sig.MuSigTradeAmountLimits.MIN_TRADE_AMOUNT_IN_USD;
 import static bisq.mu_sig.MuSigTradeAmountLimits.withTolerance;
 import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
 
@@ -331,8 +331,8 @@ public class MuSigCreateOfferAmountController implements Controller {
                 .map(PaymentMethod::getPaymentRail)
                 .map(MuSigTradeAmountLimits::getMaxTradeLimitInUsd)
                 .min(Comparator.naturalOrder())
-                .orElse(MAX_USD_TRADE_AMOUNT);
-        MonetaryRange tradeAmountLimitsInUsd = new MonetaryRange(MuSigTradeAmountLimits.MIN_USD_TRADE_AMOUNT, maxTradeLimitInUsd);
+                .orElse(MAX_TRADE_AMOUNT_IN_USD);
+        MonetaryRange tradeAmountLimitsInUsd = new MonetaryRange(MuSigTradeAmountLimits.MIN_TRADE_AMOUNT_IN_USD, maxTradeLimitInUsd);
         amountSelectionController.setTradeAmountLimitsInUsd(tradeAmountLimitsInUsd);
     }
 
@@ -465,13 +465,13 @@ public class MuSigCreateOfferAmountController implements Controller {
         Market market = model.getMarket();
 
         Monetary minRangeValue = market.isCrypto()
-                ? MarketBasedAmountConversion.usdToBtc(marketPriceService, MIN_USD_TRADE_AMOUNT).orElseThrow()
-                : MarketBasedAmountConversion.usdToFiat(marketPriceService, market, MIN_USD_TRADE_AMOUNT)
+                ? MarketBasedAmountConversion.usdToBtc(marketPriceService, MIN_TRADE_AMOUNT_IN_USD).orElseThrow()
+                : MarketBasedAmountConversion.usdToFiat(marketPriceService, market, MIN_TRADE_AMOUNT_IN_USD)
                 .orElseThrow().round(0);
 
         Monetary maxRangeValue = market.isCrypto()
-                ? MarketBasedAmountConversion.usdToBtc(marketPriceService, MAX_USD_TRADE_AMOUNT).orElseThrow()
-                : MarketBasedAmountConversion.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
+                ? MarketBasedAmountConversion.usdToBtc(marketPriceService, MAX_TRADE_AMOUNT_IN_USD).orElseThrow()
+                : MarketBasedAmountConversion.usdToFiat(marketPriceService, market, MAX_TRADE_AMOUNT_IN_USD)
                 .orElseThrow().round(0);
 
         applyMaxAmountBasedOnReputation();

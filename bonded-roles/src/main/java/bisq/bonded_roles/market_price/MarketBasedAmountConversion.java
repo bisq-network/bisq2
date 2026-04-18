@@ -19,7 +19,9 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.TradeAmount;
 
 import java.util.Optional;
 
@@ -116,5 +118,26 @@ public class MarketBasedAmountConversion {
         return otherCryptoToBtc(marketPriceService, otherCryptoBtcMarket, otherCryptoAmount)
                 .flatMap(btc -> btcToUsd(marketPriceService, btc));
 
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Create TradeAmount for USD input and market
+    /* --------------------------------------------------------------------- */
+
+    public static TradeAmount tradeAmountFromUsdAndMarket(MarketPriceService marketPriceService,
+                                                          Market market,
+                                                          Fiat amountInUsd) {
+        Monetary amountInBtc = MarketBasedAmountConversion.usdToBtc(marketPriceService, amountInUsd)
+                .orElseThrow();
+        if (market.isBtcFiatMarket()) {
+            Monetary amountInFiat = MarketBasedAmountConversion.btcToFiat(marketPriceService, market, amountInBtc)
+                    .orElseThrow();
+            return new TradeAmount(amountInBtc, amountInFiat);
+        } else {
+            Monetary amountInOtherCrypto = MarketBasedAmountConversion.btcToOtherCrypto(marketPriceService, market, amountInBtc)
+                    .orElseThrow();
+            return new TradeAmount(amountInOtherCrypto, amountInBtc);
+        }
     }
 }

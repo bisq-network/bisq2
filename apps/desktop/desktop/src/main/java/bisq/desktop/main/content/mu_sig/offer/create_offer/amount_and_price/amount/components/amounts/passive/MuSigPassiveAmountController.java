@@ -60,7 +60,7 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
                 model.getCode().set(code);
                 model.getUseBitcoinDisplay().set(Asset.isBtc(code));
                 model.getFormattedAmount().set(AmountFormatter.formatAmountByMonetaryType(amount));
-                model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", model.getCode()));
+                model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", model.getCode().get()));
             }
         }));
     }

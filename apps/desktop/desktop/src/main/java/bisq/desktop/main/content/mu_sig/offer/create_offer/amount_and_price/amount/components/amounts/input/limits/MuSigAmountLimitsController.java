@@ -15,11 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.slider;
+package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.limits;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +30,27 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 import java.util.Set;
 
+import static bisq.mu_sig.MuSigTradeAmountLimits.MAX_TRADE_AMOUNT_IN_USD;
+import static bisq.mu_sig.MuSigTradeAmountLimits.MIN_TRADE_AMOUNT_IN_USD;
+import static bisq.presentation.formatters.AmountFormatter.formatAmountByMonetaryType;
+
 @Slf4j
-public class MuSigAmountSliderController implements Controller {
-    private final MuSigActiveAmountSliderModel model;
+public class MuSigAmountLimitsController implements Controller {
+    private final MuSigAmountLimitsModel model;
     @Getter
-    private final MuSigActiveAmountSliderView view;
+    private final MuSigAmountLimitsView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
     private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
-    public MuSigAmountSliderController(ServiceProvider serviceProvider,
+    public MuSigAmountLimitsController(ServiceProvider serviceProvider,
                                        CreateOfferDraftWorkflow createOfferDraftWorkflow) {
         this.createOfferDraftWorkflow = createOfferDraftWorkflow;
-        model = new MuSigActiveAmountSliderModel();
-        view = new MuSigActiveAmountSliderView(model, this);
+
+        String minInUsd = Res.get("muSig.offer.create.amount.slider.limit.usd", formatAmountByMonetaryType(MIN_TRADE_AMOUNT_IN_USD));
+        String maxInInUsd = Res.get("muSig.offer.create.amount.slider.limit.usd", formatAmountByMonetaryType(MAX_TRADE_AMOUNT_IN_USD));
+        model = new MuSigAmountLimitsModel(minInUsd, maxInInUsd);
+        view = new MuSigAmountLimitsView(model, this);
     }
 
 
@@ -51,7 +60,14 @@ public class MuSigAmountSliderController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getValue().set(0.3);
+        // Domain specific
+        pins.add(createOfferDraftWorkflow.inputAmountLimitsObservable().addObserver(inputAmountLimits -> {
+            UIThread.run(() -> {
+                model.getMin().set(formatAmountByMonetaryType(inputAmountLimits.getMin()));
+                model.getMax().set(formatAmountByMonetaryType(inputAmountLimits.getMax()));
+                model.getCode().set(inputAmountLimits.getMax().getCode());
+            });
+        }));
     }
 
     @Override
@@ -73,4 +89,14 @@ public class MuSigAmountSliderController implements Controller {
     // UI handlers
     /* --------------------------------------------------------------------- */
 
+
+    double onGetMaxAllowedSliderValue() {
+        return 1;
+      /*  MonetaryRange rangeQuoteSideAmount = model.getRangeQuoteSideAmount().get();
+        if (rangeQuoteSideAmount == null) {
+            return 0;
+        }
+        Monetary maxRangeQuoteSideAmount = rangeQuoteSideAmount.getMax();
+        return getSliderValue(maxRangeQuoteSideAmount.getValue());*/
+    }
 }

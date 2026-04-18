@@ -36,8 +36,8 @@ public class MuSigRangeAmountModel implements Model {
     private final StringProperty minAmountInputText = new SimpleStringProperty();
     private final StringProperty maxAmountInputText = new SimpleStringProperty();
 
-    private final DoubleProperty minAmountWidth = new SimpleDoubleProperty();
-    private final DoubleProperty maxAmountWidth = new SimpleDoubleProperty();
+    private final DoubleProperty minAmountInputFieldWidth = new SimpleDoubleProperty();
+    private final DoubleProperty maxAmountInputFieldWidth = new SimpleDoubleProperty();
     private final DoubleProperty dashWidth = new SimpleDoubleProperty();
 
 }
