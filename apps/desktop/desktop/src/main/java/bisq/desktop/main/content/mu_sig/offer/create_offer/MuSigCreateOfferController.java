@@ -309,7 +309,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private void handlePaymentMethodsUpdate() {
         ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = muSigCreateOfferPaymentController.getSelectedAccountByPaymentMethod();
         List<PaymentMethod<?>> paymentMethods = new ArrayList<>(selectedAccountByPaymentMethod.keySet());
-        muSigCreateOfferAmountAndPriceController.setPaymentMethods(paymentMethods);
         muSigCreateOfferReviewController.setPaymentMethods(paymentMethods);
     }
 }

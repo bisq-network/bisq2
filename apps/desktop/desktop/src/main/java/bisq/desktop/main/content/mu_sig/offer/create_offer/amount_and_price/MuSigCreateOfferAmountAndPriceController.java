@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price;
 
-import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigCreateOfferAmountController;
@@ -30,10 +29,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -44,7 +40,6 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     private final MuSigCreateOfferAmountController muSigCreateOfferAmountController;
     private final MuSigCreateOfferPriceController muSigCreateOfferPriceController;
     private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
-    private Subscription priceSpecPin;
 
     public MuSigCreateOfferAmountAndPriceController(ServiceProvider serviceProvider,
                                                     CreateOfferDraftWorkflow createOfferDraftWorkflow,
@@ -77,14 +72,11 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
         model.setHeadline(getHeadline());
         model.getIsAmountOverlayVisible().bind(muSigCreateOfferAmountController.getIsOverlayVisible());
         model.getIsPriceOverlayVisible().bind(muSigCreateOfferPriceController.getIsOverlayVisible());
-        priceSpecPin = EasyBind.subscribe(muSigCreateOfferPriceController.getPriceSpec(),
-                muSigCreateOfferAmountController::updateAmountSpecWithPriceSpec);
 
     }
 
     @Override
     public void onDeactivate() {
-        priceSpecPin.unsubscribe();
         model.getIsAmountOverlayVisible().unbind();
         model.getIsPriceOverlayVisible().unbind();
     }
@@ -95,18 +87,13 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     /* --------------------------------------------------------------------- */
 
     public void reset() {
-        muSigCreateOfferAmountController.reset();
         muSigCreateOfferPriceController.reset();
         model.reset();
     }
 
-    public void setPaymentMethods(List<PaymentMethod<?>> paymentMethods) {
-        muSigCreateOfferAmountController.setPaymentMethods(paymentMethods);
-    }
 
     public boolean validate() {
-        return muSigCreateOfferAmountController.validate()
-                && muSigCreateOfferPriceController.validate();
+        return muSigCreateOfferPriceController.validate();
     }
 
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {

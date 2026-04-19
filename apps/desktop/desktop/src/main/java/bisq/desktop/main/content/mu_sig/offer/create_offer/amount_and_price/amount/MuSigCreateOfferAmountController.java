@@ -23,7 +23,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.MuSigAmountComponentsController;
+import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.container.MuSigAmountContainerController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -62,10 +62,9 @@ public class MuSigCreateOfferAmountController implements Controller {
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         model = new MuSigCreateOfferAmountModel();
 
-        MuSigAmountComponentsController muSigAmountComponentsController = new MuSigAmountComponentsController(serviceProvider, createOfferDraftWorkflow);
+        MuSigAmountContainerController muSigAmountComponentsController = new MuSigAmountContainerController(serviceProvider, createOfferDraftWorkflow);
         view = new MuSigCreateOfferAmountView(model, this, muSigAmountComponentsController.getView().getRoot());
     }
-
 
     /* --------------------------------------------------------------------- */
     // Lifecycle
