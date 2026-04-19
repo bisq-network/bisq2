@@ -20,6 +20,7 @@ package bisq.api.access.pairing;
 import bisq.api.ApiConfig;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
+import bisq.api.access.pairing.qr.TextQrCodeRenderer;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
@@ -168,7 +169,13 @@ public class PairingService {
     private void writePairingQrCodeToDataDir(String pairingQrCode) {
         try {
             Path path = appDataDirPath.resolve("pairing_qr_code.txt");
-            FileMutatorUtils.writeToPath(pairingQrCode, path);
+            StringBuilder content = new StringBuilder(pairingQrCode);
+            try {
+                content.append("\n\n\n").append(TextQrCodeRenderer.render(pairingQrCode));
+            } catch (Exception e) {
+                log.warn("Failed to render text QR code", e);
+            }
+            FileMutatorUtils.writeToPath(content.toString(), path);
             log.info("Pairing QR code written to {}", path);
         } catch (IOException e) {
             log.error("Error at write pairing QR code to disk at {}", appDataDirPath.resolve("pairing_qr_code.txt"), e);
