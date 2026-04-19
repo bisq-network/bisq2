@@ -17,30 +17,17 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount;
 
-import bisq.account.payment_method.PaymentMethod;
-import bisq.common.monetary.Monetary;
-import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
-import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Optional;
 
 @Getter
 public class MuSigCreateOfferAmountModel implements Model {
     private final BooleanProperty useRangeAmount = new SimpleBooleanProperty();
-
-    private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>();
-    private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
 
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
@@ -52,32 +39,7 @@ public class MuSigCreateOfferAmountModel implements Model {
     private String amountLimitInfoLink;
     @Setter
     private String linkToWikiText;
-    @Setter
-    private Optional<Monetary> baseSideAmount = Optional.empty();
-    @Setter
-    private Monetary reputationBasedMaxAmount;
-    @Setter
-    private long myReputationScore;
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
-    private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
     private final StringProperty errorMessage = new SimpleStringProperty();
-
-    public void reset() {
-        priceSpec.set(null);
-        paymentMethods.clear();
-        amountLimitInfo.set(null);
-        amountLimitInfoOverlayInfo.set(null);
-        shouldShowAmountLimitInfo.set(false);
-        shouldShowHowToBuildReputationButton.set(false);
-        shouldShowWarningIcon.set(false);
-        learnMoreVisible.set(false);
-        amountLimitInfoLink = null;
-        linkToWikiText = null;
-        baseSideAmount = Optional.empty();
-        isOverlayVisible.set(false);
-        priceTooltip.set(null);
-        priceQuote.set(null);
-        errorMessage.set(null);
-    }
 }

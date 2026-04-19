@@ -39,10 +39,10 @@ public class MuSigAmountComponentsView extends View<VBox, MuSigAmountComponentsM
     private static final int HEIGHT = 127;
 
     private final Label description;
-    private final Region selectionLine;
-    private final Set<Subscription> subscriptions = new HashSet<>();
     private final VBox fixAmount;
     private final VBox rangeAmount;
+    private final Region selectionLine;
+    private final Set<Subscription> subscriptions = new HashSet<>();
 
     public MuSigAmountComponentsView(MuSigAmountComponentsModel model,
                                      MuSigAmountComponentsController controller,

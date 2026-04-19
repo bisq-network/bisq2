@@ -25,7 +25,6 @@ import bisq.i18n.Res;
 import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -39,7 +38,6 @@ public class MuSigAmountLimitsController implements Controller {
     private final MuSigAmountLimitsModel model;
     @Getter
     private final MuSigAmountLimitsView view;
-    private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
     private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
@@ -53,14 +51,8 @@ public class MuSigAmountLimitsController implements Controller {
         view = new MuSigAmountLimitsView(model, this);
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Lifecycle
-    /* --------------------------------------------------------------------- */
-
     @Override
     public void onActivate() {
-        // Domain specific
         pins.add(createOfferDraftWorkflow.inputAmountLimitsObservable().addObserver(inputAmountLimits -> {
             UIThread.run(() -> {
                 model.getMin().set(formatAmountByMonetaryType(inputAmountLimits.getMin()));
@@ -72,31 +64,7 @@ public class MuSigAmountLimitsController implements Controller {
 
     @Override
     public void onDeactivate() {
-        subscriptions.forEach(Subscription::unsubscribe);
-        subscriptions.clear();
         pins.forEach(Pin::unbind);
         pins.clear();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Public API
-    /* --------------------------------------------------------------------- */
-
-
-
-    /* --------------------------------------------------------------------- */
-    // UI handlers
-    /* --------------------------------------------------------------------- */
-
-
-    double onGetMaxAllowedSliderValue() {
-        return 1;
-      /*  MonetaryRange rangeQuoteSideAmount = model.getRangeQuoteSideAmount().get();
-        if (rangeQuoteSideAmount == null) {
-            return 0;
-        }
-        Monetary maxRangeQuoteSideAmount = rangeQuoteSideAmount.getMax();
-        return getSliderValue(maxRangeQuoteSideAmount.getValue());*/
     }
 }

@@ -118,6 +118,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
     public double toDouble(long value) {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
+
     public double asDouble() {
         return toDouble(value);
     }
@@ -193,6 +194,16 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
             case IS_GREATER_THAN_OR_EQUAL -> valueForPrecision >= otherValueForPrecision;
             case IS_EQUAL -> valueForPrecision == otherValueForPrecision;
         };
+    }
+
+    public Monetary clamp(Monetary min, Monetary max) {
+        if (value < min.getValue()) {
+            return Monetary.from(this, min.getValue());
+        } else if (value > max.getValue()) {
+            return Monetary.from(this, max.getValue());
+        } else {
+            return this;
+        }
     }
 
     private enum ComparisonOperator {

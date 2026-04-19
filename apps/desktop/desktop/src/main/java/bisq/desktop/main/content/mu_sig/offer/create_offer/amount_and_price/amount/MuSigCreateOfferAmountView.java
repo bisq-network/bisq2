@@ -72,7 +72,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         amountSpecSelectionBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
 
-        // Amount input
+        // Amount component
         amountComponents.getStyleClass().add("min-amount");
         HBox amountBox = new HBox(0, amountComponents);
         amountBox.setAlignment(Pos.BASELINE_LEFT);

@@ -18,11 +18,9 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.components.amounts.input.text;
 
 import bisq.common.monetary.Monetary;
-import bisq.common.observable.Pin;
 import bisq.common.validation.NumberValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -44,14 +42,10 @@ public class MuSigAmountTextInputController implements Controller {
     @Getter
     private final MuSigAmountTextInputView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
-    private final Set<Pin> pins = new HashSet<>();
-    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
     public MuSigAmountTextInputController(ServiceProvider serviceProvider,
-                                          CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                           boolean isFixedAmount,
                                           boolean isLeftSideRangeAmount) {
-        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         StringConverter<Monetary> stringConverter = new StringConverter<>() {
             @Override
             public String toString(Monetary amount) {
@@ -109,8 +103,6 @@ public class MuSigAmountTextInputController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
-        pins.forEach(Pin::unbind);
-        pins.clear();
     }
 
 
@@ -120,18 +112,6 @@ public class MuSigAmountTextInputController implements Controller {
 
     public void setAmount(Monetary value) {
         model.getAmount().set(value);
-    }
-
-    public ReadOnlyObjectProperty<Monetary> amountProperty() {
-        return model.getAmount();
-    }
-
-    public ReadOnlyStringProperty inputTextProperty() {
-        return model.getInputText();
-    }
-
-    public ReadOnlyBooleanProperty focusedProperty() {
-        return model.getFocusedProperty();
     }
 
     public void setSumOfNumChars(int value) {
@@ -146,10 +126,17 @@ public class MuSigAmountTextInputController implements Controller {
         model.getDashFieldWidth().set(value);
     }
 
+    public ReadOnlyObjectProperty<Monetary> amountProperty() {
+        return model.getAmount();
+    }
 
-    /* --------------------------------------------------------------------- */
-    // UI handlers
-    /* --------------------------------------------------------------------- */
+    public ReadOnlyStringProperty inputTextProperty() {
+        return model.getInputText();
+    }
+
+    public ReadOnlyBooleanProperty focusedProperty() {
+        return model.getFocusedProperty();
+    }
 
 
     /* --------------------------------------------------------------------- */

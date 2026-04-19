@@ -42,7 +42,6 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
     private static final double CODE_WIDTH = 30;
     private static final double CODE_SPACING = 10;
 
-
     private final Label code;
     private final TextField textField;
     private final Label dash;
@@ -98,7 +97,6 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
             }
         }));
 
-
         subscriptions.add(EasyBind.subscribe(model.getAmountFieldWidth(), width -> {
             if (width != null) {
                 textField.setPrefWidth(width.doubleValue());
@@ -111,7 +109,7 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
         }));
 
         if (model.isFixedAmount() || !model.isLeftSideRangeAmount()) {
-            UIThread.run(() -> {
+            UIThread.runOnNextRenderFrame(() -> {
                 textField.requestFocus();
                 textField.selectRange(textField.getLength(), textField.getLength());
             });

@@ -36,9 +36,9 @@ public class MuSigRangeAmountSliderController implements Controller {
     private final MuSigRangeAmountSliderModel model;
     @Getter
     private final MuSigRangeAmountSliderView view;
+    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
-    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
 
     public MuSigRangeAmountSliderController(ServiceProvider serviceProvider,
                                             CreateOfferDraftWorkflow createOfferDraftWorkflow) {
@@ -46,12 +46,6 @@ public class MuSigRangeAmountSliderController implements Controller {
         model = new MuSigRangeAmountSliderModel();
         view = new MuSigRangeAmountSliderView(model, this);
     }
-
-
-    /* --------------------------------------------------------------------- */
-    // Lifecycle
-    /* --------------------------------------------------------------------- */
-
 
     @Override
     public void onActivate() {
@@ -80,15 +74,15 @@ public class MuSigRangeAmountSliderController implements Controller {
                 .to(createOfferDraftWorkflow.maxAmountSliderValueObservable()));
     }
 
-    private double clamp(double doubleValue) {
-        return Math.min(doubleValue, model.getMaxAllowedValue().get());
-    }
-
     @Override
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
         pins.forEach(Pin::unbind);
         pins.clear();
+    }
+
+    private double clamp(double doubleValue) {
+        return Math.min(doubleValue, model.getMaxAllowedValue().get());
     }
 }

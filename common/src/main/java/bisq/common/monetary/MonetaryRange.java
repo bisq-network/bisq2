@@ -18,7 +18,11 @@
 package bisq.common.monetary;
 
 import bisq.common.data.Range;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class MonetaryRange extends Range<Monetary> {
     public MonetaryRange(Monetary min, Monetary max) {
         super(min, max);

@@ -67,9 +67,7 @@ public class MuSigAmountComponentsController implements Controller {
     @Override
     public void onActivate() {
         pins.add(createOfferDraftWorkflow.marketObservable().addObserver(market -> {
-            UIThread.run(() -> {
-                applyDescription();
-            });
+            UIThread.run(this::applyDescription);
         }));
 
         pins.add(createOfferDraftWorkflow.useRangeAmountObservable().addObserver(useRangeAmount -> {
@@ -80,9 +78,7 @@ public class MuSigAmountComponentsController implements Controller {
 
 
         pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
-            UIThread.run(() -> {
-                applyDescription();
-            });
+            UIThread.run(this::applyDescription);
         }));
 
         subscriptions.add(EasyBind.subscribe(muSigFixAmountController.getIsTextInputFocused(),
@@ -111,24 +107,11 @@ public class MuSigAmountComponentsController implements Controller {
 
 
     /* --------------------------------------------------------------------- */
-    // Public API
-    /* --------------------------------------------------------------------- */
-
-
-    /* --------------------------------------------------------------------- */
-    // UI handlers
-    /* --------------------------------------------------------------------- */
-
-
-    /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
 
     private void applyDescription() {
         Market market = createOfferDraftWorkflow.getMarket();
-        if (market == null) {
-            return;
-        }
         boolean useRangeAmount = createOfferDraftWorkflow.getUseRangeAmount();
         String code = getCode(market);
         model.getDescription().set(useRangeAmount

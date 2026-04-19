@@ -39,6 +39,7 @@ import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,12 +119,13 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
     @Override
     protected void addObservers() {
         pin(marketObservable().addObserver(value -> {
+            updateTradeAmountLimits();
+            updateUserSpecificTradeAmountLimit();
             updateDefaultTradeAmount();
             updateFixTradeAmount();
             updateMinTradeAmount();
             updateMaxTradeAmount();
-            updateTradeAmountLimits();
-            updateUserSpecificTradeAmountLimit();
+
             updateUserSpecificTradeAmountLimitAsSliderValue();
             updateInputAmountLimits();
         }));
@@ -136,6 +138,8 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
         }));
 
         pin(priceQuoteObservable().addObserver(value -> {
+            updateTradeAmountLimits();
+            updateUserSpecificTradeAmountLimit();
             updateDefaultTradeAmount();
             updateFixTradeAmount();
             updateMinTradeAmount();
@@ -173,65 +177,77 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
         pin(amountSpecObservable().addObserver(value -> {
         }));
         pin(tradeAmountLimitsObservable().addObserver(value -> {
+            updateInputAmountLimits();
         }));
     }
 
 
     /* --------------------------------------------------------------------- */
-    // Domain methods
+    // Write methods
     /* --------------------------------------------------------------------- */
 
     public void setFixTradeAmountFromSliderValue(double sliderValue) {
         TradeAmount fixTradeAmount = getFixTradeAmount();
         TradeAmount tradeAmount = toTradeAmountWithSliderValue(sliderValue, fixTradeAmount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setFixTradeAmount(tradeAmount);
     }
 
     public void setMinTradeAmountFromSliderValue(double sliderValue) {
         TradeAmount minTradeAmount = getMinTradeAmount();
         TradeAmount tradeAmount = toTradeAmountWithSliderValue(sliderValue, minTradeAmount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setMinTradeAmount(tradeAmount);
     }
 
     public void setMaxTradeAmountFromSliderValue(double sliderValue) {
         TradeAmount maxTradeAmount = getMaxTradeAmount();
         TradeAmount tradeAmount = toTradeAmountWithSliderValue(sliderValue, maxTradeAmount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setMaxTradeAmount(tradeAmount);
     }
 
     public void setFixTradeAmountFromInputAmount(Monetary amount) {
         checkNotNull(amount, "amount must not be null");
         TradeAmount tradeAmount = toTradeAmount(amount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setFixTradeAmount(tradeAmount);
     }
 
     public void setMinTradeAmountFromInputAmount(Monetary amount) {
         checkNotNull(amount, "amount must not be null");
         TradeAmount tradeAmount = toTradeAmount(amount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setMinTradeAmount(tradeAmount);
     }
 
     public void setMaxTradeAmountFromInputAmount(Monetary amount) {
         checkNotNull(amount, "amount must not be null");
         TradeAmount tradeAmount = toTradeAmount(amount);
+        tradeAmount = clampTradeAmount(tradeAmount);
         setMaxTradeAmount(tradeAmount);
     }
 
     public Monetary toInputAmount(TradeAmount tradeAmount) {
         if (getUseBaseCurrencyForAmountInput()) {
-            return tradeAmount.getBaseSideAmount();
+            Monetary baseSideAmount = tradeAmount.getBaseSideAmount();
+            return clampBaseSideAmount(baseSideAmount);
         } else {
-            return tradeAmount.getQuoteSideAmount();
+            Monetary quoteSideAmount = tradeAmount.getQuoteSideAmount();
+            return clampQuoteSideAmount(quoteSideAmount);
         }
     }
 
     public Monetary toPassiveAmount(TradeAmount tradeAmount) {
         if (getUseBaseCurrencyForAmountInput()) {
-            return tradeAmount.getQuoteSideAmount();
+            Monetary quoteSideAmount = tradeAmount.getQuoteSideAmount();
+            return clampQuoteSideAmount(quoteSideAmount);
         } else {
-            return tradeAmount.getBaseSideAmount();
+            Monetary baseSideAmount = tradeAmount.getBaseSideAmount();
+            return clampBaseSideAmount(baseSideAmount);
         }
     }
+
 
 
     /* --------------------------------------------------------------------- */
@@ -269,12 +285,19 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
 
     private void updateTradeAmountLimits() {
         Market market = getMarket();
-        TradeAmount minTradeAmount = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
-                market,
+        PriceQuote priceQuote = getPriceQuote();
+        TradeAmount minTradeAmount = TradeAmountConversion.toTradeAmount(market,
+                priceQuote,
                 TradeAmountLimits.MIN_TRADE_AMOUNT_IN_USD);
-        TradeAmount maxTradeAmount = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
-                market,
+        TradeAmount maxTradeAmount = TradeAmountConversion.toTradeAmount(market,
+                priceQuote,
                 getMaxTradeAmountInUsd());
+      /*  TradeAmount minTradeAmount = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
+                market,
+                TradeAmountLimits.MIN_TRADE_AMOUNT_IN_USD);*/
+      /*  TradeAmount maxTradeAmount = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
+                market,
+                getMaxTradeAmountInUsd());*/
 
         TradeAmountRange tradeAmountLimit = new TradeAmountRange(minTradeAmount, maxTradeAmount);
         setTradeAmountLimits(tradeAmountLimit);
@@ -284,9 +307,15 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
         if (getDirection().isBuy()) {
             //todo
             Fiat limit = Fiat.fromFaceValue(3000, "USD");
-            TradeAmount userSpecificTradeAmountLimit = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
-                    getMarket(),
+            Market market = getMarket();
+            PriceQuote priceQuote = getPriceQuote();
+            TradeAmount userSpecificTradeAmountLimit = TradeAmountConversion.toTradeAmount(market,
+                    priceQuote,
                     limit);
+
+           /* TradeAmount userSpecificTradeAmountLimit = MarketBasedAmountConversion.tradeAmountFromUsdAndMarket(marketPriceService,
+                    getMarket(),
+                    limit);*/
             setUserSpecificTradeAmountLimit(Optional.of(userSpecificTradeAmountLimit));
         } else {
             setUserSpecificTradeAmountLimit(Optional.empty());
@@ -377,6 +406,49 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
     private static Fiat getMaxTradeAmountInUsd() {
         // todo based on payment method
         return TradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Apply limits
+    /* --------------------------------------------------------------------- */
+
+    private TradeAmount clampTradeAmount(TradeAmount tradeAmount) {
+        TradeAmountRange tradeAmountLimits = getTradeAmountLimits();
+        return clampTradeAmount(tradeAmountLimits, tradeAmount);
+
+    }
+
+    @VisibleForTesting
+    static TradeAmount clampTradeAmount(TradeAmountRange tradeAmountLimits, TradeAmount tradeAmount) {
+        TradeAmount min = tradeAmountLimits.getMin();
+        TradeAmount max = tradeAmountLimits.getMax();
+        return tradeAmount.clamp(min, max);
+
+    }
+
+    private Monetary clampBaseSideAmount(Monetary baseSideAmount) {
+        TradeAmountRange tradeAmountLimits = getTradeAmountLimits();
+        return clampBaseSideAmount(tradeAmountLimits, baseSideAmount);
+    }
+
+    @VisibleForTesting
+    static Monetary clampBaseSideAmount(TradeAmountRange tradeAmountLimits, Monetary baseSideAmount) {
+        Monetary min = tradeAmountLimits.getMin().getBaseSideAmount();
+        Monetary max = tradeAmountLimits.getMax().getBaseSideAmount();
+        return baseSideAmount.clamp(min, max);
+    }
+
+    private Monetary clampQuoteSideAmount(Monetary quoteSideAmount) {
+        TradeAmountRange tradeAmountLimits = getTradeAmountLimits();
+        return clampQuoteSideAmount(tradeAmountLimits, quoteSideAmount);
+    }
+
+    @VisibleForTesting
+    static Monetary clampQuoteSideAmount(TradeAmountRange tradeAmountLimits, Monetary quoteSideAmount) {
+        Monetary min = tradeAmountLimits.getMin().getQuoteSideAmount();
+        Monetary max = tradeAmountLimits.getMax().getQuoteSideAmount();
+        return quoteSideAmount.clamp(min, max);
     }
 
 

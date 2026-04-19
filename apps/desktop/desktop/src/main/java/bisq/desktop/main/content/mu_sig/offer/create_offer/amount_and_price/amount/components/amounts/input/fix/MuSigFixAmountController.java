@@ -48,20 +48,18 @@ public class MuSigFixAmountController implements Controller {
     private final MuSigFixAmountView view;
     private final MuSigAmountTextInputController amountTextInputController;
     private final MuSigPassiveAmountController passiveAmountController;
-    private final MuSigFixAmountSliderController amountSliderController;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
-    private final MuSigAmountLimitsController amountLimitsController;
 
     public MuSigFixAmountController(ServiceProvider serviceProvider,
                                     CreateOfferDraftWorkflow createOfferDraftWorkflow) {
         this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigFixAmountModel();
 
-        amountTextInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, true, false);
-        passiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, false);
-        amountSliderController = new MuSigFixAmountSliderController(serviceProvider, createOfferDraftWorkflow);
-        amountLimitsController = new MuSigAmountLimitsController(serviceProvider, createOfferDraftWorkflow);
+        amountTextInputController = new MuSigAmountTextInputController(serviceProvider, true, false);
+        passiveAmountController = new MuSigPassiveAmountController(serviceProvider, false);
+        MuSigFixAmountSliderController amountSliderController = new MuSigFixAmountSliderController(serviceProvider, createOfferDraftWorkflow);
+        MuSigAmountLimitsController amountLimitsController = new MuSigAmountLimitsController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigFixAmountView(model, this,
                 amountTextInputController.getView().getRoot(),
@@ -80,20 +78,17 @@ public class MuSigFixAmountController implements Controller {
     public void onActivate() {
         // Domain specific
         pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
-            UIThread.run(() -> {
-                applyAllAmounts();
-            });
+            UIThread.run(this::applyAllAmounts);
         }));
 
         pins.add(createOfferDraftWorkflow.fixTradeAmountObservable().addObserver(tradeAmount -> {
-            UIThread.run(() -> {
-                applyAllAmounts();
-            });
+            UIThread.run(this::applyAllAmounts);
         }));
 
         subscriptions.add(EasyBind.subscribe(amountTextInputController.amountProperty(),
                 amount -> {
                     createOfferDraftWorkflow.setFixTradeAmountFromInputAmount(amount);
+                    applyInputAmount();
                 }));
 
         // UI specific

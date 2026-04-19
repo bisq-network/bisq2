@@ -39,5 +39,4 @@ public class MuSigRangeAmountModel implements Model {
     private final DoubleProperty minAmountInputFieldWidth = new SimpleDoubleProperty();
     private final DoubleProperty maxAmountInputFieldWidth = new SimpleDoubleProperty();
     private final DoubleProperty dashWidth = new SimpleDoubleProperty();
-
 }

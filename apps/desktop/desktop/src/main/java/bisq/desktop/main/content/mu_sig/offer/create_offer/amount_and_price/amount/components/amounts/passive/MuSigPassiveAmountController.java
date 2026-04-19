@@ -19,10 +19,8 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amo
 
 import bisq.common.asset.Asset;
 import bisq.common.monetary.Monetary;
-import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
-import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.presentation.formatters.AmountFormatter;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
@@ -32,17 +30,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class MuSigPassiveAmountController implements bisq.desktop.common.view.Controller {
-    private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final MuSigPassiveAmountModel model;
     @Getter
     private final MuSigPassiveAmountView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
-    private final Set<Pin> pins = new HashSet<>();
 
     public MuSigPassiveAmountController(ServiceProvider serviceProvider,
-                                        CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                         boolean isLeftSideRangeAmount) {
-        this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigPassiveAmountModel(isLeftSideRangeAmount);
         view = new MuSigPassiveAmountView(model, this);
     }
@@ -69,8 +63,6 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
-        pins.forEach(Pin::unbind);
-        pins.clear();
     }
 
     /* --------------------------------------------------------------------- */
@@ -84,16 +76,4 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
     public Monetary getAmount() {
         return model.getAmount().get();
     }
-
-
-    /* --------------------------------------------------------------------- */
-    // UI handlers
-    /* --------------------------------------------------------------------- */
-
-
-
-    /* --------------------------------------------------------------------- */
-    // Private
-    /* --------------------------------------------------------------------- */
-
 }

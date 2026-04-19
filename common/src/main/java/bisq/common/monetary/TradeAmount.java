@@ -32,4 +32,10 @@ public class TradeAmount {
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
     }
+
+    public TradeAmount clamp(TradeAmount min, TradeAmount max) {
+        Monetary clampedBaseSideAmount = baseSideAmount.clamp(min.getBaseSideAmount(), max.getBaseSideAmount());
+        Monetary clampedQuoteSideAmount = quoteSideAmount.clamp(min.getQuoteSideAmount(), max.getQuoteSideAmount());
+        return new TradeAmount(clampedBaseSideAmount, clampedQuoteSideAmount);
+    }
 }

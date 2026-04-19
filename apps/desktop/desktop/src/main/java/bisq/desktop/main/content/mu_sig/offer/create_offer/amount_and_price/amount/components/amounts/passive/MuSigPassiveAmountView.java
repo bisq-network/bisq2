@@ -87,7 +87,6 @@ public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, 
         }
         amountBox.setAlignment(Pos.BASELINE_LEFT);
 
-
         root.setMinHeight(30);
         root.setMaxHeight(30);
 
@@ -100,7 +99,6 @@ public class MuSigPassiveAmountView extends bisq.desktop.common.view.View<HBox, 
             root.getChildren().addAll(amountBox, bitcoinAmountDisplayBox, infoIcon);
         }
     }
-
 
     @Override
     protected void onViewAttached() {

@@ -18,7 +18,11 @@
 package bisq.common.monetary;
 
 import bisq.common.data.Range;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class TradeAmountRange extends Range<TradeAmount> {
     public TradeAmountRange(TradeAmount min, TradeAmount max) {
         super(min, max);

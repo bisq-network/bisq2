@@ -45,25 +45,23 @@ public class MuSigRangeAmountController implements Controller {
     private final MuSigRangeAmountView view;
     private final MuSigAmountTextInputController minAmountInputController;
     private final MuSigPassiveAmountController minPassiveAmountController;
-    private final MuSigRangeAmountSliderController amountSliderController;
     private final MuSigAmountTextInputController maxAmountInputController;
     private final MuSigPassiveAmountController maxPassiveAmountController;
     private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
-    private final MuSigAmountLimitsController amountLimitsController;
 
     public MuSigRangeAmountController(ServiceProvider serviceProvider,
                                       CreateOfferDraftWorkflow createOfferDraftWorkflow) {
         this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         model = new MuSigRangeAmountModel();
 
-        minAmountInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, false, true);
-        maxAmountInputController = new MuSigAmountTextInputController(serviceProvider, createOfferDraftWorkflow, false, false);
-        minPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, true);
-        maxPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, createOfferDraftWorkflow, false);
-        amountSliderController = new MuSigRangeAmountSliderController(serviceProvider, createOfferDraftWorkflow);
-        amountLimitsController = new MuSigAmountLimitsController(serviceProvider, createOfferDraftWorkflow);
+        minAmountInputController = new MuSigAmountTextInputController(serviceProvider, false, true);
+        maxAmountInputController = new MuSigAmountTextInputController(serviceProvider, false, false);
+        minPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, true);
+        maxPassiveAmountController = new MuSigPassiveAmountController(serviceProvider, false);
+        MuSigRangeAmountSliderController amountSliderController = new MuSigRangeAmountSliderController(serviceProvider, createOfferDraftWorkflow);
+        MuSigAmountLimitsController amountLimitsController = new MuSigAmountLimitsController(serviceProvider, createOfferDraftWorkflow);
 
         view = new MuSigRangeAmountView(model, this,
                 minAmountInputController.getView().getRoot(),
@@ -84,31 +82,28 @@ public class MuSigRangeAmountController implements Controller {
     public void onActivate() {
         // Domain specific
         pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(useBaseCurrencyForAmountInput -> {
-            UIThread.run(() -> {
-                applyAllAmounts();
-            });
+            UIThread.run(this::applyAllAmounts);
         }));
 
         pins.add(createOfferDraftWorkflow.minTradeAmountObservable().addObserver(tradeAmount -> {
-            UIThread.run(() -> {
-                applyAllAmounts();
-            });
+            UIThread.run(this::applyAllAmounts);
         }));
         pins.add(createOfferDraftWorkflow.maxTradeAmountObservable().addObserver(tradeAmount -> {
-            UIThread.run(() -> {
-                applyAllAmounts();
-            });
+            UIThread.run(this::applyAllAmounts);
         }));
 
         subscriptions.add(EasyBind.subscribe(minAmountInputController.amountProperty(),
                 amount -> {
                     createOfferDraftWorkflow.setMinTradeAmountFromInputAmount(amount);
+                    applyMinInputAmount();
+
                 }));
 
 
         subscriptions.add(EasyBind.subscribe(maxAmountInputController.amountProperty(),
                 amount -> {
                     createOfferDraftWorkflow.setMaxTradeAmountFromInputAmount(amount);
+                    applyMaxInputAAmount();
                 }));
 
         // UI specific

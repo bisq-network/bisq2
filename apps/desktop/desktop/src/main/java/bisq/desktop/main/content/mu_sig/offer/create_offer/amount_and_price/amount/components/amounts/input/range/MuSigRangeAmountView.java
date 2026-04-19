@@ -28,10 +28,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.PADDING;
 import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.MuSigAmountLayoutConstants.WIDTH;
@@ -40,7 +36,6 @@ import static bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_pri
 public class MuSigRangeAmountView extends View<VBox, MuSigRangeAmountModel, MuSigRangeAmountController> {
     private final BisqMenuItem inputModeToggle;
     private final RangeAmountLayoutHelper layoutHelper;
-    private final Set<Subscription> subscriptions = new HashSet<>();
 
     public MuSigRangeAmountView(MuSigRangeAmountModel model,
                                 MuSigRangeAmountController controller,
@@ -88,8 +83,6 @@ public class MuSigRangeAmountView extends View<VBox, MuSigRangeAmountModel, MuSi
 
     @Override
     protected void onViewDetached() {
-        subscriptions.forEach(Subscription::unsubscribe);
-        subscriptions.clear();
         layoutHelper.onViewDetached();
         inputModeToggle.setOnAction(null);
     }
