@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@ToString(callSuper = true)
 public class TradeAmountRange extends Range<TradeAmount> {
     public TradeAmountRange(TradeAmount min, TradeAmount max) {
         super(min, max);

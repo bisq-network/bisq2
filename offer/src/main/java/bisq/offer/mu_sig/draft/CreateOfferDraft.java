@@ -20,6 +20,7 @@ package bisq.offer.mu_sig.draft;
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
+import bisq.common.monetary.Monetary;
 import bisq.common.monetary.MonetaryRange;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
@@ -54,6 +55,7 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     private final Observable<TradeAmount> maxTradeAmount = new Observable<>();
     private final Observable<Optional<TradeAmount>> userSpecificTradeAmountLimit = new Observable<>();
     private final Observable<Optional<Double>> userSpecificTradeAmountLimitAsSliderValue = new Observable<>();
+    private final Observable<Optional<Monetary>> userSpecificInputAmountLimit = new Observable<>();
     private final Observable<AmountSpec> amountSpec = new Observable<>();
     private final Observable<TradeAmountRange> tradeAmountLimits = new Observable<>();
     private final Observable<MonetaryRange> inputAmountLimits = new Observable<>();
@@ -350,6 +352,25 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     @Override
     public Optional<Double> getUserSpecificTradeAmountLimitAsSliderValue() {
         return userSpecificTradeAmountLimitAsSliderValue.get();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // userSpecificInputAmountLimit
+    /* --------------------------------------------------------------------- */
+
+    void setUserSpecificInputAmountLimit(Optional<Monetary> value) {
+        this.userSpecificInputAmountLimit.set(value);
+    }
+
+    @Override
+    public ReadOnlyObservable<Optional<Monetary>> userSpecificInputAmountLimitObservable() {
+        return userSpecificInputAmountLimit;
+    }
+
+    @Override
+    public Optional<Monetary> getUserSpecificInputAmountLimit() {
+        return userSpecificInputAmountLimit.get();
     }
 
 
