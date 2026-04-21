@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.container.components.passive;
 
 import bisq.common.asset.Asset;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
@@ -53,7 +54,9 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
                 String code = amount.getCode();
                 model.getCode().set(code);
                 model.getUseBitcoinDisplay().set(Asset.isBtc(code));
-                model.getFormattedAmount().set(AmountFormatter.formatAmountByMonetaryType(amount));
+                // XMR has precision of 12, but we only show 8 decimal places
+                int precision = amount instanceof Fiat ? amount.getLowPrecision() : 8;
+                model.getFormattedAmount().set(AmountFormatter.formatAmount(amount, precision));
                 model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", model.getCode().get()));
             }
         }));

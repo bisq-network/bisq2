@@ -59,6 +59,30 @@ public class MonetaryTest {
     }
 
     @Test
+    void testClampWithMonetaryRange() {
+        Monetary min = Coin.asBtcFromFaceValue(0.5);
+        Monetary max = Coin.asBtcFromFaceValue(1.5);
+        MonetaryRange limits = new MonetaryRange(min, max);
+
+        Monetary belowMin = Coin.asBtcFromFaceValue(0.1);
+        Monetary inRange = Coin.asBtcFromFaceValue(1.0);
+        Monetary aboveMax = Coin.asBtcFromFaceValue(2.0);
+
+        assertEquals(min, belowMin.clamp(limits));
+        assertEquals(inRange, inRange.clamp(limits));
+        assertEquals(max, aboveMax.clamp(limits));
+    }
+
+    @Test
+    void testClampThrowsIfCodeDoesNotMatch() {
+        Monetary value = Coin.asBtcFromFaceValue(1.0);
+        Monetary min = Fiat.fromFaceValue(10, "USD");
+        Monetary max = Coin.asBtcFromFaceValue(2.0);
+
+        assertThrows(IllegalArgumentException.class, () -> value.clamp(min, max));
+    }
+
+    @Test
     void testGetRoundedValueForLowPrecision() {
         Monetary monetary = Monetary.from(123456789, "BTC");
         assertEquals(123460000, monetary.getRoundedValueForLowPrecision());

@@ -1,81 +1,212 @@
 package bisq.offer.mu_sig.draft;
 
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
-import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
-import bisq.common.monetary.TradeAmountRange;
+import bisq.common.monetary.TradeAmountConversion;
+import bisq.offer.Direction;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CreateOfferDraftWorkflowTest {
+    private Market defaultMarket;
+    private Market usdBtcMarket;
+    private Market xmrBtcMarket;
+    private PriceQuote defaultMarketPriceQuote;
+    private PriceQuote usdBtcPriceQuote;
+    private PriceQuote xmrBtcPriceQuote;
+    private TradeAmount defaultMarketDefaultTradeAmount;
+    private TradeAmount usdBtcDefaultTradeAmount;
+    private TradeAmount xmrBtcDefaultTradeAmount;
+    private FakeMarketData marketData;
+    private FakeCookieStore cookieStore;
+    private CreateOfferDraftWorkflow workflow;
 
-    @Test
-    public void testClampTradeAmount() {
-        TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
-        TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
-        TradeAmountRange limits = new TradeAmountRange(min, max);
+    @BeforeEach
+    public void setUp() {
+        defaultMarket = MarketRepository.getDefaultBtcFiatMarket();
+        usdBtcMarket = MarketRepository.getUSDBitcoinMarket();
+        xmrBtcMarket = MarketRepository.getXmrBtcMarket();
 
-        // Within limits
-        TradeAmount amount1 = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(500.0, "USD"));
-        assertEquals(amount1, CreateOfferDraftWorkflow.clampTradeAmount(limits, amount1));
+        defaultMarketPriceQuote = PriceQuote.fromPrice(50000,
+                defaultMarket.getBaseCurrencyCode(),
+                defaultMarket.getQuoteCurrencyCode());
+        usdBtcPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        xmrBtcPriceQuote = PriceQuote.fromPrice(0.005, "XMR", "BTC");
 
-        // Below min
-        TradeAmount amount2 = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(50.0, "USD"));
-        assertEquals(min, CreateOfferDraftWorkflow.clampTradeAmount(limits, amount2));
+        defaultMarketDefaultTradeAmount = TradeAmountConversion.toTradeAmount(defaultMarket,
+                defaultMarketPriceQuote,
+                Fiat.fromFaceValue(500, defaultMarket.getQuoteCurrencyCode()));
+        usdBtcDefaultTradeAmount = TradeAmountConversion.toTradeAmount(usdBtcMarket,
+                usdBtcPriceQuote,
+                Fiat.fromFaceValue(500, "USD"));
+        xmrBtcDefaultTradeAmount = TradeAmountConversion.toTradeAmount(xmrBtcMarket,
+                xmrBtcPriceQuote,
+                Coin.asBtcFromFaceValue(0.01));
 
-        // Above max
-        TradeAmount amount3 = new TradeAmount(Coin.asBtcFromFaceValue(15.0), Fiat.fromFaceValue(1500.0, "USD"));
-        assertEquals(max, CreateOfferDraftWorkflow.clampTradeAmount(limits, amount3));
+        marketData = new FakeMarketData(usdBtcPriceQuote);
+        marketData.put(defaultMarket, defaultMarketPriceQuote, defaultMarketDefaultTradeAmount);
+        marketData.put(usdBtcMarket, usdBtcPriceQuote, usdBtcDefaultTradeAmount);
+        marketData.put(xmrBtcMarket, xmrBtcPriceQuote, xmrBtcDefaultTradeAmount);
 
-        // Partially below/above (mixed)
-        TradeAmount amount4 = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(1500.0, "USD"));
-        TradeAmount expected4 = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(1000.0, "USD"));
-        assertEquals(expected4, CreateOfferDraftWorkflow.clampTradeAmount(limits, amount4));
+        cookieStore = new FakeCookieStore(Direction.SELL, false, true, false);
+        workflow = new CreateOfferDraftWorkflow(marketData, cookieStore);
+        workflow.onActivate();
     }
 
     @Test
-    public void testClampBaseSideAmount() {
-        TradeAmount minAmount = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
-        TradeAmount maxAmount = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
-        TradeAmountRange limits = new TradeAmountRange(minAmount, maxAmount);
+    public void setMarketResetsPriceAndAmountsDeterministically() {
+        workflow.setMarket(xmrBtcMarket);
 
-        Monetary min = minAmount.getBaseSideAmount();
-        Monetary max = maxAmount.getBaseSideAmount();
-
-        // Within limits
-        Monetary amount1 = Coin.asBtcFromFaceValue(5.0);
-        assertEquals(amount1, CreateOfferDraftWorkflow.clampBaseSideAmount(limits, amount1));
-
-        // Below min
-        Monetary amount2 = Coin.asBtcFromFaceValue(0.5);
-        assertEquals(min, CreateOfferDraftWorkflow.clampBaseSideAmount(limits, amount2));
-
-        // Above max
-        Monetary amount3 = Coin.asBtcFromFaceValue(15.0);
-        assertEquals(max, CreateOfferDraftWorkflow.clampBaseSideAmount(limits, amount3));
+        assertEquals(xmrBtcMarket, workflow.getMarket());
+        assertEquals(xmrBtcPriceQuote, workflow.getPriceQuote());
+        assertEquals(xmrBtcDefaultTradeAmount, workflow.getFixTradeAmount());
+        assertEquals(xmrBtcDefaultTradeAmount, workflow.getMinTradeAmount());
+        assertEquals(xmrBtcDefaultTradeAmount, workflow.getMaxTradeAmount());
+        assertNotNull(workflow.getTradeAmountLimits());
+        assertNotNull(workflow.getInputAmountLimits());
     }
 
     @Test
-    public void testClampQuoteSideAmount() {
-        TradeAmount minAmount = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
-        TradeAmount maxAmount = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
-        TradeAmountRange limits = new TradeAmountRange(minAmount, maxAmount);
+    public void setPriceQuoteKeepsQuoteInputAmountConstant() {
+        workflow.setMarket(usdBtcMarket);
+        workflow.setUseBaseCurrencyForAmountInput(false);
+        workflow.setFixTradeAmountFromInputAmount(Fiat.fromFaceValue(500, "USD"));
 
-        Monetary min = minAmount.getQuoteSideAmount();
-        Monetary max = maxAmount.getQuoteSideAmount();
+        TradeAmount fixTradeAmountBefore = workflow.getFixTradeAmount();
+        workflow.setPriceQuote(PriceQuote.fromFiatPrice(40000, "USD"));
+        TradeAmount fixTradeAmountAfter = workflow.getFixTradeAmount();
 
-        // Within limits
-        Monetary amount1 = Fiat.fromFaceValue(500.0, "USD");
-        assertEquals(amount1, CreateOfferDraftWorkflow.clampQuoteSideAmount(limits, amount1));
+        assertEquals(fixTradeAmountBefore.getQuoteSideAmount(), fixTradeAmountAfter.getQuoteSideAmount());
+        assertEquals(Coin.asBtcFromFaceValue(0.0125), fixTradeAmountAfter.getBaseSideAmount());
+    }
 
-        // Below min
-        Monetary amount2 = Fiat.fromFaceValue(50.0, "USD");
-        assertEquals(min, CreateOfferDraftWorkflow.clampQuoteSideAmount(limits, amount2));
+    @Test
+    public void setDirectionRecomputesUserSpecificLimitAndKeepsAmountsStable() {
+        workflow.setMarket(usdBtcMarket);
+        TradeAmount fixTradeAmountBefore = workflow.getFixTradeAmount();
 
-        // Above max
-        Monetary amount3 = Fiat.fromFaceValue(1500.0, "USD");
-        assertEquals(max, CreateOfferDraftWorkflow.clampQuoteSideAmount(limits, amount3));
+        workflow.setDirection(Direction.BUY);
+        Optional<TradeAmount> buyLimit = workflow.getUserSpecificTradeAmountLimit();
+
+        workflow.setDirection(Direction.SELL);
+
+        assertTrue(buyLimit.isPresent());
+        assertTrue(workflow.getUserSpecificTradeAmountLimit().isEmpty());
+        assertEquals(fixTradeAmountBefore, workflow.getFixTradeAmount());
+        assertEquals(List.of(Direction.BUY, Direction.SELL), cookieStore.persistedDirections);
+    }
+
+    @Test
+    public void settersBeforeActivationOnlyMutateInputs() {
+        FakeCookieStore nonActivatedCookieStore = new FakeCookieStore(Direction.SELL, false, true, false);
+        CreateOfferDraftWorkflow nonActivatedWorkflow = new CreateOfferDraftWorkflow(marketData, nonActivatedCookieStore);
+
+        nonActivatedWorkflow.setMarket(xmrBtcMarket);
+        nonActivatedWorkflow.setDirection(Direction.BUY);
+
+        assertEquals(xmrBtcMarket, nonActivatedWorkflow.getMarket());
+        assertEquals(Direction.BUY, nonActivatedWorkflow.getDirection());
+        assertNull(nonActivatedWorkflow.getPriceQuote());
+        assertTrue(nonActivatedCookieStore.persistedDirections.isEmpty());
+    }
+
+    private static class FakeMarketData implements CreateOfferDraftMarketData {
+        private final Map<Market, PriceQuote> priceQuoteByMarket = new HashMap<>();
+        private final Map<Market, TradeAmount> defaultTradeAmountByMarket = new HashMap<>();
+        private final PriceQuote btcUsdPriceQuote;
+
+        private FakeMarketData(PriceQuote btcUsdPriceQuote) {
+            this.btcUsdPriceQuote = btcUsdPriceQuote;
+        }
+
+        private void put(Market market, PriceQuote priceQuote, TradeAmount defaultTradeAmount) {
+            priceQuoteByMarket.put(market, priceQuote);
+            defaultTradeAmountByMarket.put(market, defaultTradeAmount);
+        }
+
+        @Override
+        public PriceQuote getMarketPriceQuote(Market market) {
+            return Optional.ofNullable(priceQuoteByMarket.get(market))
+                    .orElseThrow(() -> new IllegalStateException("Market price quote not available for " + market));
+        }
+
+        @Override
+        public PriceQuote getBtcUsdPriceQuote() {
+            return btcUsdPriceQuote;
+        }
+
+        @Override
+        public TradeAmount getTradeAmountFromUsd(Market market, Fiat usdAmount) {
+            return Optional.ofNullable(defaultTradeAmountByMarket.get(market))
+                    .orElseThrow(() -> new IllegalStateException("Default trade amount not available for " + market));
+        }
+    }
+
+    private static class FakeCookieStore implements CreateOfferDraftCookieStore {
+        private final Direction defaultDirection;
+        private final boolean defaultUseBaseForFiatMarkets;
+        private final boolean defaultUseBaseForOtherMarkets;
+        private final boolean defaultUseRangeAmount;
+        private final List<Direction> persistedDirections = new ArrayList<>();
+        private final List<InputModePreference> persistedInputModes = new ArrayList<>();
+        private final List<Boolean> persistedUseRangeAmountValues = new ArrayList<>();
+
+        private FakeCookieStore(Direction defaultDirection,
+                                boolean defaultUseBaseForFiatMarkets,
+                                boolean defaultUseBaseForOtherMarkets,
+                                boolean defaultUseRangeAmount) {
+            this.defaultDirection = defaultDirection;
+            this.defaultUseBaseForFiatMarkets = defaultUseBaseForFiatMarkets;
+            this.defaultUseBaseForOtherMarkets = defaultUseBaseForOtherMarkets;
+            this.defaultUseRangeAmount = defaultUseRangeAmount;
+        }
+
+        @Override
+        public Direction getDefaultDirection() {
+            return defaultDirection;
+        }
+
+        @Override
+        public boolean getDefaultUseBaseCurrencyForAmountInput(Market market) {
+            return market.isBtcFiatMarket() ? defaultUseBaseForFiatMarkets : defaultUseBaseForOtherMarkets;
+        }
+
+        @Override
+        public boolean getDefaultUseRangeAmount() {
+            return defaultUseRangeAmount;
+        }
+
+        @Override
+        public void persistDirection(Direction direction) {
+            persistedDirections.add(direction);
+        }
+
+        @Override
+        public void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput) {
+            persistedInputModes.add(new InputModePreference(market, useBaseCurrencyForAmountInput));
+        }
+
+        @Override
+        public void persistUseRangeAmount(boolean useRangeAmount) {
+            persistedUseRangeAmountValues.add(useRangeAmount);
+        }
+    }
+
+    private record InputModePreference(Market market, boolean useBaseCurrencyForAmountInput) {
     }
 }

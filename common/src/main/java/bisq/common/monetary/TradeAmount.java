@@ -17,10 +17,15 @@
 
 package bisq.common.monetary;
 
+import bisq.common.asset.Asset;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -29,13 +34,23 @@ public class TradeAmount {
     private final Monetary quoteSideAmount;
 
     public TradeAmount(Monetary baseSideAmount, Monetary quoteSideAmount) {
+        checkArgument(!baseSideAmount.getCode().equals(quoteSideAmount.getCode()),
+                "baseSideAmount must not be the same code as the quote.quoteSideAmount");
+        checkArgument(Asset.isBtc(baseSideAmount.getCode()) || Asset.isBtc(quoteSideAmount.getCode()),
+                "Either baseSideAmount or quoteSideAmount must be BTC");
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
     }
 
+    public TradeAmount clamp(TradeAmountRange limits) {
+        return clamp(limits.getMin(), limits.getMax());
+    }
+
     public TradeAmount clamp(TradeAmount min, TradeAmount max) {
-        Monetary clampedBaseSideAmount = baseSideAmount.clamp(min.getBaseSideAmount(), max.getBaseSideAmount());
-        Monetary clampedQuoteSideAmount = quoteSideAmount.clamp(min.getQuoteSideAmount(), max.getQuoteSideAmount());
+        MonetaryRange baseSideLimits = new MonetaryRange(min.getBaseSideAmount(), max.getBaseSideAmount());
+        MonetaryRange quoteSideLimits = new MonetaryRange(min.getQuoteSideAmount(), max.getQuoteSideAmount());
+        Monetary clampedBaseSideAmount = baseSideAmount.clamp(baseSideLimits);
+        Monetary clampedQuoteSideAmount = quoteSideAmount.clamp(quoteSideLimits);
         return new TradeAmount(clampedBaseSideAmount, clampedQuoteSideAmount);
     }
 }

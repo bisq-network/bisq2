@@ -94,7 +94,7 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         learnMore.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         amountLimitInfoHBox = new HBox(2.5, warningIcon, amountLimitInfo, learnMore);
-        amountLimitInfoHBox.setAlignment(Pos.CENTER);
+        amountLimitInfoHBox.setAlignment(Pos.CENTER_LEFT);
 
 
         // Amount limit overlay

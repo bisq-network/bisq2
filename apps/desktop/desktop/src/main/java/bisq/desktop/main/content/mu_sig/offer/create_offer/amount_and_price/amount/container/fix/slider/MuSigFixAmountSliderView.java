@@ -51,13 +51,10 @@ public class MuSigFixAmountSliderView extends View<VBox, MuSigFixAmountSliderMod
     protected void onViewAttached() {
         slider.valueProperty().bindBidirectional(model.getGetSliderValue());
         subscriptions.add(EasyBind.subscribe(slider.valueProperty(), value -> {
-            double maxAllowedValue = model.getMaxAllowedValue().get();
-            if (value.doubleValue() > maxAllowedValue) {
-                slider.setValue(maxAllowedValue);
-            }
-
-            String style = getSliderTrackStyle(maxAllowedValue);
-            slider.setStyle(style);
+            updateSliderValueAndStyle();
+        }));
+        subscriptions.add(EasyBind.subscribe(model.getMaxAllowedValue(), maxAllowedValue -> {
+            updateSliderValueAndStyle();
         }));
     }
 
@@ -66,5 +63,15 @@ public class MuSigFixAmountSliderView extends View<VBox, MuSigFixAmountSliderMod
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
         slider.valueProperty().unbindBidirectional(model.getGetSliderValue());
+    }
+
+    private void updateSliderValueAndStyle() {
+        double maxAllowedValue = model.getMaxAllowedValue().get();
+        if (slider.getValue() > maxAllowedValue) {
+            slider.setValue(maxAllowedValue);
+        }
+
+        String style = getSliderTrackStyle(maxAllowedValue);
+        slider.setStyle(style);
     }
 }

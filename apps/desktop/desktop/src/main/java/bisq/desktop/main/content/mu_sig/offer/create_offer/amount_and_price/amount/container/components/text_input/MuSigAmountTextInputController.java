@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.container.components.text_input;
 
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.validation.NumberValidation;
 import bisq.desktop.ServiceProvider;
@@ -145,7 +146,9 @@ public class MuSigAmountTextInputController implements Controller {
 
     private String formatAmount(Monetary amount) {
         if (amount != null) {
-            return AmountFormatter.formatAmountByMonetaryType(amount);
+            // XMR has precision of 12, but we only show 8 decimal places
+            int precision = amount instanceof Fiat ? amount.getLowPrecision() : 8;
+            return AmountFormatter.formatAmount(amount, precision);
         } else {
             return "";
         }

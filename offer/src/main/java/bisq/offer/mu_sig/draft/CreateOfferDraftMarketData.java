@@ -18,13 +18,14 @@
 package bisq.offer.mu_sig.draft;
 
 import bisq.common.market.Market;
-import bisq.offer.Direction;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.PriceQuote;
+import bisq.common.monetary.TradeAmount;
 
-public abstract class ReadOnlyOfferDraft {
-    public ReadOnlyOfferDraft() {
-    }
+public interface CreateOfferDraftMarketData {
+    PriceQuote getMarketPriceQuote(Market market);
 
-    public abstract Market getMarket();
+    PriceQuote getBtcUsdPriceQuote();
 
-    public abstract Direction getDirection();
+    TradeAmount getTradeAmountFromUsd(Market market, Fiat usdAmount);
 }

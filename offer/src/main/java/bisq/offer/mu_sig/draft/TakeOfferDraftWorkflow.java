@@ -28,15 +28,12 @@ public class TakeOfferDraftWorkflow extends OfferDraftWorkflow<TakeOfferDraft> {
     }
 
     @Override
-    protected void initialize() {
+    public void onActivate() {
+        addObservers();
     }
 
     @Override
     protected void addObservers() {
-    }
-
-    @Override
-    protected void reset() {
     }
 
     public void setOffer(MuSigOffer offer) {

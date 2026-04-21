@@ -25,6 +25,23 @@ import bisq.common.monetary.TradeAmount;
  * AmountUtil and OfferAmountFormatter exposes public APIs.
  */
 public class AmountSpecFactory {
+    public static AmountSpec createAmountSpec(boolean isBtcFiatMarket,
+                                              boolean useRangeAmount,
+                                              TradeAmount minTradeAmount,
+                                              TradeAmount maxTradeAmount,
+                                              TradeAmount fixTradeAmount) {
+        if (isBtcFiatMarket) {
+            return createBaseSideAmountSpec(useRangeAmount,
+                    minTradeAmount,
+                    maxTradeAmount,
+                    fixTradeAmount);
+        } else {
+            return createQuoteSideAmountSpec(useRangeAmount,
+                    minTradeAmount,
+                    maxTradeAmount,
+                    fixTradeAmount);
+        }
+    }
 
     public static BaseSideAmountSpec createBaseSideAmountSpec(boolean useRangeAmount,
                                                               TradeAmount minTradeAmount,
@@ -37,6 +54,20 @@ public class AmountSpecFactory {
         } else {
             long fixAmount = fixTradeAmount.getBaseSideAmount().getValue();
             return new BaseSideFixedAmountSpec(fixAmount);
+        }
+    }
+
+    public static QuoteSideAmountSpec createQuoteSideAmountSpec(boolean useRangeAmount,
+                                                                TradeAmount minTradeAmount,
+                                                                TradeAmount maxTradeAmount,
+                                                                TradeAmount fixTradeAmount) {
+        if (useRangeAmount) {
+            long minAmount = minTradeAmount.getQuoteSideAmount().getValue();
+            long maxAmount = maxTradeAmount.getQuoteSideAmount().getValue();
+            return new QuoteSideRangeAmountSpec(minAmount, maxAmount);
+        } else {
+            long fixAmount = fixTradeAmount.getQuoteSideAmount().getValue();
+            return new QuoteSideFixedAmountSpec(fixAmount);
         }
     }
 }

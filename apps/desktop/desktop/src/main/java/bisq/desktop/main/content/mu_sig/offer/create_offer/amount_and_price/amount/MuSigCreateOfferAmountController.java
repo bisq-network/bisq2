@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount;
 
+import bisq.common.monetary.TradeAmount;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -25,9 +26,11 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.mu_sig.offer.create_offer.amount_and_price.amount.container.MuSigAmountContainerController;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
 import bisq.offer.mu_sig.draft.CreateOfferDraftWorkflow;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
@@ -35,6 +38,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -79,9 +83,24 @@ public class MuSigCreateOfferAmountController implements Controller {
         }));
         pins.add(createOfferDraftWorkflow.userSpecificTradeAmountLimitObservable().addObserver(value -> {
             UIThread.run(() -> {
-                // TODO show info text
+                applyAmountLimitInfo();
             });
         }));
+        pins.add(createOfferDraftWorkflow.useBaseCurrencyForAmountInputObservable().addObserver(value -> {
+            UIThread.run(() -> {
+                applyAmountLimitInfo();
+            });
+        }));
+    }
+
+    private void applyAmountLimitInfo() {
+        Optional<TradeAmount> userSpecificTradeAmountLimit = createOfferDraftWorkflow.getUserSpecificTradeAmountLimit();
+        model.getShouldShowAmountLimitInfo().set(userSpecificTradeAmountLimit.isPresent());
+        boolean useBaseCurrencyForAmountInput = createOfferDraftWorkflow.getUseBaseCurrencyForAmountInput();
+        model.getAmountLimitInfo().set(userSpecificTradeAmountLimit.map(tradeAmount -> useBaseCurrencyForAmountInput ? tradeAmount.getBaseSideAmount() : tradeAmount.getQuoteSideAmount())
+                .map(monetary -> AmountFormatter.formatAmountWithCode(monetary, true))
+                .map(formatted -> Res.get("muSig.offer.create.amount.limitInfo.buyer", formatted))
+                .orElse(""));
     }
 
     @Override

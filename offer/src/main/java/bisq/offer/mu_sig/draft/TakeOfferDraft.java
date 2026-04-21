@@ -19,12 +19,9 @@ package bisq.offer.mu_sig.draft;
 
 import bisq.common.market.Market;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.offer.price.spec.PriceSpec;
 
 public class TakeOfferDraft extends ReadOnlyOfferDraft {
-
 
     private MuSigOffer offer;
 
@@ -47,15 +44,5 @@ public class TakeOfferDraft extends ReadOnlyOfferDraft {
     @Override
     public Direction getDirection() {
         return offer.getDirection();
-    }
-
-    @Override
-    public PriceSpec getPriceSpec() {
-        return offer.getPriceSpec();
-    }
-
-    @Override
-    public AmountSpec getAmountSpec() {
-        return offer.getAmountSpec();
     }
 }

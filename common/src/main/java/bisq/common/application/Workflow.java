@@ -34,24 +34,16 @@ public abstract class Workflow {
     // Lifecycle
     /* --------------------------------------------------------------------- */
 
-    public final void onActivate() {
-        initialize();
-        addObservers();
-    }
+    abstract public void onActivate();
 
     public final void onDeactivate() {
         if (pins != null) {
             pins.forEach(Pin::unbind);
             pins.clear();
         }
-        reset();
     }
 
-    abstract protected void initialize();
-
     abstract protected void addObservers();
-
-    abstract protected void reset();
 
     protected void pin(Pin pin) {
         getPins().add(pin);

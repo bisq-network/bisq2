@@ -79,12 +79,12 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     @Override
     public void onActivate() {
         Market market = createOfferDraftWorkflow.getMarket();
+
         model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
 
         model.getSelectedMarketTypeListItem().set(market.isCrypto()
                 ? new MarketTypeListItem(MarketType.OTHER)
                 : new MarketTypeListItem(MarketType.FIAT));
-        selectDirection(Direction.BUY);
 
         model.getPaymentCurrencySearchText().set("");
 
@@ -207,7 +207,6 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         if (market != null) {
             createOfferDraftWorkflow.setMarket(market);
 
-            createOfferDraftWorkflow.setMarket(market);
             model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
 
             MarketListItem item = model.getMarketListItems().stream()

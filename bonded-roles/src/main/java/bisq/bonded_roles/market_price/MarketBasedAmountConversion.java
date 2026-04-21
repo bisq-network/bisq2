@@ -125,9 +125,9 @@ public class MarketBasedAmountConversion {
     // Create TradeAmount for USD input and market
     /* --------------------------------------------------------------------- */
 
-    public static TradeAmount tradeAmountFromUsdAndMarket(MarketPriceService marketPriceService,
-                                                          Market market,
-                                                          Fiat amountInUsd) {
+    public static TradeAmount tradeAmountFromUsdAmount(MarketPriceService marketPriceService,
+                                                       Market market,
+                                                       Fiat amountInUsd) {
         Monetary amountInBtc = MarketBasedAmountConversion.usdToBtc(marketPriceService, amountInUsd)
                 .orElseThrow();
         if (market.isBtcFiatMarket()) {

@@ -18,26 +18,42 @@
 package bisq.common.monetary;
 
 import bisq.common.market.Market;
+import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeAmountConversion {
     public static TradeAmount toTradeAmount(Market market, PriceQuote priceQuote, Monetary amount) {
         checkNotNull(market, "Market must not be null");
+        checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(amount, "amount must not be null");
 
         if (isBaseSideAmount(market, amount)) {
             return new TradeAmount(amount, priceQuote.toQuoteSideMonetary(amount));
-        } else {
+        } else if (isQuoteSideAmount(market, amount)) {
             return new TradeAmount(priceQuote.toBaseSideMonetary(amount), amount);
+        } else {
+            throw new IllegalArgumentException("Amount is neither base nor quote side for market: " + market + ". amount=" + amount);
         }
     }
 
-    public static boolean isBaseSideAmount(Market market, Monetary amount) {
+    @VisibleForTesting
+    static boolean isBaseSideAmount(Market market, Monetary amount) {
         return isBaseSideAmount(market.getBaseCurrencyCode(), amount);
     }
 
-    public static boolean isBaseSideAmount(String baseCurrencyCode, Monetary amount) {
+    @VisibleForTesting
+    static boolean isBaseSideAmount(String baseCurrencyCode, Monetary amount) {
         return baseCurrencyCode.equals(amount.getCode());
+    }
+
+    @VisibleForTesting
+    static boolean isQuoteSideAmount(Market market, Monetary amount) {
+        return isQuoteSideAmount(market.getQuoteCurrencyCode(), amount);
+    }
+
+    @VisibleForTesting
+    static boolean isQuoteSideAmount(String quoteCurrencyCode, Monetary amount) {
+        return quoteCurrencyCode.equals(amount.getCode());
     }
 }

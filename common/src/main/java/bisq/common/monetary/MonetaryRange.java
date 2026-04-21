@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@ToString(callSuper = true)
 public class MonetaryRange extends Range<Monetary> {
     public MonetaryRange(Monetary min, Monetary max) {
         super(min, max);

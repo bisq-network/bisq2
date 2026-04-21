@@ -20,11 +20,16 @@ package bisq.offer.mu_sig.draft;
 import bisq.common.market.Market;
 import bisq.offer.Direction;
 
-public abstract class ReadOnlyOfferDraft {
-    public ReadOnlyOfferDraft() {
-    }
+public interface CreateOfferDraftCookieStore {
+    Direction getDefaultDirection();
 
-    public abstract Market getMarket();
+    boolean getDefaultUseBaseCurrencyForAmountInput(Market market);
 
-    public abstract Direction getDirection();
+    boolean getDefaultUseRangeAmount();
+
+    void persistDirection(Direction direction);
+
+    void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput);
+
+    void persistUseRangeAmount(boolean useRangeAmount);
 }

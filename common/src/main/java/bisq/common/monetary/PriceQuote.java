@@ -17,8 +17,8 @@
 
 package bisq.common.monetary;
 
-import bisq.common.market.Market;
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
@@ -154,7 +154,9 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      */
     public Monetary toQuoteSideMonetary(Monetary baseSideMonetary) {
         checkArgument(baseSideMonetary.getClass() == this.baseSideMonetary.getClass(),
-                "baseSideMonetary must be the same type as the quote.baseSideMonetary");
+                "baseSideMonetary must be the same type as the quote.baseSideMonetary.\n" +
+                        "parameter baseSideMonetary=" + baseSideMonetary + "\n" +
+                        "this.baseSideMonetary" + this.baseSideMonetary);
         long value = BigDecimal.valueOf(baseSideMonetary.value).multiply(BigDecimal.valueOf(this.value))
                 .movePointLeft(baseSideMonetary.precision)
                 .longValue();
@@ -171,7 +173,9 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
 
     public Monetary toBaseSideMonetary(Monetary quoteSideMonetary) {
         checkArgument(quoteSideMonetary.getClass() == this.quoteSideMonetary.getClass(),
-                "quoteSideMonetary must be the same type as the quote.quoteSideMonetary");
+                "quoteSideMonetary must be the same type as the quote.quoteSideMonetary.\n" +
+                        "parameter quoteSideMonetary=" + quoteSideMonetary + "\n" +
+                        "this.quoteSideMonetary" + this.quoteSideMonetary);
         long value = BigDecimal.valueOf(quoteSideMonetary.value)
                 .movePointRight(baseSideMonetary.precision)
                 .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)

@@ -21,10 +21,21 @@ import bisq.common.data.Range;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class TradeAmountRange extends Range<TradeAmount> {
     public TradeAmountRange(TradeAmount min, TradeAmount max) {
         super(min, max);
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+        checkArgument(min.getBaseSideAmount().getCode().equals(max.getBaseSideAmount().getCode()),
+                "min and max base side codes must match. min.base=%s; max.base=%s",
+                min.getBaseSideAmount().getCode(), max.getBaseSideAmount().getCode());
+        checkArgument(min.getQuoteSideAmount().getCode().equals(max.getQuoteSideAmount().getCode()),
+                "min and max quote side codes must match. min.quote=%s; max.quote=%s",
+                min.getQuoteSideAmount().getCode(), max.getQuoteSideAmount().getCode());
     }
 }

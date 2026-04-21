@@ -30,8 +30,6 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.price.spec.PriceSpec;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
@@ -45,24 +43,21 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
 
     private final Observable<PriceQuote> priceQuote = new Observable<>();
-    private final Observable<PriceSpec> priceSpec = new Observable<>();
 
-    private final Observable<Boolean> useBaseCurrencyForAmountInput = new Observable<>();
-    private final Observable<Boolean> useRangeAmount = new Observable<>();
-    private final Observable<TradeAmount> defaultTradeAmount = new Observable<>();
+    private final Observable<Boolean> useBaseCurrencyForAmountInput = new Observable<>(false);
+    private final Observable<Boolean> useRangeAmount = new Observable<>(false);
     private final Observable<TradeAmount> fixTradeAmount = new Observable<>();
     private final Observable<TradeAmount> minTradeAmount = new Observable<>();
     private final Observable<TradeAmount> maxTradeAmount = new Observable<>();
-    private final Observable<Optional<TradeAmount>> userSpecificTradeAmountLimit = new Observable<>();
-    private final Observable<Optional<Double>> userSpecificTradeAmountLimitAsSliderValue = new Observable<>();
-    private final Observable<Optional<Monetary>> userSpecificInputAmountLimit = new Observable<>();
-    private final Observable<AmountSpec> amountSpec = new Observable<>();
+    private final Observable<Optional<TradeAmount>> userSpecificTradeAmountLimit = new Observable<>(Optional.empty());
+    private final Observable<Optional<Double>> userSpecificTradeAmountLimitAsSliderValue = new Observable<>(Optional.empty());
+    private final Observable<Optional<Monetary>> userSpecificInputAmountLimit = new Observable<>(Optional.empty());
     private final Observable<TradeAmountRange> tradeAmountLimits = new Observable<>();
     private final Observable<MonetaryRange> inputAmountLimits = new Observable<>();
 
-    private final Observable<Double> fixAmountSliderValue = new Observable<>();
-    private final Observable<Double> minAmountSliderValue = new Observable<>();
-    private final Observable<Double> maxAmountSliderValue = new Observable<>();
+    private final Observable<Double> fixAmountSliderValue = new Observable<>(0d);
+    private final Observable<Double> minAmountSliderValue = new Observable<>(0d);
+    private final Observable<Double> maxAmountSliderValue = new Observable<>(0d);
 
     public CreateOfferDraft() {
     }
@@ -147,24 +142,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
         return priceQuote.get();
     }
 
-    /* --------------------------------------------------------------------- */
-    // PriceSpec
-    /* --------------------------------------------------------------------- */
-
-    void setPriceSpec(PriceSpec priceSpec) {
-        this.priceSpec.set(priceSpec);
-    }
-
-    @Override
-    public ReadOnlyObservable<PriceSpec> priceSpecObservable() {
-        return priceSpec;
-    }
-
-    @Override
-    public PriceSpec getPriceSpec() {
-        return priceSpec.get();
-    }
-
 
     /* --------------------------------------------------------------------- */
     // useBaseCurrencyForAmountInput
@@ -203,23 +180,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
         return useRangeAmount.get();
     }
 
-    /* --------------------------------------------------------------------- */
-    // defaultTradeAmount
-    /* --------------------------------------------------------------------- */
-
-    void setDefaultTradeAmount(TradeAmount defaultTradeAmount) {
-        this.defaultTradeAmount.set(defaultTradeAmount);
-    }
-
-    @Override
-    public ReadOnlyObservable<TradeAmount> defaultTradeAmountObservable() {
-        return defaultTradeAmount;
-    }
-
-    @Override
-    public TradeAmount getDefaultTradeAmount() {
-        return defaultTradeAmount.get();
-    }
 
     /* --------------------------------------------------------------------- */
     // fixTradeAmount
@@ -278,26 +238,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     }
 
 
-
-    /* --------------------------------------------------------------------- */
-    // AmountSpec
-    /* --------------------------------------------------------------------- */
-
-    void setAmountSpec(AmountSpec amountSpec) {
-        this.amountSpec.set(amountSpec);
-    }
-
-    @Override
-    public ReadOnlyObservable<AmountSpec> amountSpecObservable() {
-        return amountSpec;
-    }
-
-    @Override
-    public AmountSpec getAmountSpec() {
-        return amountSpec.get();
-    }
-
-
     /* --------------------------------------------------------------------- */
     // TradeAmountLimits
     /* --------------------------------------------------------------------- */
@@ -352,25 +292,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     @Override
     public Optional<Double> getUserSpecificTradeAmountLimitAsSliderValue() {
         return userSpecificTradeAmountLimitAsSliderValue.get();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // userSpecificInputAmountLimit
-    /* --------------------------------------------------------------------- */
-
-    void setUserSpecificInputAmountLimit(Optional<Monetary> value) {
-        this.userSpecificInputAmountLimit.set(value);
-    }
-
-    @Override
-    public ReadOnlyObservable<Optional<Monetary>> userSpecificInputAmountLimitObservable() {
-        return userSpecificInputAmountLimit;
-    }
-
-    @Override
-    public Optional<Monetary> getUserSpecificInputAmountLimit() {
-        return userSpecificInputAmountLimit.get();
     }
 
 
@@ -446,6 +367,4 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     public Double getMaxAmountSliderValue() {
         return maxAmountSliderValue.get();
     }
-
-
 }
