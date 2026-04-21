@@ -20,8 +20,6 @@ package bisq.notifications.mobile;
 
 import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
 import bisq.common.application.Service;
-import bisq.common.encoding.Base64;
-import bisq.common.encoding.Hex;
 import bisq.common.json.JsonMapperProvider;
 import bisq.notifications.Notification;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
@@ -66,26 +64,39 @@ public class MobileNotificationService implements Service {
         log.info("Dispatching push notification '{}' to {} registered device(s)", notification.getTitle(), profiles.size());
         profiles.forEach(mobileDeviceProfile -> {
                     boolean isAndroid = mobileDeviceProfile.getPlatform() == MobileDevicePlatform.ANDROID;
-                    String deviceTokenHex = mobileDeviceProfile.getDeviceToken();
+                    String deviceToken = mobileDeviceProfile.getDeviceToken();
                     String platform = isAndroid ? "Android" : "iOS";
                     MobileNotificationPayload payload = new MobileNotificationPayload(notification.getId(),
                             notification.getTitle(),
                             notification.getMessage());
                     try {
                         String json = JsonMapperProvider.get().writeValueAsString(payload);
-                        String encryptedBase64 = MobileNotificationEncryption.encrypt(mobileDeviceProfile.getPublicKeyBase64(), json);
-                        // The bisq-relay server expects hex-encoded encrypted messages.
-                        // MobileNotificationEncryption.encrypt() returns Base64, so we
-                        // convert here to match the relay's expected format.
-                        String encryptedMessageHex = Hex.encode(Base64.decode(encryptedBase64));
+
+                        // Use AES-GCM when a symmetric key is available (iOS NSE),
+                        // otherwise fall back to ECIES (legacy / Android)
+                        String encryptedBase64;
+                        boolean mutableContent = false;
+                        if (mobileDeviceProfile.hasSymmetricKey()) {
+                            encryptedBase64 = MobileNotificationEncryption.encryptWithSymmetricKey(
+                                    mobileDeviceProfile.getSymmetricKeyBase64().orElseThrow(), json);
+                            mutableContent = true;
+                        } else {
+                            encryptedBase64 = MobileNotificationEncryption.encrypt(
+                                    mobileDeviceProfile.getPublicKeyBase64(), json);
+                        }
+
+                        // Send Base64-encoded encrypted payload directly to the relay's v1 POST endpoint.
+                        // The v1 endpoint accepts JSON with the encrypted field as Base64, avoiding the
+                        // hex-encoding round-trip of the legacy GET /relay endpoint which corrupts binary data.
                         mobileNotificationRelayClient.sendToRelayServer(isAndroid,
-                                        deviceTokenHex,
-                                        encryptedMessageHex)
+                                        deviceToken,
+                                        encryptedBase64,
+                                        mutableContent)
                                 .whenComplete((success, throwable) -> {
                                     if (throwable != null) {
                                         log.warn("Failed to send push notification to {} device", platform, throwable);
                                     } else if (Boolean.TRUE.equals(success)) {
-                                        log.info("Push notification sent to {} device (token: {}...)", platform, deviceTokenHex.substring(0, Math.min(8, deviceTokenHex.length())));
+                                        log.info("Push notification sent to {} device (token: {}...)", platform, deviceToken.substring(0, Math.min(8, deviceToken.length())));
                                     } else {
                                         log.warn("Push notification relay returned failure for {} device", platform);
                                     }

@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -31,18 +33,25 @@ public final class MobileDeviceProfile implements PersistableProto {
     private final String publicKeyBase64;
     private final String deviceDescriptor;
     private final MobileDevicePlatform platform;
+    private final Optional<String> symmetricKeyBase64;
 
     public MobileDeviceProfile(String deviceId,
                                String deviceToken,
                                String publicKeyBase64,
                                String deviceDescriptor,
-                               MobileDevicePlatform platform
+                               MobileDevicePlatform platform,
+                               Optional<String> symmetricKeyBase64
     ) {
         this.deviceId = deviceId;
         this.deviceToken = deviceToken;
         this.publicKeyBase64 = publicKeyBase64;
         this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
+        this.symmetricKeyBase64 = symmetricKeyBase64;
+    }
+
+    public boolean hasSymmetricKey() {
+        return symmetricKeyBase64.isPresent() && !symmetricKeyBase64.get().isEmpty();
     }
 
     @Override
@@ -52,20 +61,26 @@ public final class MobileDeviceProfile implements PersistableProto {
 
     @Override
     public bisq.notifications.protobuf.MobileDeviceProfile.Builder getBuilder(boolean serializeForHash) {
-        return bisq.notifications.protobuf.MobileDeviceProfile.newBuilder()
+        var builder = bisq.notifications.protobuf.MobileDeviceProfile.newBuilder()
                 .setDeviceId(deviceId)
                 .setDeviceToken(deviceToken)
                 .setPublicKeyBase64(publicKeyBase64)
                 .setDeviceDescriptor(deviceDescriptor)
                 .setPlatform(platform.toProtoEnum());
+        symmetricKeyBase64.ifPresent(builder::setSymmetricKeyBase64);
+        return builder;
     }
 
     public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto) {
+        Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
+                ? Optional.of(proto.getSymmetricKeyBase64())
+                : Optional.empty();
         return new MobileDeviceProfile(proto.getDeviceId(),
                 proto.getDeviceToken(),
                 proto.getPublicKeyBase64(),
                 proto.getDeviceDescriptor(),
-                MobileDevicePlatform.fromProto(proto.getPlatform()));
+                MobileDevicePlatform.fromProto(proto.getPlatform()),
+                symmetricKey);
     }
 }
 

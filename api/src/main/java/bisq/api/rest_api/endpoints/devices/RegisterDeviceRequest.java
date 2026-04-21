@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+
+import javax.annotation.Nullable;
 /**
  * Request payload for registering a mobile device for push notifications.
  *
@@ -69,18 +71,30 @@ public class RegisterDeviceRequest {
     )
     private final MobileDevicePlatform platform;
 
+    @Schema(
+            description = "Optional Base64-encoded AES-256 symmetric key for push notification encryption. " +
+                    "When present, notifications are encrypted with AES-GCM instead of ECIES. " +
+                    "Required for iOS Notification Service Extension decryption.",
+            required = false,
+            example = "dGhpcyBpcyBhIHRlc3Qga2V5IGZvciBkZW1vbnN0cmF0aW9u"
+    )
+    @Nullable
+    private final String symmetricKeyBase64;
+
     @JsonCreator
     public RegisterDeviceRequest(
             @JsonProperty("deviceId") String deviceId,
             @JsonProperty("deviceToken") String deviceToken,
             @JsonProperty("publicKeyBase64") String publicKeyBase64,
             @JsonProperty("deviceDescriptor") String deviceDescriptor,
-            @JsonProperty("platform") MobileDevicePlatform platform
+            @JsonProperty("platform") MobileDevicePlatform platform,
+            @Nullable @JsonProperty("symmetricKeyBase64") String symmetricKeyBase64
     ) {
         this.deviceId = deviceId;
         this.deviceToken = deviceToken;
         this.publicKeyBase64 = publicKeyBase64;
         this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
+        this.symmetricKeyBase64 = symmetricKeyBase64;
     }
 }

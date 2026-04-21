@@ -26,6 +26,7 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,7 +47,8 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
                          String deviceToken,
                          String publicKeyBase64,
                          String deviceDescriptor,
-                         MobileDevicePlatform platform) {
+                         MobileDevicePlatform platform,
+                         Optional<String> symmetricKeyBase64) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceToken), "deviceToken must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
@@ -54,17 +56,18 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         checkNotNull(platform, "platform must not be null");
 
         // Log at DEBUG level to avoid exposing sensitive device identifiers
-        log.debug("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}",
-                deviceId, deviceDescriptor, platform);
+        log.debug("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}, hasSymmetricKey: {}",
+                deviceId, deviceDescriptor, platform, symmetricKeyBase64.isPresent());
         // Log minimal info at INFO level for monitoring
-        log.info("Device registration: platform={}, deviceIdLength={}, descriptorLength={}",
-                platform, deviceId.length(), deviceDescriptor.length());
+        log.info("Device registration: platform={}, deviceIdLength={}, descriptorLength={}, hasSymmetricKey={}",
+                platform, deviceId.length(), deviceDescriptor.length(), symmetricKeyBase64.isPresent());
 
         MobileDeviceProfile mobileDeviceProfile = new MobileDeviceProfile(deviceId,
                 deviceToken,
                 publicKeyBase64,
                 deviceDescriptor,
-                platform);
+                platform,
+                symmetricKeyBase64);
         MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
         if (previous == null || !previous.equals(mobileDeviceProfile)) {
             persist();
