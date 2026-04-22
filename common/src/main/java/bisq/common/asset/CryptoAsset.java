@@ -17,19 +17,15 @@
 
 package bisq.common.asset;
 
-
 import bisq.common.validation.Validation;
 import bisq.common.validation.crypto.CryptoAddressValidationRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class CryptoAsset extends DigitalAsset {
-    private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
 
     @Getter
     private transient final Validation addressValidation;
@@ -44,7 +40,7 @@ public class CryptoAsset extends DigitalAsset {
     public CryptoAsset(String code, String name) {
         super(code, name);
         this.addressValidation = CryptoAddressValidationRepository.getValidation(code);
-        supportAutoConf = SUPPORT_AUTO_CONF_CODES.contains(code);
+        supportAutoConf = CryptoAssetRepository.isAutoConfSupported(code);
     }
 
     @Override
