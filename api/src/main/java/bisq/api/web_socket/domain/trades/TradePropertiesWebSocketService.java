@@ -76,6 +76,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 pins.add(observePeersErrorMessage(bisqEasyTrade, tradeId));
                 pins.add(observePeersErrorStackTrace(bisqEasyTrade, tradeId));
                 pins.add(observePeersTradeProtocolFailure(bisqEasyTrade, tradeId));
+                pins.add(observeTradeCompletedDate(bisqEasyTrade, tradeId));
             }
 
             @Override
@@ -207,6 +208,16 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
         });
     }
 
+    private Pin observeTradeCompletedDate(BisqEasyTrade bisqEasyTrade, String tradeId) {
+        return bisqEasyTrade.tradeCompletedDateObservable().addObserver(value -> {
+            if (value.isPresent()) {
+                var data = new TradePropertiesDto();
+                data.tradeCompletedDate = value;
+                send(Map.of(tradeId, data));
+            }
+        });
+    }
+
     @Override
     public CompletableFuture<Boolean> shutdown() {
         if (tradesPin != null) {
@@ -234,6 +245,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                     data.peersErrorMessage = Optional.ofNullable(bisqEasyTrade.getPeersErrorMessage());
                     data.peersErrorStackTrace = Optional.ofNullable(bisqEasyTrade.getPeersErrorStackTrace());
                     data.peersTradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getPeersTradeProtocolFailure()));
+                    data.tradeCompletedDate = bisqEasyTrade.getTradeCompletedDate();
                     return Map.of(bisqEasyTrade.getId(), data);
                 })
                 .collect(Collectors.toList());
