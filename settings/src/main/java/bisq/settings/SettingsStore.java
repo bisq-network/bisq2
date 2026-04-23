@@ -92,6 +92,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> autoAddToContactsList = new Observable<>();
     //todo should be done with cookies
+    //todo remove
     final Observable<Market> muSigLastSelectedFiatMarket = new Observable<>();
     final Observable<Market> muSigLastSelectedOtherMarket = new Observable<>();
     final Observable<Market> selectedWalletMarket = new Observable<>();

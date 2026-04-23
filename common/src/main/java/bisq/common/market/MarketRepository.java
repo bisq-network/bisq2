@@ -178,4 +178,9 @@ public class MarketRepository {
                 .filter(e -> e.getMarketCodes().equals(marketCodes))
                 .findAny();
     }
+    public static Optional<Market> findAnyOtherMarketByMarketCodes(String marketCodes) {
+        return MarketRepository.getAllCryptoAssetMarkets().stream()
+                .filter(e -> e.getMarketCodes().equals(marketCodes))
+                .findAny();
+    }
 }

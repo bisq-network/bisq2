@@ -39,6 +39,7 @@ import java.util.Map;
 @Getter
 public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     static final Map<String, StackPane> MARKET_ICON_CACHE = new HashMap<>();
+
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headlineText = new SimpleStringProperty();
@@ -61,7 +62,7 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
     public MuSigCreateOfferDirectionAndMarketModel(List<MarketTypeListItem> marketTypeListItems) {
         this.marketTypeListItems.addAll(marketTypeListItems);
     }
-
+/*
     void reset() {
         buyButtonDisabled.set(false);
         headlineText.set("");
@@ -69,5 +70,5 @@ public class MuSigCreateOfferDirectionAndMarketModel implements Model {
         paymentCurrencySearchText.set(null);
         tradePairImage.set(null);
         marketListItems.clear();
-    }
+    }*/
 }

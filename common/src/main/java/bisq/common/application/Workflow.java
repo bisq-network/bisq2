@@ -29,21 +29,12 @@ public abstract class Workflow {
     public Workflow() {
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Lifecycle
-    /* --------------------------------------------------------------------- */
-
-    abstract public void onActivate();
-
-    public final void onDeactivate() {
+    public final void dispose() {
         if (pins != null) {
             pins.forEach(Pin::unbind);
             pins.clear();
         }
     }
-
-    abstract protected void addObservers();
 
     protected void pin(Pin pin) {
         getPins().add(pin);

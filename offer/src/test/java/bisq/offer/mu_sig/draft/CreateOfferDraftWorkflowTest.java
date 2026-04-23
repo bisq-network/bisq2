@@ -177,17 +177,17 @@ public class CreateOfferDraftWorkflowTest {
         }
 
         @Override
-        public Direction getDefaultDirection() {
+        public Direction getDirection() {
             return defaultDirection;
         }
 
         @Override
-        public boolean getDefaultUseBaseCurrencyForAmountInput(Market market) {
+        public boolean getUseBaseCurrencyForAmountInput(Market market) {
             return market.isBtcFiatMarket() ? defaultUseBaseForFiatMarkets : defaultUseBaseForOtherMarkets;
         }
 
         @Override
-        public boolean getDefaultUseRangeAmount() {
+        public boolean getUseRangeAmount() {
             return defaultUseRangeAmount;
         }
 

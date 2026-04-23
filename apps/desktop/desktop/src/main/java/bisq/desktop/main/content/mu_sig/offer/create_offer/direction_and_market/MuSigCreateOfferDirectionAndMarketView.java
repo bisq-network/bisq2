@@ -124,7 +124,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         // tableView.getSelectionModel().getSelectedItem() to get triggered the handler only at user action and
         // not when we set the selected item by code.
         marketsTableView.setOnMouseClicked(e ->
-                controller.onMarketListItemClicked(marketsTableView.getSelectionModel().getSelectedItem()));
+                controller.onSelectMarketListItem(marketsTableView.getSelectionModel().getSelectedItem()));
         tradePairBox.setOnMouseClicked(e -> {
             if (!marketSelectionPopup.isShowing()) {
                 Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
@@ -137,7 +137,7 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
 
         marketTypeTableView.initialize();
         marketTypeTableView.setOnMouseClicked(e ->
-                controller.onMarketTypeListItemSelected(marketTypeTableView.getSelectionModel().getSelectedItem()));
+                controller.onSelectMarketTypeListItem(marketTypeTableView.getSelectionModel().getSelectedItem()));
 
         paymentCurrencySearchBox.textProperty().bindBidirectional(model.getPaymentCurrencySearchText());
 

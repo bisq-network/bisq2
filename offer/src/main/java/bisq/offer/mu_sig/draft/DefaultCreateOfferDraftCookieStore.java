@@ -32,15 +32,32 @@ public class DefaultCreateOfferDraftCookieStore implements CreateOfferDraftCooki
     }
 
     @Override
-    public Direction getDefaultDirection() {
+    public void persistDirection(Direction direction) {
+        checkNotNull(direction, "direction must not be null");
+        settingsService.setCookie(CookieKey.MU_SIG_CREATE_OFFER_USE_BUY_DIRECTION, direction.isBuy());
+    }
+
+    @Override
+    public Direction getDirection() {
         boolean useBuyDirection = settingsService.getCookie()
                 .asBoolean(CookieKey.MU_SIG_CREATE_OFFER_USE_BUY_DIRECTION)
                 .orElse(false);
         return useBuyDirection ? Direction.BUY : Direction.SELL;
     }
 
+
     @Override
-    public boolean getDefaultUseBaseCurrencyForAmountInput(Market market) {
+    public void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput) {
+        checkNotNull(market, "market must not be null");
+        if (market.isBtcFiatMarket()) {
+            settingsService.setCookie(CookieKey.MU_SIG_FIAT_MARKET_IS_DEFAULT_AMOUNT_INPUT_BTC, useBaseCurrencyForAmountInput);
+        } else {
+            settingsService.setCookie(CookieKey.MU_SIG_OTHER_MARKET_IS_DEFAULT_AMOUNT_INPUT_BTC, useBaseCurrencyForAmountInput);
+        }
+    }
+
+    @Override
+    public boolean getUseBaseCurrencyForAmountInput(Market market) {
         checkNotNull(market, "market must not be null");
         if (market.isBtcFiatMarket()) {
             return settingsService.getCookie()
@@ -52,27 +69,12 @@ public class DefaultCreateOfferDraftCookieStore implements CreateOfferDraftCooki
                 .orElse(true);
     }
 
+
     @Override
-    public boolean getDefaultUseRangeAmount() {
+    public boolean getUseRangeAmount() {
         return settingsService.getCookie()
                 .asBoolean(CookieKey.CREATE_MU_SIG_OFFER_IS_MIN_AMOUNT_ENABLED)
                 .orElse(false);
-    }
-
-    @Override
-    public void persistDirection(Direction direction) {
-        checkNotNull(direction, "direction must not be null");
-        settingsService.setCookie(CookieKey.MU_SIG_CREATE_OFFER_USE_BUY_DIRECTION, direction.isBuy());
-    }
-
-    @Override
-    public void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput) {
-        checkNotNull(market, "market must not be null");
-        if (market.isBtcFiatMarket()) {
-            settingsService.setCookie(CookieKey.MU_SIG_FIAT_MARKET_IS_DEFAULT_AMOUNT_INPUT_BTC, useBaseCurrencyForAmountInput);
-        } else {
-            settingsService.setCookie(CookieKey.MU_SIG_OTHER_MARKET_IS_DEFAULT_AMOUNT_INPUT_BTC, useBaseCurrencyForAmountInput);
-        }
     }
 
     @Override

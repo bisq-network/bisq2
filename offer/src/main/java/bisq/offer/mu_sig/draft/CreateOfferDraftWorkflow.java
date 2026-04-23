@@ -21,7 +21,6 @@ import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.MonetaryRange;
@@ -64,26 +63,35 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
         createOfferDraft = offerDraft;
     }
 
+    public void initialize(Market market) {
+        setMarket(market);
 
-    /* --------------------------------------------------------------------- */
-    // Lifecycle
-    /* --------------------------------------------------------------------- */
+        Direction direction = cookieStore.getDirection();
 
-    @Override
-    public void onActivate() {
-        addObservers();
-        initializeDraft();
-    }
+        boolean useBaseCurrencyForAmountInput = cookieStore.getUseBaseCurrencyForAmountInput(market);
 
+        boolean useRangeAmount = cookieStore.getUseRangeAmount();
 
-    /* --------------------------------------------------------------------- */
-    // Observers
-    /* --------------------------------------------------------------------- */
+        PriceQuote marketPriceQuote = marketData.getMarketPriceQuote(market);
 
-    @Override
-    protected void addObservers() {
-        // no-op by design:
-        // internal state transitions are action-based and deterministic.
+        offerDraft.setMarket(market);
+        offerDraft.setDirection(direction);
+        offerDraft.setUseBaseCurrencyForAmountInput(useBaseCurrencyForAmountInput);
+        offerDraft.setUseRangeAmount(useRangeAmount);
+        offerDraft.setPriceQuote(marketPriceQuote);
+
+        PricingData pricingData = createPricingData(market, direction, marketPriceQuote, marketPriceQuote);
+        applyPricingData(pricingData);
+
+        TradeAmount defaultTradeAmount = marketData.getTradeAmountFromUsd(market, DEFAULT_TRADE_AMOUNT_IN_USD);
+        TradeAmount clampedDefaultTradeAmount = clampTradeAmount(defaultTradeAmount, true);
+        offerDraft.setFixTradeAmount(clampedDefaultTradeAmount);
+        offerDraft.setMinTradeAmount(clampedDefaultTradeAmount);
+        offerDraft.setMaxTradeAmount(clampedDefaultTradeAmount);
+
+        Optional<TradeAmount> userSpecificTradeAmountLimit = getUserSpecificTradeAmountLimit();
+        updateUserSpecificTradeAmountLimitAsSliderValue(direction, userSpecificTradeAmountLimit);
+        updateAmountSliderValues();
     }
 
 
@@ -183,35 +191,8 @@ public class CreateOfferDraftWorkflow extends OfferDraftWorkflow<CreateOfferDraf
 
 
     /* --------------------------------------------------------------------- */
-    // Utils
+    // Apply data
     /* --------------------------------------------------------------------- */
-
-    private void initializeDraft() {
-        Market market = MarketRepository.getDefaultBtcFiatMarket();
-        Direction direction = cookieStore.getDefaultDirection();
-        boolean useBaseCurrencyForAmountInput = cookieStore.getDefaultUseBaseCurrencyForAmountInput(market);
-        boolean useRangeAmount = cookieStore.getDefaultUseRangeAmount();
-        PriceQuote marketPriceQuote = marketData.getMarketPriceQuote(market);
-
-        offerDraft.setMarket(market);
-        offerDraft.setDirection(direction);
-        offerDraft.setUseBaseCurrencyForAmountInput(useBaseCurrencyForAmountInput);
-        offerDraft.setUseRangeAmount(useRangeAmount);
-        offerDraft.setPriceQuote(marketPriceQuote);
-
-        PricingData pricingData = createPricingData(market, direction, marketPriceQuote, marketPriceQuote);
-        applyPricingData(pricingData);
-
-        TradeAmount defaultTradeAmount = marketData.getTradeAmountFromUsd(market, DEFAULT_TRADE_AMOUNT_IN_USD);
-        TradeAmount clampedDefaultTradeAmount = clampTradeAmount(defaultTradeAmount, true);
-        offerDraft.setFixTradeAmount(clampedDefaultTradeAmount);
-        offerDraft.setMinTradeAmount(clampedDefaultTradeAmount);
-        offerDraft.setMaxTradeAmount(clampedDefaultTradeAmount);
-
-        Optional<TradeAmount> userSpecificTradeAmountLimit = getUserSpecificTradeAmountLimit();
-        updateUserSpecificTradeAmountLimitAsSliderValue(direction, userSpecificTradeAmountLimit);
-        updateAmountSliderValues();
-    }
 
     private void applyMarketChanged(Market market) {
         offerDraft.setMarket(market);

@@ -166,6 +166,10 @@ public class MarketPriceService extends RateLimitedPersistenceClient<MarketPrice
         return persistableStore.getSelectedMarket();
     }
 
+    public boolean hasMarketPrice(Market market) {
+        return getMarketPriceByCurrencyMap().containsKey(market);
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Private

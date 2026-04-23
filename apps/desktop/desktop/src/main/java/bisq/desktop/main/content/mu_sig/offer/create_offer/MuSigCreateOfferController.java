@@ -112,6 +112,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     public void initWithData(InitData data) {
         Market market = data.getMarket();
 
+        createOfferDraftWorkflow.initialize(market);
         createOfferDraftWorkflow.setMarket(market);
 
         boolean isBaseCurrencyBitcoin = market.isBaseCurrencyBitcoin();
@@ -122,8 +123,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void onActivate() {
-        createOfferDraftWorkflow.onActivate();
-
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -148,7 +147,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
 
     @Override
     public void onDeactivate() {
-        createOfferDraftWorkflow.onDeactivate();
+        createOfferDraftWorkflow.dispose();
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
         pins.forEach(Pin::unbind);
@@ -276,7 +275,6 @@ public class MuSigCreateOfferController extends NavigationController implements 
     private void reset() {
         resetSelectedChildTarget();
 
-        muSigCreateOfferDirectionAndMarketController.reset();
         muSigCreateOfferAmountAndPriceController.reset();
         muSigCreateOfferPaymentController.reset();
         muSigCreateOfferReviewController.reset();

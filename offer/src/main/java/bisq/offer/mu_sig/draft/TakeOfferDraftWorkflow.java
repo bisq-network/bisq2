@@ -27,16 +27,7 @@ public class TakeOfferDraftWorkflow extends OfferDraftWorkflow<TakeOfferDraft> {
         super(new TakeOfferDraft());
     }
 
-    @Override
-    public void onActivate() {
-        addObservers();
-    }
-
-    @Override
-    protected void addObservers() {
-    }
-
-    public void setOffer(MuSigOffer offer) {
+    public void initialize(MuSigOffer offer) {
         this.offerDraft.setOffer(offer);
     }
 }

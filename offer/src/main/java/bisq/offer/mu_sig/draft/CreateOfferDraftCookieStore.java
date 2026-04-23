@@ -21,15 +21,15 @@ import bisq.common.market.Market;
 import bisq.offer.Direction;
 
 public interface CreateOfferDraftCookieStore {
-    Direction getDefaultDirection();
-
-    boolean getDefaultUseBaseCurrencyForAmountInput(Market market);
-
-    boolean getDefaultUseRangeAmount();
-
     void persistDirection(Direction direction);
 
+    Direction getDirection();
+
+    boolean getUseBaseCurrencyForAmountInput(Market market);
+
     void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput);
+
+    boolean getUseRangeAmount();
 
     void persistUseRangeAmount(boolean useRangeAmount);
 }

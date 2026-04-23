@@ -108,6 +108,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     @Override
     public void initWithData(InitData initData) {
         MuSigOffer muSigOffer = initData.getMuSigOffer();
+        takeOfferDraftWorkflow.initialize(muSigOffer);
         muSigTakeOfferAmountController.init(muSigOffer);
         muSigTakeOfferPaymentController.init(muSigOffer);
         muSigTakeOfferReviewController.init(muSigOffer);
@@ -164,7 +165,6 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     @Override
     public void onActivate() {
-        takeOfferDraftWorkflow.onActivate();
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -191,7 +191,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     @Override
     public void onDeactivate() {
-        takeOfferDraftWorkflow.onDeactivate();
+        takeOfferDraftWorkflow.dispose();
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         takersBaseSideAmountPin.unsubscribe();
