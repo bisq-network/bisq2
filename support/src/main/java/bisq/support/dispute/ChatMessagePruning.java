@@ -35,12 +35,12 @@ public final class ChatMessagePruning {
     private ChatMessagePruning() {
     }
 
-    public static <M extends ChatMessage> List<M> prune(List<M> chatMessages,
-                                                        int maxTotalTextBytes,
-                                                        int maxSerializedSize,
-                                                        ToIntFunction<List<M>> serializedSizeSupplier,
-                                                        Logger log,
-                                                        String tradeId) {
+    public static <M extends ChatMessage> List<M> maybePrune(List<M> chatMessages,
+                                                             int maxTotalTextBytes,
+                                                             int maxSerializedSize,
+                                                             ToIntFunction<List<M>> serializedSizeSupplier,
+                                                             Logger log,
+                                                             String tradeId) {
         int totalTextBytes = 0;
         List<M> result = new ArrayList<>();
         for (M message : chatMessages) {

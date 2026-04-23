@@ -27,6 +27,7 @@ import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.support.dispute.ChatMessagePruning;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -43,7 +44,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 import static bisq.support.dispute.ChatMessagePruning.MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES;
-import static bisq.support.dispute.ChatMessagePruning.prune;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -81,7 +81,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         this.requester = requester;
         this.peer = peer;
         this.mediatorNetworkId = mediatorNetworkId;
-        this.chatMessages = maybePrune(chatMessages);
+        this.chatMessages = maybePrune(tradeId, contract, requester, peer, mediatorNetworkId, chatMessages);
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
@@ -92,7 +92,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
-        checkArgument(getValueBuilder(chatMessages, false).build().getSerializedSize() <= MAX_SERIALIZED_SIZE,
+        checkArgument(getSerializedSize(tradeId, contract, requester, peer, mediatorNetworkId, chatMessages) <= MAX_SERIALIZED_SIZE,
                 "Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
     }
 
@@ -102,11 +102,16 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
 
     @Override
     public bisq.support.protobuf.MediationRequest.Builder getValueBuilder(boolean serializeForHash) {
-        return getValueBuilder(chatMessages, serializeForHash);
+        return getValueBuilder(tradeId, contract, requester, peer, mediatorNetworkId, chatMessages, serializeForHash);
     }
 
-    private bisq.support.protobuf.MediationRequest.Builder getValueBuilder(List<BisqEasyOpenTradeMessage> chatMessages,
-                                                                           boolean serializeForHash) {
+    private static bisq.support.protobuf.MediationRequest.Builder getValueBuilder(String tradeId,
+                                                                                  BisqEasyContract contract,
+                                                                                  UserProfile requester,
+                                                                                  UserProfile peer,
+                                                                                  Optional<NetworkId> mediatorNetworkId,
+                                                                                  List<BisqEasyOpenTradeMessage> chatMessages,
+                                                                                  boolean serializeForHash) {
         bisq.support.protobuf.MediationRequest.Builder builder = bisq.support.protobuf.MediationRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setContract(contract.toProto(serializeForHash))
@@ -115,8 +120,19 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                 .addAllChatMessages(chatMessages.stream()
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()));
-        mediatorNetworkId.ifPresent(mediatorNetworkId -> builder.setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash)));
+        mediatorNetworkId.ifPresent(networkId -> builder.setMediatorNetworkId(networkId.toProto(serializeForHash)));
         return builder;
+    }
+
+    private static int getSerializedSize(String tradeId,
+                                         BisqEasyContract contract,
+                                         UserProfile requester,
+                                         UserProfile peer,
+                                         Optional<NetworkId> mediatorNetworkId,
+                                         List<BisqEasyOpenTradeMessage> chatMessages) {
+        return getValueBuilder(tradeId, contract, requester, peer, mediatorNetworkId, chatMessages, false)
+                .build()
+                .getSerializedSize();
     }
 
     @Override
@@ -179,11 +195,16 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return getCostFactor(0.25, 0.5);
     }
 
-    private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
-        return prune(chatMessages,
+    private static List<BisqEasyOpenTradeMessage> maybePrune(String tradeId,
+                                                             BisqEasyContract contract,
+                                                             UserProfile requester,
+                                                             UserProfile peer,
+                                                             Optional<NetworkId> mediatorNetworkId,
+                                                             List<BisqEasyOpenTradeMessage> chatMessages) {
+        return ChatMessagePruning.maybePrune(chatMessages,
                 MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES,
                 MAX_SERIALIZED_SIZE,
-                messages -> getValueBuilder(messages, false).build().getSerializedSize(),
+                messages -> getSerializedSize(tradeId, contract, requester, peer, mediatorNetworkId, messages),
                 log,
                 tradeId);
     }

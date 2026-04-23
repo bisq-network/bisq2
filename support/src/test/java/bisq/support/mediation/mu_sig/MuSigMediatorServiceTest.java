@@ -34,7 +34,6 @@ import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
-import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
@@ -89,8 +88,6 @@ class MuSigMediatorServiceTest {
                 .thenReturn(persistence);
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
         when(persistence.getStorePath()).thenReturn(Path.of("build/test/musig-mediator-service"));
-
-        NetworkService networkService = mock(NetworkService.class);
 
         ChatService chatService = mock(ChatService.class);
         MuSigOpenTradeChannelService openTradeChannelService = mock(MuSigOpenTradeChannelService.class);
@@ -227,24 +224,17 @@ class MuSigMediatorServiceTest {
     private MuSigMediationRequest createMediationRequest(String tradeId,
                                                          UserProfile requester,
                                                          UserProfile peer) {
+        UserProfile mediator = createUserProfile(19000);
         return new MuSigMediationRequest(
                 tradeId,
-                createContract(requester, peer, "offer-" + tradeId,
+                createContract(requester, peer, mediator, "offer-" + tradeId,
                         createNationalBankPayload("taker-" + tradeId, "DE" + tradeId.substring(tradeId.length() - 2) + "1"),
                         createNationalBankPayload("maker-" + tradeId, "DE" + tradeId.substring(tradeId.length() - 2) + "2")),
                 requester,
                 peer,
                 List.of(),
-                null
+                mediator.getNetworkId()
         );
-    }
-
-    private MuSigContract createContract(UserProfile maker,
-                                         UserProfile taker,
-                                         String offerId,
-                                         AccountPayload<?> takerPayloadForHash,
-                                         AccountPayload<?> makerPayloadForHash) {
-        return createContractWithMediator(maker, taker, Optional.empty(), offerId, takerPayloadForHash, List.of(makerPayloadForHash));
     }
 
     private MuSigContract createContract(UserProfile maker,
@@ -334,5 +324,4 @@ class MuSigMediatorServiceTest {
                 Optional.empty()
         );
     }
-
 }

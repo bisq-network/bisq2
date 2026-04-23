@@ -28,6 +28,7 @@ import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.support.dispute.ChatMessagePruning;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.ByteString;
@@ -46,7 +47,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 import static bisq.support.dispute.ChatMessagePruning.MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES;
-import static bisq.support.dispute.ChatMessagePruning.prune;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -87,8 +87,15 @@ public final class MuSigArbitrationRequest implements
         this.mediationResultSignature = mediationResultSignature.clone();
         this.requester = requester;
         this.peer = peer;
-        this.chatMessages = maybePrune(chatMessages);
         this.arbitratorNetworkId = arbitratorNetworkId;
+        this.chatMessages = maybePrune(tradeId,
+                contract,
+                muSigMediationResult,
+                this.mediationResultSignature,
+                requester,
+                peer,
+                arbitratorNetworkId,
+                chatMessages);
 
         Collections.sort(this.chatMessages);
         verify();
@@ -98,17 +105,39 @@ public final class MuSigArbitrationRequest implements
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
         NetworkDataValidation.validateECSignature(mediationResultSignature);
-        checkArgument(getValueBuilder(chatMessages, false).build().getSerializedSize() <= MAX_SERIALIZED_SIZE,
+        checkArgument(getSerializedSize(tradeId,
+                        contract,
+                        muSigMediationResult,
+                        mediationResultSignature,
+                        requester,
+                        peer,
+                        arbitratorNetworkId,
+                        chatMessages) <= MAX_SERIALIZED_SIZE,
                 "Serialized arbitration request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
     }
 
     @Override
     public bisq.support.protobuf.MuSigArbitrationRequest.Builder getValueBuilder(boolean serializeForHash) {
-        return getValueBuilder(chatMessages, serializeForHash);
+        return getValueBuilder(tradeId,
+                contract,
+                muSigMediationResult,
+                mediationResultSignature,
+                requester,
+                peer,
+                arbitratorNetworkId,
+                chatMessages,
+                serializeForHash);
     }
 
-    private bisq.support.protobuf.MuSigArbitrationRequest.Builder getValueBuilder(List<MuSigOpenTradeMessage> chatMessages,
-                                                                                  boolean serializeForHash) {
+    private static bisq.support.protobuf.MuSigArbitrationRequest.Builder getValueBuilder(String tradeId,
+                                                                                         MuSigContract contract,
+                                                                                         MuSigMediationResult muSigMediationResult,
+                                                                                         byte[] mediationResultSignature,
+                                                                                         UserProfile requester,
+                                                                                         UserProfile peer,
+                                                                                         NetworkId arbitratorNetworkId,
+                                                                                         List<MuSigOpenTradeMessage> chatMessages,
+                                                                                         boolean serializeForHash) {
         return bisq.support.protobuf.MuSigArbitrationRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setContract(contract.toProto(serializeForHash))
@@ -120,6 +149,27 @@ public final class MuSigArbitrationRequest implements
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .setArbitratorNetworkId(arbitratorNetworkId.toProto(serializeForHash));
+    }
+
+    private static int getSerializedSize(String tradeId,
+                                         MuSigContract contract,
+                                         MuSigMediationResult muSigMediationResult,
+                                         byte[] mediationResultSignature,
+                                         UserProfile requester,
+                                         UserProfile peer,
+                                         NetworkId arbitratorNetworkId,
+                                         List<MuSigOpenTradeMessage> chatMessages) {
+        return getValueBuilder(tradeId,
+                contract,
+                muSigMediationResult,
+                mediationResultSignature,
+                requester,
+                peer,
+                arbitratorNetworkId,
+                chatMessages,
+                false)
+                .build()
+                .getSerializedSize();
     }
 
     @Override
@@ -180,11 +230,25 @@ public final class MuSigArbitrationRequest implements
         return requester.getPublicKey();
     }
 
-    private List<MuSigOpenTradeMessage> maybePrune(List<MuSigOpenTradeMessage> chatMessages) {
-        return prune(chatMessages,
+    private static List<MuSigOpenTradeMessage> maybePrune(String tradeId,
+                                                          MuSigContract contract,
+                                                          MuSigMediationResult muSigMediationResult,
+                                                          byte[] mediationResultSignature,
+                                                          UserProfile requester,
+                                                          UserProfile peer,
+                                                          NetworkId arbitratorNetworkId,
+                                                          List<MuSigOpenTradeMessage> chatMessages) {
+        return ChatMessagePruning.maybePrune(chatMessages,
                 MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES,
                 MAX_SERIALIZED_SIZE,
-                messages -> getValueBuilder(messages, false).build().getSerializedSize(),
+                messages -> getSerializedSize(tradeId,
+                        contract,
+                        muSigMediationResult,
+                        mediationResultSignature,
+                        requester,
+                        peer,
+                        arbitratorNetworkId,
+                        messages),
                 log,
                 tradeId);
     }

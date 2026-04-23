@@ -23,9 +23,11 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.MetaData;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,11 +35,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ChatMessagePruningTest {
     @Test
-    void prune_keepsAllMessages_whenUnderBothLimits() {
+    void maybePrune_keepsAllMessages_whenUnderBothLimits() {
         TestChatMessage first = new TestChatMessage("1", "hello", 10);
         TestChatMessage second = new TestChatMessage("2", "world", 20);
 
-        List<TestChatMessage> result = ChatMessagePruning.prune(
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
                 List.of(first, second),
                 100,
                 100,
@@ -49,11 +51,11 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void prune_usesUtf8ByteLengthForTheHeuristic() {
+    void maybePrune_usesUtf8ByteLengthForTheHeuristic() {
         TestChatMessage first = new TestChatMessage("1", "🙂", 10);
         TestChatMessage second = new TestChatMessage("2", "ok", 20);
 
-        List<TestChatMessage> result = ChatMessagePruning.prune(
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
                 List.of(first, second),
                 5,
                 100,
@@ -65,11 +67,11 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void prune_dropsMessage_whenUtf8ByteLengthHitsTheLimitExactly() {
+    void maybePrune_dropsMessage_whenUtf8ByteLengthHitsTheLimitExactly() {
         TestChatMessage first = new TestChatMessage("1", "🙂", 10);
         TestChatMessage second = new TestChatMessage("2", "ok", 20);
 
-        List<TestChatMessage> result = ChatMessagePruning.prune(
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
                 List.of(first, second),
                 4,
                 100,
@@ -81,12 +83,12 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void prune_trimsFromTheEnd_whenSerializedSizeStillExceedsLimit() {
+    void maybePrune_trimsFromTheEnd_whenSerializedSizeStillExceedsLimit() {
         TestChatMessage first = new TestChatMessage("1", "aa", 10);
         TestChatMessage second = new TestChatMessage("2", "bb", 20);
         TestChatMessage third = new TestChatMessage("3", "cc", 30);
 
-        List<TestChatMessage> result = ChatMessagePruning.prune(
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
                 List.of(first, second, third),
                 100,
                 25,
@@ -98,11 +100,11 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void prune_returnsEmpty_whenFirstMessageAlreadyReachesTextLimit() {
+    void maybePrune_returnsEmpty_whenFirstMessageAlreadyReachesTextLimit() {
         TestChatMessage first = new TestChatMessage("1", "🙂🙂🙂", 10);
         TestChatMessage second = new TestChatMessage("2", "ok", 20);
 
-        List<TestChatMessage> result = ChatMessagePruning.prune(
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
                 List.of(first, second),
                 4,
                 100,
@@ -111,6 +113,66 @@ class ChatMessagePruningTest {
                 "trade-4");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void maybePrune_usesRealRequestSerializedSizeSupplierWithContextFields() {
+        TestChatMessage first = new TestChatMessage("1", "aa", 10);
+        TestChatMessage second = new TestChatMessage("2", "bb", 20);
+        int maxSerializedSize = getMediationRequestSerializedSize(List.of(first));
+
+        List<TestChatMessage> result = ChatMessagePruning.maybePrune(
+                List.of(first, second),
+                100,
+                maxSerializedSize,
+                ChatMessagePruningTest::getMediationRequestSerializedSize,
+                LoggerFactory.getLogger(ChatMessagePruningTest.class),
+                "trade-real-request-size");
+
+        assertThat(getMediationRequestSerializedSize(List.of(first, second))).isGreaterThan(maxSerializedSize);
+        assertThat(result).containsExactly(first);
+        assertThat(getMediationRequestSerializedSize(result)).isLessThanOrEqualTo(maxSerializedSize);
+    }
+
+    private static int getMediationRequestSerializedSize(List<TestChatMessage> chatMessages) {
+        return bisq.support.protobuf.MediationRequest.newBuilder()
+                .setTradeId("trade-real-request-size")
+                .setContract(bisq.contract.protobuf.Contract.newBuilder()
+                        .setTakeOfferDate(1)
+                        .build())
+                .setRequester(createUserProfile("requester"))
+                .setPeer(createUserProfile("peer"))
+                .setMediatorNetworkId(createNetworkId("mediator"))
+                .addAllChatMessages(chatMessages.stream()
+                        .map(message -> message.<bisq.chat.protobuf.ChatMessage>unsafeToProto(false))
+                        .toList())
+                .build()
+                .getSerializedSize();
+    }
+
+    private static bisq.user.protobuf.UserProfile createUserProfile(String id) {
+        return bisq.user.protobuf.UserProfile.newBuilder()
+                .setNickName(id + "-" + createString(1_000))
+                .setNetworkId(createNetworkId(id))
+                .setTerms(createString(1_000))
+                .setStatement(createString(1_000))
+                .setApplicationVersion("1.0.0")
+                .build();
+    }
+
+    private static bisq.network.identity.protobuf.NetworkId createNetworkId(String id) {
+        return bisq.network.identity.protobuf.NetworkId.newBuilder()
+                .setPubKey(bisq.security.protobuf.PubKey.newBuilder()
+                        .setKeyId(id + "-" + createString(1_000))
+                        .setPublicKey(ByteString.copyFrom(new byte[1_000]))
+                        .build())
+                .build();
+    }
+
+    private static String createString(int length) {
+        char[] chars = new char[length];
+        Arrays.fill(chars, 'x');
+        return new String(chars);
     }
 
     private static final class TestChatMessage extends ChatMessage {
