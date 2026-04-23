@@ -21,12 +21,14 @@ package bisq.account;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.crypto.CryptoAssetAccount;
+import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.bisq1_import.ImportBisq1AccountsParser;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.map.ReadOnlyObservableMap;
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -209,5 +212,15 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
 
     public Optional<Account<? extends PaymentMethod<?>, ?>> findSelectedAccount() {
         return Optional.ofNullable(selectedAccountAsObservable().get());
+    }
+
+    public List<Account<?, ?>> findAccountsForMarket(Market market) {
+        String relevantCurrencyCode = market.getRelevantCurrencyCode();
+        return getAccounts().stream()
+                .filter(account -> !(account instanceof UserDefinedFiatAccount))
+                .filter(account ->
+                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
+                                .anyMatch(code -> code.equals(relevantCurrencyCode)))
+                .collect(Collectors.toList());
     }
 }

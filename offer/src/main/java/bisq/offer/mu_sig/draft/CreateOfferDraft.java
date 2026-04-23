@@ -32,6 +32,7 @@ import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.offer.Direction;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,8 +40,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     protected final Observable<Market> market = new Observable<>();
 
     protected final Observable<Direction> direction = new Observable<>();
-
-    private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
 
     private final Observable<PriceQuote> priceQuote = new Observable<>();
 
@@ -54,10 +53,12 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     private final Observable<Optional<Monetary>> userSpecificInputAmountLimit = new Observable<>(Optional.empty());
     private final Observable<TradeAmountRange> tradeAmountLimits = new Observable<>();
     private final Observable<MonetaryRange> inputAmountLimits = new Observable<>();
-
     private final Observable<Double> fixAmountSliderValue = new Observable<>(0d);
     private final Observable<Double> minAmountSliderValue = new Observable<>(0d);
     private final Observable<Double> maxAmountSliderValue = new Observable<>(0d);
+
+    private final ObservableHashMap<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new ObservableHashMap<>();
+    private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
 
     public CreateOfferDraft() {
     }
@@ -98,29 +99,6 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     @Override
     public Direction getDirection() {
         return direction.get();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // selectedAccountByPaymentMethod
-    /* --------------------------------------------------------------------- */
-
-    void clearSelectedAccountByPaymentMethod() {
-        selectedAccountByPaymentMethod.clear();
-    }
-
-    void putAllSelectedAccountByPaymentMethod(Map<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod) {
-        this.selectedAccountByPaymentMethod.putAll(selectedAccountByPaymentMethod);
-    }
-
-    @Override
-    public ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethodObservable() {
-        return selectedAccountByPaymentMethod;
-    }
-
-    @Override
-    public ImmutableMap<PaymentMethod<?>, Account<?, ?>> getSelectedAccountByPaymentMethod() {
-        return ImmutableMap.copyOf(selectedAccountByPaymentMethod);
     }
 
 
@@ -366,5 +344,68 @@ public class CreateOfferDraft extends ReadOnlyCreateOfferDraft {
     @Override
     public Double getMaxAmountSliderValue() {
         return maxAmountSliderValue.get();
+    }
+
+
+
+    /* --------------------------------------------------------------------- */
+    // accountsByPaymentMethod
+    /* --------------------------------------------------------------------- */
+
+    void clearAccountsByPaymentMethod() {
+        accountsByPaymentMethod.clear();
+    }
+
+    void putAccountsByPaymentMethod(PaymentMethod<?> paymentMethod, List<Account<?, ?>> account) {
+        accountsByPaymentMethod.put(paymentMethod, account);
+    }
+
+    void removeAccountsByPaymentMethod(PaymentMethod<?> paymentMethod) {
+        accountsByPaymentMethod.remove(paymentMethod);
+    }
+
+    void putAllAccountsByPaymentMethod(Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod) {
+        this.accountsByPaymentMethod.putAll(accountsByPaymentMethod);
+    }
+
+    @Override
+    public ReadOnlyObservableMap<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethodObservable() {
+        return accountsByPaymentMethod;
+    }
+
+    @Override
+    public ImmutableMap<PaymentMethod<?>, List<Account<?, ?>>> getAccountsByPaymentMethod() {
+        return ImmutableMap.copyOf(accountsByPaymentMethod);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // selectedAccountByPaymentMethod
+    /* --------------------------------------------------------------------- */
+
+    void clearSelectedAccountByPaymentMethod() {
+        selectedAccountByPaymentMethod.clear();
+    }
+
+    void putSelectedAccountByPaymentMethod(PaymentMethod<?> paymentMethod, Account<?, ?> account) {
+        selectedAccountByPaymentMethod.put(paymentMethod, account);
+    }
+
+    void removeSelectedAccountByPaymentMethod(PaymentMethod<?> paymentMethod) {
+        selectedAccountByPaymentMethod.remove(paymentMethod);
+    }
+
+    void putAllSelectedAccountByPaymentMethod(Map<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod) {
+        this.selectedAccountByPaymentMethod.putAll(selectedAccountByPaymentMethod);
+    }
+
+    @Override
+    public ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethodObservable() {
+        return selectedAccountByPaymentMethod;
+    }
+
+    @Override
+    public ImmutableMap<PaymentMethod<?>, Account<?, ?>> getSelectedAccountByPaymentMethod() {
+        return ImmutableMap.copyOf(selectedAccountByPaymentMethod);
     }
 }

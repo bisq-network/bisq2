@@ -17,22 +17,11 @@
 
 package bisq.offer.mu_sig.draft;
 
-import bisq.common.application.Workflow;
-import bisq.common.market.Market;
+import bisq.common.monetary.TradeAmount;
+import bisq.common.monetary.TradeAmountRange;
 
-public abstract class OfferDraftWorkflow<T extends ReadOnlyOfferDraft> extends Workflow {
-    protected final T offerDraft;
+import java.util.Optional;
 
-
-    protected OfferDraftWorkflow(T offerDraft) {
-        this.offerDraft = offerDraft;
-    }
-
-    protected ReadOnlyOfferDraft getOfferDraft() {
-        return offerDraft;
-    }
-
-    public Market getMarket() {
-        return offerDraft.getMarket();
-    }
+record TradeAmountConstraints(TradeAmountRange tradeAmountLimits,
+                              Optional<TradeAmount> userSpecificTradeAmountLimit) {
 }

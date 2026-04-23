@@ -1233,6 +1233,10 @@
     -fx-image: url("/images/icons/info-green.png");
 }
 
+#instruction-green {
+    -fx-image: url("/images/icons/instruction-green.png");
+}
+
 #btcoins-grey {
     -fx-image: url("/images/icons/btcoins-grey.png");
 }

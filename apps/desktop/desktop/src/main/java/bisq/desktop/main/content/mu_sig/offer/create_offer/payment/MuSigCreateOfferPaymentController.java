@@ -17,25 +17,23 @@
 
 package bisq.desktop.main.content.mu_sig.offer.create_offer.payment;
 
-import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.MultiCurrencyAccountPayload;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
-import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
-import bisq.common.observable.map.ReadOnlyObservableMap;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.mu_sig.offer.components.MuSigPaymentMethodChipButton;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -55,9 +53,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -70,10 +68,8 @@ public class MuSigCreateOfferPaymentController implements Controller {
     private final MuSigCreateOfferPaymentView view;
     private final CreateOfferDraftWorkflow createOfferDraftWorkflow;
     private final Region owner;
-    private final AccountService accountService;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final ListChangeListener<PaymentMethod<?>> selectedPaymentMethodsListener;
-    private Subscription paymentMethodWithoutAccountPin, paymentMethodWithMultipleAccountsPin;
     private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
 
@@ -81,36 +77,18 @@ public class MuSigCreateOfferPaymentController implements Controller {
                                              CreateOfferDraftWorkflow createOfferDraftWorkflow,
                                              Region owner,
                                              Consumer<Boolean> navigationButtonsVisibleHandler) {
-        accountService = serviceProvider.getAccountService();
         this.createOfferDraftWorkflow = createOfferDraftWorkflow;
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
 
         model = new MuSigCreateOfferPaymentModel();
         view = new MuSigCreateOfferPaymentView(model, this);
-        model.getSortedAccountsForPaymentMethod().setComparator(Comparator.comparing(Account::getAccountName));
-
+        model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         selectedPaymentMethodsListener = c -> updateTradeLimitInfo();
     }
 
-    public ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> getSelectedAccountByPaymentMethod() {
-        return model.getSelectedAccountByPaymentMethod();
-    }
-
-    public List<Account<?, ?>> getEligibleAccounts() {
-        String currencyCode = getPaymentMethodCurrencyCode();
-        if (currencyCode == null) return List.of();
-
-        return accountService.getAccounts().stream()
-                .filter(account -> !(account instanceof UserDefinedFiatAccount))
-                .filter(account ->
-                        account.getAccountPayload().getSelectedCurrencyCodes().stream()
-                                .anyMatch(code -> code.equals(currencyCode)))
-                .collect(Collectors.toList());
-    }
-
     public boolean validate() {
-        if (model.getSelectedAccountByPaymentMethod().isEmpty()) {
+        if (createOfferDraftWorkflow.getSelectedAccountByPaymentMethod().isEmpty()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShouldShowNoPaymentMethodSelectedOverlay().set(true);
             model.getNoPaymentMethodSelectedOverlayText().set(
@@ -123,48 +101,74 @@ public class MuSigCreateOfferPaymentController implements Controller {
         return true;
     }
 
-    public void reset() {
-        model.reset();
-    }
-
     @Override
     public void onActivate() {
-        Market market = createOfferDraftWorkflow.getMarket();
-        String paymentMethodCurrencyCode = getPaymentMethodCurrencyCode();
-        model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
-        model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(paymentMethodCurrencyCode));
-        model.getAccountsByPaymentMethod().putAll(getEligibleAccounts().stream()
-                .collect(Collectors.groupingBy(
-                        Account::getPaymentMethod,
-                        Collectors.toList()
-                )));
+        model.getSelectedAccountByPaymentMethod().clear();
+        model.getSelectedPaymentMethods().clear();
+        model.getPaymentMethodRequiringAccountSelection().set(null);
+        model.getAccountsByPaymentMethod().clear();
+        updateShouldShowNoAccountOverlay(false);
+        updateShouldShowMultipleAccountsOverlay(false);
         model.getPaymentMethodWithoutAccount().set(null);
-        model.getPaymentMethodWithMultipleAccounts().set(null);
 
-        paymentMethodWithoutAccountPin = EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
+        Market market = createOfferDraftWorkflow.getMarket();
+        pins.add(createOfferDraftWorkflow.selectedAccountByPaymentMethodObservable().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(PaymentMethod<?> paymentMethod, Account<?, ?> account) {
+                UIThread.run(() -> {
+                    model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
+                    model.getSelectedPaymentMethods().add(paymentMethod);
+                });
+            }
+
+            @Override
+            public void remove(Object key) {
+                if (key instanceof PaymentMethod<?> paymentMethod) {
+                    model.getSelectedAccountByPaymentMethod().remove(paymentMethod);
+                    model.getSelectedPaymentMethods().remove(paymentMethod);
+                }
+            }
+        }));
+
+        pins.add(createOfferDraftWorkflow.accountsByPaymentMethodObservable().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(PaymentMethod<?> paymentMethod, List<Account<?, ?>> accounts) {
+                UIThread.run(() -> {
+                    model.getAccountsByPaymentMethod().put(paymentMethod, accounts);
+                });
+            }
+
+            @Override
+            public void remove(Object key) {
+                if (key instanceof PaymentMethod<?> paymentMethod) {
+                    model.getAccountsByPaymentMethod().remove(paymentMethod);
+                }
+            }
+        }));
+
+        subscriptions.add(EasyBind.subscribe(model.getPaymentMethodWithoutAccount(), paymentMethod -> {
             if (paymentMethod != null) {
                 model.getNoAccountOverlayHeadlineText().set(
                         Res.get("muSig.offer.create.paymentMethod.noAccountOverlay.headline",
                                 paymentMethod.getShortDisplayString()));
                 updateShouldShowNoAccountOverlay(true);
             }
-        });
-        paymentMethodWithMultipleAccountsPin = EasyBind.subscribe(model.getPaymentMethodWithMultipleAccounts(), paymentMethod -> {
+        }));
+        subscriptions.add(EasyBind.subscribe(model.getPaymentMethodRequiringAccountSelection(), paymentMethod -> {
             if (paymentMethod != null) {
                 model.getMultipleAccountsOverlayHeadlineText().set(
                         Res.get("muSig.offer.create.paymentMethod.multipleAccountOverlay.headline",
                                 paymentMethod.getShortDisplayString()));
                 updateShouldShowMultipleAccountsOverlay(true);
             }
-        });
+        }));
+
+        String relevantCurrencyCode = market.getRelevantCurrencyCode();
+        List<PaymentMethod<?>> paymentMethods = PaymentMethodUtil.getPaymentMethods(relevantCurrencyCode);
+        model.getPaymentMethods().setAll(paymentMethods);
 
         model.getSelectedPaymentMethods().addListener(selectedPaymentMethodsListener);
         updateTradeLimitInfo();
-    }
-
-    private String getPaymentMethodCurrencyCode() {
-        Market market = createOfferDraftWorkflow.getMarket();
-        return market.isCrypto() ? market.getBaseCurrencyCode() : market.getQuoteCurrencyCode();
     }
 
     @Override
@@ -173,71 +177,58 @@ public class MuSigCreateOfferPaymentController implements Controller {
         subscriptions.clear();
         pins.forEach(Pin::unbind);
         pins.clear();
-        model.getAccountsByPaymentMethod().clear();
-        updateShouldShowNoAccountOverlay(false);
-        updateShouldShowMultipleAccountsOverlay(false);
-
-        paymentMethodWithoutAccountPin.unsubscribe();
-        paymentMethodWithMultipleAccountsPin.unsubscribe();
-
         model.getSelectedPaymentMethods().removeListener(selectedPaymentMethodsListener);
     }
 
-    void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, MuSigPaymentMethodChipButton button) {
-        if (button.isSelected()) {
-            if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
-                if (model.getSelectedPaymentMethods().size() >= MAX_NUM_PAYMENT_METHODS) {
-                    new Popup().invalid(Res.get("muSig.offer.create.paymentMethods.warn.maxMethodsReached", MAX_NUM_PAYMENT_METHODS))
-                            .owner(owner)
-                            .onClose(() -> button.setSelected(false))
-                            .show();
-                    return;
-                }
+    void onTogglePaymentMethod(PaymentMethod<?> paymentMethod, boolean selected, Runnable deSelectHandler) {
+        ObservableList<PaymentMethod<?>> selectedPaymentMethods = model.getSelectedPaymentMethods();
+        if (selected) {
+            if (selectedPaymentMethods.contains(paymentMethod)) {
+                return;
+            }
 
-                if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
-                    model.getSelectedPaymentMethods().add(paymentMethod);
-                }
-                if (model.getAccountsByPaymentMethod().containsKey(paymentMethod)) {
-                    List<Account<?, ?>> accountsForPaymentMethod = model.getAccountsByPaymentMethod().get(paymentMethod);
-                    checkArgument(!accountsForPaymentMethod.isEmpty());
+            if (selectedPaymentMethods.size() >= MAX_NUM_PAYMENT_METHODS) {
+                new Popup().invalid(Res.get("muSig.offer.create.paymentMethods.warn.maxMethodsReached", MAX_NUM_PAYMENT_METHODS))
+                        .owner(owner)
+                        .onClose(deSelectHandler)
+                        .show();
+                return;
+            }
 
-                    if (accountsForPaymentMethod.size() == 1) {
-                        model.getSelectedAccountByPaymentMethod().put(paymentMethod, accountsForPaymentMethod.get(0));
-                    } else {
-                        model.getAccountsForPaymentMethod().setAll(accountsForPaymentMethod);
-                        model.getPaymentMethodWithMultipleAccounts().set(paymentMethod);
-                    }
+            Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = createOfferDraftWorkflow.getAccountsByPaymentMethod();
+
+            if (accountsByPaymentMethod.containsKey(paymentMethod)) {
+                List<Account<?, ?>> accountsForPaymentMethod = accountsByPaymentMethod.get(paymentMethod);
+                checkArgument(accountsForPaymentMethod != null && !accountsForPaymentMethod.isEmpty());
+
+                if (accountsForPaymentMethod.size() == 1) {
+                    Account<?, ?> account = accountsForPaymentMethod.getFirst();
+                    createOfferDraftWorkflow.putSelectedAccountByPaymentMethod(paymentMethod, account);
                 } else {
-                    model.getPaymentMethodWithoutAccount().set(paymentMethod);
+                    model.getAccountsForSelectedPaymentMethod().setAll(accountsForPaymentMethod);
+                    model.getPaymentMethodRequiringAccountSelection().set(paymentMethod);
+                    deSelectHandler.run();
                 }
+            } else {
+                model.getPaymentMethodWithoutAccount().set(paymentMethod);
+                deSelectHandler.run();
             }
         } else {
-            model.getSelectedAccountByPaymentMethod().remove(paymentMethod);
-            model.getSelectedPaymentMethods().remove(paymentMethod);
-        }
-    }
-
-    public void selectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
-        doSelectAccount(account, paymentMethod);
-
-        if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
-            model.getSelectedPaymentMethods().add(paymentMethod);
+            createOfferDraftWorkflow.removeSelectedAccountByPaymentMethod(paymentMethod);
+            selectedPaymentMethods.remove(paymentMethod);
+            model.getPaymentMethodRequiringAccountSelection().set(null);
         }
     }
 
     void onSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
-        doSelectAccount(account, paymentMethod);
-    }
-
-    private void doSelectAccount(Account<? extends PaymentMethod<?>, ?> account, PaymentMethod<?> paymentMethod) {
-        if (account != null) {
-            model.getSelectedAccountByPaymentMethod().put(paymentMethod, account);
-            model.getPaymentMethodWithMultipleAccounts().set(null);
+        if (account != null && paymentMethod != null) {
+            createOfferDraftWorkflow.putSelectedAccountByPaymentMethod(paymentMethod, account);
+            model.getPaymentMethodRequiringAccountSelection().set(null);
+            updateShouldShowMultipleAccountsOverlay(false);
         }
-        updateShouldShowMultipleAccountsOverlay(false);
     }
 
-    void onOpenCreateAccountScreen() {
+    void onNavigateToAccounts() {
         onCloseNoAccountOverlay();
         OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS));
     }
@@ -252,16 +243,16 @@ public class MuSigCreateOfferPaymentController implements Controller {
     }
 
     void onKeyPressedWhileShowingNoAccountOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onOpenCreateAccountScreen);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNavigateToAccounts);
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseNoAccountOverlay);
     }
 
     void onCloseMultipleAccountsOverlay() {
-        PaymentMethod<?> paymentMethod = model.getPaymentMethodWithMultipleAccounts().get();
+        PaymentMethod<?> paymentMethod = model.getPaymentMethodRequiringAccountSelection().get();
         if (paymentMethod != null) {
             model.getSelectedPaymentMethods().remove(paymentMethod);
         }
-        model.getPaymentMethodWithMultipleAccounts().set(null);
+        model.getPaymentMethodRequiringAccountSelection().set(null);
         updateShouldShowMultipleAccountsOverlay(false);
     }
 

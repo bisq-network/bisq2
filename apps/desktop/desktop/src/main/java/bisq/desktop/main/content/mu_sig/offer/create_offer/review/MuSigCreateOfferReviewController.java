@@ -30,7 +30,6 @@ import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
-import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -73,6 +72,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -120,13 +120,13 @@ public class MuSigCreateOfferReviewController implements Controller {
         }
     }
 
-    public void setDataForCreateOffer(ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod,
-                                      AmountSpec amountSpec,
+    public void setDataForCreateOffer(AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         Direction direction = createOfferDraftWorkflow.getDirection();
         Market market = createOfferDraftWorkflow.getMarket();
         List<PaymentMethod<?>> paymentMethods = new ArrayList<>();
         List<Account<?, ?>> accounts = new ArrayList<>();
+        Map<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = createOfferDraftWorkflow.getSelectedAccountByPaymentMethod();
         selectedAccountByPaymentMethod.entrySet().stream()
                 .sorted(Comparator.comparing(o -> o.getKey().getPaymentRailName()))
                 .forEach(e -> {

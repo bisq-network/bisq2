@@ -15,24 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.mu_sig.draft;
+package bisq.offer.mu_sig.draft.dependencies;
 
-import bisq.common.application.Workflow;
 import bisq.common.market.Market;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.PriceQuote;
+import bisq.common.monetary.TradeAmount;
 
-public abstract class OfferDraftWorkflow<T extends ReadOnlyOfferDraft> extends Workflow {
-    protected final T offerDraft;
+public interface CreateOfferDraftMarketData {
+    PriceQuote getMarketPriceQuote(Market market);
 
+    PriceQuote getBtcUsdPriceQuote();
 
-    protected OfferDraftWorkflow(T offerDraft) {
-        this.offerDraft = offerDraft;
-    }
-
-    protected ReadOnlyOfferDraft getOfferDraft() {
-        return offerDraft;
-    }
-
-    public Market getMarket() {
-        return offerDraft.getMarket();
-    }
+    TradeAmount getTradeAmountFromUsd(Market market, Fiat usdAmount);
 }

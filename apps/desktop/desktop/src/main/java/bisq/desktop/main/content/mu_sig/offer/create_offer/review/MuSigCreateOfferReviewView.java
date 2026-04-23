@@ -38,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewModel, MuSigCreateOfferReviewController> {
     public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
@@ -52,7 +55,7 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
     private final GridPane gridPane;
     private final TextFlow price;
     private final HBox reviewDataDisplay;
-    private Subscription showCreateOfferSuccessPin;
+    private final Set<Subscription> subscriptions = new HashSet<>();
 
     MuSigCreateOfferReviewView(MuSigCreateOfferReviewModel model,
                                MuSigCreateOfferReviewController controller,
@@ -198,10 +201,10 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
 
         createOfferSuccessButton.setOnAction(e -> controller.onShowOfferbook());
 
-        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(), shouldShow ->
+        subscriptions.add(EasyBind.subscribe(model.getShowCreateOfferSuccess(), shouldShow ->
                 createOfferSuccessOverlay.updateOverlayVisibility(gridPane,
                         shouldShow,
-                        controller::onKeyPressedWhileShowingOverlay));
+                        controller::onKeyPressedWhileShowingOverlay)));
 
         if (model.isRangeAmount() && model.isCrypto()) {
             GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 45, 0));
@@ -212,8 +215,9 @@ class MuSigCreateOfferReviewView extends View<StackPane, MuSigCreateOfferReviewM
 
     @Override
     protected void onViewDetached() {
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
         createOfferSuccessButton.setOnAction(null);
-        showCreateOfferSuccessPin.unsubscribe();
         paymentMethod.setTooltip(null);
         paymentMethodDetails.setTooltip(null);
         securityDepositInfoIcon.setTooltip(null);

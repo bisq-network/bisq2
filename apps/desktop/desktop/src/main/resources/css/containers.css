@@ -907,7 +907,8 @@
 }
 
 .wizard-overlay .green-warning,
-.wizard-overlay .default-info {
+.wizard-overlay .default-info ,
+.wizard-overlay .default-instruction {
     -fx-fill: -bisq2-green;
     -fx-text-fill: -bisq2-green;
 }

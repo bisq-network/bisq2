@@ -15,21 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.mu_sig.draft;
+package bisq.offer.mu_sig.draft.dependencies;
 
+import bisq.account.AccountService;
+import bisq.account.accounts.Account;
 import bisq.common.market.Market;
-import bisq.offer.Direction;
 
-public interface CreateOfferDraftCookieStore {
-    void persistDirection(Direction direction);
+import java.util.List;
 
-    Direction getDirection();
+public class DefaultAccountsProvider implements AccountsProvider {
+    private final AccountService accountService;
 
-    boolean getUseBaseCurrencyForAmountInput(Market market);
+    public DefaultAccountsProvider(AccountService accountService) {
+        this.accountService = accountService;
+    }
 
-    void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput);
-
-    boolean getUseRangeAmount();
-
-    void persistUseRangeAmount(boolean useRangeAmount);
+    @Override
+    public List<Account<?, ?>> findAccountsForMarket(Market market) {
+        return accountService.findAccountsForMarket(market);
+    }
 }
+

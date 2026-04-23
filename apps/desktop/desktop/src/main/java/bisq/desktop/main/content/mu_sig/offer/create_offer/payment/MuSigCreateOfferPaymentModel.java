@@ -19,7 +19,6 @@ package bisq.desktop.main.content.mu_sig.offer.create_offer.payment;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -29,6 +28,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
@@ -39,42 +39,27 @@ import java.util.Map;
 @Getter
 public class MuSigCreateOfferPaymentModel implements Model {
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
+    private final ObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = FXCollections.observableHashMap();
+
     private final ObservableList<PaymentMethod<?>> paymentMethods = FXCollections.observableArrayList();
     private final SortedList<PaymentMethod<?>> sortedPaymentMethods = new SortedList<>(paymentMethods);
+
     private final ObservableList<PaymentMethod<?>> selectedPaymentMethods = FXCollections.observableArrayList();
 
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithoutAccount = new SimpleObjectProperty<>();
-    private final ObjectProperty<PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
+    private final ObjectProperty<PaymentMethod<?>> paymentMethodRequiringAccountSelection = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShowNoAccountOverlay = new SimpleBooleanProperty();
     private final StringProperty noAccountOverlayHeadlineText = new SimpleStringProperty();
     private final BooleanProperty shouldShowMultipleAccountsOverlay = new SimpleBooleanProperty();
     private final StringProperty multipleAccountsOverlayHeadlineText = new SimpleStringProperty();
 
-    private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
-    private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
-    private final ObservableHashMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethod = new ObservableHashMap<>();
+    private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForSelectedPaymentMethod = FXCollections.observableArrayList();
+    private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForSelectedPaymentMethod = new SortedList<>(accountsForSelectedPaymentMethod);
 
     private final BooleanProperty shouldShowNoPaymentMethodSelectedOverlay = new SimpleBooleanProperty();
     private final StringProperty noPaymentMethodSelectedOverlayText = new SimpleStringProperty("");
     private final StringProperty tradeLimitInfo = new SimpleStringProperty();
 
     public MuSigCreateOfferPaymentModel() {
-    }
-
-    void reset() {
-        accountsByPaymentMethod.clear();
-        paymentMethods.clear();
-        selectedPaymentMethods.clear();
-        paymentMethodWithoutAccount.set(null);
-        paymentMethodWithMultipleAccounts.set(null);
-        shouldShowNoAccountOverlay.set(false);
-        noAccountOverlayHeadlineText.set("");
-        shouldShowMultipleAccountsOverlay.set(false);
-        multipleAccountsOverlayHeadlineText.set("");
-        accountsForPaymentMethod.clear();
-        sortedAccountsForPaymentMethod.clear();
-        selectedAccountByPaymentMethod.clear();
-        shouldShowNoPaymentMethodSelectedOverlay.set(false);
-        noPaymentMethodSelectedOverlayText.set("");
     }
 }

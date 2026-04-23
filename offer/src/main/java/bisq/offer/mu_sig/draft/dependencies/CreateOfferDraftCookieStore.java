@@ -15,17 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.mu_sig.draft;
+package bisq.offer.mu_sig.draft.dependencies;
 
 import bisq.common.market.Market;
-import bisq.common.monetary.Fiat;
-import bisq.common.monetary.PriceQuote;
-import bisq.common.monetary.TradeAmount;
+import bisq.offer.Direction;
 
-public interface CreateOfferDraftMarketData {
-    PriceQuote getMarketPriceQuote(Market market);
+public interface CreateOfferDraftCookieStore {
+    void persistDirection(Direction direction);
 
-    PriceQuote getBtcUsdPriceQuote();
+    Direction getDirection();
 
-    TradeAmount getTradeAmountFromUsd(Market market, Fiat usdAmount);
+    boolean getUseBaseCurrencyForAmountInput(Market market);
+
+    void persistUseBaseCurrencyForAmountInput(Market market, boolean useBaseCurrencyForAmountInput);
+
+    boolean getUseRangeAmount();
+
+    void persistUseRangeAmount(boolean useRangeAmount);
 }

@@ -15,24 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.mu_sig.draft;
+package bisq.offer.mu_sig.draft.dependencies;
 
-import bisq.common.application.Workflow;
+import bisq.account.accounts.Account;
 import bisq.common.market.Market;
 
-public abstract class OfferDraftWorkflow<T extends ReadOnlyOfferDraft> extends Workflow {
-    protected final T offerDraft;
+import java.util.List;
 
-
-    protected OfferDraftWorkflow(T offerDraft) {
-        this.offerDraft = offerDraft;
-    }
-
-    protected ReadOnlyOfferDraft getOfferDraft() {
-        return offerDraft;
-    }
-
-    public Market getMarket() {
-        return offerDraft.getMarket();
-    }
+public interface AccountsProvider {
+    List<Account<?, ?>> findAccountsForMarket(Market market);
 }

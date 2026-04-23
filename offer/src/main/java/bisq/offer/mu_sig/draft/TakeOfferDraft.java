@@ -25,14 +25,14 @@ public class TakeOfferDraft extends ReadOnlyOfferDraft {
 
     private MuSigOffer offer;
 
-    public TakeOfferDraft() {
+    TakeOfferDraft() {
     }
 
     void setOffer(MuSigOffer offer) {
         this.offer = offer;
     }
 
-    public MuSigOffer getOffer() {
+    MuSigOffer getOffer() {
         return offer;
     }
 

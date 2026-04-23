@@ -25,7 +25,6 @@ import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountConversion;
 import bisq.common.monetary.TradeAmountRange;
 import bisq.common.util.MathUtils;
-import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -33,7 +32,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Utility class for amount conversions and calculations in the offer creation workflow.
  * Provides methods for converting between input/passive amounts and slider values.
  */
-public class AmountUtils {
+class AmountUtils {
     /**
      * Extracts the input amount from a TradeAmount based on user preference.
      * The input amount is the currency that the user directly controls (e.g., enters in a text field or slider).
@@ -43,7 +42,6 @@ public class AmountUtils {
      * @param useBaseCurrencyForAmountInput If true, base currency is the input; otherwise quote currency
      * @return The clamped input amount (either base or quote side)
      */
-    @VisibleForTesting
     static Monetary toInputAmount(TradeAmount tradeAmount,
                                   TradeAmountRange limits,
                                   boolean useBaseCurrencyForAmountInput) {
@@ -66,7 +64,6 @@ public class AmountUtils {
      * @param useBaseCurrencyForAmountInput If true, quote currency is passive; otherwise base currency
      * @return The clamped passive amount (opposite side of input amount)
      */
-    @VisibleForTesting
     static Monetary toPassiveAmount(TradeAmount tradeAmount,
                                     TradeAmountRange limits,
                                     boolean useBaseCurrencyForAmountInput) {
@@ -87,7 +84,6 @@ public class AmountUtils {
      * @param inputAmountLimits The min/max limits for the input amount
      * @return A slider value between 0 and 1, where 0 represents the minimum and 1 represents the maximum
      */
-    @VisibleForTesting
     static double toSliderValue(Monetary inputAmount, MonetaryRange inputAmountLimits) {
         long min = inputAmountLimits.getMin().getValue();
         long max = inputAmountLimits.getMax().getValue();
@@ -106,7 +102,6 @@ public class AmountUtils {
      * @param sliderValue       A value between 0 and 1
      * @return A TradeAmount corresponding to the slider position
      */
-    @VisibleForTesting
     static TradeAmount toTradeAmountFromSliderValue(Market market,
                                                     PriceQuote priceQuote,
                                                     MonetaryRange inputAmountLimits,

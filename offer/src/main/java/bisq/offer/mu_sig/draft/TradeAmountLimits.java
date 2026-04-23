@@ -30,7 +30,6 @@ import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountRange;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -39,35 +38,35 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TradeAmountLimits {
-    public static final Fiat MIN_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10, "USD");
-    public static final Fiat MAX_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10000, "USD");
+class TradeAmountLimits {
+    static final Fiat MIN_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10, "USD");
+    static final Fiat MAX_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(10000, "USD");
 
     // todo
-    public static Fiat getMaxTradeAmountInUsd() {
+    static Fiat getMaxTradeAmountInUsd() {
         return TradeAmountLimits.MAX_TRADE_AMOUNT_IN_USD;
     }
 
-    public static Monetary getMinTradeAmountInBtc(MarketPriceService marketPriceService) {
+    static Monetary getMinTradeAmountInBtc(MarketPriceService marketPriceService) {
         return MarketBasedAmountConversion.usdToBtc(marketPriceService, MIN_TRADE_AMOUNT_IN_USD)
                 .orElseThrow();
     }
 
-    public static Monetary getMaxTradeAmountInBtc(MarketPriceService marketPriceService) {
+    static Monetary getMaxTradeAmountInBtc(MarketPriceService marketPriceService) {
         return MarketBasedAmountConversion.usdToBtc(marketPriceService, MAX_TRADE_AMOUNT_IN_USD)
                 .orElseThrow();
     }
 
-    public static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail) {
+    static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail) {
         return getMaxTradeLimitInUsd(paymentRail, MAX_TRADE_AMOUNT_IN_USD);
     }
 
-    public static String getFormattedMaxTradeLimitInUsd(PaymentRail paymentRail) {
+    static String getFormattedMaxTradeLimitInUsd(PaymentRail paymentRail) {
         Fiat maxTradeLimit = getMaxTradeLimitInUsd(paymentRail);
         return AmountFormatter.formatQuoteAmount(maxTradeLimit);
     }
 
-    public static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail, Fiat maxTradeLimitByProtocol) {
+    static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail, Fiat maxTradeLimitByProtocol) {
         if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
             switch (fiatPaymentRail.getChargebackRisk()) {
                 case VERY_LOW -> {
@@ -92,11 +91,10 @@ public class TradeAmountLimits {
     }
 
     //todo
-    public static Fiat getUserSpecificLimitInUsdAmount() {
+    static Fiat getUserSpecificLimitInUsdAmount() {
         return Fiat.fromFaceValue(4000, "USD");
     }
 
-    @VisibleForTesting
     static TradeAmountRange toTradeAmountLimits(Market market,
                                                 PriceQuote priceQuote,
                                                 PriceQuote btcUsdPriceQuote,
@@ -133,7 +131,6 @@ public class TradeAmountLimits {
         return new TradeAmountRange(minTradeAmount, maxTradeAmount);
     }
 
-    @VisibleForTesting
     static Optional<TradeAmount> toUserSpecificTradeAmountLimit(Direction direction,
                                                                 Market market,
                                                                 PriceQuote priceQuote,
@@ -166,7 +163,6 @@ public class TradeAmountLimits {
         return Optional.of(new TradeAmount(minBaseSideMonetary, quoteSideAmount));
     }
 
-    @VisibleForTesting
     static TradeAmount clampTradeAmount(TradeAmountRange tradeAmountLimits,
                                         Optional<TradeAmount> userSpecificTradeAmountLimit,
                                         TradeAmount tradeAmount,
@@ -177,7 +173,6 @@ public class TradeAmountLimits {
         return clampTradeAmount(limits, tradeAmount);
     }
 
-    @VisibleForTesting
     static Monetary clampBaseSideAmount(TradeAmountRange tradeAmountLimits,
                                         Optional<TradeAmount> userSpecificTradeAmountLimit,
                                         Monetary baseSideAmount,
@@ -188,7 +183,6 @@ public class TradeAmountLimits {
         return clampBaseSideAmount(limits, baseSideAmount);
     }
 
-    @VisibleForTesting
     static Monetary clampQuoteSideAmount(TradeAmountRange tradeAmountLimits,
                                          Optional<TradeAmount> userSpecificTradeAmountLimit,
                                          Monetary quoteSideAmount,
@@ -199,7 +193,6 @@ public class TradeAmountLimits {
         return clampQuoteSideAmount(limits, quoteSideAmount);
     }
 
-    @VisibleForTesting
     static TradeAmountRange getClampLimits(TradeAmountRange tradeAmountLimits,
                                            Optional<TradeAmount> userSpecificTradeAmountLimit,
                                            boolean includeUserSpecificTradeAmountLimit) {
@@ -215,7 +208,6 @@ public class TradeAmountLimits {
         }
     }
 
-    @VisibleForTesting
     static TradeAmount clampTradeAmount(TradeAmountRange tradeAmountLimits, TradeAmount tradeAmount) {
         checkNotNull(tradeAmountLimits, "tradeAmountLimits must not be null");
         checkNotNull(tradeAmount, "tradeAmount must not be null");
@@ -223,7 +215,6 @@ public class TradeAmountLimits {
 
     }
 
-    @VisibleForTesting
     static Monetary clampBaseSideAmount(TradeAmountRange tradeAmountLimits, Monetary baseSideAmount) {
         checkNotNull(tradeAmountLimits, "tradeAmountLimits must not be null");
         checkNotNull(baseSideAmount, "baseSideAmount must not be null");
@@ -232,7 +223,6 @@ public class TradeAmountLimits {
         return baseSideAmount.clamp(min, max);
     }
 
-    @VisibleForTesting
     static Monetary clampQuoteSideAmount(TradeAmountRange tradeAmountLimits, Monetary quoteSideAmount) {
         checkNotNull(tradeAmountLimits, "tradeAmountLimits must not be null");
         checkNotNull(quoteSideAmount, "quoteSideAmount must not be null");

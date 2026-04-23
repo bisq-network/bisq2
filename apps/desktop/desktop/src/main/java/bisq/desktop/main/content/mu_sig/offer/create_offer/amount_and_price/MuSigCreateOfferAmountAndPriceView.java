@@ -28,11 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOfferAmountAndPriceModel, MuSigCreateOfferAmountAndPriceController> {
     private final Label headline;
     private final VBox priceOverlay, content, amountOverlay;
-    private Subscription isAmountOverlayVisiblePin, isPriceOverlayVisiblePin;
+    private final Set<Subscription> subscriptions = new HashSet<>();
 
     public MuSigCreateOfferAmountAndPriceView(MuSigCreateOfferAmountAndPriceModel model,
                                               MuSigCreateOfferAmountAndPriceController controller,
@@ -64,7 +67,7 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
     protected void onViewAttached() {
         headline.textProperty().set(model.getHeadline());
 
-        isAmountOverlayVisiblePin = EasyBind.subscribe(model.getIsAmountOverlayVisible(), isAmountOverlayVisible -> {
+        subscriptions.add(EasyBind.subscribe(model.getIsAmountOverlayVisible(), isAmountOverlayVisible -> {
             if (isAmountOverlayVisible) {
                 amountOverlay.setVisible(true);
                 amountOverlay.setOpacity(1);
@@ -81,9 +84,9 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                     root.getParent().requestFocus();
                 }
             }
-        });
+        }));
 
-        isPriceOverlayVisiblePin = EasyBind.subscribe(model.getIsPriceOverlayVisible(), isPriceOverlayVisible -> {
+        subscriptions.add(EasyBind.subscribe(model.getIsPriceOverlayVisible(), isPriceOverlayVisible -> {
             if (isPriceOverlayVisible) {
                 priceOverlay.setVisible(true);
                 priceOverlay.setOpacity(1);
@@ -100,12 +103,12 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                     root.getParent().requestFocus();
                 }
             }
-        });
+        }));
     }
 
     @Override
     protected void onViewDetached() {
-        isAmountOverlayVisiblePin.unsubscribe();
-        isPriceOverlayVisiblePin.unsubscribe();
+        subscriptions.forEach(Subscription::unsubscribe);
+        subscriptions.clear();
     }
 }
