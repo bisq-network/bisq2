@@ -29,6 +29,13 @@
 - If parameters are getting too long, break it up as single param per line.
 - When using fluent interface break up in lines at each `.`
 - Use separator lines if classes are getting large to logically group methods.
+  Use 2 line breaks after the comment separator line.
+  Format for comment separators:
+    ```
+    /* --------------------------------------------------------------------- */
+    // Group Name
+    /* --------------------------------------------------------------------- */
+    ```
 - Use Java records only for simple value objects. Converting them later to normal classes is a bit cumbersome.
 - Always use `@Override` when overriding methods.
 - Ternary operators should be styled for clarity and conciseness. For short conditions that fit in one line, use:
