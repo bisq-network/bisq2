@@ -78,6 +78,8 @@ tasks.register("publishAll") {
             ":chat:publishToMavenLocal",
             ":common:publishToMavenLocal",
             ":contract:publishToMavenLocal",
+            ":desktop-automation-contract:publishToMavenLocal",
+            ":desktop-automation:publishToMavenLocal",
             ":i18n:publishToMavenLocal",
             ":identity:publishToMavenLocal",
             ":network:publishToMavenLocal",
