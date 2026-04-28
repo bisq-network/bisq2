@@ -1,0 +1,286 @@
+name: Sync for-mobile to main
+
+# Forward-port automation: when a PR is merged into the highest-versioned
+# `for-mobile-based-on-X.Y.Z` branch, automatically open a PR to `main` with
+# the same commits cherry-picked. Implements the "any approved merged commit
+# in the for-mobile branch must be synced to main" policy without relying on
+# devs remembering.
+#
+# Notes:
+#  - Only the highest-version `for-mobile-based-on-X.Y.Z` branch is treated
+#    as "active" — older release branches (2.1.7, 2.1.8, ...) are ignored.
+#    Detection is dynamic via `sort -V`, so no manual update is needed when a
+#    new for-mobile branch is created.
+#  - Branches with prefixes / suffixes (e.g. `bugfix/for-mobile-based-on-…`,
+#    `feature/for-mobile-based-on-…_some_suffix`) are excluded by the strict
+#    regex; only the canonical branches qualify as "active".
+#  - Opt out per-PR with the `skip-sync-to-main` label before merging. The
+#    label is honoured ONLY when added by a maintainer (admin / write
+#    permission on the repo) — see the `verify-skip-label` job below.
+#  - On clean cherry-pick: opens a PR to main, copies assignees + reviewers
+#    from the source PR so the involved people get notified.
+#  - On conflict: creates a *draft* PR with conflict markers AND posts a
+#    comment on the source PR with manual-resolution instructions (action's
+#    `conflict_resolution: draft_commit_conflicts` mode).
+#  - The default GITHUB_TOKEN can open PRs but does NOT trigger downstream CI
+#    on the auto-PR. Either accept the manual "Re-run jobs" click on the
+#    sync PR, or replace `secrets.GITHUB_TOKEN` with a fine-grained PAT /
+#    GitHub App token allowed to dispatch workflows.
+#
+# Security:
+#  - `pull_request_target` runs with the BASE repo's secrets and write
+#    permissions. We never check out PR HEAD code; only the merge commit
+#    (which has already been reviewed and merged). The detect-active-branch
+#    script reads only `github.repository` (set by GitHub Actions, not user-
+#    controlled) and runs a public `git ls-remote` against the canonical repo.
+#  - Top-level `permissions:` is read-only. Only the `sync-to-main` job
+#    elevates to `contents: write` + `pull-requests: write` for the cherry-
+#    pick + PR-opening operations. The other two jobs run with the read-only
+#    default — they don't need writes.
+#  - All third-party and first-party `uses:` references are pinned to a
+#    commit SHA (immutable), with the human-readable version in a trailing
+#    comment for context. Tag pins (`@v7`) can be force-moved by the
+#    publisher; SHA pins can only change with an explicit upgrade in this
+#    repo. For a workflow with write permissions on `pull_request_target`,
+#    SHA pinning is the right default. When upgrading an action, swap to
+#    the new release's SHA and update the trailing version comment.
+#  - The `skip-sync-to-main` label is only honoured if added by an account
+#    with write/admin permission on the repo. This prevents a PR author from
+#    sneaking the label onto their own merged PR via a co-conspirator with
+#    only triage rights, bypassing the sync policy.
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches:
+      - 'for-mobile-based-on-*'
+
+# Read-only by default. Per-job overrides below grant writes only where needed.
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+# Prevent racing if the same PR triggers two runs (e.g. manual re-run while
+# the original run is still going). Wait for the in-flight run rather than
+# cancelling it — we don't want to abort a half-pushed cherry-pick branch.
+concurrency:
+  group: sync-for-mobile-to-main-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  detect-active-branch:
+    name: Detect active for-mobile branch
+    # The `pull_request_target: closed` trigger fires for every closure, not
+    # just merges. Skip everything when the PR was closed without merging —
+    # there's nothing to sync. (Per @wodoro.)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # No job-level permissions — inherits the read-only top-level scope.
+
+    outputs:
+      active: ${{ steps.detect.outputs.active }}
+      should_sync: ${{ steps.detect.outputs.should_sync }}
+
+    steps:
+      - name: Determine the highest-version for-mobile branch
+        id: detect
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Network call separated from local filtering: a transient failure
+          # of `git ls-remote` (DNS, GitHub blip, rate limit) must NOT be
+          # silently swallowed — that would mean a merge to for-mobile slips
+          # past with no sync PR, defeating the whole purpose of the workflow.
+          # Retry up to 3 times, then fail the workflow loudly so a maintainer
+          # notices in the PR's checks UI.
+          REMOTE_HEADS=""
+          for attempt in 1 2 3; do
+            if REMOTE_HEADS=$(git ls-remote --heads "https://github.com/${REPO}.git" 'for-mobile-based-on-*'); then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::git ls-remote failed after 3 attempts. Cannot determine the active for-mobile branch — re-run this workflow once GitHub connectivity is restored."
+              exit 1
+            fi
+            sleep_seconds=$((attempt * 5))
+            echo "git ls-remote attempt $attempt failed; retrying in ${sleep_seconds}s..."
+            sleep "$sleep_seconds"
+          done
+
+          # Local filtering. The trailing `|| true` here is scoped — it only
+          # protects the legitimate "no canonical for-mobile branch exists"
+          # case (`grep` finding no matches). It no longer hides network
+          # failures because those are caught above.
+          ACTIVE=$(printf '%s\n' "$REMOTE_HEADS" \
+            | awk -F'refs/heads/' '{print $2}' \
+            | grep -E '^for-mobile-based-on-[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -n1 \
+            || true)
+
+          echo "Active for-mobile branch (highest version): ${ACTIVE:-<none found>}"
+          echo "PR base ref:                                ${PR_BASE}"
+
+          if [ -n "$ACTIVE" ] && [ "$ACTIVE" = "$PR_BASE" ]; then
+            echo "PR base matches the active for-mobile branch — sync will run."
+            echo "should_sync=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "PR base is not the active for-mobile branch — skipping sync."
+            echo "should_sync=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "active=$ACTIVE" >> "$GITHUB_OUTPUT"
+
+  verify-skip-label:
+    name: Verify skip-sync-to-main label authority
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Read-only — same as detect-active-branch.
+
+    outputs:
+      skip_by_maintainer: ${{ steps.check.outputs.skip_by_maintainer }}
+
+    steps:
+      - name: Check that the skip-sync-to-main label was added by a maintainer
+        id: check
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          # Returns 'true' only when the most recent `labeled` event for
+          # `skip-sync-to-main` was performed by an account with admin/write
+          # permission on this repo. Triage / read / outside-contributor labels
+          # are NOT honoured — only maintainers can suppress the sync.
+          script: |
+            const SKIP_LABEL = 'skip-sync-to-main';
+            const ALLOWED_PERMISSIONS = ['admin', 'write'];
+
+            const labelOnPr = (context.payload.pull_request.labels || [])
+              .some(l => l.name === SKIP_LABEL);
+            if (!labelOnPr) {
+              core.info(`Label "${SKIP_LABEL}" not present on PR — sync proceeds.`);
+              core.setOutput('skip_by_maintainer', 'false');
+              return;
+            }
+
+            // Find the most recent `labeled` timeline event for SKIP_LABEL.
+            const events = await github.paginate(
+              github.rest.issues.listEventsForTimeline,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                per_page: 100,
+              },
+            );
+            const labelEvents = events
+              .filter(e => e.event === 'labeled' && e.label && e.label.name === SKIP_LABEL)
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            if (labelEvents.length === 0) {
+              core.warning(
+                `Label "${SKIP_LABEL}" is on the PR but no "labeled" event ` +
+                `was found in the timeline — treating as untrusted, sync proceeds.`,
+              );
+              core.setOutput('skip_by_maintainer', 'false');
+              return;
+            }
+
+            const actor = labelEvents[0].actor && labelEvents[0].actor.login;
+            if (!actor) {
+              core.warning('Label event has no actor — sync proceeds.');
+              core.setOutput('skip_by_maintainer', 'false');
+              return;
+            }
+
+            try {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: actor,
+              });
+              const allowed = ALLOWED_PERMISSIONS.includes(data.permission);
+              core.info(
+                `Label was added by @${actor} (permission: ${data.permission}). ` +
+                `Honoured as opt-out: ${allowed}.`,
+              );
+              core.setOutput('skip_by_maintainer', allowed ? 'true' : 'false');
+            } catch (err) {
+              core.warning(
+                `Could not resolve permission for @${actor}: ${err.message}. ` +
+                `Treating label as untrusted — sync proceeds.`,
+              );
+              core.setOutput('skip_by_maintainer', 'false');
+            }
+
+  sync-to-main:
+    name: Cherry-pick to main
+    needs: [detect-active-branch, verify-skip-label]
+    if: >
+      github.event.pull_request.merged == true
+      && needs.detect-active-branch.outputs.should_sync == 'true'
+      && needs.verify-skip-label.outputs.skip_by_maintainer != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Elevated permissions are scoped to ONLY this job (least-privilege).
+    # `issues: write` is required because PR *conversation* comments go
+    # through the Issues API (PRs are issues for this endpoint), and the
+    # backport action posts conflict instructions on the source PR when
+    # `conflict_resolution: draft_commit_conflicts` triggers. Without it
+    # the action 403s on the conflict-comment step.
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Forward-port the merged PR to main
+        # Pinned to commit SHA (immutable). When upgrading the action, replace
+        # this SHA with the new release's SHA — see release notes at
+        # https://github.com/korthout/backport-action/releases.
+        uses: korthout/backport-action@d07416681cab29bf2661702f925f020aaa962997 # v3.3.0
+        with:
+          target_branches: main
+          pull_title: 'chore: sync #${pull_number} to main — ${pull_title}'
+          pull_description: |
+            Automated cherry-pick of #${pull_number} from
+            `${{ needs.detect-active-branch.outputs.active }}` to `main`,
+            per the for-mobile → main sync policy.
+
+            **Original author:** @${pull_author}
+            **Reviewers:** please verify the cherry-pick lands cleanly,
+            tests still pass, and there are no unintended interactions
+            with main-only changes.
+
+            If this should NOT be synced to main, close this PR and ask a
+            maintainer to add the `skip-sync-to-main` label on the source
+            PR for future reference (the workflow only honours that label
+            when added by an account with admin/write permission).
+
+            Issue refs from the source PR: ${issue_refs}
+          copy_assignees: true
+          copy_milestone: false
+          copy_requested_reviewers: true
+          # Don't carry across `for-mobile-*` markers or any `skip-*` labels.
+          copy_labels_pattern: '^(?!for-mobile|skip-).*$'
+          # Squash-merged PRs land as a single commit; merge-commits land as
+          # the merge's contained commits with the merge commit itself
+          # skipped. Either way the cherry-pick set is the actual change list.
+          merge_commits: 'skip'
+          # On conflict: create a draft PR with conflict markers AND post a
+          # comment on the source PR pointing to it. Loud failure beats silent
+          # drift.
+          experimental: |
+            {
+              "conflict_resolution": "draft_commit_conflicts"
+            }
