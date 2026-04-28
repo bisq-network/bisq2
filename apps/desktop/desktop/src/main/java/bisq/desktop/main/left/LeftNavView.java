@@ -46,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -60,6 +62,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
     private final VBox mainMenuItems, networkInfoRoot;
+    private final Map<NavigationTarget, Node> navigationButtonByTarget = new EnumMap<>(NavigationTarget.class);
     private final int menuTop;
     private final LeftNavButton authorizedRole, muSigLeftNavButton, wallet;
     private final Label version;
@@ -332,6 +335,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 hasSubmenu,
                 this::verticalExpandCollapseHandler);
         setupButtonHandler(navigationTarget, button);
+        navigationButtonByTarget.put(navigationTarget, button);
         return button;
     }
 
@@ -351,6 +355,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         submenu.setPrefHeight(0);
         submenu.getChildren().setAll(items);
         return submenu;
+    }
+
+    public VBox getMainMenuItems() {
+        return mainMenuItems;
+    }
+
+    public Optional<Node> findNavigationButtonNode(NavigationTarget navigationTarget) {
+        return Optional.ofNullable(navigationButtonByTarget.get(navigationTarget));
     }
 
     private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {

@@ -67,15 +67,10 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                                     this::onApplicationLaunched);
                             desktopController.init();
                         } catch (Throwable t) {
-                            t.printStackTrace();
+                            shutdownAfterStartupFailure("Desktop startup failed", t);
                         }
                     } else {
-                        log.error("Could not launch JavaFX application.", throwable);
-                        if (Platform.isFxApplicationThread()) {
-                            applicationService.shutdown().thenAccept(result -> Platform.exit());
-                        } else {
-                            applicationService.shutdown().thenAccept(result -> System.exit(EXIT_FAILURE));
-                        }
+                        shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
     }
@@ -150,6 +145,20 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             log.error("Platform.exit failed", e);
             super.exitJvm();
         }
+    }
+
+    private void shutdownAfterStartupFailure(String message, Throwable throwable) {
+        log.error(message, throwable);
+        applicationService.shutdown().whenComplete((ignored, shutdownThrowable) -> {
+            if (shutdownThrowable != null) {
+                log.warn("Shutdown after startup failure failed", shutdownThrowable);
+            }
+            if (Platform.isFxApplicationThread()) {
+                Platform.exit();
+            } else {
+                System.exit(EXIT_FAILURE);
+            }
+        });
     }
 
     private void setupStartupAndShutdownErrorHandlers() {

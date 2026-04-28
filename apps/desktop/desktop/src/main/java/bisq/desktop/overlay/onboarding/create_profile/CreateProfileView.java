@@ -131,6 +131,14 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         );
     }
 
+    public MaterialTextField getNickname() {
+        return nickname;
+    }
+
+    public Button getCreateProfileButton() {
+        return createProfileButton;
+    }
+
     @Override
     protected void onViewAttached() {
         catHashImageView.imageProperty().bind(model.getCatHashImage());
