@@ -62,7 +62,7 @@
    ./gradlew :apps:desktop:desktop-app:clean :apps:desktop:desktop-app:installDist
    ```
 
-   **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
+   **For Windows environments**: replace `./gradlew` with `gradlew.bat`.
 
 
 6. **Generate Installers**
@@ -251,5 +251,3 @@ JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
     -Dapplication.devModeReputationScore=50000" \
     apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
 ```
-
-
