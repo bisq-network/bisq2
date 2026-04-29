@@ -38,6 +38,7 @@ import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.support.mediation.mu_sig.MuSigMediationPayoutResolver;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import javafx.beans.property.BooleanProperty;
@@ -97,7 +98,7 @@ public class MuSigMediationResultSection {
         private final Model model;
 
         private final MuSigMediatorService muSigMediatorService;
-        private Optional<MuSigMediationPayoutDistributionCalculator.PayoutContext> payoutContext = Optional.empty();
+        private Optional<MuSigMediationPayoutResolver.PayoutContext> payoutContext = Optional.empty();
         private final Set<Subscription> subscriptions = new HashSet<>();
 
         private Controller(ServiceProvider serviceProvider) {
@@ -208,13 +209,13 @@ public class MuSigMediationResultSection {
 
         void onBuyerPayoutAmountFocusChanged(boolean focused) {
             if (!focused) {
-                alignCustomPayoutAmounts(true);
+                resolveCustomPayoutAmounts(true);
             }
         }
 
         void onSellerPayoutAmountFocusChanged(boolean focused) {
             if (!focused) {
-                alignCustomPayoutAmounts(false);
+                resolveCustomPayoutAmounts(false);
             }
         }
 
@@ -240,13 +241,13 @@ public class MuSigMediationResultSection {
             applyPayoutAmountsForType(payoutDistributionType);
         }
 
-        private void alignCustomPayoutAmounts(boolean buyerFieldEdited) {
+        private void resolveCustomPayoutAmounts(boolean buyerFieldEdited) {
             if (model.getSelectedPayoutDistributionType().get() != MediationPayoutDistributionType.CUSTOM_PAYOUT) {
                 return;
             }
 
             payoutContext
-                    .flatMap(context -> MuSigMediationPayoutDistributionCalculator.alignCustomPayout(
+                    .flatMap(context -> MuSigMediationPayoutResolver.resolveCustomPayout(
                             context,
                             Optional.ofNullable(model.getBuyerPayoutAmountAsCoin().get()).map(Coin::getValue),
                             Optional.ofNullable(model.getSellerPayoutAmountAsCoin().get()).map(Coin::getValue),
@@ -281,7 +282,7 @@ public class MuSigMediationResultSection {
             }
 
             payoutContext
-                    .flatMap(context -> MuSigMediationPayoutDistributionCalculator.calculateForType(
+                    .flatMap(context -> MuSigMediationPayoutResolver.calculateForType(
                             payoutDistributionType,
                             context,
                             getPayoutAdjustmentPercentageValue()))
@@ -319,13 +320,13 @@ public class MuSigMediationResultSection {
             }
         }
 
-        private Optional<MuSigMediationPayoutDistributionCalculator.PayoutContext> resolvePayoutContext() {
+        private Optional<MuSigMediationPayoutResolver.PayoutContext> resolvePayoutContext() {
             MuSigContract contract = model.getMuSigMediationCaseListItem()
                     .getMuSigMediationCase()
                     .getMuSigMediationRequest()
                     .getContract();
-            Optional<MuSigMediationPayoutDistributionCalculator.PayoutContext> optionalPayoutContext =
-                    MuSigMediationPayoutDistributionCalculator.createPayoutContext(contract);
+            Optional<MuSigMediationPayoutResolver.PayoutContext> optionalPayoutContext =
+                    MuSigMediationPayoutResolver.createPayoutContext(contract);
             if (optionalPayoutContext.isEmpty()) {
                 log.warn("CollateralOption not found for tradeId={}",
                         model.getMuSigMediationCaseListItem().getMuSigMediationCase().getMuSigMediationRequest().getTradeId());
@@ -333,7 +334,7 @@ public class MuSigMediationResultSection {
             return optionalPayoutContext;
         }
 
-        private void setPayoutAmounts(MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts) {
+        private void setPayoutAmounts(MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts) {
             model.getBuyerPayoutAmountAsCoin().set(Coin.asBtcFromValue(payoutAmounts.buyerAmountAsSats()));
             model.getSellerPayoutAmountAsCoin().set(Coin.asBtcFromValue(payoutAmounts.sellerAmountAsSats()));
             model.getBuyerPayoutAmount().set(formatSatsAsBtc(payoutAmounts.buyerAmountAsSats()));
@@ -377,63 +378,33 @@ public class MuSigMediationResultSection {
                     hasValidPayoutAmounts(
                             payoutDistributionType,
                             Optional.ofNullable(model.getBuyerPayoutAmountAsCoin().get()).map(Coin::getValue),
-                            Optional.ofNullable(model.getSellerPayoutAmountAsCoin().get()).map(Coin::getValue)) &&
-                    hasValidPayoutAdjustmentPercentage(
-                            payoutDistributionType,
+                            Optional.ofNullable(model.getSellerPayoutAmountAsCoin().get()).map(Coin::getValue),
                             Optional.ofNullable(model.getPayoutAdjustmentPercentageValue().get()));
         }
 
         private boolean hasValidPayoutAmounts(MediationPayoutDistributionType payoutDistributionType,
                                               Optional<Long> optionalBuyerPayoutAmount,
-                                              Optional<Long> optionalSellerPayoutAmount) {
-            if (payoutDistributionType == MediationPayoutDistributionType.NO_PAYOUT) {
-                return optionalBuyerPayoutAmount.isEmpty() && optionalSellerPayoutAmount.isEmpty();
-            }
-
-            if (optionalBuyerPayoutAmount.isEmpty() || optionalSellerPayoutAmount.isEmpty()) {
-                return false;
-            }
-
-            long buyerPayoutAmount = optionalBuyerPayoutAmount.get();
-            long sellerPayoutAmount = optionalSellerPayoutAmount.get();
-            if (buyerPayoutAmount < 0 || sellerPayoutAmount < 0 ||
-                    (buyerPayoutAmount == 0 && sellerPayoutAmount == 0)) {
-                return false;
-            }
-
-            if (payoutDistributionType != MediationPayoutDistributionType.CUSTOM_PAYOUT) {
-                return true;
-            }
-
+                                              Optional<Long> optionalSellerPayoutAmount,
+                                              Optional<Double> optionalPayoutAdjustmentPercentage) {
             return payoutContext
-                    .map(context -> buyerPayoutAmount + sellerPayoutAmount == context.totalPayoutAmount() &&
-                            buyerPayoutAmount >= context.minPayoutAmount() &&
-                            buyerPayoutAmount <= context.maxPayoutAmount() &&
-                            sellerPayoutAmount >= context.minPayoutAmount() &&
-                            sellerPayoutAmount <= context.maxPayoutAmount())
+                    .map(context -> {
+                        try {
+                            MuSigMediationPayoutResolver.checkPayoutAmounts(
+                                    payoutDistributionType,
+                                    context,
+                                    optionalBuyerPayoutAmount,
+                                    optionalSellerPayoutAmount,
+                                    optionalPayoutAdjustmentPercentage);
+                            return true;
+                        } catch (IllegalArgumentException e) {
+                            return false;
+                        }
+                    })
                     .orElse(false);
         }
 
         private static boolean hasValidSummaryNotesLength(String summaryNotes) {
             return summaryNotes != null && summaryNotes.length() <= MuSigMediationResult.MAX_SUMMARY_NOTES_LENGTH;
-        }
-
-        private static boolean hasValidPayoutAdjustmentPercentage(MediationPayoutDistributionType payoutDistributionType,
-                                                                  Optional<Double> optionalPayoutAdjustmentPercentage) {
-            if (payoutDistributionType == null) {
-                return false;
-            }
-
-            if (!shouldShowPayoutAdjustmentPercentage(payoutDistributionType)) {
-                return true;
-            }
-
-            if (optionalPayoutAdjustmentPercentage.isEmpty()) {
-                return false;
-            }
-
-            double payoutAdjustmentPercentage = optionalPayoutAdjustmentPercentage.get();
-            return payoutAdjustmentPercentage >= 0 && payoutAdjustmentPercentage <= 1;
         }
 
         private static String formatSatsAsBtc(long sats) {

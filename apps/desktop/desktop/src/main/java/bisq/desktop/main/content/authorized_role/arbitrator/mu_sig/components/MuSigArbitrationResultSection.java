@@ -33,6 +33,7 @@ import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
 import bisq.support.arbitration.ArbitrationResultReason;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationCase;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationPayoutResolver;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
 import bisq.support.arbitration.mu_sig.MuSigArbitratorService;
 import javafx.beans.property.BooleanProperty;
@@ -92,7 +93,7 @@ public class MuSigArbitrationResultSection {
         private final Model model;
 
         private final MuSigArbitratorService muSigArbitratorService;
-        private Optional<MuSigArbitrationPayoutDistributionCalculator.PayoutContext> payoutContext = Optional.empty();
+        private Optional<MuSigArbitrationPayoutResolver.PayoutContext> payoutContext = Optional.empty();
         private final Set<Subscription> subscriptions = new HashSet<>();
 
         private Controller(ServiceProvider serviceProvider) {
@@ -185,13 +186,13 @@ public class MuSigArbitrationResultSection {
 
         void onBuyerPayoutAmountFocusChanged(boolean focused) {
             if (!focused) {
-                alignCustomPayoutAmounts(true);
+                resolveCustomPayoutAmounts(true);
             }
         }
 
         void onSellerPayoutAmountFocusChanged(boolean focused) {
             if (!focused) {
-                alignCustomPayoutAmounts(false);
+                resolveCustomPayoutAmounts(false);
             }
         }
 
@@ -205,13 +206,13 @@ public class MuSigArbitrationResultSection {
             applyPayoutAmountsForType(payoutDistributionType);
         }
 
-        private void alignCustomPayoutAmounts(boolean buyerFieldEdited) {
+        private void resolveCustomPayoutAmounts(boolean buyerFieldEdited) {
             if (model.getSelectedPayoutDistributionType().get() != ArbitrationPayoutDistributionType.CUSTOM_PAYOUT) {
                 return;
             }
 
             payoutContext
-                    .flatMap(context -> MuSigArbitrationPayoutDistributionCalculator.alignCustomPayout(
+                    .flatMap(context -> MuSigArbitrationPayoutResolver.resolveCustomPayout(
                             context,
                             Optional.ofNullable(model.getBuyerPayoutAmountAsCoin().get()).map(Coin::getValue),
                             Optional.ofNullable(model.getSellerPayoutAmountAsCoin().get()).map(Coin::getValue),
@@ -233,7 +234,7 @@ public class MuSigArbitrationResultSection {
             }
 
             payoutContext
-                    .flatMap(context -> MuSigArbitrationPayoutDistributionCalculator.calculateForType(
+                    .flatMap(context -> MuSigArbitrationPayoutResolver.calculateForType(
                             payoutDistributionType,
                             context))
                     .ifPresentOrElse(this::setPayoutAmounts, this::clearPayoutAmounts);
@@ -250,13 +251,13 @@ public class MuSigArbitrationResultSection {
             }
         }
 
-        private Optional<MuSigArbitrationPayoutDistributionCalculator.PayoutContext> resolvePayoutContext() {
+        private Optional<MuSigArbitrationPayoutResolver.PayoutContext> resolvePayoutContext() {
             MuSigContract contract = model.getMuSigArbitrationCaseListItem()
                     .getMuSigArbitrationCase()
                     .getMuSigArbitrationRequest()
                     .getContract();
-            Optional<MuSigArbitrationPayoutDistributionCalculator.PayoutContext> optionalPayoutContext =
-                    MuSigArbitrationPayoutDistributionCalculator.createPayoutContext(contract);
+            Optional<MuSigArbitrationPayoutResolver.PayoutContext> optionalPayoutContext =
+                    MuSigArbitrationPayoutResolver.createPayoutContext(contract);
             if (optionalPayoutContext.isEmpty()) {
                 log.warn("CollateralOption not found for tradeId={}",
                         model.getMuSigArbitrationCaseListItem().getMuSigArbitrationCase().getMuSigArbitrationRequest().getTradeId());
@@ -264,7 +265,7 @@ public class MuSigArbitrationResultSection {
             return optionalPayoutContext;
         }
 
-        private void setPayoutAmounts(MuSigArbitrationPayoutDistributionCalculator.PayoutAmounts payoutAmounts) {
+        private void setPayoutAmounts(MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts) {
             model.getBuyerPayoutAmountAsCoin().set(Coin.asBtcFromValue(payoutAmounts.buyerAmountAsSats()));
             model.getSellerPayoutAmountAsCoin().set(Coin.asBtcFromValue(payoutAmounts.sellerAmountAsSats()));
             model.getBuyerPayoutAmount().set(formatSatsAsBtc(payoutAmounts.buyerAmountAsSats()));
@@ -300,18 +301,19 @@ public class MuSigArbitrationResultSection {
                 return false;
             }
 
-            long buyerPayoutAmount = buyerPayoutAmountAsCoin.getValue();
-            long sellerPayoutAmount = sellerPayoutAmountAsCoin.getValue();
-            if (buyerPayoutAmount < 0 || sellerPayoutAmount < 0) {
-                return false;
-            }
-
-            if (payoutDistributionType != ArbitrationPayoutDistributionType.CUSTOM_PAYOUT) {
-                return true;
-            }
-
             return payoutContext
-                    .map(context -> buyerPayoutAmount + sellerPayoutAmount <= context.totalPayoutAmount())
+                    .map(context -> {
+                        try {
+                            MuSigArbitrationPayoutResolver.checkPayoutAmounts(
+                                    payoutDistributionType,
+                                    context,
+                                    buyerPayoutAmountAsCoin.getValue(),
+                                    sellerPayoutAmountAsCoin.getValue());
+                            return true;
+                        } catch (IllegalArgumentException e) {
+                            return false;
+                        }
+                    })
                     .orElse(false);
         }
 
