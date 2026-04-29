@@ -42,6 +42,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.support.dispute.mu_sig.MuSigDisputeCaseDataMessage;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsResponse;
 import bisq.support.dispute.mu_sig.MuSigDisputePaymentDetailsVerifier;
@@ -49,7 +50,6 @@ import bisq.support.dispute.mu_sig.MuSigDisputeRoleIdentityResolver;
 import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
-import bisq.support.dispute.mu_sig.MuSigDisputeCaseDataMessage;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -69,6 +69,7 @@ import java.util.stream.Stream;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.hasMatchingContractDisputeAgent;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.hasMatchingContractParties;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.resolveSenderRole;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Service used by mediators
@@ -155,10 +156,12 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
                                                                   Optional<Long> proposedSellerPayoutAmount,
                                                                   Optional<Double> payoutAdjustmentPercentage,
                                                                   Optional<String> summaryNotes) {
-        return new MuSigMediationResult(ContractService.getContractHash(contract),
+        MuSigMediationResult muSigMediationResult = new MuSigMediationResult(ContractService.getContractHash(contract),
                 mediationResultReason, mediationPayoutDistributionType,
                 proposedBuyerPayoutAmount, proposedSellerPayoutAmount,
                 payoutAdjustmentPercentage, summaryNotes);
+        checkMuSigMediationResult(contract, muSigMediationResult);
+        return muSigMediationResult;
     }
 
     public void closeMediationCase(MuSigMediationCase muSigMediationCase, MuSigMediationResult muSigMediationResult) {
@@ -170,6 +173,7 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
             }
 
             MuSigMediationResult resultToUse = existingResult.orElse(muSigMediationResult);
+            checkMuSigMediationResult(muSigMediationCase.getMuSigMediationRequest().getContract(), resultToUse);
             boolean resultChanged = false;
             if (existingResult.isEmpty() || muSigMediationCase.getMediationResultSignature().isEmpty()) {
                 byte[] mediationResultSignature = createMediationResultSignature(muSigMediationCase, resultToUse);
@@ -210,12 +214,29 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
                         muSigMediationCase.getMuSigMediationRequest().getTradeId());
                 return;
             }
+            checkMuSigMediationResult(muSigMediationCase.getMuSigMediationRequest().getContract(), existingResult.orElseThrow());
             if (muSigMediationCase.setMediationCaseState(MediationCaseState.CLOSED)) {
                 persist();
                 sendMediationCaseStateChangeMessage(muSigMediationCase);
                 sendMediationCaseStateChangeTradeLogMessage(muSigMediationCase);
             }
         }
+    }
+
+    private static void checkMuSigMediationResult(MuSigContract contract,
+                                                  MuSigMediationResult muSigMediationResult) {
+        checkArgument(Arrays.equals(muSigMediationResult.getContractHash(), ContractService.getContractHash(contract)),
+                "MuSigMediationResult contractHash does not match contract");
+        Optional<MuSigMediationPayoutResolver.PayoutContext> optionalPayoutContext =
+                MuSigMediationPayoutResolver.createPayoutContext(contract);
+        checkArgument(optionalPayoutContext.isPresent(), "CollateralOption not found for MuSigContract");
+        MuSigMediationPayoutResolver.PayoutContext payoutContext = optionalPayoutContext.orElseThrow();
+        MuSigMediationPayoutResolver.checkPayoutAmounts(
+                muSigMediationResult.getMediationPayoutDistributionType(),
+                payoutContext,
+                muSigMediationResult.getProposedBuyerPayoutAmount(),
+                muSigMediationResult.getProposedSellerPayoutAmount(),
+                muSigMediationResult.getPayoutAdjustmentPercentage());
     }
 
     public void leaveChat(MuSigMediationCase muSigMediationCase) {

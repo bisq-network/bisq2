@@ -44,10 +44,10 @@ import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
 import bisq.support.arbitration.ArbitrationResultReason;
-import bisq.support.dispute.mu_sig.MuSigDisputePaymentDetailsVerifier;
-import bisq.support.dispute.mu_sig.MuSigDisputeRoleIdentityResolver;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsResponse;
+import bisq.support.dispute.mu_sig.MuSigDisputePaymentDetailsVerifier;
+import bisq.support.dispute.mu_sig.MuSigDisputeRoleIdentityResolver;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.support.mediation.mu_sig.MuSigMediationResultService;
 import bisq.user.UserService;
@@ -69,6 +69,7 @@ import java.util.stream.Stream;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.hasMatchingContractDisputeAgent;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.hasMatchingContractParties;
 import static bisq.support.dispute.mu_sig.MuSigDisputeContractIdentityChecks.resolveSenderRole;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Service used by arbitrators.
@@ -149,12 +150,14 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                                                                       long buyerPayoutAmount,
                                                                       long sellerPayoutAmount,
                                                                       Optional<String> summaryNotes) {
-        return new MuSigArbitrationResult(ContractService.getContractHash(contract),
+        MuSigArbitrationResult muSigArbitrationResult = new MuSigArbitrationResult(ContractService.getContractHash(contract),
                 arbitrationResultReason,
                 arbitrationPayoutDistributionType,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
                 summaryNotes);
+        checkMuSigArbitrationResult(contract, muSigArbitrationResult);
+        return muSigArbitrationResult;
     }
 
     public void closeArbitrationCase(MuSigArbitrationCase muSigArbitrationCase,
@@ -167,6 +170,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
             }
 
             MuSigArbitrationResult resultToUse = existingResult.orElse(muSigArbitrationResult);
+            checkMuSigArbitrationResult(muSigArbitrationCase.getMuSigArbitrationRequest().getContract(), resultToUse);
             boolean resultChanged = false;
             if (existingResult.isEmpty() || muSigArbitrationCase.getArbitrationResultSignature().isEmpty()) {
                 byte[] arbitrationResultSignature = createArbitrationResultSignature(muSigArbitrationCase, resultToUse);
@@ -179,6 +183,21 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                 sendArbitrationCaseStateChangeTradeLogMessage(muSigArbitrationCase);
             }
         }
+    }
+
+    private static void checkMuSigArbitrationResult(MuSigContract contract,
+                                                    MuSigArbitrationResult muSigArbitrationResult) {
+        checkArgument(Arrays.equals(muSigArbitrationResult.getContractHash(), ContractService.getContractHash(contract)),
+                "MuSigArbitrationResult contractHash does not match contract");
+        Optional<MuSigArbitrationPayoutResolver.PayoutContext> optionalPayoutContext =
+                MuSigArbitrationPayoutResolver.createPayoutContext(contract);
+        checkArgument(optionalPayoutContext.isPresent(), "CollateralOption not found for MuSigContract");
+        MuSigArbitrationPayoutResolver.PayoutContext payoutContext = optionalPayoutContext.orElseThrow();
+        MuSigArbitrationPayoutResolver.checkPayoutAmounts(
+                muSigArbitrationResult.getArbitrationPayoutDistributionType(),
+                payoutContext,
+                muSigArbitrationResult.getBuyerPayoutAmount(),
+                muSigArbitrationResult.getSellerPayoutAmount());
     }
 
     public void removeArbitrationCase(MuSigArbitrationCase muSigArbitrationCase) {

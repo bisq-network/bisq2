@@ -15,24 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.mediator.mu_sig.components;
+package bisq.support.mediation.mu_sig;
 
 import bisq.support.mediation.MediationPayoutDistributionType;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MuSigMediationPayoutDistributionCalculatorTest {
+class MuSigMediationPayoutResolverTest {
     private static final long TRADE_AMOUNT_SATS = 480_000; // 0.0048 BTC
     private static final long SECURITY_DEPOSIT_SATS = 120_000; // 25% of trade amount
     private static final long MIN_REFUND_AMOUNT_SATS = 24_000; // 5% of trade amount
     private static final long TOTAL_PAYOUT_SATS = 720_000;
 
-    private static final MuSigMediationPayoutDistributionCalculator.PayoutContext CONTEXT =
-            new MuSigMediationPayoutDistributionCalculator.PayoutContext(
+    private static final MuSigMediationPayoutResolver.PayoutContext CONTEXT =
+            new MuSigMediationPayoutResolver.PayoutContext(
                     TRADE_AMOUNT_SATS,
                     SECURITY_DEPOSIT_SATS,
                     SECURITY_DEPOSIT_SATS,
@@ -41,7 +43,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeNoPayoutReturnsEmpty() {
-        Optional<MuSigMediationPayoutDistributionCalculator.PayoutAmounts> payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        Optional<MuSigMediationPayoutResolver.PayoutAmounts> payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                 MediationPayoutDistributionType.NO_PAYOUT,
                 CONTEXT,
                 Optional.empty());
@@ -51,7 +53,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeBuyerGetsTradeAmount() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
                         CONTEXT,
                         Optional.empty())
@@ -63,7 +65,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeSellerGetsTradeAmount() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT,
                         CONTEXT,
                         Optional.empty())
@@ -75,7 +77,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeBuyerPlusCompensationWithTenPercent() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
                         Optional.of(0.10))
@@ -87,7 +89,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeBuyerMinusPenaltyWithTenPercent() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
                         Optional.of(0.10))
@@ -99,7 +101,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeBuyerMinusPenaltyWithNinetyPercent() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
                         Optional.of(0.90))
@@ -111,7 +113,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeSellerPlusCompensationWithTenPercent() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
                         Optional.of(0.10))
@@ -123,7 +125,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void calculateForTypeSellerMinusPenaltyWithTenPercent() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
                         Optional.of(0.10))
@@ -135,7 +137,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void compensationTransferIsCappedByMinimumRefundConstraint() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
                         Optional.of(0.50))
@@ -147,7 +149,7 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void buyerPenaltyAtHundredPercentKeepsMinimumRefundConstraint() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.calculateForType(
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
                         Optional.of(1.0))
@@ -158,8 +160,8 @@ class MuSigMediationPayoutDistributionCalculatorTest {
     }
 
     @Test
-    void customPayoutBuyerEditedIsAlignedToMinimumRefund() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.alignCustomPayout(
+    void customPayoutBuyerEditedIsResolvedToMinimumRefund() {
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.of(10_000L),
                         Optional.empty(),
@@ -171,8 +173,8 @@ class MuSigMediationPayoutDistributionCalculatorTest {
     }
 
     @Test
-    void customPayoutSellerEditedIsAlignedToMinimumRefund() {
-        MuSigMediationPayoutDistributionCalculator.PayoutAmounts payoutAmounts = MuSigMediationPayoutDistributionCalculator.alignCustomPayout(
+    void customPayoutSellerEditedIsResolvedToMinimumRefund() {
+        MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.empty(),
                         Optional.of(1_000_000L),
@@ -185,13 +187,93 @@ class MuSigMediationPayoutDistributionCalculatorTest {
 
     @Test
     void customPayoutMissingInputReturnsEmpty() {
-        Optional<MuSigMediationPayoutDistributionCalculator.PayoutAmounts> payoutAmounts =
-                MuSigMediationPayoutDistributionCalculator.alignCustomPayout(
+        Optional<MuSigMediationPayoutResolver.PayoutAmounts> payoutAmounts =
+                MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.empty(),
                         Optional.empty(),
                         true);
 
         assertTrue(payoutAmounts.isEmpty());
+    }
+
+    @Test
+    void checkPayoutAmountsAcceptsNoPayoutWithoutAmounts() {
+        assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.NO_PAYOUT,
+                CONTEXT,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
+    }
+
+    @Test
+    void checkPayoutAmountsRejectsNoPayoutWithAmounts() {
+        assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.NO_PAYOUT,
+                CONTEXT,
+                Optional.of(1L),
+                Optional.empty(),
+                Optional.empty()));
+    }
+
+    @Test
+    void checkPayoutAmountsAcceptsMatchingBuyerPlusCompensation() {
+        assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
+                CONTEXT,
+                Optional.of(648_000L),
+                Optional.of(72_000L),
+                Optional.of(0.10)));
+    }
+
+    @Test
+    void checkPayoutAmountsRejectsMismatchingBuyerPlusCompensation() {
+        assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
+                CONTEXT,
+                Optional.of(600_000L),
+                Optional.of(120_000L),
+                Optional.of(0.10)));
+    }
+
+    @Test
+    void checkPayoutAmountsRejectsMissingAdjustmentForAdjustmentType() {
+        assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
+                CONTEXT,
+                Optional.of(600_000L),
+                Optional.of(120_000L),
+                Optional.empty()));
+    }
+
+    @Test
+    void checkPayoutAmountsAcceptsCustomPayoutWithinMinimumRefundBounds() {
+        assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.CUSTOM_PAYOUT,
+                CONTEXT,
+                Optional.of(100_000L),
+                Optional.of(620_000L),
+                Optional.empty()));
+    }
+
+    @Test
+    void checkPayoutAmountsRejectsCustomPayoutBelowMinimumRefundBounds() {
+        assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.CUSTOM_PAYOUT,
+                CONTEXT,
+                Optional.of(10_000L),
+                Optional.of(710_000L),
+                Optional.empty()));
+    }
+
+    @Test
+    void checkPayoutAmountsRejectsCustomPayoutOverflow() {
+        assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
+                MediationPayoutDistributionType.CUSTOM_PAYOUT,
+                CONTEXT,
+                Optional.of(Long.MAX_VALUE),
+                Optional.of(Long.MAX_VALUE),
+                Optional.empty()));
     }
 }

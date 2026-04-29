@@ -15,27 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.authorized_role.arbitrator.mu_sig.components;
+package bisq.support.arbitration.mu_sig;
 
+import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
-import bisq.trade.mu_sig.MuSigTradeUtils;
 
 import java.util.Optional;
 
-final class MuSigArbitrationPayoutDistributionCalculator {
-    record PayoutContext(long tradeAmount, long buyerSecurityDeposit, long sellerSecurityDeposit,
-                         long totalPayoutAmount) {
+import static com.google.common.base.Preconditions.checkArgument;
+
+public final class MuSigArbitrationPayoutResolver {
+    public record PayoutContext(long tradeAmount, long buyerSecurityDeposit, long sellerSecurityDeposit,
+                                long totalPayoutAmount) {
     }
 
-    record PayoutAmounts(long buyerAmountAsSats, long sellerAmountAsSats) {
+    public record PayoutAmounts(long buyerAmountAsSats, long sellerAmountAsSats) {
     }
 
-    static Optional<PayoutContext> createPayoutContext(MuSigContract contract) {
+    public static Optional<PayoutContext> createPayoutContext(MuSigContract contract) {
         Optional<CollateralOption> collateralOption =
                 OfferOptionUtil.findCollateralOption(contract.getOffer().getOfferOptions());
         if (collateralOption.isEmpty()) {
@@ -44,10 +46,10 @@ final class MuSigArbitrationPayoutDistributionCalculator {
 
         long tradeAmount = contract.getBtcSideAmount();
         long buyerSecurityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(
-                MuSigTradeUtils.getBtcSideMonetary(contract),
+                getBtcSideMonetary(contract),
                 collateralOption.get().getBuyerSecurityDeposit()).getValue();
         long sellerSecurityDeposit = OfferAmountUtil.calculateSecurityDepositAsBTC(
-                MuSigTradeUtils.getBtcSideMonetary(contract),
+                getBtcSideMonetary(contract),
                 collateralOption.get().getSellerSecurityDeposit()).getValue();
         long totalPayoutAmount = tradeAmount + buyerSecurityDeposit + sellerSecurityDeposit;
         return Optional.of(new PayoutContext(
@@ -57,8 +59,8 @@ final class MuSigArbitrationPayoutDistributionCalculator {
                 totalPayoutAmount));
     }
 
-    static Optional<PayoutAmounts> calculateForType(ArbitrationPayoutDistributionType payoutDistributionType,
-                                                    PayoutContext context) {
+    public static Optional<PayoutAmounts> calculateForType(ArbitrationPayoutDistributionType payoutDistributionType,
+                                                           PayoutContext context) {
         return switch (payoutDistributionType) {
             case CUSTOM_PAYOUT -> Optional.empty();
             case BUYER_GETS_TRADE_AMOUNT -> Optional.of(new PayoutAmounts(
@@ -70,10 +72,10 @@ final class MuSigArbitrationPayoutDistributionCalculator {
         };
     }
 
-    static Optional<PayoutAmounts> alignCustomPayout(PayoutContext context,
-                                                     Optional<Long> buyerPayoutAmountAsSats,
-                                                     Optional<Long> sellerPayoutAmountAsSats,
-                                                     boolean buyerFieldEdited) {
+    public static Optional<PayoutAmounts> resolveCustomPayout(PayoutContext context,
+                                                              Optional<Long> buyerPayoutAmountAsSats,
+                                                              Optional<Long> sellerPayoutAmountAsSats,
+                                                              boolean buyerFieldEdited) {
         if (buyerPayoutAmountAsSats.isEmpty() || sellerPayoutAmountAsSats.isEmpty()) {
             return Optional.empty();
         }
@@ -89,5 +91,32 @@ final class MuSigArbitrationPayoutDistributionCalculator {
             }
         }
         return Optional.of(new PayoutAmounts(buyerAmountAsSats, sellerAmountAsSats));
+    }
+
+    public static void checkPayoutAmounts(ArbitrationPayoutDistributionType payoutDistributionType,
+                                          PayoutContext context,
+                                          long buyerPayoutAmountAsSats,
+                                          long sellerPayoutAmountAsSats) {
+        checkArgument(buyerPayoutAmountAsSats >= 0, "buyerPayoutAmountAsSats must not be negative");
+        checkArgument(sellerPayoutAmountAsSats >= 0, "sellerPayoutAmountAsSats must not be negative");
+
+        if (payoutDistributionType == ArbitrationPayoutDistributionType.CUSTOM_PAYOUT) {
+            checkArgument(buyerPayoutAmountAsSats <= context.totalPayoutAmount() &&
+                            sellerPayoutAmountAsSats <= context.totalPayoutAmount() - buyerPayoutAmountAsSats,
+                    "Custom payout amounts must not exceed totalPayoutAmount");
+            return;
+        }
+
+        PayoutAmounts expectedPayoutAmounts = calculateForType(payoutDistributionType, context).orElseThrow();
+        checkArgument(buyerPayoutAmountAsSats == expectedPayoutAmounts.buyerAmountAsSats() &&
+                        sellerPayoutAmountAsSats == expectedPayoutAmounts.sellerAmountAsSats(),
+                "Payout amounts do not match arbitrationPayoutDistributionType");
+    }
+
+    private static Monetary getBtcSideMonetary(MuSigContract contract) {
+        return contract.getOffer().getMarket().isBaseCurrencyBitcoin()
+                ? Monetary.from(contract.getBaseSideAmount(), contract.getOffer().getMarket().getBaseCurrencyCode())
+                : Monetary.from(contract.getQuoteSideAmount(), contract.getOffer().getMarket().getQuoteCurrencyCode());
+
     }
 }
