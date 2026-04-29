@@ -30,6 +30,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
@@ -357,11 +358,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     String messageId = ackRequestingMessageId;
                     String chatMessageId = ackRequestingMessage.getAckRequestingMessageId();
                     String peersProfileId = null;
-                    String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
-                    if (chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
-                        // In case of a bisqEasyOpenTradeMessage we use the message id and receiver id separated with a '_'.
+                    if (chatMessage instanceof BisqEasyOpenTradeMessage ||
+                            chatMessage instanceof MuSigOpenTradeMessage) {
+                        String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
+                        // In case of open trade messages we use the message id and receiver id separated with a '_'.
                         // This allows us to handle the ACK messages separately to know when the message was received by
-                        // both the peer and the mediator (in case of mediation).
+                        // each receiver.
                         if (messageId.contains(separator)) {
                             String[] parts = messageId.split(separator);
                             messageId = parts[0];
