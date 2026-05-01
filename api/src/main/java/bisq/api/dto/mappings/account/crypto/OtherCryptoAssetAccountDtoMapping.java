@@ -8,6 +8,7 @@ import bisq.api.dto.account.crypto.OtherCryptoAssetAccountDto;
 import bisq.api.dto.account.crypto.OtherCryptoAssetAccountPayloadDto;
 import bisq.api.dto.mappings.account.PaymentAccountKeyMapping;
 import bisq.api.dto.mappings.account.PaymentAccountMetadataDtoMapping;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.util.StringUtils;
 
 public class OtherCryptoAssetAccountDtoMapping {
@@ -43,13 +44,14 @@ public class OtherCryptoAssetAccountDtoMapping {
                 account.getAccountName(),
                 new OtherCryptoAssetAccountPayloadDto(
                         payload.getCurrencyCode(),
-                        payload.getPaymentMethod().getDisplayString(),
+                        payload.getPaymentMethod().getName(),
                         payload.getAddress(),
                         payload.isInstant(),
                         payload.getIsAutoConf(),
                         payload.getAutoConfNumConfirmations(),
                         payload.getAutoConfMaxTradeAmount(),
-                        payload.getAutoConfExplorerUrls()
+                        payload.getAutoConfExplorerUrls(),
+                        CryptoAssetRepository.isAutoConfSupported(payload.getCurrencyCode())
                 ),
                 accountMetadata.creationDate(),
                 accountMetadata.tradeLimitInfo(),
