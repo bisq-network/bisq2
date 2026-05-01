@@ -5,6 +5,7 @@ public record CryptoPaymentMethodDto(
         String name,
         String category,
         boolean supportAutoConf,
-        String restrictions
+        String tradeLimitInfo,
+        String tradeDuration
 ) {
 }
