@@ -15,6 +15,8 @@ public record MoneroAccountPayloadDto(
         Optional<String> subAddress,
         Optional<Integer> accountIndex,
         Optional<Integer> initialSubAddressIndex,
-        String currencyName
+        String currencyName,
+        String currencyCode,
+        boolean supportAutoConf
 ) implements CryptoAssetAccountPayloadDto {
 }

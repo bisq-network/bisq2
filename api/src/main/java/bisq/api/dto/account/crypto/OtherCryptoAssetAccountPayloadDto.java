@@ -10,6 +10,7 @@ public record OtherCryptoAssetAccountPayloadDto(
         Optional<Boolean> isAutoConf,
         Optional<Integer> autoConfNumConfirmations,
         Optional<Long> autoConfMaxTradeAmount,
-        Optional<String> autoConfExplorerUrls
+        Optional<String> autoConfExplorerUrls,
+        boolean supportAutoConf
 ) implements CryptoAssetAccountPayloadDto {
 }
