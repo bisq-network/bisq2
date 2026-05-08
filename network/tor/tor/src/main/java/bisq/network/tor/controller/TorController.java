@@ -7,6 +7,7 @@ import bisq.security.keys.TorKeyPair;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +33,15 @@ public class TorController {
     }
 
     public void initialize(int controlPort) {
-        torControlProtocol.initialize(controlPort);
+        initialize("127.0.0.1", controlPort);
+    }
+
+    public void initialize(String controlHost, int controlPort) {
+        torControlProtocol.initialize(controlHost, controlPort);
+    }
+
+    public void initialize(Path controlSocketPath) {
+        torControlProtocol.initialize(controlSocketPath);
     }
 
     public void authenticate(byte[] authCookie) {
