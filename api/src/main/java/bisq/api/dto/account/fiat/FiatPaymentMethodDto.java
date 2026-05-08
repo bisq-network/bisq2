@@ -22,6 +22,12 @@ public record FiatPaymentMethodDto(
         String name,
         String supportedCurrencyCodes,
         String countryNames,
+<<<<<<< HEAD
         FiatPaymentMethodChargebackRiskDto chargebackRisk
+=======
+        FiatPaymentMethodChargebackRiskDto chargebackRisk,
+        String tradeLimitInfo,
+        String tradeDuration
+>>>>>>> b9fa178e25 (Update musig payment method and account models for api app)
 ) {
 }
