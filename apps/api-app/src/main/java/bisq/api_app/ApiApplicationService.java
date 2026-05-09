@@ -30,6 +30,7 @@ import bisq.common.platform.OS;
 import bisq.contract.ContractService;
 import bisq.api.ApiConfig;
 import bisq.api.ApiService;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
@@ -88,6 +89,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
     private final BisqEasyService bisqEasyService;
     private final ApiService apiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final ClosedTradeItemsService closedTradeItemsService;
     private final BurningmanService burningmanService;
     @Nullable
     private Pin difficultyAdjustmentServicePin;
@@ -165,6 +167,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 tradeService);
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
+        closedTradeItemsService = new ClosedTradeItemsService(tradeService, userService);
 
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         apiService = new ApiService(apiConfig,
@@ -180,6 +183,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 settingsService,
                 bisqEasyService,
                 openTradeItemsService,
+                closedTradeItemsService,
                 accountService,
                 userService.getReputationService(),
                 notificationService.getMobileNotificationService().getDeviceRegistrationService());
@@ -217,6 +221,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
                 .thenCompose(result -> openTradeItemsService.initialize())
+                .thenCompose(result -> closedTradeItemsService.initialize())
                 .thenCompose(result -> apiService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -253,6 +258,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> apiService.shutdown()
+                .thenCompose(result -> closedTradeItemsService.shutdown())
                 .thenCompose(result -> openTradeItemsService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
