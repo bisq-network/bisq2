@@ -4,6 +4,7 @@ public record CryptoPaymentMethodDto(
         String code,
         String name,
         String category,
-        boolean supportAutoConf
+        boolean supportAutoConf,
+        String restrictions
 ) {
 }

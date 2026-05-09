@@ -1,10 +1,27 @@
 name: Sync for-mobile to main
 
 # Forward-port automation: when a PR is merged into the highest-versioned
-# `for-mobile-based-on-X.Y.Z` branch, automatically open a PR to `main` with
-# the same commits cherry-picked. Implements the "any approved merged commit
-# in the for-mobile branch must be synced to main" policy without relying on
-# devs remembering.
+# `for-mobile-based-on-X.Y.Z` branch, the workflow notifies the original PR
+# author with a ready-to-run cherry-pick command they can execute locally to
+# open the sync PR to `main` with their own GPG-signed commits.
+#
+# Why not auto-open the PR? `main` requires GPG-signed commits. Cherry-picks
+# performed on the GitHub-hosted runner produce unsigned commits (the runner
+# doesn't have a configured GPG key, and using a bot key would require ongoing
+# secret + key-trust management). Letting the original author run the
+# cherry-pick locally — where their git is already configured to sign — is
+# both lighter on infra and keeps the signature attributed to the actual
+# author of the change. We do as much heavy lifting on the runner as we can
+# (detect active branch, verify opt-out authority, dry-run the cherry-pick to
+# detect conflicts upfront, build the exact command), and hand off only the
+# parts that genuinely need the author's keys.
+#
+# Why `-x` on the cherry-pick? `-x` adds a `(cherry picked from commit <sha>)`
+# trailer to the commit message. The author's local re-signing produces a
+# new commit hash (signature is part of the commit object's content), so the
+# trailer is what preserves the audit trail back to the original for-mobile
+# merge commit — handy when grepping `git log` to answer "where on main did
+# this for-mobile change land?".
 #
 # Notes:
 #  - Only the highest-version `for-mobile-based-on-X.Y.Z` branch is treated
@@ -17,15 +34,18 @@ name: Sync for-mobile to main
 #  - Opt out per-PR with the `skip-sync-to-main` label before merging. The
 #    label is honoured ONLY when added by a maintainer (admin / write
 #    permission on the repo) — see the `verify-skip-label` job below.
-#  - On clean cherry-pick: opens a PR to main, copies assignees + reviewers
-#    from the source PR so the involved people get notified.
-#  - On conflict: creates a *draft* PR with conflict markers AND posts a
-#    comment on the source PR with manual-resolution instructions (action's
-#    `conflict_resolution: draft_commit_conflicts` mode).
-#  - The default GITHUB_TOKEN can open PRs but does NOT trigger downstream CI
-#    on the auto-PR. Either accept the manual "Re-run jobs" click on the
-#    sync PR, or replace `secrets.GITHUB_TOKEN` with a fine-grained PAT /
-#    GitHub App token allowed to dispatch workflows.
+#  - The runner attempts the cherry-pick locally as a DRY RUN — it never
+#    pushes the result. The dry-run's only purpose is to detect conflicts
+#    upfront so the author's comment can be tailored: clean cherry-pick gets
+#    a true one-liner, conflicts get a guided manual flow with the list of
+#    conflicting files included in the comment.
+#  - bisq2's merge policy is "Create a merge commit" (devs squash locally,
+#    maintainers preserve a merge commit on the target branch). The dry-run
+#    detects parent count and uses `-m 1` for merge commits, plain `-x` for
+#    single-parent commits — handles both shapes without hardcoding either.
+#  - On re-runs (manual workflow re-trigger, retries), we update the existing
+#    bot comment in place rather than posting a duplicate — keeps the source
+#    PR's conversation clean.
 #
 # Security:
 #  - `pull_request_target` runs with the BASE repo's secrets and write
@@ -34,9 +54,10 @@ name: Sync for-mobile to main
 #    script reads only `github.repository` (set by GitHub Actions, not user-
 #    controlled) and runs a public `git ls-remote` against the canonical repo.
 #  - Top-level `permissions:` is read-only. Only the `sync-to-main` job
-#    elevates to `contents: write` + `pull-requests: write` for the cherry-
-#    pick + PR-opening operations. The other two jobs run with the read-only
-#    default — they don't need writes.
+#    elevates to `issues: write` (needed to post / update the comment on the
+#    source PR — the PR conversation API goes through the Issues endpoint).
+#    It does NOT need `contents: write` or `pull-requests: write` because it
+#    never pushes a branch or opens a PR; that's the author's job.
 #  - All third-party and first-party `uses:` references are pinned to a
 #    commit SHA (immutable), with the human-readable version in a trailing
 #    comment for context. Tag pins (`@v7`) can be force-moved by the
@@ -63,7 +84,7 @@ permissions:
 
 # Prevent racing if the same PR triggers two runs (e.g. manual re-run while
 # the original run is still going). Wait for the in-flight run rather than
-# cancelling it — we don't want to abort a half-pushed cherry-pick branch.
+# cancelling it — we don't want to abort a half-done dry-run cherry-pick.
 concurrency:
   group: sync-for-mobile-to-main-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: false
@@ -95,7 +116,7 @@ jobs:
           # Network call separated from local filtering: a transient failure
           # of `git ls-remote` (DNS, GitHub blip, rate limit) must NOT be
           # silently swallowed — that would mean a merge to for-mobile slips
-          # past with no sync PR, defeating the whole purpose of the workflow.
+          # past with no notification, defeating the whole purpose of the workflow.
           # Retry up to 3 times, then fail the workflow loudly so a maintainer
           # notices in the PR's checks UI.
           REMOTE_HEADS=""
@@ -127,7 +148,7 @@ jobs:
           echo "PR base ref:                                ${PR_BASE}"
 
           if [ -n "$ACTIVE" ] && [ "$ACTIVE" = "$PR_BASE" ]; then
-            echo "PR base matches the active for-mobile branch — sync will run."
+            echo "PR base matches the active for-mobile branch — sync notification will run."
             echo "should_sync=true" >> "$GITHUB_OUTPUT"
           else
             echo "PR base is not the active for-mobile branch — skipping sync."
@@ -218,7 +239,7 @@ jobs:
             }
 
   sync-to-main:
-    name: Cherry-pick to main
+    name: Notify author with cherry-pick instructions
     needs: [detect-active-branch, verify-skip-label]
     if: >
       github.event.pull_request.merged == true
@@ -226,61 +247,300 @@ jobs:
       && needs.verify-skip-label.outputs.skip_by_maintainer != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Elevated permissions are scoped to ONLY this job (least-privilege).
-    # `issues: write` is required because PR *conversation* comments go
-    # through the Issues API (PRs are issues for this endpoint), and the
-    # backport action posts conflict instructions on the source PR when
-    # `conflict_resolution: draft_commit_conflicts` triggers. Without it
-    # the action 403s on the conflict-comment step.
+    # Least-privilege: this job only POSTS / UPDATES A COMMENT on the source
+    # PR. It does NOT push any branch or open a PR (that's the author's job,
+    # with their own GPG-signed commit). PR conversation comments go through
+    # the Issues API (PRs are issues for that endpoint), so we need
+    # `issues: write`.
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      pull-requests: read
       issues: write
 
     steps:
       - name: Checkout main
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          # Need full history so the cherry-pick dry-run can resolve the
+          # source PR's merge commit against `main`.
           fetch-depth: 0
           ref: main
 
-      - name: Forward-port the merged PR to main
-        # Pinned to commit SHA (immutable). When upgrading the action, replace
-        # this SHA with the new release's SHA — see release notes at
-        # https://github.com/korthout/backport-action/releases.
-        uses: korthout/backport-action@d07416681cab29bf2661702f925f020aaa962997 # v3.3.0
-        with:
-          target_branches: main
-          pull_title: 'chore: sync #${pull_number} to main — ${pull_title}'
-          pull_description: |
-            Automated cherry-pick of #${pull_number} from
-            `${{ needs.detect-active-branch.outputs.active }}` to `main`,
-            per the for-mobile → main sync policy.
+      - name: Dry-run the cherry-pick to detect conflicts
+        id: cherry_pick
+        env:
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
 
-            **Original author:** @${pull_author}
-            **Reviewers:** please verify the cherry-pick lands cleanly,
-            tests still pass, and there are no unintended interactions
-            with main-only changes.
+          # Validate the SHA is present on the webhook payload. By the time a
+          # `closed` event with `merged=true` fires, GitHub has populated this
+          # field — but defend against the edge case where it's missing rather
+          # than running with an empty value.
+          if [ -z "${MERGE_SHA}" ]; then
+            echo "::error::pull_request.merge_commit_sha is empty; cannot dry-run cherry-pick."
+            exit 1
+          fi
 
-            If this should NOT be synced to main, close this PR and ask a
-            maintainer to add the `skip-sync-to-main` label on the source
-            PR for future reference (the workflow only honours that label
-            when added by an account with admin/write permission).
+          # Fetch the merge commit explicitly. fetch-depth=0 above pulls the
+          # whole history of the BASE ref (`main`), but the merge commit lives
+          # off the for-mobile branch and isn't reachable from main — fetch it
+          # by SHA so the cherry-pick can find its tree. Fail loudly if this
+          # fetch errors — without the merge commit in the workspace the
+          # cherry-pick would fail with "bad revision" and the dry-run logic
+          # would mis-report it as a content conflict (empty file list).
+          if ! git fetch --quiet origin "${MERGE_SHA}"; then
+            echo "::error::Failed to fetch merge commit ${MERGE_SHA}; cannot dry-run cherry-pick."
+            exit 1
+          fi
 
-            Issue refs from the source PR: ${issue_refs}
-          copy_assignees: true
-          copy_milestone: false
-          copy_requested_reviewers: true
-          # Don't carry across `for-mobile-*` markers or any `skip-*` labels.
-          copy_labels_pattern: '^(?!for-mobile|skip-).*$'
-          # Squash-merged PRs land as a single commit; merge-commits land as
-          # the merge's contained commits with the merge commit itself
-          # skipped. Either way the cherry-pick set is the actual change list.
-          merge_commits: 'skip'
-          # On conflict: create a draft PR with conflict markers AND post a
-          # comment on the source PR pointing to it. Loud failure beats silent
-          # drift.
-          experimental: |
+          # Detect whether the SHA is a merge commit (multiple parents) or a
+          # squash/single commit. bisq2's policy is merge-commit (devs squash
+          # locally, maintainers merge via "Create a merge commit"), so this
+          # branch will normally trigger. We still detect dynamically rather
+          # than hardcoding `-m 1` so that a one-off squash or rebase doesn't
+          # silently mis-report as a conflict.
+          parent_count=$(git cat-file -p "${MERGE_SHA}" | grep -c '^parent ')
+          if [ "$parent_count" -ge 2 ]; then
+            CHERRY_PICK_FLAGS="-m 1 -x"
+            echo "Detected merge commit (${parent_count} parents) — using -m 1 -x"
+          else
+            CHERRY_PICK_FLAGS="-x"
+            echo "Detected non-merge commit (1 parent) — using -x"
+          fi
+          echo "cherry_pick_flags=${CHERRY_PICK_FLAGS}" >> "$GITHUB_OUTPUT"
+
+          # Local-only committer for the dry-run. We never push, so this
+          # identity is never observed externally.
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Branch from `main` and try the cherry-pick. The branch is
+          # disposable — it never gets pushed.
+          git checkout -b "dryrun-sync-${PR_NUM}" origin/main
+
+          # Disable -e for the cherry-pick itself — we WANT to capture the
+          # exit code via the if/else rather than bail. Re-enable after.
+          set +e
+          # shellcheck disable=SC2086 # word-splitting CHERRY_PICK_FLAGS is intentional
+          git cherry-pick ${CHERRY_PICK_FLAGS} "${MERGE_SHA}"
+          cherry_pick_exit=$?
+          set -e
+
+          if [ "$cherry_pick_exit" -eq 0 ]; then
+            echo "Cherry-pick applied cleanly on dry-run."
+            echo "result=clean" >> "$GITHUB_OUTPUT"
+          else
+            # Capture the conflicting files BEFORE aborting. Use NUL-delimited
+            # output (`-z`) so filenames containing commas, spaces, or other
+            # special characters are preserved unambiguously. We then re-emit
+            # them newline-separated for safe transport via the GitHub Actions
+            # multi-line output syntax. (Filenames with embedded newlines are
+            # technically valid in git but vanishingly rare in code repos —
+            # accepting that single edge case to avoid a base64 round-trip.)
+            #
+            # `--diff-filter=U` is "Unmerged" — exactly the conflict set.
+            conflicts_nl=$(git diff --name-only -z --diff-filter=U | tr '\0' '\n')
+            echo "Cherry-pick hit conflicts in:"
+            echo "${conflicts_nl}"
+            echo "result=conflict" >> "$GITHUB_OUTPUT"
             {
-              "conflict_resolution": "draft_commit_conflicts"
+              echo "conflicting_files<<CONFLICT_LIST_EOF_a8f3e1"
+              echo "${conflicts_nl}"
+              echo "CONFLICT_LIST_EOF_a8f3e1"
+            } >> "$GITHUB_OUTPUT"
+            # Abort to leave the workspace clean. Failure to abort isn't fatal
+            # for the workflow — the runner is disposable.
+            git cherry-pick --abort || true
+          fi
+
+      - name: Post or update sync-to-main instructions on the source PR
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        env:
+          SYNC_RESULT: ${{ steps.cherry_pick.outputs.result }}
+          CONFLICTING_FILES: ${{ steps.cherry_pick.outputs.conflicting_files }}
+          CHERRY_PICK_FLAGS: ${{ steps.cherry_pick.outputs.cherry_pick_flags }}
+          ACTIVE_BRANCH: ${{ needs.detect-active-branch.outputs.active }}
+        with:
+          script: |
+            const result = process.env.SYNC_RESULT;
+            const conflictingFiles = process.env.CONFLICTING_FILES || '';
+            const cherryPickFlags = process.env.CHERRY_PICK_FLAGS || '-x';
+            const activeBranch = process.env.ACTIVE_BRANCH;
+
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const prNum = pr.number;
+            const prTitle = pr.title;
+            const mergeSha = pr.merge_commit_sha;
+
+            // Branch name pattern that matches what the author runs locally.
+            // Stable per source PR — also used as the marker for find-or-update
+            // dedup logic below, so re-runs of the workflow don't post duplicate
+            // comments.
+            const branchName = `sync-for-mobile-${prNum}-to-main`;
+
+            // PR title gets quoted in a shell command. We escape every
+            // shell-special character (`\`, `"`, `` ` ``, `$`) that retains
+            // its meaning inside a double-quoted bash string so a title with
+            // e.g. `$VAR` or backticks doesn't get interpreted by the user's
+            // shell when they paste the command.
+            const titleEscaped = prTitle.replace(/[\\"`$]/g, '\\$&');
+
+            // Compare URL fallback for users without `gh` CLI. After they
+            // push the branch, GitHub also surfaces this URL in the push
+            // output, but linking it explicitly saves a copy/paste.
+            const compareUrl =
+              `https://github.com/${context.repo.owner}/${context.repo.repo}/compare/main...${branchName}?expand=1`;
+
+            // Build the body in line-array form so we don't have to deal with
+            // backtick-inside-template-literal escaping for the markdown
+            // ```bash fences.
+            const lines = [];
+
+            // Header — same regardless of result. The branchName is included
+            // in the body itself, which doubles as the marker the dedup logic
+            // uses to find this comment on re-run.
+            lines.push(
+              `@${author} — this PR has been merged to \`${activeBranch}\` and needs syncing to \`main\`.`,
+              ``,
+              `Because \`main\` requires GPG-signed commits and our automation runs unsigned, ` +
+                `we ask you to do the cherry-pick locally with your own signing key. ` +
+                `That keeps the resulting commit attributed to you and signed correctly.`,
+              ``,
+            );
+
+            if (result === 'clean') {
+              // -S asks git to sign this specific commit using your existing
+              // user.signingkey config — no need to flip any persistent global
+              // git config like `commit.gpgsign true`. Pure intent, zero side
+              // effect on the user's other repos.
+              lines.push(
+                `**Dry-run on the runner succeeded with no conflicts** — should be a one-liner:`,
+                ``,
+                '```bash',
+                `git fetch origin main && \\`,
+                `  git checkout -b ${branchName} origin/main && \\`,
+                `  git cherry-pick -S ${cherryPickFlags} ${mergeSha} && \\`,
+                `  git push -u origin ${branchName} && \\`,
+                `  gh pr create --base main --head ${branchName} \\`,
+                `    --title "chore: sync #${prNum} to main — ${titleEscaped}" \\`,
+                `    --body "Automated sync of #${prNum} from \\\`${activeBranch}\\\` to \\\`main\\\`."`,
+                '```',
+                ``,
+              );
+            } else {
+              // Filenames are newline-separated. Filter empties, escape backticks
+              // (real bisq2 paths don't contain backticks, but defending against
+              // it is one regex and prevents ugly broken markdown rendering).
+              const fileList = conflictingFiles
+                .split('\n')
+                .map(f => f.trim())
+                .filter(f => f.length > 0)
+                .map(f => `- \`${f.replace(/`/g, '\\`')}\``)
+                .join('\n');
+
+              lines.push(
+                `**Dry-run on the runner hit conflicts** — the cherry-pick will need manual resolution. Steps:`,
+                ``,
+                '```bash',
+                `git fetch origin main && \\`,
+                `  git checkout -b ${branchName} origin/main && \\`,
+                `  git cherry-pick -S ${cherryPickFlags} ${mergeSha}`,
+                `# The cherry-pick will pause on conflicts. Resolve the files listed below, then:`,
+                `git add <files>`,
+                `git -c commit.gpgsign=true cherry-pick --continue`,
+                `git push -u origin ${branchName}`,
+                `gh pr create --base main --head ${branchName} \\`,
+                `  --title "chore: sync #${prNum} to main — ${titleEscaped}" \\`,
+                `  --body "Manual sync of #${prNum} from \\\`${activeBranch}\\\` to \\\`main\\\` (with conflict resolution)."`,
+                '```',
+                ``,
+                `**Files with conflicts (detected on the runner — your local result may differ if \`main\` has moved since):**`,
+                fileList || '- _(no file list captured — run `git status` after the cherry-pick to see them)_',
+                ``,
+              );
             }
+
+            // Footer — common. Collapsible "alternatives" block keeps the
+            // visible comment focused on the common case (maintainer with
+            // gh + signing config) without losing the fallback paths for
+            // contributors who don't have gh installed or push access.
+            lines.push(
+              `For the resulting commit to pass branch protection on \`main\`, your GPG key must be ` +
+                `registered with your GitHub account and \`user.signingkey\` set in your git config ` +
+                `(\`git config --global user.signingkey <YOUR_KEY_ID>\`). The \`-S\` flag in the ` +
+                `commands above signs this specific cherry-pick without flipping any persistent ` +
+                `\`commit.gpgsign\` config — so it has no effect on your other repos.`,
+              ``,
+              `<details><summary>If you don't have <code>gh</code> CLI or direct push access to bisq2</summary>`,
+              ``,
+              `**Without \`gh\` CLI:** omit the last line of the script. After \`git push\` ` +
+                `prints the "Create a pull request" URL, click it — or open it directly:`,
+              ``,
+              compareUrl,
+              ``,
+              `**Without push access to bisq2:** push to your fork instead, then open the PR ` +
+                `from there:`,
+              ``,
+              '```bash',
+              `git push -u <your-fork-remote> ${branchName}`,
+              `# then open https://github.com/<your-user>/bisq2/compare/main...${branchName}`,
+              '```',
+              ``,
+              `</details>`,
+              ``,
+              `If this PR should NOT be synced to \`main\`, ask a maintainer to add the ` +
+                `\`skip-sync-to-main\` label on this PR (the workflow only honours it when added ` +
+                `by an account with admin/write permission).`,
+            );
+
+            const body = lines.join('\n');
+
+            // Find an existing bot comment from a previous run of this workflow
+            // for this PR so we update it in place rather than spamming the
+            // conversation. We match on (a) the bot login AND (b) the unique
+            // branch-name marker present in every body — branch name embeds
+            // the PR number, so it's stable per source PR but distinct across
+            // PRs.
+            const existingComments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNum,
+                per_page: 100,
+              },
+            );
+            const existing = existingComments.find(
+              c =>
+                c.user &&
+                c.user.login === 'github-actions[bot]' &&
+                c.body &&
+                c.body.includes(branchName),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.info(
+                `Updated existing sync-to-main comment (#${existing.id}) on PR #${prNum} (${result} path).`,
+              );
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNum,
+                body,
+              });
+              core.info(
+                `Posted new sync-to-main instructions on PR #${prNum} (${result} path).`,
+              );
+            }
+
+            core.info(`Posted sync-to-main instructions on PR #${prNum} (${result} path).`);
