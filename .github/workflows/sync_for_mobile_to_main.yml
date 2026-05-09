@@ -170,7 +170,7 @@ jobs:
     steps:
       - name: Check that the skip-sync-to-main label was added by a maintainer
         id: check
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           # Returns 'true' only when the most recent `labeled` event for
           # `skip-sync-to-main` was performed by an account with admin/write
@@ -356,7 +356,7 @@ jobs:
           fi
 
       - name: Post or update sync-to-main instructions on the source PR
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           SYNC_RESULT: ${{ steps.cherry_pick.outputs.result }}
           CONFLICTING_FILES: ${{ steps.cherry_pick.outputs.conflicting_files }}
