@@ -20,7 +20,6 @@ package bisq.api.web_socket.subscription;
 
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
-import bisq.api.web_socket.domain.trade_restricting_alert.TradeRestrictingAlertWebSocketService;
 import bisq.api.web_socket.domain.alert_notifications.AlertNotificationsWebSocketService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
@@ -38,8 +37,8 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.trade.TradeService;
 import bisq.common.util.StringUtils;
+import bisq.trade.TradeService;
 import bisq.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.WebSocket;
