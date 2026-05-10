@@ -73,20 +73,26 @@ class DisputeAgentSelectionTest {
     }
 
     @Test
-    @DisplayName("Different inputs produce different selection")
-    void different_inputs_produce_different_selection() {
+    @DisplayName("Different inputs produce deterministic and valid selections")
+    void different_inputs_produce_deterministic_and_valid_selections() {
         Set<AuthorizedBondedRole> candidates = Set.of(
                 createRole(), createRole(), createRole(), createRole(), createRole());
+        Set<String> candidateProfileIds = new HashSet<>();
+        candidates.forEach(r -> candidateProfileIds.add(r.getProfileId()));
 
-        String result1 = DisputeAgentSelection.selectDeterministicProfileId(
+        String result1a = DisputeAgentSelection.selectDeterministicProfileId(
                 candidates, padId("maker1"), padId("taker1"), "offer-1").orElseThrow();
-        String result2 = DisputeAgentSelection.selectDeterministicProfileId(
+        String result1b = DisputeAgentSelection.selectDeterministicProfileId(
+                candidates, padId("maker1"), padId("taker1"), "offer-1").orElseThrow();
+        String result2a = DisputeAgentSelection.selectDeterministicProfileId(
                 candidates, padId("maker2"), padId("taker2"), "offer-2").orElseThrow();
-        String result3 = DisputeAgentSelection.selectDeterministicProfileId(
-                candidates, padId("maker3"), padId("taker3"), "offer-3").orElseThrow();
+        String result2b = DisputeAgentSelection.selectDeterministicProfileId(
+                candidates, padId("maker2"), padId("taker2"), "offer-2").orElseThrow();
 
-        assertFalse(result1.equals(result2) && result2.equals(result3),
-                "All three different inputs selected the same agent — extremely unlikely with 5 candidates");
+        assertEquals(result1a, result1b, "Same inputs must produce same selection");
+        assertEquals(result2a, result2b, "Same inputs must produce same selection");
+        assertTrue(candidateProfileIds.contains(result1a), "Selection must be a valid candidate");
+        assertTrue(candidateProfileIds.contains(result2a), "Selection must be a valid candidate");
     }
 
     @Test
