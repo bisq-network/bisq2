@@ -94,6 +94,7 @@ class MarketRepositoryTest {
     void all_markets_contains_fiat_and_crypto() {
         List<Market> all = MarketRepository.getAllMarkets();
         assertTrue(all.stream().anyMatch(Market::isBtcFiatMarket));
+        assertTrue(all.stream().anyMatch(m -> !m.isBtcFiatMarket()));
     }
 
     @Test

@@ -63,7 +63,7 @@ class BisqEasyTradeAmountLimitsTest {
     void get_max_usd_trade_amount_just_below_cap() {
         // 119_999 / 200 = $599.995 → rounds to $600
         Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(119_999);
-        assertTrue(result.getValue() <= Fiat.fromFaceValue(600, "USD").getValue());
+        assertEquals(Fiat.fromFaceValue(600, "USD").getValue(), result.getValue());
     }
 
     @Test

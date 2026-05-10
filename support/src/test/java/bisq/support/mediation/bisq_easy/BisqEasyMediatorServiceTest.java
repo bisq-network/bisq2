@@ -104,7 +104,7 @@ class BisqEasyMediatorServiceTest {
         BondedRolesService bondedRolesService = mock(BondedRolesService.class);
         authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
         when(bondedRolesService.getAuthorizedBondedRolesService()).thenReturn(authorizedBondedRolesService);
-        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)).thenReturn(Stream.empty());
+        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)).thenAnswer(invocation -> Stream.empty());
 
         service = new BisqEasyMediatorService(persistenceService, networkService, chatService, userService, bondedRolesService);
     }
@@ -142,7 +142,7 @@ class BisqEasyMediatorServiceTest {
         UserProfile mediatorProfile = createUserProfile(6003);
 
         when(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true))
-                .thenReturn(Stream.empty());
+                .thenAnswer(invocation -> Stream.empty());
 
         BisqEasyContract contract = createContract(requester, peer, mediatorProfile);
         BisqEasyMediationRequest request = new BisqEasyMediationRequest(

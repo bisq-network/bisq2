@@ -59,6 +59,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -81,6 +82,7 @@ class BisqEasyTradeServiceTest {
 
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
     private static final PriceQuote PRICE_60K = PriceQuote.fromFiatPrice(60_000, "USD");
+    private static Object previousUserProfileServiceInstance;
 
     private BisqEasyTradeService service;
     private NetworkId makerNid;
@@ -96,7 +98,15 @@ class BisqEasyTradeServiceTest {
         when(ups.evaluateUserName(any(), any())).thenAnswer(inv -> inv.getArgument(0));
         Field f = UserProfileService.class.getDeclaredField("instance");
         f.setAccessible(true);
+        previousUserProfileServiceInstance = f.get(null);
         f.set(null, ups);
+    }
+
+    @AfterAll
+    static void restore_user_profile_service() throws Exception {
+        Field f = UserProfileService.class.getDeclaredField("instance");
+        f.setAccessible(true);
+        f.set(null, previousUserProfileServiceInstance);
     }
 
     @SuppressWarnings("unchecked")

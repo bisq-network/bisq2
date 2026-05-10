@@ -149,7 +149,7 @@ class DelayedPayoutTxReceiverServiceTest {
     }
 
     @Test
-    @DisplayName("compute receivers more than251 outputs")
+    @DisplayName("compute receivers more than 251 outputs")
     void compute_receivers_more_than251_outputs() {
         long feeRateSatPerKwu = 250; // 1 sat per vbyte
         // 10_000 sats each for 252 P2SH outputs, 8_064 = 252 * 32 sats for their fee contributions, but this _doesn't_

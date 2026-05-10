@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AddressTest {
     @Test
-    @DisplayName("valid i2 p base64 address")
-    void valid_i2_p_base64_address() {
+    @DisplayName("valid i2p base64 address")
+    void valid_i2p_base64_address() {
         String host = "OazWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         int port = 1234;
         Address address = Address.from(host, port);
@@ -40,8 +40,8 @@ public class AddressTest {
     }
 
     @Test
-    @DisplayName("valid i2 p base64 and bas32 address")
-    void valid_i2_p_base64_and_bas32_address() {
+    @DisplayName("valid i2p base64 and base32 address")
+    void valid_i2p_base64_and_base32_address() {
         String b64 = "OazWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         String b32 = "wgglodqww5sifflx4ptugbn2yjey3x3xlkstozs7dmzw22wo6qfa.b32.i2p";
         int port = 1234;
@@ -54,8 +54,8 @@ public class AddressTest {
     }
 
     @Test
-    @DisplayName("invalid i2 p base64 address")
-    void invalid_i2_p_base64_address() {
+    @DisplayName("invalid i2p base64 address")
+    void invalid_i2p_base64_address() {
         // too short
         String host = "DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         int port = 1234;

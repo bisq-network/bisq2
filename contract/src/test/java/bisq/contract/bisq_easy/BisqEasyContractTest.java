@@ -218,7 +218,10 @@ class BisqEasyContractTest {
                 new Market("BTC", "USD", "Bitcoin", "US Dollar"),
                 new FixPriceSpec(fixedPrice));
 
-        // Constructor does NOT validate consistency between amounts and priceSpec
+        // INTENTIONAL CANARY: This test documents that BisqEasyContract's constructor currently
+        // does NOT validate consistency between amounts and priceSpec. If a future change adds
+        // such validation (which would be a good thing), this test will fail — signaling the
+        // developer to update dependent code paths that rely on the current lenient behavior.
         assertDoesNotThrow(() -> new BisqEasyContract(
                 System.currentTimeMillis(), offer, createNetworkId(4002),
                 baseSideAmount, inconsistentQuote,

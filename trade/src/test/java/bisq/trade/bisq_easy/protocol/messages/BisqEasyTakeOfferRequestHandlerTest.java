@@ -68,6 +68,7 @@ import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -89,6 +90,7 @@ class BisqEasyTakeOfferRequestHandlerTest {
 
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
     private static final long TAKE_OFFER_DATE = 1_700_000_000_000L;
+    private static Object previousUserProfileServiceInstance;
     private static final PriceQuote PRICE_60K = PriceQuote.fromFiatPrice(60_000, "USD");
     // At $60,000/BTC: 0.001 BTC (100_000 sat) costs $60 (600_000 in 4-decimal fiat units)
     private static final long CONSISTENT_BASE = 100_000L;
@@ -113,7 +115,15 @@ class BisqEasyTakeOfferRequestHandlerTest {
         when(ups.evaluateUserName(any(), any())).thenAnswer(inv -> inv.getArgument(0));
         Field f = UserProfileService.class.getDeclaredField("instance");
         f.setAccessible(true);
+        previousUserProfileServiceInstance = f.get(null);
         f.set(null, ups);
+    }
+
+    @AfterAll
+    static void restore_user_profile_service() throws Exception {
+        Field f = UserProfileService.class.getDeclaredField("instance");
+        f.setAccessible(true);
+        f.set(null, previousUserProfileServiceInstance);
     }
 
     @BeforeEach

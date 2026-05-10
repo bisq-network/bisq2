@@ -125,7 +125,7 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
-    @DisplayName("small btc amount with6 leading zeros")
+    @DisplayName("small btc amount with 6 leading zeros")
     void small_btc_amount_with6_leading_zeros() {
         bitcoinAmountDisplay.setBtcAmount("0.000002146");
         //0.00 000 214 (last digit should be trancated)
@@ -138,7 +138,7 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
-    @DisplayName("small btc amount with5 leading zeros")
+    @DisplayName("small btc amount with 5 leading zeros")
     void small_btc_amount_with5_leading_zeros() {
         bitcoinAmountDisplay.setBtcAmount("0.000019754");
         //0.00 001 975 (last digit should be trancated)
@@ -151,7 +151,7 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
-    @DisplayName("small btc amount with4 leading zeros")
+    @DisplayName("small btc amount with 4 leading zeros")
     void small_btc_amount_with4_leading_zeros() {
         bitcoinAmountDisplay.setBtcAmount("0.0006942");
         //0.00 069 420
@@ -164,7 +164,7 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
-    @DisplayName("small btc amount with3 leading zeros")
+    @DisplayName("small btc amount with 3 leading zeros")
     void small_btc_amount_with3_leading_zeros() {
         bitcoinAmountDisplay.setBtcAmount("0.00582");
         //0.00 582 000
@@ -177,7 +177,7 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
-    @DisplayName("small btc amount with2 leading zeros")
+    @DisplayName("small btc amount with 2 leading zeros")
     void small_btc_amount_with2_leading_zeros() {
         bitcoinAmountDisplay.setBtcAmount("0.024");
         //0.02 400 000

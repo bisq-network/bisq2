@@ -156,8 +156,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    @DisplayName("returns null on null input")
-    void returns_null_on_null_input() {
+    @DisplayName("returns empty string on null input")
+    void returns_empty_string_on_null_input() {
         assertEquals("", StringUtils.cleanUserInput(null));
     }
 
