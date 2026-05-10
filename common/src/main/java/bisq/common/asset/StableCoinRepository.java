@@ -62,6 +62,13 @@ public class StableCoinRepository {
             StableCoin.TokenStandard.SPL,
             StableCoin.Issuer.CIRCLE);
 
+    public static final StableCoin USDC_POLYGON = new StableCoin("USDC",
+            "USD Coin",
+            "USD",
+            StableCoin.Network.POLYGON,
+            StableCoin.TokenStandard.ERC20,
+            StableCoin.Issuer.CIRCLE);
+
     public static final StableCoin DAI_ERC20 = new StableCoin("DAI",
             "Dai",
             "USD",
@@ -107,7 +114,7 @@ public class StableCoinRepository {
     @Getter
     private static final Map<String, Set<StableCoin>> STABLE_COIN_CURRENCY_SET_BY_CODE = Map.of(
             "USDT", Set.of(USDT_ERC20, USDT_TRC20, USDT_BEP20),
-            "USDC", Set.of(USDC_ERC20, USDC_SPL),
+            "USDC", Set.of(USDC_ERC20, USDC_SPL, USDC_POLYGON),
             "DAI", Set.of(DAI_ERC20),
             "FDUSD", Set.of(FDUSD_ERC20, FDUSD_BEP20),
             "TUSD", Set.of(TUSD_ERC20),

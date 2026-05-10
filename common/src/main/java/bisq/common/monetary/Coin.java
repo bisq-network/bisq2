@@ -194,6 +194,7 @@ public final class Coin extends Monetary {
     private static int derivePrecision(String code) {
         if (code.equals("XMR")) return 12;
         if (code.equals("BSQ")) return 2;
+        if (code.equals("USDC")) return 6;
         return 8;
     }
 

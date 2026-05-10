@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
@@ -120,7 +120,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.setPrice(Res.get("bisqEasy.offerDetails.price", formattedPrice, market.getMarketCodes()));
 
         applyPriceDetails(priceSpec, market);
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        List<? extends PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
         model.setQuoteSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(quoteSidePaymentMethodSpecs));
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = bisqEasyOffer.getBaseSidePaymentMethodSpecs();
         model.setBaseSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(baseSidePaymentMethodSpecs));

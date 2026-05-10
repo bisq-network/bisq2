@@ -278,4 +278,42 @@ public class MonetaryTest {
             assertInstanceOf(ArithmeticException.class, e);
         }
     }
+
+    @Test
+    @DisplayName("usdc coin has 6 decimal precision")
+    void usdc_coin_has_6_decimal_precision() {
+        Coin usdc = Coin.fromFaceValue(100.0, "USDC");
+        assertEquals(6, usdc.getPrecision());
+        assertEquals(100_000_000, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("usdc fromFaceValue round trip")
+    void usdc_from_face_value_round_trip() {
+        Coin usdc = Coin.fromFaceValue(42.50, "USDC");
+        assertEquals(42_500_000, usdc.getValue());
+        assertEquals(42.5, Monetary.toFaceValue(usdc, 2), 0.0001);
+    }
+
+    @Test
+    @DisplayName("monetary from dispatches fiat vs coin")
+    void monetary_from_dispatches_fiat_vs_coin() {
+        Monetary usd = Monetary.from(10000, "USD");
+        assertInstanceOf(Fiat.class, usd);
+
+        Monetary usdc = Monetary.from(10000000, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+    }
+
+    @Test
+    @DisplayName("monetary fromFaceValue dispatches fiat vs coin")
+    void monetary_from_face_value_dispatches_fiat_vs_coin() {
+        Monetary usd = Monetary.fromFaceValue(100.0, "USD");
+        assertInstanceOf(Fiat.class, usd);
+        assertEquals(100.0, Monetary.toFaceValue(usd, 2), 0.0001);
+
+        Monetary usdc = Monetary.fromFaceValue(100.0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(100.0, Monetary.toFaceValue(usdc, 2), 0.0001);
+    }
 }

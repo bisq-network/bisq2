@@ -184,4 +184,18 @@ public class MarketRepository {
                 .filter(e -> e.getMarketCodes().equals(marketCodes))
                 .findAny();
     }
+
+    public static Market getBtcUsdcMarket() {
+        return new Market("BTC", "USDC", "Bitcoin", "USD Coin");
+    }
+
+    public static List<Market> getStableCoinMarkets() {
+        return List.of(getBtcUsdcMarket());
+    }
+
+    public static List<Market> getAllBisqEasyMarkets() {
+        List<Market> list = new ArrayList<>(getAllFiatMarkets());
+        list.addAll(getStableCoinMarkets());
+        return list.stream().distinct().collect(Collectors.toList());
+    }
 }

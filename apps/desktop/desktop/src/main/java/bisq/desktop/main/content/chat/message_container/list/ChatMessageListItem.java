@@ -18,7 +18,8 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
@@ -290,10 +291,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return Optional.empty();
     }
 
-    public List<FiatPaymentMethod> getBisqEasyOfferPaymentMethods() {
+    public List<? extends PaymentMethod<?>> getBisqEasyOfferPaymentMethods() {
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
             BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
-            return PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
+            return offer.getQuoteSidePaymentMethodSpecs().stream()
+                    .map(PaymentMethodSpec::getPaymentMethod)
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

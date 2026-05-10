@@ -130,10 +130,10 @@ public class MarketBasedAmountConversion {
                                                        Fiat amountInUsd) {
         Monetary amountInBtc = MarketBasedAmountConversion.usdToBtc(marketPriceService, amountInUsd)
                 .orElseThrow();
-        if (market.isBtcFiatMarket()) {
-            Monetary amountInFiat = MarketBasedAmountConversion.btcToFiat(marketPriceService, market, amountInBtc)
+        if (market.isBtcFiatMarket() || market.isBtcStableCoinMarket()) {
+            Monetary quoteSideAmount = MarketBasedAmountConversion.btcToFiat(marketPriceService, market, amountInBtc)
                     .orElseThrow();
-            return new TradeAmount(amountInBtc, amountInFiat);
+            return new TradeAmount(amountInBtc, quoteSideAmount);
         } else {
             Monetary amountInOtherCrypto = MarketBasedAmountConversion.btcToOtherCrypto(marketPriceService, market, amountInBtc)
                     .orElseThrow();

@@ -196,7 +196,11 @@ public class SellerState1 extends BaseState {
             });
 
             paymentAccountData = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData"), "", true);
-            paymentAccountData.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase1.accountData.prompt"));
+            boolean isStableCoinTrade = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            String promptKey = isStableCoinTrade
+                    ? "bisqEasy.tradeState.info.seller.phase1.accountData.prompt.stableCoin"
+                    : "bisqEasy.tradeState.info.seller.phase1.accountData.prompt";
+            paymentAccountData.setPromptText(Res.get(promptKey));
 
             button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase1.buttonText"));
             button.setDefaultButton(true);

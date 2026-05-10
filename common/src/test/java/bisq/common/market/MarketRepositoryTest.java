@@ -143,4 +143,43 @@ class MarketRepositoryTest {
         assertEquals("BSQ", bsq.getBaseCurrencyCode());
         assertEquals("BTC", bsq.getQuoteCurrencyCode());
     }
+
+    @Test
+    @DisplayName("btc usdc market correct")
+    void btc_usdc_market_correct() {
+        Market market = MarketRepository.getBtcUsdcMarket();
+        assertEquals("BTC", market.getBaseCurrencyCode());
+        assertEquals("USDC", market.getQuoteCurrencyCode());
+        assertTrue(market.isBtcStableCoinMarket());
+    }
+
+    @Test
+    @DisplayName("stablecoin markets non empty")
+    void stablecoin_markets_non_empty() {
+        List<Market> markets = MarketRepository.getStableCoinMarkets();
+        assertFalse(markets.isEmpty());
+        assertTrue(markets.stream().allMatch(Market::isBtcStableCoinMarket));
+    }
+
+    @Test
+    @DisplayName("all bisq easy markets contains fiat and stablecoin")
+    void all_bisq_easy_markets_contains_fiat_and_stablecoin() {
+        List<Market> all = MarketRepository.getAllBisqEasyMarkets();
+        assertTrue(all.stream().anyMatch(Market::isBtcFiatMarket));
+        assertTrue(all.stream().anyMatch(Market::isBtcStableCoinMarket));
+    }
+
+    @Test
+    @DisplayName("all bisq easy markets no duplicates")
+    void all_bisq_easy_markets_no_duplicates() {
+        List<Market> all = MarketRepository.getAllBisqEasyMarkets();
+        assertEquals(all.size(), new HashSet<>(all).size());
+    }
+
+    @Test
+    @DisplayName("all bisq easy markets contains all fiat markets")
+    void all_bisq_easy_markets_contains_all_fiat_markets() {
+        List<Market> all = MarketRepository.getAllBisqEasyMarkets();
+        assertTrue(all.containsAll(MarketRepository.getAllFiatMarkets()));
+    }
 }

@@ -24,7 +24,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingAnimation;
@@ -82,8 +82,10 @@ public abstract class BaseState {
             long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
             model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
             model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
-            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            String quoteCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+            Monetary quoteMonetary = Monetary.from(quoteSideAmount, quoteCode);
+            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(quoteMonetary));
+            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(quoteMonetary));
         }
 
         @Override

@@ -94,6 +94,15 @@ class StableCoinPaymentRailTest {
     }
 
     @Test
+    @DisplayName("usdc polygon maps to correct coin")
+    void usdc_polygon_maps_to_correct_coin() {
+        StableCoin coin = StableCoinPaymentRail.USDC_POLYGON.getStableCoin();
+        assertEquals("USDC", coin.getCode());
+        assertEquals(StableCoin.Network.POLYGON, coin.getNetwork());
+        assertEquals(StableCoin.Issuer.CIRCLE, coin.getIssuer());
+    }
+
+    @Test
     @DisplayName("dai erc20 maps to correct coin")
     void dai_erc20_maps_to_correct_coin() {
         StableCoin coin = StableCoinPaymentRail.DAI_ERC20.getStableCoin();

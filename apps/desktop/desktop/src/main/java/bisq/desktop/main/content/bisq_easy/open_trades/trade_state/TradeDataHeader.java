@@ -21,7 +21,6 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.asset.Asset;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
@@ -117,7 +116,7 @@ public class TradeDataHeader {
                 long quoteSideAmount = bisqEasyTrade.getContract().getQuoteSideAmount();
                 Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
                 String baseAmountString = AmountFormatter.formatBaseAmount(baseAmount);
-                Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
+                Monetary quoteAmount = Monetary.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
                 String quoteAmountString = AmountFormatter.formatQuoteAmount(quoteAmount);
                 if (bisqEasyTrade.isSeller()) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());

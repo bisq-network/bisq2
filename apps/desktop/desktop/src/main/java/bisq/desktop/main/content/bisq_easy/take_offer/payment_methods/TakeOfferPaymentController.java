@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -26,7 +25,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -71,7 +69,7 @@ public class TakeOfferPaymentController implements Controller {
         return model.getSelectedBitcoinPaymentMethodSpec();
     }
 
-    public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
+    public ReadOnlyObjectProperty<PaymentMethodSpec<?>> getSelectedFiatPaymentMethodSpec() {
         return model.getSelectedFiatPaymentMethodSpec();
     }
 
@@ -119,12 +117,11 @@ public class TakeOfferPaymentController implements Controller {
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey())
                 .ifPresent(name -> {
                     try {
-                        FiatPaymentRail persisted = FiatPaymentRail.valueOf(FiatPaymentRail.class, name);
                         model.getOfferedFiatPaymentMethodSpecs().stream()
-                                .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
+                                .filter(spec -> spec.getPaymentMethodName().equals(name)).findAny()
                                 .ifPresent(spec -> model.getSelectedFiatPaymentMethodSpec().set(spec));
                     } catch (Exception e) {
-                        log.warn("Could not create FiatPaymentRail from persisted name {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Could not restore persisted payment method {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
                     }
                 });
     }
@@ -133,11 +130,11 @@ public class TakeOfferPaymentController implements Controller {
     public void onDeactivate() {
     }
 
-    void onToggleFiatPaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
+    void onToggleFiatPaymentMethod(PaymentMethodSpec<?> spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedFiatPaymentMethodSpec().set(spec);
             settingsService.setCookie(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey(),
-                    spec.getPaymentMethod().getPaymentRail().name());
+                    spec.getPaymentMethodName());
         } else {
             model.getSelectedFiatPaymentMethodSpec().set(null);
         }

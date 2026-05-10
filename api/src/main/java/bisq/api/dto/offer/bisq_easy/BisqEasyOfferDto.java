@@ -24,7 +24,7 @@ import bisq.api.dto.offer.DirectionDto;
 import bisq.api.dto.offer.amount.spec.AmountSpecDto;
 import bisq.api.dto.offer.options.OfferOptionDto;
 import bisq.api.dto.offer.payment_method.BitcoinPaymentMethodSpecDto;
-import bisq.api.dto.offer.payment_method.FiatPaymentMethodSpecDto;
+import bisq.api.dto.offer.payment_method.PaymentMethodSpecDto;
 import bisq.api.dto.offer.price.spec.PriceSpecDto;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public record BisqEasyOfferDto(String id,
                                PriceSpecDto priceSpec,
                                List<TradeProtocolTypeDto> protocolTypes,
                                List<BitcoinPaymentMethodSpecDto> baseSidePaymentMethodSpecs,
-                               List<FiatPaymentMethodSpecDto> quoteSidePaymentMethodSpecs,
+                               List<PaymentMethodSpecDto> quoteSidePaymentMethodSpecs,
                                List<OfferOptionDto> offerOptions,
                                List<String> supportedLanguageCodes,
                                int version,

@@ -67,12 +67,13 @@ class StableCoinRepositoryTest {
     }
 
     @Test
-    @DisplayName("all with code usdc returns two variants")
-    void all_with_code_usdc_returns_two_variants() {
+    @DisplayName("all with code usdc returns three variants")
+    void all_with_code_usdc_returns_three_variants() {
         Set<StableCoin> variants = StableCoinRepository.allWithCode("USDC");
-        assertEquals(2, variants.size());
+        assertEquals(3, variants.size());
         assertTrue(variants.contains(StableCoinRepository.USDC_ERC20));
         assertTrue(variants.contains(StableCoinRepository.USDC_SPL));
+        assertTrue(variants.contains(StableCoinRepository.USDC_POLYGON));
     }
 
     @Test
@@ -134,5 +135,22 @@ class StableCoinRepositoryTest {
     void usdc_spl_has_correct_network() {
         assertEquals(StableCoin.Network.SOLANA, StableCoinRepository.USDC_SPL.getNetwork());
         assertEquals(StableCoin.TokenStandard.SPL, StableCoinRepository.USDC_SPL.getTokenStandard());
+    }
+
+    @Test
+    @DisplayName("usdc polygon has correct properties")
+    void usdc_polygon_has_correct_properties() {
+        StableCoin coin = StableCoinRepository.USDC_POLYGON;
+        assertEquals("USDC", coin.getCode());
+        assertEquals("USD Coin", coin.getName());
+        assertEquals("USD", coin.getPegCurrencyCode());
+        assertEquals(StableCoin.Network.POLYGON, coin.getNetwork());
+        assertEquals(StableCoin.Issuer.CIRCLE, coin.getIssuer());
+    }
+
+    @Test
+    @DisplayName("usdc polygon is found by code")
+    void usdc_polygon_is_found_by_code() {
+        assertTrue(StableCoinRepository.allWithCode("USDC").contains(StableCoinRepository.USDC_POLYGON));
     }
 }

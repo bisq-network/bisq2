@@ -22,6 +22,9 @@ import bisq.account.payment_method.crypto.CryptoPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.common.market.Market;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -153,5 +156,44 @@ class PaymentMethodSpecUtilTest {
         List<String> names = PaymentMethodSpecUtil.getPaymentMethodNames(List.of(spec));
         assertEquals(1, names.size());
         assertEquals("SEPA", names.get(0));
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs for fiat returns fiat specs")
+    void create_quote_side_specs_for_fiat_returns_fiat_specs() {
+        FiatPaymentMethod sepa = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        List<PaymentMethodSpec<?>> specs = PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of(sepa));
+        assertEquals(1, specs.size());
+        assertInstanceOf(FiatPaymentMethodSpec.class, specs.get(0));
+        assertEquals(sepa, specs.get(0).getPaymentMethod());
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs for stablecoin returns stablecoin specs")
+    void create_quote_side_specs_for_stablecoin_returns_stablecoin_specs() {
+        StableCoinPaymentMethod usdcPolygon = StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON);
+        List<PaymentMethodSpec<?>> specs = PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of(usdcPolygon));
+        assertEquals(1, specs.size());
+        assertInstanceOf(StableCoinPaymentMethodSpec.class, specs.get(0));
+        assertEquals(usdcPolygon, specs.get(0).getPaymentMethod());
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs for mixed list")
+    void create_quote_side_specs_for_mixed_list() {
+        FiatPaymentMethod sepa = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        StableCoinPaymentMethod usdcPolygon = StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON);
+        List<PaymentMethodSpec<?>> specs = PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of(sepa, usdcPolygon));
+        assertEquals(2, specs.size());
+        assertInstanceOf(FiatPaymentMethodSpec.class, specs.get(0));
+        assertInstanceOf(StableCoinPaymentMethodSpec.class, specs.get(1));
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs rejects crypto payment method")
+    void create_quote_side_specs_rejects_crypto_payment_method() {
+        CryptoPaymentMethod xmr = new CryptoPaymentMethod("XMR");
+        assertThrows(IllegalArgumentException.class,
+                () -> PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of(xmr)));
     }
 }

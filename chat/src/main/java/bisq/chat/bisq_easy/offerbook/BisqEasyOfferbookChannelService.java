@@ -166,7 +166,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
             BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefaultBtcFiatMarket());
             maybeAddPublicTradeChannel(defaultChannel);
 
-            List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
+            List<Market> allMarkets = MarketRepository.getAllBisqEasyMarkets();
             allMarkets.remove(MarketRepository.getDefaultBtcFiatMarket());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }

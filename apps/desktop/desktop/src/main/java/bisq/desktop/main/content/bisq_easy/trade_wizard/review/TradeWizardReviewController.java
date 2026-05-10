@@ -22,8 +22,12 @@ import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -139,7 +143,7 @@ public class TradeWizardReviewController implements Controller {
         }
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+    public void setFiatPaymentMethods(List<? extends PaymentMethod<?>> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             resetSelectedPaymentMethod();
         }
@@ -154,19 +158,19 @@ public class TradeWizardReviewController implements Controller {
     public void setDataForCreateOffer(Direction direction,
                                       Market market,
                                       List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                                      List<FiatPaymentMethod> fiatPaymentMethods,
+                                      List<? extends PaymentMethod<?>> quoteSidePaymentMethods,
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         model.setCreateOfferMode(true);
         checkArgument(!bitcoinPaymentMethods.isEmpty(), "bitcoinPaymentMethods must not be empty");
-        checkArgument(!fiatPaymentMethods.isEmpty(), "fiatPaymentMethods must not be empty");
+        checkArgument(!quoteSidePaymentMethods.isEmpty(), "quoteSidePaymentMethods must not be empty");
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageFromPeerPerspective(userIdentity.getNickName(),
                 marketPriceService,
                 direction,
                 market,
                 bitcoinPaymentMethods,
-                fiatPaymentMethods,
+                quoteSidePaymentMethods,
                 amountSpec,
                 priceSpec);
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
@@ -176,7 +180,7 @@ public class TradeWizardReviewController implements Controller {
                 amountSpec,
                 priceSpec,
                 new ArrayList<>(bitcoinPaymentMethods),
-                new ArrayList<>(fiatPaymentMethods),
+                new ArrayList<>(quoteSidePaymentMethods),
                 userIdentity.getUserProfile().getTerms(),
                 new ArrayList<>(settingsService.getSupportedLanguageTags()),
                 BisqEasyProtocol.VERSION);
@@ -203,7 +207,7 @@ public class TradeWizardReviewController implements Controller {
         applyData(direction,
                 market,
                 bitcoinPaymentMethods,
-                fiatPaymentMethods,
+                quoteSidePaymentMethods,
                 amountSpec,
                 priceSpec);
     }
@@ -211,7 +215,7 @@ public class TradeWizardReviewController implements Controller {
     public void setDataForTakeOffer(BisqEasyOffer bisqEasyOffer,
                                     AmountSpec amountSpec,
                                     List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                                    List<FiatPaymentMethod> fiatPaymentMethods) {
+                                    List<? extends PaymentMethod<?>> quoteSidePaymentMethods) {
         if (bisqEasyOffer == null) {
             return;
         }
@@ -229,11 +233,11 @@ public class TradeWizardReviewController implements Controller {
                 .map(PaymentMethodSpec::getPaymentMethod)
                 .collect(Collectors.toList());
 
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
-        Set<FiatPaymentMethod> takersFiatPaymentMethodSet = new HashSet<>(fiatPaymentMethods);
-        List<FiatPaymentMethod> fiatPaymentMethodsToUse = quoteSidePaymentMethodSpecs.stream()
-                .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        Set<PaymentMethod<?>> takersQuoteSideMethodSet = new HashSet<>(quoteSidePaymentMethods);
+        List<PaymentMethod<?>> quoteSideMethodsToUse = quoteSidePaymentMethodSpecs.stream()
                 .map(PaymentMethodSpec::getPaymentMethod)
+                .filter(takersQuoteSideMethodSet::contains)
                 .collect(Collectors.toList());
 
         AmountSpec amountSpecToUse = bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec
@@ -243,7 +247,7 @@ public class TradeWizardReviewController implements Controller {
         applyData(direction,
                 market,
                 bitcoinPaymentMethodsToUse,
-                fiatPaymentMethodsToUse,
+                quoteSideMethodsToUse,
                 amountSpecToUse,
                 price);
     }
@@ -258,7 +262,7 @@ public class TradeWizardReviewController implements Controller {
     private void applyData(Direction direction,
                            Market market,
                            List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                           List<FiatPaymentMethod> fiatPaymentMethods,
+                           List<? extends PaymentMethod<?>> quoteSidePaymentMethods,
                            AmountSpec amountSpec,
                            PriceSpec priceSpec) {
         boolean isCreateOfferMode = model.isCreateOfferMode();
@@ -266,7 +270,7 @@ public class TradeWizardReviewController implements Controller {
         String marketCodes = market.getMarketCodes();
 
         model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
-        model.setFiatPaymentMethods(fiatPaymentMethods);
+        model.setFiatPaymentMethods(quoteSidePaymentMethods);
         model.setPriceSpec(priceSpec);
         priceInput.setMarket(market);
         priceInput.setDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker", marketCodes));
@@ -341,6 +345,8 @@ public class TradeWizardReviewController implements Controller {
             }
         }
 
+        String quoteSideType = market.isBtcStableCoinMarket() ? "stableCoin" : "fiat";
+
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
@@ -350,24 +356,24 @@ public class TradeWizardReviewController implements Controller {
                             : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.btc.maker")
             );
             model.setFiatPaymentMethodDescription(
-                    fiatPaymentMethods.size() == 1
-                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat")
-                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.fiat.maker")
+                    quoteSidePaymentMethods.size() == 1
+                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription." + quoteSideType)
+                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions." + quoteSideType + ".maker")
             );
             model.setBitcoinPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods));
-            model.setFiatPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
+            model.setFiatPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(quoteSidePaymentMethods));
             model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
         } else {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.taker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.taker").toUpperCase());
             model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.taker"));
             model.getTakersBitcoinPaymentMethods().setAll(bitcoinPaymentMethods);
-            model.getTakersFiatPaymentMethods().setAll(fiatPaymentMethods);
+            model.getTakersFiatPaymentMethods().setAll(quoteSidePaymentMethods);
             if (model.getTakersSelectedBitcoinPaymentMethod() == null) {
                 model.setTakersSelectedBitcoinPaymentMethod(bitcoinPaymentMethods.get(0));
             }
             if (model.getTakersSelectedFiatPaymentMethod() == null) {
-                model.setTakersSelectedFiatPaymentMethod(fiatPaymentMethods.get(0));
+                model.setTakersSelectedFiatPaymentMethod(quoteSidePaymentMethods.get(0));
             }
             model.setBitcoinPaymentMethodDescription(
                     bitcoinPaymentMethods.size() == 1
@@ -375,9 +381,9 @@ public class TradeWizardReviewController implements Controller {
                             : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.btc.taker")
             );
             model.setFiatPaymentMethodDescription(
-                    fiatPaymentMethods.size() == 1
-                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat")
-                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.fiat.taker")
+                    quoteSidePaymentMethods.size() == 1
+                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription." + quoteSideType)
+                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions." + quoteSideType + ".taker")
             );
             model.setBitcoinPaymentMethod(model.getTakersSelectedBitcoinPaymentMethod().getDisplayString());
             model.setFiatPaymentMethod(model.getTakersSelectedFiatPaymentMethod().getDisplayString());
@@ -461,7 +467,13 @@ public class TradeWizardReviewController implements Controller {
         Monetary takersBaseSideAmount = model.getFixBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getFixQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(model.getTakersSelectedBitcoinPaymentMethod());
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(model.getTakersSelectedFiatPaymentMethod());
+        PaymentMethodSpec<?> quoteSidePaymentMethodSpec;
+        PaymentMethod<?> selectedQuoteMethod = model.getTakersSelectedFiatPaymentMethod();
+        if (selectedQuoteMethod instanceof StableCoinPaymentMethod stableCoinMethod) {
+            quoteSidePaymentMethodSpec = new StableCoinPaymentMethodSpec(stableCoinMethod);
+        } else {
+            quoteSidePaymentMethodSpec = new FiatPaymentMethodSpec((FiatPaymentMethod) selectedQuoteMethod);
+        }
         PriceSpec sellersPriceSpec = model.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
@@ -469,7 +481,7 @@ public class TradeWizardReviewController implements Controller {
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
                 bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
+                quoteSidePaymentMethodSpec,
                 mediator,
                 sellersPriceSpec,
                 marketPrice);
@@ -604,7 +616,7 @@ public class TradeWizardReviewController implements Controller {
         applyHeaderBitcoinPaymentMethod();
     }
 
-    void onSelectFiatPaymentMethod(FiatPaymentMethod paymentMethod) {
+    void onSelectFiatPaymentMethod(PaymentMethod<?> paymentMethod) {
         model.setTakersSelectedFiatPaymentMethod(paymentMethod);
         applyHeaderFiatPaymentMethod();
     }
@@ -634,7 +646,7 @@ public class TradeWizardReviewController implements Controller {
     }
 
     private void applyHeaderFiatPaymentMethod() {
-        List<FiatPaymentMethod> bitcoinPaymentMethods = model.getFiatPaymentMethods();
+        List<? extends PaymentMethod<?>> bitcoinPaymentMethods = model.getFiatPaymentMethods();
         String bitcoinPaymentMethodsString;
         if (model.isCreateOfferMode()) {
             if (bitcoinPaymentMethods.size() > 2) {

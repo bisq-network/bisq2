@@ -70,6 +70,14 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         }
     }
 
+    public static Monetary fromFaceValue(double faceValue, String code) {
+        if (Asset.isFiat(code)) {
+            return Fiat.fromFaceValue(faceValue, code);
+        } else {
+            return Coin.fromFaceValue(faceValue, code);
+        }
+    }
+
     /**
      * Unique ID in case an altcoin uses a code used by a fiat currency (happened in the past)
      */

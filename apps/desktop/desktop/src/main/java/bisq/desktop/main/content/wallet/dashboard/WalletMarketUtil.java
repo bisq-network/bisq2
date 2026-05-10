@@ -20,7 +20,7 @@ package bisq.desktop.main.content.wallet.dashboard;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.presentation.formatters.AmountFormatter;
 
 public class WalletMarketUtil {
@@ -31,11 +31,11 @@ public class WalletMarketUtil {
             double value = btcBalance.asDouble() / marketPrice.getPriceQuote().asDouble();
             Coin coin = Coin.fromFaceValue(value, code);
             return AmountFormatter.formatAmount(coin, useLowPrecisionForCoin);
-        } else if (market.isBtcFiatMarket()) {
+        } else if (market.isBtcFiatMarket() || market.isBtcStableCoinMarket()) {
             String code = market.getQuoteCurrencyCode();
             double value = btcBalance.asDouble() * marketPrice.getPriceQuote().asDouble();
-            Fiat fiat = Fiat.fromFaceValue(value, code);
-            return AmountFormatter.formatAmount(fiat, true);
+            Monetary quoteSideAmount = Monetary.fromFaceValue(value, code);
+            return AmountFormatter.formatAmount(quoteSideAmount, true);
         } else {
             throw new IllegalStateException("Market not supported for conversion. market=" + market);
         }
@@ -44,7 +44,7 @@ public class WalletMarketUtil {
     static String getMarketCode(Market market) {
         if (market.isXmr()) {
             return market.getBaseCurrencyCode();
-        } else if (market.isBtcFiatMarket()) {
+        } else if (market.isBtcFiatMarket() || market.isBtcStableCoinMarket()) {
             return market.getQuoteCurrencyCode();
         } else {
             throw new IllegalStateException("Market not supported for conversion. market=" + market);

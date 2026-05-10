@@ -18,7 +18,7 @@
 package bisq.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.util.StringUtils;
@@ -58,11 +58,11 @@ public class BisqEasyServiceUtil {
                                                                    Direction direction,
                                                                    Market market,
                                                                    List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                                                                   List<FiatPaymentMethod> fiatPaymentMethods,
+                                                                   List<? extends PaymentMethod<?>> quoteSidePaymentMethods,
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
         String bitcoinPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
-        String fiatPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
+        String fiatPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(quoteSidePaymentMethods);
         return createOfferBookMessageFromPeerPerspective(messageOwnerNickName,
                 marketPriceService,
                 direction,

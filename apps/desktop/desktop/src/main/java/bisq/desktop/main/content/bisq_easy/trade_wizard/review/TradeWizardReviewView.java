@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
@@ -60,7 +60,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     @Nullable
     private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
     @Nullable
-    private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
+    private ComboBox<PaymentMethod<?>> fiatPaymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
 
@@ -265,12 +265,12 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethodsComboBox);
             fiatPaymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(FiatPaymentMethod method) {
+                public String toString(PaymentMethod<?> method) {
                     return method != null ? method.getDisplayString() : "";
                 }
 
                 @Override
-                public FiatPaymentMethod fromString(String string) {
+                public PaymentMethod<?> fromString(String string) {
                     return null;
                 }
             });

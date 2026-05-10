@@ -104,6 +104,7 @@ public final class StableCoin extends DigitalAsset {
         TRON("Tron"),
         BNB_SMART_CHAIN("BNB Smart Chain"),
         SOLANA("Solana"),
+        POLYGON("Polygon"),
         BITCOIN("Bitcoin"),
         TAPROOT_ASSETS("Taproot Assets"),
         LIQUID("Liquid Bitcoin");

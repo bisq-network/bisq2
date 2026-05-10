@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -151,7 +151,7 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
+    public void setFiatPaymentMethodSpec(PaymentMethodSpec<?> spec) {
         if (spec != null) {
             model.setFiatPaymentMethodSpec(spec);
             model.setFiatPaymentMethod(spec.getShortDisplayString());
@@ -190,7 +190,7 @@ public class TakeOfferReviewController implements Controller {
         Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
+        PaymentMethodSpec<?> fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
