@@ -32,7 +32,6 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -319,7 +318,7 @@ public class TradeRestApi extends RestApiBase {
                                                 String userName) throws Exception {
         long quoteSideAmount = trade.getContract().getQuoteSideAmount();
         String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
-        String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Monetary.from(quoteSideAmount, quoteCurrencyCode));
         String encoded = Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage", userName, formattedQuoteAmount);
         bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.sellerConfirmFiatReceipt(trade);

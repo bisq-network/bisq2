@@ -144,9 +144,11 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setFiatSubtitleLabel(model.getDirection().isBuy()
-                ? Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
-                : Res.get("bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
+        boolean isStableCoinMarket = model.getMarket().get().isBtcStableCoinMarket();
+        String fiatSubKey = model.getDirection().isBuy()
+                ? (isStableCoinMarket ? "bisqEasy.tradeWizard.paymentMethods.stableCoin.subTitle.buyer" : "bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.buyer")
+                : (isStableCoinMarket ? "bisqEasy.tradeWizard.paymentMethods.stableCoin.subTitle.seller" : "bisqEasy.tradeWizard.paymentMethods.fiat.subTitle.seller");
+        model.setFiatSubtitleLabel(Res.get(fiatSubKey, model.getMarket().get().getQuoteCurrencyCode()));
         model.setBitcoinSubtitleLabel(model.getDirection().isBuy()
                 ? Res.get("bisqEasy.tradeWizard.paymentMethods.bitcoin.subTitle.buyer")
                 : Res.get("bisqEasy.tradeWizard.paymentMethods.bitcoin.subTitle.seller"));
@@ -170,12 +172,14 @@ public class TradeWizardPaymentMethodsController implements Controller {
                     if (name.isEmpty()) {
                         return;
                     }
-                    FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
-                    boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
+                    PaymentMethod<?> paymentMethod = StableCoinPaymentMethodUtil.findPaymentMethod(name)
+                            .<PaymentMethod<?>>map(m -> m)
+                            .orElseGet(() -> FiatPaymentMethodUtil.getPaymentMethod(name));
+                    boolean isCustomPaymentMethod = paymentMethod.isCustomPaymentMethod();
                     if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
-                        maybeAddFiatPaymentMethod(fiatPaymentMethod);
-                    } else if (isCustomPaymentMethod) {
-                        maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
+                        maybeAddFiatPaymentMethod(paymentMethod);
+                    } else if (isCustomPaymentMethod && paymentMethod instanceof FiatPaymentMethod customFiat) {
+                        maybeAddCustomFiatPaymentMethod(customFiat);
                     }
                 }));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_BITCOIN_METHODS)

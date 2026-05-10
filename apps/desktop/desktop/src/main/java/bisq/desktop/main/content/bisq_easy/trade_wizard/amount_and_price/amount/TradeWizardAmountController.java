@@ -578,7 +578,7 @@ public class TradeWizardAmountController implements Controller {
 
         applyMaxAmountBasedOnReputation();
 
-        Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
+        Monetary defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
         Monetary defaultFiatAmount = MarketBasedAmountConversion.usdToFiat(marketPriceService, market, defaultUsdAmount)
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();

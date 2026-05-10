@@ -117,4 +117,39 @@ class StableCoinPaymentRailTest {
             assertNotNull(rail.getStableCoin(), "Rail " + rail.name() + " should have non-null StableCoin");
         }
     }
+
+    @Test
+    @DisplayName("usdc polygon exhaustive properties")
+    void usdc_polygon_exhaustive_properties() {
+        StableCoinPaymentRail rail = StableCoinPaymentRail.USDC_POLYGON;
+        StableCoin coin = rail.getStableCoin();
+
+        assertEquals("USDC", coin.getCode());
+        assertEquals("USD Coin", coin.getName());
+        assertEquals(StableCoin.Network.POLYGON, coin.getNetwork());
+        assertEquals(StableCoin.Issuer.CIRCLE, coin.getIssuer());
+        assertEquals(TradeDuration.HOURS_24, rail.getTradeDuration());
+        assertNotNull(rail.name());
+        assertEquals("USDC_POLYGON", rail.name());
+    }
+
+    @Test
+    @DisplayName("usdc polygon payment method display string not empty")
+    void usdc_polygon_payment_method_display_string() {
+        StableCoinPaymentMethod method = StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON);
+        assertNotNull(method.getDisplayString());
+        assertFalse(method.getDisplayString().isEmpty());
+        assertFalse(method.isCustomPaymentMethod());
+    }
+
+    @Test
+    @DisplayName("all rails have non-empty payment rail name via payment method")
+    void all_rails_have_non_empty_payment_rail_name() {
+        for (StableCoinPaymentRail rail : StableCoinPaymentRail.values()) {
+            StableCoinPaymentMethod method = StableCoinPaymentMethod.fromPaymentRail(rail);
+            assertNotNull(method.getPaymentRailName());
+            assertFalse(method.getPaymentRailName().isEmpty(),
+                    "Rail " + rail.name() + " should have non-empty payment rail name");
+        }
+    }
 }

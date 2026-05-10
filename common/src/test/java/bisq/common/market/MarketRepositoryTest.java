@@ -182,4 +182,27 @@ class MarketRepositoryTest {
         List<Market> all = MarketRepository.getAllBisqEasyMarkets();
         assertTrue(all.containsAll(MarketRepository.getAllFiatMarkets()));
     }
+
+    @Test
+    @DisplayName("find any market by market codes returns BTC/USDC")
+    void find_any_market_by_market_codes_returns_btc_usdc() {
+        assertTrue(MarketRepository.findAnyMarketByMarketCodes("BTC/USDC").isPresent(),
+                "getAllMarkets should include BTC/USDC so findAnyMarketByMarketCodes finds it");
+    }
+
+    @Test
+    @DisplayName("all markets includes stablecoin markets")
+    void all_markets_includes_stablecoin_markets() {
+        List<Market> all = MarketRepository.getAllMarkets();
+        assertTrue(all.stream().anyMatch(Market::isBtcStableCoinMarket),
+                "getAllMarkets should include stablecoin markets");
+    }
+
+    @Test
+    @DisplayName("btc usdc market is not fiat market")
+    void btc_usdc_market_is_not_fiat_market() {
+        Market market = MarketRepository.getBtcUsdcMarket();
+        assertFalse(market.isBtcFiatMarket());
+        assertTrue(market.isBtcStableCoinMarket());
+    }
 }

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.components.offer.amount_selection;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -610,8 +611,8 @@ public class AmountSelectionController implements Controller {
         } else {
             Monetary minRangeMonetary = model.getMinRangeMonetary().get();
             Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-            boolean isMinRangeMonetaryFiat = Asset.isFiat(minRangeMonetary.getCode());
-            boolean isMaxRangeMonetaryFiat = Asset.isFiat(maxRangeMonetary.getCode());
+            boolean isMinRangeMonetaryFiat = Asset.isFiat(minRangeMonetary.getCode()) || StableCoin.isStableCoin(minRangeMonetary.getCode());
+            boolean isMaxRangeMonetaryFiat = Asset.isFiat(maxRangeMonetary.getCode()) || StableCoin.isStableCoin(maxRangeMonetary.getCode());
 
             Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toBaseSideMonetary(minRangeMonetary);
             model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);

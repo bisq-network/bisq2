@@ -330,7 +330,10 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         reviewDataDisplay.setToReceiveMaxOrFixedAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
-        reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
+        String paymentMethodDescKey = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket()
+                ? "bisqEasy.tradeWizard.review.paymentMethodDescription.stableCoin"
+                : "bisqEasy.tradeWizard.review.paymentMethodDescription.fiat";
+        reviewDataDisplay.setFiatPaymentMethodDescription(Res.get(paymentMethodDescKey).toUpperCase());
         reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
         reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
         reviewDataDisplay.setPriceDescription(Res.get("bisqEasy.takeOffer.review.price.price").toUpperCase());

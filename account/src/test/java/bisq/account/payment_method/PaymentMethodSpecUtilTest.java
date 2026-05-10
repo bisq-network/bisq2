@@ -196,4 +196,50 @@ class PaymentMethodSpecUtilTest {
         assertThrows(IllegalArgumentException.class,
                 () -> PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of(xmr)));
     }
+
+    @Test
+    @DisplayName("stablecoin payment rail name roundtrip via cookie string")
+    void stablecoin_payment_rail_name_roundtrip() {
+        StableCoinPaymentMethod usdcPolygon = StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON);
+        String railName = usdcPolygon.getPaymentRailName();
+        assertEquals("USDC_POLYGON", railName);
+
+        StableCoinPaymentRail restored = StableCoinPaymentRail.valueOf(railName);
+        StableCoinPaymentMethod restoredMethod = StableCoinPaymentMethod.fromPaymentRail(restored);
+        assertEquals(usdcPolygon.getPaymentRailName(), restoredMethod.getPaymentRailName());
+    }
+
+    @Test
+    @DisplayName("fiat payment rail name roundtrip via cookie string")
+    void fiat_payment_rail_name_roundtrip() {
+        FiatPaymentMethod sepa = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        String railName = sepa.getPaymentRailName();
+        assertEquals("SEPA", railName);
+
+        FiatPaymentRail restored = FiatPaymentRail.valueOf(railName);
+        FiatPaymentMethod restoredMethod = FiatPaymentMethod.fromPaymentRail(restored);
+        assertEquals(sepa.getPaymentRailName(), restoredMethod.getPaymentRailName());
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs empty list returns empty")
+    void create_quote_side_specs_empty_list() {
+        List<PaymentMethodSpec<?>> specs = PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(List.of());
+        assertTrue(specs.isEmpty());
+    }
+
+    @Test
+    @DisplayName("create quote side payment method specs preserves order")
+    void create_quote_side_specs_preserves_order() {
+        StableCoinPaymentMethod usdcPolygon = StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON);
+        FiatPaymentMethod sepa = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        FiatPaymentMethod zelle = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
+
+        List<PaymentMethodSpec<?>> specs = PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(
+                List.of(usdcPolygon, sepa, zelle));
+        assertEquals(3, specs.size());
+        assertInstanceOf(StableCoinPaymentMethodSpec.class, specs.get(0));
+        assertInstanceOf(FiatPaymentMethodSpec.class, specs.get(1));
+        assertInstanceOf(FiatPaymentMethodSpec.class, specs.get(2));
+    }
 }

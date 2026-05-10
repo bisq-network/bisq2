@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;
@@ -141,14 +142,14 @@ public final class Coin extends Monetary {
         // We add a `c` as prefix for cryptocurrencies to avoid that we get a collusion with the code. 
         // It happened in the past that altcoins used a fiat code.
 
-        super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);
+        super(code + " [crypto]", value, code, precision, deriveLowPrecision(code));
     }
 
     /**
      * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
      */
     private Coin(double faceValue, String code, int precision) {
-        super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
+        super(code + " [crypto]", faceValue, code, precision, deriveLowPrecision(code));
     }
 
     public Coin(String id, long value, String code, int precision, int lowPrecision) {
@@ -196,6 +197,12 @@ public final class Coin extends Monetary {
         if (code.equals("BSQ")) return 2;
         if (code.equals("USDC")) return 6;
         return 8;
+    }
+
+    // Stablecoins display like fiat (2 decimals) even though stored with higher precision
+    private static int deriveLowPrecision(String code) {
+        if (code.equals("BSQ") || StableCoin.isStableCoin(code)) return 2;
+        return 4;
     }
 
     public Coin round(int roundPrecision) {

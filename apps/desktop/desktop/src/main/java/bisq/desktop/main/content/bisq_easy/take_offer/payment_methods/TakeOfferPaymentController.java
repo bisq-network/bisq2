@@ -57,9 +57,16 @@ public class TakeOfferPaymentController implements Controller {
         model.setMarket(bisqEasyOffer.getMarket());
         model.getOfferedBitcoinPaymentMethodSpecs().setAll(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        boolean isStableCoin = bisqEasyOffer.getMarket().isBtcStableCoinMarket();
+        String fiatOrStableCoinBuyerKey = isStableCoin
+                ? "bisqEasy.takeOffer.paymentMethods.subtitle.stableCoin.buyer"
+                : "bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer";
+        String fiatOrStableCoinSellerKey = isStableCoin
+                ? "bisqEasy.takeOffer.paymentMethods.subtitle.stableCoin.seller"
+                : "bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller";
         model.setFiatSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode())
-                : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+                ? Res.get(fiatOrStableCoinBuyerKey, bisqEasyOffer.getMarket().getQuoteCurrencyCode())
+                : Res.get(fiatOrStableCoinSellerKey, bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
         model.setBitcoinSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
                 ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.buyer")
                 : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.seller"));
@@ -97,11 +104,18 @@ public class TakeOfferPaymentController implements Controller {
         if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
             model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
         }
-        model.setHeadline(model.isFiatMethodVisible() && model.isBitcoinMethodVisible()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin")
-                : model.isFiatMethodVisible()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiat")
-                : Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
+        boolean isStableCoinMarket = model.getMarket().isBtcStableCoinMarket();
+        if (model.isFiatMethodVisible() && model.isBitcoinMethodVisible()) {
+            model.setHeadline(Res.get(isStableCoinMarket
+                    ? "bisqEasy.takeOffer.paymentMethods.headline.stableCoinAndBitcoin"
+                    : "bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin"));
+        } else if (model.isFiatMethodVisible()) {
+            model.setHeadline(Res.get(isStableCoinMarket
+                    ? "bisqEasy.takeOffer.paymentMethods.headline.stableCoin"
+                    : "bisqEasy.takeOffer.paymentMethods.headline.fiat"));
+        } else {
+            model.setHeadline(Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
+        }
 
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD)
                 .ifPresent(name -> {

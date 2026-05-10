@@ -99,7 +99,10 @@ public class SellerState2b extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getTrade().getShortId()));
-            fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
+            String receivedKey = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket()
+                    ? "bisqEasy.tradeState.info.seller.phase2b.stableCoinReceivedButton"
+                    : "bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton";
+            fiatReceivedButton.setText(Res.get(receivedKey, model.getFormattedQuoteAmount()));
             fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
         }
 

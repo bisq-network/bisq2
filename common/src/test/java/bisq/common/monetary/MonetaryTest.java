@@ -316,4 +316,75 @@ public class MonetaryTest {
         assertInstanceOf(Coin.class, usdc);
         assertEquals(100.0, Monetary.toFaceValue(usdc, 2), 0.0001);
     }
+
+    @Test
+    @DisplayName("usdc zero value")
+    void usdc_zero_value() {
+        Monetary usdc = Monetary.from(0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(0, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("usdc max reasonable amount")
+    void usdc_max_reasonable_amount() {
+        Monetary usdc = Monetary.fromFaceValue(1_000_000.0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(1_000_000_000_000L, usdc.getValue());
+        assertEquals(1_000_000.0, Monetary.toFaceValue(usdc, 2), 0.01);
+    }
+
+    @Test
+    @DisplayName("usdc precision boundary at 6 decimals")
+    void usdc_precision_boundary() {
+        Coin usdc = Coin.fromFaceValue(0.000001, "USDC");
+        assertEquals(1, usdc.getValue());
+        assertEquals(6, usdc.getPrecision());
+    }
+
+    @Test
+    @DisplayName("usdc fromFaceValue precision truncation")
+    void usdc_face_value_precision_truncation() {
+        Coin usdc = Coin.fromFaceValue(1.1234567, "USDC");
+        assertEquals(1_123_456, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("monetary from returns Coin for USDC and Fiat for USD")
+    void monetary_from_type_dispatch() {
+        Monetary usdc = Monetary.from(1000000, "USDC");
+        Monetary usd = Monetary.from(10000, "USD");
+        assertInstanceOf(Coin.class, usdc);
+        assertInstanceOf(Fiat.class, usd);
+        assertEquals("USDC", usdc.getCode());
+        assertEquals("USD", usd.getCode());
+    }
+
+    @Test
+    @DisplayName("btc usdc price quote")
+    void btc_usdc_price_quote() {
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
+        Coin usdc = Coin.fromFaceValue(100000.0, "USDC");
+        PriceQuote priceQuote = PriceQuote.from(btc, usdc);
+        assertEquals("BTC/USDC", priceQuote.getMarket().getMarketCodes());
+        assertEquals("USDC", priceQuote.getQuoteSideMonetary().getCode());
+        assertEquals("BTC", priceQuote.getBaseSideMonetary().getCode());
+        assertTrue(priceQuote.getValue() > 0);
+    }
+
+    @Test
+    @DisplayName("usdc low precision is 2 for display like fiat")
+    void usdc_low_precision_is_two() {
+        Coin usdc = Coin.fromFaceValue(1000.50, "USDC");
+        assertEquals(6, usdc.getPrecision());
+        assertEquals(2, usdc.getLowPrecision());
+    }
+
+    @Test
+    @DisplayName("btc low precision is 4 unchanged")
+    void btc_low_precision_unchanged() {
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
+        assertEquals(8, btc.getPrecision());
+        assertEquals(4, btc.getLowPrecision());
+    }
 }

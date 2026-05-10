@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
@@ -74,8 +74,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             offerListGreyIcon, offerListCollapsedWhiteIcon, offerListGreenIcon, offerListExpandedWhiteIcon;
     private final DropdownMenu paymentsFilterMenu;
     private final SplitButton offerDirectionFilterMenu;
-    private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
-    private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
+    private final ListChangeListener<PaymentMethod<?>> availablePaymentsChangeListener;
+    private final SetChangeListener<PaymentMethod<?>> selectedPaymentsChangeListener;
     private final CheckBox showOnlyMyMessages;
     private final VBox content;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
@@ -571,9 +571,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final class PaymentMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        private final Optional<FiatPaymentMethod> paymentMethod;
+        private final Optional<PaymentMethod<?>> paymentMethod;
 
-        private PaymentMenuItem(FiatPaymentMethod paymentMethod, Label displayLabel) {
+        private PaymentMenuItem(PaymentMethod<?> paymentMethod, Label displayLabel) {
             super("check-white", "check-white", displayLabel);
 
             this.paymentMethod = Optional.ofNullable(paymentMethod);

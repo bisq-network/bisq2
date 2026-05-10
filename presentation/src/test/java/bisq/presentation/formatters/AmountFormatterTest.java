@@ -19,6 +19,7 @@ package bisq.presentation.formatters;
 
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AmountFormatterTest {
 
@@ -69,5 +71,52 @@ public class AmountFormatterTest {
 
         assertEquals(AmountFormatter.formatAmountWithCode(usd, true), AmountFormatter.formatBaseAmountWithCode(usd));
         assertEquals(AmountFormatter.formatAmountWithCode(usd, true), AmountFormatter.formatQuoteAmountWithCode(usd));
+    }
+
+    @Test
+    @DisplayName("USDC formats with 2 decimals like fiat, not 6 like generic crypto")
+    void usdc_formats_with_two_decimals() {
+        Coin usdc = Coin.fromFaceValue(1000.50, "USDC");
+
+        assertEquals("1000.50", AmountFormatter.formatQuoteAmount(usdc));
+        assertEquals("1000.50 USDC", AmountFormatter.formatQuoteAmountWithCode(usdc));
+
+        assertEquals(2, usdc.getLowPrecision());
+    }
+
+    @Test
+    @DisplayName("USDC formatAmountByMonetaryType uses low precision like fiat")
+    void usdc_format_amount_by_monetary_type_uses_low_precision() {
+        Coin usdc = Coin.fromFaceValue(42.50, "USDC");
+        Fiat usd = Fiat.fromFaceValue(42.50, "USD");
+
+        String usdcFormatted = AmountFormatter.formatAmountByMonetaryType(usdc);
+        String usdFormatted = AmountFormatter.formatAmountByMonetaryType(usd);
+
+        assertEquals("42.50", usdcFormatted);
+        assertEquals("42.50", usdFormatted);
+    }
+
+    @Test
+    @DisplayName("USDC full precision still available when explicitly requested")
+    void usdc_full_precision_available_when_requested() {
+        Coin usdc = Coin.fromFaceValue(1000.123456, "USDC");
+        assertEquals("1000.123456", AmountFormatter.formatAmount(usdc, Locale.US, false));
+    }
+
+    @Test
+    @DisplayName("Monetary.from dispatches USDC to Coin with correct lowPrecision")
+    void monetary_from_usdc_has_correct_low_precision() {
+        Monetary usdc = Monetary.from(1_000_000, "USDC");
+        assertEquals(2, usdc.getLowPrecision());
+        assertEquals(6, usdc.getPrecision());
+    }
+
+    @Test
+    @DisplayName("BTC formatting unchanged -- still shows full precision")
+    void btc_formatting_unchanged() {
+        Coin btc = Coin.asBtcFromFaceValue(1.12345678);
+        String formatted = AmountFormatter.formatQuoteAmount(btc);
+        assertTrue(formatted.contains("1234"), "BTC should still show full 8-decimal precision");
     }
 }

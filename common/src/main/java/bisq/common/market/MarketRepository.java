@@ -156,6 +156,7 @@ public class MarketRepository {
         list.add(getDefaultBtcFiatMarket());
         list.addAll(getMajorMarkets());
         list.addAll(getMinorMarkets());
+        list.addAll(getStableCoinMarkets());
         return list.stream().distinct().collect(Collectors.toList());
     }
 

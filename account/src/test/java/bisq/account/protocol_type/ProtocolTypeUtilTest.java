@@ -51,4 +51,30 @@ class ProtocolTypeUtilTest {
         List<TradeProtocolType> types = ProtocolTypeUtil.getProtocols(XMR_BTC);
         assertFalse(types.contains(TradeProtocolType.BISQ_EASY));
     }
+
+    @Test
+    @DisplayName("btc usdt market supports bisq easy if usdt is stablecoin")
+    void btc_usdt_market_supports_bisq_easy() {
+        Market btcUsdt = new Market("BTC", "USDT", "Bitcoin", "Tether USD");
+        List<TradeProtocolType> types = ProtocolTypeUtil.getProtocols(btcUsdt);
+        assertTrue(types.contains(TradeProtocolType.BISQ_EASY),
+                "BTC/USDT should support Bisq Easy if USDT is registered as stablecoin");
+    }
+
+    @Test
+    @DisplayName("non-btc base fiat market does not support bisq easy")
+    void non_btc_base_fiat_market_does_not_support_bisq_easy() {
+        Market ethUsd = new Market("ETH", "USD", "Ethereum", "US Dollar");
+        List<TradeProtocolType> types = ProtocolTypeUtil.getProtocols(ethUsd);
+        assertFalse(types.contains(TradeProtocolType.BISQ_EASY),
+                "Non-BTC base market should not support Bisq Easy");
+    }
+
+    @Test
+    @DisplayName("protocols list always contains mu sig for any market")
+    void protocols_always_contains_mu_sig() {
+        assertTrue(ProtocolTypeUtil.getProtocols(BTC_USD).contains(TradeProtocolType.MU_SIG));
+        assertTrue(ProtocolTypeUtil.getProtocols(BTC_USDC).contains(TradeProtocolType.MU_SIG));
+        assertTrue(ProtocolTypeUtil.getProtocols(XMR_BTC).contains(TradeProtocolType.MU_SIG));
+    }
 }

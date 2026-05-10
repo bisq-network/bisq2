@@ -20,9 +20,13 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPrice;
@@ -89,17 +93,23 @@ import static org.mockito.Mockito.when;
 class BisqEasyTakeOfferRequestHandlerTest {
 
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
+    private static final Market USDC_MARKET = new Market("BTC", "USDC", "Bitcoin", "USD Coin");
     private static final long TAKE_OFFER_DATE = 1_700_000_000_000L;
     private static Object previousUserProfileServiceInstance;
     private static final PriceQuote PRICE_60K = PriceQuote.fromFiatPrice(60_000, "USD");
+    // BTC/USDC price: 60,000 USDC per BTC. USDC has 6-decimal precision → 60_000_000_000
+    private static final PriceQuote PRICE_60K_USDC = PriceQuote.fromPrice(60_000.0, "BTC", "USDC");
     // At $60,000/BTC: 0.001 BTC (100_000 sat) costs $60 (600_000 in 4-decimal fiat units)
     private static final long CONSISTENT_BASE = 100_000L;
     private static final long CONSISTENT_QUOTE = 600_000L;
+    // USDC: 0.001 BTC at 60,000 = 60 USDC → 60_000_000 in 6-decimal units
+    private static final long CONSISTENT_USDC_QUOTE = 60_000_000L;
 
     private ServiceProvider serviceProvider;
     private BisqEasyTradeService tradeService;
     private BisqEasyMediationRequestService mediationRequestService;
     private MarketPriceService marketPriceService;
+    private ObservableHashMap<Market, MarketPrice> priceMap;
 
     private NetworkId makerNetworkId;
     private NetworkId takerNetworkId;
@@ -179,7 +189,7 @@ class BisqEasyTakeOfferRequestHandlerTest {
 
         MarketPrice marketPrice = new MarketPrice(PRICE_60K, System.currentTimeMillis(),
                 new MarketPriceProviderInfo(MarketPriceProvider.BISQAGGREGATE));
-        ObservableHashMap<Market, MarketPrice> priceMap = new ObservableHashMap<>();
+        priceMap = new ObservableHashMap<>();
         priceMap.put(MARKET, marketPrice);
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(priceMap);
         when(marketPriceService.findMarketPrice(MARKET)).thenReturn(Optional.of(marketPrice));
@@ -316,6 +326,111 @@ class BisqEasyTakeOfferRequestHandlerTest {
         assertDoesNotThrow(() -> handler.verify(message),
                 "verify() should pass even with amounts exceeding reputation limits — " +
                 "reputation enforcement is not part of the protocol handler");
+    }
+
+    // ---- BTC/USDC (stablecoin) integration tests ----
+
+    @Test
+    @DisplayName("BTC/USDC: valid take offer request passes all verify checks")
+    void usdc_valid_take_offer_request_passes() {
+        setupUsdcMarketPrice();
+        BisqEasyOffer usdcOffer = createUsdcOffer(makerNetworkId);
+        stubTradeServiceWithOffer(usdcOffer);
+
+        BisqEasyContract contract = createUsdcContract(CONSISTENT_BASE, CONSISTENT_USDC_QUOTE, usdcOffer);
+        BisqEasyTrade trade = new BisqEasyTrade(contract, false, false, makerIdentity, usdcOffer, takerNetworkId, makerNetworkId);
+        BisqEasyTakeOfferRequestHandler handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        BisqEasyTakeOfferRequest message = createMessage(contract, trade);
+
+        assertDoesNotThrow(() -> handler.verify(message));
+    }
+
+    @Test
+    @DisplayName("BTC/USDC: price deviation rejects taker with too-low BTC amount")
+    void usdc_price_deviation_rejects_too_low_btc() {
+        setupUsdcMarketPrice();
+        BisqEasyOffer usdcOffer = createUsdcOffer(makerNetworkId);
+        stubTradeServiceWithOffer(usdcOffer);
+
+        long tooLowBase = (long) (CONSISTENT_BASE * 0.85);
+        BisqEasyContract contract = createUsdcContract(tooLowBase, CONSISTENT_USDC_QUOTE, usdcOffer);
+        BisqEasyTrade trade = new BisqEasyTrade(contract, true, false, makerIdentity, usdcOffer, takerNetworkId, makerNetworkId);
+        BisqEasyTakeOfferRequestHandler handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        BisqEasyTakeOfferRequest message = createMessage(contract, trade);
+
+        TradeProtocolException ex = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+        assertEquals(TradeProtocolFailure.PRICE_DEVIATION, ex.getTradeProtocolFailure());
+    }
+
+    @Test
+    @DisplayName("BTC/USDC: stablecoin payment method not in offer throws")
+    void usdc_payment_method_not_in_offer_throws() {
+        setupUsdcMarketPrice();
+        BisqEasyOffer usdcOffer = createUsdcOffer(makerNetworkId);
+        stubTradeServiceWithOffer(usdcOffer);
+
+        // Offer has USDC_POLYGON but contract specifies SEPA (fiat) — mismatch
+        BisqEasyContract contract = new BisqEasyContract(
+                TAKE_OFFER_DATE, usdcOffer, takerNetworkId, CONSISTENT_BASE, CONSISTENT_USDC_QUOTE,
+                new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
+                new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
+                Optional.of(mediator), new FixPriceSpec(PRICE_60K_USDC), CONSISTENT_USDC_QUOTE);
+
+        BisqEasyTrade trade = new BisqEasyTrade(contract, false, false, makerIdentity, usdcOffer, takerNetworkId, makerNetworkId);
+        BisqEasyTakeOfferRequestHandler handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        BisqEasyTakeOfferRequest message = createMessage(contract, trade);
+
+        assertThrows(IllegalArgumentException.class, () -> handler.verify(message));
+    }
+
+    private void setupUsdcMarketPrice() {
+        MarketPrice usdcMarketPrice = new MarketPrice(PRICE_60K_USDC, System.currentTimeMillis(),
+                new MarketPriceProviderInfo(MarketPriceProvider.BISQAGGREGATE));
+        priceMap.put(USDC_MARKET, usdcMarketPrice);
+        when(marketPriceService.findMarketPrice(USDC_MARKET)).thenReturn(Optional.of(usdcMarketPrice));
+        when(marketPriceService.findMarketPriceQuote(USDC_MARKET)).thenReturn(Optional.of(PRICE_60K_USDC));
+    }
+
+    private BisqEasyOffer createUsdcOffer(NetworkId makerNid) {
+        return new BisqEasyOffer(
+                "offer-usdc-test",
+                System.currentTimeMillis(),
+                makerNid,
+                Direction.SELL,
+                USDC_MARKET,
+                new BaseSideFixedAmountSpec(CONSISTENT_BASE),
+                new FixPriceSpec(PRICE_60K_USDC),
+                List.of(TradeProtocolType.BISQ_EASY),
+                List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
+                List.of(new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON))),
+                List.of(),
+                List.of("en"),
+                0,
+                "1.0.0",
+                "1.0.0"
+        );
+    }
+
+    private BisqEasyContract createUsdcContract(long baseSideAmount, long quoteSideAmount, BisqEasyOffer usdcOffer) {
+        return new BisqEasyContract(
+                TAKE_OFFER_DATE, usdcOffer, takerNetworkId,
+                baseSideAmount, quoteSideAmount,
+                new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
+                new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON)),
+                Optional.of(mediator), new FixPriceSpec(PRICE_60K_USDC), CONSISTENT_USDC_QUOTE);
+    }
+
+    private void stubTradeServiceWithOffer(BisqEasyOffer offerToStub) {
+        BisqEasyContract stubContract = new BisqEasyContract(
+                TAKE_OFFER_DATE, offerToStub, takerNetworkId, CONSISTENT_BASE, CONSISTENT_QUOTE,
+                new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
+                new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
+                Optional.of(mediator), new FixPriceSpec(PRICE_60K), CONSISTENT_QUOTE);
+        BisqEasyTrade existingTrade = new BisqEasyTrade(
+                stubContract, false, false, makerIdentity, offerToStub, takerNetworkId, makerNetworkId);
+        ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
+        trades.add(existingTrade);
+        when(tradeService.getTrades()).thenReturn(trades);
     }
 
     private BisqEasyContract createContract(long baseSideAmount, long quoteSideAmount) {
