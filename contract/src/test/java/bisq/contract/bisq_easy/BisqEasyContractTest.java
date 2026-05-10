@@ -25,6 +25,9 @@ import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
@@ -33,6 +36,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.keys.KeyGeneration;
@@ -47,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BisqEasyContractTest {
@@ -174,6 +179,91 @@ class BisqEasyContractTest {
                 new MarketPriceSpec(),
                 6_000_000L
         ));
+    }
+
+    @Test
+    @DisplayName("getPriceQuote derived from amounts is consistent with FixPriceSpec")
+    void get_price_quote_consistent_with_fix_price_spec() {
+        // At $60,000/BTC: 0.001 BTC (100_000 sat) = $60 (600_000 fiat units at precision 4)
+        PriceQuote fixedPrice = PriceQuote.fromFiatPrice(60_000, "USD");
+        long baseSideAmount = 100_000L;
+        long quoteSideAmount = 600_000L;
+
+        BisqEasyOffer offer = createOfferWithMarket(
+                new Market("BTC", "USD", "Bitcoin", "US Dollar"),
+                new FixPriceSpec(fixedPrice));
+        BisqEasyContract contract = new BisqEasyContract(
+                System.currentTimeMillis(), offer, createNetworkId(4001),
+                baseSideAmount, quoteSideAmount,
+                createBtcPaymentMethodSpec(), createFiatPaymentMethodSpec(),
+                Optional.empty(), new FixPriceSpec(fixedPrice), fixedPrice.getValue());
+
+        // Derive the implied price from the contract amounts
+        Coin baseMoney = Coin.fromValue(baseSideAmount, "BTC");
+        Fiat quoteMoney = Fiat.fromValue(quoteSideAmount, "USD");
+        PriceQuote impliedPrice = PriceQuote.from(baseMoney, quoteMoney);
+
+        assertThat(impliedPrice.getValue()).isEqualTo(fixedPrice.getValue());
+    }
+
+    @Test
+    @DisplayName("inconsistent amounts can be constructed — no validation in constructor")
+    void inconsistent_amounts_accepted_by_constructor() {
+        // Amounts that don't match the price: $60k price but with amounts implying $120k
+        PriceQuote fixedPrice = PriceQuote.fromFiatPrice(60_000, "USD");
+        long baseSideAmount = 100_000L;
+        long inconsistentQuote = 1_200_000L; // double the correct value
+
+        BisqEasyOffer offer = createOfferWithMarket(
+                new Market("BTC", "USD", "Bitcoin", "US Dollar"),
+                new FixPriceSpec(fixedPrice));
+
+        // Constructor does NOT validate consistency between amounts and priceSpec
+        assertDoesNotThrow(() -> new BisqEasyContract(
+                System.currentTimeMillis(), offer, createNetworkId(4002),
+                baseSideAmount, inconsistentQuote,
+                createBtcPaymentMethodSpec(), createFiatPaymentMethodSpec(),
+                Optional.empty(), new FixPriceSpec(fixedPrice), fixedPrice.getValue()));
+    }
+
+    @Test
+    @DisplayName("implied price deviation between amounts and priceSpec is measurable")
+    void implied_price_deviation_measurable() {
+        PriceQuote fixedPrice = PriceQuote.fromFiatPrice(60_000, "USD");
+        long baseSideAmount = 100_000L;
+        long slightlyOffQuote = 630_000L; // implies $63k instead of $60k
+
+        Coin baseMoney = Coin.fromValue(baseSideAmount, "BTC");
+        Fiat quoteMoney = Fiat.fromValue(slightlyOffQuote, "USD");
+        PriceQuote impliedPrice = PriceQuote.from(baseMoney, quoteMoney);
+
+        double deviation = Math.abs(impliedPrice.getValue() - fixedPrice.getValue())
+                / (double) fixedPrice.getValue();
+        assertThat(deviation)
+                .as("5%% deviation between implied ($63k) and fixed ($60k) price")
+                .isGreaterThan(0.04)
+                .isLessThan(0.06);
+    }
+
+    private BisqEasyOffer createOfferWithMarket(Market market, PriceSpec priceSpec) {
+        NetworkId makerNetworkId = createNetworkId(1001);
+        return new BisqEasyOffer(
+                "offer-test-consistency",
+                System.currentTimeMillis(),
+                makerNetworkId,
+                Direction.BUY,
+                market,
+                new BaseSideFixedAmountSpec(100_000L),
+                priceSpec,
+                List.of(TradeProtocolType.BISQ_EASY),
+                List.of(createBtcPaymentMethodSpec()),
+                List.of(createFiatPaymentMethodSpec()),
+                List.of(),
+                List.of("en"),
+                0,
+                "1.0.0",
+                "1.0.0"
+        );
     }
 
     private BisqEasyOffer createOffer() {

@@ -286,6 +286,28 @@ class BisqEasyTakeOfferRequestHandlerTest {
         assertDoesNotThrow(() -> handler.verify(message));
     }
 
+    /**
+     * Regression canary: verify() does NOT enforce reputation-based trade amount limits.
+     * A contract with amounts far exceeding any realistic reputation cap passes verification.
+     * If reputation enforcement is added later, this test documents the behavior change.
+     */
+    @Test
+    @DisplayName("verify does NOT enforce reputation limits — amounts exceeding any rep cap pass")
+    void verify_does_not_enforce_reputation_limits() {
+        // 10 BTC at $60k = $600,000 — far beyond any realistic Bisq Easy reputation limit
+        long hugeBase = 10_0000_0000L;  // 10 BTC in satoshis
+        long hugeQuote = 6_000_000_000L; // $600,000 at precision 4
+
+        BisqEasyContract contract = createContract(hugeBase, hugeQuote);
+        BisqEasyTrade trade = createMakerTrade(contract, false);
+        BisqEasyTakeOfferRequestHandler handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        BisqEasyTakeOfferRequest message = createMessage(contract, trade);
+
+        assertDoesNotThrow(() -> handler.verify(message),
+                "verify() should pass even with amounts exceeding reputation limits — " +
+                "reputation enforcement is not part of the protocol handler");
+    }
+
     private BisqEasyContract createContract(long baseSideAmount, long quoteSideAmount) {
         return new BisqEasyContract(
                 TAKE_OFFER_DATE, offer, takerNetworkId,
