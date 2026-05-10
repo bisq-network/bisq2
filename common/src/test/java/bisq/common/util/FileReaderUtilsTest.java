@@ -4,6 +4,7 @@ import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -24,20 +25,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileReaderUtilsTest {
 
     @Test
-    public void hasResourceFile() {
+    @DisplayName("has resource file")
+    public void has_resource_file() {
         assertTrue(FileReaderUtils.hasResourceFile("logback.xml"));
         assertFalse(FileReaderUtils.hasResourceFile("logback.xml1"));
     }
 
     @Test
-    void testReadUtf8StringFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("read utf8 string file")
+    void read_utf8_string_file(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("test2.txt");
         FileMutatorUtils.writeToPath("abc".getBytes(), path);
         assertEquals("abc", FileReaderUtils.readUTF8String(path));
     }
 
     @Test
-    void testWaitUntilFileExists(@TempDir Path tempDirPath) throws InterruptedException, TimeoutException {
+    @DisplayName("wait until file exists")
+    void wait_until_file_exists(@TempDir Path tempDirPath) throws InterruptedException, TimeoutException {
         Path path = tempDirPath.resolve("waitExists.txt");
         new Thread(() -> {
             try {
@@ -51,7 +55,8 @@ public class FileReaderUtilsTest {
     }
 
     @Test
-    void testListRegularFilesInDirectory(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("list regular files in directory")
+    void list_regular_files_in_directory(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("listdir");
         FileMutatorUtils.createDirectory(dirPath);
         FileMutatorUtils.createFile(dirPath.resolve("a.txt"));
@@ -62,7 +67,8 @@ public class FileReaderUtilsTest {
     }
 
     @Test
-    void testReadFromFileIfPresent(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("read from file if present")
+    void read_from_file_if_present(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("present.txt");
         FileMutatorUtils.writeToPath("abc".getBytes(), path);
         Optional<String> result = FileReaderUtils.readFromFileIfPresent(path);
@@ -71,7 +77,8 @@ public class FileReaderUtilsTest {
     }
 
     @Test
-    void testReadFromScanner() {
+    @DisplayName("read from scanner")
+    void read_from_scanner() {
         String input = String.format("%s%s%s", "line1", System.lineSeparator(), "line2");
         Scanner scanner = new Scanner(input);
         String expected = String.format("%s%s%s", "line1", System.lineSeparator(), "line2");
@@ -80,14 +87,16 @@ public class FileReaderUtilsTest {
     }
 
     @Test
-    void testGetResourceAsStream() throws IOException {
+    @DisplayName("get resource as stream")
+    void get_resource_as_stream() throws IOException {
         InputStream is = FileReaderUtils.getResourceAsStream("logback.xml");
         assertNotNull(is);
         is.close();
     }
 
     @Test
-    void testListDirectories(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("list directories")
+    void list_directories(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("listdirs");
         FileMutatorUtils.createDirectory(dirPath);
 
@@ -112,13 +121,15 @@ public class FileReaderUtilsTest {
     }
 
     @Test
-    void testHasResourceFile() {
+    @DisplayName("has resource file nonexistent")
+    void has_resource_file_nonexistent() {
         assertTrue(FileReaderUtils.hasResourceFile("logback.xml"));
         assertFalse(FileReaderUtils.hasResourceFile("nonexistent.xml"));
     }
 
     @Test
-    void testListResources() throws Exception {
+    @DisplayName("list resources")
+    void list_resources() throws Exception {
         Set<String> resources = FileReaderUtils.listResources("bisq/common/util/");
         assertTrue(resources.contains("FileReaderUtilsTest.class"));
     }

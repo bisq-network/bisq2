@@ -24,6 +24,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +53,8 @@ public class PgPUtilsTest {
     }
 
     @Test
-    public void testReadPgpPublicKeyRing() {
+    @DisplayName("read pgp public key ring")
+    public void read_pgp_public_key_ring() {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");
             String keyId = Integer.toHexString((int) pgpPublicKeyRing.getPublicKey().getKeyID()).toUpperCase(Locale.ROOT);
@@ -64,7 +66,8 @@ public class PgPUtilsTest {
     }
 
     @Test
-    public void testReadPgpSignature() {
+    @DisplayName("read pgp signature")
+    public void read_pgp_signature() {
         // To create a test signature use:
         // gpg --digest-algo SHA256 -u [KEY ID] --output testData.txt.asc --detach-sig --armor testData.txt
         try {
@@ -78,7 +81,8 @@ public class PgPUtilsTest {
     }
 
     @Test
-    public void testIsSignatureValid() {
+    @DisplayName("is signature valid")
+    public void is_signature_valid() {
         try {
             PGPSignature signature = getPGPSignature("testData.txt.asc");
             PGPPublicKeyRing pgpPublicKeyRing = getPGPPublicKeyRing("387C8307.asc");

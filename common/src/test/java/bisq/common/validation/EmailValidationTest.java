@@ -1,13 +1,15 @@
 package bisq.common.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EmailValidationTest {
     @Test
-    void testValidEmails() {
+    @DisplayName("valid emails")
+    void valid_emails() {
         assertTrue(EmailValidation.isValid("user@example.com"));
         assertTrue(EmailValidation.isValid("user.name+tag@sub.domain.co.uk"));
         assertTrue(EmailValidation.isValid("u.ser_name123@domain.io"));
@@ -16,7 +18,8 @@ public class EmailValidationTest {
     }
 
     @Test
-    void testInvalidEmails() {
+    @DisplayName("invalid emails")
+    void invalid_emails() {
         assertFalse(EmailValidation.isValid(null));
         assertFalse(EmailValidation.isValid(""));
         assertFalse(EmailValidation.isValid("ss"));

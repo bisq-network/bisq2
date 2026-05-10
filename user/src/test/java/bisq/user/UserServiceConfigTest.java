@@ -19,6 +19,7 @@ package bisq.user;
 
 import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,21 +27,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class UserServiceConfigTest {
 
     @Test
-    void fromReadsEnabledRateLimitConfig() {
+    @DisplayName("from reads enabled rate limit config")
+    void from_reads_enabled_rate_limit_config() {
         UserService.Config config = UserService.Config.from(ConfigFactory.parseString("rateLimitEnabled=true"));
 
         assertTrue(config.isRateLimitEnabled());
     }
 
     @Test
-    void fromReadsDisabledRateLimitConfig() {
+    @DisplayName("from reads disabled rate limit config")
+    void from_reads_disabled_rate_limit_config() {
         UserService.Config config = UserService.Config.from(ConfigFactory.parseString("rateLimitEnabled=false"));
 
         assertFalse(config.isRateLimitEnabled());
     }
 
     @Test
-    void fromDefaultsRateLimitEnabledWhenKeyIsMissing() {
+    @DisplayName("from defaults rate limit enabled when key is missing")
+    void from_defaults_rate_limit_enabled_when_key_is_missing() {
         UserService.Config config = UserService.Config.from(ConfigFactory.empty());
 
         assertTrue(config.isRateLimitEnabled());

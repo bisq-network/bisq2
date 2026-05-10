@@ -19,6 +19,7 @@ package bisq.evolution.updater;
 
 import bisq.common.file.FileMutatorUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -31,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UpdaterUtilsTest {
 
     @Test
-    void testReadVersionFromVersionFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("read version from version file")
+    void read_version_from_version_file(@TempDir Path tempDirPath) throws IOException {
         Path expectedPath = tempDirPath.resolve(UpdaterUtils.VERSION_FILE_NAME);
         FileMutatorUtils.writeToPath("12.3.6", expectedPath);
 

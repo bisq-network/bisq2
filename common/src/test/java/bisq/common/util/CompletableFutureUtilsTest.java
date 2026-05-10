@@ -2,6 +2,7 @@ package bisq.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -17,7 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Slf4j
 public class CompletableFutureUtilsTest {
     @Test
-    public void testAllOf() throws ExecutionException, InterruptedException {
+    @DisplayName("all of")
+    public void all_of() throws ExecutionException, InterruptedException {
         CompletableFuture<Void> cfA = createCompletableFuture(10, "A");
         CompletableFuture<Void> cfB = createCompletableFuture(20, "B");
         CompletableFuture<Void> cfC = createCompletableFuture(30, "C");
@@ -31,7 +33,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyOf_allSucceed() throws ExecutionException, InterruptedException {
+    @DisplayName("any of all succeed")
+    public void any_of_all_succeed() throws ExecutionException, InterruptedException {
 
         CompletableFuture<Void> cfA = createCompletableFuture(10, "A");
         CompletableFuture<Void> cfB = createCompletableFuture(20, "B");
@@ -47,7 +50,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyOfBoolean() throws ExecutionException, InterruptedException {
+    @DisplayName("any of boolean")
+    public void any_of_boolean() throws ExecutionException, InterruptedException {
         CompletableFuture<Boolean> cfA = createCompletableFutureBool(10, "A", false);
         CompletableFuture<Boolean> cfB = createCompletableFutureBool(20, "B", true);
         CompletableFuture<Boolean> cfC = createCompletableFutureBool(30, "C", true);
@@ -89,7 +93,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAllOfWithType() {
+    @DisplayName("all of with type")
+    public void all_of_with_type() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(20, 1);
         CompletableFuture<Integer> future_2 = createIntegerFuture(10, 2);
         future_1.whenComplete((result, throwable) -> assertNotNull(throwable));
@@ -104,7 +109,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAllWithCancel() {
+    @DisplayName("all with cancel")
+    public void all_with_cancel() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createIntegerFuture(200, 2);
         CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
@@ -122,7 +128,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAllWithException() {
+    @DisplayName("all with exception")
+    public void all_with_exception() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createFailingIntegerFuture(200, 2);
         CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
@@ -140,7 +147,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyOfWithType() {
+    @DisplayName("any of with type")
+    public void any_of_with_type() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(20, 2);
         CompletableFuture<Integer> future_2 = createIntegerFuture(10, 2);
         future_1.whenComplete((result, throwable) -> assertNotNull(throwable));
@@ -155,7 +163,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyWithCancel() {
+    @DisplayName("any with cancel")
+    public void any_with_cancel() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createIntegerFuture(200, 3);
         CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
@@ -170,7 +179,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyWithException() {
+    @DisplayName("any with exception")
+    public void any_with_exception() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createFailingIntegerFuture(200, 2);
         CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
@@ -185,7 +195,8 @@ public class CompletableFutureUtilsTest {
     }
 
     @Test
-    public void testAnyWithAllExceptionally() {
+    @DisplayName("any with all exceptionally")
+    public void any_with_all_exceptionally() {
         CompletableFuture<Integer> future_1 = createFailingIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createFailingIntegerFuture(20, 2);
         future_1.whenComplete((result, throwable) -> assertNull(throwable));

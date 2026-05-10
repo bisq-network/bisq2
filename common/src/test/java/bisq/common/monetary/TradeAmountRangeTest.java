@@ -18,13 +18,15 @@
 package bisq.common.monetary;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TradeAmountRangeTest {
     @Test
-    void testConstructorAcceptsMatchingCodes() {
+    @DisplayName("constructor accepts matching codes")
+    void constructor_accepts_matching_codes() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1), Fiat.fromFaceValue(100, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(2), Fiat.fromFaceValue(200, "USD"));
 
@@ -32,7 +34,8 @@ public class TradeAmountRangeTest {
     }
 
     @Test
-    void testConstructorThrowsIfBaseSideCodesDoNotMatch() {
+    @DisplayName("constructor throws if base side codes do not match")
+    void constructor_throws_if_base_side_codes_do_not_match() {
         TradeAmount min = new TradeAmount(Coin.fromFaceValue(1, "XMR"), Coin.asBtcFromFaceValue(0.01));
         TradeAmount max = new TradeAmount(Coin.fromFaceValue(2, "ETH"), Coin.asBtcFromFaceValue(0.02));
 
@@ -40,7 +43,8 @@ public class TradeAmountRangeTest {
     }
 
     @Test
-    void testConstructorThrowsIfQuoteSideCodesDoNotMatch() {
+    @DisplayName("constructor throws if quote side codes do not match")
+    void constructor_throws_if_quote_side_codes_do_not_match() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1), Fiat.fromFaceValue(100, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(2), Fiat.fromFaceValue(200, "EUR"));
 

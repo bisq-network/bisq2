@@ -18,6 +18,7 @@
 package bisq.common.network;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static bisq.common.network.Address.removeProtocolPrefix;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AddressTest {
     @Test
-    void testValidI2PBase64Address() {
+    @DisplayName("valid i2 p base64 address")
+    void valid_i2_p_base64_address() {
         String host = "OazWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         int port = 1234;
         Address address = Address.from(host, port);
@@ -38,7 +40,8 @@ public class AddressTest {
     }
 
     @Test
-    void testValidI2PBase64AndBas32Address() {
+    @DisplayName("valid i2 p base64 and bas32 address")
+    void valid_i2_p_base64_and_bas32_address() {
         String b64 = "OazWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         String b32 = "wgglodqww5sifflx4ptugbn2yjey3x3xlkstozs7dmzw22wo6qfa.b32.i2p";
         int port = 1234;
@@ -51,7 +54,8 @@ public class AddressTest {
     }
 
     @Test
-    void testInvalidI2PBase64Address() {
+    @DisplayName("invalid i2 p base64 address")
+    void invalid_i2_p_base64_address() {
         // too short
         String host = "DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpTm81gObqFuwTCNJZLeu5DqswBCBoIM34tZX0eHg8WGlObzWA5uoW7BMI0lkt67kOqzAEIGggzfi1lfR4eDxYaU5vNYDm6hbsEwjSWS3ruQ6rMAQgaCDN-LWV9Hh4PFhpa03btjnuHsU5Gsx61g7CqT2YA8J6EHOiS~-XZpiNt01BQAEAAcAAA==";
         int port = 1234;
@@ -86,12 +90,14 @@ public class AddressTest {
     }
 
     @Test
-    void testValidTorAddress() {
+    @DisplayName("valid tor address")
+    void valid_tor_address() {
         assertInstanceOf(TorAddress.class, Address.from("m3h2p7j2mfl6w2u6g5hx7o5fek7e6fhb4i2h6h6syh5w4slf6xqrv7ad.onion", 3333));
     }
 
     @Test
-    void testInvalidTorAddress() {
+    @DisplayName("invalid tor address")
+    void invalid_tor_address() {
         // v2 address
         assertThrows(IllegalArgumentException.class, () -> Address.from("duskgytldkxiuqc6.onion", 1234));
         assertThrows(IllegalArgumentException.class, () -> Address.from("mm3h2p7j2mfl6w2u6g5hx7o5fek7e6fhb4i2h6h6syh5w4slf6xqrv7ad.onion", 1234));
@@ -100,7 +106,8 @@ public class AddressTest {
     }
 
     @Test
-    void testValidClearnetAddress() {
+    @DisplayName("valid clearnet address")
+    void valid_clearnet_address() {
         assertInstanceOf(ClearnetAddress.class, Address.from("192.168.0.10", 8080));
         assertInstanceOf(ClearnetAddress.class, Address.from("0.0.0.0", 8080));
         assertInstanceOf(ClearnetAddress.class, Address.from("2001:0db8:85a3:0000:0000:8a2e:0370:7334", 8080));
@@ -112,7 +119,8 @@ public class AddressTest {
     }
 
     @Test
-    void testInvalidClearnetAddress() {
+    @DisplayName("invalid clearnet address")
+    void invalid_clearnet_address() {
         assertThrows(IllegalArgumentException.class, () -> Address.from("127.0.0.1", 0));
         assertThrows(IllegalArgumentException.class, () -> Address.from("127.0.0.1", 10000000));
         assertThrows(IllegalArgumentException.class, () -> Address.from("127.0.0.256", 4444));
@@ -127,7 +135,8 @@ public class AddressTest {
     }
 
     @Test
-    void testRemoveProtocolPrefix() {
+    @DisplayName("remove protocol prefix")
+    void remove_protocol_prefix() {
         // Valid inputs where a protocol is present and should be stripped
         assertEquals("example.com:8080", removeProtocolPrefix("http://example.com:8080"));
         assertEquals("example.com", removeProtocolPrefix("https://example.com"));
@@ -146,7 +155,8 @@ public class AddressTest {
     }
 
     @Test
-    void testFailingRemoveProtocolPrefix() {
+    @DisplayName("failing remove protocol prefix")
+    void failing_remove_protocol_prefix() {
         // Missing scheme before ://
         assertThrows(IllegalArgumentException.class, () -> removeProtocolPrefix("://host"));
         // Repeated scheme

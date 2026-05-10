@@ -22,6 +22,7 @@ import bisq.trade.protobuf.ReceiverAddressAndAmount;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DelayedPayoutTxReceiverServiceTest {
     @Test
-    void testComputeReceivers_noneFiltered() {
+    @DisplayName("compute receivers none filtered")
+    void compute_receivers_none_filtered() {
         // These are the same available msat amount, fee rate & absolute receiver amounts used in the test trades of
         // 'TradeProtocolClient.java' from the bisq-musig project.
         long feeRateSatPerKwu = 10 * 250; // 10 sats per vbyte
@@ -66,7 +68,8 @@ class DelayedPayoutTxReceiverServiceTest {
     }
 
     @Test
-    void testComputeReceivers_oneFilteredNormally() {
+    @DisplayName("compute receivers one filtered normally")
+    void compute_receivers_one_filtered_normally() {
         // This is the smallest fee for which the minimum allowed receiver output amount starts scaling linearly with
         // the fee and exceeds the absolute minimum of 1000 sats, instead being rounded _up_ to 1001 sats:
         long feeRateSatPerKwu = 3_907; // 15.628 sats per vbyte
@@ -95,7 +98,8 @@ class DelayedPayoutTxReceiverServiceTest {
     }
 
     @Test
-    void testComputeReceivers_oneFilteredByMinOutputSaturation() {
+    @DisplayName("compute receivers one filtered by min output saturation")
+    void compute_receivers_one_filtered_by_min_output_saturation() {
         long feeRateSatPerKwu = 10 * 250; // 10 sats per vbyte
         // 1999 sats for two P2TR outputs, plus 860 sats for their fee contributions:
         long availableAmountMsat = 2_859_000;
@@ -125,7 +129,8 @@ class DelayedPayoutTxReceiverServiceTest {
     }
 
     @Test
-    void testComputeReceivers_allFiltered() {
+    @DisplayName("compute receivers all filtered")
+    void compute_receivers_all_filtered() {
         long feeRateSatPerKwu = 10 * 250; // 10 sats per vbyte
         // 999 sats for one P2TR output, plus 430 sats for its fee contribution:
         long availableAmountMsat = 1_429_000;
@@ -144,7 +149,8 @@ class DelayedPayoutTxReceiverServiceTest {
     }
 
     @Test
-    void testComputeReceivers_moreThan251Outputs() {
+    @DisplayName("compute receivers more than251 outputs")
+    void compute_receivers_more_than251_outputs() {
         long feeRateSatPerKwu = 250; // 1 sat per vbyte
         // 10_000 sats each for 252 P2SH outputs, 8_064 = 252 * 32 sats for their fee contributions, but this _doesn't_
         // include the extra 2 vB <-> 2 sats cost for including >251 outputs:
@@ -202,7 +208,8 @@ class DelayedPayoutTxReceiverServiceTest {
 
     @SuppressWarnings("SpellCheckingInspection")
     @Test
-    void testScriptPubKeyLength() {
+    @DisplayName("script pub key length")
+    void script_pub_key_length() {
         assertEquals(25, scriptPubKeyLength("11111111111111111111BZbvjr")); // mainnet P2PKH
         assertEquals(25, scriptPubKeyLength("1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH")); // mainnet P2PKH
         assertEquals(25, scriptPubKeyLength("mrCDrCybB6J1vRfbwM5hemdJz73FwDBC8r")); // testnet/regtest P2PKH

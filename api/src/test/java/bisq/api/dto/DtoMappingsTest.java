@@ -22,6 +22,7 @@ import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -30,7 +31,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DtoMappingsTest {
 
     @Test
-    void authorizedAlertDataMappingRejectsUnsupportedAlertTypes() {
+    @DisplayName("authorized alert data mapping rejects unsupported alert types")
+    void authorized_alert_data_mapping_rejects_unsupported_alert_types() {
         AuthorizedAlertData banAlert = new AuthorizedAlertData(
                 "ban-alert",
                 System.currentTimeMillis(),

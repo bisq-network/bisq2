@@ -1,12 +1,14 @@
 package bisq.common.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BitcoinTransactionValidationTest {
     @Test
-    public void testIsValid() {
+    @DisplayName("is valid")
+    public void is_valid() {
         assertTrue(BitcoinTransactionValidation.isValid("4b1ecb5cf2b6f254dc2b82c4e6a6c44f11b1e9d35cce63143142b6eae3c721c2")); // Valid TXID
         assertTrue(BitcoinTransactionValidation.isValid("4b1fcb5cf2b6f254dc2b82c4e6a6c14f11b1e9d33cce63143142b6e3e3c721c2")); // Valid TXID
 

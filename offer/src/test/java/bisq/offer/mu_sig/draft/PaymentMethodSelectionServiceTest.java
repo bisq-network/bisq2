@@ -9,6 +9,7 @@ import bisq.common.market.MarketRepository;
 import bisq.offer.mu_sig.draft.dependencies.AccountsProvider;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,8 @@ import static org.mockito.Mockito.when;
 public class PaymentMethodSelectionServiceTest {
 
     @Test
-    public void loadAccountsForMarketGroupsByPaymentMethod() {
+    @DisplayName("load accounts for market groups by payment method")
+    public void load_accounts_for_market_groups_by_payment_method() {
         Market market = MarketRepository.getUSDBitcoinMarket();
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         PaymentMethod<?> advancedCashMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ADVANCED_CASH);
@@ -43,7 +45,8 @@ public class PaymentMethodSelectionServiceTest {
     }
 
     @Test
-    public void findSelectedPaymentMethodsToRemoveReturnsMissingAccounts() {
+    @DisplayName("find selected payment methods to remove returns missing accounts")
+    public void find_selected_payment_methods_to_remove_returns_missing_accounts() {
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         PaymentMethod<?> advancedCashMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ADVANCED_CASH);
         Account<?, ?> achAccount = createAccount(achMethod);
@@ -61,7 +64,8 @@ public class PaymentMethodSelectionServiceTest {
     }
 
     @Test
-    public void findAccountToAutoSelectReturnsSingleUnselectedAccount() {
+    @DisplayName("find account to auto select returns single unselected account")
+    public void find_account_to_auto_select_returns_single_unselected_account() {
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> achAccount = createAccount(achMethod);
         PaymentMethodSelectionService service = new PaymentMethodSelectionService(market -> List.of());
@@ -71,7 +75,8 @@ public class PaymentMethodSelectionServiceTest {
     }
 
     @Test
-    public void findMostRestrictiveSelectedPaymentRailReturnsLowestLimitRail() {
+    @DisplayName("find most restrictive selected payment rail returns lowest limit rail")
+    public void find_most_restrictive_selected_payment_rail_returns_lowest_limit_rail() {
         PaymentMethod<?> veryLowRiskMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ADVANCED_CASH);
         PaymentMethod<?> moderateRiskMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> veryLowRiskAccount = createAccount(veryLowRiskMethod);

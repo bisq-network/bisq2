@@ -26,6 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.json.JsonMapperProvider;
 import bisq.common.observable.collection.ObservableSet;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -37,7 +38,8 @@ import static org.mockito.Mockito.when;
 class TradeRestrictingAlertWebSocketServiceTest {
 
     @Test
-    void getJsonPayloadUsesSubscriberAppTypeParameterAndFiltersOutNonLimitingAlerts() throws Exception {
+    @DisplayName("get json payload uses subscriber app type parameter and filters out non limiting alerts")
+    void get_json_payload_uses_subscriber_app_type_parameter_and_filters_out_non_limiting_alerts() throws Exception {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("desktop-info", AppType.DESKTOP, 10L, AlertType.INFO, false, false));
@@ -55,7 +57,8 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadThrowsWhenRequestParameterMissing() {
+    @DisplayName("get json payload throws when request parameter missing")
+    void get_json_payload_throws_when_request_parameter_missing() {
         AlertService alertService = mock(AlertService.class);
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(new ObservableSet<>());
 
@@ -65,7 +68,8 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadPrefersHaltTradingOverRequireVersionEvenWhenOlder() throws Exception {
+    @DisplayName("get json payload prefers halt trading over require version even when older")
+    void get_json_payload_prefers_halt_trading_over_require_version_even_when_older() throws Exception {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("halt-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
@@ -82,7 +86,8 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadReturnsNullJsonWhenNoTradeRestrictingAlertPresent() throws Exception {
+    @DisplayName("get json payload returns null json when no trade restricting alert present")
+    void get_json_payload_returns_null_json_when_no_trade_restricting_alert_present() throws Exception {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("desktop-info", AppType.DESKTOP, 10L, AlertType.INFO, false, false));
@@ -97,7 +102,8 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadRejectsInvalidAppType() {
+    @DisplayName("get json payload rejects invalid app type")
+    void get_json_payload_rejects_invalid_app_type() {
         AlertService alertService = mock(AlertService.class);
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(new ObservableSet<>());
         TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);

@@ -10,6 +10,7 @@ import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountConversion;
 import bisq.common.monetary.TradeAmountRange;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,7 +18,8 @@ public class AmountMappingServiceTest {
     private final AmountMappingService service = new AmountMappingService();
 
     @Test
-    public void toTradeAmountFromInputAmountClampsToLimits() {
+    @DisplayName("to trade amount from input amount clamps to limits")
+    public void to_trade_amount_from_input_amount_clamps_to_limits() {
         Market market = MarketRepository.getUSDBitcoinMarket();
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         TradeAmountRange limits = createTradeAmountLimits(market, priceQuote, 10, 5000);
@@ -31,7 +33,8 @@ public class AmountMappingServiceTest {
     }
 
     @Test
-    public void toSliderValueAndBackIsStable() {
+    @DisplayName("to slider value and back is stable")
+    public void to_slider_value_and_back_is_stable() {
         Market market = MarketRepository.getUSDBitcoinMarket();
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         TradeAmountRange limits = createTradeAmountLimits(market, priceQuote, 10, 5000);
@@ -53,7 +56,8 @@ public class AmountMappingServiceTest {
     }
 
     @Test
-    public void toUpdatedPassiveAmountKeepsQuoteInputAmount() {
+    @DisplayName("to updated passive amount keeps quote input amount")
+    public void to_updated_passive_amount_keeps_quote_input_amount() {
         Market market = MarketRepository.getUSDBitcoinMarket();
         PriceQuote oldPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote newPriceQuote = PriceQuote.fromFiatPrice(40000, "USD");

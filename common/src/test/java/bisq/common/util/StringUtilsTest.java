@@ -3,6 +3,7 @@ package bisq.common.util;
 import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,7 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @Slf4j
 public class StringUtilsTest {
     @Test
-    public void splitStringsByTags() {
+    @DisplayName("split strings by tags")
+    public void split_strings_by_tags() {
         List<Pair<String, List<String>>> textWithStyleAndRest;
 
         textWithStyleAndRest = StringUtils.getTextStylePairs("<EUR/BTC style=text-color-light>");
@@ -47,7 +49,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void deriveWordStartingWith() {
+    @DisplayName("derive word starting with")
+    public void derive_word_starting_with() {
         assert Objects.equals(StringUtils.deriveWordStartingWith("Hello jo", '@'), null);
         assert Objects.equals(StringUtils.deriveWordStartingWith("@jo x", '@'), null);
         assert Objects.equals(StringUtils.deriveWordStartingWith("Hello@jo", '@'), null);
@@ -61,7 +64,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testTruncate() {
+    @DisplayName("truncate")
+    public void truncate() {
         assertEquals("1", StringUtils.truncate("1", 4));
         assertEquals("123", StringUtils.truncate("123", 4));
         assertEquals("1234", StringUtils.truncate("1234", 4));
@@ -71,7 +75,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testSnakeCaseToCamelCase() {
+    @DisplayName("snake case to camel case")
+    public void snake_case_to_camel_case() {
         assertEquals("camelCase", StringUtils.snakeCaseToCamelCase("camel_case"));
         assertEquals("CamelCase", StringUtils.snakeCaseToCamelCase("_camel_case"));
         assertEquals("camelCase", StringUtils.snakeCaseToCamelCase("CAMEL_CASE"));
@@ -81,7 +86,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testKebapCaseToCamelCase() {
+    @DisplayName("kebap case to camel case")
+    public void kebap_case_to_camel_case() {
         assertEquals("camelCase", StringUtils.kebapCaseToCamelCase("camel-case"));
         assertEquals("CamelCase", StringUtils.kebapCaseToCamelCase("-camel-case"));
         assertEquals("camelCase", StringUtils.kebapCaseToCamelCase("CAMEL-CASE"));
@@ -91,7 +97,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testCamelCaseToSnakeCase() {
+    @DisplayName("camel case to snake case")
+    public void camel_case_to_snake_case() {
         assertEquals("camel_case", StringUtils.camelCaseToSnakeCase("camelCase"));
         assertEquals("camel_case", StringUtils.camelCaseToSnakeCase("CamelCase"));
         assertEquals("c_a_m_e_l__c_a_s_e", StringUtils.camelCaseToSnakeCase("CAMEL_CASE"));
@@ -102,7 +109,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testCamelCaseToKebapCase() {
+    @DisplayName("camel case to kebap case")
+    public void camel_case_to_kebap_case() {
         assertEquals("camel-case", StringUtils.camelCaseToKebapCase("camelCase"));
         assertEquals("camel-case", StringUtils.camelCaseToKebapCase("CamelCase"));
         assertEquals("c-a-m-e-l_-c-a-s-e", StringUtils.camelCaseToKebapCase("CAMEL_CASE"));
@@ -113,7 +121,8 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testSnakeCaseToKebapCase() {
+    @DisplayName("snake case to kebap case")
+    public void snake_case_to_kebap_case() {
         assertEquals("camel-case", StringUtils.snakeCaseToKebapCase("camel_case"));
         assertEquals("-camel-case", StringUtils.snakeCaseToKebapCase("_camel_case"));
         assertEquals("camel-case", StringUtils.snakeCaseToKebapCase("CAMEL_CASE"));
@@ -123,44 +132,51 @@ public class StringUtilsTest {
     }
 
     @Test
-    void testRemovesBiDiCharacters() {
+    @DisplayName("removes bi di characters")
+    void removes_bi_di_characters() {
         String input = "\u202D+1 415 9604264\u202C"; // LRO ... PDF
         String expected = "+1 415 9604264";
         assertEquals(expected, StringUtils.cleanUserInput(input));
     }
 
     @Test
-    void testRemovesZeroWidthSpace() {
+    @DisplayName("removes zero width space")
+    void removes_zero_width_space() {
         String input = "+1\u200B415\u200B9604264"; // zero-width spaces
         String expected = "+14159604264";
         assertEquals(expected, StringUtils.cleanUserInput(input));
     }
 
     @Test
-    void testRemovesRLMandLRM() {
+    @DisplayName("removes rl mand lrm")
+    void removes_rl_mand_lrm() {
         String input = "\u200E+1 415\u200F 9604264"; // LRM and RLM
         String expected = "+1 415 9604264";
         assertEquals(expected, StringUtils.cleanUserInput(input));
     }
 
     @Test
-    void testReturnsNullOnNullInput() {
+    @DisplayName("returns null on null input")
+    void returns_null_on_null_input() {
         assertEquals("", StringUtils.cleanUserInput(null));
     }
 
     @Test
-    void testEmptyString() {
+    @DisplayName("empty string")
+    void empty_string() {
         assertEquals("", StringUtils.cleanUserInput(""));
     }
 
     @Test
-    void testOnlyInvisibleCharacters() {
+    @DisplayName("only invisible characters")
+    void only_invisible_characters() {
         String input = "\u200E\u202D\u202C\u200F\u200B";
         assertEquals("", StringUtils.cleanUserInput(input));
     }
 
     @Test
-    void testMixedValidAndInvisibleCharacters() {
+    @DisplayName("mixed valid and invisible characters")
+    void mixed_valid_and_invisible_characters() {
         String input = "  \u202Duser@example.com\u202C  ";
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));

@@ -20,6 +20,7 @@ package bisq.security;
 import bisq.security.keys.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -31,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class SignatureTest {
 
     @Test
-    public void testSignature() {
+    @DisplayName("signature")
+    public void signature() {
         byte[] message = "hello".getBytes();
         try {
             KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();

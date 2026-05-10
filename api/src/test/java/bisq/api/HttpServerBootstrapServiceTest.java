@@ -1,6 +1,7 @@
 package bisq.api;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -20,7 +21,8 @@ class HttpServerBootstrapServiceTest {
 
     @Disabled
     @Test
-    void testCallEndpointAndVerifyFingerprint() {
+    @DisplayName("call endpoint and verify fingerprint")
+    void call_endpoint_and_verify_fingerprint() {
         assertDoesNotThrow(this::callEndpointAndVerifyPublicKeyFingerprint);
     }
 

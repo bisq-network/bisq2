@@ -4,6 +4,7 @@ import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
@@ -22,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileMutatorUtilsTest {
 
     @Test
-    void testDeleteOnExitAndReleaseTempFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("delete on exit and release temp file")
+    void delete_on_exit_and_release_temp_file(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("deleteOnExit.txt");
         FileMutatorUtils.createFile(path);
         FileMutatorUtils.deleteOnExit(path);
@@ -31,7 +33,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testDeleteFileOrDirectory(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("delete file or directory")
+    void delete_file_or_directory(@TempDir Path tempDirPath) throws IOException {
         Path dirPath = tempDirPath.resolve("dir");
         FileMutatorUtils.createDirectory(dirPath);
         Path filePath = dirPath.resolve("file.txt");
@@ -41,7 +44,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testDeleteFileOrDirectoryWithComplexDirectory(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("delete file or directory with complex directory")
+    void delete_file_or_directory_with_complex_directory(@TempDir Path tempDirPath) throws IOException {
         // Setup complex nested directories and files
         Path subDirPath1 = tempDirPath.resolve("subDir1");
         Path subDirPath2 = tempDirPath.resolve("subDir2");
@@ -73,7 +77,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testDeleteFileAndWait(@TempDir Path tempDirPath) throws IOException, InterruptedException {
+    @DisplayName("delete file and wait")
+    void delete_file_and_wait(@TempDir Path tempDirPath) throws IOException, InterruptedException {
         Path path = tempDirPath.resolve("wait.txt");
         FileMutatorUtils.createFile(path);
         FileMutatorUtils.deleteFileAndWait(path, 1000);
@@ -82,7 +87,8 @@ public class FileMutatorUtilsTest {
 
 
     @Test
-    void testCreateTempDirPath() throws IOException {
+    @DisplayName("create temp dir path")
+    void create_temp_dir_path() throws IOException {
         Path tempPath = FileMutatorUtils.createTempDirPath();
         assertTrue(Files.isDirectory(tempPath));
         // Clean up
@@ -90,7 +96,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testRenameFileOverExistingFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("rename file over existing file")
+    void rename_file_over_existing_file(@TempDir Path tempDirPath) throws IOException {
         // Create the source file
         Path sourceFilePath = tempDirPath.resolve("source.txt");
         FileMutatorUtils.writeToPath("Hello source", sourceFilePath);
@@ -114,21 +121,24 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testWriteToPath(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("write to path")
+    void write_to_path(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("writefile.txt");
         FileMutatorUtils.writeToPath("data", path);
         assertEquals("data", FileReaderUtils.readUTF8String(path));
     }
 
     @Test
-    void testResourceToFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("resource to file")
+    void resource_to_file(@TempDir Path tempDirPath) throws IOException {
         Path path = tempDirPath.resolve("resource.txt");
         FileMutatorUtils.resourceToFile("logback.xml", path);
         assertThat(path).exists();
     }
 
     @Test
-    void testCopyFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("copy file")
+    void copy_file(@TempDir Path tempDirPath) throws IOException {
         Path srcPath = tempDirPath.resolve("src.txt");
         Path destPath = tempDirPath.resolve("dest.txt");
         FileMutatorUtils.writeToPath("copy".getBytes(), srcPath);
@@ -137,7 +147,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testCopyInputStream() throws IOException {
+    @DisplayName("copy input stream")
+    void copy_input_stream() throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream("abc".getBytes());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FileMutatorUtils.copy(in, out);
@@ -145,7 +156,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testRenameFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("rename file")
+    void rename_file(@TempDir Path tempDirPath) throws IOException {
         Path oldPath = tempDirPath.resolve("old.txt");
         Path newPath = tempDirPath.resolve("new.txt");
         FileMutatorUtils.writeToPath("rename".getBytes(), oldPath);
@@ -155,7 +167,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testBackupCorruptedFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("backup corrupted file")
+    void backup_corrupted_file(@TempDir Path tempDirPath) throws IOException {
         Path backupPath = tempDirPath.resolve("backup");
         FileMutatorUtils.createDirectory(backupPath);
         Path corruptPath = backupPath.resolve("corrupt.txt");
@@ -166,7 +179,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testCopyDirectoryWithExtensionsToSkip(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("copy directory with extensions to skip")
+    void copy_directory_with_extensions_to_skip(@TempDir Path tempDirPath) throws IOException {
         Path srcDirPath = tempDirPath.resolve("srcdir2");
         Path destDirPath = tempDirPath.resolve("destdir2");
         FileMutatorUtils.createDirectory(srcDirPath);
@@ -178,7 +192,8 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
-    void testCopyResourceDirectory(@TempDir Path tempDirPath) throws Exception {
+    @DisplayName("copy resource directory")
+    void copy_resource_directory(@TempDir Path tempDirPath) throws Exception {
         Path targetDirPath = tempDirPath.resolve("resourceCopy");
         FileMutatorUtils.copyResourceDirectory("bisq/common/util/", targetDirPath);
         assertTrue(Files.exists(targetDirPath.resolve("FileMutatorUtilsTest.class")));

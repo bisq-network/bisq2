@@ -31,6 +31,7 @@ import bisq.user.UserService;
 import org.glassfish.grizzly.impl.ReadyFutureImpl;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -54,7 +55,8 @@ import static org.mockito.Mockito.when;
 class SubscriptionServiceTest {
 
     @Test
-    void subscribeRemovesSubscriberWhenSendingInitialPayloadFails() throws Exception {
+    @DisplayName("subscribe removes subscriber when sending initial payload fails")
+    void subscribe_removes_subscriber_when_sending_initial_payload_fails() throws Exception {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         when(alertNotificationsService.getUnconsumedAlerts()).thenReturn(new ObservableSet<>());
         when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.MOBILE_CLIENT)).thenReturn(Stream.empty());
@@ -83,7 +85,8 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void subscribeDeliversLiveEventEmittedDuringInitialSnapshot() throws Exception {
+    @DisplayName("subscribe delivers live event emitted during initial snapshot")
+    void subscribe_delivers_live_event_emitted_during_initial_snapshot() throws Exception {
         SubscriptionService service = new SubscriptionService(
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
@@ -119,7 +122,8 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void subscribeOffersWithVariantCaseCurrencyCodeLandsInSameBucket() throws Exception {
+    @DisplayName("subscribe offers with variant case currency code lands in same bucket")
+    void subscribe_offers_with_variant_case_currency_code_lands_in_same_bucket() throws Exception {
         BisqEasyOfferbookChannelService offerbookService = mock(BisqEasyOfferbookChannelService.class);
         when(offerbookService.getChannels()).thenReturn(new ObservableSet<>());
         ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);

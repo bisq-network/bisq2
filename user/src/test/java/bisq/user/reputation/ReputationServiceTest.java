@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 
@@ -26,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ReputationServiceTest {
 
     @Test
-    void testGetIndex() {
+    @DisplayName("get index")
+    void get_index() {
         List<Long> scores = List.of(1L, 2L, 3L, 4L, 5L);
         assertEquals(0, ReputationService.getIndex(1, scores));
         assertEquals(4, ReputationService.getIndex(5, scores));
@@ -36,7 +38,8 @@ public class ReputationServiceTest {
     }
 
     @Test
-    void testGetFiveSystemScore() {
+    @DisplayName("get five system score")
+    void get_five_system_score() {
         assertEquals(0, ReputationService.getFiveSystemScore(0));
         assertEquals(0.5, ReputationService.getFiveSystemScore(1_200));
         assertEquals(1, ReputationService.getFiveSystemScore(5_000));

@@ -23,6 +23,7 @@ import bisq.security.keys.KeyGeneration;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -35,7 +36,8 @@ import static org.mockito.Mockito.when;
 
 class MuSigMediationResultServiceTest {
     @Test
-    void verifyReturnsTrueForMatchingSignature() throws GeneralSecurityException {
+    @DisplayName("verify returns true for matching signature")
+    void verify_returns_true_for_matching_signature() throws GeneralSecurityException {
         KeyPair mediatorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         MuSigMediationResult mediationResult = createMediationResult();
         byte[] mediationResultSignature = MuSigMediationResultService.signMediationResult(mediationResult, mediatorKeyPair);
@@ -47,7 +49,8 @@ class MuSigMediationResultServiceTest {
     }
 
     @Test
-    void verifyReturnsFalseForTamperedResult() throws GeneralSecurityException {
+    @DisplayName("verify returns false for tampered result")
+    void verify_returns_false_for_tampered_result() throws GeneralSecurityException {
         KeyPair mediatorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         MuSigContract contract = createContract("contract-a");
         byte[] mediationResultSignature = MuSigMediationResultService.signMediationResult(createMediationResult(contract), mediatorKeyPair);
@@ -67,7 +70,8 @@ class MuSigMediationResultServiceTest {
     }
 
     @Test
-    void verifyReturnsFalseForMismatchedContractHash() throws GeneralSecurityException {
+    @DisplayName("verify returns false for mismatched contract hash")
+    void verify_returns_false_for_mismatched_contract_hash() throws GeneralSecurityException {
         KeyPair mediatorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         MuSigMediationResult mediationResult = createMediationResult();
         byte[] mediationResultSignature = MuSigMediationResultService.signMediationResult(mediationResult, mediatorKeyPair);

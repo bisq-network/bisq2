@@ -28,6 +28,7 @@ import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOption;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MuSigContractTest {
     @Test
-    void usesBaseAsBtcSideWhenBaseCurrencyIsBitcoin() {
+    @DisplayName("uses base as btc side when base currency is bitcoin")
+    void uses_base_as_btc_side_when_base_currency_is_bitcoin() {
         PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
         PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
                 FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
@@ -51,7 +53,8 @@ class MuSigContractTest {
     }
 
     @Test
-    void usesQuoteAsBtcSideWhenBaseCurrencyIsNotBitcoin() {
+    @DisplayName("uses quote as btc side when base currency is not bitcoin")
+    void uses_quote_as_btc_side_when_base_currency_is_not_bitcoin() {
         PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(new CryptoPaymentMethod("XMR"), "XMR");
         PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
         MuSigContract contract = createContract(createCryptoBtcMarket(), 111L, 222L, baseSpec, quoteSpec);
@@ -63,7 +66,8 @@ class MuSigContractTest {
     }
 
     @Test
-    void derivesMakerSaltedAccountPayloadHashFromNonBtcQuoteSideAccountOption() {
+    @DisplayName("derives maker salted account payload hash from non btc quote side account option")
+    void derives_maker_salted_account_payload_hash_from_non_btc_quote_side_account_option() {
         FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         byte[] expectedHash = hash((byte) 1);
         MuSigOffer offer = createOffer(createBtcFiatMarket(),
@@ -86,7 +90,8 @@ class MuSigContractTest {
     }
 
     @Test
-    void derivesMakerSaltedAccountPayloadHashFromNonBtcBaseSideAccountOption() {
+    @DisplayName("derives maker salted account payload hash from non btc base side account option")
+    void derives_maker_salted_account_payload_hash_from_non_btc_base_side_account_option() {
         CryptoPaymentMethod paymentMethod = new CryptoPaymentMethod("XMR");
         byte[] expectedHash = hash((byte) 2);
         MuSigOffer offer = createOffer(createCryptoBtcMarket(),
@@ -109,7 +114,8 @@ class MuSigContractTest {
     }
 
     @Test
-    void makerSaltedAccountPayloadHashIsEmptyWhenNoMatchingAccountOptionExists() {
+    @DisplayName("maker salted account payload hash is empty when no matching account option exists")
+    void maker_salted_account_payload_hash_is_empty_when_no_matching_account_option_exists() {
         FiatPaymentMethod offerPaymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         FiatPaymentMethod differentPaymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
         MuSigOffer offer = createOffer(createBtcFiatMarket(),

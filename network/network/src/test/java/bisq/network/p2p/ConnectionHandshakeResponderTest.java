@@ -36,6 +36,7 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,14 +81,16 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void emptyInitialEnvelopes() throws IOException {
+    @DisplayName("empty initial envelopes")
+    void empty_initial_envelopes() throws IOException {
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(Collections.emptyList());
         Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
         assertThat(exception.getMessage()).contains("empty");
     }
 
     @Test
-    void tooManyInitialEnvelopes() throws IOException {
+    @DisplayName("too many initial envelopes")
+    void too_many_initial_envelopes() throws IOException {
         NetworkEnvelope requestNetworkEnvelope = createValidRequest();
         List<NetworkEnvelope> initialMessages = List.of(requestNetworkEnvelope, requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(initialMessages);
@@ -99,7 +102,8 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void wrongEnvelopeVersion() throws IOException {
+    @DisplayName("wrong envelope version")
+    void wrong_envelope_version() throws IOException {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -113,7 +117,8 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void wrongNetworkMessage() throws IOException {
+    @DisplayName("wrong network message")
+    void wrong_network_message() throws IOException {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, new NetworkLoad());
         AuthorizationToken token = authorizationService.createToken(
                 response,
@@ -132,7 +137,8 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void bannedPeer() throws IOException {
+    @DisplayName("banned peer")
+    void banned_peer() throws IOException {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -149,7 +155,8 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void correctPoW() throws IOException {
+    @DisplayName("correct po w")
+    void correct_po_w() throws IOException {
         Capability peerCapability = createCapability(LocalHostAddressTypeFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,

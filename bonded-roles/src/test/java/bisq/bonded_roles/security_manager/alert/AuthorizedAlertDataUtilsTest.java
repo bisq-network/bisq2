@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.release.AppType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -32,7 +33,8 @@ class AuthorizedAlertDataUtilsTest {
     private static final long NOW = System.currentTimeMillis();
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsEmptyWhenNoAlerts() {
+    @DisplayName("find most recent trade restricting alert returns empty when no alerts")
+    void find_most_recent_trade_restricting_alert_returns_empty_when_no_alerts() {
         Optional<AuthorizedAlertData> result = AuthorizedAlertDataUtils.findMostRecentTradeRestrictingAlert(
                 Stream.empty(), AppType.DESKTOP);
 
@@ -40,7 +42,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertFiltersNonTradeRestrictingAlerts() {
+    @DisplayName("find most recent trade restricting alert filters non trade restricting alerts")
+    void find_most_recent_trade_restricting_alert_filters_non_trade_restricting_alerts() {
         // INFO alerts are not trade-restricting
         AuthorizedAlertData infoAlert = createAlert("info-1", AppType.DESKTOP, 10, AlertType.INFO, false, false);
 
@@ -51,7 +54,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertFiltersAlertsForOtherAppTypes() {
+    @DisplayName("find most recent trade restricting alert filters alerts for other app types")
+    void find_most_recent_trade_restricting_alert_filters_alerts_for_other_app_types() {
         AuthorizedAlertData mobileHalt = createAlert("mobile-halt", AppType.MOBILE_CLIENT, 10, AlertType.EMERGENCY, true, false);
 
         Optional<AuthorizedAlertData> result = AuthorizedAlertDataUtils.findMostRecentTradeRestrictingAlert(
@@ -61,7 +65,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsSingleHaltTradingAlert() {
+    @DisplayName("find most recent trade restricting alert returns single halt trading alert")
+    void find_most_recent_trade_restricting_alert_returns_single_halt_trading_alert() {
         AuthorizedAlertData haltAlert = createAlert("halt-1", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
 
         Optional<AuthorizedAlertData> result = AuthorizedAlertDataUtils.findMostRecentTradeRestrictingAlert(
@@ -71,7 +76,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsSingleRequireVersionAlert() {
+    @DisplayName("find most recent trade restricting alert returns single require version alert")
+    void find_most_recent_trade_restricting_alert_returns_single_require_version_alert() {
         AuthorizedAlertData requireVersion = createAlert("req-1", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.0"));
 
         Optional<AuthorizedAlertData> result = AuthorizedAlertDataUtils.findMostRecentTradeRestrictingAlert(
@@ -81,7 +87,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsOnlyMostRecentHaltTradingAlert() {
+    @DisplayName("find most recent trade restricting alert returns only most recent halt trading alert")
+    void find_most_recent_trade_restricting_alert_returns_only_most_recent_halt_trading_alert() {
         AuthorizedAlertData haltOld = createAlert("halt-old", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
         AuthorizedAlertData haltNew = createAlert("halt-new", AppType.DESKTOP, 30, AlertType.EMERGENCY, true, false);
         AuthorizedAlertData haltMid = createAlert("halt-mid", AppType.DESKTOP, 20, AlertType.EMERGENCY, true, false);
@@ -93,7 +100,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsOnlyMostRecentRequireVersionAlert() {
+    @DisplayName("find most recent trade restricting alert returns only most recent require version alert")
+    void find_most_recent_trade_restricting_alert_returns_only_most_recent_require_version_alert() {
         AuthorizedAlertData reqOld = createAlert("req-old", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.0.0"));
         AuthorizedAlertData reqNew = createAlert("req-new", AppType.DESKTOP, 60, AlertType.EMERGENCY, false, true, Optional.of("2.1.5"));
         AuthorizedAlertData reqMid = createAlert("req-mid", AppType.DESKTOP, 40, AlertType.EMERGENCY, false, true, Optional.of("2.1.3"));
@@ -105,7 +113,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertPrefersHaltTradingOverRequireVersionEvenWhenOlder() {
+    @DisplayName("find most recent trade restricting alert prefers halt trading over require version even when older")
+    void find_most_recent_trade_restricting_alert_prefers_halt_trading_over_require_version_even_when_older() {
         // haltTrading alert is older (offset 10) but still takes precedence over requireVersion (offset 20)
         AuthorizedAlertData haltAlert = createAlert("halt-1", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
         AuthorizedAlertData requireVersion = createAlert("req-1", AppType.DESKTOP, 20, AlertType.EMERGENCY, false, true, Optional.of("2.1.0"));
@@ -117,7 +126,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertPicksMostRecentHaltFromMixedInput() {
+    @DisplayName("find most recent trade restricting alert picks most recent halt from mixed input")
+    void find_most_recent_trade_restricting_alert_picks_most_recent_halt_from_mixed_input() {
         AuthorizedAlertData haltOld = createAlert("halt-old", AppType.MOBILE_CLIENT, 10, AlertType.EMERGENCY, true, false);
         AuthorizedAlertData haltNew = createAlert("halt-new", AppType.MOBILE_CLIENT, 30, AlertType.EMERGENCY, true, false);
         AuthorizedAlertData reqOld = createAlert("req-old", AppType.MOBILE_CLIENT, 40, AlertType.EMERGENCY, false, true, Optional.of("2.1.3"));
@@ -132,7 +142,8 @@ class AuthorizedAlertDataUtilsTest {
     }
 
     @Test
-    void findMostRecentTradeRestrictingAlertReturnsRequireVersionWhenNoHaltPresent() {
+    @DisplayName("find most recent trade restricting alert returns require version when no halt present")
+    void find_most_recent_trade_restricting_alert_returns_require_version_when_no_halt_present() {
         AuthorizedAlertData reqOld = createAlert("req-old", AppType.MOBILE_CLIENT, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.3"));
         AuthorizedAlertData reqNew = createAlert("req-new", AppType.MOBILE_CLIENT, 60, AlertType.EMERGENCY, false, true, Optional.of("2.1.5"));
         AuthorizedAlertData desktopAlert = createAlert("desktop-halt", AppType.DESKTOP, 100, AlertType.EMERGENCY, true, false);

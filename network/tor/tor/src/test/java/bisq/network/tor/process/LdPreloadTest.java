@@ -19,6 +19,7 @@ package bisq.network.tor.process;
 
 import bisq.common.file.FileMutatorUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -32,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LdPreloadTest {
 
     @Test
-    void computeLdPreloadVariable_returnsColonSeparatedPaths(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("compute ld preload variable returns colon separated paths")
+    void compute_ld_preload_variable_returns_colon_separated_paths(@TempDir Path tempDirPath) throws IOException {
         Path libPath1 = FileMutatorUtils.createFile(tempDirPath.resolve("libfoo.so.1"));
         Path libPath2 = FileMutatorUtils.createFile(tempDirPath.resolve("libbar.so.2"));
         FileMutatorUtils.createFile(tempDirPath.resolve("notalib.txt"));
@@ -46,26 +48,30 @@ class LdPreloadTest {
     }
 
     @Test
-    void computeLdPreloadVariable_returnsEmptyStringIfNoSoFiles(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("compute ld preload variable returns empty string if no so files")
+    void compute_ld_preload_variable_returns_empty_string_if_no_so_files(@TempDir Path tempDirPath) throws IOException {
         FileMutatorUtils.createFile(tempDirPath.resolve("file.txt"));
         String result = LdPreload.computeLdPreloadVariable(tempDirPath);
         assertEquals("", result);
     }
 
     @Test
-    void computeLdPreloadVariable_throwsExceptionIfDirIsNull() {
+    @DisplayName("compute ld preload variable throws exception if dir is null")
+    void compute_ld_preload_variable_throws_exception_if_dir_is_null() {
         assertThrows(NullPointerException.class, () -> LdPreload.computeLdPreloadVariable(null));
     }
 
     @Test
-    void computeLdPreloadVariable_throwsIllegalStateExceptionOnIOException(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("compute ld preload variable throws illegal state exception on io exception")
+    void compute_ld_preload_variable_throws_illegal_state_exception_on_io_exception(@TempDir Path tempDirPath) throws IOException {
         Path notADirPath = FileMutatorUtils.createFile(tempDirPath.resolve("notADir"));
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> LdPreload.computeLdPreloadVariable(notADirPath));
         assertTrue(exception.getMessage().contains("Failed to list directory"));
     }
 
     @Test
-    void computeLdPreloadVariable_excludesUnversionedSoFiles(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("compute ld preload variable excludes unversioned so files")
+    void compute_ld_preload_variable_excludes_unversioned_so_files(@TempDir Path tempDirPath) throws IOException {
         FileMutatorUtils.createFile(tempDirPath.resolve("libfoo.so"));  // unversioned
         FileMutatorUtils.createFile(tempDirPath.resolve("libbar.so.1")); // versioned
 

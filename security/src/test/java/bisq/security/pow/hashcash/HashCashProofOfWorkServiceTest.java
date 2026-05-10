@@ -21,6 +21,7 @@ import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,8 @@ class HashCashProofOfWorkServiceTest {
     private final static Logger log = LoggerFactory.getLogger(HashCashProofOfWorkServiceTest.class);
 
     @Test
-    public void testNumberOfLeadingZeros() {
+    @DisplayName("number of leading zeros")
+    public void number_of_leading_zeros() {
         assertEquals(8, numberOfLeadingZeros((byte) 0x0));
         assertEquals(0, numberOfLeadingZeros((byte) 0xFF));
         assertEquals(6, numberOfLeadingZeros((byte) 0x2));
@@ -49,7 +51,8 @@ class HashCashProofOfWorkServiceTest {
     }
 
     @Test
-    public void testToNumLeadingZeros() {
+    @DisplayName("to num leading zeros")
+    public void to_num_leading_zeros() {
         assertEquals(0, toNumLeadingZeros(-1.0));
         assertEquals(0, toNumLeadingZeros(0.0));
         assertEquals(0, toNumLeadingZeros(1.0));
@@ -60,7 +63,8 @@ class HashCashProofOfWorkServiceTest {
     }
 
     @Test
-    public void testDiffIncrease() {
+    @DisplayName("diff increase")
+    public void diff_increase() {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < 9; i++) {
             run(i, stringBuilder);
