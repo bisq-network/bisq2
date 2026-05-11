@@ -43,7 +43,7 @@ public class StableCoinAccountDataController implements Controller {
 
     StableCoinAccountDataController(CreateStableCoinAccountModel parentModel) {
         this.parentModel = parentModel;
-        this.view = new DataView(parentModel);
+        this.view = new DataView(parentModel, this);
     }
 
     @Override
@@ -69,8 +69,8 @@ public class StableCoinAccountDataController implements Controller {
         private ChangeListener<StableCoinPaymentRail> railListener;
         private ChangeListener<String> addressListener;
 
-        DataView(CreateStableCoinAccountModel model) {
-            super(new VBox(20), model, null);
+        DataView(CreateStableCoinAccountModel model, StableCoinAccountDataController controller) {
+            super(new VBox(20), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
             root.setPadding(new Insets(20, 0, 0, 0));
@@ -87,7 +87,8 @@ public class StableCoinAccountDataController implements Controller {
                 @Override
                 public String toString(StableCoinPaymentRail rail) {
                     if (rail == null) return "";
-                    return rail.getStableCoin().getCode() + " on " + rail.getStableCoin().getNetwork().getDisplayName();
+                    return Res.get("user.stableCoinAccounts.create.networkComboFormat",
+                            rail.getStableCoin().getCode(), rail.getStableCoin().getNetwork().getDisplayName());
                 }
 
                 @Override
@@ -126,7 +127,7 @@ public class StableCoinAccountDataController implements Controller {
             addressListener = (obs, old, newVal) -> {
                 model.getAddress().set(newVal);
                 boolean showError = StringUtils.isNotEmpty(newVal) && !StableCoinAccountPayload.isValidEvmAddress(newVal.trim());
-                validationLabel.setText(showError ? "Invalid EVM address (expected 0x + 40 hex characters)" : "");
+                validationLabel.setText(showError ? Res.get("user.stableCoinAccounts.create.address.invalidEvm") : "");
                 validationLabel.setVisible(showError);
                 validationLabel.setManaged(showError);
                 if (controller != null) controller.updateNextButtonState();

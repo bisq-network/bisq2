@@ -97,7 +97,11 @@ public class TradeWizardPaymentMethodsController implements Controller {
         if (model.getSelectedFiatPaymentMethods().isEmpty()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShouldShowOverlay().set(true);
-            model.getOverlayText().set(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"));
+            Market market = model.getMarket().get();
+            String warningKey = market != null && market.isBtcStableCoinMarket()
+                    ? "bisqEasy.tradeWizard.paymentMethods.warn.noStableCoinPaymentMethodSelected"
+                    : "bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected";
+            model.getOverlayText().set(Res.get(warningKey));
             return false;
         }
 

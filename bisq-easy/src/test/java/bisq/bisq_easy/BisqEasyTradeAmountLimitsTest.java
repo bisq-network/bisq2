@@ -17,6 +17,7 @@
 
 package bisq.bisq_easy;
 
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import org.junit.jupiter.api.Test;
@@ -170,5 +171,32 @@ class BisqEasyTradeAmountLimitsTest {
     @DisplayName("result enum score too low is not valid")
     void result_enum_score_too_low_is_not_valid() {
         assertFalse(BisqEasyTradeAmountLimits.Result.SCORE_TOO_LOW.isValid());
+    }
+
+    @Test
+    @DisplayName("getRequiredReputationScoreByUsdAmount works with USDC Coin amounts")
+    void get_required_reputation_score_works_with_usdc_coin() {
+        Monetary usdcAmount = Coin.fromFaceValue(150, "USDC");
+        long score = BisqEasyTradeAmountLimits.getRequiredReputationScoreByUsdAmount(usdcAmount);
+        assertEquals(30_000, score);
+    }
+
+    @Test
+    @DisplayName("getRequiredReputationScoreByUsdAmount USDC at cap")
+    void get_required_reputation_score_usdc_at_cap() {
+        Monetary usdcAmount = Coin.fromFaceValue(600, "USDC");
+        long score = BisqEasyTradeAmountLimits.getRequiredReputationScoreByUsdAmount(usdcAmount);
+        assertEquals(120_000, score);
+    }
+
+    @Test
+    @DisplayName("USDC Coin face value matches Fiat face value for same amount")
+    void usdc_coin_face_value_matches_fiat_for_same_amount() {
+        Monetary usdFiat = Fiat.fromFaceValue(150, "USD");
+        Monetary usdcCoin = Coin.fromFaceValue(150, "USDC");
+
+        long fiatScore = BisqEasyTradeAmountLimits.getRequiredReputationScoreByUsdAmount(usdFiat);
+        long coinScore = BisqEasyTradeAmountLimits.getRequiredReputationScoreByUsdAmount(usdcCoin);
+        assertEquals(fiatScore, coinScore);
     }
 }

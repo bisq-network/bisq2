@@ -75,6 +75,10 @@ public class CreateStableCoinAccountController extends NavigationController {
 
     @Override
     public void onActivate() {
+        model.getSelectedRail().set(null);
+        model.getAddress().set("");
+        model.getAccountName().set("");
+
         model.getNextButtonVisible().set(true);
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);

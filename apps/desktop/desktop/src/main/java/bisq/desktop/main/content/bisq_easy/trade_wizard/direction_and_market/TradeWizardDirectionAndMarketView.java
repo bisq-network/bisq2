@@ -310,7 +310,9 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
             this.numUsersAsInteger = numUsersAsInteger;
 
             this.numOffers = String.valueOf(numOffersAsInteger);
-            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
+            quoteCurrencyDisplayName = market.isBtcStableCoinMarket()
+                    ? market.getQuoteCurrencyCode() + " (" + market.getQuoteCurrencyDisplayName() + ")"
+                    : new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
             this.numUsers = String.valueOf(numUsersAsInteger);
             marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
             marketLogo.setCache(true);

@@ -23,6 +23,9 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
@@ -317,5 +320,64 @@ class BisqEasyContractTest {
         NetworkId networkId = new NetworkId(addresses, pubKey);
         ProofOfWork proofOfWork = new ProofOfWork(pubKey.getHash(), 0, null, 1.0, new byte[72], 0);
         return new UserProfile(1, "nick-" + port, proofOfWork, 0, networkId, "", "", "1.0.0");
+    }
+
+    private StableCoinPaymentMethodSpec createStableCoinPaymentMethodSpec() {
+        return new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromPaymentRail(StableCoinPaymentRail.USDC_POLYGON));
+    }
+
+    private BisqEasyOffer createStableCoinOffer() {
+        NetworkId makerNetworkId = createNetworkId(1010);
+        Market market = new Market("BTC", "USDC", "Bitcoin", "USD Coin");
+        return new BisqEasyOffer(
+                "offer-test-stablecoin",
+                System.currentTimeMillis(),
+                makerNetworkId,
+                Direction.BUY,
+                market,
+                new BaseSideFixedAmountSpec(100_000L),
+                new MarketPriceSpec(),
+                List.of(TradeProtocolType.BISQ_EASY),
+                List.of(createBtcPaymentMethodSpec()),
+                List.of(createStableCoinPaymentMethodSpec()),
+                List.of(),
+                List.of("en"),
+                0,
+                "1.0.0",
+                "1.0.0"
+        );
+    }
+
+    @Test
+    @DisplayName("toProto and fromProto round trip preserves StableCoinPaymentMethodSpec on quote side")
+    void to_proto_round_trip_preserves_stablecoin_payment_method_spec() {
+        BisqEasyOffer offer = createStableCoinOffer();
+        NetworkId takerNetworkId = createNetworkId(2010);
+        BitcoinPaymentMethodSpec baseSideSpec = createBtcPaymentMethodSpec();
+        StableCoinPaymentMethodSpec quoteSideSpec = createStableCoinPaymentMethodSpec();
+
+        BisqEasyContract original = new BisqEasyContract(
+                System.currentTimeMillis(),
+                offer,
+                takerNetworkId,
+                100_000L,
+                111_359_000_000L,
+                baseSideSpec,
+                quoteSideSpec,
+                Optional.empty(),
+                new MarketPriceSpec(),
+                8_980L
+        );
+
+        bisq.contract.protobuf.Contract proto = original.toProto(false);
+        BisqEasyContract deserialized = BisqEasyContract.fromProto(proto);
+
+        assertThat(deserialized.getQuoteSidePaymentMethodSpec()).isInstanceOf(StableCoinPaymentMethodSpec.class);
+        StableCoinPaymentMethodSpec deserializedSpec = (StableCoinPaymentMethodSpec) deserialized.getQuoteSidePaymentMethodSpec();
+        assertEquals(quoteSideSpec.getPaymentMethod().getName(), deserializedSpec.getPaymentMethod().getName());
+        assertEquals(original.getBaseSideAmount(), deserialized.getBaseSideAmount());
+        assertEquals(original.getQuoteSideAmount(), deserialized.getQuoteSideAmount());
+        assertEquals("BTC", deserialized.getOffer().getMarket().getBaseCurrencyCode());
+        assertEquals("USDC", deserialized.getOffer().getMarket().getQuoteCurrencyCode());
     }
 }

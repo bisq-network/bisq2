@@ -80,7 +80,10 @@ public class SellerState2a extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT);
+            WaitingState waitingState = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket()
+                    ? WaitingState.QUOTE_PAYMENT
+                    : WaitingState.FIAT_PAYMENT;
+            waitingAnimation = new WaitingAnimation(waitingState);
             headline = FormUtils.getHeadline();
             info = FormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);

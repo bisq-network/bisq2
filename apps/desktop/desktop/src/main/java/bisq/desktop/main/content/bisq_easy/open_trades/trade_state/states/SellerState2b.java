@@ -87,7 +87,10 @@ public class SellerState2b extends BaseState {
             super(model, controller);
 
             headline = FormUtils.getHeadline();
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
+            String infoKey = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket()
+                    ? "bisqEasy.tradeState.info.seller.phase2b.info.stableCoin"
+                    : "bisqEasy.tradeState.info.seller.phase2b.info";
+            WrappingText info = FormUtils.getInfo(Res.get(infoKey));
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
             VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));

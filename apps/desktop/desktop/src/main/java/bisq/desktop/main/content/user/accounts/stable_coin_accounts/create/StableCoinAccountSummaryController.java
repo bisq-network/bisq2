@@ -39,7 +39,7 @@ public class StableCoinAccountSummaryController implements Controller {
 
     StableCoinAccountSummaryController(CreateStableCoinAccountModel parentModel) {
         this.parentModel = parentModel;
-        this.view = new SummaryView(parentModel);
+        this.view = new SummaryView(parentModel, this);
     }
 
     @Override
@@ -69,8 +69,8 @@ public class StableCoinAccountSummaryController implements Controller {
         private final MaterialTextField accountNameField;
         private ChangeListener<String> accountNameListener;
 
-        SummaryView(CreateStableCoinAccountModel model) {
-            super(new VBox(15), model, null);
+        SummaryView(CreateStableCoinAccountModel model, StableCoinAccountSummaryController controller) {
+            super(new VBox(15), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
             root.setPadding(new Insets(20, 0, 0, 0));

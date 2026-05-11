@@ -129,11 +129,20 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                         ? Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescription")
                         : Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescriptions")
         );
-        model.setQuoteSidePaymentMethodDescription(
-                quoteSidePaymentMethodSpecs.size() == 1
-                        ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription")
-                        : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions")
-        );
+        boolean isStableCoin = bisqEasyOffer.getMarket().isBtcStableCoinMarket();
+        if (isStableCoin) {
+            model.setQuoteSidePaymentMethodDescription(
+                    quoteSidePaymentMethodSpecs.size() == 1
+                            ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription.stableCoin")
+                            : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions.stableCoin")
+            );
+        } else {
+            model.setQuoteSidePaymentMethodDescription(
+                    quoteSidePaymentMethodSpecs.size() == 1
+                            ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription")
+                            : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions")
+            );
+        }
 
         model.setId(bisqEasyOffer.getId());
         model.setDate(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
