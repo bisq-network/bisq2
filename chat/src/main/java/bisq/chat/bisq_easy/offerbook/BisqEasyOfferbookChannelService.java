@@ -190,6 +190,9 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
             allMarkets.remove(MarketRepository.getDefaultBtcFiatMarket());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }
+
+        MarketRepository.getStableCoinMarkets()
+                .forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
     }
 
     @Override
