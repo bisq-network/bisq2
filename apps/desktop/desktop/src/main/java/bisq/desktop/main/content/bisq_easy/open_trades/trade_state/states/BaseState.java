@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.stable_coin.StableCoinAccount;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -93,11 +94,20 @@ public abstract class BaseState {
         }
 
         protected Optional<String> findUsersAccountData() {
+            boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
             return accountService
                     .findSelectedAccount().stream()
-                    .filter(UserDefinedFiatAccount.class::isInstance)
-                    .map(UserDefinedFiatAccount.class::cast)
-                    .map(account -> account.getAccountPayload().getAccountData())
+                    .filter(account -> isStableCoinMarket
+                            ? account instanceof StableCoinAccount
+                            : account instanceof UserDefinedFiatAccount)
+                    .map(account -> {
+                        if (account instanceof StableCoinAccount stableCoinAccount) {
+                            return stableCoinAccount.getAccountPayload().getAccountDataDisplayString();
+                        } else if (account instanceof UserDefinedFiatAccount fiatAccount) {
+                            return fiatAccount.getAccountPayload().getAccountData();
+                        }
+                        return null;
+                    })
                     .findFirst();
         }
 

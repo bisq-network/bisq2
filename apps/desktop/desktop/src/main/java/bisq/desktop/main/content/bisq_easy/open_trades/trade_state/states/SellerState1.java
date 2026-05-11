@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.stable_coin.StableCoinAccount;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -90,19 +91,29 @@ public class SellerState1 extends BaseState {
 
             model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
+            boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
             accountsPin = accountService.getAccountByNameMap().addObserver(() ->
                     UIThread.run(() -> {
-                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
-                                .filter(account -> account instanceof UserDefinedFiatAccount)
-                                .map(account -> (UserDefinedFiatAccount) account)
-                                .collect(Collectors.toList());
-                        model.setAllAccounts(accounts);
-                        model.getAccountSelectionVisible().set(accounts.size() > 1);
+                        List<Account<?, ?>> matchingAccounts;
+                        if (isStableCoinMarket) {
+                            matchingAccounts = accountService.getAccounts().stream()
+                                    .filter(account -> account instanceof StableCoinAccount)
+                                    .collect(Collectors.toList());
+                        } else {
+                            matchingAccounts = accountService.getAccounts().stream()
+                                    .filter(account -> account instanceof UserDefinedFiatAccount)
+                                    .collect(Collectors.toList());
+                        }
+                        model.setAllAccounts(matchingAccounts);
+                        model.getAccountSelectionVisible().set(matchingAccounts.size() > 1);
                         maybeSelectFirstAccount();
                     }));
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
                     UIThread.run(() -> {
-                        if (account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
+                        if (isStableCoinMarket && account instanceof StableCoinAccount stableCoinAccount) {
+                            model.selectedAccountProperty().set(stableCoinAccount);
+                            model.getPaymentAccountData().set(stableCoinAccount.getAccountPayload().getAccountDataDisplayString());
+                        } else if (!isStableCoinMarket && account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
                             model.selectedAccountProperty().set(userDefinedFiatAccount);
                             model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
                         }
@@ -132,7 +143,7 @@ public class SellerState1 extends BaseState {
             bisqEasyTradeService.sellerSendsPaymentAccount(model.getTrade(), paymentAccountData);
         }
 
-        private void onSelectAccount(UserDefinedFiatAccount account) {
+        private void onSelectAccount(Account<?, ?> account) {
             if (account != null) {
                 accountService.setSelectedAccount(account);
             }
@@ -150,24 +161,24 @@ public class SellerState1 extends BaseState {
         private final StringProperty paymentAccountData = new SimpleStringProperty();
         private final BooleanProperty buttonDisabled = new SimpleBooleanProperty();
         private final BooleanProperty accountSelectionVisible = new SimpleBooleanProperty();
-        private final ObservableList<UserDefinedFiatAccount> accounts = FXCollections.observableArrayList();
-        private final SortedList<UserDefinedFiatAccount> sortedAccounts = new SortedList<>(accounts);
-        private final ObjectProperty<UserDefinedFiatAccount> selectedAccount = new SimpleObjectProperty<>();
+        private final ObservableList<Account<?, ?>> accounts = FXCollections.observableArrayList();
+        private final SortedList<Account<?, ?>> sortedAccounts = new SortedList<>(accounts);
+        private final ObjectProperty<Account<?, ?>> selectedAccount = new SimpleObjectProperty<>();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
 
         @Nullable
-        public UserDefinedFiatAccount getSelectedAccount() {
+        public Account<?, ?> getSelectedAccount() {
             return selectedAccount.get();
         }
 
-        public ObjectProperty<UserDefinedFiatAccount> selectedAccountProperty() {
+        public ObjectProperty<Account<?, ?>> selectedAccountProperty() {
             return selectedAccount;
         }
 
-        public void setAllAccounts(Collection<UserDefinedFiatAccount> collection) {
+        public void setAllAccounts(Collection<? extends Account<?, ?>> collection) {
             accounts.setAll(collection);
         }
     }
@@ -175,7 +186,7 @@ public class SellerState1 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button button;
         private final MaterialTextArea paymentAccountData;
-        private final AutoCompleteComboBox<UserDefinedFiatAccount> accountSelection;
+        private final AutoCompleteComboBox<Account<?, ?>> accountSelection;
         private Subscription selectedAccountPin;
 
         private View(Model model, Controller controller) {
@@ -185,12 +196,12 @@ public class SellerState1 extends BaseState {
             accountSelection.setPrefWidth(300);
             accountSelection.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(UserDefinedFiatAccount object) {
+                public String toString(Account<?, ?> object) {
                     return object != null ? object.getAccountName() : "";
                 }
 
                 @Override
-                public UserDefinedFiatAccount fromString(String string) {
+                public Account<?, ?> fromString(String string) {
                     return null;
                 }
             });
