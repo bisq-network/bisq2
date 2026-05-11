@@ -79,7 +79,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
-            changedNotificationPin, bisqEasyOfferbookMessageTypeFilterPin;
+            changedNotificationPin, bisqEasyOfferbookMessageTypeFilterPin,
+            unsupportedOfferPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin, selectedMarketPricePin;
     private final ListChangeListener<? super MarketChannelItem> marketChannelItemListener = c -> updateFilteredMarketChannelItems();
     private final Map<MarketChannelItem, ChangeListener<Number>> marketNumOffersListeners = new HashMap<>();
@@ -275,6 +276,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                     .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                     .show();
         }
+
+        unsupportedOfferPin = bisqEasyOfferbookChannelService.getHasReceivedUnsupportedOffer()
+                .addObserver(hasUnsupported -> UIThread.run(() -> {
+                    if (Boolean.TRUE.equals(hasUnsupported) && !model.isShownUnsupportedOfferPopup()) {
+                        model.setShownUnsupportedOfferPopup(true);
+                        new Popup().information(Res.get("bisqEasy.offerbook.unsupportedOffer.popup")).show();
+                    }
+                }));
     }
 
     @Override
@@ -291,6 +300,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         favouriteMarketsPin.unbind();
         changedNotificationPin.unbind();
         bisqEasyOfferbookMessageTypeFilterPin.unbind();
+        if (unsupportedOfferPin != null) {
+            unsupportedOfferPin.unbind();
+        }
         if (selectedMarketPricePin != null) {
             selectedMarketPricePin.unsubscribe();
         }
@@ -331,11 +343,20 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
                         channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
 
+                boolean isStableCoin = channel.getMarket().isBtcStableCoinMarket();
+                boolean dismissed = settingsService.getCookie().asBoolean(CookieKey.STABLECOIN_INTRO_DISMISSED).orElse(false);
+                model.getStableCoinBannerVisible().set(isStableCoin && !dismissed);
+
                 updateMarketPrice();
 
                 offerbookListController.setSelectedChannel(channel);
             }
         });
+    }
+
+    void onDismissStableCoinBanner() {
+        settingsService.setCookie(CookieKey.STABLECOIN_INTRO_DISMISSED, true);
+        model.getStableCoinBannerVisible().set(false);
     }
 
     void onCreateOffer() {

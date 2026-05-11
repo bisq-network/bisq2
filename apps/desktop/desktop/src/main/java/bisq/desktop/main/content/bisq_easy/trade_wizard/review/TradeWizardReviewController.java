@@ -191,13 +191,16 @@ public class TradeWizardReviewController implements Controller {
             BisqEasyOfferbookChannel channel = optionalChannel.get();
             model.setSelectedChannel(channel);
 
+            int offerVersion = market.isBtcStableCoinMarket()
+                    ? BisqEasyOfferbookMessage.CURRENT_VERSION : 0;
             BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channel.getId(),
                     userIdentity.getUserProfile().getId(),
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),
                     Optional.empty(),
                     System.currentTimeMillis(),
-                    false);
+                    false,
+                    offerVersion);
 
             model.setMyOfferMessage(myOfferMessage);
         } else {
@@ -346,6 +349,12 @@ public class TradeWizardReviewController implements Controller {
         }
 
         String quoteSideType = market.isBtcStableCoinMarket() ? "stableCoin" : "fiat";
+
+        boolean isStableCoinMarket = market.isBtcStableCoinMarket();
+        model.getStableCoinNoteVisible().set(isStableCoinMarket);
+        if (isStableCoinMarket) {
+            model.getStableCoinNoteText().set(Res.get("bisqEasy.tradeWizard.review.stableCoinNote"));
+        }
 
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));

@@ -43,7 +43,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     private static final int PADDING = 20;
 
     private Button watchVideoButton, openTradeGuideButton;
-    private final Button startTradingButton, openChatButton;
+    private final Button startTradingButton, openChatButton, openStableCoinButton;
     private ImageView videoImage;
     private Subscription videoSeenPin;
 
@@ -60,17 +60,18 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         //Second row
         Insets gridPaneInsets = new Insets(0, 0, 0, 0);
-        GridPane gridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
+        GridPane gridPane = GridPaneUtil.getGridPane(PADDING, 15, gridPaneInsets);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 3);
         root.add(gridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-easy-onboarding-small-box";
         String headlineLabelStyleClass = "bisq-easy-onboarding-small-box-headline";
         String infoLabelStyleClass = "bisq-easy-onboarding-small-box-text";
         String buttonStyleClass = "large-button";
-        Insets groupInsets = new Insets(36, 48, 44, 48);
-        Insets headlineInsets = new Insets(36, 48, 0, 48);
-        Insets infoInsets = new Insets(10, 48, 0, 48);
-        Insets buttonInsets = new Insets(20, 48, 44, 48);
+        Insets groupInsets = new Insets(36, 28, 44, 28);
+        Insets headlineInsets = new Insets(36, 28, 0, 28);
+        Insets infoInsets = new Insets(10, 28, 0, 28);
+        Insets buttonInsets = new Insets(20, 28, 44, 28);
 
         startTradingButton = new Button(Res.get("bisqEasy.onboarding.left.button"));
         GridPaneUtil.fillColumn(gridPane,
@@ -107,6 +108,24 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 0d,
                 groupPaneStyleClass,
                 groupInsets);
+
+        openStableCoinButton = new Button(Res.get("bisqEasy.onboarding.stableCoin.button"));
+        GridPaneUtil.fillColumn(gridPane,
+                2,
+                openStableCoinButton,
+                buttonStyleClass,
+                buttonInsets,
+                Res.get("bisqEasy.onboarding.stableCoin.headline"),
+                headlineLabelStyleClass,
+                "bisq-easy",
+                16d,
+                headlineInsets,
+                Res.get("bisqEasy.onboarding.stableCoin.info"),
+                infoLabelStyleClass,
+                infoInsets,
+                0d,
+                groupPaneStyleClass,
+                groupInsets);
     }
 
     @Override
@@ -118,6 +137,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         startTradingButton.setOnAction(e -> controller.onOpenTradeWizard());
         openChatButton.setOnAction(e -> controller.onOpenOfferbook());
+        openStableCoinButton.setOnAction(e -> controller.onOpenStableCoinOfferbook());
         openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
         watchVideoButton.setOnMouseClicked(e -> controller.onPlayVideo());
         videoImage.setOnMouseClicked(e -> controller.onPlayVideo());
@@ -129,6 +149,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         startTradingButton.setOnAction(null);
         openChatButton.setOnAction(null);
+        openStableCoinButton.setOnAction(null);
         openTradeGuideButton.setOnAction(null);
         watchVideoButton.setOnAction(null);
         videoImage.setOnMouseClicked(null);

@@ -31,6 +31,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -109,6 +111,8 @@ class TradeWizardReviewModel implements Model {
     private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+    private final BooleanProperty stableCoinNoteVisible = new SimpleBooleanProperty();
+    private final StringProperty stableCoinNoteText = new SimpleStringProperty();
     private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
     private long marketPrice;
@@ -146,6 +150,8 @@ class TradeWizardReviewModel implements Model {
         takersBitcoinPaymentMethods.clear();
         takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
+        stableCoinNoteVisible.set(false);
+        stableCoinNoteText.set(null);
         takeOfferStatus.set(TakeOfferStatus.NOT_STARTED);
         marketPrice = 0;
     }

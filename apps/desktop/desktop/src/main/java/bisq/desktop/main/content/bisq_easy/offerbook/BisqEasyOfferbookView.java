@@ -86,7 +86,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
             collapsedMarketSelectionListTitle, marketSelectionListTitle, expandMarketsListIconLabel,
             collapseMarketsListIconLabel;
-    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
+    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint, stableCoinBanner;
+    private Button stableCoinBannerDismissButton;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon, marketsGreenIcon, marketsGreyIcon,
             marketsWhiteIcon, expandMarketsListWhiteIcon, expandMarketsListGreyIcon, collapseMarketsListWhiteIcon,
@@ -207,6 +208,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         showOnlyOfferMessages.setOnAction(e -> getController().setMessageTypeFilter(showOnlyOfferMessages.getMenuItem()));
         showOnlyTextMessages.setOnAction(e -> getController().setMessageTypeFilter(showOnlyTextMessages.getMenuItem()));
 
+        stableCoinBanner.visibleProperty().bind(getModel().getStableCoinBannerVisible());
+        stableCoinBanner.managedProperty().bind(getModel().getStableCoinBannerVisible());
+
+        stableCoinBannerDismissButton.setOnAction(e -> getController().onDismissStableCoinBanner());
+
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
         removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(ALL));
@@ -276,6 +282,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         showOnlyOfferMessages.setOnAction(null);
         showOnlyTextMessages.setOnAction(null);
         createOfferButton.setOnAction(null);
+
+        stableCoinBanner.visibleProperty().unbind();
+        stableCoinBanner.managedProperty().unbind();
+        stableCoinBannerDismissButton.setOnAction(null);
 
         removeWithOffersFilter.setOnMouseClicked(null);
         withOffersDisplayHint.setOnMouseEntered(null);
@@ -571,13 +581,41 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
 
+        stableCoinBanner = createStableCoinBanner();
+
         chatMessagesComponent.setMinWidth(520);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatVBox = new VBox(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
+        chatVBox = new VBox(titleHBox, stableCoinBanner, Layout.hLine(), subheader, chatMessagesComponent);
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
         centerVBox.getChildren().add(chatVBox);
         centerVBox.setAlignment(Pos.CENTER);
+    }
+
+    private HBox createStableCoinBanner() {
+        ImageView infoIcon = ImageUtil.getImageViewById("info");
+
+        Label headline = new Label(Res.get("bisqEasy.offerbook.stableCoinBanner.headline"));
+        headline.getStyleClass().add("bisq-easy-container-headline");
+
+        Label text = new Label(Res.get("bisqEasy.offerbook.stableCoinBanner.text"));
+        text.setWrapText(true);
+        text.getStyleClass().add("bisq-easy-container-label");
+
+        VBox textBox = new VBox(4, headline, text);
+        HBox.setHgrow(textBox, Priority.ALWAYS);
+
+        stableCoinBannerDismissButton = new Button(Res.get("bisqEasy.offerbook.stableCoinBanner.dismiss"));
+        stableCoinBannerDismissButton.getStyleClass().addAll("outlined-button", "grey-outlined-button");
+        stableCoinBannerDismissButton.setMinWidth(Button.USE_PREF_SIZE);
+
+        HBox banner = new HBox(15, infoIcon, textBox, stableCoinBannerDismissButton);
+        banner.setAlignment(Pos.CENTER_LEFT);
+        banner.setPadding(new Insets(15, 20, 15, 20));
+        banner.getStyleClass().add("bisq-easy-container");
+        banner.setVisible(false);
+        banner.setManaged(false);
+        return banner;
     }
 
     private DropdownMenu createAndGetMessageTypeFilterMenu() {
