@@ -163,6 +163,10 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
             try {
                 Map<?, ?> treeMap = (Map<?, ?>) obj;
                 String currencyCode = (String) treeMap.get("currencyCode");
+                // Pricenode returns "USDT-E" for Tether; normalize to canonical code
+                if ("USDT-E".equals(currencyCode)) {
+                    currencyCode = "USDT";
+                }
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
                     String provider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
                     // Convert Bisq-Aggregate to BISQAGGREGATE

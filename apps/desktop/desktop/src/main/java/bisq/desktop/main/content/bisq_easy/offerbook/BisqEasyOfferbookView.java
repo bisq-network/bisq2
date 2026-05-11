@@ -57,7 +57,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import static bisq.bisq_easy.BisqEasyMarketFilter.ALL;
+import static bisq.bisq_easy.BisqEasyMarketFilter.FIAT;
 import static bisq.bisq_easy.BisqEasyMarketFilter.FAVOURITES;
+import static bisq.bisq_easy.BisqEasyMarketFilter.STABLECOINS;
 import static bisq.bisq_easy.BisqEasyMarketFilter.WITH_OFFERS;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -81,15 +83,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, messageTypeFilterMenu;
     private SortAndFilterDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
-    private SortAndFilterDropdownMenuItem<BisqEasyMarketFilter> filterShowAll, filterWithOffers, filterFavourites;
+    private SortAndFilterDropdownMenuItem<BisqEasyMarketFilter> filterShowAll, filterWithOffers, filterFavourites,
+            filterFiatOnly, filterStablecoinsOnly;
     private SortAndFilterDropdownMenuItem<ChatMessageType> showAllMessages, showOnlyOfferMessages, showOnlyTextMessages;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
+            removeFiatOnlyFilter, removeStablecoinsOnlyFilter,
             collapsedMarketSelectionListTitle, marketSelectionListTitle, expandMarketsListIconLabel,
             collapseMarketsListIconLabel;
-    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint, stableCoinBanner;
+    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint,
+            fiatOnlyDisplayHint, stablecoinsOnlyDisplayHint, stableCoinBanner;
     private Button stableCoinBannerDismissButton;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
-            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon, marketsGreenIcon, marketsGreyIcon,
+            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon,
+            fiatOnlyRemoveFilterDefaultIcon, fiatOnlyRemoveFilterActiveIcon,
+            stablecoinsOnlyRemoveFilterDefaultIcon, stablecoinsOnlyRemoveFilterActiveIcon,
+            marketsGreenIcon, marketsGreyIcon,
             marketsWhiteIcon, expandMarketsListWhiteIcon, expandMarketsListGreyIcon, collapseMarketsListWhiteIcon,
             collapseMarketsListGreyIcon;
 
@@ -150,6 +158,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         withOffersDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(WITH_OFFERS));
         onlyFavouritesDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(FAVOURITES));
         onlyFavouritesDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(FAVOURITES));
+        fiatOnlyDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(FIAT));
+        fiatOnlyDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(FIAT));
+        stablecoinsOnlyDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(STABLECOINS));
+        stablecoinsOnlyDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(STABLECOINS));
         favouritesTableView.visibleProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
         collapsedMarketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListCollapsed());
@@ -203,6 +215,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(e -> getModel().getSelectedMarketsFilter().set(WITH_OFFERS));
         filterShowAll.setOnAction(e -> getModel().getSelectedMarketsFilter().set(ALL));
         filterFavourites.setOnAction(e -> getModel().getSelectedMarketsFilter().set(FAVOURITES));
+        filterFiatOnly.setOnAction(e -> getModel().getSelectedMarketsFilter().set(FIAT));
+        filterStablecoinsOnly.setOnAction(e -> getModel().getSelectedMarketsFilter().set(STABLECOINS));
 
         showAllMessages.setOnAction(e -> getController().setMessageTypeFilter(showAllMessages.getMenuItem()));
         showOnlyOfferMessages.setOnAction(e -> getController().setMessageTypeFilter(showOnlyOfferMessages.getMenuItem()));
@@ -222,6 +236,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         removeFavouritesFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(ALL));
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
+
+        removeFiatOnlyFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(ALL));
+        fiatOnlyDisplayHint.setOnMouseEntered(e -> removeFiatOnlyFilter.setGraphic(fiatOnlyRemoveFilterActiveIcon));
+        fiatOnlyDisplayHint.setOnMouseExited(e -> removeFiatOnlyFilter.setGraphic(fiatOnlyRemoveFilterDefaultIcon));
+
+        removeStablecoinsOnlyFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(ALL));
+        stablecoinsOnlyDisplayHint.setOnMouseEntered(e -> removeStablecoinsOnlyFilter.setGraphic(stablecoinsOnlyRemoveFilterActiveIcon));
+        stablecoinsOnlyDisplayHint.setOnMouseExited(e -> removeStablecoinsOnlyFilter.setGraphic(stablecoinsOnlyRemoveFilterDefaultIcon));
 
         marketSelectionListTitle.setOnMouseClicked(e -> collapseMarketsList());
         marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
@@ -253,6 +275,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         withOffersDisplayHint.managedProperty().unbind();
         onlyFavouritesDisplayHint.visibleProperty().unbind();
         onlyFavouritesDisplayHint.managedProperty().unbind();
+        fiatOnlyDisplayHint.visibleProperty().unbind();
+        fiatOnlyDisplayHint.managedProperty().unbind();
+        stablecoinsOnlyDisplayHint.visibleProperty().unbind();
+        stablecoinsOnlyDisplayHint.managedProperty().unbind();
         favouritesTableView.visibleProperty().unbind();
         favouritesTableView.managedProperty().unbind();
         collapsedMarketSelectionList.visibleProperty().unbind();
@@ -278,6 +304,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(null);
         filterShowAll.setOnAction(null);
         filterFavourites.setOnAction(null);
+        filterFiatOnly.setOnAction(null);
+        filterStablecoinsOnly.setOnAction(null);
         showAllMessages.setOnAction(null);
         showOnlyOfferMessages.setOnAction(null);
         showOnlyTextMessages.setOnAction(null);
@@ -294,6 +322,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         removeFavouritesFilter.setOnMouseClicked(null);
         onlyFavouritesDisplayHint.setOnMouseEntered(null);
         onlyFavouritesDisplayHint.setOnMouseExited(null);
+
+        removeFiatOnlyFilter.setOnMouseClicked(null);
+        fiatOnlyDisplayHint.setOnMouseEntered(null);
+        fiatOnlyDisplayHint.setOnMouseExited(null);
+
+        removeStablecoinsOnlyFilter.setOnMouseClicked(null);
+        stablecoinsOnlyDisplayHint.setOnMouseEntered(null);
+        stablecoinsOnlyDisplayHint.setOnMouseExited(null);
 
         marketSelectionListTitle.setOnMouseClicked(null);
         marketSelectionListTitle.setOnMouseEntered(null);
@@ -432,7 +468,20 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint = createAndGetDisplayHintHBox(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), removeFavouritesFilter);
 
-        appliedFiltersSection = new HBox(withOffersDisplayHint, onlyFavouritesDisplayHint);
+        fiatOnlyRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+        fiatOnlyRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
+        removeFiatOnlyFilter = createAndGetRemoveFilterLabel(fiatOnlyRemoveFilterDefaultIcon);
+        fiatOnlyDisplayHint = createAndGetDisplayHintHBox(
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.fiatOnly"), removeFiatOnlyFilter);
+
+        stablecoinsOnlyRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+        stablecoinsOnlyRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
+        removeStablecoinsOnlyFilter = createAndGetRemoveFilterLabel(stablecoinsOnlyRemoveFilterDefaultIcon);
+        stablecoinsOnlyDisplayHint = createAndGetDisplayHintHBox(
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.stablecoinsOnly"), removeStablecoinsOnlyFilter);
+
+        appliedFiltersSection = new HBox(withOffersDisplayHint, onlyFavouritesDisplayHint,
+                fiatOnlyDisplayHint, stablecoinsOnlyDisplayHint);
         appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
 
@@ -536,11 +585,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), WITH_OFFERS);
         filterFavourites = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), FAVOURITES);
+        filterFiatOnly = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.fiatOnly"), FIAT);
+        filterStablecoinsOnly = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.stablecoinsOnly"), STABLECOINS);
         filterShowAll = new SortAndFilterDropdownMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator, filterTitle,
-                filterWithOffers, filterFavourites, filterShowAll);
+                filterWithOffers, filterFavourites, filterFiatOnly, filterStablecoinsOnly, filterShowAll);
         return dropdownMenu;
     }
 

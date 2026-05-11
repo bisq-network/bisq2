@@ -190,8 +190,24 @@ public class MarketRepository {
         return new Market("BTC", "USDC", "Bitcoin", "USD Coin");
     }
 
+    public static Market getBtcUsdtMarket() {
+        return new Market("BTC", "USDT", "Bitcoin", "Tether USD");
+    }
+
+    public static Market getBtcDaiMarket() {
+        return new Market("BTC", "DAI", "Bitcoin", "Dai");
+    }
+
+    public static Market getBtcTusdMarket() {
+        return new Market("BTC", "TUSD", "Bitcoin", "TrueUSD");
+    }
+
+    // Only stablecoins with pricenode price feeds are listed here. FDUSD, USDP, and GUSD
+    // lack pricenode support and would be hidden by the marketPricePredicate filter.
+    // They can be added once their prices become available or when we implement
+    // BTC/USD price derivation for all USD-pegged stablecoins.
     public static List<Market> getStableCoinMarkets() {
-        return List.of(getBtcUsdcMarket());
+        return List.of(getBtcUsdcMarket(), getBtcUsdtMarket(), getBtcDaiMarket(), getBtcTusdMarket());
     }
 
     public static List<Market> getAllBisqEasyMarkets() {

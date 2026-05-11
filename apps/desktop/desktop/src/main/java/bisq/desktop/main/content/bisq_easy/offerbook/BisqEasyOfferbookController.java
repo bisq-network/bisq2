@@ -165,7 +165,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == BisqEasyMarketFilter.WITH_OFFERS || filter == BisqEasyMarketFilter.FAVOURITES);
+            model.getShouldShowAppliedFilters().set(filter == BisqEasyMarketFilter.WITH_OFFERS
+                    || filter == BisqEasyMarketFilter.FAVOURITES
+                    || filter == BisqEasyMarketFilter.FIAT
+                    || filter == BisqEasyMarketFilter.STABLECOINS);
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
