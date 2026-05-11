@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.stable_coin.StableCoinAccount;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -50,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -92,10 +92,16 @@ public class SellerState1 extends BaseState {
             model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
             boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            StableCoinPaymentRail contractRail = resolveContractRail();
             accountsPin = accountService.getAccountByNameMap().addObserver(() ->
                     UIThread.run(() -> {
                         List<Account<?, ?>> matchingAccounts;
-                        if (isStableCoinMarket) {
+                        if (isStableCoinMarket && contractRail != null) {
+                            matchingAccounts = accountService.getAccounts().stream()
+                                    .filter(account -> account instanceof StableCoinAccount sca
+                                            && sca.getAccountPayload().getPaymentMethod().getPaymentRail() == contractRail)
+                                    .collect(Collectors.toList());
+                        } else if (isStableCoinMarket) {
                             matchingAccounts = accountService.getAccounts().stream()
                                     .filter(account -> account instanceof StableCoinAccount)
                                     .collect(Collectors.toList());
@@ -110,9 +116,10 @@ public class SellerState1 extends BaseState {
                     }));
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
                     UIThread.run(() -> {
-                        if (isStableCoinMarket && account instanceof StableCoinAccount stableCoinAccount) {
-                            model.selectedAccountProperty().set(stableCoinAccount);
-                            model.getPaymentAccountData().set(stableCoinAccount.getAccountPayload().getAccountDataDisplayString());
+                        if (isStableCoinMarket && account instanceof StableCoinAccount sca
+                                && (contractRail == null || sca.getAccountPayload().getPaymentMethod().getPaymentRail() == contractRail)) {
+                            model.selectedAccountProperty().set(sca);
+                            model.getPaymentAccountData().set(sca.getAccountPayload().getAccountDataDisplayString());
                         } else if (!isStableCoinMarket && account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
                             model.selectedAccountProperty().set(userDefinedFiatAccount);
                             model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());

@@ -197,13 +197,16 @@ public class OfferbookRestApi extends RestApiBase {
                     supportedLanguageCodes,
                     BisqEasyProtocol.VERSION);
             String channelId = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow().getId();
+            int offerVersion = market.isBtcStableCoinMarket()
+                    ? BisqEasyOfferbookMessage.CURRENT_VERSION : 0;
             BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channelId,
                     userProfile.getId(),
                     Optional.of(bisqEasyOffer),
                     Optional.of(chatMessageText),
                     Optional.empty(),
                     System.currentTimeMillis(),
-                    false);
+                    false,
+                    offerVersion);
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateOfferResponse(bisqEasyOffer.getId())));
         } catch (InterruptedException e) {

@@ -20,6 +20,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.accounts.stable_coin.StableCoinAccount;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -95,11 +97,17 @@ public abstract class BaseState {
 
         protected Optional<String> findUsersAccountData() {
             boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            StableCoinPaymentRail contractRail = resolveContractRail();
             return accountService
                     .findSelectedAccount().stream()
-                    .filter(account -> isStableCoinMarket
-                            ? account instanceof StableCoinAccount
-                            : account instanceof UserDefinedFiatAccount)
+                    .filter(account -> {
+                        if (isStableCoinMarket) {
+                            if (!(account instanceof StableCoinAccount sca)) return false;
+                            return contractRail == null
+                                    || sca.getAccountPayload().getPaymentMethod().getPaymentRail() == contractRail;
+                        }
+                        return account instanceof UserDefinedFiatAccount;
+                    })
                     .map(account -> {
                         if (account instanceof StableCoinAccount stableCoinAccount) {
                             return stableCoinAccount.getAccountPayload().getAccountDataDisplayString();
@@ -109,6 +117,14 @@ public abstract class BaseState {
                         return null;
                     })
                     .findFirst();
+        }
+
+        protected StableCoinPaymentRail resolveContractRail() {
+            var quoteSideSpec = model.getTrade().getContract().getQuoteSidePaymentMethodSpec();
+            if (quoteSideSpec instanceof StableCoinPaymentMethodSpec stableCoinSpec) {
+                return stableCoinSpec.getPaymentMethod().getPaymentRail();
+            }
+            return null;
         }
 
         protected void sendTradeLogMessage(String encoded) {

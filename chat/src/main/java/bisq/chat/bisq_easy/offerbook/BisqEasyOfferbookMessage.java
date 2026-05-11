@@ -41,10 +41,27 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 public final class BisqEasyOfferbookMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
 
+    /**
+     * Bump this when adding new PaymentMethodSpec types or other breaking offer
+     * features. Receivers that see minSupportedVersion > CURRENT_VERSION will
+     * skip the offer gracefully instead of crashing.
+     */
+    public static final int CURRENT_VERSION = 1;
+
     // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
+    private final int minSupportedVersion;
+
+    /**
+     * Set during deserialization when an offer was skipped because its
+     * minSupportedVersion exceeds CURRENT_VERSION or because the offer
+     * proto could not be parsed (try/catch safety net).
+     */
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private transient boolean unsupportedOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
                                     String authorUserProfileId,
@@ -53,6 +70,17 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                                     Optional<Citation> citation,
                                     long date,
                                     boolean wasEdited) {
+        this(channelId, authorUserProfileId, bisqEasyOffer, text, citation, date, wasEdited, 0);
+    }
+
+    public BisqEasyOfferbookMessage(String channelId,
+                                    String authorUserProfileId,
+                                    Optional<BisqEasyOffer> bisqEasyOffer,
+                                    Optional<String> text,
+                                    Optional<Citation> citation,
+                                    long date,
+                                    boolean wasEdited,
+                                    int minSupportedVersion) {
         this(StringUtils.createUid(),
                 ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                 channelId,
@@ -62,7 +90,8 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 citation,
                 date,
                 wasEdited,
-                ChatMessageType.TEXT);
+                ChatMessageType.TEXT,
+                minSupportedVersion);
     }
 
     public BisqEasyOfferbookMessage(String messageId,
@@ -75,6 +104,21 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                                      long date,
                                      boolean wasEdited,
                                      ChatMessageType chatMessageType) {
+        this(messageId, chatChannelDomain, channelId, authorUserProfileId,
+                bisqEasyOffer, text, citation, date, wasEdited, chatMessageType, 0);
+    }
+
+    public BisqEasyOfferbookMessage(String messageId,
+                                     ChatChannelDomain chatChannelDomain,
+                                     String channelId,
+                                     String authorUserProfileId,
+                                     Optional<BisqEasyOffer> bisqEasyOffer,
+                                     Optional<String> text,
+                                     Optional<Citation> citation,
+                                     long date,
+                                     boolean wasEdited,
+                                     ChatMessageType chatMessageType,
+                                     int minSupportedVersion) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -85,6 +129,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
+        this.minSupportedVersion = minSupportedVersion;
     }
 
     @Override
@@ -100,6 +145,9 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     private bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder getBisqEasyOfferbookMessageBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookMessage.newBuilder();
         bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto(serializeForHash)));
+        if (minSupportedVersion > 0) {
+            builder.setMinSupportedVersion(minSupportedVersion);
+        }
         return builder;
     }
 
@@ -110,10 +158,37 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOfferbookMessage(
+
+        bisq.chat.protobuf.BisqEasyOfferbookMessage offerbookMsg = baseProto.getBisqEasyOfferbookMessage();
+        int minVersion = offerbookMsg.hasMinSupportedVersion()
+                ? offerbookMsg.getMinSupportedVersion()
+                : 0;
+
+        Optional<BisqEasyOffer> bisqEasyOffer;
+        boolean skippedOffer = false;
+
+        // --- Explicit version gate: don't even try if the sender requires a newer version ---
+        if (minVersion > CURRENT_VERSION) {
+            log.warn("Offer requires version {} but we only support {}. Skipping offer from message {}.",
+                    minVersion, CURRENT_VERSION, baseProto.getId());
+            bisqEasyOffer = Optional.empty();
+            skippedOffer = true;
+        } else if (offerbookMsg.hasBisqEasyOffer()) {
+            // --- Try/catch safety net: catches corrupted payloads or unknown spec types
+            //     even when the version check passes ---
+            try {
+                bisqEasyOffer = Optional.of(BisqEasyOffer.fromProto(offerbookMsg.getBisqEasyOffer()));
+            } catch (Exception e) {
+                log.warn("Failed to deserialize BisqEasyOffer despite version {} <= {}. Skipping: {}",
+                        minVersion, CURRENT_VERSION, e.getMessage());
+                bisqEasyOffer = Optional.empty();
+                skippedOffer = true;
+            }
+        } else {
+            bisqEasyOffer = Optional.empty();
+        }
+
+        BisqEasyOfferbookMessage message = new BisqEasyOfferbookMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
@@ -123,7 +198,10 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                minVersion);
+        message.unsupportedOffer = skippedOffer;
+        return message;
     }
 
     @Override
@@ -134,6 +212,10 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
+    }
+
+    public boolean isUnsupportedOffer() {
+        return unsupportedOffer;
     }
 
     @Override

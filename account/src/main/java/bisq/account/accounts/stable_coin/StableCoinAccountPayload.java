@@ -110,9 +110,28 @@ public final class StableCoinAccountPayload extends AccountPayload<StableCoinPay
         return currencyCode + " (" + network + ") " + StringUtils.truncate(address, 8);
     }
 
+    public static String networkTag(String networkDisplayName) {
+        return "(" + networkDisplayName + ")";
+    }
+
+    public static boolean containsNetworkTag(String accountData, String networkDisplayName) {
+        return accountData != null && accountData.contains(networkTag(networkDisplayName));
+    }
+
     @Override
     public String getAccountDataDisplayString() {
-        return address;
+        String networkDisplayName = resolveNetworkDisplayName();
+        return address + " " + networkTag(networkDisplayName);
+    }
+
+    private String resolveNetworkDisplayName() {
+        for (StableCoinPaymentRail rail : StableCoinPaymentRail.values()) {
+            StableCoin sc = rail.getStableCoin();
+            if (sc.getCode().equals(currencyCode) && sc.getNetwork().name().equals(network)) {
+                return sc.getNetwork().getDisplayName();
+            }
+        }
+        return network;
     }
 
     @Override
