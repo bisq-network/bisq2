@@ -40,10 +40,11 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    git pull
    ```
 
-4. **Create desktop-app script:**
+4. **Build desktop client distribution:**
    ```bash
-   ./gradlew apps:desktop:desktop-app:installDist
+   ./gradlew :apps:desktop:desktop-app:installDist
    ```
+
 5. **Run desktop client:**
    ```bash
    ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
@@ -54,7 +55,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    ./apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
    ```
 
-**For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
+**For Windows environments**: replace `./gradlew` with `gradlew.bat`.
 
 ## Community and Contributions
 

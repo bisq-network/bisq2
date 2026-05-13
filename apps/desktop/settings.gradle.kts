@@ -18,6 +18,7 @@ includeBuild("../..")
 include("desktop")
 include("desktop-app")
 include("desktop-app-launcher")
+include("desktop-ui-harness-app")
 include("webcam-app")
 include("bi2p")
 

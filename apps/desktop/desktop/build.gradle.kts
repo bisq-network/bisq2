@@ -64,4 +64,3 @@ dependencies {
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.openjfx.monocle)
 }
-

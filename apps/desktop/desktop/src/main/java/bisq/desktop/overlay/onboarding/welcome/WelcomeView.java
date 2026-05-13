@@ -69,6 +69,10 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
                 nextButton);
     }
 
+    public Button getNextButton() {
+        return nextButton;
+    }
+
     @Override
     protected void onViewAttached() {
         nextButton.setOnMouseClicked(e -> controller.onNext());

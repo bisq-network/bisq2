@@ -1,0 +1,15 @@
+# Desktop UI harness smoke scenario
+# Commands:
+#   health
+#   validate
+#   wait-node <selector> [timeout_ms] [visible]
+#   click <selector>
+#   type <selector> <text...>
+#   press-key <key> [selector]
+#   screenshot <name>
+#   sleep <ms>
+
+health
+validate
+wait-node splash/logo 30000 true
+screenshot smoke-logo
