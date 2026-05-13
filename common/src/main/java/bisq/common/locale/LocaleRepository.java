@@ -39,7 +39,14 @@ public class LocaleRepository {
 
     static {
         String propertyFileName = "bisq.properties";
-        Locale locale = Locale.getDefault();
+        // Ensure the initial OS locale is safe before we do anything else
+        Locale osLocale = Locale.getDefault();
+        if (osLocale.getCountry().isEmpty() && osLocale.getScript().isEmpty()) {
+            log.warn("OS locale '{}' has no country or script. Falling back to Locale.US", osLocale);
+            osLocale = Locale.US;
+        }
+        Locale locale = osLocale;
+
         try {
             Properties properties = PropertiesReader.getProperties(propertyFileName);
             String language = properties.getProperty("language"); // e.g., "en"
@@ -52,7 +59,8 @@ public class LocaleRepository {
         } catch (IOException e) {
             log.warn("Could not load properties from {}", propertyFileName);
         } finally {
-            setDefaultLocale(locale);
+            // Validate the final locale before setting it as default
+            setDefaultLocale(ensureValidLocale(locale));
         }
     }
 
