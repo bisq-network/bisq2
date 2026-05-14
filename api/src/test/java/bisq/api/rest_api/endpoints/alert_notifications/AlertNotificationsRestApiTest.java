@@ -24,6 +24,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,8 @@ import static org.mockito.Mockito.when;
 class AlertNotificationsRestApiTest {
 
     @Test
-    void dismissAlertUsesRequestedAppType() {
+    @DisplayName("dismiss alert uses requested app type")
+    void dismiss_alert_uses_requested_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AuthorizedAlertData desktopAlert = createAlert("desktop-alert", AppType.DESKTOP, 20L, AlertType.INFO);
         when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.DESKTOP))
@@ -57,7 +59,8 @@ class AlertNotificationsRestApiTest {
     }
 
     @Test
-    void dismissAlertReturnsBadRequestForInvalidAppType() {
+    @DisplayName("dismiss alert returns bad request for invalid app type")
+    void dismiss_alert_returns_bad_request_for_invalid_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AlertNotificationsRestApi restApi = new AlertNotificationsRestApi(alertNotificationsService);
 
@@ -69,7 +72,8 @@ class AlertNotificationsRestApiTest {
     }
 
     @Test
-    void dismissAlertReturnsNotFoundWhenAlertDoesNotExistForRequestedAppType() {
+    @DisplayName("dismiss alert returns not found when alert does not exist for requested app type")
+    void dismiss_alert_returns_not_found_when_alert_does_not_exist_for_requested_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.DESKTOP))
                 .thenReturn(Stream.empty());
@@ -84,7 +88,8 @@ class AlertNotificationsRestApiTest {
     }
 
     @Test
-    void getAlertNotificationsReturnsBadRequestForInvalidAppType() {
+    @DisplayName("get alert notifications returns bad request for invalid app type")
+    void get_alert_notifications_returns_bad_request_for_invalid_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AlertNotificationsRestApi restApi = new AlertNotificationsRestApi(alertNotificationsService);
 
@@ -95,7 +100,8 @@ class AlertNotificationsRestApiTest {
     }
 
     @Test
-    void getAlertNotificationsSkipsUnsupportedAlertTypes() {
+    @DisplayName("get alert notifications skips unsupported alert types")
+    void get_alert_notifications_skips_unsupported_alert_types() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AuthorizedAlertData infoAlert = createAlert("info-alert", AppType.MOBILE_CLIENT, 10L, AlertType.INFO);
         AuthorizedAlertData banAlert = createAlert("ban-alert", AppType.MOBILE_CLIENT, 30L, AlertType.BAN);

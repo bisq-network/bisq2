@@ -23,6 +23,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +41,8 @@ class BannedUserServiceTest {
     private static final String USER_PROFILE_ID = "0123456789abcdef0123456789abcdef01234567";
 
     @Test
-    void disabledRateLimitAlwaysReturnsNotExceeding() {
+    @DisplayName("disabled rate limit always returns not exceeding")
+    void disabled_rate_limit_always_returns_not_exceeding() {
         RateLimiter rateLimiter = mock(RateLimiter.class);
         BannedUserService service = createService(false, rateLimiter);
         long now = System.currentTimeMillis();
@@ -54,7 +56,8 @@ class BannedUserServiceTest {
     }
 
     @Test
-    void enabledRateLimitMarksProfileAsExceeding() {
+    @DisplayName("enabled rate limit marks profile as exceeding")
+    void enabled_rate_limit_marks_profile_as_exceeding() {
         RateLimiter rateLimiter = mock(RateLimiter.class);
         when(rateLimiter.exceedsLimit(eq(USER_PROFILE_ID), anyLong()))
                 .thenReturn(false)

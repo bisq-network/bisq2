@@ -7,6 +7,7 @@ import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -18,7 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class MigratorTest {
     @Test
-    void migrationSuccess(@TempDir Path appDataDirPath) throws IOException {
+    @DisplayName("migration success")
+    void migration_success(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
         FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);
@@ -33,7 +35,8 @@ public class MigratorTest {
     }
 
     @Test
-    void migrationFailure(@TempDir Path appDataDirPath) throws IOException {
+    @DisplayName("migration failure")
+    void migration_failure(@TempDir Path appDataDirPath) throws IOException {
         Path versionFilePath = appDataDirPath.resolve("version");
         Version storedVersion = new Version("2.1.0");
         FileMutatorUtils.writeToPath(storedVersion.toString(), versionFilePath);

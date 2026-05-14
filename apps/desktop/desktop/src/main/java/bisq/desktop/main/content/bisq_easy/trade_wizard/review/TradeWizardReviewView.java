@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
 @Slf4j
 class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, TradeWizardReviewController> {
     private final Label headline, detailsHeadline, bitcoinPaymentMethod, bitcoinPaymentMethodDescription,
-            fiatPaymentMethod, fiatPaymentMethodDescription, fee, feeDetails, priceDetails, priceDescription;
+            fiatPaymentMethod, fiatPaymentMethodDescription, stableCoinNote, fee, feeDetails, priceDetails, priceDescription;
     private final WizardOverlay createOfferSuccessOverlay, sendTakeOfferMessageOverlay, takeOfferSuccessOverlay;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane gridPane;
@@ -60,7 +60,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     @Nullable
     private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
     @Nullable
-    private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
+    private ComboBox<PaymentMethod<?>> fiatPaymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
 
@@ -148,6 +148,16 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         gridPane.add(fiatPaymentMethodValuePane, 1, rowIndex);
 
         rowIndex++;
+        stableCoinNote = new Label();
+        stableCoinNote.setWrapText(true);
+        stableCoinNote.getStyleClass().add(detailsStyle);
+        stableCoinNote.setVisible(false);
+        stableCoinNote.setManaged(false);
+        GridPane.setColumnSpan(stableCoinNote, 4);
+        GridPane.setMargin(stableCoinNote, new Insets(-5, 0, 0, 0));
+        gridPane.add(stableCoinNote, 0, rowIndex);
+
+        rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
         feeInfoDescription.getStyleClass().add(descriptionStyle);
         gridPane.add(feeInfoDescription, 0, rowIndex);
@@ -212,6 +222,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         fiatPaymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
         fiatPaymentMethod.setText(model.getFiatPaymentMethod());
 
+        stableCoinNote.visibleProperty().bind(model.getStableCoinNoteVisible());
+        stableCoinNote.managedProperty().bind(model.getStableCoinNoteVisible());
+        stableCoinNote.textProperty().bind(model.getStableCoinNoteText());
+
         feeDetails.setVisible(model.isFeeDetailsVisible());
         feeDetails.setManaged(model.isFeeDetailsVisible());
 
@@ -265,12 +279,12 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethodsComboBox);
             fiatPaymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(FiatPaymentMethod method) {
+                public String toString(PaymentMethod<?> method) {
                     return method != null ? method.getDisplayString() : "";
                 }
 
                 @Override
-                public FiatPaymentMethod fromString(String string) {
+                public PaymentMethod<?> fromString(String string) {
                     return null;
                 }
             });
@@ -296,6 +310,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         showCreateOfferSuccessPin.unsubscribe();
         takeOfferStatusPin.unsubscribe();
+
+        stableCoinNote.visibleProperty().unbind();
+        stableCoinNote.managedProperty().unbind();
+        stableCoinNote.textProperty().unbind();
 
         takeOfferSendMessageWaitingAnimation.stop();
 

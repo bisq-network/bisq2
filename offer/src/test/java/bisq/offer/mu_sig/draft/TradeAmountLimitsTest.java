@@ -9,6 +9,7 @@ import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountRange;
 import bisq.offer.Direction;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -19,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TradeAmountLimitsTest {
 
     @Test
-    public void testToTradeAmountLimits_FiatMarket() {
+    @DisplayName("to trade amount limits fiat market")
+    public void to_trade_amount_limits_fiat_market() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcUsdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
@@ -40,7 +42,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testToTradeAmountLimits_CryptoMarket() {
+    @DisplayName("to trade amount limits crypto market")
+    public void to_trade_amount_limits_crypto_market() {
         Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
         PriceQuote priceQuote = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         PriceQuote btcUsdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
@@ -63,7 +66,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testToUserSpecificTradeAmountLimit() {
+    @DisplayName("to user specific trade amount limit")
+    public void to_user_specific_trade_amount_limit() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcUsdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
@@ -82,7 +86,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testGetClampLimits() {
+    @DisplayName("get clamp limits")
+    public void get_clamp_limits() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange protocolLimits = new TradeAmountRange(min, max);
@@ -103,7 +108,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testGetClampLimits_UserLimitAboveProtocolMax_UsesProtocolMax() {
+    @DisplayName("get clamp limits user limit above protocol max uses protocol max")
+    public void get_clamp_limits_user_limit_above_protocol_max_uses_protocol_max() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange protocolLimits = new TradeAmountRange(min, max);
@@ -116,7 +122,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testGetClampLimits_UserLimitBelowProtocolMin_UsesProtocolMinAsMax() {
+    @DisplayName("get clamp limits user limit below protocol min uses protocol min as max")
+    public void get_clamp_limits_user_limit_below_protocol_min_uses_protocol_min_as_max() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange protocolLimits = new TradeAmountRange(min, max);
@@ -129,7 +136,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testToTradeAmountLimitsThrowsIfMinAmountExceedsMaxAmount() {
+    @DisplayName("to trade amount limits throws if min amount exceeds max amount")
+    public void to_trade_amount_limits_throws_if_min_amount_exceeds_max_amount() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcUsdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
@@ -142,7 +150,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testClampTradeAmount() {
+    @DisplayName("clamp trade amount")
+    public void clamp_trade_amount() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange limits = new TradeAmountRange(min, max);
@@ -161,7 +170,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testClampTradeAmountExtended() {
+    @DisplayName("clamp trade amount extended")
+    public void clamp_trade_amount_extended() {
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange protocolLimits = new TradeAmountRange(min, max);
@@ -179,7 +189,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testClampBaseSideAmount() {
+    @DisplayName("clamp base side amount")
+    public void clamp_base_side_amount() {
         TradeAmount minAmount = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount maxAmount = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange limits = new TradeAmountRange(minAmount, maxAmount);
@@ -201,7 +212,8 @@ public class TradeAmountLimitsTest {
     }
 
     @Test
-    public void testClampQuoteSideAmount() {
+    @DisplayName("clamp quote side amount")
+    public void clamp_quote_side_amount() {
         TradeAmount minAmount = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(100.0, "USD"));
         TradeAmount maxAmount = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(1000.0, "USD"));
         TradeAmountRange limits = new TradeAmountRange(minAmount, maxAmount);

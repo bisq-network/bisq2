@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -30,6 +31,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -50,7 +53,7 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private BitcoinPaymentMethod takersSelectedBitcoinPaymentMethod;
     @Setter
-    private FiatPaymentMethod takersSelectedFiatPaymentMethod;
+    private PaymentMethod<?> takersSelectedFiatPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -68,7 +71,7 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private List<BitcoinPaymentMethod> bitcoinPaymentMethods;
     @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods;
+    private List<? extends PaymentMethod<?>> fiatPaymentMethods;
     @Setter
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
@@ -106,8 +109,10 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private boolean feeDetailsVisible;
     private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<PaymentMethod<?>> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+    private final BooleanProperty stableCoinNoteVisible = new SimpleBooleanProperty();
+    private final StringProperty stableCoinNoteText = new SimpleStringProperty();
     private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
     private long marketPrice;
@@ -145,6 +150,8 @@ class TradeWizardReviewModel implements Model {
         takersBitcoinPaymentMethods.clear();
         takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
+        stableCoinNoteVisible.set(false);
+        stableCoinNoteText.set(null);
         takeOfferStatus.set(TakeOfferStatus.NOT_STARTED);
         marketPrice = 0;
     }

@@ -34,6 +34,7 @@ public class UserView extends ContentTabView<UserModel, UserController> {
         addTab(Res.get("user.fiatPaymentAccounts"), NavigationTarget.FIAT_PAYMENT_ACCOUNTS);
 
         cryptoPaymentAccountsTab = addTab(Res.get("user.cryptoPaymentAccounts"), NavigationTarget.CRYPTO_CURRENCY_ACCOUNTS);
+        addTab(Res.get("user.stableCoinAccounts"), NavigationTarget.STABLE_COIN_ACCOUNTS);
     }
 
     @Override

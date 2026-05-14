@@ -19,6 +19,7 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -40,7 +41,8 @@ class MuSigArbitrationPayoutResolverTest {
                     TOTAL_PAYOUT_SATS);
 
     @Test
-    void calculateForTypeBuyerGetsTradeAmount() {
+    @DisplayName("calculate for type buyer gets trade amount")
+    void calculate_for_type_buyer_gets_trade_amount() {
         MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts = MuSigArbitrationPayoutResolver.calculateForType(
                         ArbitrationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
                         CONTEXT)
@@ -51,7 +53,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeSellerGetsTradeAmount() {
+    @DisplayName("calculate for type seller gets trade amount")
+    void calculate_for_type_seller_gets_trade_amount() {
         MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts = MuSigArbitrationPayoutResolver.calculateForType(
                         ArbitrationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT,
                         CONTEXT)
@@ -62,7 +65,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeCustomPayoutReturnsEmpty() {
+    @DisplayName("calculate for type custom payout returns empty")
+    void calculate_for_type_custom_payout_returns_empty() {
         Optional<MuSigArbitrationPayoutResolver.PayoutAmounts> payoutAmounts = MuSigArbitrationPayoutResolver.calculateForType(
                 ArbitrationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT);
@@ -71,7 +75,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutCanLeaveAmountUndistributed() {
+    @DisplayName("custom payout can leave amount undistributed")
+    void custom_payout_can_leave_amount_undistributed() {
         MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts = MuSigArbitrationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.of(100_000L),
@@ -84,7 +89,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutBuyerEditedReducesSellerAmountWhenTotalWouldBeExceeded() {
+    @DisplayName("custom payout buyer edited reduces seller amount when total would be exceeded")
+    void custom_payout_buyer_edited_reduces_seller_amount_when_total_would_be_exceeded() {
         MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts = MuSigArbitrationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.of(600_000L),
@@ -97,7 +103,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutSellerEditedReducesBuyerAmountWhenTotalWouldBeExceeded() {
+    @DisplayName("custom payout seller edited reduces buyer amount when total would be exceeded")
+    void custom_payout_seller_edited_reduces_buyer_amount_when_total_would_be_exceeded() {
         MuSigArbitrationPayoutResolver.PayoutAmounts payoutAmounts = MuSigArbitrationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.of(600_000L),
@@ -110,7 +117,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutMissingInputReturnsEmpty() {
+    @DisplayName("custom payout missing input returns empty")
+    void custom_payout_missing_input_returns_empty() {
         Optional<MuSigArbitrationPayoutResolver.PayoutAmounts> payoutAmounts =
                 MuSigArbitrationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
@@ -122,7 +130,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsAcceptsMatchingBuyerGetsTradeAmount() {
+    @DisplayName("check payout amounts accepts matching buyer gets trade amount")
+    void check_payout_amounts_accepts_matching_buyer_gets_trade_amount() {
         assertDoesNotThrow(() -> MuSigArbitrationPayoutResolver.checkPayoutAmounts(
                 ArbitrationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
                 CONTEXT,
@@ -131,7 +140,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsMismatchingBuyerGetsTradeAmount() {
+    @DisplayName("check payout amounts rejects mismatching buyer gets trade amount")
+    void check_payout_amounts_rejects_mismatching_buyer_gets_trade_amount() {
         assertThrows(IllegalArgumentException.class, () -> MuSigArbitrationPayoutResolver.checkPayoutAmounts(
                 ArbitrationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
                 CONTEXT,
@@ -140,7 +150,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsAcceptsCustomPayoutBelowTotalPayoutAmount() {
+    @DisplayName("check payout amounts accepts custom payout below total payout amount")
+    void check_payout_amounts_accepts_custom_payout_below_total_payout_amount() {
         assertDoesNotThrow(() -> MuSigArbitrationPayoutResolver.checkPayoutAmounts(
                 ArbitrationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,
@@ -149,7 +160,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsCustomPayoutAboveTotalPayoutAmount() {
+    @DisplayName("check payout amounts rejects custom payout above total payout amount")
+    void check_payout_amounts_rejects_custom_payout_above_total_payout_amount() {
         assertThrows(IllegalArgumentException.class, () -> MuSigArbitrationPayoutResolver.checkPayoutAmounts(
                 ArbitrationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,
@@ -158,7 +170,8 @@ class MuSigArbitrationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsCustomPayoutOverflow() {
+    @DisplayName("check payout amounts rejects custom payout overflow")
+    void check_payout_amounts_rejects_custom_payout_overflow() {
         assertThrows(IllegalArgumentException.class, () -> MuSigArbitrationPayoutResolver.checkPayoutAmounts(
                 ArbitrationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,

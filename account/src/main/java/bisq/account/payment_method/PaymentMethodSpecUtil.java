@@ -22,6 +22,8 @@ import bisq.account.payment_method.crypto.CryptoPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
 import bisq.common.asset.Asset;
 import bisq.common.market.Market;
 
@@ -53,6 +55,20 @@ public class PaymentMethodSpecUtil {
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {
         return paymentMethods.stream()
                 .map(FiatPaymentMethodSpec::new)
+                .collect(Collectors.toList());
+    }
+
+    public static List<PaymentMethodSpec<?>> createQuoteSidePaymentMethodSpecs(List<? extends PaymentMethod<?>> paymentMethods) {
+        return paymentMethods.stream()
+                .map(method -> {
+                    if (method instanceof FiatPaymentMethod fiatMethod) {
+                        return (PaymentMethodSpec<?>) new FiatPaymentMethodSpec(fiatMethod);
+                    } else if (method instanceof StableCoinPaymentMethod stableCoinMethod) {
+                        return (PaymentMethodSpec<?>) new StableCoinPaymentMethodSpec(stableCoinMethod);
+                    } else {
+                        throw new IllegalArgumentException("Unsupported quote-side payment method: " + method);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 

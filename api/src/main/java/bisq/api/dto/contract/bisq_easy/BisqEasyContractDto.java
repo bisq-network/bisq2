@@ -20,7 +20,7 @@ package bisq.api.dto.contract.bisq_easy;
 import bisq.api.dto.contract.PartyDto;
 import bisq.api.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.api.dto.offer.payment_method.BitcoinPaymentMethodSpecDto;
-import bisq.api.dto.offer.payment_method.FiatPaymentMethodSpecDto;
+import bisq.api.dto.offer.payment_method.PaymentMethodSpecDto;
 import bisq.api.dto.offer.price.spec.PriceSpecDto;
 import bisq.api.dto.user.profile.UserProfileDto;
 
@@ -33,7 +33,7 @@ public record BisqEasyContractDto(long takeOfferDate,
                                   long baseSideAmount,
                                   long quoteSideAmount,
                                   BitcoinPaymentMethodSpecDto baseSidePaymentMethodSpec,
-                                  FiatPaymentMethodSpecDto quoteSidePaymentMethodSpec,
+                                  PaymentMethodSpecDto quoteSidePaymentMethodSpec,
                                   Optional<UserProfileDto> mediator,
                                   PriceSpecDto priceSpec,
                                   long marketPrice) {

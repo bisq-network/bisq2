@@ -19,12 +19,15 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
+import bisq.account.accounts.stable_coin.StableCoinAccount;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingAnimation;
@@ -82,8 +85,10 @@ public abstract class BaseState {
             long quoteSideAmount = model.getTrade().getContract().getQuoteSideAmount();
             model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
             model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
-            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            String quoteCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+            Monetary quoteMonetary = Monetary.from(quoteSideAmount, quoteCode);
+            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(quoteMonetary));
+            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(quoteMonetary));
         }
 
         @Override
@@ -91,12 +96,35 @@ public abstract class BaseState {
         }
 
         protected Optional<String> findUsersAccountData() {
+            boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            StableCoinPaymentRail contractRail = resolveContractRail();
             return accountService
                     .findSelectedAccount().stream()
-                    .filter(UserDefinedFiatAccount.class::isInstance)
-                    .map(UserDefinedFiatAccount.class::cast)
-                    .map(account -> account.getAccountPayload().getAccountData())
+                    .filter(account -> {
+                        if (isStableCoinMarket) {
+                            if (!(account instanceof StableCoinAccount sca)) return false;
+                            return contractRail == null
+                                    || sca.getAccountPayload().getPaymentMethod().getPaymentRail() == contractRail;
+                        }
+                        return account instanceof UserDefinedFiatAccount;
+                    })
+                    .map(account -> {
+                        if (account instanceof StableCoinAccount stableCoinAccount) {
+                            return stableCoinAccount.getAccountPayload().getAccountDataDisplayString();
+                        } else if (account instanceof UserDefinedFiatAccount fiatAccount) {
+                            return fiatAccount.getAccountPayload().getAccountData();
+                        }
+                        return null;
+                    })
                     .findFirst();
+        }
+
+        protected StableCoinPaymentRail resolveContractRail() {
+            var quoteSideSpec = model.getTrade().getContract().getQuoteSidePaymentMethodSpec();
+            if (quoteSideSpec instanceof StableCoinPaymentMethodSpec stableCoinSpec) {
+                return stableCoinSpec.getPaymentMethod().getPaymentRail();
+            }
+            return null;
         }
 
         protected void sendTradeLogMessage(String encoded) {

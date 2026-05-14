@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -27,7 +26,7 @@ import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.ChipToggleButton;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -128,8 +127,8 @@ public class TakeOfferPaymentView extends View<StackPane, TakeOfferPaymentModel,
             GridPaneUtil.setGridPaneMultiColumnsConstraints(fiatGridPane, numColumns, numColumns == 2 ? TWO_COLUMN_WIDTH : MULTIPLE_COLUMN_WIDTH);
             int col = 0;
             int row = 0;
-            for (FiatPaymentMethodSpec spec : model.getSortedFiatPaymentMethodSpecs()) {
-                FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
+            for (PaymentMethodSpec<?> spec : model.getSortedFiatPaymentMethodSpecs()) {
+                var paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), fiatToggleGroup);
                 Node icon = !paymentMethod.isCustomPaymentMethod()
                         ? ImageUtil.getImageViewById(paymentMethod.getPaymentRailName())

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -97,7 +97,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = bisqEasyOffer.getBaseSidePaymentMethodSpecs();
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
         model.setPaymentMethodVisible(baseSidePaymentMethodSpecs.size() > 1 || quoteSidePaymentMethodSpecs.size() > 1);
 
         model.getChildTargets().clear();

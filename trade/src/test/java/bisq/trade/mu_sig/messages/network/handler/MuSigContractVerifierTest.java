@@ -37,6 +37,7 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.security.KeyPair;
 import java.util.List;
@@ -54,7 +55,8 @@ class MuSigContractVerifierTest {
     private final ContractService contractService = new ContractService(null);
 
     @Test
-    void verifyPeerAcceptsValidMatchingContractAndSignature() {
+    @DisplayName("verify peer accepts valid matching contract and signature")
+    void verify_peer_accepts_valid_matching_contract_and_signature() {
         MuSigContract contract = createContract();
         KeyPair myKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         KeyPair peerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -70,7 +72,8 @@ class MuSigContractVerifierTest {
     }
 
     @Test
-    void verifyPeerRejectsInvalidPeerSignature() {
+    @DisplayName("verify peer rejects invalid peer signature")
+    void verify_peer_rejects_invalid_peer_signature() {
         MuSigContract contract = createContract();
         KeyPair myKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         KeyPair peerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -86,7 +89,8 @@ class MuSigContractVerifierTest {
     }
 
     @Test
-    void verifyPeerRejectsMismatchedPeerHash() {
+    @DisplayName("verify peer rejects mismatched peer hash")
+    void verify_peer_rejects_mismatched_peer_hash() {
         MuSigContract contract = createContract();
         KeyPair myKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         KeyPair peerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -102,7 +106,8 @@ class MuSigContractVerifierTest {
     }
 
     @Test
-    void verifyPeerRejectsMismatchedPeerContract() {
+    @DisplayName("verify peer rejects mismatched peer contract")
+    void verify_peer_rejects_mismatched_peer_contract() {
         MuSigContract myContract = createContract();
         MuSigContract peersContract = createContract(333L, 444L);
         KeyPair myKeyPair = KeyGeneration.generateDefaultEcKeyPair();

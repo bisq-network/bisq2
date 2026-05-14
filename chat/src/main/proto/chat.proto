@@ -154,6 +154,7 @@ message BisqEasyOpenTradeChannelStore {
 
 message BisqEasyOfferbookMessage {
   optional offer.Offer bisqEasyOffer = 1;
+  optional uint32 minSupportedVersion = 2;
 }
 message BisqEasyOfferbookChannel {
   common.Market market = 1;

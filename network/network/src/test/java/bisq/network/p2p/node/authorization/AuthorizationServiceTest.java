@@ -2,6 +2,7 @@ package bisq.network.p2p.node.authorization;
 
 import bisq.network.p2p.node.Feature;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -13,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AuthorizationServiceTest {
 
     @Test
-    void testSelectAuthorizationTokenType() {
+    @DisplayName("select authorization token type")
+    void select_authorization_token_type() {
         List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes;
         List<Feature> peersFeatures;
         AuthorizationTokenType result;

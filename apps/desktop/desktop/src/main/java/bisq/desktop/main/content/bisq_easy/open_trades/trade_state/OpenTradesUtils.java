@@ -5,7 +5,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -32,7 +32,7 @@ public class OpenTradesUtils {
             long baseSideAmount = contract.getBaseSideAmount();
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
-            String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+            String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Monetary.from(quoteSideAmount, quoteCurrencyCode));
             String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElseGet(() -> Res.get("data.na"));
             String bitcoinPaymentData = Optional.ofNullable(trade.getBitcoinPaymentData().get()).orElseGet(() -> Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();

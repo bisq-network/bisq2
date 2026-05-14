@@ -141,7 +141,11 @@ public class BuyerState2a extends BaseState {
             headline = FormUtils.getHeadline();
 
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
-            account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
+            boolean isStableCoinMarket = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            String accountLabelKey = isStableCoinMarket
+                    ? "bisqEasy.tradeState.info.buyer.phase2a.sellersAccount.stableCoin"
+                    : "bisqEasy.tradeState.info.buyer.phase2a.sellersAccount";
+            account = FormUtils.addTextArea(Res.get(accountLabelKey), "", false);
             account.setValidator(model.getAccountDataBannedValidator());
 
             Label paymentReason = new Label(Res.get("bisqEasy.tradeState.info.buyer.phase2a.paymentReason"));
@@ -176,7 +180,13 @@ public class BuyerState2a extends BaseState {
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
             account.setText(model.getTrade().getPaymentAccountData().get());
             account.validate();
-            confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
+            boolean isStableCoin = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket();
+            String confirmKey = isStableCoin
+                    ? "bisqEasy.tradeState.info.buyer.phase2a.confirmStableCoinSent"
+                    : "bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent";
+            confirmFiatSentButton.setText(Res.get(confirmKey, model.getFormattedQuoteAmount()));
+            paymentReasonHbox.setVisible(!isStableCoin);
+            paymentReasonHbox.setManaged(!isStableCoin);
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
             confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
         }

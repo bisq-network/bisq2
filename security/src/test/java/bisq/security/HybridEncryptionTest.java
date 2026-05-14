@@ -20,6 +20,7 @@ package bisq.security;
 import bisq.security.keys.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import javax.crypto.AEADBadTagException;
 import java.security.GeneralSecurityException;
@@ -38,7 +39,8 @@ public class HybridEncryptionTest {
     }
 
     @Test
-    void testValidEncryption() throws GeneralSecurityException {
+    @DisplayName("valid encryption")
+    void valid_encryption() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message, keyPairReceiver.getPublic(), keyPairSender);
 
@@ -47,7 +49,8 @@ public class HybridEncryptionTest {
     }
 
     @Test
-    void decryptWithWrongKey() throws GeneralSecurityException {
+    @DisplayName("decrypt with wrong key")
+    void decrypt_with_wrong_key() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message, keyPairReceiver.getPublic(), keyPairSender);
 
@@ -69,7 +72,8 @@ public class HybridEncryptionTest {
     }
 
     @Test
-    void decryptWrongSignature() throws GeneralSecurityException {
+    @DisplayName("decrypt wrong signature")
+    void decrypt_wrong_signature() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message, keyPairReceiver.getPublic(), keyPairSender);
 
@@ -91,7 +95,8 @@ public class HybridEncryptionTest {
     }
 
     @Test
-    void decryptWithWrongIv() throws GeneralSecurityException {
+    @DisplayName("decrypt with wrong iv")
+    void decrypt_with_wrong_iv() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message, keyPairReceiver.getPublic(), keyPairSender);
 
@@ -111,7 +116,8 @@ public class HybridEncryptionTest {
     }
 
     @Test
-    void decryptBrokenMessageFailure() throws GeneralSecurityException {
+    @DisplayName("decrypt broken message failure")
+    void decrypt_broken_message_failure() throws GeneralSecurityException {
         byte[] message = "hello".getBytes();
         ConfidentialData confidentialData = HybridEncryption.encryptAndSign(message, keyPairReceiver.getPublic(), keyPairSender);
 

@@ -18,12 +18,14 @@
 package bisq.desktop.main.content.chat.message_container.list.message_box.markdown;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SupportMarkdownRendererTest {
     @Test
-    void mapsFaqAndWikiSourceIconsToChatAndBookGlyphs() {
+    @DisplayName("maps faq and wiki source icons to chat and book glyphs")
+    void maps_faq_and_wiki_source_icons_to_chat_and_book_glyphs() {
         assertThat(SupportMarkdownRenderer.getIconIdForSourceUrl("bisq-icon://faq"))
                 .isEqualTo("open-p-chat-grey");
         assertThat(SupportMarkdownRenderer.getIconIdForSourceUrl("bisq-icon://wiki"))
@@ -31,7 +33,8 @@ class SupportMarkdownRendererTest {
     }
 
     @Test
-    void sourceIconMappingIsCaseInsensitiveAndSafeForUnknownInput() {
+    @DisplayName("source icon mapping is case insensitive and safe for unknown input")
+    void source_icon_mapping_is_case_insensitive_and_safe_for_unknown_input() {
         assertThat(SupportMarkdownRenderer.getIconIdForSourceUrl("BISQ-ICON://FAQ"))
                 .isEqualTo("open-p-chat-grey");
         assertThat(SupportMarkdownRenderer.getIconIdForSourceUrl("bisq-icon://unknown"))

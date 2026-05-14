@@ -29,6 +29,7 @@ public enum StableCoinPaymentRail implements PaymentRail {
     USDT_BEP20(StableCoinRepository.USDT_BEP20),
     USDC_ERC20(StableCoinRepository.USDC_ERC20),
     USDC_SPL(StableCoinRepository.USDC_SPL),
+    USDC_POLYGON(StableCoinRepository.USDC_POLYGON),
     DAI_ERC20(StableCoinRepository.DAI_ERC20),
     FDUSD_BEP20(StableCoinRepository.FDUSD_BEP20),
     FDUSD_ERC20(StableCoinRepository.FDUSD_ERC20),

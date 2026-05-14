@@ -58,6 +58,10 @@ public class BisqEasyOnboardingController implements Controller {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
     }
 
+    void onOpenStableCoinOfferbook() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK);
+    }
+
     void onOpenTradeWizard() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_WIZARD, new TradeWizardController.InitData(false));
     }

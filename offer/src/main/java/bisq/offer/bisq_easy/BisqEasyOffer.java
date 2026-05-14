@@ -18,7 +18,10 @@
 package bisq.offer.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
@@ -30,10 +33,6 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,7 +48,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, PaymentMethodSpec<?>> {
     private static final int VERSION = 0;
 
     // todo OfferOption could be used instead
@@ -61,7 +60,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
                          List<BitcoinPaymentMethod> bitcoinPaymentMethods,
-                         List<FiatPaymentMethod> fiatPaymentMethods,
+                         List<? extends PaymentMethod<?>> quoteSidePaymentMethods,
                          String makersTradeTerms,
                          List<String> supportedLanguageCodes,
                          String tradeProtocolVersion) {
@@ -77,7 +76,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
                 PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
-                PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
+                PaymentMethodSpecUtil.createQuoteSidePaymentMethodSpecs(quoteSidePaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, 30_000),
                 supportedLanguageCodes,
                 VERSION,
@@ -95,7 +94,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          PriceSpec priceSpec,
                          List<TradeProtocolType> protocolTypes,
                          List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                         List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs,
                          List<OfferOption> offerOptions,
                          List<String> supportedLanguageCodes,
                          int version,
@@ -148,8 +147,8 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
                 .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
+                .map(PaymentMethodSpec::protoToQuoteSidePaymentMethodSpec)
                 .collect(Collectors.toList());
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)

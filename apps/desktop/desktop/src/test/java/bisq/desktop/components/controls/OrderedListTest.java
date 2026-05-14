@@ -23,6 +23,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
@@ -45,7 +46,8 @@ class OrderedListTest {
     }
 
     @Test
-    void parsesOrderedListWithPreambleAndTrailingParagraph() throws Exception {
+    @DisplayName("parses ordered list with preamble and trailing paragraph")
+    void parses_ordered_list_with_preamble_and_trailing_paragraph() throws Exception {
         String text = "Intro paragraph.\n"
                 + "  1. First item\n"
                 + "  2. Second item\n\n"
@@ -66,7 +68,8 @@ class OrderedListTest {
     }
 
     @Test
-    void parsesInlineOrderedItemsWithoutLeadingParagraph() throws Exception {
+    @DisplayName("parses inline ordered items without leading paragraph")
+    void parses_inline_ordered_items_without_leading_paragraph() throws Exception {
         String text = "1. First item 2. Second item 3. Third item";
         OrderedList list = runOnFxThread(() -> new OrderedList(text, "bisq-text-13", 7, 0));
 
@@ -77,7 +80,8 @@ class OrderedListTest {
     }
 
     @Test
-    void rendersSingleParagraphWhenNoNumberedMarkersPresent() throws Exception {
+    @DisplayName("renders single paragraph when no numbered markers present")
+    void renders_single_paragraph_when_no_numbered_markers_present() throws Exception {
         String text = "Just a paragraph.";
         OrderedList list = runOnFxThread(() -> new OrderedList(text, "bisq-text-13", 7, 0));
 
@@ -87,7 +91,8 @@ class OrderedListTest {
     }
 
     @Test
-    void parsesNumberedItemsStartingAtTen() throws Exception {
+    @DisplayName("parses numbered items starting at ten")
+    void parses_numbered_items_starting_at_ten() throws Exception {
         String text = "10. Ten\n"
                 + "11. Eleven\n"
                 + "12. Twelve";
@@ -101,7 +106,8 @@ class OrderedListTest {
     }
 
     @Test
-    void parsesItemsWithoutSpaceAfterDot() throws Exception {
+    @DisplayName("parses items without space after dot")
+    void parses_items_without_space_after_dot() throws Exception {
         String text = "1.First\n"
                 + "2.Second\n"
                 + "3.Third";

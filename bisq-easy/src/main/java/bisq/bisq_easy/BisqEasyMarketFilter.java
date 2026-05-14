@@ -22,6 +22,8 @@ import lombok.Getter;
 @Getter
 public enum BisqEasyMarketFilter {
     ALL,
+    FIAT,
+    STABLECOINS,
     FAVOURITES,
     WITH_OFFERS
 }

@@ -18,6 +18,7 @@
 package bisq.api.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -28,7 +29,8 @@ import static bisq.bonded_roles.release.AppType.DESKTOP;
 class AppTypeParserTest {
 
     @Test
-    void parseThrowsForNullBlankAndEmptyValues() {
+    @DisplayName("parse throws for null blank and empty values")
+    void parse_throws_for_null_blank_and_empty_values() {
         assertThatThrownBy(() -> AppTypeParser.parse((String) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("appType parameter is required");
@@ -41,13 +43,15 @@ class AppTypeParserTest {
     }
 
     @Test
-    void parseAcceptsCaseInsensitiveValue() {
+    @DisplayName("parse accepts case insensitive value")
+    void parse_accepts_case_insensitive_value() {
         assertThat(AppTypeParser.parse("desktop")).isEqualTo(DESKTOP);
         assertThat(AppTypeParser.parse(Optional.of("desktop"))).isEqualTo(DESKTOP);
     }
 
     @Test
-    void parseRejectsInvalidValue() {
+    @DisplayName("parse rejects invalid value")
+    void parse_rejects_invalid_value() {
         assertThatThrownBy(() -> AppTypeParser.parse("invalid"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Invalid appType: invalid");

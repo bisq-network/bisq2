@@ -18,6 +18,7 @@
 package bisq.common.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SepaPaymentAccountValidationTest {
 
     @Test
-    void validIbansShouldPass() {
+    @DisplayName("valid ibans should pass")
+    void valid_ibans_should_pass() {
         List<String> validIbans = Arrays.asList(
                 "DE89370400440532013000", // Germany
                 "FR1420041010050500013M02606", // France
@@ -45,7 +47,8 @@ class SepaPaymentAccountValidationTest {
     }
 
     @Test
-    void ibanWithInvalidChecksumShouldFail() {
+    @DisplayName("iban with invalid checksum should fail")
+    void iban_with_invalid_checksum_should_fail() {
         String invalidIban = "DE89370400440532013001"; // altered last digit to fail checksum
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 SepaPaymentAccountValidation.validateIban(invalidIban));
@@ -53,7 +56,8 @@ class SepaPaymentAccountValidationTest {
     }
 
     @Test
-    void ibanWithInvalidFormatShouldFail() {
+    @DisplayName("iban with invalid format should fail")
+    void iban_with_invalid_format_should_fail() {
         String invalidIban = "D189370400440532013000"; // 1st char is digit, invalid format
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 SepaPaymentAccountValidation.validateIban(invalidIban));
@@ -61,7 +65,8 @@ class SepaPaymentAccountValidationTest {
     }
 
     @Test
-    void ibanWithWrongLengthShouldFail() {
+    @DisplayName("iban with wrong length should fail")
+    void iban_with_wrong_length_should_fail() {
         String shortIban = "DE89370400"; // too short
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 SepaPaymentAccountValidation.validateIban(shortIban));
@@ -69,7 +74,8 @@ class SepaPaymentAccountValidationTest {
     }
 
     @Test
-    void nullOrEmptyIbanShouldFail() {
+    @DisplayName("null or empty iban should fail")
+    void null_or_empty_iban_should_fail() {
         assertThrows(IllegalArgumentException.class, () ->
                 SepaPaymentAccountValidation.validateIban(null));
 
@@ -78,7 +84,8 @@ class SepaPaymentAccountValidationTest {
     }
 
     @Test
-    void ibanWithSpecialCharactersShouldFail() {
+    @DisplayName("iban with special characters should fail")
+    void iban_with_special_characters_should_fail() {
         String invalidIban = "DE89-3704-0044-0532-0130-00"; // special characters
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 SepaPaymentAccountValidation.validateIban(invalidIban));

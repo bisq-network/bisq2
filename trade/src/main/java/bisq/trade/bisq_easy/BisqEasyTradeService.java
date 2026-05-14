@@ -18,7 +18,7 @@
 package bisq.trade.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
@@ -274,7 +274,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                                  Monetary baseSideAmount,
                                                  Monetary quoteSideAmount,
                                                  BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                                 FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                                 PaymentMethodSpec<?> quoteSidePaymentMethodSpec,
                                                  Optional<UserProfile> mediator,
                                                  PriceSpec priceSpec,
                                                  long marketPrice) {
@@ -289,7 +289,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
+                quoteSidePaymentMethodSpec,
                 mediator,
                 priceSpec,
                 marketPrice);

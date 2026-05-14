@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -29,7 +29,6 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
@@ -154,7 +153,7 @@ public class TradeWizardAmountController implements Controller {
         }
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+    public void setFiatPaymentMethods(List<? extends PaymentMethod<?>> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
         }
@@ -476,10 +475,9 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
-            List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
-            if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
+            List<String> offerQuoteSideNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+            List<String> myQuoteSideNames = PaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods());
+            if (myQuoteSideNames.stream().noneMatch(offerQuoteSideNames::contains)) {
                 return false;
             }
 
@@ -580,7 +578,7 @@ public class TradeWizardAmountController implements Controller {
 
         applyMaxAmountBasedOnReputation();
 
-        Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
+        Monetary defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
         Monetary defaultFiatAmount = MarketBasedAmountConversion.usdToFiat(marketPriceService, market, defaultUsdAmount)
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
@@ -630,7 +628,7 @@ public class TradeWizardAmountController implements Controller {
                     .max()
                     .orElse(0L);
             Monetary highestPossibleAmountFromSellers = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, highestScore)
-                    .orElseGet(() -> Fiat.from(0, market.getQuoteCurrencyCode()));
+                    .orElseGet(() -> Monetary.from(0, market.getQuoteCurrencyCode()));
             if (isCreateOfferMode) {
                 amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             }
@@ -662,7 +660,7 @@ public class TradeWizardAmountController implements Controller {
         long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
         model.setMyReputationScore(myReputationScore);
         model.setReputationBasedMaxAmount(BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), myReputationScore)
-                .orElseGet(() -> Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
+                .orElseGet(() -> Monetary.from(0, model.getMarket().getQuoteCurrencyCode()))
         );
     }
 
@@ -775,10 +773,9 @@ public class TradeWizardAmountController implements Controller {
             return false;
         }
 
-        List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
-        List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
-        if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
+        List<String> offerQuoteSideNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+        List<String> myQuoteSideNames = PaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods());
+        if (myQuoteSideNames.stream().noneMatch(offerQuoteSideNames::contains)) {
             return false;
         }
 

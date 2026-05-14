@@ -17,9 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodUtil;
+import bisq.account.payment_method.stable_coin.StableCoinPaymentRail;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -127,7 +131,11 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                 channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
         model.getChannel().set(channel);
 
-        model.getAvailableMarketPayments().setAll(FiatPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
+        if (channel.getMarket().isBtcStableCoinMarket()) {
+            model.getAvailableMarketPayments().setAll(StableCoinPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
+        } else {
+            model.getAvailableMarketPayments().setAll(FiatPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
+        }
         applyCookiePaymentFilters();
 
         if (offerMessagesPin != null) {
@@ -201,7 +209,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getShowBuyOffers().set(true);
     }
 
-    void onTogglePaymentFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
+    void onTogglePaymentFilter(PaymentMethod<?> paymentMethod, boolean isSelected) {
         if (isSelected) {
             model.getSelectedMarketPayments().remove(paymentMethod);
         } else {
@@ -210,7 +218,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         updateActiveMarketPaymentsCount();
         settingsService.setCookie(CookieKey.BISQ_EASY_OFFER_LIST_PAYMENT_FILTERS, getCookieSubKey(),
                 Joiner.on(",").join(model.getSelectedMarketPayments().stream()
-                        .map(payment -> payment.getPaymentRail().name()).collect(Collectors.toList())));
+                        .map(payment -> payment.getPaymentRailName()).collect(Collectors.toList())));
     }
 
     void onToggleCustomPaymentFilter(boolean isSelected) {
@@ -237,7 +245,12 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                             FiatPaymentRail persisted = FiatPaymentRail.valueOf(FiatPaymentRail.class, paymentName);
                             model.getSelectedMarketPayments().add(FiatPaymentMethod.fromPaymentRail(persisted));
                         } catch (Exception e) {
-                            log.warn("Could not create FiatPaymentRail from persisted name {}. {}", paymentName, ExceptionUtil.getRootCauseMessage(e));
+                            try {
+                                StableCoinPaymentRail persisted = StableCoinPaymentRail.valueOf(StableCoinPaymentRail.class, paymentName);
+                                model.getSelectedMarketPayments().add(StableCoinPaymentMethod.fromPaymentRail(persisted));
+                            } catch (Exception e2) {
+                                log.warn("Could not create payment rail from persisted name {}. {}", paymentName, ExceptionUtil.getRootCauseMessage(e2));
+                            }
                         }
                     }
                 });

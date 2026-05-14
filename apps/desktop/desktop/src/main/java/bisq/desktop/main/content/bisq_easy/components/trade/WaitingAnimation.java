@@ -116,8 +116,8 @@ public class WaitingAnimation extends StackPane {
         return switch (waitingState) {
             case TAKE_BISQ_EASY_OFFER -> "take-bisq-easy-offer";
             case ACCOUNT_DATA -> "account-data";
-            case FIAT_PAYMENT -> "fiat-payment";
-            case FIAT_PAYMENT_CONFIRMATION -> "fiat-payment-confirmation";
+            case FIAT_PAYMENT, QUOTE_PAYMENT -> "fiat-payment";
+            case FIAT_PAYMENT_CONFIRMATION, QUOTE_PAYMENT_CONFIRMATION -> "fiat-payment-confirmation";
             case BITCOIN_ADDRESS -> "bitcoin-address";
             case BITCOIN_PAYMENT -> "bitcoin-payment";
             case BITCOIN_CONFIRMATION -> "bitcoin-confirmation";

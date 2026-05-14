@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.common.market.Market;
 import bisq.desktop.ServiceProvider;
@@ -116,7 +116,7 @@ public class TradeWizardAmountAndPriceController implements Controller {
         tradeWizardAmountController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+    public void setFiatPaymentMethods(List<? extends PaymentMethod<?>> fiatPaymentMethods) {
         tradeWizardAmountController.setFiatPaymentMethods(fiatPaymentMethods);
     }
 

@@ -27,6 +27,8 @@ public class MarketFilterPredicate {
     public static Predicate<MarketChannelItem> getPredicate(BisqEasyMarketFilter bisqEasyMarketFilter) {
         return switch (bisqEasyMarketFilter) {
             case ALL -> item -> true;
+            case FIAT -> item -> !item.getMarket().isBtcStableCoinMarket();
+            case STABLECOINS -> item -> item.getMarket().isBtcStableCoinMarket();
             case FAVOURITES -> item -> item.getIsFavourite().get();
             case WITH_OFFERS -> item -> item.getNumOffers().get() > 0;
         };

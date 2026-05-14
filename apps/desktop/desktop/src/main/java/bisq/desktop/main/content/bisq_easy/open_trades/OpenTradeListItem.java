@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.payment_method.PaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
@@ -59,7 +59,7 @@ class OpenTradeListItem implements DateTableItem {
     private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
     private final Pin changedChatNotificationPin, isInMediationPin;
     private final BitcoinPaymentRail bitcoinPaymentRail;
-    private final FiatPaymentRail fiatPaymentRail;
+    private final PaymentRail fiatPaymentRail;
     private final boolean isFiatPaymentMethodCustom;
 
     private long peerNumNotifications, mediatorNumNotifications;

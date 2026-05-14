@@ -42,6 +42,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import bisq.i18n.Res;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
@@ -58,7 +59,8 @@ class MuSigDisputePaymentDetailsVerifierTest {
     }
 
     @Test
-    void verify_returnsMatches_whenMakerAndTakerPayloadHashesMatch() {
+    @DisplayName("verify returns matches when maker and taker payload hashes match")
+    void verify_returns_matches_when_maker_and_taker_payload_hashes_match() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         AccountPayload<?> takerPayload = createTakerPayload();
@@ -74,7 +76,8 @@ class MuSigDisputePaymentDetailsVerifierTest {
     }
 
     @Test
-    void verify_returnsTakerMismatchDetails_whenTakerPayloadHashDoesNotMatch() {
+    @DisplayName("verify returns taker mismatch details when taker payload hash does not match")
+    void verify_returns_taker_mismatch_details_when_taker_payload_hash_does_not_match() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         AccountPayload<?> expectedTakerPayload = createTakerPayload();
@@ -91,7 +94,8 @@ class MuSigDisputePaymentDetailsVerifierTest {
     }
 
     @Test
-    void verify_returnsMakerMismatchDetails_whenMakerPayloadHashDoesNotMatch() {
+    @DisplayName("verify returns maker mismatch details when maker payload hash does not match")
+    void verify_returns_maker_mismatch_details_when_maker_payload_hash_does_not_match() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         AccountPayload<?> takerPayload = createTakerPayload();
@@ -108,7 +112,8 @@ class MuSigDisputePaymentDetailsVerifierTest {
     }
 
     @Test
-    void verify_returnsMakerMismatchDetails_whenMakerHashIsMissing() {
+    @DisplayName("verify returns maker mismatch details when maker hash is missing")
+    void verify_returns_maker_mismatch_details_when_maker_hash_is_missing() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         AccountPayload<?> takerPayload = createTakerPayload();

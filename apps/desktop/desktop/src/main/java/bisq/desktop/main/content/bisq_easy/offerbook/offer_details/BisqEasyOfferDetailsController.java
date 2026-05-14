@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offer_details;
 
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
@@ -120,7 +120,7 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.setPrice(Res.get("bisqEasy.offerDetails.price", formattedPrice, market.getMarketCodes()));
 
         applyPriceDetails(priceSpec, market);
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        List<? extends PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
         model.setQuoteSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(quoteSidePaymentMethodSpecs));
         List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = bisqEasyOffer.getBaseSidePaymentMethodSpecs();
         model.setBaseSidePaymentMethods(PaymentMethodSpecFormatter.fromPaymentMethodSpecs(baseSidePaymentMethodSpecs));
@@ -129,11 +129,20 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
                         ? Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescription")
                         : Res.get("bisqEasy.offerDetails.baseSidePaymentMethodDescriptions")
         );
-        model.setQuoteSidePaymentMethodDescription(
-                quoteSidePaymentMethodSpecs.size() == 1
-                        ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription")
-                        : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions")
-        );
+        boolean isStableCoin = bisqEasyOffer.getMarket().isBtcStableCoinMarket();
+        if (isStableCoin) {
+            model.setQuoteSidePaymentMethodDescription(
+                    quoteSidePaymentMethodSpecs.size() == 1
+                            ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription.stableCoin")
+                            : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions.stableCoin")
+            );
+        } else {
+            model.setQuoteSidePaymentMethodDescription(
+                    quoteSidePaymentMethodSpecs.size() == 1
+                            ? Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescription")
+                            : Res.get("bisqEasy.offerDetails.quoteSidePaymentMethodDescriptions")
+            );
+        }
 
         model.setId(bisqEasyOffer.getId());
         model.setDate(DateFormatter.formatDateTime(bisqEasyOffer.getDate()));

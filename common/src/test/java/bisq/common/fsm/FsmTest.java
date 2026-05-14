@@ -19,6 +19,7 @@ package bisq.common.fsm;
 
 import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class FsmTest {
 
     @Test
-    void testTransitions() {
+    @DisplayName("transitions")
+    void transitions() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -105,7 +107,8 @@ public class FsmTest {
     }
 
     @Test
-    void testOutOfOrderEvents() {
+    @DisplayName("out of order events")
+    void out_of_order_events() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -159,7 +162,8 @@ public class FsmTest {
     }
 
     @Test
-    void testFromAny() {
+    @DisplayName("from any")
+    void from_any() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -189,7 +193,8 @@ public class FsmTest {
     }
 
     @Test
-    void testFromStates() {
+    @DisplayName("from states")
+    void from_states() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
         fsm.addTransition()
@@ -222,7 +227,8 @@ public class FsmTest {
     }
 
     @Test
-    void testErrorState() {
+    @DisplayName("error state")
+    void error_state() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
         // FailingMockEventHandler thrown an error
@@ -237,7 +243,8 @@ public class FsmTest {
     }
 
     @Test
-    void testCyclicGraphFailing() {
+    @DisplayName("cyclic graph failing")
+    void cyclic_graph_failing() {
         MockModel model = new MockModel(MockState.S1);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -259,7 +266,8 @@ public class FsmTest {
     }
 
     @Test
-    void testTransitionToLowerState() {
+    @DisplayName("transition to lower state")
+    void transition_to_lower_state() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -281,7 +289,8 @@ public class FsmTest {
     }
 
     @Test
-    void testNoStateTransition() {
+    @DisplayName("no state transition")
+    void no_state_transition() {
         // No such event defined: No state change, no handler call
         MockModel model1 = new MockModel(MockState.INIT);
         Fsm<MockModel> fsm1 = new SimpleFsm<>(model1);
@@ -347,7 +356,8 @@ public class FsmTest {
     }
 
     @Test
-    void testEventHandlerNotCalled() {
+    @DisplayName("event handler not called")
+    void event_handler_not_called() {
         // No EventHandlerClass defined
         MockModel model1 = new MockModel(MockState.INIT);
         Fsm<MockModel> fsm1 = new SimpleFsm<>(model1);
@@ -361,7 +371,8 @@ public class FsmTest {
     }
 
     @Test
-    void testInvalidConfigs() {
+    @DisplayName("invalid configs")
+    void invalid_configs() {
         // fromStates empty
         Assertions.assertThrows(FsmConfigException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);

@@ -17,6 +17,7 @@
 
 package bisq.presentation.formatters;
 
+import bisq.common.asset.StableCoin;
 import bisq.common.formatter.DecimalFormatter;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.monetary.Fiat;
@@ -92,11 +93,15 @@ public class AmountFormatter {
     }
 
     public static String formatAmountByMonetaryType(Monetary amount) {
-        return formatAmount(amount, amount instanceof Fiat);
+        return formatAmount(amount, useLowPrecisionForType(amount));
     }
 
     public static String formatAmountWithCodeByMonetaryType(Monetary amount) {
-        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), amount instanceof Fiat);
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), useLowPrecisionForType(amount));
+    }
+
+    private static boolean useLowPrecisionForType(Monetary amount) {
+        return amount instanceof Fiat || StableCoin.isStableCoin(amount.getCode());
     }
 
     public static DecimalFormatter.Format getDecimalFormat(Monetary amount, Locale locale, boolean useLowPrecision) {

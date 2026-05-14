@@ -20,6 +20,7 @@ package bisq.offer.amount;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.monetary.Coin;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -35,13 +36,15 @@ public class OfferAmountFormatterTest {
     }
 
     @Test
-    void formatDepositAmountAsBtcFormatsWithCode() {
+    @DisplayName("format deposit amount as btc formats with code")
+    void format_deposit_amount_as_btc_formats_with_code() {
         String formatted = OfferAmountFormatter.formatDepositAmountAsBTC(Coin.asBtcFromValue(123_456_789L));
         assertEquals("1.23456789 BTC", formatted);
     }
 
     @Test
-    void formatDepositAmountAsBtcRejectsNonBtc() {
+    @DisplayName("format deposit amount as btc rejects non btc")
+    void format_deposit_amount_as_btc_rejects_non_btc() {
         assertThrows(IllegalArgumentException.class,
                 () -> OfferAmountFormatter.formatDepositAmountAsBTC(Coin.asXmrFromValue(1)));
     }

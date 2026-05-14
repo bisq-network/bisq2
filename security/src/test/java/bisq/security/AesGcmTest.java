@@ -19,6 +19,7 @@ package bisq.security;
 
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import javax.crypto.SecretKey;
 import java.security.GeneralSecurityException;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class AesGcmTest {
     @Test
-    void encryptAndDecryptTest() throws GeneralSecurityException {
+    @DisplayName("encrypt and decrypt test")
+    void encrypt_and_decrypt_test() throws GeneralSecurityException {
         KeyPair aliceKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         KeyPair bobKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
@@ -46,7 +48,8 @@ public class AesGcmTest {
     }
 
     @Test
-    void encryptAndDecryptWithPasswordTest() throws GeneralSecurityException {
+    @DisplayName("encrypt and decrypt with password test")
+    void encrypt_and_decrypt_with_password_test() throws GeneralSecurityException {
         String password = "test_password";
         ScryptKeyDeriver scryptKeyDeriver1 = new ScryptKeyDeriver();
         ScryptParameters scryptParameters = scryptKeyDeriver1.getScryptParameters();

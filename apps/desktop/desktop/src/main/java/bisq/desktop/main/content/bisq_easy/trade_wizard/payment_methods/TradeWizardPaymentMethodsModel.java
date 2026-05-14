@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
@@ -37,9 +38,9 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private String fiatSubtitleLabel;
     @Setter
     private String bitcoinSubtitleLabel;
-    private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
-    private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
-    private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<PaymentMethod<?>> fiatPaymentMethods = FXCollections.observableArrayList();
+    private final SortedList<PaymentMethod<?>> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
+    private final ObservableList<PaymentMethod<?>> selectedFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
     private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethods);

@@ -100,9 +100,8 @@ public class OfferItemPresentationDtoFactory {
                 .map(PriceFormatter::format)
                 .orElse("");
         String formattedPriceSpec = PriceSpecFormatter.getFormattedPriceSpec(priceSpec, true);
-        List<String> quoteSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs())
-                .stream()
-                .map(PaymentMethod::getPaymentRailName)
+        List<String> quoteSidePaymentMethods = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
+                .map(spec -> spec.getPaymentMethod().getPaymentRailName())
                 .collect(Collectors.toList());
         List<String> baseSidePaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getBaseSidePaymentMethodSpecs())
                 .stream()
