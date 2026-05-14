@@ -20,6 +20,7 @@ package bisq.presentation.formatters;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AmountFormatterTest {
 
     @Test
-    void testFormat() {
+    @DisplayName("format")
+    void format() {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         Assertions.assertEquals("1,00000000", AmountFormatter.formatAmount(btc, Locale.GERMAN, false));
         assertEquals("1.00000000", AmountFormatter.formatAmount(btc, Locale.US, false));
@@ -44,7 +46,8 @@ public class AmountFormatterTest {
     }
 
     @Test
-    void formatBaseAndQuoteAmountUseMonetaryTypePrecision() {
+    @DisplayName("format base and quote amount use monetary type precision")
+    void format_base_and_quote_amount_use_monetary_type_precision() {
         Coin btc = Coin.asBtcFromFaceValue(1.12345678);
         Fiat usd = Fiat.fromFaceValue(1234.5678, "USD");
 
@@ -56,7 +59,8 @@ public class AmountFormatterTest {
     }
 
     @Test
-    void formatBaseAndQuoteAmountWithCodeUseMonetaryTypePrecision() {
+    @DisplayName("format base and quote amount with code use monetary type precision")
+    void format_base_and_quote_amount_with_code_use_monetary_type_precision() {
         Coin btc = Coin.asBtcFromFaceValue(1.12345678);
         Fiat usd = Fiat.fromFaceValue(1234.5678, "USD");
 

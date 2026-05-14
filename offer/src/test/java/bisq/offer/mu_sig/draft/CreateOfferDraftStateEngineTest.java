@@ -11,6 +11,7 @@ import bisq.common.monetary.TradeAmountConversion;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.draft.dependencies.CreateOfferDraftMarketData;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -59,7 +60,8 @@ public class CreateOfferDraftStateEngineTest {
     }
 
     @Test
-    public void initializeSetsDerivedStateAndCallsPaymentMethodUpdater() {
+    @DisplayName("initialize sets derived state and calls payment method updater")
+    public void initialize_sets_derived_state_and_calls_payment_method_updater() {
         stateEngine.initialize(usdBtcMarket, Direction.SELL, false, true);
 
         assertEquals(usdBtcMarket, offerDraft.getMarket());
@@ -74,7 +76,8 @@ public class CreateOfferDraftStateEngineTest {
     }
 
     @Test
-    public void applyDirectionChangedReturnsFalseWithoutPricingContext() {
+    @DisplayName("apply direction changed returns false without pricing context")
+    public void apply_direction_changed_returns_false_without_pricing_context() {
         boolean recalculated = stateEngine.applyDirectionChanged(Direction.BUY);
 
         assertFalse(recalculated);
@@ -82,7 +85,8 @@ public class CreateOfferDraftStateEngineTest {
     }
 
     @Test
-    public void applyDirectionChangedReturnsTrueWithPricingContext() {
+    @DisplayName("apply direction changed returns true with pricing context")
+    public void apply_direction_changed_returns_true_with_pricing_context() {
         stateEngine.initialize(usdBtcMarket, Direction.SELL, false, false);
 
         boolean recalculated = stateEngine.applyDirectionChanged(Direction.BUY);
@@ -93,7 +97,8 @@ public class CreateOfferDraftStateEngineTest {
     }
 
     @Test
-    public void applyUseBaseCurrencyForAmountInputChangedDependsOnDerivedStateInitialization() {
+    @DisplayName("apply use base currency for amount input changed depends on derived state initialization")
+    public void apply_use_base_currency_for_amount_input_changed_depends_on_derived_state_initialization() {
         assertFalse(stateEngine.applyUseBaseCurrencyForAmountInputChanged(true));
 
         stateEngine.initialize(usdBtcMarket, Direction.SELL, false, false);
@@ -103,7 +108,8 @@ public class CreateOfferDraftStateEngineTest {
     }
 
     @Test
-    public void recalculateTradeAmountConstraintsForSelectedPaymentRailClampsExistingAmounts() {
+    @DisplayName("recalculate trade amount constraints for selected payment rail clamps existing amounts")
+    public void recalculate_trade_amount_constraints_for_selected_payment_rail_clamps_existing_amounts() {
         stateEngine.initialize(usdBtcMarket, Direction.SELL, false, false);
 
         TradeAmount nineThousandUsd = TradeAmountConversion.toTradeAmount(usdBtcMarket,

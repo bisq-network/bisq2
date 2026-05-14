@@ -3,6 +3,7 @@ package bisq.api.dto;
 import bisq.account.payment_method.fiat.FiatPaymentMethodChargebackRisk;
 import bisq.i18n.Res;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,8 @@ class FiatPaymentMethodLocalizationTest {
     }
 
     @Test
-    void chargebackRisk_toString_respondsToLanguageChange() {
+    @DisplayName("chargeback risk to string responds to language change")
+    void chargeback_risk_to_string_responds_to_language_change() {
         Res.setAndApplyLanguageTag("en");
         assertEquals("Low", FiatPaymentMethodChargebackRisk.LOW.toString());
         assertEquals("Very low", FiatPaymentMethodChargebackRisk.VERY_LOW.toString());
@@ -43,7 +45,8 @@ class FiatPaymentMethodLocalizationTest {
     }
 
     @Test
-    void resGet_withoutApply_doesNotUpdateBundles() {
+    @DisplayName("res get without apply does not update bundles")
+    void res_get_without_apply_does_not_update_bundles() {
         // Documents the root cause of the bug: Res.setLanguageTag() without
         // updateBundles() does NOT reload resource bundles. This is what
         // SettingsService.setLanguageTag() was doing before the fix — it stored
@@ -65,7 +68,8 @@ class FiatPaymentMethodLocalizationTest {
     }
 
     @Test
-    void multipleLanguageSwitches_allReflectedImmediately() {
+    @DisplayName("multiple language switches all reflected immediately")
+    void multiple_language_switches_all_reflected_immediately() {
         Res.setAndApplyLanguageTag("en");
         assertEquals("Low", FiatPaymentMethodChargebackRisk.LOW.toString());
 

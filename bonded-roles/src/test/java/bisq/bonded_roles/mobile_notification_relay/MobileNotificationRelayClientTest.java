@@ -26,6 +26,7 @@ import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -51,7 +52,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildJsonBody_withAllFields() throws Exception {
+    @DisplayName("build json body with all fields")
+    void build_json_body_with_all_fields() throws Exception {
         String json = MobileNotificationRelayClient.buildJsonBody("dGVzdA==", true, true);
 
         JsonNode node = objectMapper.readTree(json);
@@ -61,7 +63,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildJsonBody_withMutableContentFalse() throws Exception {
+    @DisplayName("build json body with mutable content false")
+    void build_json_body_with_mutable_content_false() throws Exception {
         String json = MobileNotificationRelayClient.buildJsonBody("abc123==", true, false);
 
         JsonNode node = objectMapper.readTree(json);
@@ -71,7 +74,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildJsonBody_producesValidJson_withUrgentFalse() throws Exception {
+    @DisplayName("build json body produces valid json with urgent false")
+    void build_json_body_produces_valid_json_with_urgent_false() throws Exception {
         String json = MobileNotificationRelayClient.buildJsonBody("payload==", false, true);
 
         JsonNode node = objectMapper.readTree(json);
@@ -81,7 +85,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildJsonBody_preservesBase64Padding() throws Exception {
+    @DisplayName("build json body preserves base64 padding")
+    void build_json_body_preserves_base64_padding() throws Exception {
         // Base64 with padding characters must survive JSON serialization
         String base64 = "SGVsbG8gV29ybGQ=";
         String json = MobileNotificationRelayClient.buildJsonBody(base64, true, true);
@@ -91,7 +96,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildRequest_androidTargetsFcmPath() throws Exception {
+    @DisplayName("build request android targets fcm path")
+    void build_request_android_targets_fcm_path() throws Exception {
         TestableRelayClient client = newClient();
 
         HttpRequest req = client.publicBuildRequest(stubProvider(),
@@ -109,7 +115,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildRequest_iosTargetsApnsPath() throws Exception {
+    @DisplayName("build request ios targets apns path")
+    void build_request_ios_targets_apns_path() throws Exception {
         TestableRelayClient client = newClient();
 
         HttpRequest req = client.publicBuildRequest(stubProvider(),
@@ -121,7 +128,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildRequest_redactsDeviceTokenFromLogPath() {
+    @DisplayName("build request redacts device token from log path")
+    void build_request_redacts_device_token_from_log_path() {
         TestableRelayClient client = newClient();
 
         HttpRequest req = client.publicBuildRequest(stubProvider(),
@@ -137,7 +145,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void buildRequest_optsIntoServerErrorRetry() {
+    @DisplayName("build request opts into server error retry")
+    void build_request_opts_into_server_error_retry() {
         TestableRelayClient client = newClient();
 
         HttpRequest req = client.publicBuildRequest(stubProvider(),
@@ -149,7 +158,8 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void parseResult_reportsSuccess_whenAnyBodyReceived() {
+    @DisplayName("parse result reports success when any body received")
+    void parse_result_reports_success_when_any_body_received() {
         TestableRelayClient client = newClient();
 
         assertThat(client.publicParseResult("any-body")).isTrue();

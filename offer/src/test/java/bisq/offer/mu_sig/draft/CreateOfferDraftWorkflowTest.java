@@ -18,6 +18,7 @@ import bisq.offer.mu_sig.draft.dependencies.AccountsProvider;
 import bisq.offer.mu_sig.draft.dependencies.CreateOfferDraftCookieStore;
 import bisq.offer.mu_sig.draft.dependencies.CreateOfferDraftMarketData;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -78,7 +79,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void initializePopulatesDraftAndUpdatesPaymentMethods() {
+    @DisplayName("initialize populates draft and updates payment methods")
+    public void initialize_populates_draft_and_updates_payment_methods() {
         workflow.initialize(defaultMarket);
 
         assertEquals(defaultMarket, workflow.getMarket());
@@ -93,7 +95,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setMarketResetsPriceAndAmountsDeterministically() {
+    @DisplayName("set market resets price and amounts deterministically")
+    public void set_market_resets_price_and_amounts_deterministically() {
         workflow.initialize(defaultMarket);
         workflow.setMarket(xmrBtcMarket);
 
@@ -108,7 +111,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setPriceQuoteKeepsQuoteInputAmountConstant() {
+    @DisplayName("set price quote keeps quote input amount constant")
+    public void set_price_quote_keeps_quote_input_amount_constant() {
         workflow.initialize(usdBtcMarket);
         workflow.setUseBaseCurrencyForAmountInput(false);
         workflow.setFixTradeAmountFromInputAmount(Fiat.fromFaceValue(500, "USD"));
@@ -122,7 +126,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setDirectionRecomputesUserSpecificLimitAndKeepsAmountsStable() {
+    @DisplayName("set direction recomputes user specific limit and keeps amounts stable")
+    public void set_direction_recomputes_user_specific_limit_and_keeps_amounts_stable() {
         workflow.initialize(usdBtcMarket);
         TradeAmount fixTradeAmountBefore = workflow.getFixTradeAmount();
 
@@ -138,7 +143,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void selectedAccountsUseMostRestrictivePaymentRailLimit() {
+    @DisplayName("selected accounts use most restrictive payment rail limit")
+    public void selected_accounts_use_most_restrictive_payment_rail_limit() {
         workflow.initialize(usdBtcMarket);
 
         PaymentMethod<?> veryLowRiskMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ADVANCED_CASH);
@@ -156,7 +162,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void selectedAccountLimitChangeClampsExistingAmounts() {
+    @DisplayName("selected account limit change clamps existing amounts")
+    public void selected_account_limit_change_clamps_existing_amounts() {
         workflow.initialize(usdBtcMarket);
         workflow.setUseBaseCurrencyForAmountInput(false);
         workflow.setFixTradeAmountFromInputAmount(Fiat.fromFaceValue(9000, "USD"));
@@ -174,7 +181,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setDirectionWithCurrentValueIsNoOp() {
+    @DisplayName("set direction with current value is no op")
+    public void set_direction_with_current_value_is_no_op() {
         workflow.initialize(usdBtcMarket);
 
         TradeAmount fixTradeAmountBefore = workflow.getFixTradeAmount();
@@ -185,7 +193,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setPriceQuoteWithCurrentValueIsNoOp() {
+    @DisplayName("set price quote with current value is no op")
+    public void set_price_quote_with_current_value_is_no_op() {
         workflow.initialize(usdBtcMarket);
         int recalculationCountBefore = marketData.btcUsdPriceQuoteRequests;
 
@@ -195,7 +204,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setMarketWithCurrentValueIsNoOp() {
+    @DisplayName("set market with current value is no op")
+    public void set_market_with_current_value_is_no_op() {
         workflow.initialize(defaultMarket);
 
         workflow.setMarket(defaultMarket);
@@ -204,7 +214,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void selectingSameAccountTwiceDoesNotRecalculateConstraints() {
+    @DisplayName("selecting same account twice does not recalculate constraints")
+    public void selecting_same_account_twice_does_not_recalculate_constraints() {
         workflow.initialize(usdBtcMarket);
 
         PaymentMethod<?> moderateRiskMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
@@ -219,7 +230,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUseBaseCurrencyForAmountInputWithCurrentValueIsNoOp() {
+    @DisplayName("set use base currency for amount input with current value is no op")
+    public void set_use_base_currency_for_amount_input_with_current_value_is_no_op() {
         workflow.initialize(usdBtcMarket);
 
         workflow.setUseBaseCurrencyForAmountInput(false);
@@ -228,7 +240,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUseBaseCurrencyForAmountInputWithDifferentValuePersistsPreference() {
+    @DisplayName("set use base currency for amount input with different value persists preference")
+    public void set_use_base_currency_for_amount_input_with_different_value_persists_preference() {
         workflow.initialize(usdBtcMarket);
 
         workflow.setUseBaseCurrencyForAmountInput(true);
@@ -237,7 +250,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUseRangeAmountWithCurrentValueIsNoOp() {
+    @DisplayName("set use range amount with current value is no op")
+    public void set_use_range_amount_with_current_value_is_no_op() {
         workflow.initialize(usdBtcMarket);
 
         workflow.setUseRangeAmount(false);
@@ -246,7 +260,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUseRangeAmountWithDifferentValuePersistsPreference() {
+    @DisplayName("set use range amount with different value persists preference")
+    public void set_use_range_amount_with_different_value_persists_preference() {
         workflow.initialize(usdBtcMarket);
 
         workflow.setUseRangeAmount(true);
@@ -255,7 +270,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void getAmountSpecThrowsWhenMarketIsNull() {
+    @DisplayName("get amount spec throws when market is null")
+    public void get_amount_spec_throws_when_market_is_null() {
         try {
             workflow.getAmountSpec();
             throw new AssertionError("Expected NullPointerException");
@@ -265,7 +281,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void toInputAmountAndToPassiveAmountAreConsistent() {
+    @DisplayName("to input amount and to passive amount are consistent")
+    public void to_input_amount_and_to_passive_amount_are_consistent() {
         workflow.initialize(usdBtcMarket);
         workflow.setUseBaseCurrencyForAmountInput(false);
 
@@ -278,7 +295,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setFixTradeAmountFromSliderValueUpdatesAmount() {
+    @DisplayName("set fix trade amount from slider value updates amount")
+    public void set_fix_trade_amount_from_slider_value_updates_amount() {
         workflow.initialize(usdBtcMarket);
         workflow.setUseBaseCurrencyForAmountInput(false);
 
@@ -292,7 +310,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setMinAndMaxTradeAmountFromSliderValueWorksCorrectly() {
+    @DisplayName("set min and max trade amount from slider value works correctly")
+    public void set_min_and_max_trade_amount_from_slider_value_works_correctly() {
         workflow.initialize(usdBtcMarket);
         workflow.setUseRangeAmount(true);
 
@@ -306,7 +325,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void clearAccountsByPaymentMethodRemovesAllAccounts() {
+    @DisplayName("clear accounts by payment method removes all accounts")
+    public void clear_accounts_by_payment_method_removes_all_accounts() {
         workflow.initialize(usdBtcMarket);
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> achAccount = createAccount(achMethod);
@@ -319,7 +339,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void removeAccountsByPaymentMethodRemovesSpecificMethod() {
+    @DisplayName("remove accounts by payment method removes specific method")
+    public void remove_accounts_by_payment_method_removes_specific_method() {
         workflow.initialize(usdBtcMarket);
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         PaymentMethod<?> advancedCashMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ADVANCED_CASH);
@@ -336,7 +357,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void putAllAccountsByPaymentMethodReplacesAllAccounts() {
+    @DisplayName("put all accounts by payment method replaces all accounts")
+    public void put_all_accounts_by_payment_method_replaces_all_accounts() {
         workflow.initialize(usdBtcMarket);
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> achAccount = createAccount(achMethod);
@@ -349,7 +371,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void clearSelectedAccountByPaymentMethodRemovesAllSelectedAccounts() {
+    @DisplayName("clear selected account by payment method removes all selected accounts")
+    public void clear_selected_account_by_payment_method_removes_all_selected_accounts() {
         workflow.initialize(usdBtcMarket);
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> achAccount = createAccount(achMethod);
@@ -362,7 +385,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void putAllSelectedAccountByPaymentMethodReplacesAllSelectedAccounts() {
+    @DisplayName("put all selected account by payment method replaces all selected accounts")
+    public void put_all_selected_account_by_payment_method_replaces_all_selected_accounts() {
         workflow.initialize(usdBtcMarket);
         PaymentMethod<?> achMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         Account<?, ?> achAccount = createAccount(achMethod);
@@ -375,7 +399,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setTradeAmountLimitsUpdatesLimits() {
+    @DisplayName("set trade amount limits updates limits")
+    public void set_trade_amount_limits_updates_limits() {
         workflow.initialize(usdBtcMarket);
         TradeAmountRange currentLimits = workflow.getTradeAmountLimits();
 
@@ -392,7 +417,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUserSpecificTradeAmountLimitUpdatesLimit() {
+    @DisplayName("set user specific trade amount limit updates limit")
+    public void set_user_specific_trade_amount_limit_updates_limit() {
         workflow.initialize(usdBtcMarket);
         TradeAmount customLimit = TradeAmountConversion.toTradeAmount(usdBtcMarket,
                 usdBtcPriceQuote,
@@ -404,7 +430,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setInputAmountLimitsUpdatesLimits() {
+    @DisplayName("set input amount limits updates limits")
+    public void set_input_amount_limits_updates_limits() {
         workflow.initialize(usdBtcMarket);
         var currentLimits = workflow.getInputAmountLimits();
 
@@ -418,7 +445,8 @@ public class CreateOfferDraftWorkflowTest {
     }
 
     @Test
-    public void setUseRangeAmountUpdatesSliderValues() {
+    @DisplayName("set use range amount updates slider values")
+    public void set_use_range_amount_updates_slider_values() {
         workflow.initialize(defaultMarket);
         workflow.setUseRangeAmount(true);
 

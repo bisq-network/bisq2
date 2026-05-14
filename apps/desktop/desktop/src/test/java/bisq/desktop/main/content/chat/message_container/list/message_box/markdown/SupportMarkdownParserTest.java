@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat.message_container.list.message_box.markdown;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 
@@ -25,7 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SupportMarkdownParserTest {
     @Test
-    void plainTextHasNoMarkdownFormatting() {
+    @DisplayName("plain text has no markdown formatting")
+    void plain_text_has_no_markdown_formatting() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("hello support");
 
         assertThat(document.hasMarkdownFormatting()).isFalse();
@@ -38,7 +40,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void parsesInlineMarkdownSyntax() {
+    @DisplayName("parses inline markdown syntax")
+    void parses_inline_markdown_syntax() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("**bold** *italic* `code` [docs](https://bisq.network)");
 
         assertThat(document.hasMarkdownFormatting()).isTrue();
@@ -54,7 +57,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void rejectsUnsupportedLinkSchemes() {
+    @DisplayName("rejects unsupported link schemes")
+    void rejects_unsupported_link_schemes() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("[pwn](javascript:alert(1))");
 
         assertThat(document.hasMarkdownFormatting()).isFalse();
@@ -64,7 +68,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void autoLinksHttpAndHttpsUrls() {
+    @DisplayName("auto links http and https urls")
+    void auto_links_http_and_https_urls() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("Use https://bisq.network and http://localhost:8090/api");
         List<SupportMarkdownDocument.Segment> segments = document.lines().get(0).segments();
 
@@ -77,7 +82,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void supportsEscapedMarkdownDelimiters() {
+    @DisplayName("supports escaped markdown delimiters")
+    void supports_escaped_markdown_delimiters() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("\\*not italic\\* and \\`not code\\`");
 
         assertThat(document.hasMarkdownFormatting()).isFalse();
@@ -87,7 +93,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void parsesHorizontalRuleMarkdownLine() {
+    @DisplayName("parses horizontal rule markdown line")
+    void parses_horizontal_rule_markdown_line() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("before\n---\nafter");
 
         assertThat(document.hasMarkdownFormatting()).isTrue();
@@ -99,7 +106,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void parsesLevelThreeHeadingMarkdownLine() {
+    @DisplayName("parses level three heading markdown line")
+    void parses_level_three_heading_markdown_line() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("### Answer quality");
 
         assertThat(document.hasMarkdownFormatting()).isTrue();
@@ -110,7 +118,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void parsesBisqIconImageMarkdown() {
+    @DisplayName("parses bisq icon image markdown")
+    void parses_bisq_icon_image_markdown() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("![Wiki](bisq-icon://wiki) source");
         List<SupportMarkdownDocument.Segment> segments = document.lines().get(0).segments();
 
@@ -121,7 +130,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void parsesSourceLineWithIconTypeAndLink() {
+    @DisplayName("parses source line with icon type and link")
+    void parses_source_line_with_icon_type_and_link() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse(
                 "- ![FAQ](bisq-icon://faq) [FAQ] [What is Bisq Easy?](https://bisq.network/faq/what-is-bisq-easy)");
         List<SupportMarkdownDocument.Segment> segments = document.lines().get(0).segments();
@@ -138,7 +148,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void removesWikiPrefixAfterSourceIconCaseInsensitive() {
+    @DisplayName("removes wiki prefix after source icon case insensitive")
+    void removes_wiki_prefix_after_source_icon_case_insensitive() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse(
                 "- ![Wiki](bisq-icon://wiki) [wIkI] [Bisq Easy](https://bisq.wiki/Bisq_Easy)");
         List<SupportMarkdownDocument.Segment> segments = document.lines().get(0).segments();
@@ -155,7 +166,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void rejectsRemoteMarkdownImageUrls() {
+    @DisplayName("rejects remote markdown image urls")
+    void rejects_remote_markdown_image_urls() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("![Wiki](https://example.com/wiki.png)");
 
         assertThat(document.hasMarkdownFormatting()).isTrue();
@@ -165,7 +177,8 @@ class SupportMarkdownParserTest {
     }
 
     @Test
-    void rejectsUrlsContainingBidiControlCharacters() {
+    @DisplayName("rejects urls containing bidi control characters")
+    void rejects_urls_containing_bidi_control_characters() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse(
                 "[safe](https://bisq.network/\u202Eattack)");
 

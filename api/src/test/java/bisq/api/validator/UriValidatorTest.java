@@ -3,6 +3,7 @@ package bisq.api.validator;
 import bisq.api.access.filter.authz.AuthorizationException;
 import bisq.api.access.filter.authz.UriValidator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.net.URI;
 
@@ -14,7 +15,8 @@ class UriValidatorTest {
     /* ---------- URI sanitizer (path) ---------- */
 
     @Test
-    void nullUriRejected() {
+    @DisplayName("null uri rejected")
+    void null_uri_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -23,7 +25,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void emptyPathRejected() {
+    @DisplayName("empty path rejected")
+    void empty_path_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -32,7 +35,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void pathMustStartWithSlash() {
+    @DisplayName("path must start with slash")
+    void path_must_start_with_slash() {
         UriValidator validator =
                 new UriValidator();
 
@@ -41,7 +45,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void dotDotTraversalInPathRejected() {
+    @DisplayName("dot dot traversal in path rejected")
+    void dot_dot_traversal_in_path_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -53,7 +58,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void encodedTraversalStillRejected() {
+    @DisplayName("encoded traversal still rejected")
+    void encoded_traversal_still_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -63,7 +69,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void unsafeCharactersInPathRejected() {
+    @DisplayName("unsafe characters in path rejected")
+    void unsafe_characters_in_path_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -72,7 +79,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void pathLengthLimitEnforced() {
+    @DisplayName("path length limit enforced")
+    void path_length_limit_enforced() {
         UriValidator validator =
                 new UriValidator();
 
@@ -83,7 +91,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void validPathAccepted() {
+    @DisplayName("valid path accepted")
+    void valid_path_accepted() {
         UriValidator validator =
                 new UriValidator();
 
@@ -93,7 +102,8 @@ class UriValidatorTest {
     /* ---------- URI sanitizer (query) ---------- */
 
     @Test
-    void validQueryAccepted() {
+    @DisplayName("valid query accepted")
+    void valid_query_accepted() {
         UriValidator validator =
                 new UriValidator();
 
@@ -102,7 +112,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void unsafeCharactersInQueryRejected() {
+    @DisplayName("unsafe characters in query rejected")
+    void unsafe_characters_in_query_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -111,7 +122,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void dotDotInQueryRejected() {
+    @DisplayName("dot dot in query rejected")
+    void dot_dot_in_query_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -120,7 +132,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void validPathWithSpacesAccepted() {
+    @DisplayName("valid path with spaces accepted")
+    void valid_path_with_spaces_accepted() {
         UriValidator validator =
                 new UriValidator();
 
@@ -130,7 +143,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void queryWithSpecialCharactersAccepted() {
+    @DisplayName("query with special characters accepted")
+    void query_with_special_characters_accepted() {
         UriValidator validator =
                 new UriValidator();
 
@@ -141,7 +155,8 @@ class UriValidatorTest {
     }
 
     @Test
-    void queryWithControlCharactersRejected() {
+    @DisplayName("query with control characters rejected")
+    void query_with_control_characters_rejected() {
         UriValidator validator =
                 new UriValidator();
 
@@ -154,7 +169,8 @@ class UriValidatorTest {
     /* ---------- Raw URI parsing ---------- */
 
     @Test
-    void malformedUriRejected() {
+    @DisplayName("malformed uri rejected")
+    void malformed_uri_rejected() {
         UriValidator validator =
                 new UriValidator();
 

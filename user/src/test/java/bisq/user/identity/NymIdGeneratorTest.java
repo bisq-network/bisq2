@@ -21,6 +21,7 @@ import bisq.common.util.StringUtils;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
@@ -35,7 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Slf4j
 public class NymIdGeneratorTest {
     @Test
-    void testFromHash() {
+    @DisplayName("from hash")
+    void from_hash() {
         List<String> adverbs, adjectives, nouns;
 
         // Min. lists

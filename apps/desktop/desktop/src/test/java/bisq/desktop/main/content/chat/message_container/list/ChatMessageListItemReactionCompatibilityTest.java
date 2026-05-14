@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.reactions.Reaction;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,13 +27,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChatMessageListItemReactionCompatibilityTest {
     @Test
-    void resolveReactionFromOrdinalReturnsKnownReactions() {
+    @DisplayName("resolve reaction from ordinal returns known reactions")
+    void resolve_reaction_from_ordinal_returns_known_reactions() {
         assertEquals(Reaction.THUMBS_UP,
                 ChatMessageListItem.resolveReactionFromOrdinal(Reaction.THUMBS_UP.ordinal()).orElseThrow());
     }
 
     @Test
-    void resolveReactionFromOrdinalIgnoresUnsupportedFutureReactions() {
+    @DisplayName("resolve reaction from ordinal ignores unsupported future reactions")
+    void resolve_reaction_from_ordinal_ignores_unsupported_future_reactions() {
         assertFalse(ChatMessageListItem.resolveReactionFromOrdinal(Reaction.values().length).isPresent());
         assertTrue(ChatMessageListItem.resolveReactionFromOrdinal(Reaction.HEART.ordinal()).isPresent());
     }

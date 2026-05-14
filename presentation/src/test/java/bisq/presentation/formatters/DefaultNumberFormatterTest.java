@@ -2,6 +2,7 @@ package bisq.presentation.formatters;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.text.DecimalFormat;
 
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Slf4j
 public class DefaultNumberFormatterTest {
     @Test
+    @DisplayName("format")
     public void format() {
         DecimalFormat numberFormat = DefaultNumberFormatter.DEFAULT_NUMBER_FORMAT;
         assertEquals("0", DefaultNumberFormatter.format(0, numberFormat));

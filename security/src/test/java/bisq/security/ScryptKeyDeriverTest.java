@@ -19,6 +19,7 @@ package bisq.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @Slf4j
 public class ScryptKeyDeriverTest {
     @Test
-    void testDeriveAESKey() throws GeneralSecurityException {
+    @DisplayName("derive aes key")
+    void derive_aes_key() throws GeneralSecurityException {
         String password = "test_password";
 
         ScryptKeyDeriver scryptKeyDeriver1 = new ScryptKeyDeriver();

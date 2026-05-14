@@ -24,6 +24,7 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.MetaData;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ChatMessagePruningTest {
     @Test
-    void createWithMaybePrunedMessages_keepsNewestMessages_whenTextBytesExceedLimit() {
+    @DisplayName("create with maybe pruned messages keeps newest messages when text bytes exceed limit")
+    void create_with_maybe_pruned_messages_keeps_newest_messages_when_text_bytes_exceed_limit() {
         TestChatMessage first = new TestChatMessage("1", "x".repeat(17_999), 10);
         TestChatMessage second = new TestChatMessage("2", "middle", 20);
         TestChatMessage third = new TestChatMessage("3", "new", 30);
@@ -49,7 +51,8 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void createWithMaybePrunedMessages_removesOldestMessage_whenSerializedSizeStillExceedsLimit() {
+    @DisplayName("create with maybe pruned messages removes oldest message when serialized size still exceeds limit")
+    void create_with_maybe_pruned_messages_removes_oldest_message_when_serialized_size_still_exceeds_limit() {
         TestChatMessage first = new TestChatMessage("1", "aa", 10);
         TestChatMessage second = new TestChatMessage("2", "bb", 20);
         TestChatMessage third = new TestChatMessage("3", "cc", 30);
@@ -71,7 +74,8 @@ class ChatMessagePruningTest {
     }
 
     @Test
-    void createWithMaybePrunedMessages_rethrows_whenRequestWithNoMessagesIsStillTooLarge() {
+    @DisplayName("create with maybe pruned messages rethrows when request with no messages is still too large")
+    void create_with_maybe_pruned_messages_rethrows_when_request_with_no_messages_is_still_too_large() {
         TestChatMessage message = new TestChatMessage("1", "aa", 10);
 
         assertThatThrownBy(() -> ChatMessagePruning.createWithMaybePrunedMessages(

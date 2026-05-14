@@ -9,6 +9,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountRange;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AmountUtilsTest {
 
     @Test
-    public void testToInputAmount_UseBaseCurrency_WithinLimits() {
+    @DisplayName("to input amount use base currency within limits")
+    public void to_input_amount_use_base_currency_within_limits() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(250000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -29,7 +31,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_UseBaseCurrency_BelowMin() {
+    @DisplayName("to input amount use base currency below min")
+    public void to_input_amount_use_base_currency_below_min() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(25000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -43,7 +46,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_UseBaseCurrency_AboveMax() {
+    @DisplayName("to input amount use base currency above max")
+    public void to_input_amount_use_base_currency_above_max() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(15.0), Fiat.fromFaceValue(750000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -57,7 +61,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_UseQuoteCurrency_WithinLimits() {
+    @DisplayName("to input amount use quote currency within limits")
+    public void to_input_amount_use_quote_currency_within_limits() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(250000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -70,7 +75,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_UseQuoteCurrency_BelowMin() {
+    @DisplayName("to input amount use quote currency below min")
+    public void to_input_amount_use_quote_currency_below_min() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(25000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -84,7 +90,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_UseQuoteCurrency_AboveMax() {
+    @DisplayName("to input amount use quote currency above max")
+    public void to_input_amount_use_quote_currency_above_max() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(15.0), Fiat.fromFaceValue(750000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -98,7 +105,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseBaseCurrency_WithinLimits() {
+    @DisplayName("to passive amount use base currency within limits")
+    public void to_passive_amount_use_base_currency_within_limits() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(250000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -112,7 +120,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseBaseCurrency_BelowMin() {
+    @DisplayName("to passive amount use base currency below min")
+    public void to_passive_amount_use_base_currency_below_min() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(25000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -126,7 +135,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseBaseCurrency_AboveMax() {
+    @DisplayName("to passive amount use base currency above max")
+    public void to_passive_amount_use_base_currency_above_max() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(15.0), Fiat.fromFaceValue(750000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -140,7 +150,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseQuoteCurrency_WithinLimits() {
+    @DisplayName("to passive amount use quote currency within limits")
+    public void to_passive_amount_use_quote_currency_within_limits() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(250000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -154,7 +165,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseQuoteCurrency_BelowMin() {
+    @DisplayName("to passive amount use quote currency below min")
+    public void to_passive_amount_use_quote_currency_below_min() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(0.5), Fiat.fromFaceValue(25000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -168,7 +180,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToPassiveAmount_UseQuoteCurrency_AboveMax() {
+    @DisplayName("to passive amount use quote currency above max")
+    public void to_passive_amount_use_quote_currency_above_max() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(15.0), Fiat.fromFaceValue(750000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -182,7 +195,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToInputAmount_And_ToPassiveAmount_AreInverse() {
+    @DisplayName("to input amount and to passive amount are inverse")
+    public void to_input_amount_and_to_passive_amount_are_inverse() {
         TradeAmount tradeAmount = new TradeAmount(Coin.asBtcFromFaceValue(5.0), Fiat.fromFaceValue(250000.0, "USD"));
         TradeAmount min = new TradeAmount(Coin.asBtcFromFaceValue(1.0), Fiat.fromFaceValue(50000.0, "USD"));
         TradeAmount max = new TradeAmount(Coin.asBtcFromFaceValue(10.0), Fiat.fromFaceValue(500000.0, "USD"));
@@ -202,7 +216,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToSliderValue_AtMin() {
+    @DisplayName("to slider value at min")
+    public void to_slider_value_at_min() {
         Monetary inputAmount = Fiat.fromFaceValue(100.0, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
         Monetary max = Fiat.fromFaceValue(1000.0, "USD");
@@ -214,7 +229,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToSliderValue_AtMax() {
+    @DisplayName("to slider value at max")
+    public void to_slider_value_at_max() {
         Monetary inputAmount = Fiat.fromFaceValue(1000.0, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
         Monetary max = Fiat.fromFaceValue(1000.0, "USD");
@@ -226,7 +242,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToSliderValue_AtMiddle() {
+    @DisplayName("to slider value at middle")
+    public void to_slider_value_at_middle() {
         Monetary inputAmount = Fiat.fromFaceValue(550.0, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
         Monetary max = Fiat.fromFaceValue(1000.0, "USD");
@@ -238,7 +255,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToSliderValue_WhenMinEqualsMax() {
+    @DisplayName("to slider value when min equals max")
+    public void to_slider_value_when_min_equals_max() {
         Monetary inputAmount = Fiat.fromFaceValue(100.0, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
         Monetary max = Fiat.fromFaceValue(100.0, "USD");
@@ -251,7 +269,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToTradeAmountFromSliderValue_AtMin() {
+    @DisplayName("to trade amount from slider value at min")
+    public void to_trade_amount_from_slider_value_at_min() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
@@ -265,7 +284,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToTradeAmountFromSliderValue_AtMax() {
+    @DisplayName("to trade amount from slider value at max")
+    public void to_trade_amount_from_slider_value_at_max() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
@@ -279,7 +299,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testToTradeAmountFromSliderValue_AtMiddle() {
+    @DisplayName("to trade amount from slider value at middle")
+    public void to_trade_amount_from_slider_value_at_middle() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");
@@ -293,7 +314,8 @@ public class AmountUtilsTest {
     }
 
     @Test
-    public void testSliderValue_RoundTrip() {
+    @DisplayName("slider value round trip")
+    public void slider_value_round_trip() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary min = Fiat.fromFaceValue(100.0, "USD");

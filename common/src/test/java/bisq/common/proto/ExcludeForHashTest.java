@@ -4,6 +4,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.mocks.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -12,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 public class ExcludeForHashTest {
 
     @Test
-    public void testExcludeForHash() {
+    @DisplayName("exclude for hash")
+    public void exclude_for_hash() {
         String serialized, serializeNonExcluded;
         Child child;
         Parent parent;

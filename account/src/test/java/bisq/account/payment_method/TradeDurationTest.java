@@ -2,13 +2,15 @@ package bisq.account.payment_method;
 
 import bisq.i18n.Res;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class TradeDurationTest {
 
     @Test
-    void displayStringUsesActiveLanguageTag() {
+    @DisplayName("display string uses active language tag")
+    void display_string_uses_active_language_tag() {
         Res.setAndApplyLanguageTag("en");
         String english = TradeDuration.DAYS_4.getDisplayString();
 

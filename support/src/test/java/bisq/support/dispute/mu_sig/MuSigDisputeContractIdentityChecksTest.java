@@ -38,6 +38,7 @@ import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.security.KeyPair;
 import java.util.List;
@@ -49,7 +50,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MuSigDisputeContractIdentityChecksTest {
     @Test
-    void hasMatchingContractParties_returnsTrue_whenRequesterIsMakerAndPeerIsTaker() {
+    @DisplayName("has matching contract parties returns true when requester is maker and peer is taker")
+    void has_matching_contract_parties_returns_true_when_requester_is_maker_and_peer_is_taker() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         MuSigContract contract = createContract(maker, taker);
@@ -60,7 +62,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void hasMatchingContractParties_returnsTrue_whenRequesterIsTakerAndPeerIsMaker() {
+    @DisplayName("has matching contract parties returns true when requester is taker and peer is maker")
+    void has_matching_contract_parties_returns_true_when_requester_is_taker_and_peer_is_maker() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         MuSigContract contract = createContract(maker, taker);
@@ -71,7 +74,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void hasMatchingContractParties_returnsFalse_whenPeerIsNotContractParty() {
+    @DisplayName("has matching contract parties returns false when peer is not contract party")
+    void has_matching_contract_parties_returns_false_when_peer_is_not_contract_party() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         UserProfile stranger = createStranger();
@@ -83,7 +87,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void hasMatchingContractDisputeAgent_returnsTrue_whenReceiverMatchesAgentNetworkId() {
+    @DisplayName("has matching contract dispute agent returns true when receiver matches agent network id")
+    void has_matching_contract_dispute_agent_returns_true_when_receiver_matches_agent_network_id() {
         UserProfile disputeAgent = createDisputeAgent();
 
         boolean result = MuSigDisputeContractIdentityChecks.hasMatchingContractDisputeAgent(Optional.of(disputeAgent), disputeAgent.getNetworkId());
@@ -92,7 +97,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void hasMatchingContractDisputeAgent_returnsFalse_whenReceiverDoesNotMatchAgentNetworkId() {
+    @DisplayName("has matching contract dispute agent returns false when receiver does not match agent network id")
+    void has_matching_contract_dispute_agent_returns_false_when_receiver_does_not_match_agent_network_id() {
         UserProfile disputeAgent = createDisputeAgent();
         UserProfile receiver = createStranger();
 
@@ -102,7 +108,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void hasMatchingContractDisputeAgent_returnsFalse_whenAgentIsMissing() {
+    @DisplayName("has matching contract dispute agent returns false when agent is missing")
+    void has_matching_contract_dispute_agent_returns_false_when_agent_is_missing() {
         UserProfile receiver = createDisputeAgent();
 
         boolean result = MuSigDisputeContractIdentityChecks.hasMatchingContractDisputeAgent(Optional.empty(), receiver.getNetworkId());
@@ -111,7 +118,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void resolveSenderRole_returnsMaker_whenSenderIsMaker() {
+    @DisplayName("resolve sender role returns maker when sender is maker")
+    void resolve_sender_role_returns_maker_when_sender_is_maker() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         MuSigContract contract = createContract(maker, taker);
@@ -122,7 +130,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void resolveSenderRole_returnsTaker_whenSenderIsTaker() {
+    @DisplayName("resolve sender role returns taker when sender is taker")
+    void resolve_sender_role_returns_taker_when_sender_is_taker() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         MuSigContract contract = createContract(maker, taker);
@@ -133,7 +142,8 @@ class MuSigDisputeContractIdentityChecksTest {
     }
 
     @Test
-    void resolveSenderRole_throws_whenSenderIsNotContractParty() {
+    @DisplayName("resolve sender role throws when sender is not contract party")
+    void resolve_sender_role_throws_when_sender_is_not_contract_party() {
         UserProfile maker = createMaker();
         UserProfile taker = createTaker();
         UserProfile stranger = createStranger();

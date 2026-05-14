@@ -43,6 +43,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -82,7 +83,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void getUnusedAddress() throws ExecutionException, InterruptedException {
+    @DisplayName("get unused address")
+    void get_unused_address() throws ExecutionException, InterruptedException {
         var response = GetUnusedAddressResponse.newBuilder()
                 .setAddress("test_address")
                 .build();
@@ -98,7 +100,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void requestBalance() throws ExecutionException, InterruptedException {
+    @DisplayName("request balance")
+    void request_balance() throws ExecutionException, InterruptedException {
         var response = GetBalanceResponse.newBuilder()
                 .setBalance(1000L)
                 .build();
@@ -114,7 +117,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void isWalletEncrypted() throws ExecutionException, InterruptedException {
+    @DisplayName("is wallet encrypted")
+    void is_wallet_encrypted() throws ExecutionException, InterruptedException {
         var response = IsWalletEncryptedResponse.newBuilder()
                 .setEncrypted(true)
                 .build();
@@ -130,7 +134,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void getSeedWords() throws ExecutionException, InterruptedException {
+    @DisplayName("get seed words")
+    void get_seed_words() throws ExecutionException, InterruptedException {
         var response = GetSeedWordsResponse.newBuilder()
                 .addSeedWords("word1")
                 .addSeedWords("word2")
@@ -149,7 +154,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void listTransactions() throws ExecutionException, InterruptedException {
+    @DisplayName("list transactions")
+    void list_transactions() throws ExecutionException, InterruptedException {
         var response = ListTransactionsResponse.newBuilder()
                 .addTransactions(Transaction.newBuilder().setTxId("tx1").build())
                 .build();
@@ -166,7 +172,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void listUtxos() throws ExecutionException, InterruptedException {
+    @DisplayName("list utxos")
+    void list_utxos() throws ExecutionException, InterruptedException {
         var response = ListUtxosResponse.newBuilder()
                 .addUtxos(bisq.wallet.protobuf.Utxo.newBuilder().setTxId("utxo1").build())
                 .build();
@@ -183,7 +190,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void requestWalletAddresses() throws ExecutionException, InterruptedException {
+    @DisplayName("request wallet addresses")
+    void request_wallet_addresses() throws ExecutionException, InterruptedException {
         var response = GetWalletAddressesResponse.newBuilder()
                 .addAddresses("address1")
                 .addAddresses("address2")
@@ -202,7 +210,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void isWalletReady() throws ExecutionException, InterruptedException {
+    @DisplayName("is wallet ready")
+    void is_wallet_ready() throws ExecutionException, InterruptedException {
         var response = IsWalletReadyResponse.newBuilder().setReady(true).build();
         doAnswer(invocation -> {
             StreamObserver<IsWalletReadyResponse> responseObserver = invocation.getArgument(1);
@@ -216,7 +225,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void sendToAddress() throws ExecutionException, InterruptedException {
+    @DisplayName("send to address")
+    void send_to_address() throws ExecutionException, InterruptedException {
         var response = SendToAddressResponse.newBuilder().setTxId("sent_tx_id").build();
         doAnswer(invocation -> {
             StreamObserver<SendToAddressResponse> responseObserver = invocation.getArgument(1);

@@ -21,6 +21,7 @@ import bisq.bonded_roles.release.AppType;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.settings.SettingsService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -31,7 +32,8 @@ import static org.mockito.Mockito.when;
 class AlertNotificationsServiceTest {
 
     @Test
-    void initializeWithUnspecifiedAppTypeCollectsAlertsForAllAppTypes() {
+    @DisplayName("initialize with unspecified app type collects alerts for all app types")
+    void initialize_with_unspecified_app_type_collects_alerts_for_all_app_types() {
         ObservableSet<AuthorizedAlertData> authorizedAlerts = new ObservableSet<>();
         ObservableSet<String> consumedAlertIds = new ObservableSet<>();
         SettingsService settingsService = mock(SettingsService.class);
@@ -56,7 +58,8 @@ class AlertNotificationsServiceTest {
     }
 
     @Test
-    void initializeWithSpecificAppTypeCollectsOnlyMatchingAndLegacyAlerts() {
+    @DisplayName("initialize with specific app type collects only matching and legacy alerts")
+    void initialize_with_specific_app_type_collects_only_matching_and_legacy_alerts() {
         ObservableSet<AuthorizedAlertData> authorizedAlerts = new ObservableSet<>();
         ObservableSet<String> consumedAlertIds = new ObservableSet<>();
         SettingsService settingsService = mock(SettingsService.class);

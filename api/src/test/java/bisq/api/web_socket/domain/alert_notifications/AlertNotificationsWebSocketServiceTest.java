@@ -11,6 +11,7 @@ import bisq.common.json.JsonMapperProvider;
 import bisq.common.observable.collection.ObservableSet;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,8 @@ import static org.mockito.Mockito.when;
 class AlertNotificationsWebSocketServiceTest {
 
     @Test
-    void getJsonPayloadUsesSubscriberAppTypeParameter() throws Exception {
+    @DisplayName("get json payload uses subscriber app type parameter")
+    void get_json_payload_uses_subscriber_app_type_parameter() throws Exception {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AuthorizedAlertData desktopAlert = createAlert("desktop-alert", AppType.DESKTOP, 10L, AlertType.INFO);
         when(alertNotificationsService.getUnconsumedAlertsByAppType(AppType.DESKTOP))
@@ -45,7 +47,8 @@ class AlertNotificationsWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadRejectsInvalidAppType() {
+    @DisplayName("get json payload rejects invalid app type")
+    void get_json_payload_rejects_invalid_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AlertNotificationsWebSocketService service = new AlertNotificationsWebSocketService(new SubscriberRepository(), alertNotificationsService);
 
@@ -55,7 +58,8 @@ class AlertNotificationsWebSocketServiceTest {
     }
 
     @Test
-    void getJsonPayloadSkipsUnsupportedAlertTypes() throws Exception {
+    @DisplayName("get json payload skips unsupported alert types")
+    void get_json_payload_skips_unsupported_alert_types() throws Exception {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         AuthorizedAlertData infoAlert = createAlert("info-alert", AppType.MOBILE_CLIENT, 10L, AlertType.INFO);
         AuthorizedAlertData banAlert = createAlert("ban-alert", AppType.MOBILE_CLIENT, 30L, AlertType.BAN);
@@ -74,7 +78,8 @@ class AlertNotificationsWebSocketServiceTest {
     }
 
     @Test
-    void canonicalizeParameterNormalizesToCanonicalAppTypeName() {
+    @DisplayName("canonicalize parameter normalizes to canonical app type name")
+    void canonicalize_parameter_normalizes_to_canonical_app_type_name() {
         AlertNotificationsWebSocketService service = new AlertNotificationsWebSocketService(
                 new SubscriberRepository(), mock(AlertNotificationsService.class));
 
@@ -86,7 +91,8 @@ class AlertNotificationsWebSocketServiceTest {
     }
 
     @Test
-    void onChangeQueriesOncePerDistinctAppType() {
+    @DisplayName("on change queries once per distinct app type")
+    void on_change_queries_once_per_distinct_app_type() {
         AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
         ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
         when(alertNotificationsService.getUnconsumedAlerts()).thenReturn(unconsumedAlerts);

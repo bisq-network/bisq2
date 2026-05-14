@@ -97,6 +97,19 @@ For a quick full cleanup/rebuild you can use
    If running from the IDE one need to enable `annotation processing` (search for that in the settings).
    The `Protocol Buffers` plugin need to be installed as well.
 
+5. Gradle JVM must be set to JDK 21 in IntelliJ.
+   Go to **Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM** and select
+   a JDK 21 distribution. Using JDK 22+ will cause the Kotlin compiler to fall back to JVM target 21,
+   which can corrupt the Gradle build cache and produce empty plugin jars (e.g. `PackagingPlugin` not
+   found). It also breaks IntelliJ's Gradle sync with `ModelBuilderService: Error accessing
+   configuration file`. If you hit either of these errors, switch the Gradle JVM back to 21 and
+   clear stale caches with:
+   ```sh
+   ./gradlew --stop
+   rm -rf .gradle build-logic/packaging/build
+   ./gradlew --no-build-cache build
+   ```
+
 ## Running Bisq
 
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:

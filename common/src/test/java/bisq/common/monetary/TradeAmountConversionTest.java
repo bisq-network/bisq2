@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.market.Market;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TradeAmountConversionTest {
 
     @Test
-    void testToTradeAmountWithBaseSideAmountInBtcFiatMarket() {
+    @DisplayName("to trade amount with base side amount in btc fiat market")
+    void to_trade_amount_with_base_side_amount_in_btc_fiat_market() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
@@ -42,7 +44,8 @@ public class TradeAmountConversionTest {
     }
 
     @Test
-    void testToTradeAmountWithQuoteSideAmountInBtcFiatMarket() {
+    @DisplayName("to trade amount with quote side amount in btc fiat market")
+    void to_trade_amount_with_quote_side_amount_in_btc_fiat_market() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary usdAmount = Fiat.fromFaceValue(500, "USD");
@@ -56,7 +59,8 @@ public class TradeAmountConversionTest {
     }
 
     @Test
-    void testToTradeAmountWithBaseSideAmountInAltcoinMarket() {
+    @DisplayName("to trade amount with base side amount in altcoin market")
+    void to_trade_amount_with_base_side_amount_in_altcoin_market() {
         Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
         PriceQuote priceQuote = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Monetary xmrAmount = Coin.fromFaceValue(2, "XMR");
@@ -70,7 +74,8 @@ public class TradeAmountConversionTest {
     }
 
     @Test
-    void testToTradeAmountWithQuoteSideAmountInAltcoinMarket() {
+    @DisplayName("to trade amount with quote side amount in altcoin market")
+    void to_trade_amount_with_quote_side_amount_in_altcoin_market() {
         Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
         PriceQuote priceQuote = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
@@ -84,7 +89,8 @@ public class TradeAmountConversionTest {
     }
 
     @Test
-    void testToTradeAmountThrowsIfAmountCurrencyIsNotInMarket() {
+    @DisplayName("to trade amount throws if amount currency is not in market")
+    void to_trade_amount_throws_if_amount_currency_is_not_in_market() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary eurAmount = Fiat.fromFaceValue(100, "EUR");
@@ -96,7 +102,8 @@ public class TradeAmountConversionTest {
     }
 
     @Test
-    void testIsBaseAndQuoteSideAmountHelpers() {
+    @DisplayName("is base and quote side amount helpers")
+    void is_base_and_quote_side_amount_helpers() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.5);
         Monetary usdAmount = Fiat.fromFaceValue(100, "USD");

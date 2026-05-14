@@ -20,6 +20,7 @@ package bisq.desktop.common.utils;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -34,7 +35,8 @@ class CatHashImageUtilTest {
     }
 
     @Test
-    void testByteArrayToImageAndImageToByteArray() {
+    @DisplayName("byte array to image and image to byte array")
+    void byte_array_to_image_and_image_to_byte_array() {
         Image image = createInMemoryImage(16, 16);
         WritableImage writableImage = (WritableImage) image;
         writableImage.getPixelWriter().setArgb(0, 0, 0xFF0000FF); // Red pixel
@@ -46,7 +48,8 @@ class CatHashImageUtilTest {
     }
 
     @Test
-    void testWriteAndReadRawImage(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("write and read raw image")
+    void write_and_read_raw_image(@TempDir Path tempDirPath) throws IOException {
         Image image = createInMemoryImage(8, 8);
         Path tempFilePath = tempDirPath.resolve("test.raw");
 

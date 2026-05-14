@@ -21,13 +21,15 @@ import bisq.common.monetary.PriceQuote;
 import bisq.offer.price.PriceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class PriceUtilTest {
     @Test
-    void testOffsetOf() {
+    @DisplayName("offset of")
+    void offset_of() {
         PriceQuote marketPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote offerPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
 
@@ -62,7 +64,8 @@ public class PriceUtilTest {
     }
 
     @Test
-    void testFromMarketPriceOffset() {
+    @DisplayName("from market price offset")
+    void from_market_price_offset() {
         PriceQuote marketPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
 
         PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote, 0);

@@ -19,6 +19,7 @@ package bisq.user.profile;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 public class UserProfileServiceTest {
     @Test
-    void testShouldAddNymToNickName() {
+    @DisplayName("should add nym to nick name")
+    void should_add_nym_to_nick_name() {
         String nickName;
         String nym;
         Map<String, Set<String>> nymsByNickNameFromNetwork;
