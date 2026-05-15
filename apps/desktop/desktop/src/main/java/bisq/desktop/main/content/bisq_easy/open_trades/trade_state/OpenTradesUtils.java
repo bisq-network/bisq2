@@ -33,29 +33,35 @@ public class OpenTradesUtils {
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+            String formattedPrice = AmountFormatter.formatQuoteAmountWithCode(trade.getPriceQuote().getQuoteSideMonetary());
             String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElseGet(() -> Res.get("data.na"));
             String bitcoinPaymentData = Optional.ofNullable(trade.getBitcoinPaymentData().get()).orElseGet(() -> Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
             String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
             String paymentMethod = bitcoinMethod + " / " + fiatMethod;
+
             List<String> headers = List.of(
                     Res.get("bisqEasy.openTrades.table.tradeId"),
                     Res.get("bisqEasy.openTrades.table.baseAmount"),
                     Res.get("bisqEasy.openTrades.csv.quoteAmount", quoteCurrencyCode),
+                    Res.get("bisqEasy.openTrades.table.price"),
                     Res.get("bisqEasy.openTrades.csv.txIdOrPreimage"),
                     Res.get("bisqEasy.openTrades.csv.receiverAddressOrInvoice"),
                     Res.get("bisqEasy.openTrades.csv.paymentMethod")
             );
+
             List<List<String>> tradeData = List.of(
                     List.of(
                             tradeId,
                             formattedBaseAmount,
                             formattedQuoteAmount,
+                            formattedPrice,
                             paymentProof,
                             bitcoinPaymentData,
                             paymentMethod
                     )
             );
+
             String csv = Csv.toCsv(headers, tradeData);
             String initialFileName = "BisqEasy-trade-" + trade.getShortId() + ".csv";
             FileChooserUtil.saveFile(scene, initialFileName)
@@ -72,9 +78,9 @@ public class OpenTradesUtils {
     }
 
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
-                                         BisqEasyContract contract,
-                                         BisqEasyMediationRequestService bisqEasyMediationRequestService,
-                                         BisqEasyOpenTradeChannelService channelService) {
+                                        BisqEasyContract contract,
+                                        BisqEasyMediationRequestService bisqEasyMediationRequestService,
+                                        BisqEasyOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
