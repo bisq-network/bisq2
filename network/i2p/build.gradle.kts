@@ -16,7 +16,7 @@ dependencies {
 }
 
 val grpcPluginId = "grpc"
-val grpcArtifact = "io.grpc:protoc-gen-grpc-java:1.61.0" //1.71.0
+val grpcArtifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}"
 val protocArtifact = "com.google.protobuf:protoc:4.28.2"
 
 protobuf {
@@ -56,6 +56,3 @@ idea {
         generatedSourceDirs.add(file("build/generated/source/proto/main/grpc"))
     }
 }
-
-
-
