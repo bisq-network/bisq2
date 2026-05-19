@@ -450,8 +450,16 @@ fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlis
                         "Expected '<group:name:version>\\t<artifact-file-name>\\t<review-rationale>'."
             )
         }
+        val coordinate = columns[0].trim()
+        val coordinateParts = coordinate.split(':')
+        if (coordinateParts.size != 3 || coordinateParts.any { it.isEmpty() }) {
+            throw GradleException(
+                "Invalid checksum fallback allowlist coordinate at $allowlistFile:${index + 1}: '$coordinate'. " +
+                        "Expected '<group:name:version>' in entry '$line'."
+            )
+        }
 
-        val entry = "${columns[0].trim()}\t${columns[1].trim()}"
+        val entry = "$coordinate\t${columns[1].trim()}"
         entryOrder += entry
         if (!allowedEntries.add(entry)) {
             duplicateEntries += entry
