@@ -3,6 +3,8 @@ plugins {
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
+apply(from = "../../gradle/dependency-verification.gradle.kts")
+
 extensions.findByName("buildScan")?.withGroovyBuilder {
     setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
     setProperty("termsOfServiceAgree", "yes")

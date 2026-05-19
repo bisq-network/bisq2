@@ -21,6 +21,8 @@ val compositeBuilds = listOf(
     CompositeBuild(file("apps/desktop"), ":apps:desktop"),
 )
 
+apply(from = "gradle/dependency-verification.gradle.kts")
+
 fun getGradleCommand(): String {
     return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
 }
