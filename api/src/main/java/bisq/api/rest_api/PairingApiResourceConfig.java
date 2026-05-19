@@ -5,7 +5,7 @@ import bisq.api.rest_api.error.CustomExceptionMapper;
 import bisq.api.rest_api.error.RestApiException;
 import bisq.common.json.JsonMapperProvider;
 import jakarta.ws.rs.ApplicationPath;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.inject.hk2.AbstractBinder;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 

@@ -27,6 +27,11 @@ dependencies {
         implementation(it)
     }
 
+    versionCatalog.findLibrary("findbugs-jsr305").ifPresent {
+        compileOnly(it)
+        testCompileOnly(it)
+    }
+
     versionCatalog.findLibrary("lombok").ifPresent {
         compileOnly(it)
         annotationProcessor(it)
@@ -47,6 +52,9 @@ dependencies {
 
     versionCatalog.findLibrary("junit-jupiter").ifPresent {
         testImplementation(it)
+    }
+    versionCatalog.findLibrary("junit-platform-launcher").ifPresent {
+        testRuntimeOnly(it)
     }
 
     versionCatalog.findLibrary("assertj-core").ifPresent {
