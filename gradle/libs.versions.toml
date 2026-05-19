@@ -73,7 +73,7 @@ square-okhttp-libs = { strictly = '4.12.0' }
 swagger-lib = { strictly = '2.2.0' }
 testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.12' }
-typesafe-config-lib = { strictly = '1.4.3' }
+typesafe-config-lib = { strictly = '1.4.8' }
 
 zxing-lib = { strictly = '3.5.3' }
 
