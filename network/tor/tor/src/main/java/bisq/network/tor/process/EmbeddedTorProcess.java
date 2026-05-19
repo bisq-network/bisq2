@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -67,11 +66,7 @@ public class EmbeddedTorProcess {
         );
 
         if (torBinaryPath.startsWith(torDataDirPath)) {
-            String ldPreload = LdPreload.computeLdPreloadVariable(torDataDirPath);
-            Map<String, String> environment = processBuilder.environment();
-            if (!ldPreload.isBlank()) {
-                environment.put("LD_PRELOAD", ldPreload);
-            }
+            LdPreload.applyToEnvironment(processBuilder.environment(), torDataDirPath);
         }
 
         processBuilder.redirectError(stderrLogPath.toFile());

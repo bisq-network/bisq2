@@ -23,6 +23,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -73,5 +75,26 @@ class LdPreloadTest {
 
         assertFalse(result.contains("libfoo.so"));
         assertTrue(result.contains("libbar.so.1"));
+    }
+
+    @Test
+    void applyToEnvironment_removesLdPreloadIfNoSoFiles(@TempDir Path tempDirPath) throws IOException {
+        FileMutatorUtils.createFile(tempDirPath.resolve("file.txt"));
+        Map<String, String> environment = new HashMap<>();
+        environment.put("LD_PRELOAD", "/tmp/inherited.so");
+
+        LdPreload.applyToEnvironment(environment, tempDirPath);
+
+        assertFalse(environment.containsKey("LD_PRELOAD"));
+    }
+
+    @Test
+    void applyToEnvironment_setsLdPreloadIfSoFilesExist(@TempDir Path tempDirPath) throws IOException {
+        Path libPath = FileMutatorUtils.createFile(tempDirPath.resolve("libfoo.so.1"));
+        Map<String, String> environment = new HashMap<>();
+
+        LdPreload.applyToEnvironment(environment, tempDirPath);
+
+        assertEquals(libPath.toAbsolutePath().toString(), environment.get("LD_PRELOAD"));
     }
 }
