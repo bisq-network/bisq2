@@ -1,25 +1,31 @@
 package bisq.api.dto.mappings.account.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.ZelleAccount;
-import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.accounts.fiat.MoneyGramAccount;
+import bisq.account.accounts.fiat.MoneyGramAccountPayload;
+import bisq.api.dto.account.fiat.CountryDto;
+import bisq.api.dto.account.fiat.FiatCurrencyDto;
 import bisq.api.dto.account.fiat.FiatPaymentMethodChargebackRiskDto;
 import bisq.api.dto.account.fiat.FiatPaymentRailDto;
 import bisq.api.dto.account.PaymentAccountDto;
-import bisq.api.dto.account.fiat.ZelleAccountPayloadDto;
-import bisq.api.dto.account.fiat.create.CreateZelleAccountPayloadDto;
+import bisq.api.dto.account.fiat.MoneyGramAccountPayloadDto;
+import bisq.api.dto.account.fiat.create.CreateMoneyGramAccountPayloadDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMappingHelper;
-import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 
-public class ZelleAccountDtoMapping {
-    public static ZelleAccount toBisq2Model(String accountName, CreateZelleAccountPayloadDto payloadDto) {
-        ZelleAccountPayload payload = new ZelleAccountPayload(
+import java.util.List;
+
+public class MoneyGramAccountDtoMapping {
+    public static MoneyGramAccount toBisq2Model(String accountName, CreateMoneyGramAccountPayloadDto payloadDto) {
+        MoneyGramAccountPayload payload = new MoneyGramAccountPayload(
                 StringUtils.createUid(),
+                payloadDto.selectedCountryCode(),
+                payloadDto.selectedCurrencyCodes(),
                 payloadDto.holderName(),
-                payloadDto.emailOrMobileNr()
+                payloadDto.email(),
+                payloadDto.state()
         );
-        return new ZelleAccount(
+        return new MoneyGramAccount(
                 StringUtils.createUid(),
                 System.currentTimeMillis(),
                 accountName,
@@ -30,21 +36,22 @@ public class ZelleAccountDtoMapping {
         );
     }
 
-    public static PaymentAccountDto fromBisq2Model(ZelleAccount account) {
+    public static PaymentAccountDto fromBisq2Model(MoneyGramAccount account) {
         FiatPaymentMethodChargebackRiskDto chargebackRisk = FiatAccountDtoMappingHelper.toChargebackRiskDto(account.getPaymentMethod().getPaymentRail());
-
-        String currency = FiatAccountPayloadCurrencyMapping.toDisplayString(account.getAccountPayload());
+        CountryDto country = FiatAccountDtoMappingHelper.toCountryDto(account.getCountry().getCode());
+        List<FiatCurrencyDto> selectedCurrencies = FiatAccountDtoMappingHelper.toFiatCurrencyDtos(account.getAccountPayload().getSelectedCurrencyCodes());
 
         return new PaymentAccountDto(
                 account.getAccountName(),
-                FiatPaymentRailDto.ZELLE,
-                new ZelleAccountPayloadDto(
+                FiatPaymentRailDto.MONEY_GRAM,
+                new MoneyGramAccountPayloadDto(
                         chargebackRisk,
                         account.getPaymentMethod().getShortDisplayString(),
-                        currency,
-                        CountryRepository.getNameByCode(account.getCountry().getCode()),
+                        country,
+                        selectedCurrencies,
                         account.getAccountPayload().getHolderName(),
-                        account.getAccountPayload().getEmailOrMobileNr()
+                        account.getAccountPayload().getEmail(),
+                        account.getAccountPayload().getState()
                 ),
                 PaymentAccountDtoMappingHelper.getCreationDate(account),
                 PaymentAccountDtoMappingHelper.getTradeLimitInfo(account),

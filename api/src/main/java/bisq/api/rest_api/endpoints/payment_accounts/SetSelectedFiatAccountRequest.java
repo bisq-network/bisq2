@@ -17,12 +17,9 @@
 
 package bisq.api.rest_api.endpoints.payment_accounts;
 
-import bisq.api.dto.account.PaymentAccountDto;
-
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 public record SetSelectedFiatAccountRequest(
-        @Nullable PaymentAccountDto selectedAccount
+        Optional<String> accountName
 ) {
 }
-

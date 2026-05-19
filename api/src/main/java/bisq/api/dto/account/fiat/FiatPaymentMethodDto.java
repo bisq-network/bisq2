@@ -17,11 +17,14 @@
 
 package bisq.api.dto.account.fiat;
 
+import java.util.List;
+
 public record FiatPaymentMethodDto(
         FiatPaymentRailDto paymentRail,
         String name,
-        String supportedCurrencyCodes,
-        String countryNames,
+        List<FiatCurrencyDto> supportedCurrencies,
+        List<CountryDto> supportedCountries,
+        boolean matchesAllCountries,
         FiatPaymentMethodChargebackRiskDto chargebackRisk,
         String tradeLimitInfo,
         String tradeDuration

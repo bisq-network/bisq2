@@ -17,45 +17,16 @@
 
 package bisq.api.dto.account;
 
-import bisq.api.dto.account.crypto.MoneroAccountDto;
-import bisq.api.dto.account.crypto.OtherCryptoAssetAccountDto;
-import bisq.api.dto.account.fiat.UserDefinedFiatAccountDto;
-import bisq.api.dto.account.fiat.ZelleAccountDto;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 /**
- * Base interface for all fiat payment account DTOs.
- * Each fiat payment rail type (CUSTOM, SEPA, REVOLUT, etc.) will have its own implementation.
- * All fiat account DTOs must have an account name, payment rail type, and payload.
- * 
- * Jackson uses the paymentRail field to determine which concrete type to deserialize to.
+ * Generic read-side payment account DTO.
+ * Rail-specific details are represented by the concrete accountPayload DTO.
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "paymentRail",
-    visible = true
-)
-@JsonSubTypes({
-        // Fiat
-        @JsonSubTypes.Type(value = UserDefinedFiatAccountDto.class, name = "CUSTOM"),
-        @JsonSubTypes.Type(value = ZelleAccountDto.class, name = "ZELLE"),
-        // Crypto
-        @JsonSubTypes.Type(value = MoneroAccountDto.class, name = "MONERO"),
-        @JsonSubTypes.Type(value = OtherCryptoAssetAccountDto.class, name = "OTHER_CRYPTO_ASSET")
-})
-public interface PaymentAccountDto {
-    String accountName();
-
-    PaymentRailDto paymentRail();
-
-    PaymentAccountPayloadDto accountPayload();
-
-    String creationDate();
-
-    String tradeLimitInfo();
-
-    String tradeDuration();
+public record PaymentAccountDto(
+        String accountName,
+        PaymentRailDto paymentRail,
+        PaymentAccountPayloadDto accountPayload,
+        String creationDate,
+        String tradeLimitInfo,
+        String tradeDuration
+) {
 }
-

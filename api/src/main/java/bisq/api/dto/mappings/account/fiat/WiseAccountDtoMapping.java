@@ -1,25 +1,28 @@
 package bisq.api.dto.mappings.account.fiat;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.ZelleAccount;
-import bisq.account.accounts.fiat.ZelleAccountPayload;
+import bisq.account.accounts.fiat.WiseAccount;
+import bisq.account.accounts.fiat.WiseAccountPayload;
+import bisq.api.dto.account.fiat.FiatCurrencyDto;
 import bisq.api.dto.account.fiat.FiatPaymentMethodChargebackRiskDto;
 import bisq.api.dto.account.fiat.FiatPaymentRailDto;
 import bisq.api.dto.account.PaymentAccountDto;
-import bisq.api.dto.account.fiat.ZelleAccountPayloadDto;
-import bisq.api.dto.account.fiat.create.CreateZelleAccountPayloadDto;
+import bisq.api.dto.account.fiat.WiseAccountPayloadDto;
+import bisq.api.dto.account.fiat.create.CreateWiseAccountPayloadDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMappingHelper;
-import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 
-public class ZelleAccountDtoMapping {
-    public static ZelleAccount toBisq2Model(String accountName, CreateZelleAccountPayloadDto payloadDto) {
-        ZelleAccountPayload payload = new ZelleAccountPayload(
+import java.util.List;
+
+public class WiseAccountDtoMapping {
+    public static WiseAccount toBisq2Model(String accountName, CreateWiseAccountPayloadDto payloadDto) {
+        WiseAccountPayload payload = new WiseAccountPayload(
                 StringUtils.createUid(),
+                payloadDto.selectedCurrencyCodes(),
                 payloadDto.holderName(),
-                payloadDto.emailOrMobileNr()
+                payloadDto.email()
         );
-        return new ZelleAccount(
+        return new WiseAccount(
                 StringUtils.createUid(),
                 System.currentTimeMillis(),
                 accountName,
@@ -30,21 +33,19 @@ public class ZelleAccountDtoMapping {
         );
     }
 
-    public static PaymentAccountDto fromBisq2Model(ZelleAccount account) {
+    public static PaymentAccountDto fromBisq2Model(WiseAccount account) {
         FiatPaymentMethodChargebackRiskDto chargebackRisk = FiatAccountDtoMappingHelper.toChargebackRiskDto(account.getPaymentMethod().getPaymentRail());
-
-        String currency = FiatAccountPayloadCurrencyMapping.toDisplayString(account.getAccountPayload());
+        List<FiatCurrencyDto> selectedCurrencies = FiatAccountDtoMappingHelper.toFiatCurrencyDtos(account.getAccountPayload().getSelectedCurrencyCodes());
 
         return new PaymentAccountDto(
                 account.getAccountName(),
-                FiatPaymentRailDto.ZELLE,
-                new ZelleAccountPayloadDto(
+                FiatPaymentRailDto.WISE,
+                new WiseAccountPayloadDto(
                         chargebackRisk,
                         account.getPaymentMethod().getShortDisplayString(),
-                        currency,
-                        CountryRepository.getNameByCode(account.getCountry().getCode()),
+                        selectedCurrencies,
                         account.getAccountPayload().getHolderName(),
-                        account.getAccountPayload().getEmailOrMobileNr()
+                        account.getAccountPayload().getEmail()
                 ),
                 PaymentAccountDtoMappingHelper.getCreationDate(account),
                 PaymentAccountDtoMappingHelper.getTradeLimitInfo(account),
