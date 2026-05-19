@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,6 +51,10 @@ public class ContractService implements Service {
         checkArgument(Arrays.equals(contractHash, getContractHash(contract)),
                 "Contract hash from the signatureData does not match the given contract");
         return SignatureUtil.verify(contractHash, signatureData.getSignature(), signatureData.getPublicKey());
+    }
+
+    public boolean isSignaturePublicKey(ContractSignatureData signatureData, PublicKey publicKey) {
+        return Arrays.equals(signatureData.getPublicKey().getEncoded(), publicKey.getEncoded());
     }
 
     private <T extends Offer<?, ?>> byte[] getContractHash(Contract<T> contract) {

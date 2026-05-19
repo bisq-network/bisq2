@@ -45,6 +45,9 @@ public class BisqEasyTakeOfferResponseHandler extends BisqEasyTradeMessageHandle
                 "Takers and makers contracts must be the same");
 
         ContractService contractService = serviceProvider.getContractService();
+        checkArgument(contractService.isSignaturePublicKey(makersContractSignatureData,
+                        trade.getContract().getMaker().getNetworkId().getPubKey().getPublicKey()),
+                "Makers contract signature public key must match makers network id public key");
         try {
             checkArgument(contractService.verifyContractSignature(trade.getContract(), makersContractSignatureData),
                     "Verifying makers contract signature failed");

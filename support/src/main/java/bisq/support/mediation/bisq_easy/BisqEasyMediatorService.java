@@ -49,6 +49,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
+
 /**
  * Service used by mediators
  */
@@ -151,11 +154,12 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     /* --------------------------------------------------------------------- */
 
     private void processMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest) {
-        UserProfile requester = bisqEasyMediationRequest.getRequester();
-        if (bannedUserService.isUserProfileBanned(requester)) {
-            log.warn("Message ignored as sender is banned");
+        Optional<UserProfile> optionalRequester = authorizeMediationRequest(bisqEasyMediationRequest, bannedUserService);
+        if (optionalRequester.isEmpty()) {
             return;
         }
+
+        UserProfile requester = optionalRequester.orElseThrow();
         BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
             String tradeId = bisqEasyMediationRequest.getTradeId();
@@ -179,19 +183,75 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             addNewMediationCase(bisqEasyMediationCase);
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+            UserProfile myUserProfile = myUserIdentity.getUserProfile();
 
             // Send to requester
-            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId),
+            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId, myUserProfile),
                     requester.getNetworkId(),
                     networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
 
             // Send to peer
-            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId),
+            networkService.confidentialSend(new BisqEasyMediatorsResponse(tradeId, myUserProfile),
                     peer.getNetworkId(),
                     networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
         });
+    }
+
+    static Optional<UserProfile> authorizeMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                                           BannedUserService bannedUserService) {
+        UserProfile requester = bisqEasyMediationRequest.getRequester();
+        if (bannedUserService.isUserProfileBanned(requester)) {
+            log.warn("Message ignored as sender is banned");
+            return Optional.empty();
+        }
+
+        BisqEasyContract contract = bisqEasyMediationRequest.getContract();
+        UserProfile peer = bisqEasyMediationRequest.getPeer();
+        if (!hasMatchingContractParties(contract, requester, peer)) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} and peer {} do not match contract parties.",
+                    bisqEasyMediationRequest.getTradeId(), requester.getId(), peer.getId());
+            return Optional.empty();
+        }
+
+        if (!hasMatchingContractMediator(contract.getMediator(), bisqEasyMediationRequest.getReceiver())) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because mediator does not match contract mediator.",
+                    bisqEasyMediationRequest.getTradeId());
+            return Optional.empty();
+        }
+        if (!hasValidChatMessages(bisqEasyMediationRequest, requester, peer)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(requester);
+    }
+
+    private static boolean hasValidChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                                UserProfile requester,
+                                                UserProfile peer) {
+        String tradeId = bisqEasyMediationRequest.getTradeId();
+        String channelId = BisqEasyOpenTradeChannel.createId(tradeId);
+        return bisqEasyMediationRequest.getChatMessages().stream()
+                .allMatch(chatMessage -> {
+                    if (!chatMessage.getTradeId().equals(tradeId)) {
+                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has trade ID {}.",
+                                tradeId, chatMessage.getId(), chatMessage.getTradeId());
+                        return false;
+                    }
+                    if (!chatMessage.getChannelId().equals(channelId)) {
+                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has channel ID {}.",
+                                tradeId, chatMessage.getId(), chatMessage.getChannelId());
+                        return false;
+                    }
+                    String senderUserProfileId = chatMessage.getSenderUserProfile().getId();
+                    if (!senderUserProfileId.equals(requester.getId()) && !senderUserProfileId.equals(peer.getId())) {
+                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has unexpected sender {}.",
+                                tradeId, chatMessage.getId(), senderUserProfileId);
+                        return false;
+                    }
+                    return true;
+                });
     }
 
     private void addNewMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {

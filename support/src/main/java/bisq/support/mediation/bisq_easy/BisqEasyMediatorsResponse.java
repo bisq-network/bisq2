@@ -21,13 +21,17 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.security.PublicKey;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
@@ -36,13 +40,16 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class BisqEasyMediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
+public final class BisqEasyMediatorsResponse implements MailboxMessage, ExternalNetworkMessage,
+        SenderPublicKeyProvidingPayload {
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String tradeId;
+    private final UserProfile senderUserProfile;
 
-    public BisqEasyMediatorsResponse(String tradeId) {
+    public BisqEasyMediatorsResponse(String tradeId, UserProfile senderUserProfile) {
         this.tradeId = tradeId;
+        this.senderUserProfile = senderUserProfile;
 
         verify();
     }
@@ -59,11 +66,12 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     @Override
     public bisq.support.protobuf.MediatorsResponse.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediatorsResponse.newBuilder()
-                .setTradeId(tradeId);
+                .setTradeId(tradeId)
+                .setSenderUserProfile(senderUserProfile.toProto(serializeForHash));
     }
 
     public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
-        return new BisqEasyMediatorsResponse(proto.getTradeId());
+        return new BisqEasyMediatorsResponse(proto.getTradeId(), UserProfile.fromProto(proto.getSenderUserProfile()));
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -80,5 +88,11 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.2);
+    }
+
+
+    @Override
+    public PublicKey getSenderPublicKey() {
+        return senderUserProfile.getPublicKey();
     }
 }

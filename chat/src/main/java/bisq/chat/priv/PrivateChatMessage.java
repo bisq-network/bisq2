@@ -26,6 +26,8 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
+import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
@@ -34,6 +36,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,7 +48,7 @@ import java.util.Set;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage implements MailboxMessage,
-        ExternalNetworkMessage, AckRequestingMessage {
+        ExternalNetworkMessage, AckRequestingMessage, SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
@@ -123,6 +126,16 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     @Override
     public NetworkId getSender() {
         return senderUserProfile.getNetworkId();
+    }
+
+    @Override
+    public PublicKey getSenderPublicKey() {
+        return senderUserProfile.getPublicKey();
+    }
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return receiverNetworkId.getPubKey().getPublicKey();
     }
 
     @Override

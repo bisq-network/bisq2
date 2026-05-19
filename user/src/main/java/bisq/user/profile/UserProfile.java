@@ -41,6 +41,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -213,12 +214,16 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }
 
+    public PublicKey getPublicKey() {
+        return networkId.getPubKey().getPublicKey();
+    }
+
     public byte[] getPubKeyHash() {
         return networkId.getPubKey().getHash();
     }
 
     public String getPubKeyAsHex() {
-        return Hex.encode(networkId.getPubKey().getPublicKey().getEncoded());
+        return Hex.encode(getPublicKey().getEncoded());
     }
 
     public String getId() {

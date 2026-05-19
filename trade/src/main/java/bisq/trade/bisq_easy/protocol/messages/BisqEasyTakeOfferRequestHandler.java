@@ -119,6 +119,9 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        checkArgument(serviceProvider.getContractService().isSignaturePublicKey(takersContractSignatureData,
+                        takersContract.getTaker().getNetworkId().getPubKey().getPublicKey()),
+                "Takers contract signature public key must match takers network id public key");
         try {
             checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData),
                     "Verifying takers contract signature failed");

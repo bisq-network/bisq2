@@ -23,6 +23,8 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
+import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
@@ -33,11 +35,14 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.PublicKey;
+
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage, Event {
+public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage, Event,
+        SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     private final String id;
     private final String tradeId;
     private final String protocolVersion;
@@ -70,6 +75,17 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
     @Override
     public String getAckRequestingMessageId() {
         return id;
+    }
+
+    @Override
+    public PublicKey getSenderPublicKey() {
+        return sender.getPubKey().getPublicKey();
+    }
+
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return receiver.getPubKey().getPublicKey();
     }
 
     abstract public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash);
