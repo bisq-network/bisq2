@@ -7,6 +7,7 @@
 [versions]
 bisq = '2.1.10'
 annotations-lib = { strictly = '23.0.0' }
+findbugs-jsr305-lib = { strictly = '3.0.2' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
 apache-httpcomponents-core-lib = { strictly = '5.3.1' }
@@ -35,11 +36,11 @@ glassfish-jaxb-runtime-lib = { strictly = '4.0.5' }
 
 grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
-google-gson-lib = { strictly = '2.10.1' }
-google-guava-lib = { strictly = '33.2.1-jre' }
+google-gson-lib = { strictly = '2.14.0' }
+google-guava-lib = { strictly = '33.6.0-jre' }
 google-libphonenumber-lib = { strictly = '9.0.8' }
 
-grpc = { strictly = '1.61.0' }
+grpc = { strictly = '1.81.0' }
 
 i2p-lib = { strictly = '2.7.0' }
 
@@ -86,6 +87,7 @@ apache-tomcat-annotations-api = { module = 'org.apache.tomcat:annotations-api', 
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
+findbugs-jsr305 = { module = 'com.google.code.findbugs:jsr305', version.ref = 'findbugs-jsr305-lib' }
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk18on', version.ref = 'bouncycastle-lib' }
 bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bouncycastle-lib' }

@@ -32,6 +32,11 @@ dependencies {
         implementation(it)
     }
 
+    versionCatalog.findLibrary("findbugs-jsr305").ifPresent {
+        compileOnly(it)
+        testCompileOnly(it)
+    }
+
     versionCatalog.findLibrary("lombok").ifPresent {
         compileOnly(it)
         annotationProcessor(it)
