@@ -9,9 +9,11 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.api.dto.account.PaymentAccountDto;
-import bisq.api.dto.account.crypto.CryptoPaymentMethodDto;
-import bisq.api.dto.account.fiat.FiatPaymentMethodDto;
+import bisq.api.dto.account.create.CreatePaymentAccountDto;
+import bisq.api.dto.account.crypto.payment_method.CryptoPaymentMethodDto;
+import bisq.api.dto.account.fiat.payment_method.FiatPaymentMethodDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMapping;
+import bisq.api.dto.mappings.account.create.CreatePaymentAccountDtoMapping;
 import bisq.api.dto.mappings.account.crypto.CryptoPaymentMethodDtoMapping;
 import bisq.api.dto.mappings.account.fiat.FiatPaymentMethodDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
@@ -73,7 +75,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
             List<PaymentAccountDto> paymentAccounts = accounts.stream()
                     .filter(account -> isFiatAccount(account) || isCryptoAccount(account))
-                    .map(PaymentAccountDtoMapping::fromBisq2Model)
+                    .map(PaymentAccountDtoMapping::fromBisq2ModelIfSupported)
+                    .flatMap(Optional::stream)
                     .toList();
 
             return buildOkResponse(paymentAccounts);
@@ -90,7 +93,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
             requestBody = @RequestBody(
                     description = "Payment account details",
                     content = @Content(
-                            schema = @Schema(implementation = PaymentAccountDto.class),
+                            schema = @Schema(implementation = CreatePaymentAccountDto.class),
                             examples = {
                                     @ExampleObject(
                                             name = "Zelle account",
@@ -120,7 +123,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
     )
-    public void addAccount(@Valid PaymentAccountDto request,
+    public void addAccount(@Valid CreatePaymentAccountDto request,
                            @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response ->
@@ -132,7 +135,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
             }
 
             try {
-                Account<? extends PaymentMethod<?>, ?> account = PaymentAccountDtoMapping.toBisq2Model(request);
+                Account<? extends PaymentMethod<?>, ?> account = CreatePaymentAccountDtoMapping.toBisq2Model(request);
                 if (!accountService.addPaymentAccount(account)) {
                     asyncResponse.resume(buildErrorResponse(Response.Status.CONFLICT,
                             "Payment account already exists: " + request.accountName()));
