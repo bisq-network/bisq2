@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.Delete
+
+import java.io.File
 import java.util.Locale.getDefault
 
 plugins {
@@ -5,8 +8,54 @@ plugins {
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
+data class CompositeBuild(
+    val rootDir: File,
+    val taskPath: String
+)
+
+val compositeBuilds = listOf(
+    CompositeBuild(file("build-logic"), ":build-logic"),
+    CompositeBuild(file("network"), ":network"),
+    CompositeBuild(file("network/tor"), ":network:tor"),
+    CompositeBuild(file("apps"), ":apps"),
+    CompositeBuild(file("apps/desktop"), ":apps:desktop"),
+)
+
 fun getGradleCommand(): String {
     return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
+}
+
+fun readIncludedProjectPaths(settingsDir: File): List<String> {
+    val settingsFile = settingsDir.resolve("settings.gradle.kts")
+    if (!settingsFile.isFile) {
+        return emptyList()
+    }
+
+    val includeRegex = Regex("""^\s*include\s*\(([^)]*)\)""")
+    val projectPathRegex = Regex(""""([^"]+)"""")
+
+    return settingsFile.readLines().flatMap { line ->
+        val match = includeRegex.find(line) ?: return@flatMap emptyList<String>()
+        projectPathRegex.findAll(match.groupValues[1])
+            .map { it.groupValues[1] }
+            .toList()
+    }
+}
+
+fun File.resolveProjectPath(projectPath: String): File {
+    return resolve(projectPath.removePrefix(":").replace(':', File.separatorChar))
+}
+
+fun buildDirectories(settingsDir: File): List<File> {
+    val projectDirs = listOf(settingsDir) + readIncludedProjectPaths(settingsDir).map {
+        settingsDir.resolveProjectPath(it)
+    }
+
+    return projectDirs.map { it.resolve("build") }
+}
+
+fun allBuildDirectories(): List<File> {
+    return buildDirectories(rootDir) + compositeBuilds.flatMap { buildDirectories(it.rootDir) }
 }
 
 tasks.register("buildAll") {
@@ -14,21 +63,12 @@ tasks.register("buildAll") {
     description = "Build the entire project leaving it ready to work with."
 
     doLast {
-        listOf(
+        (listOf(
             ":build-logic:build",
             "build",
-            ":network:build",
-            ":network:tor:build",
-            ":apps:seed-node-app:build",
-            ":apps:oracle-node-app:build",
-            ":apps:api-app:build",
-            ":apps:node-monitor-web-app:build",
-            ":apps:desktop:desktop:build",
-            ":apps:desktop:desktop-app:build",
-            ":apps:desktop:desktop-app-launcher:build",
-            ":apps:desktop:webcam-app:build",
-            ":apps:desktop:bi2p:build",
-        ).forEach {
+        ) + compositeBuilds
+            .filter { it.taskPath != ":build-logic" }
+            .map { "${it.taskPath}:build" }).forEach {
             exec {
                 println("Executing Build: $it")
                 commandLine(getGradleCommand(), it)
@@ -37,32 +77,10 @@ tasks.register("buildAll") {
     }
 }
 
-tasks.register("cleanAll") {
+tasks.register<Delete>("cleanAll") {
     group = "build"
     description = "Cleans the entire project."
-
-    doLast {
-        listOf(
-            ":build-logic:clean",
-            "clean",
-            ":network:clean",
-            ":network:tor:clean",
-            ":apps:seed-node-app:clean",
-            ":apps:oracle-node-app:clean",
-            ":apps:api-app:clean",
-            ":apps:node-monitor-web-app:clean",
-            ":apps:desktop:desktop:clean",
-            ":apps:desktop:desktop-app:clean",
-            ":apps:desktop:desktop-app-launcher:clean",
-            ":apps:desktop:webcam-app:clean",
-            ":apps:desktop:bi2p:clean",
-        ).forEach {
-            exec {
-                println("Executing Clean: $it")
-                commandLine(getGradleCommand(), it)
-            }
-        }
-    }
+    delete(allBuildDirectories())
 }
 
 tasks.register("publishAll") {
