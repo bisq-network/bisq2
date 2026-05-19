@@ -20,10 +20,20 @@ package bisq.network.tor.process;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LdPreload {
+    public static void applyToEnvironment(Map<String, String> environment, Path dirPath) {
+        String ldPreload = computeLdPreloadVariable(dirPath);
+        if (ldPreload.isBlank()) {
+            environment.remove("LD_PRELOAD");
+        } else {
+            environment.put("LD_PRELOAD", ldPreload);
+        }
+    }
+
     public static String computeLdPreloadVariable(Path dirPath) {
         try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
