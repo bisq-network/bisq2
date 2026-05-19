@@ -75,7 +75,7 @@ testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.12' }
 typesafe-config-lib = { strictly = '1.4.8' }
 
-zxing-lib = { strictly = '3.5.3' }
+zxing-lib = { strictly = '3.5.4' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
