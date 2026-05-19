@@ -110,16 +110,29 @@ public class EmbeddedTorProcess {
             try {
                 boolean exited = process.waitFor(3, TimeUnit.SECONDS);
                 if (!exited && process.isAlive()) {
-                    process.destroyForcibly();
+                    destroyForciblyAndWait(process);
                 }
             } catch (InterruptedException e) {
                 log.warn("Thread got interrupted at shutdown method", e);
-                Thread.currentThread().interrupt();
                 if (process.isAlive()) {
-                    process.destroyForcibly();
+                    destroyForciblyAndWait(process);
                 }
+                Thread.currentThread().interrupt();
             }
         });
+    }
+
+    private void destroyForciblyAndWait(Process process) {
+        process.destroyForcibly();
+        try {
+            boolean exited = process.waitFor(3, TimeUnit.SECONDS);
+            if (!exited && process.isAlive()) {
+                log.warn("Tor process {} did not exit after being forcibly destroyed", process.pid());
+            }
+        } catch (InterruptedException e) {
+            log.warn("Thread got interrupted while waiting for forcibly destroyed Tor process to exit", e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     public boolean isAlive() {
