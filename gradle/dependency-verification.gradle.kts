@@ -13,7 +13,11 @@ import java.util.Base64
 import java.util.Locale
 import java.util.TreeMap
 import java.util.TreeSet
+import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
+
+val accessExternalDtd = "http://javax.xml.XMLConstants/property/accessExternalDTD"
+val accessExternalSchema = "http://javax.xml.XMLConstants/property/accessExternalSchema"
 
 data class OpenPgpPacket(val tag: Int, val body: ByteArray)
 data class ResolvableConfiguration(val projectPath: String, val configuration: Configuration)
@@ -480,8 +484,21 @@ fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlis
 fun NodeList.elements(): List<Element> =
     (0 until length).mapNotNull { item(it) as? Element }
 
+fun secureDocumentBuilderFactory(): DocumentBuilderFactory =
+    DocumentBuilderFactory.newInstance().apply {
+        setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+        setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        setFeature("http://xml.org/sax/features/external-general-entities", false)
+        setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+        setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        setAttribute(accessExternalDtd, "")
+        setAttribute(accessExternalSchema, "")
+        isXIncludeAware = false
+        isExpandEntityReferences = false
+    }
+
 fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComponent>, List<TrustedKey>> {
-    val document = DocumentBuilderFactory.newInstance()
+    val document = secureDocumentBuilderFactory()
         .newDocumentBuilder()
         .parse(metadataFile)
 
