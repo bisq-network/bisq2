@@ -44,7 +44,7 @@ grpc = { strictly = '1.81.0' }
 
 hamcrest-lib = { strictly = '3.0' }
 
-i2p-lib = { strictly = '2.7.0' }
+i2p-lib = { strictly = '2.12.0' }
 
 jackson-lib = { strictly = '2.21.3' }
 jackson-annotations-lib = { strictly = '2.21' }
