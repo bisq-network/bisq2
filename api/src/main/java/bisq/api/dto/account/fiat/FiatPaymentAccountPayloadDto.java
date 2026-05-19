@@ -6,8 +6,4 @@ public interface FiatPaymentAccountPayloadDto extends PaymentAccountPayloadDto {
     FiatPaymentMethodChargebackRiskDto chargebackRisk();
 
     String paymentMethodName();
-
-    String currency();
-
-    String country();
 }

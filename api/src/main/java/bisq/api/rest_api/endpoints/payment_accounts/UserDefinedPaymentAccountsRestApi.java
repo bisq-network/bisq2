@@ -22,7 +22,9 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.api.dto.account.PaymentAccountDto;
-import bisq.api.dto.account.fiat.UserDefinedFiatAccountDto;
+import bisq.api.dto.account.create.CreatePaymentAccountDto;
+import bisq.api.dto.account.fiat.FiatPaymentRailDto;
+import bisq.api.dto.account.fiat.create.CreateUserDefinedFiatAccountPayloadDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.UserDefinedFiatAccountDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
@@ -104,6 +106,16 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
         return PaymentAccountDtoMapping.fromBisq2Model(account);
     }
 
+    private UserDefinedFiatAccount toUserDefinedFiatAccount(CreatePaymentAccountDto accountDto) {
+        if (accountDto.paymentRail() != FiatPaymentRailDto.CUSTOM) {
+            throw new IllegalArgumentException("Payment rail must be CUSTOM");
+        }
+        if (accountDto.accountPayload() instanceof CreateUserDefinedFiatAccountPayloadDto payloadDto) {
+            return UserDefinedFiatAccountDtoMapping.toBisq2Model(accountDto.accountName(), payloadDto);
+        }
+        throw new IllegalArgumentException("Expected CreateUserDefinedFiatAccountPayloadDto for CUSTOM payment rail");
+    }
+
     @GET
     @Operation(
             summary = "Get selected user-defined fiat payment account",
@@ -135,13 +147,14 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
             summary = "Add new user-defined fiat payment account",
             description = "Create a new user-defined fiat payment account (CUSTOM rail only).",
             requestBody = @RequestBody(
-                    description = "User-defined fiat account details (must be UserDefinedFiatAccountDto / CUSTOM)",
+                    description = "User-defined fiat account create details (must be CUSTOM payment rail)",
                     content = @Content(schema = @Schema(implementation = AddFiatAccountRequest.class))
             ),
             responses = {
                     @ApiResponse(responseCode = "201", description = "User-defined fiat payment account created successfully",
                             content = @Content(schema = @Schema(implementation = PaymentAccountDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input or unsupported account type"),
+                    @ApiResponse(responseCode = "409", description = "Payment account already exists"),
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
                     @ApiResponse(responseCode = "503", description = "Request timed out")
             }
@@ -153,26 +166,27 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
-            PaymentAccountDto accountDto = request.account();
-            if (accountDto == null) {
+            if (request == null || request.account() == null) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data is required"));
                 return;
             }
-            if (!(accountDto instanceof UserDefinedFiatAccountDto userDefinedDto)) {
-                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST,
-                        "Account must be of type UserDefinedFiatAccountDto"));
-                return;
-            }
 
+            CreatePaymentAccountDto accountDto = request.account();
+            UserDefinedFiatAccount account;
             try {
-                UserDefinedFiatAccount account = UserDefinedFiatAccountDtoMapping.toBisq2Model(userDefinedDto);
-                accountService.addPaymentAccount(account);
+                account = toUserDefinedFiatAccount(accountDto);
+                if (!accountService.addPaymentAccount(account)) {
+                    asyncResponse.resume(buildErrorResponse(Response.Status.CONFLICT,
+                            "Payment account already exists: " + accountDto.accountName()));
+                    return;
+                }
             } catch (IllegalArgumentException e) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
                 return;
             }
 
-            asyncResponse.resume(buildResponse(Response.Status.CREATED, userDefinedDto));
+            PaymentAccountDto createdAccountDto = PaymentAccountDtoMapping.fromBisq2Model(account);
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, createdAccountDto));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
@@ -227,12 +241,13 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
             summary = "Update user-defined fiat payment account",
             description = "Update an existing user-defined fiat payment account by replacing it with new data. The account name to update is provided as a query parameter.",
             requestBody = @RequestBody(
-                    description = "Updated user-defined fiat account details (must be UserDefinedFiatAccountDto / CUSTOM)",
+                    description = "Updated user-defined fiat account details (must be CUSTOM payment rail)",
                     required = true,
                     content = @Content(schema = @Schema(implementation = SaveFiatAccountRequest.class))
             ),
             responses = {
-                    @ApiResponse(responseCode = "204", description = "User-defined fiat payment account updated successfully"),
+                    @ApiResponse(responseCode = "200", description = "User-defined fiat payment account updated successfully",
+                            content = @Content(schema = @Schema(implementation = PaymentAccountDto.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid input data or unsupported account type"),
                     @ApiResponse(responseCode = "404", description = "User-defined fiat payment account not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
@@ -252,16 +267,11 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
                 return;
             }
 
-            PaymentAccountDto accountDto = request.account();
-            if (accountDto == null) {
+            if (request == null || request.account() == null) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Account data is required"));
                 return;
             }
-            if (!(accountDto instanceof UserDefinedFiatAccountDto userDefinedDto)) {
-                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST,
-                        "Account must be of type UserDefinedFiatAccountDto"));
-                return;
-            }
+            CreatePaymentAccountDto accountDto = request.account();
 
             Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
             if (result.isEmpty()) {
@@ -276,15 +286,17 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
                 return;
             }
 
+            UserDefinedFiatAccount updatedAccount;
             try {
-                UserDefinedFiatAccount newAccount = UserDefinedFiatAccountDtoMapping.toBisq2Model(userDefinedDto);
-                accountService.updatePaymentAccount(accountName, newAccount);
+                updatedAccount = toUserDefinedFiatAccount(accountDto);
+                accountService.updatePaymentAccount(accountName, updatedAccount);
             } catch (IllegalArgumentException e) {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()));
                 return;
             }
 
-            asyncResponse.resume(buildNoContentResponse());
+            PaymentAccountDto updatedAccountDto = PaymentAccountDtoMapping.fromBisq2Model(updatedAccount);
+            asyncResponse.resume(buildResponse(Response.Status.OK, updatedAccountDto));
         } catch (Exception e) {
             log.error("Failed to save payment account", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
@@ -294,9 +306,9 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
     @PATCH
     @Operation(
             summary = "Set selected user-defined fiat payment account",
-            description = "Set the currently selected user-defined fiat payment account. Pass null or omit selectedAccount to unselect.",
+            description = "Set the currently selected user-defined fiat payment account by account name. Pass null or omit accountName to unselect.",
             requestBody = @RequestBody(
-                    description = "The user-defined fiat payment account to set as selected. Pass null to unselect.",
+                    description = "The user-defined fiat account name to set as selected. Pass null to unselect.",
                     required = false,
                     content = @Content(schema = @Schema(implementation = SetSelectedFiatAccountRequest.class))
             ),
@@ -310,30 +322,26 @@ public class UserDefinedPaymentAccountsRestApi extends RestApiBase {
     @Path("/selected")
     public Response setSelectedPaymentAccount(@Valid SetSelectedFiatAccountRequest request) {
         try {
-            PaymentAccountDto accountDto = request.selectedAccount();
-            if (accountDto != null) {
-                if (!(accountDto instanceof UserDefinedFiatAccountDto)) {
-                    return buildErrorResponse(Response.Status.BAD_REQUEST,
-                            "Account must be of type UserDefinedFiatAccountDto");
-                }
-                Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountDto.accountName());
-                if (result.isEmpty()) {
-                    return buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found");
-                }
-
-                Account<? extends PaymentMethod<?>, ?> foundAccount = result.get();
-
-                if (!isUserDefinedAccount(foundAccount)) {
-                    return buildErrorResponse(Response.Status.BAD_REQUEST, "Account is not a user-defined fiat payment account");
-                }
-
-                accountService.setSelectedAccount(foundAccount);
-                log.info("Set selected payment account: {}", accountDto.accountName());
-            } else {
+            Optional<String> accountNameOptional = request != null ? request.accountName() : Optional.empty();
+            if (accountNameOptional.isEmpty() || accountNameOptional.get().trim().isEmpty()) {
                 accountService.setSelectedAccount(null);
                 log.info("Unselected payment account");
+                return Response.noContent().build();
             }
 
+            String accountName = accountNameOptional.get();
+            Optional<Account<? extends PaymentMethod<?>, ?>> result = accountService.findAccount(accountName);
+            if (result.isEmpty()) {
+                return buildErrorResponse(Response.Status.NOT_FOUND, "Payment account not found");
+            }
+
+            Account<? extends PaymentMethod<?>, ?> foundAccount = result.get();
+            if (!isUserDefinedAccount(foundAccount)) {
+                return buildErrorResponse(Response.Status.BAD_REQUEST, "Account is not a user-defined fiat payment account");
+            }
+
+            accountService.setSelectedAccount(foundAccount);
+            log.info("Set selected payment account: {}", accountName);
             return Response.noContent().build();
         } catch (Exception e) {
             log.error("Error updating selected payment account", e);

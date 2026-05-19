@@ -3,17 +3,16 @@ package bisq.api.dto.mappings.account.crypto;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.crypto.MoneroAccount;
 import bisq.account.accounts.crypto.MoneroAccountPayload;
-import bisq.api.dto.account.AccountMetadataDto;
-import bisq.api.dto.account.crypto.MoneroAccountDto;
+import bisq.api.dto.account.PaymentAccountDto;
 import bisq.api.dto.account.crypto.MoneroAccountPayloadDto;
-import bisq.api.dto.mappings.account.PaymentAccountKeyMapping;
-import bisq.api.dto.mappings.account.PaymentAccountMetadataDtoMapping;
+import bisq.api.dto.account.crypto.CryptoPaymentRailDto;
+import bisq.api.dto.account.crypto.create.CreateMoneroAccountPayloadDto;
+import bisq.api.dto.mappings.account.PaymentAccountDtoMappingHelper;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.util.StringUtils;
 
 public class MoneroAccountDtoMapping {
-    public static MoneroAccount toBisq2Model(MoneroAccountDto dto) {
-        MoneroAccountPayloadDto payloadDto = dto.accountPayload();
+    public static MoneroAccount toBisq2Model(String accountName, CreateMoneroAccountPayloadDto payloadDto) {
         MoneroAccountPayload payload = new MoneroAccountPayload(
                 StringUtils.createUid(),
                 payloadDto.address(),
@@ -29,24 +28,23 @@ public class MoneroAccountDtoMapping {
                 payloadDto.accountIndex(),
                 payloadDto.initialSubAddressIndex()
         );
-        PaymentAccountKeyMapping.KeyData keyData = PaymentAccountKeyMapping.createDefault();
         return new MoneroAccount(
                 StringUtils.createUid(),
                 System.currentTimeMillis(),
-                dto.accountName(),
+                accountName,
                 payload,
-                keyData.keyPair(),
-                keyData.keyType(),
+                PaymentAccountDtoMappingHelper.createDefaultKeyPair(),
+                PaymentAccountDtoMappingHelper.getDefaultKeyType(),
                 AccountOrigin.BISQ2_NEW
         );
     }
 
-    public static MoneroAccountDto fromBisq2Model(MoneroAccount account) {
-        AccountMetadataDto accountMetadata = PaymentAccountMetadataDtoMapping.mapAccountMetadata(account);
+    public static PaymentAccountDto fromBisq2Model(MoneroAccount account) {
 
         MoneroAccountPayload payload = account.getAccountPayload();
-        return new MoneroAccountDto(
+        return new PaymentAccountDto(
                 account.getAccountName(),
+                CryptoPaymentRailDto.MONERO,
                 new MoneroAccountPayloadDto(
                         payload.getAddress(),
                         payload.isInstant(),
@@ -64,9 +62,9 @@ public class MoneroAccountDtoMapping {
                         payload.getCurrencyCode(),
                         CryptoAssetRepository.isAutoConfSupported(payload.getCurrencyCode())
                 ),
-                accountMetadata.creationDate(),
-                accountMetadata.tradeLimitInfo(),
-                accountMetadata.tradeDuration()
+                PaymentAccountDtoMappingHelper.getCreationDate(account),
+                PaymentAccountDtoMappingHelper.getTradeLimitInfo(account),
+                PaymentAccountDtoMappingHelper.getTradeDuration(account)
         );
     }
 }

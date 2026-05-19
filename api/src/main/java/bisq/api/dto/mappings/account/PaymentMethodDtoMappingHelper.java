@@ -3,8 +3,8 @@ package bisq.api.dto.mappings.account;
 import bisq.account.payment_method.PaymentRail;
 import bisq.mu_sig.MuSigTradeAmountLimits;
 
-public final class PaymentMethodDtoHelper {
-    private PaymentMethodDtoHelper() {
+public final class PaymentMethodDtoMappingHelper {
+    private PaymentMethodDtoMappingHelper() {
     }
 
     public static String getTradeLimitInfo(PaymentRail paymentRail) {
