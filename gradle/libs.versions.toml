@@ -34,7 +34,7 @@ fxmisc-richtextfx-lib = { strictly = '0.11.7' }
 glassfish-jersey-lib = { strictly = '4.0.2' }
 glassfish-jaxb-runtime-lib = { strictly = '4.0.8' }
 
-grizzly-websockets-server-lib = { strictly = '2.4.4' }
+grizzly-websockets-server-lib = { strictly = '5.0.1' }
 
 google-gson-lib = { strictly = '2.14.0' }
 google-guava-lib = { strictly = '33.6.0-jre' }
@@ -49,6 +49,7 @@ i2p-lib = { strictly = '2.7.0' }
 jackson-lib = { strictly = '2.21.3' }
 jackson-annotations-lib = { strictly = '2.21' }
 jakarta-lib = { strictly = '2.2.0' }
+jakarta-servlet-lib = { strictly = '6.1.0' }
 javacv = { strictly = '1.5.10' }
 java-dev-jna-lib = { strictly = '5.18.1' }
 jeromq-lib = { strictly = '0.6.0' }
@@ -143,6 +144,7 @@ jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', ver
 jackson-datatype = { module = 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8', version.ref = 'jackson-lib' }
 
 jakarta-websocket = { module = 'jakarta.websocket:jakarta.websocket-api', version.ref = 'jakarta-lib' }
+jakarta-servlet = { module = 'jakarta.servlet:jakarta.servlet-api', version.ref = 'jakarta-servlet-lib' }
 
 javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
@@ -198,7 +200,8 @@ rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfi
     'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime',
     'jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'glassfish-jersey-containers-grizzly',
-    'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jackson-databind', 'jackson-datatype', 'swagger-swagger-annotations']
+    'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jakarta-servlet', 'jackson-databind',
+    'jackson-datatype', 'swagger-swagger-annotations']
 
 # Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
 # Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,
