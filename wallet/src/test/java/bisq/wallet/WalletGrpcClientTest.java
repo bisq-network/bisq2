@@ -45,6 +45,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -60,7 +61,7 @@ class WalletGrpcClientTest {
 
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
-    @Mock
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     private WalletGrpc.WalletImplBase serviceImpl;
 
     private WalletGrpcClient client;
@@ -230,4 +231,3 @@ class WalletGrpcClientTest {
         assertEquals("sent_tx_id", result.getTxId());
     }
 }
-
