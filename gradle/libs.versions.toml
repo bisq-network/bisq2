@@ -50,7 +50,7 @@ jakarta-lib = { strictly = '2.2.0' }
 javacv = { strictly = '1.5.10' }
 java-dev-jna-lib = { strictly = '5.18.1' }
 jeromq-lib = { strictly = '0.6.0' }
-junit-jupiter-lib = { strictly = '5.8.2' }
+junit-jupiter-lib = { strictly = '6.0.3' }
 kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
@@ -145,6 +145,7 @@ java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-li
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
 junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
+junit-platform-launcher = { module = 'org.junit.platform:junit-platform-launcher', version.ref = 'junit-jupiter-lib' }
 
 logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
