@@ -17,8 +17,8 @@
 
 package bisq.api.rest_api.endpoints.payment_accounts;
 
-import bisq.api.dto.account.PaymentAccountDto;
+import bisq.api.dto.account.create.CreatePaymentAccountDto;
 
-public record SaveFiatAccountRequest(PaymentAccountDto account) {
+public record SaveFiatAccountRequest(CreatePaymentAccountDto account) {
 }
 
