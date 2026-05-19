@@ -8,6 +8,7 @@ import bisq.api.dto.account.crypto.MoneroAccountDto;
 import bisq.api.dto.account.crypto.MoneroAccountPayloadDto;
 import bisq.api.dto.mappings.account.PaymentAccountKeyMapping;
 import bisq.api.dto.mappings.account.PaymentAccountMetadataDtoMapping;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.util.StringUtils;
 
 public class MoneroAccountDtoMapping {
@@ -59,7 +60,9 @@ public class MoneroAccountDtoMapping {
                         payload.getSubAddress(),
                         payload.getAccountIndex(),
                         payload.getInitialSubAddressIndex(),
-                        payload.getPaymentMethod().getDisplayString()
+                        payload.getPaymentMethod().getName(),
+                        payload.getCurrencyCode(),
+                        CryptoAssetRepository.isAutoConfSupported(payload.getCurrencyCode())
                 ),
                 accountMetadata.creationDate(),
                 accountMetadata.tradeLimitInfo(),
