@@ -22,10 +22,12 @@ import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +37,7 @@ import static bisq.common.facades.FacadeProvider.getJdkFacade;
 @Slf4j
 public class EmbeddedTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
+    private static final int MAX_LOG_SNIPPET_BYTES = 4096;
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
@@ -187,11 +190,17 @@ public class EmbeddedTorProcess {
             if (!Files.exists(logPath)) {
                 return "<missing>";
             }
-            String content = Files.readString(logPath, StandardCharsets.UTF_8).trim();
-            int maxLength = 4000;
-            if (content.length() > maxLength) {
-                return content.substring(content.length() - maxLength);
+            long fileSize = Files.size(logPath);
+            int bytesToRead = (int) Math.min(fileSize, MAX_LOG_SNIPPET_BYTES);
+            ByteBuffer buffer = ByteBuffer.allocate(bytesToRead);
+            try (var channel = Files.newByteChannel(logPath, StandardOpenOption.READ)) {
+                channel.position(Math.max(0, fileSize - bytesToRead));
+                while (buffer.hasRemaining() && channel.read(buffer) != -1) {
+                    // Read until the requested tail buffer is filled or EOF is reached.
+                }
             }
+            buffer.flip();
+            String content = StandardCharsets.UTF_8.decode(buffer).toString().trim();
             return content.isEmpty() ? "<empty>" : content;
         } catch (IOException e) {
             return "<failed to read " + logPath.toAbsolutePath() + ": " + e.getMessage() + ">";
