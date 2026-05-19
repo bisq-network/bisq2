@@ -31,7 +31,7 @@ fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
 fxmisc-easybind-lib = { strictly = '1.0.3' }
 fxmisc-richtextfx-lib = { strictly = '0.11.7' }
 
-glassfish-jersey-lib = { strictly = '3.1.8' }
+glassfish-jersey-lib = { strictly = '4.0.2' }
 glassfish-jaxb-runtime-lib = { strictly = '4.0.8' }
 
 grizzly-websockets-server-lib = { strictly = '2.4.4' }
