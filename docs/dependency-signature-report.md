@@ -24,9 +24,9 @@ Refresh the metadata before regenerating this report:
 | Modules using checksum fallback only | 60 |
 | Modules with mixed signed/checksum-fallback artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 342 |
+| Verified artifacts | 344 |
 | PGP-signed artifacts | 216 |
-| Checksum-fallback artifacts | 126 |
+| Checksum-fallback artifacts | 128 |
 | Signer keys found in exported keyring | 69 / 69 |
 | Signer keys with name or email | 41 / 69 |
 | Signer keys with creation date | 69 / 69 |
@@ -40,7 +40,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum fallback artifacts and review rationale |
 | --- | --- | --- |
 | `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | `jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.<br><br>`jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256. |
-| `com.github.bisq-network:jtorctl:1.5` | direct | `jtorctl-1.5-sources.jar`<br>Bisq-maintained JitPack dependency; source artifact is pinned by SHA-256.<br><br>`jtorctl-1.5.jar`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.<br><br>`jtorctl-1.5.pom`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256. |
+| `com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466` | direct | `jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466-sources.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; source artifact is pinned by SHA-256.<br><br>`jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.<br><br>`jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256. |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | `protobuf-java-4.28.2.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`protobuf-java-4.28.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `com.google.protobuf:protoc:4.28.2` | direct | `protoc-4.28.2-osx-aarch_64.exe`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`protoc-4.28.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `com.googlecode.libphonenumber:libphonenumber:9.0.30` | direct | `libphonenumber-9.0.30-sources.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; source artifact is pinned by SHA-256.<br><br>`libphonenumber-9.0.30.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`libphonenumber-9.0.30.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
@@ -97,8 +97,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | `org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom`<br>Gradle plugin marker POM without a published detached signature; artifact is pinned by SHA-256. |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | `javafx-plugin-0.1.0.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`javafx-plugin-0.1.0.module`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
 | `org.reactfx:reactfx:2.0-M5` | transitive | `reactfx-2.0-M5.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`reactfx-2.0-M5.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
-| `org.testfx:testfx-core:4.0.18` | transitive | `testfx-core-4.0.18.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`testfx-core-4.0.18.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
-| `org.testfx:testfx-junit5:4.0.18` | direct | `testfx-junit5-4.0.18.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`testfx-junit5-4.0.18.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
+| `org.testfx:testfx-core:4.0.18` | transitive | `testfx-core-4.0.18-sources.jar`<br>Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.<br><br>`testfx-core-4.0.18.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`testfx-core-4.0.18.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
+| `org.testfx:testfx-junit5:4.0.18` | direct | `testfx-junit5-4.0.18-sources.jar`<br>Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.<br><br>`testfx-junit5-4.0.18.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`testfx-junit5-4.0.18.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
 
 ## Full Resolved Dependency Inventory
 
@@ -118,7 +118,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson:jackson-bom:2.21.3` | transitive | PGP signed | 0 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.fasterxml.woodstox:woodstox-core:7.1.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network:jtorctl:1.5` | direct | checksum fallback | 0 signed / 3 checksum | - |
+| `com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `com.github.jai-imageio:jai-imageio-core:1.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `0A60B3F1FCB211175300EC206E50BB68CC1699A6`<br>Stian Soiland-Reyes<br>`s.soilandreyes@uva.nl`<br>created 2002-01-20 |
 | `com.github.sarxos:webcam-capture:0.3.12` | direct | PGP signed | 2 signed / 0 checksum | `2F399004A4E2328A2645DFB452D84435919970B9`<br>Bartosz Firyn (sarxos)<br>`bartoszfiryn@gmail.com`<br>created 2012-07-10 |
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
@@ -338,8 +338,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 1 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.reactfx:reactfx:2.0-M5` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.slf4j:slf4j-api:2.0.18` | direct | PGP signed | 1 signed / 0 checksum | `475F3B8E59E6E63AA78067482C7B12F2A511E325`<br>created 2012-04-26<br><br>`60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
-| `org.testfx:testfx-core:4.0.18` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `org.testfx:testfx-junit5:4.0.18` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `org.testfx:testfx-core:4.0.18` | transitive | checksum fallback | 0 signed / 3 checksum | - |
+| `org.testfx:testfx-junit5:4.0.18` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `org.tukaani:xz:1.12` | direct | PGP signed | 1 signed / 0 checksum | `3690C240CE51B4670D30AD1C38EE757D69184620`<br>Lasse Collin<br>`lasse.collin@tukaani.org`<br>created 2010-10-24 |
 | `org.vafer:jdependency:2.15` | transitive | PGP signed | 1 signed / 0 checksum | `79156E0351AF8604DE9B186B09A79E1E15A04694`<br>Torsten Curdt (Code Signing Key)<br>`tcurdt@vafer.org`<br>created 2021-02-10 |
 | `org.yaml:snakeyaml:2.6` | transitive | PGP signed | 1 signed / 0 checksum | `2FC53E6B1F681184F4CCD637F5C81DE10A0B8ECC`<br>created 2024-05-11 |
