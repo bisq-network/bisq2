@@ -17,6 +17,7 @@
 
 package bisq.network.tor.installer;
 
+import bisq.common.application.BuildVersion;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import java.nio.file.Path;
 
 @Slf4j
 public class TorInstaller {
-    private static final String VERSION = "0.1.0";
+    private static final String VERSION = BuildVersion.TOR_VERSION;
     private final Path torDirPath;
     private final Path versionFilePath;
 
