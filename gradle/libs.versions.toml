@@ -5,7 +5,7 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-bisq = '2.1.10'
+bisq = '2.1.11'
 annotations-lib = { strictly = '26.1.0' }
 findbugs-jsr305-lib = { strictly = '3.0.2' }
 
