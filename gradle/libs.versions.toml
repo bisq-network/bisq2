@@ -42,6 +42,8 @@ google-libphonenumber-lib = { strictly = '9.0.30' }
 
 grpc = { strictly = '1.81.0' }
 
+hamcrest-lib = { strictly = '3.0' }
+
 i2p-lib = { strictly = '2.7.0' }
 
 jackson-lib = { strictly = '2.21.3' }
@@ -71,7 +73,7 @@ square-moshi-lib = { strictly = '1.15.2' }
 square-okhttp-libs = { strictly = '4.12.0' }
 
 swagger-lib = { strictly = '2.2.0' }
-testfx-junit5-lib = { strictly = '4.0.16-alpha' }
+testfx-junit5-lib = { strictly = '4.0.18' }
 tukaani-lib = { strictly = '1.12' }
 typesafe-config-lib = { strictly = '1.4.8' }
 
@@ -126,6 +128,8 @@ grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
 grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
 grpc-testing = { module = 'io.grpc:grpc-testing', version.ref = 'grpc' }
 grpc-inprocess = { module = 'io.grpc:grpc-inprocess', version.ref = 'grpc' }
+
+hamcrest = { module = 'org.hamcrest:hamcrest', version.ref = 'hamcrest-lib' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
