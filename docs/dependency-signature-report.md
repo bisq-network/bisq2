@@ -24,12 +24,12 @@ Refresh the metadata before regenerating this report:
 | Modules using checksum fallback only | 60 |
 | Modules with mixed signed/checksum-fallback artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 340 |
+| Verified artifacts | 342 |
 | PGP-signed artifacts | 216 |
-| Checksum-fallback artifacts | 124 |
-| Signer keys found in exported keyring | 63 / 69 |
-| Signer keys with name or email | 38 / 69 |
-| Signer keys with creation date | 63 / 69 |
+| Checksum-fallback artifacts | 126 |
+| Signer keys found in exported keyring | 69 / 69 |
+| Signer keys with name or email | 41 / 69 |
+| Signer keys with creation date | 69 / 69 |
 
 ## Handling Transitive Dependencies
 
@@ -40,7 +40,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum fallback artifacts and review rationale |
 | --- | --- | --- |
 | `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | `jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.<br><br>`jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256. |
-| `com.github.bisq-network:jtorctl:1.5` | direct | `jtorctl-1.5.jar`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.<br><br>`jtorctl-1.5.pom`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256. |
+| `com.github.bisq-network:jtorctl:1.5` | direct | `jtorctl-1.5-sources.jar`<br>Bisq-maintained JitPack dependency; source artifact is pinned by SHA-256.<br><br>`jtorctl-1.5.jar`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.<br><br>`jtorctl-1.5.pom`<br>Bisq-maintained JitPack dependency; artifact is pinned by SHA-256. |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | `protobuf-java-4.28.2.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`protobuf-java-4.28.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `com.google.protobuf:protoc:4.28.2` | direct | `protoc-4.28.2-osx-aarch_64.exe`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`protoc-4.28.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `com.googlecode.libphonenumber:libphonenumber:9.0.30` | direct | `libphonenumber-9.0.30-sources.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; source artifact is pinned by SHA-256.<br><br>`libphonenumber-9.0.30.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`libphonenumber-9.0.30.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
@@ -48,7 +48,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.nativelibs4java:bridj:0.7.0` | transitive | `bridj-0.7.0.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`bridj-0.7.0.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `de.jensd:fontawesomefx-commons:9.1.2` | direct | `fontawesomefx-commons-9.1.2.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`fontawesomefx-commons-9.1.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
 | `de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2` | direct | `fontawesomefx-materialdesignfont-2.0.26-9.1.2.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`fontawesomefx-materialdesignfont-2.0.26-9.1.2.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
-| `dev.failsafe:failsafe:3.3.2` | direct | `failsafe-3.3.2.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`failsafe-3.3.2.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
+| `dev.failsafe:failsafe:3.3.2` | direct | `failsafe-3.3.2-sources.jar`<br>Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.<br><br>`failsafe-3.3.2.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`failsafe-3.3.2.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
 | `jakarta.servlet:jakarta.servlet-api:6.1.0` | direct | `jakarta.servlet-api-6.1.0-sources.jar`<br>Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.<br><br>`jakarta.servlet-api-6.1.0.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`jakarta.servlet-api-6.1.0.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
 | `jakarta.validation:jakarta.validation-api:3.1.0` | transitive | `jakarta.validation-api-3.1.0-sources.jar`<br>Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.<br><br>`jakarta.validation-api-3.1.0.jar`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.<br><br>`jakarta.validation-api-3.1.0.pom`<br>Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256. |
 | `org.apache.tomcat:annotations-api:6.0.53` | direct | `annotations-api-6.0.53.jar`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.<br><br>`annotations-api-6.0.53.pom`<br>Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored. |
@@ -118,7 +118,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson:jackson-bom:2.21.3` | transitive | PGP signed | 0 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.fasterxml.woodstox:woodstox-core:7.1.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network:jtorctl:1.5` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network:jtorctl:1.5` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `com.github.jai-imageio:jai-imageio-core:1.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `0A60B3F1FCB211175300EC206E50BB68CC1699A6`<br>Stian Soiland-Reyes<br>`s.soilandreyes@uva.nl`<br>created 2002-01-20 |
 | `com.github.sarxos:webcam-capture:0.3.12` | direct | PGP signed | 2 signed / 0 checksum | `2F399004A4E2328A2645DFB452D84435919970B9`<br>Bartosz Firyn (sarxos)<br>`bartoszfiryn@gmail.com`<br>created 2012-07-10 |
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
@@ -132,7 +132,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.google.guava:failureaccess:1.0.3` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.guava:guava:33.6.0-jre` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava` | transitive | PGP signed | 2 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
-| `com.google.j2objc:j2objc-annotations:3.1` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`C3259D20DAEC4ACE6D57CC83340B090F727518D8` |
+| `com.google.j2objc:j2objc-annotations:3.1` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`C3259D20DAEC4ACE6D57CC83340B090F727518D8`<br>Thomas Ball<br>`tball@google.com`<br>created 2025-08-13 |
 | `com.google.protobuf:protobuf-gradle-plugin:0.9.4` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java-util:3.25.8` | transitive | PGP signed | 1 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | checksum fallback | 0 signed / 2 checksum | - |
@@ -144,14 +144,14 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.gradleup.shadow:shadow-gradle-plugin:9.4.1` | transitive | PGP signed | 1 signed / 0 checksum | `4857D1CE04E78FAB2A172E8F39B48E1BADDB933F`<br>GradleUp (GradleUp sonatype key)<br>`martin@mbonnin.net`<br>created 2021-09-13 |
 | `com.nativelibs4java:bridj:0.7.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.sun.istack:istack-commons-runtime:4.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `04543577D6A9CC626239C50C7ECBD740FF06AEB5`<br>created 2018-09-11 |
-| `com.typesafe:config:1.4.8` | direct | PGP signed | 1 signed / 0 checksum | `DFD60A08EC2B0CECED24A01F36A22209606109DC` |
-| `commons-codec:commons-codec:1.21.0` | transitive | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F` |
-| `commons-codec:commons-codec:1.22.0` | direct | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F` |
+| `com.typesafe:config:1.4.8` | direct | PGP signed | 1 signed / 0 checksum | `DFD60A08EC2B0CECED24A01F36A22209606109DC`<br>Secure Bot<br>`lightbend-tools-secure@lightbend.com`<br>created 2025-07-10 |
+| `commons-codec:commons-codec:1.21.0` | transitive | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
+| `commons-codec:commons-codec:1.22.0` | direct | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `commons-io:commons-io:2.21.0` | transitive | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12 |
 | `de.jensd:fontawesomefx-commons:9.1.2` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2` | direct | PGP signed | 1 signed / 0 checksum | `E6A6566630749F995E4703542C3097C79005FF30`<br>Jens Deters<br>`mail@jensd.de`<br>created 2017-03-27 |
 | `de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `dev.failsafe:failsafe:3.3.2` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `dev.failsafe:failsafe:3.3.2` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `io.github.classgraph:classgraph:4.8.184` | transitive | PGP signed | 1 signed / 0 checksum | `1F47744C9B6E14F2049C2857F1F111AF65925306`<br>Luke Hutchison<br>`luke.hutch@gmail.com`<br>created 2015-01-14 |
 | `io.grpc:grpc-api:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-context:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
@@ -191,7 +191,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `net.java.dev.jna:jna:5.18.1` | direct | PGP signed | 1 signed / 0 checksum | `FA7929F83AD44C4590F6CC6815C71C0A4E0B8EDD`<br>Matthias Bläsing<br>`mblaesing@doppel-helix.eu`<br>created 2016-05-10 |
 | `org.apache.ant:ant-launcher:1.10.15` | transitive | PGP signed | 1 signed / 0 checksum | `0A123C1ED3F13A6A0140E166C71FB765CD9DE313`<br>created 2022-12-11 |
 | `org.apache.ant:ant:1.10.15` | transitive | PGP signed | 1 signed / 0 checksum | `0A123C1ED3F13A6A0140E166C71FB765CD9DE313`<br>created 2022-12-11 |
-| `org.apache.commons:commons-lang3:3.20.0` | direct | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F` |
+| `org.apache.commons:commons-lang3:3.20.0` | direct | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `org.apache.httpcomponents.client5:httpclient5:5.6.1` | direct | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5-h2:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
@@ -271,8 +271,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
 | `org.gradle.kotlin:gradle-kotlin-dsl-plugins:4.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `1BD97A6A154E7810EE0BC832E2F38302C8075E3D`<br>Gradle Inc.<br>`maven-publishing@gradle.com`<br>created 2022-12-29 |
 | `org.hamcrest:hamcrest-core:1.3` | transitive | PGP signed | 2 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14 |
-| `org.hamcrest:hamcrest:2.1` | transitive | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480` |
-| `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480` |
+| `org.hamcrest:hamcrest:2.1` | transitive | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>created 2018-11-21 |
+| `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>created 2018-11-21 |
 | `org.javassist:javassist:3.30.2-GA` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.jcommander:jcommander:1.85` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.jdom:jdom2:2.0.6.1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
@@ -334,7 +334,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.openjfx:javafx-media:21.0.11` | direct | PGP signed | 2 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 1 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
-| `org.osgi:org.osgi.core:6.0.0` | transitive | PGP signed | 1 signed / 0 checksum | `1AF010D408C1852AB6EFD4B651CDB4A9DAAC1CBC` |
+| `org.osgi:org.osgi.core:6.0.0` | transitive | PGP signed | 1 signed / 0 checksum | `1AF010D408C1852AB6EFD4B651CDB4A9DAAC1CBC`<br>Raymond Auge (I love OSS!)<br>`rotty3000@gmail.com`<br>created 2014-07-09 |
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 1 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.reactfx:reactfx:2.0-M5` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.slf4j:slf4j-api:2.0.18` | direct | PGP signed | 1 signed / 0 checksum | `475F3B8E59E6E63AA78067482C7B12F2A511E325`<br>created 2012-04-26<br><br>`60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
@@ -342,4 +342,4 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.testfx:testfx-junit5:4.0.18` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `org.tukaani:xz:1.12` | direct | PGP signed | 1 signed / 0 checksum | `3690C240CE51B4670D30AD1C38EE757D69184620`<br>Lasse Collin<br>`lasse.collin@tukaani.org`<br>created 2010-10-24 |
 | `org.vafer:jdependency:2.15` | transitive | PGP signed | 1 signed / 0 checksum | `79156E0351AF8604DE9B186B09A79E1E15A04694`<br>Torsten Curdt (Code Signing Key)<br>`tcurdt@vafer.org`<br>created 2021-02-10 |
-| `org.yaml:snakeyaml:2.6` | transitive | PGP signed | 1 signed / 0 checksum | `2FC53E6B1F681184F4CCD637F5C81DE10A0B8ECC` |
+| `org.yaml:snakeyaml:2.6` | transitive | PGP signed | 1 signed / 0 checksum | `2FC53E6B1F681184F4CCD637F5C81DE10A0B8ECC`<br>created 2024-05-11 |
