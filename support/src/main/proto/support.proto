@@ -16,11 +16,13 @@ message MediationRequest {
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
-  optional network.identity.NetworkId mediatorNetworkId = 6;
+  network.identity.NetworkId mediatorNetworkId = 6;
 }
 
 message MediatorsResponse {
   string tradeId = 1;
+  optional network.identity.NetworkId senderNetworkId = 2;
+  sint32 version = 3;
 }
 
 message MediationCase {

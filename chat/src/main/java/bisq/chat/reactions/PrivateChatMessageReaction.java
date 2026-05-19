@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -34,8 +35,8 @@ import java.security.PublicKey;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessageReaction extends ChatMessageReaction implements
-        MailboxMessage, ExternalNetworkMessage, AckRequestingMessage, SenderPublicKeyProvidingPayload {
+public abstract class PrivateChatMessageReaction extends ChatMessageReaction implements MailboxMessage, ExternalNetworkMessage,
+        AckRequestingMessage, SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
     protected final UserProfile senderUserProfile;
@@ -74,6 +75,17 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
     @Override
     public NetworkId getSender() {
         return senderUserProfile.getNetworkId();
+    }
+
+    @Override
+    public PublicKey getSenderPublicKey() {
+        return senderUserProfile.getPublicKey();
+    }
+
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return receiverNetworkId.getPubKey().getPublicKey();
     }
 
     @Override
