@@ -67,7 +67,7 @@ protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '8.3.0' }
 slf4j-lib = { strictly = '2.0.18' }
-spring-boot-starter-web-lib = { strictly = '2.5.6' }
+spring-boot-starter-web-lib = { strictly = '4.0.6' }
 springfox-lib = { strictly = '3.0.0' }
 
 square-moshi-lib = { strictly = '1.15.2' }
