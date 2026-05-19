@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -98,6 +99,9 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
                 "Senders networkId must be same as takers networkId from takers contract");
 
+        validateOfferAmount(takersOffer,
+                takersContract.getBaseSideAmount(),
+                takersContract.getQuoteSideAmount());
         validateAmount(takersOffer, takersContract);
 
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()),

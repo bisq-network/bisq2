@@ -82,6 +82,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 
 //TODO Consider to use async calls at handle (CompletableFuture.runAsync(()...)
@@ -280,6 +281,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                                  long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
+        validateOfferAmount(bisqEasyOffer, baseSideAmount.getValue(), quoteSideAmount.getValue());
 
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
