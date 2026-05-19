@@ -24,7 +24,7 @@ jtorctl-lib = { strictly = 'b2a172f' }
 
 failsafe-lib = { strictly = '3.3.2' }
 
-fontawesomefx-lib = { strictly = '8.0.0' }
+fontawesomefx-lib = { strictly = '4.7.0-9.1.2' }
 fontawesomefx-commons-lib = { strictly = '9.1.2' }
 fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
 
@@ -105,7 +105,7 @@ jtorctl = { module = 'com.github.bisq-network:jtorctl', version.ref = 'jtorctl-l
 
 failsafe = { module = 'dev.failsafe:failsafe', version.ref = 'failsafe-lib' }
 
-fontawesomefx = { module = 'de.jensd:fontawesomefx', version.ref = 'fontawesomefx-lib' }
+fontawesomefx = { module = 'de.jensd:fontawesomefx-fontawesome', version.ref = 'fontawesomefx-lib' }
 fontawesomefx-commons = { module = 'de.jensd:fontawesomefx-commons', version.ref = 'fontawesomefx-commons-lib' }
 fontawesomefx-materialdesignfont = { module = 'de.jensd:fontawesomefx-materialdesignfont', version.ref = 'fontawesomefx-materialdesignfont-lib' }
 
