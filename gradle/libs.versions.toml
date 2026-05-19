@@ -22,7 +22,7 @@ commons-codec = { strictly = '1.22.0' }
 jsocks-lib = { strictly = '43b004b' }
 jtorctl-lib = { strictly = 'b2a172f' }
 
-failsafe-lib = { strictly = '3.2.4' }
+failsafe-lib = { strictly = '3.3.2' }
 
 fontawesomefx-lib = { strictly = '8.0.0' }
 fontawesomefx-commons-lib = { strictly = '9.1.2' }
