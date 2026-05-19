@@ -68,6 +68,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class TorService implements Service {
     private static final int RANDOM_PORT = 0;
+    private static final long CONTROL_PORT_FILE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
+    private static final long CONTROL_PORT_FILE_POLL_INTERVAL_MS = 100;
     // Environment variable to not launch the embedded Tor process
     public static final String TOR_SKIP_LAUNCH = "TOR_SKIP_LAUNCH";
 
@@ -156,8 +158,11 @@ public class TorService implements Service {
         embeddedTorProcess.start();
 
         try {
-            FileReaderUtils.waitUntilFileExists(controlPortFilePath, 5000);
+            waitUntilControlPortFileExists(controlPortFilePath, embeddedTorProcess);
         } catch (Exception e) {
+            embeddedTorProcess.shutdown();
+            torProcess = Optional.empty();
+            isRunning.set(false);
             throw new RuntimeException("Error while waiting for tor control port file to exist", e);
         }
 
@@ -205,9 +210,11 @@ public class TorService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
-            torController.shutdown();
+            if (torController != null) {
+                torController.shutdown();
+            }
             torController = null;
-            torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
+            torProcess.ifPresent(EmbeddedTorProcess::shutdown);
             torProcess = Optional.empty();
             torSocksProxyFactory = Optional.empty();
             publishedOnionServices.clear();
@@ -409,6 +416,22 @@ public class TorService implements Service {
             FileMutatorUtils.createDirectories(torDataDirPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void waitUntilControlPortFileExists(Path controlPortFilePath,
+                                                EmbeddedTorProcess embeddedTorProcess) throws InterruptedException, IOException {
+        long start = System.currentTimeMillis();
+        while (!Files.exists(controlPortFilePath)) {
+            if (!embeddedTorProcess.isAlive()) {
+                throw new IOException("Embedded Tor exited before writing control port file. " +
+                        embeddedTorProcess.getStartupDiagnostics());
+            }
+            if (System.currentTimeMillis() - start > CONTROL_PORT_FILE_TIMEOUT_MS) {
+                throw new IOException("Control port file did not exist after " + CONTROL_PORT_FILE_TIMEOUT_MS + " ms: " +
+                        controlPortFilePath.toAbsolutePath() + ". " + embeddedTorProcess.getStartupDiagnostics());
+            }
+            Thread.sleep(CONTROL_PORT_FILE_POLL_INTERVAL_MS);
         }
     }
 

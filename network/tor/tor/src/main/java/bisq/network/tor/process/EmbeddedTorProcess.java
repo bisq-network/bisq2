@@ -22,6 +22,7 @@ import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,12 +39,16 @@ public class EmbeddedTorProcess {
     private final Path torDataDirPath;
     private final Path torBinaryPath;
     private final Path torrcPath;
+    private final Path stdoutLogPath;
+    private final Path stderrLogPath;
     private Optional<Process> process = Optional.empty();
 
     public EmbeddedTorProcess(Path torBinaryPath, Path torDataDirPath) {
         this.torBinaryPath = torBinaryPath;
         this.torDataDirPath = torDataDirPath;
         this.torrcPath = torDataDirPath.resolve("torrc");
+        this.stdoutLogPath = torDataDirPath.resolve("tor-stdout.log");
+        this.stderrLogPath = torDataDirPath.resolve("tor-stderr.log");
     }
 
     public void start() {
@@ -59,12 +64,15 @@ public class EmbeddedTorProcess {
         );
 
         if (torBinaryPath.startsWith(torDataDirPath)) {
+            String ldPreload = LdPreload.computeLdPreloadVariable(torDataDirPath);
             Map<String, String> environment = processBuilder.environment();
-            environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+            if (!ldPreload.isBlank()) {
+                environment.put("LD_PRELOAD", ldPreload);
+            }
         }
 
-        getJdkFacade().redirectError(processBuilder);
-        getJdkFacade().redirectOutput(processBuilder);
+        processBuilder.redirectError(stderrLogPath.toFile());
+        processBuilder.redirectOutput(stdoutLogPath.toFile());
 
         try {
             Process torProcess = processBuilder.start();
@@ -92,6 +100,50 @@ public class EmbeddedTorProcess {
         });
     }
 
+    public void shutdown() {
+        process.ifPresent(process -> {
+            if (!process.isAlive()) {
+                return;
+            }
+
+            process.destroy();
+            try {
+                boolean exited = process.waitFor(3, TimeUnit.SECONDS);
+                if (!exited && process.isAlive()) {
+                    process.destroyForcibly();
+                }
+            } catch (InterruptedException e) {
+                log.warn("Thread got interrupted at shutdown method", e);
+                Thread.currentThread().interrupt();
+                if (process.isAlive()) {
+                    process.destroyForcibly();
+                }
+            }
+        });
+    }
+
+    public boolean isAlive() {
+        return process.map(Process::isAlive).orElse(false);
+    }
+
+    public Optional<Integer> getExitCode() {
+        return process.flatMap(process -> {
+            if (process.isAlive()) {
+                return Optional.empty();
+            }
+            return Optional.of(process.exitValue());
+        });
+    }
+
+    public String getStartupDiagnostics() {
+        String exitCode = getExitCode()
+                .map(String::valueOf)
+                .orElseGet(() -> isAlive() ? "still running" : "not started");
+        return "exitCode=" + exitCode +
+                ", stderrLog=" + stderrLogPath.toAbsolutePath() +
+                ", stderr=" + readLogSnippet(stderrLogPath);
+    }
+
     public static Optional<Path> getSystemTorPath() {
         String pathEnvironmentVariable = System.getenv("PATH");
         String[] searchPaths = pathEnvironmentVariable.split(":");
@@ -114,6 +166,22 @@ public class EmbeddedTorProcess {
             } catch (IOException e) {
                 throw new TorStartupFailedException("Couldn't create Tor control directory.");
             }
+        }
+    }
+
+    private String readLogSnippet(Path logPath) {
+        try {
+            if (!Files.exists(logPath)) {
+                return "<missing>";
+            }
+            String content = Files.readString(logPath, StandardCharsets.UTF_8).trim();
+            int maxLength = 4000;
+            if (content.length() > maxLength) {
+                return content.substring(content.length() - maxLength);
+            }
+            return content.isEmpty() ? "<empty>" : content;
+        } catch (IOException e) {
+            return "<failed to read " + logPath.toAbsolutePath() + ": " + e.getMessage() + ">";
         }
     }
 }
