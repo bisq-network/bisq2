@@ -38,7 +38,7 @@ grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
 google-gson-lib = { strictly = '2.14.0' }
 google-guava-lib = { strictly = '33.6.0-jre' }
-google-libphonenumber-lib = { strictly = '9.0.8' }
+google-libphonenumber-lib = { strictly = '9.0.30' }
 
 grpc = { strictly = '1.81.0' }
 
