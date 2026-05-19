@@ -63,5 +63,4 @@ dependencies {
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.hamcrest)
-    testImplementation(libs.openjfx.monocle)
 }
