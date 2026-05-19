@@ -159,6 +159,12 @@ public class TorService implements Service {
 
         try {
             waitUntilControlPortFileExists(controlPortFilePath, embeddedTorProcess);
+        } catch (InterruptedException e) {
+            embeddedTorProcess.shutdown();
+            torProcess = Optional.empty();
+            isRunning.set(false);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for tor control port file to exist", e);
         } catch (Exception e) {
             embeddedTorProcess.shutdown();
             torProcess = Optional.empty();
