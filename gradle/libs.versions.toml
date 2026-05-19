@@ -58,7 +58,6 @@ logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
 mockito-lib = { strictly = '5.23.0' }
 openjfx-plugin = { strictly = '0.1.0' }
-openjfx-monocle-lib = { strictly = '21.0.2' }
 
 protobuf-java-lib = { strictly = '4.28.2' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
@@ -150,7 +149,6 @@ lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
 mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
 mockito-junit-jupiter = { module = 'org.mockito:mockito-junit-jupiter', version.ref = 'mockito-lib' }
-openjfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'openjfx-monocle-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
