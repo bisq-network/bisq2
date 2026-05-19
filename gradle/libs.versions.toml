@@ -50,7 +50,8 @@ jackson-lib = { strictly = '2.21.3' }
 jackson-annotations-lib = { strictly = '2.21' }
 jakarta-lib = { strictly = '2.2.0' }
 jakarta-servlet-lib = { strictly = '6.1.0' }
-javacv = { strictly = '1.5.10' }
+javacpp-platform-plugin = { strictly = '1.5.10' }
+javacv-lib = { strictly = '1.5.13' }
 java-dev-jna-lib = { strictly = '5.18.1' }
 jeromq-lib = { strictly = '0.6.0' }
 junit-jupiter-lib = { strictly = '6.0.3' }
@@ -146,7 +147,7 @@ jackson-datatype = { module = 'com.fasterxml.jackson.datatype:jackson-datatype-j
 jakarta-websocket = { module = 'jakarta.websocket:jakarta.websocket-api', version.ref = 'jakarta-lib' }
 jakarta-servlet = { module = 'jakarta.servlet:jakarta.servlet-api', version.ref = 'jakarta-servlet-lib' }
 
-javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
+javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv-lib" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
@@ -212,4 +213,4 @@ websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'g
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
 shadow = { id = 'com.gradleup.shadow', version.ref = 'shadow-plugin' }
-gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }
+gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacpp-platform-plugin" }
