@@ -21,6 +21,7 @@ data class ResolvedBuildDependencies(
     val resolvedComponents: Set<String>,
     val directComponents: Set<String>,
     val configurationCount: Int,
+    val artifactsByComponent: Map<String, Set<String>> = emptyMap(),
 )
 data class SignerMetadata(
     val keyId: String,
@@ -304,6 +305,7 @@ fun resolvableConfigurations(): List<ResolvableConfiguration> =
 fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies {
     val resolvedComponents = TreeSet<String>()
     val directComponents = TreeSet<String>()
+    val artifactsByComponent = TreeMap<String, MutableSet<String>>()
     val failures = mutableListOf<String>()
     val configurations = resolvableConfigurations()
 
@@ -324,6 +326,14 @@ fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies
                         resolvedComponents += "${id.group}:${id.module}:${id.version}"
                     }
                 }
+                configuration.incoming.artifacts.artifacts.forEach { artifact ->
+                    val id = artifact.id.componentIdentifier
+                    if (id is ModuleComponentIdentifier) {
+                        artifactsByComponent
+                            .getOrPut("${id.group}:${id.module}:${id.version}") { TreeSet() }
+                            .add(artifact.file.name)
+                    }
+                }
             }
 
             configuration.resolve()
@@ -340,6 +350,7 @@ fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies
         resolvedComponents = resolvedComponents,
         directComponents = directComponents,
         configurationCount = configurations.size,
+        artifactsByComponent = artifactsByComponent.mapValues { it.value.toSet() },
     )
 }
 
@@ -361,12 +372,18 @@ fun writeResolvedDependencyInventory(resolved: ResolvedBuildDependencies) {
         val scope = if (resolved.directComponents.contains(id)) "direct" else "transitive"
         lines += "$scope\t$id"
     }
+    resolved.artifactsByComponent.forEach { (id, artifactNames) ->
+        artifactNames.forEach { artifactName ->
+            lines += "artifact\t$id\t$artifactName"
+        }
+    }
     inventoryFile.writeText(lines.joinToString(System.lineSeparator()) + System.lineSeparator(), StandardCharsets.UTF_8)
 }
 
 fun readResolvedDependencyInventory(): ResolvedBuildDependencies {
     val resolvedComponents = TreeSet<String>()
     val directComponents = TreeSet<String>()
+    val artifactsByComponent = TreeMap<String, MutableSet<String>>()
     var configurationCount = 0
     if (!dependencyVerificationInventoryDir.isDirectory) {
         return ResolvedBuildDependencies(emptySet(), emptySet(), 0)
@@ -377,21 +394,32 @@ fun readResolvedDependencyInventory(): ResolvedBuildDependencies {
         ?.forEach { file ->
             file.forEachLine(StandardCharsets.UTF_8) { line ->
                 val columns = line.split('\t')
-                if (columns.size != 2) {
-                    return@forEachLine
-                }
                 when (columns[0]) {
-                    "configurations" -> configurationCount += columns[1].toInt()
-                    "direct" -> {
-                        resolvedComponents += columns[1]
-                        directComponents += columns[1]
+                    "configurations" -> if (columns.size == 2) {
+                        configurationCount += columns[1].toInt()
                     }
-                    "transitive" -> resolvedComponents += columns[1]
+                    "direct" -> {
+                        if (columns.size == 2) {
+                            resolvedComponents += columns[1]
+                            directComponents += columns[1]
+                        }
+                    }
+                    "transitive" -> if (columns.size == 2) {
+                        resolvedComponents += columns[1]
+                    }
+                    "artifact" -> if (columns.size == 3) {
+                        artifactsByComponent.getOrPut(columns[1]) { TreeSet() }.add(columns[2])
+                    }
                 }
             }
         }
 
-    return ResolvedBuildDependencies(resolvedComponents, directComponents, configurationCount)
+    return ResolvedBuildDependencies(
+        resolvedComponents = resolvedComponents,
+        directComponents = directComponents,
+        configurationCount = configurationCount,
+        artifactsByComponent = artifactsByComponent.mapValues { it.value.toSet() },
+    )
 }
 
 fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlist {
@@ -673,28 +701,47 @@ if (isBisqRepositoryRootBuild) {
             val signerMetadata = loadSignerMetadata(dependencyVerificationKeyring)
             val (componentsById, trustedKeys) = parseVerificationMetadata(dependencyVerificationMetadata)
 
+            fun matchingTrustedKeyIds(group: String, name: String, version: String): List<String> =
+                trustedKeys
+                    .filter { trustedKey ->
+                        trustedKey.entries.any { entry ->
+                            patternMatches(entry.group, group, entry.regex) &&
+                                    patternMatches(entry.name, name, entry.regex) &&
+                                    patternMatches(entry.version, version, entry.regex)
+                        }
+                    }
+                    .map { it.id }
+                    .distinct()
+                    .sorted()
+
             val rows = resolved.resolvedComponents.map { id ->
                 val component = componentsById[id]
                 if (component == null) {
-                    DependencyReportRow(
-                        id = id,
-                        scope = if (resolved.directComponents.contains(id)) "direct" else "transitive",
-                        status = "missing from metadata",
-                        signedCount = 0,
-                        checksumOnlyCount = 0,
-                        keyIds = emptyList(),
-                        checksumArtifacts = listOf("metadata entry missing" to ""),
-                    )
+                    val (group, name, version) = id.split(':', limit = 3)
+                    val matchingTrustedKeys = matchingTrustedKeyIds(group, name, version)
+                    if (matchingTrustedKeys.isEmpty()) {
+                        DependencyReportRow(
+                            id = id,
+                            scope = if (resolved.directComponents.contains(id)) "direct" else "transitive",
+                            status = "missing from metadata",
+                            signedCount = 0,
+                            checksumOnlyCount = 0,
+                            keyIds = emptyList(),
+                            checksumArtifacts = listOf("metadata entry missing" to ""),
+                        )
+                    } else {
+                        DependencyReportRow(
+                            id = id,
+                            scope = if (resolved.directComponents.contains(id)) "direct" else "transitive",
+                            status = "PGP signed",
+                            signedCount = resolved.artifactsByComponent[id]?.size ?: 0,
+                            checksumOnlyCount = 0,
+                            keyIds = matchingTrustedKeys,
+                            checksumArtifacts = emptyList(),
+                        )
+                    }
                 } else {
-                    val matchingTrustedKeys = trustedKeys
-                        .filter { trustedKey ->
-                            trustedKey.entries.any { entry ->
-                                patternMatches(entry.group, component.group, entry.regex) &&
-                                        patternMatches(entry.name, component.name, entry.regex) &&
-                                        patternMatches(entry.version, component.version, entry.regex)
-                            }
-                        }
-                        .map { it.id }
+                    val matchingTrustedKeys = matchingTrustedKeyIds(component.group, component.name, component.version)
                     val signedCount = component.artifacts.count { !it.checksumOnly }
                     val checksumOnlyCount = component.artifacts.count { it.checksumOnly }
                     val status = if (checksumOnlyCount == 0) {
