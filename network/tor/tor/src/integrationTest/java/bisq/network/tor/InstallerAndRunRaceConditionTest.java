@@ -42,7 +42,10 @@ public class InstallerAndRunRaceConditionTest {
         );
 
         Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(tempDirPath));
+        String ldPreload = LdPreload.computeLdPreloadVariable(tempDirPath);
+        if (!ldPreload.isBlank()) {
+            environment.put("LD_PRELOAD", ldPreload);
+        }
 
         Process process = processBuilder.start();
         boolean isSuccess = process.waitFor(30, TimeUnit.SECONDS);
