@@ -53,9 +53,7 @@ jakarta-servlet-lib = { strictly = '6.1.0' }
 javacpp-platform-plugin = { strictly = '1.5.10' }
 javacv-lib = { strictly = '1.5.13' }
 java-dev-jna-lib = { strictly = '5.18.1' }
-jeromq-lib = { strictly = '0.6.0' }
 junit-jupiter-lib = { strictly = '6.0.3' }
-kotlindsl-plugin = { strictly = '6.7.0' }
 logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
 mockito-lib = { strictly = '5.23.0' }
@@ -68,10 +66,6 @@ protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '9.4.1' }
 slf4j-lib = { strictly = '2.0.18' }
-springfox-lib = { strictly = '3.0.0' }
-
-square-moshi-lib = { strictly = '1.15.2' }
-square-okhttp-libs = { strictly = '5.3.2' }
 
 swagger-lib = { strictly = '2.2.50' }
 testfx-junit5-lib = { strictly = '4.0.18' }
@@ -133,9 +127,7 @@ grpc-inprocess = { module = 'io.grpc:grpc-inprocess', version.ref = 'grpc' }
 hamcrest = { module = 'org.hamcrest:hamcrest', version.ref = 'hamcrest-lib' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
-i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
-i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
 i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
@@ -148,7 +140,6 @@ jakarta-servlet = { module = 'jakarta.servlet:jakarta.servlet-api', version.ref 
 
 javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv-lib" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
-jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
 junit-jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine', version.ref = 'junit-jupiter-lib' }
 junit-platform-launcher = { module = 'org.junit.platform:junit-platform-launcher', version.ref = 'junit-jupiter-lib' }
@@ -163,16 +154,9 @@ openjfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'openjf
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
-protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 
 sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
-springfox-boot-starter = { module = 'io.springfox:springfox-boot-starter', version.ref = 'springfox-lib' }
-springfox-swagger2 = { module = 'io.springfox:springfox-swagger2', version.ref = 'springfox-lib' }
-springfox-swagger-ui = { module = 'io.springfox:springfox-swagger-ui', version.ref = 'springfox-lib' }
-
-square-okhttp-bom = { module = 'com.squareup.okhttp3:okhttp-bom', version.ref = 'square-okhttp-libs' }
-square-moshi = { module = 'com.squareup.moshi:moshi', version.ref = 'square-moshi-lib' }
 
 swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }
 swagger-swagger-annotations = { module = 'io.swagger.core.v3:swagger-annotations', version.ref = 'swagger-lib' }
@@ -194,7 +178,6 @@ glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson'
 grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
-springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson',
     'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime',
     'jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
@@ -207,7 +190,6 @@ websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'g
 # since plugins don't bring other plugins as transitive dependencies, as long as they are loaded using the
 # `alias(libs.plugins.protobuf)` mechanism, there is no risk of loading multiple versions.
 [plugins]
-kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
 shadow = { id = 'com.gradleup.shadow', version.ref = 'shadow-plugin' }
 gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacpp-platform-plugin" }
