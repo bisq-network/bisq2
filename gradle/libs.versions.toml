@@ -51,7 +51,7 @@ java-dev-jna-lib = { strictly = '5.13.0' }
 jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
-logback-lib = { strictly = '1.2.13' }
+logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.34' }
 mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.13' }
@@ -62,7 +62,7 @@ protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
 sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '8.3.0' }
-slf4j-lib = { strictly = '1.7.36' }
+slf4j-lib = { strictly = '2.0.18' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
 springfox-lib = { strictly = '3.0.0' }
 
