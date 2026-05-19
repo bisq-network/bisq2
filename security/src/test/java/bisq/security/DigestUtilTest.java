@@ -20,10 +20,22 @@ package bisq.security;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 @Slf4j
 public class DigestUtilTest {
+    @Test
+    public void testSha256InputStreamMatchesByteArrayHash() throws IOException {
+        byte[] bytes = new byte[1000];
+        new Random().nextBytes(bytes);
+
+        assertArrayEquals(DigestUtil.sha256(bytes), DigestUtil.sha256(new ByteArrayInputStream(bytes)));
+    }
+
     @Test
     public void testPerformance() {
         long ts;
