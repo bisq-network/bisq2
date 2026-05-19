@@ -19,6 +19,8 @@ package bisq.security;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -37,18 +39,26 @@ public class DigestUtil {
     }
 
     public static byte[] sha256(byte[] input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return digest.digest(input);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+        return newMessageDigest("SHA-256").digest(input);
+    }
+
+    public static byte[] sha256(InputStream inputStream) throws IOException {
+        MessageDigest digest = newMessageDigest("SHA-256");
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            digest.update(buffer, 0, bytesRead);
         }
+        return digest.digest();
     }
 
     public static byte[] sha512(byte[] input) {
+        return newMessageDigest("SHA-512").digest(input);
+    }
+
+    private static MessageDigest newMessageDigest(String algorithm) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-512");
-            return digest.digest(input);
+            return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
