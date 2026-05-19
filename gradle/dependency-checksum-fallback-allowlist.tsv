@@ -105,6 +105,7 @@ org.codehaus.mojo:animal-sniffer-annotations:1.27	animal-sniffer-annotations-1.2
 org.codehaus.mojo:animal-sniffer-annotations:1.27	animal-sniffer-annotations-1.27.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.codehaus.mojo:animal-sniffer-annotations:1.27	animal-sniffer-annotations-1.27.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.codehaus.mojo:animal-sniffer-parent:1.27	animal-sniffer-parent-1.27.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
+org.codehaus.plexus:plexus-xml:4.1.1	plexus-xml-4.1.1-sources.jar	Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.
 org.codehaus.plexus:plexus-xml:4.1.1	plexus-xml-4.1.1.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.codehaus.plexus:plexus-xml:4.1.1	plexus-xml-4.1.1.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.fxmisc.easybind:easybind:1.0.3	easybind-1.0.3.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
@@ -135,6 +136,7 @@ org.javamodularity:moduleplugin:1.8.10	moduleplugin-1.8.10.jar	Publisher does no
 org.javamodularity:moduleplugin:1.8.10	moduleplugin-1.8.10.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.javassist:javassist:3.30.2-GA	javassist-3.30.2-GA.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.javassist:javassist:3.30.2-GA	javassist-3.30.2-GA.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
+org.jcommander:jcommander:1.85	jcommander-1.85-sources.jar	Gradle could not retrieve the publisher signing key during metadata generation; source artifact is pinned by SHA-256.
 org.jcommander:jcommander:1.85	jcommander-1.85.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.jcommander:jcommander:1.85	jcommander-1.85.module	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.jdom:jdom2:2.0.6.1	jdom2-2.0.6.1.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
@@ -205,6 +207,7 @@ org.jetbrains.kotlin:kotlin-scripting-jvm:1.9.23	kotlin-scripting-jvm-1.9.23.pom
 org.jetbrains.kotlin:kotlin-stdlib:1.9.23	kotlin-stdlib-1.9.23-all.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.jetbrains.kotlin:kotlin-stdlib:1.9.23	kotlin-stdlib-1.9.23.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.jetbrains.kotlin:kotlin-stdlib:1.9.23	kotlin-stdlib-1.9.23.module	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
+org.jetbrains.kotlin:kotlin-stdlib:1.9.23	kotlin-stdlib-1.9.23.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.jetbrains.kotlin:kotlin-tooling-core:1.9.23	kotlin-tooling-core-1.9.23.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.jetbrains.kotlin:kotlin-tooling-core:1.9.23	kotlin-tooling-core-1.9.23.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.jetbrains.kotlin:kotlin-util-io:1.9.23	kotlin-util-io-1.9.23.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
@@ -236,6 +239,7 @@ org.openjfx:javafx-media:21.0.6	javafx-media-21.0.6-mac-aarch64.jar	Gradle could
 org.openjfx:javafx-media:21.0.6	javafx-media-21.0.6.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.openjfx:javafx-plugin:0.0.13	javafx-plugin-0.0.13.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.0.13	javafx-plugin-0.0.13.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
+org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0-sources.jar	Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.module	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.0.13	org.openjfx.javafxplugin.gradle.plugin-0.0.13.pom	Gradle plugin marker POM without a published detached signature; artifact is pinned by SHA-256.
