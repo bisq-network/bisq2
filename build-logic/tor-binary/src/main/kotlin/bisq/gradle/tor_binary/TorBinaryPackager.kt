@@ -8,7 +8,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.kotlin.dsl.register
@@ -22,7 +22,7 @@ class TorBinaryPackager(private val project: Project, private val torBinaryDownl
     }
 
     fun registerTasks() {
-        val unpackTarTask: TaskProvider<Copy> = project.tasks.register<Copy>("unpackTorBinaryTar") {
+        val unpackTarTask: TaskProvider<Sync> = project.tasks.register<Sync>("unpackTorBinaryTar") {
             dependsOn(torBinaryDownloader.verifySignatureTask)
 
             val tarFile: Provider<RegularFile> = torBinaryDownloader.verifySignatureTask.flatMap { it.fileToVerify }
@@ -35,8 +35,8 @@ class TorBinaryPackager(private val project: Project, private val torBinaryDownl
             into(project.layout.buildDirectory.dir(ARCHIVE_EXTRACTION_DIR))
         }
 
-        val processUnpackedTorBinaryTar: TaskProvider<Copy> =
-            project.tasks.register<Copy>("processUnpackedTorBinaryTar") {
+        val processUnpackedTorBinaryTar: TaskProvider<Sync> =
+            project.tasks.register<Sync>("processUnpackedTorBinaryTar") {
                 dependsOn(unpackTarTask)
 
                 from(project.layout.buildDirectory.dir("${ARCHIVE_EXTRACTION_DIR}/data"))
