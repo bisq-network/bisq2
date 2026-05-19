@@ -57,7 +57,7 @@ kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
 mockito-lib = { strictly = '5.23.0' }
-openjfx-plugin = { strictly = '0.0.13' }
+openjfx-plugin = { strictly = '0.1.0' }
 openjfx-monocle-lib = { strictly = '21.0.2' }
 
 protobuf-java-lib = { strictly = '4.28.2' }
