@@ -6,6 +6,7 @@ com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.jar	Bisq-maintained JitPac
 com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
+com.github.bisq-network:jtorctl:1.5	jtorctl-1.5-sources.jar	Bisq-maintained JitPack dependency; source artifact is pinned by SHA-256.
 com.github.bisq-network:jtorctl:1.5	jtorctl-1.5.jar	Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.
 com.github.bisq-network:jtorctl:1.5	jtorctl-1.5.pom	Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.
 com.github.bisq-network:jtorctl:b2a172f	jtorctl-b2a172f.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
@@ -51,6 +52,7 @@ de.jensd:fontawesomefx-commons:9.1.2	fontawesomefx-commons-9.1.2.jar	Gradle coul
 de.jensd:fontawesomefx-commons:9.1.2	fontawesomefx-commons-9.1.2.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2	fontawesomefx-materialdesignfont-2.0.26-9.1.2.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2	fontawesomefx-materialdesignfont-2.0.26-9.1.2.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
+dev.failsafe:failsafe:3.3.2	failsafe-3.3.2-sources.jar	Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.
 dev.failsafe:failsafe:3.3.2	failsafe-3.3.2.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 dev.failsafe:failsafe:3.3.2	failsafe-3.3.2.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 dev.failsafe:failsafe-parent:3.3.2	failsafe-parent-3.3.2.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
