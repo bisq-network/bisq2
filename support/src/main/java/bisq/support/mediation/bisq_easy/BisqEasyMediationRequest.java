@@ -24,6 +24,8 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
+import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -34,9 +36,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
@@ -46,7 +48,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class BisqEasyMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+public final class BisqEasyMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage,
+        SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     public static String createMessageId(String tradeId) {
         // Keep name without BisqEasy prefix for backward compatibility
         return "MediationRequest" + "." + tradeId;
@@ -64,14 +67,14 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @EqualsAndHashCode.Exclude
     private final List<BisqEasyOpenTradeMessage> chatMessages;
     @EqualsAndHashCode.Exclude
-    private final Optional<NetworkId> mediatorNetworkId;
+    private final NetworkId mediatorNetworkId;
 
     public BisqEasyMediationRequest(String tradeId,
                                     BisqEasyContract contract,
                                     UserProfile requester,
                                     UserProfile peer,
                                     List<BisqEasyOpenTradeMessage> chatMessages,
-                                    Optional<NetworkId> mediatorNetworkId) {
+                                    NetworkId mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
         this.requester = requester;
@@ -104,8 +107,8 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                 .setPeer(peer.toProto(serializeForHash))
                 .addAllChatMessages(chatMessages.stream()
                         .map(e -> e.toValueProto(serializeForHash))
-                        .collect(Collectors.toList()));
-        mediatorNetworkId.ifPresent(mediatorNetworkId -> builder.setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash)));
+                        .collect(Collectors.toList()))
+                .setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash));
         return builder;
     }
 
@@ -122,9 +125,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                 proto.getChatMessagesList().stream()
                         .map(BisqEasyOpenTradeMessage::fromProto)
                         .collect(Collectors.toList()),
-                proto.hasMediatorNetworkId()
-                        ? Optional.of(NetworkId.fromProto(proto.getMediatorNetworkId()))
-                        : Optional.empty());
+                NetworkId.fromProto(proto.getMediatorNetworkId()));
     }
 
 
@@ -143,14 +144,24 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     }
 
     @Override
+    public PublicKey getSenderPublicKey() {
+        return requester.getPublicKey();
+    }
+
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return mediatorNetworkId.getPubKey().getPublicKey();
+    }
+
+    @Override
     public NetworkId getReceiver() {
-        // We access it only after checking with allFieldsValid
-        return mediatorNetworkId.orElseThrow();
+        return mediatorNetworkId;
     }
 
     @Override
     public boolean allFieldsValid() {
-        return mediatorNetworkId.isPresent();
+        return true;
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
