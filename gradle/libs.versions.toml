@@ -15,7 +15,7 @@ apache-httpcomponents-httpclient-lib = { strictly = '5.4.1' }
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
-bouncycastle-lib = { strictly = '1.79' }
+bouncycastle-lib = { strictly = '1.84' }
 
 commons-codec = { strictly = '1.17.1' }
 
