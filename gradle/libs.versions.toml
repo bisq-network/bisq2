@@ -68,7 +68,6 @@ protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '9.4.1' }
 slf4j-lib = { strictly = '2.0.18' }
-spring-boot-starter-web-lib = { strictly = '4.0.6' }
 springfox-lib = { strictly = '3.0.0' }
 
 square-moshi-lib = { strictly = '1.15.2' }
@@ -168,8 +167,6 @@ protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', versio
 
 sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
-spring-boot-starter-web = { module = 'org.springframework.boot:spring-boot-starter-web', version.ref = 'spring-boot-starter-web-lib' }
-
 springfox-boot-starter = { module = 'io.springfox:springfox-boot-starter', version.ref = 'springfox-lib' }
 springfox-swagger2 = { module = 'io.springfox:springfox-swagger2', version.ref = 'springfox-lib' }
 springfox-swagger-ui = { module = 'io.springfox:springfox-swagger-ui', version.ref = 'springfox-lib' }
