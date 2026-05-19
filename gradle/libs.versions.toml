@@ -20,7 +20,7 @@ bouncycastle-lib = { strictly = '1.84' }
 commons-codec = { strictly = '1.22.0' }
 
 jsocks-lib = { strictly = '5c126a64a3864fb9f6a88818874ce71d73d63504' }
-jtorctl-lib = { strictly = '1.5' }
+jtorctl-lib = { strictly = 'a3ced974b02f336720f3c86814ddb3fe00be3466' }
 
 failsafe-lib = { strictly = '3.3.2' }
 

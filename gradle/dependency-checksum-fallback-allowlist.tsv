@@ -6,11 +6,9 @@ com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.jar	Bisq-maintained JitPac
 com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:1.5	jtorctl-1.5-sources.jar	Bisq-maintained JitPack dependency; source artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:1.5	jtorctl-1.5.jar	Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:1.5	jtorctl-1.5.pom	Bisq-maintained JitPack dependency; artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:b2a172f	jtorctl-b2a172f.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:b2a172f	jtorctl-b2a172f.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
+com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466-sources.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; source artifact is pinned by SHA-256.
+com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
+com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; artifact is pinned by SHA-256.
 com.google:google:5	google-5.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 com.google.api.grpc:proto-google-common-protos:2.29.0	proto-google-common-protos-2.29.0.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 com.google.api.grpc:proto-google-common-protos:2.29.0	proto-google-common-protos-2.29.0.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
@@ -245,8 +243,10 @@ org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0	org.openjf
 org.reactfx:reactfx:2.0-M5	reactfx-2.0-M5.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.reactfx:reactfx:2.0-M5	reactfx-2.0-M5.pom	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
 org.sonatype.oss:oss-parent:7	oss-parent-7.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
+org.testfx:testfx-core:4.0.18	testfx-core-4.0.18-sources.jar	Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.
 org.testfx:testfx-core:4.0.18	testfx-core-4.0.18.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.testfx:testfx-core:4.0.18	testfx-core-4.0.18.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
+org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18-sources.jar	Publisher does not provide a detached PGP signature; source artifact is pinned by SHA-256.
 org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18.jar	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18.pom	Publisher does not provide a detached PGP signature; artifact is pinned by SHA-256.
 org.vafer:jdependency:2.10	jdependency-2.10.jar	Gradle could not retrieve the publisher signing key during metadata generation; artifact is pinned by SHA-256 until signature verification can be restored.
