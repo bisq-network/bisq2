@@ -55,7 +55,7 @@ javacv-lib = { strictly = '1.5.13' }
 java-dev-jna-lib = { strictly = '5.18.1' }
 jeromq-lib = { strictly = '0.6.0' }
 junit-jupiter-lib = { strictly = '6.0.3' }
-kotlindsl-plugin = { strictly = '2.1.7' }
+kotlindsl-plugin = { strictly = '6.7.0' }
 logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
 mockito-lib = { strictly = '5.23.0' }
