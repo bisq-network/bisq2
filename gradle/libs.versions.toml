@@ -48,7 +48,7 @@ jackson-lib = { strictly = '2.21.3' }
 jackson-annotations-lib = { strictly = '2.21' }
 jakarta-lib = { strictly = '2.2.0' }
 javacv = { strictly = '1.5.10' }
-java-dev-jna-lib = { strictly = '5.13.0' }
+java-dev-jna-lib = { strictly = '5.18.1' }
 jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
