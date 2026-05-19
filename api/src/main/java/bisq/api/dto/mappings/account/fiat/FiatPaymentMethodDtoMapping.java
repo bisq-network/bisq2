@@ -2,15 +2,16 @@ package bisq.api.dto.mappings.account.fiat;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
-import bisq.api.dto.account.fiat.FiatPaymentMethodChargebackRiskDto;
-import bisq.api.dto.account.fiat.FiatPaymentMethodDto;
-import bisq.api.dto.mappings.account.PaymentMethodDtoHelper;
+import bisq.api.dto.account.fiat.common.CountryDto;
+import bisq.api.dto.account.fiat.common.FiatCurrencyDto;
+import bisq.api.dto.account.fiat.payment_method.FiatPaymentMethodChargebackRiskDto;
+import bisq.api.dto.account.fiat.payment_method.FiatPaymentMethodDto;
+import bisq.api.dto.mappings.account.PaymentMethodDtoMappingHelper;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
-import bisq.i18n.Res;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FiatPaymentMethodDtoMapping {
     public static FiatPaymentMethodDto fromBisq2Model(FiatPaymentMethod paymentMethod) {
@@ -19,23 +20,32 @@ public class FiatPaymentMethodDtoMapping {
                 .map(Country::getCode)
                 .sorted()
                 .toList();
-        String countryNames = CountryRepository.matchesAllCountries(countryCodes)
-                ? Res.get("paymentAccounts.allCountries")
-                : countryCodes.stream()
-                .map(CountryRepository::getLocalizedCountryDisplayString)
-                .sorted()
-                .collect(Collectors.joining(", "));
+        boolean matchesAllCountries = CountryRepository.matchesAllCountries(countryCodes);
+
+        List<CountryDto> supportedCountryDtos = supportedCountries.stream()
+                .map(country -> new CountryDto(
+                        country.getCode(),
+                        CountryRepository.getLocalizedCountryDisplayString(country.getCode())
+                ))
+                .sorted(Comparator.comparing(CountryDto::name).thenComparing(CountryDto::code))
+                .toList();
+
+        List<FiatCurrencyDto> supportedCurrencies = paymentMethod.getSupportedCurrencies().stream()
+                .map(asset -> new FiatCurrencyDto(asset.getCode(), asset.getDisplayName()))
+                .sorted(Comparator.comparing(FiatCurrencyDto::code))
+                .toList();
 
         FiatPaymentRail paymentRail = paymentMethod.getPaymentRail();
 
         return new FiatPaymentMethodDto(
                 FiatPaymentRailDtoMapping.fromBisq2Model(paymentRail),
                 paymentMethod.getShortDisplayString(),
-                paymentMethod.getSupportedCurrencyCodesAsDisplayString(),
-                countryNames,
+                supportedCurrencies,
+                supportedCountryDtos,
+                matchesAllCountries,
                 FiatPaymentMethodChargebackRiskDto.valueOf(paymentMethod.getPaymentRail().getChargebackRisk().name()),
-                PaymentMethodDtoHelper.getTradeLimitInfo(paymentRail),
-                PaymentMethodDtoHelper.getTradeDuration(paymentRail)
+                PaymentMethodDtoMappingHelper.getTradeLimitInfo(paymentRail),
+                PaymentMethodDtoMappingHelper.getTradeDuration(paymentRail)
         );
     }
 }
