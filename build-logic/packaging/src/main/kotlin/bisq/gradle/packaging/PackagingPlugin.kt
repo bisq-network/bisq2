@@ -104,7 +104,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val releaseBinariesTaskFactory = ReleaseBinariesTaskFactory(project)
         releaseBinariesTaskFactory.registerCopyReleaseBinariesTask()
         releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
-        releaseBinariesTaskFactory.registerCopySigningPublicKeyTask()
+        releaseBinariesTaskFactory.registerCopyActiveSigningKeyIdMarkerTask()
         releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask(extension.version)
         releaseBinariesTaskFactory.registerSignReleaseArtifactsTask()
     }
