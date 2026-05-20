@@ -17,23 +17,26 @@
 
 package bisq.webcam.service.network;
 
-import bisq.common.data.WebcamControlSignals;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
+import bisq.common.webcam.WebcamControlSignals;
+import bisq.common.webcam.WebcamIpcMessageSerializer;
+import bisq.common.webcam.WebcamIpcWireMessage;
 import bisq.webcam.service.ErrorCode;
 import bisq.webcam.service.WebcamException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.encoding.NonPrintingCharacters.UNIT_SEPARATOR;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class QrCodeSender {
@@ -41,11 +44,14 @@ public class QrCodeSender {
     private static final long SEND_MSG_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
     private final InetSocketAddress serverAddress;
+    private final String sessionSecret;
     private Optional<Scheduler> heartBeatScheduler = Optional.empty();
     private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("QrCodeSender");
 
-    public QrCodeSender(int port) {
+    public QrCodeSender(int port, String sessionSecret) {
+        checkArgument(sessionSecret != null && !sessionSecret.isBlank(), "Missing webcam IPC session secret");
         serverAddress = new InetSocketAddress("127.0.0.1", port);
+        this.sessionSecret = sessionSecret;
     }
 
     public void startSendingHeartBeat() {
@@ -63,23 +69,24 @@ public class QrCodeSender {
     }
 
     public CompletableFuture<Void> send(WebcamControlSignals controlSignal) {
-        return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name());
+        return doSend(controlSignal, Optional.empty());
     }
 
-    public CompletableFuture<Void> send(WebcamControlSignals controlSignal, String message) {
-        return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name() + UNIT_SEPARATOR.getNonPrintingChar() + message);
+    public CompletableFuture<Void> send(WebcamControlSignals controlSignal, String payload) {
+        return doSend(controlSignal, Optional.of(checkNotNull(payload, "payload must not be null")));
     }
 
-    private CompletableFuture<Void> doSend(String message) {
-        log.info("send {} to {}", message, serverAddress);
+    private CompletableFuture<Void> doSend(WebcamControlSignals controlSignal, Optional<String> payload) {
+        WebcamIpcWireMessage wireMessage = WebcamIpcWireMessage.create(sessionSecret, controlSignal, payload);
+        int payloadByteLength = payload.map(value -> value.getBytes(StandardCharsets.UTF_8).length).orElse(0);
+        log.info("send {} message with payloadByteLength={}", controlSignal, payloadByteLength);
         return CompletableFuture.runAsync(() -> {
                     try (Socket socket = new Socket()) {
                         socket.connect(serverAddress);
-                        try (PrintWriter printWriter = new PrintWriter(socket.getOutputStream())) {
-                            printWriter.println(message);
-                        }
+                        WebcamIpcMessageSerializer.writeFrame(socket.getOutputStream(), wireMessage);
                     } catch (IOException e) {
-                        log.error("Error at sending qrCode {} to {}", message, serverAddress, e);
+                        log.error("Error at sending {} message with payloadByteLength={}",
+                                controlSignal, payloadByteLength, e);
                         throw new WebcamException(ErrorCode.IO_EXCEPTION, e);
                     }
                 }, executorService)
