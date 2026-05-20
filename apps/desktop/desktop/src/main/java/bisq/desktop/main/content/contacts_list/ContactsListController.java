@@ -110,7 +110,7 @@ public class ContactsListController implements Controller {
         signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
 
-        model.setShouldShowLearnMorePopup(settingsService.getCookie().asBoolean(CookieKey.SHOW_CONTACTS_LIST_LEARN_MORE_POPUP).orElse(true));
+        model.getIsIntroBoxVisible().set(settingsService.getCookie().asBoolean(CookieKey.SHOW_CONTACTS_LIST_INTRO).orElse(true));
     }
 
     @Override
@@ -123,6 +123,11 @@ public class ContactsListController implements Controller {
 
         model.getListItems().forEach(ContactsListView.ListItem::dispose);
         model.getListItems().clear();
+    }
+
+    void onCloseIntro() {
+        settingsService.setCookie(CookieKey.SHOW_CONTACTS_LIST_INTRO, false);
+        model.getIsIntroBoxVisible().set(false);
     }
 
     void onOpenPrivateChat(String userProfileId) {
@@ -154,11 +159,6 @@ public class ContactsListController implements Controller {
                         item.getTotalScoreString().toLowerCase().contains(string) ||
                         item.getProfileAgeString().toLowerCase().contains(string));
         applyPredicates();
-    }
-
-    void onShowLearnMorePopup() {
-        settingsService.setCookie(CookieKey.SHOW_CONTACTS_LIST_LEARN_MORE_POPUP, false);
-        model.setShouldShowLearnMorePopup(false);
     }
 
     private void doRemoveContact(ContactListEntry contactListEntry) {

@@ -42,6 +42,7 @@ public class ContactsListModel implements Model {
     private final String tableInfoTitle = Res.get("contactsList.table.tableInfo.title");
     private final String tableInfoContent = Res.get("contactsList.table.tableInfo.content");
 
+    private final BooleanProperty isIntroBoxVisible = new SimpleBooleanProperty();
     private final ObservableList<ContactsListView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<ContactsListView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<ContactsListView.ListItem> sortedList = new SortedList<>(filteredList);
@@ -53,6 +54,4 @@ public class ContactsListModel implements Model {
     private Predicate<ContactsListView.ListItem> filterItemPredicate = e -> true;
     @Setter
     private Predicate<ContactsListView.ListItem> searchStringPredicate = e -> true;
-    @Setter
-    private boolean shouldShowLearnMorePopup;
 }
