@@ -87,6 +87,7 @@ val dependencyVerificationBinaryKeyring = File(bisqRepositoryRoot, "gradle/verif
 val dependencyChecksumFallbackAllowlist = File(bisqRepositoryRoot, "gradle/dependency-checksum-fallback-allowlist.tsv")
 val dependencySignatureReport = File(bisqRepositoryRoot, "docs/dependency-signature-report.md")
 val dependencyVerificationInventoryDir = File(bisqRepositoryRoot, "build/dependency-verification")
+val unsignedArtifactReason = "Artifact is not signed"
 val gradleWrapperCommand =
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) "gradlew.bat" else "./gradlew"
 val includedBuildCurrentResolverTaskPaths = listOf(
@@ -428,7 +429,7 @@ fun readResolvedDependencyInventory(): ResolvedBuildDependencies {
 
 fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlist {
     if (!allowlistFile.exists()) {
-        throw GradleException("Missing $allowlistFile. Review checksum fallback dependencies and add the approved entries.")
+        throw GradleException("Missing $allowlistFile. Review checksum-only dependencies and add the approved entries.")
     }
 
     fun sortKey(entry: String): String {
@@ -450,7 +451,7 @@ fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlis
         val columns = line.split('\t')
         if (columns.size != 3 || columns.any { it.trim().isEmpty() }) {
             throw GradleException(
-                "Invalid checksum fallback allowlist entry at $allowlistFile:${index + 1}. " +
+                "Invalid checksum-only allowlist entry at $allowlistFile:${index + 1}. " +
                         "Expected '<group:name:version>\\t<artifact-file-name>\\t<review-rationale>'."
             )
         }
@@ -458,7 +459,7 @@ fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlis
         val coordinateParts = coordinate.split(':')
         if (coordinateParts.size != 3 || coordinateParts.any { it.isEmpty() }) {
             throw GradleException(
-                "Invalid checksum fallback allowlist coordinate at $allowlistFile:${index + 1}: '$coordinate'. " +
+                "Invalid checksum-only allowlist coordinate at $allowlistFile:${index + 1}: '$coordinate'. " +
                         "Expected '<group:name:version>' in entry '$line'."
             )
         }
@@ -472,10 +473,10 @@ fun readChecksumFallbackAllowlist(allowlistFile: File): ChecksumFallbackAllowlis
     }
 
     if (duplicateEntries.isNotEmpty()) {
-        throw GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.distinct().sorted().joinToString("\n - ")}")
+        throw GradleException("Duplicate checksum-only allowlist entries:\n - ${duplicateEntries.distinct().sorted().joinToString("\n - ")}")
     }
     if (entryOrder != entryOrder.sortedBy { sortKey(it) }) {
-        throw GradleException("Checksum fallback allowlist entries must be sorted by module and artifact:\n$allowlistFile")
+        throw GradleException("Checksum-only allowlist entries must be sorted by module and artifact:\n$allowlistFile")
     }
 
     return ChecksumFallbackAllowlist(allowedEntries, rationaleByEntry)
@@ -511,11 +512,11 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
         val artifacts = component.getElementsByTagName("artifact").elements().map { artifact ->
             val checksumFallbackReason = artifact.getElementsByTagName("sha256").elements()
                 .map { it.getAttribute("reason") }
-                .firstOrNull { it.isNotEmpty() }
+                .firstOrNull { it == unsignedArtifactReason }
                 ?: ""
             VerifiedArtifact(
                 name = artifact.getAttribute("name"),
-                checksumOnly = checksumFallbackReason.isNotEmpty(),
+                checksumOnly = checksumFallbackReason == unsignedArtifactReason,
                 checksumFallbackReason = checksumFallbackReason,
                 keyIds = artifact.getElementsByTagName("pgp").elements()
                     .map { it.getAttribute("value") }
@@ -660,7 +661,7 @@ if (isBisqRepositoryRootBuild) {
 
     tasks.register("verifyDependencySignaturePolicy") {
         group = "verification"
-        description = "Verifies all dependency artifacts and fails if checksum fallback artifacts are not explicitly allowed."
+        description = "Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed."
 
         dependsOn("resolveAndVerifyDependencies")
         inputs.file(dependencyVerificationMetadata)
@@ -687,24 +688,24 @@ if (isBisqRepositoryRootBuild) {
             if (unapprovedEntries.isNotEmpty() || staleEntries.isNotEmpty()) {
                 val message = StringBuilder("Dependency signature policy failed.")
                 if (unapprovedEntries.isNotEmpty()) {
-                    message.append("\n\nUnapproved checksum fallback dependency artifacts:\n - ")
+                    message.append("\n\nUnapproved checksum-only dependency artifacts:\n - ")
                         .append(unapprovedEntries.joinToString("\n - "))
                 }
                 if (staleEntries.isNotEmpty()) {
-                    message.append("\n\nAllowlist entries that are no longer checksum fallback artifacts:\n - ")
+                    message.append("\n\nAllowlist entries that are no longer checksum-only artifacts:\n - ")
                         .append(staleEntries.joinToString("\n - "))
                 }
-                message.append("\n\nReview each checksum fallback artifact, update $dependencyChecksumFallbackAllowlist, and regenerate $dependencySignatureReport.")
+                message.append("\n\nReview each checksum-only artifact, update $dependencyChecksumFallbackAllowlist, and regenerate $dependencySignatureReport.")
                 throw GradleException(message.toString())
             }
 
-            logger.lifecycle("Verified ${checksumFallbackEntries.size} approved checksum fallback dependency artifact(s).")
+            logger.lifecycle("Verified ${checksumFallbackEntries.size} approved checksum-only dependency artifact(s).")
         }
     }
 
     tasks.register("dependencySignatureReport") {
         group = "verification"
-        description = "Writes a report of signed and checksum fallback dependencies from Gradle verification metadata."
+        description = "Writes a report of signed and checksum-only dependencies from Gradle verification metadata."
 
         dependsOn("resolveAndVerifyDependencies")
         inputs.file(dependencyVerificationMetadata)
@@ -850,7 +851,7 @@ if (isBisqRepositoryRootBuild) {
             } else {
                 markdown.append("Signer metadata is unavailable because `gradle/verification-keyring.keys` is missing.\n\n")
             }
-            markdown.append("Checksum fallback review rationales are loaded from `gradle/dependency-checksum-fallback-allowlist.tsv`.\n\n")
+            markdown.append("Checksum-only review rationales are loaded from `gradle/dependency-checksum-fallback-allowlist.tsv`.\n\n")
             markdown.append("Refresh the metadata before regenerating this report:\n\n")
             markdown.append("```bash\n")
             markdown.append("./gradlew refreshDependencyVerificationKeyring\n")
@@ -863,22 +864,22 @@ if (isBisqRepositoryRootBuild) {
             markdown.append("| --- | ---: |\n")
             markdown.append("| Resolved external modules | ${rows.size} |\n")
             markdown.append("| Modules with PGP-signed artifacts only | ${signedRows.size} |\n")
-            markdown.append("| Modules using checksum fallback only | ${checksumRows.size} |\n")
-            markdown.append("| Modules with mixed signed/checksum-fallback artifacts | ${mixedRows.size} |\n")
+            markdown.append("| Modules using checksum-only artifacts only | ${checksumRows.size} |\n")
+            markdown.append("| Modules with mixed signed/checksum-only artifacts | ${mixedRows.size} |\n")
             markdown.append("| Modules missing verification metadata | ${missingRows.size} |\n")
             markdown.append("| Verified artifacts | $totalArtifacts |\n")
             markdown.append("| PGP-signed artifacts | $signedArtifacts |\n")
-            markdown.append("| Checksum-fallback artifacts | $checksumOnlyArtifacts |\n")
+            markdown.append("| Checksum-only artifacts | $checksumOnlyArtifacts |\n")
             markdown.append("| Signer keys found in exported keyring | $reportedKeyIdsInKeyring / ${reportedKeyIds.size} |\n")
             markdown.append("| Signer keys with name or email | $reportedKeyIdsWithUserId / ${reportedKeyIds.size} |\n")
             markdown.append("| Signer keys with creation date | $reportedKeyIdsWithCreatedDate / ${reportedKeyIds.size} |\n\n")
             markdown.append("## Handling Transitive Dependencies\n\n")
-            markdown.append("Treat transitive dependencies the same as direct dependencies. Gradle verifies the resolved artifact graph, so a transitive artifact with a published signature should be PGP-verified, and an artifact Gradle cannot verify by signature should keep an explicit SHA-256 checksum fallback. Review metadata changes separately when dependency versions change, especially new trusted keys and new checksum fallback artifacts.\n\n")
-            markdown.append("## Checksum Fallback Dependencies\n\n")
+            markdown.append("Treat transitive dependencies the same as direct dependencies. Gradle verifies the resolved artifact graph, so a transitive artifact with a published signature should be PGP-verified, and an unsigned artifact should keep an explicit SHA-256 checksum-only fallback. Review metadata changes separately when dependency versions change, especially new trusted keys and new checksum-only artifacts.\n\n")
+            markdown.append("## Checksum-Only Dependencies\n\n")
             if (checksumRows.isEmpty() && mixedRows.isEmpty()) {
                 markdown.append("All resolved modules have PGP-signed artifacts in the current metadata.\n\n")
             } else {
-                markdown.append("| Dependency | Scope | Checksum fallback artifacts and review rationale |\n")
+                markdown.append("| Dependency | Scope | Checksum-only artifacts and review rationale |\n")
                 markdown.append("| --- | --- | --- |\n")
                 (checksumRows + mixedRows).sortedBy { it.id }.forEach { row ->
                     val checksumArtifacts = row.checksumArtifacts.joinToString("<br><br>") { artifact ->
