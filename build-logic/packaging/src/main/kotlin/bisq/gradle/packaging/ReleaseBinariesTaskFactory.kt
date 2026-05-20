@@ -64,11 +64,11 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
         }
     }
 
-    fun registerCopySigningPublicKeyTask() {
-        val signingKeyId = project.layout.projectDirectory
+    fun registerCopyActiveSigningKeyIdMarkerTask() {
+        val activeSigningKeyIdMarker = project.layout.projectDirectory
                 .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/signingkey.asc")
-        project.tasks.register<Copy>("copySigningPublicKey") {
-            from(signingKeyId)
+        project.tasks.register<Copy>("copyActiveSigningKeyIdMarker") {
+            from(activeSigningKeyIdMarker)
             into(releaseDir)
         }
     }
