@@ -414,6 +414,9 @@ public class StorageService {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
+        if (isStoreKeyNotAllowed(storeKey)) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
+        }
         if (!authenticatedDataStores.containsKey(storeKey)) {
             AuthenticatedDataStorageService storageService = new AuthenticatedDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
@@ -455,6 +458,9 @@ public class StorageService {
     }
 
     public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
+        if (isStoreKeyNotAllowed(storeKey)) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
+        }
         if (!mailboxStores.containsKey(storeKey)) {
             MailboxDataStorageService storageService = new MailboxDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
@@ -498,6 +504,9 @@ public class StorageService {
     }
 
     public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
+        if (isStoreKeyNotAllowed(storeKey)) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
+        }
         if (!appendOnlyDataStores.containsKey(storeKey)) {
             AppendOnlyDataStorageService storageService = new AppendOnlyDataStorageService(persistenceService,
                     APPEND_ONLY_DATA_STORE.getStoreName(),
@@ -610,6 +619,11 @@ public class StorageService {
     private Stream<DataStorageService<? extends DataRequest>> getStoreByFileName(String storeKey) {
         return getAllStores()
                 .filter(store -> storeKey.equals(store.getStoreKey()));
+    }
+
+    private static boolean isStoreKeyNotAllowed(String storeKey) {
+        Set<String> allowed = NetworkStorageWhiteList.getClassNames();
+        return !allowed.isEmpty() && !allowed.contains(storeKey);
     }
 
     private Set<String> getExistingStoreKeys(Path dirPath) {

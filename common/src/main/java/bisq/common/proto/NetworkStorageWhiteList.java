@@ -48,6 +48,7 @@ public class NetworkStorageWhiteList {
                         resolver.getClass().getSimpleName().startsWith("BisqEasyMediationRequest")) ||
                         (protoTypeName.equals("support.MediatorsResponse") &&
                                 resolver.getClass().getSimpleName().startsWith("BisqEasyMediatorsResponse"))) {
+                    classNames.add(className);
                     log.debug("resolver and protoTypeName do not match because of backwards compatibility. protoTypeName={} resolver={}",
                             protoTypeName, resolver.getClass().getSimpleName());
                 } else {

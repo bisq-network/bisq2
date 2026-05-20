@@ -26,6 +26,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Meta data for storage properties per DistributedData
@@ -53,6 +54,8 @@ public final class MetaData implements NetworkProto {
     public static final int DEFAULT_PRIORITY = 0;
     public static final int HIGH_PRIORITY = 1;
     public static final int HIGHEST_PRIORITY = 2;
+
+    private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
 
     // How long data are kept in the storage map
     private final long ttl;
@@ -91,6 +94,9 @@ public final class MetaData implements NetworkProto {
     @Override
     public void verify() {
         NetworkDataValidation.validateText(className, 50);
+        if (!CLASS_NAME_PATTERN.matcher(className).matches()) {
+            throw new IllegalArgumentException("Invalid className");
+        }
     }
 
     @Override
