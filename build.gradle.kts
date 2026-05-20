@@ -356,6 +356,7 @@ tasks.register("verifyGithubActionsSecurity") {
 }
 
 tasks.named("check") {
+    dependsOn("verifyGradleWrapperSecurity")
     dependsOn("verifyGithubActionsSecurity")
 }
 
