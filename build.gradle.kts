@@ -1473,6 +1473,7 @@ tasks.named("check") {
     dependsOn("verifyBuildEnvironment")
     dependsOn("verifyGradleWrapperSecurity")
     dependsOn("verifyGithubActionsSecurity")
+    dependsOn("verifyDependencySignaturePolicy")
 }
 
 tasks.register("publishAll") {

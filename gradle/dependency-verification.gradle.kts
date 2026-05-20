@@ -675,9 +675,11 @@ if (isBisqRepositoryRootBuild) {
                 )
             }
             val allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist)
+            val resolved = readResolvedDependencyInventory()
             val (componentsById) = parseVerificationMetadata(dependencyVerificationMetadata)
             val checksumFallbackEntries = TreeSet<String>()
-            componentsById.values.forEach { component ->
+            resolved.resolvedComponents.forEach { componentId ->
+                val component = componentsById[componentId] ?: return@forEach
                 component.artifacts.filter { it.checksumOnly }.forEach { artifact ->
                     checksumFallbackEntries += "${component.id}\t${artifact.name}"
                 }
