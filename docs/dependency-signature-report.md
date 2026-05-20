@@ -19,17 +19,17 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 239 |
-| Modules with PGP-signed artifacts only | 233 |
+| Resolved external modules | 226 |
+| Modules with PGP-signed artifacts only | 220 |
 | Modules using checksum-only artifacts only | 6 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 345 |
-| PGP-signed artifacts | 334 |
+| Verified artifacts | 322 |
+| PGP-signed artifacts | 311 |
 | Checksum-only artifacts | 11 |
-| Signer keys found in exported keyring | 84 / 84 |
-| Signer keys with name or email | 53 / 84 |
-| Signer keys with creation date | 84 / 84 |
+| Signer keys found in exported keyring | 82 / 82 |
+| Signer keys with name or email | 51 / 82 |
+| Signer keys with creation date | 82 / 82 |
 
 ## Handling Transitive Dependencies
 
@@ -66,7 +66,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `com.github.jai-imageio:jai-imageio-core:1.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `0A60B3F1FCB211175300EC206E50BB68CC1699A6`<br>Stian Soiland-Reyes<br>`s.soilandreyes@uva.nl`<br>created 2002-01-20 |
-| `com.github.sarxos:webcam-capture:0.3.12` | direct | PGP signed | 2 signed / 0 checksum | `2F399004A4E2328A2645DFB452D84435919970B9`<br>Bartosz Firyn (sarxos)<br>`bartoszfiryn@gmail.com`<br>created 2012-07-10 |
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.api.grpc:proto-google-common-protos:2.64.1` | transitive | PGP signed | 1 signed / 0 checksum | `47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>created 2013-04-30<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.code.findbugs:jsr305:3.0.2` | direct | PGP signed | 2 signed / 0 checksum | `7616EB882DAF57A11477AAF559A252FB1199D873`<br>Tagir Valeev<br>`lany@ngs.ru`<br>created 2015-03-12<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
@@ -83,12 +82,11 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.google.protobuf:protobuf-java-util:3.25.8` | transitive | PGP signed | 1 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protoc:4.28.2` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
-| `com.google.zxing:core:3.5.4` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
+| `com.google.zxing:core:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.google.zxing:javase:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.googlecode.libphonenumber:libphonenumber:9.0.30` | direct | PGP signed | 3 signed / 0 checksum | `4759F2DC7BBF3AEC20B12D894DE0E3360046F74C`<br>rohini nidhi<br>`rnidhi@google.com`<br>created 2024-07-10<br><br>`76DF4612A2C7D5821832A8A2665487B2DBDA9781`<br>Kavitha Keshava<br>`kkeshava@google.com`<br>created 2025-09-25 |
 | `com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1` | direct | checksum fallback | 0 signed / 1 checksum | - |
 | `com.gradleup.shadow:shadow-gradle-plugin:9.4.1` | transitive | PGP signed | 1 signed / 0 checksum | `4857D1CE04E78FAB2A172E8F39B48E1BADDB933F`<br>GradleUp (GradleUp sonatype key)<br>`martin@mbonnin.net`<br>created 2021-09-13 |
-| `com.nativelibs4java:bridj:0.7.0` | transitive | PGP signed | 2 signed / 0 checksum | `07D03E3F78E4A0A5CE0F8864C6E12D4AC4337240`<br>Olivier Chafik (NativeLibs4Java Key)<br>`olivier.chafik@gmail.com`<br>created 2011-02-17 |
 | `com.sun.istack:istack-commons-runtime:4.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `04543577D6A9CC626239C50C7ECBD740FF06AEB5`<br>created 2018-09-11 |
 | `com.typesafe:config:1.4.8` | direct | PGP signed | 1 signed / 0 checksum | `DFD60A08EC2B0CECED24A01F36A22209606109DC`<br>Secure Bot<br>`lightbend-tools-secure@lightbend.com`<br>created 2025-07-10 |
 | `commons-codec:commons-codec:1.21.0` | transitive | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
@@ -142,8 +140,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.apache.httpcomponents.core5:httpcore5-h2:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5:5.4.2` | direct | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
-| `org.apache.logging.log4j:log4j-api:2.25.3` | transitive | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
-| `org.apache.logging.log4j:log4j-core:2.25.3` | direct | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
+| `org.apache.logging.log4j:log4j-api:2.25.4` | transitive | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
+| `org.apache.logging.log4j:log4j-core:2.25.4` | direct | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
 | `org.apache.maven:maven-api-annotations:4.0.0-rc-5` | transitive | PGP signed | 1 signed / 0 checksum | `0181A4828FA27B6BE6F1F5A68611CD28F472E006`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18<br><br>`073F7A9345756F3B40CDB99E6C70A3B7599C5736`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18 |
 | `org.apache.maven:maven-api-xml:4.0.0-rc-5` | transitive | PGP signed | 1 signed / 0 checksum | `0181A4828FA27B6BE6F1F5A68611CD28F472E006`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18<br><br>`073F7A9345756F3B40CDB99E6C70A3B7599C5736`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18 |
 | `org.apache.maven:maven-xml:4.0.0-rc-5` | transitive | PGP signed | 1 signed / 0 checksum | `0181A4828FA27B6BE6F1F5A68611CD28F472E006`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18<br><br>`073F7A9345756F3B40CDB99E6C70A3B7599C5736`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18 |
@@ -155,29 +153,18 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.bouncycastle:bcprov-jdk18on:1.84` | direct | PGP signed | 1 signed / 0 checksum | `7B121B76A7ED6CE6E60AD51784E913A8E3A748C0`<br>The Legion of the Bouncy Castle Inc. (Maven Repository Artifact Signer)<br>`bcmavensync@bouncycastle.org`<br>created 2023-06-07 |
 | `org.bouncycastle:bcutil-jdk18on:1.84` | transitive | PGP signed | 1 signed / 0 checksum | `7B121B76A7ED6CE6E60AD51784E913A8E3A748C0`<br>The Legion of the Bouncy Castle Inc. (Maven Repository Artifact Signer)<br>`bcmavensync@bouncycastle.org`<br>created 2023-06-07 |
 | `org.bytedeco.gradle-javacpp-platform:org.bytedeco.gradle-javacpp-platform.gradle.plugin:1.5.10` | direct | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:artoolkitplus:2.3.1-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:ffmpeg:8.0.1-1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:flycapture:2.13.3.31-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:gradle-javacpp:1.5.10` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:javacpp-platform:1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:javacpp:1.5.10` | transitive | PGP signed | 3 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:javacpp:1.5.13` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:javacv-platform:1.5.13` | direct | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:javacv:1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:leptonica:1.87.0-1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:libdc1394:2.2.6-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:libfreenect2:0.2.0-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:libfreenect:0.5.7-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:librealsense2:2.53.1-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:librealsense:1.12.4-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:openblas-platform:0.3.31-1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:openblas:0.3.31-1.5.13` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:opencv-platform:4.13.0-1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.bytedeco:opencv:4.13.0-1.5.13` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:tesseract:5.5.2-1.5.13` | transitive | PGP signed | 1 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
-| `org.bytedeco:videoinput:0.200-1.5.9` | transitive | PGP signed | 2 signed / 0 checksum | `18DF0EB86C2DB754FB4F00C3EFE7D4CEC12C4DDD`<br>Bytedeco Release<br>`contact@bytedeco.org`<br>created 2018-03-26 |
 | `org.codehaus.mojo:animal-sniffer-annotations:1.27` | transitive | PGP signed | 3 signed / 0 checksum | `32118CF76C9EC5D918E54967CA80D1F0EB6CA4BA`<br>created 2020-05-09<br><br>`84789D24DF77A32433CE1F079EB80E92EB2135B1`<br>Slawomir Jaranowski<br>`s.jaranowski@gmail.com`<br>created 2021-12-22 |
-| `org.codehaus.plexus:plexus-utils:4.0.2` | transitive | PGP signed | 1 signed / 0 checksum | `073F7A9345756F3B40CDB99E6C70A3B7599C5736`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18<br><br>`84789D24DF77A32433CE1F079EB80E92EB2135B1`<br>Slawomir Jaranowski<br>`s.jaranowski@gmail.com`<br>created 2021-12-22 |
+| `org.codehaus.plexus:plexus-utils:4.0.3` | transitive | PGP signed | 1 signed / 0 checksum | `0181A4828FA27B6BE6F1F5A68611CD28F472E006`<br>Guillaume Nodet<br>`gnodet@gmail.com`<br>created 2006-04-18<br><br>`84789D24DF77A32433CE1F079EB80E92EB2135B1`<br>Slawomir Jaranowski<br>`s.jaranowski@gmail.com`<br>created 2021-12-22 |
 | `org.codehaus.plexus:plexus-xml:4.1.1` | transitive | PGP signed | 3 signed / 0 checksum | `32118CF76C9EC5D918E54967CA80D1F0EB6CA4BA`<br>created 2020-05-09<br><br>`84789D24DF77A32433CE1F079EB80E92EB2135B1`<br>Slawomir Jaranowski<br>`s.jaranowski@gmail.com`<br>created 2021-12-22 |
 | `org.codehaus.woodstox:stax2-api:4.2.2` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `org.eclipse.angus:angus-activation:2.0.3` | transitive | PGP signed | 1 signed / 0 checksum | `BCA1F17506AF088F3A964A9C0459A2B383ED8C11`<br>created 2021-07-30 |
