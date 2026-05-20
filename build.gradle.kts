@@ -1,10 +1,18 @@
+import groovy.json.JsonSlurper
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Delete
 
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneOffset
+import java.util.Locale
 import java.util.Properties
 import java.util.TreeMap
 import java.util.Locale.getDefault
@@ -33,6 +41,58 @@ val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle
 val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
 val expectedReleaseJavaVendor = providers.gradleProperty("releaseBuild.javaVendor")
 val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
+val releaseReadinessReportFile = layout.buildDirectory.file("reports/release/release-readiness.md")
+
+data class CommandResult(
+    val exitValue: Int,
+    val stdout: String,
+    val stderr: String,
+) {
+    fun failureDetails(): String {
+        return listOf(stderr, stdout)
+            .filter { it.trim().isNotEmpty() }
+            .joinToString("\n")
+            .trim()
+    }
+}
+
+data class HttpResponse(
+    val status: Int,
+    val url: String,
+    val body: ByteArray,
+)
+
+data class ProbeResult(
+    val ok: Boolean,
+    val status: String,
+    val method: String,
+    val details: String? = null,
+)
+
+data class ReadinessResult(
+    val status: String,
+    val name: String,
+    val details: String,
+)
+
+data class GpgKeyInfo(
+    val keyId: String,
+    val created: String,
+    val expires: String,
+    val fingerprint: String,
+)
+
+val bisq2ReleaseKeyIds = listOf("E222AA02", "387C8307")
+val bisq2InstallerReleaseAssets = listOf(
+    "Bisq-%s-linux_x86_64.deb",
+    "Bisq-%s-linux_arm64.deb",
+    "Bisq-%s-linux_x86_64.rpm",
+    "Bisq-%s-linux_arm64.rpm",
+    "Bisq-%s-macos_x86_64.dmg",
+    "Bisq-%s-macos_arm64.dmg",
+    "Bisq-%s-win_x86_64.exe",
+)
+val bisq2ReleaseArtifactExtensions = listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256")
 
 fun getGradleCommand(): String {
     return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
@@ -59,6 +119,66 @@ fun sha256(file: File): String {
         }
     }
     return digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
+}
+
+fun sha256Bytes(bytes: ByteArray): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    return digest.digest(bytes).joinToString("") { "%02x".format(it.toInt() and 0xff) }
+}
+
+fun htmlEscape(value: Any?): String {
+    return value?.toString()
+        ?.replace("&", "&amp;")
+        ?.replace("<", "&lt;")
+        ?.replace(">", "&gt;")
+        ?.replace("|", "&#124;")
+        ?: ""
+}
+
+fun normalizeReleaseVersion(rawReleaseVersion: String?): String {
+    if (rawReleaseVersion == null || rawReleaseVersion.trim().isEmpty()) {
+        throw GradleException("Missing required -PreleaseVersion=<version>, for example -PreleaseVersion=2.1.11")
+    }
+
+    val releaseVersion = rawReleaseVersion.trim().removePrefix("v")
+    if (!Regex("""\d+\.\d+\.\d+([.-][A-Za-z0-9_.-]+)?""").matches(releaseVersion)) {
+        throw GradleException(
+            "Invalid release version '$rawReleaseVersion'. Expected a version such as 2.1.11 or v2.1.11."
+        )
+    }
+    return releaseVersion
+}
+
+fun resolveGpgExecutable(configuredGpgExecutable: String?): String {
+    val configured = configuredGpgExecutable?.trim()
+    if (!configured.isNullOrEmpty()) {
+        return configured
+    }
+
+    return listOf(
+        "/opt/homebrew/bin/gpg",
+        "/usr/local/bin/gpg",
+        "/usr/bin/gpg",
+    ).firstOrNull { File(it).canExecute() } ?: "gpg"
+}
+
+fun expectedBisq2ReleaseAssets(releaseVersion: String): List<String> {
+    val installers = bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
+    val jarHash = "Bisq-$releaseVersion-all-jars.sha256"
+    val signableArtifacts = installers + jarHash
+    val keyAssets = bisq2ReleaseKeyIds.map { "$it.asc" } + "signingkey.asc"
+    return (keyAssets + signableArtifacts + signableArtifacts.map { "$it.asc" }).sorted()
+}
+
+fun isExpectedBisq2ReleaseArtifact(candidate: File): Boolean {
+    if (!candidate.isFile || candidate.name.startsWith(".") || candidate.name.endsWith(".asc")) {
+        return false
+    }
+
+    val lowerName = candidate.name.lowercase(Locale.ROOT)
+    return bisq2ReleaseArtifactExtensions.any { extension ->
+        lowerName.endsWith(".${extension.lowercase(Locale.ROOT)}")
+    }
 }
 
 fun loadGradleWrapperProperties(): Properties {
@@ -186,6 +306,622 @@ tasks.register("verifyReleaseEnvironment") {
     group = "verification"
     description = "Verifies the local Gradle and Java runtime match the pinned release build environment."
     dependsOn("verifyBuildEnvironment")
+}
+
+tasks.register("signReleaseArtifacts") {
+    group = "distribution"
+    description = "Signs Bisq 2 release artifacts in -Pbisq.release.dir with detached armored GPG signatures."
+
+    val releaseDirProperty = providers.gradleProperty("bisq.release.dir")
+        .orElse(providers.gradleProperty("releaseDir"))
+    val gpgUserProperty = providers.gradleProperty("gpgUser")
+        .orElse(providers.gradleProperty("bisqGpgUser"))
+        .orElse(providers.environmentVariable("BISQ_GPG_USER"))
+    val gpgExecutableProperty = providers.gradleProperty("gpgExecutable")
+        .orElse(providers.environmentVariable("GPG_EXECUTABLE"))
+
+    inputs.property("releaseDir", releaseDirProperty.orElse(""))
+    inputs.property("gpgUser", gpgUserProperty.orElse(""))
+    inputs.property("gpgExecutable", gpgExecutableProperty.orElse(""))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        fun execResult(commandLine: List<String>): CommandResult {
+            val stdout = ByteArrayOutputStream()
+            val stderr = ByteArrayOutputStream()
+            val result = exec {
+                commandLine(commandLine)
+                standardOutput = stdout
+                errorOutput = stderr
+                isIgnoreExitValue = true
+            }
+            return CommandResult(
+                result.exitValue,
+                stdout.toString(StandardCharsets.UTF_8.name()),
+                stderr.toString(StandardCharsets.UTF_8.name())
+            )
+        }
+
+        val rawReleaseDir = releaseDirProperty.orNull
+        if (rawReleaseDir == null || rawReleaseDir.trim().isEmpty()) {
+            throw GradleException(
+                "Missing required -Pbisq.release.dir=<directory>. You can also use -PreleaseDir=<directory>."
+            )
+        }
+
+        val gpgUser = gpgUserProperty.orNull?.trim()
+        if (gpgUser.isNullOrEmpty()) {
+            throw GradleException(
+                "Missing required -PgpgUser=<key-id-or-email>. " +
+                    "You can also use -PbisqGpgUser=<key-id-or-email> or BISQ_GPG_USER."
+            )
+        }
+
+        val releaseDir = file(rawReleaseDir.trim())
+        if (!releaseDir.isDirectory) {
+            throw GradleException("Release directory is not a directory: $releaseDir")
+        }
+
+        val releaseDirFiles = releaseDir.listFiles()
+            ?: throw GradleException("Cannot list release directory: $releaseDir. Check that it is readable.")
+
+        val artifacts = releaseDirFiles
+            .filter(::isExpectedBisq2ReleaseArtifact)
+            .sortedBy { it.name }
+
+        if (artifacts.isEmpty()) {
+            throw GradleException("No Bisq 2 release artifacts found to sign in $releaseDir")
+        }
+
+        val gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull)
+
+        logger.lifecycle("Signing ${artifacts.size} Bisq 2 release artifact(s) in ${releaseDir.absolutePath}")
+        artifacts.forEach { artifact ->
+            val signatureFile = File(artifact.parentFile, "${artifact.name}.asc")
+            val signResult = execResult(
+                listOf(
+                    gpgExecutable,
+                    "--yes",
+                    "--digest-algo", "SHA256",
+                    "--local-user", gpgUser,
+                    "--output", signatureFile.absolutePath,
+                    "--detach-sig",
+                    "--armor",
+                    artifact.absolutePath,
+                )
+            )
+            if (signResult.exitValue != 0) {
+                throw GradleException("Failed to sign ${artifact.name}: ${signResult.failureDetails()}")
+            }
+            if (!signatureFile.isFile || signatureFile.length() == 0L) {
+                throw GradleException("GPG did not create a non-empty signature file for ${artifact.name}: $signatureFile")
+            }
+
+            val verifyResult = execResult(
+                listOf(
+                    gpgExecutable,
+                    "--verify",
+                    signatureFile.absolutePath,
+                    artifact.absolutePath,
+                )
+            )
+            if (verifyResult.exitValue != 0) {
+                throw GradleException("Failed to verify ${signatureFile.name}: ${verifyResult.failureDetails()}")
+            }
+
+            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
+        }
+    }
+}
+
+tasks.register("verifyReleaseReadiness") {
+    group = "verification"
+    description = "Read-only check for Bisq 2 release assets, signer keys, key expiry, and download URLs."
+
+    val releaseVersionProperty = providers.gradleProperty("releaseVersion")
+    val gpgExecutableProperty = providers.gradleProperty("gpgExecutable")
+        .orElse(providers.environmentVariable("GPG_EXECUTABLE"))
+
+    inputs.property("releaseVersion", releaseVersionProperty.orElse(""))
+    inputs.property("gpgExecutable", gpgExecutableProperty.orElse(""))
+    outputs.file(releaseReadinessReportFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        fun addResult(results: MutableList<ReadinessResult>, status: String, name: String, details: String?) {
+            results += ReadinessResult(status, name, details.orEmpty())
+        }
+
+        fun escapeMarkdownCell(value: Any?): String {
+            return htmlEscape(value)
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .replace("\n", "<br>")
+        }
+
+        fun httpRequest(requestUrl: String,
+                        requestMethod: String,
+                        headers: Map<String, String>,
+                        readBody: Boolean): HttpResponse {
+            var currentUrl = requestUrl
+            var method = requestMethod
+            var redirectCount = 0
+
+            while (true) {
+                val connection = URL(currentUrl).openConnection() as HttpURLConnection
+                connection.instanceFollowRedirects = false
+                connection.requestMethod = method
+                connection.connectTimeout = 15_000
+                connection.readTimeout = 30_000
+                connection.setRequestProperty("User-Agent", "Bisq 2 release readiness Gradle task")
+                headers.forEach { (name, value) ->
+                    if (value.isNotEmpty()) {
+                        connection.setRequestProperty(name, value)
+                    }
+                }
+
+                val status = connection.responseCode
+                if (status in listOf(301, 302, 303, 307, 308)) {
+                    val location = connection.getHeaderField("Location")
+                    connection.disconnect()
+                    if (location.isNullOrEmpty()) {
+                        return HttpResponse(status, currentUrl, ByteArray(0))
+                    }
+                    redirectCount += 1
+                    if (redirectCount > 5) {
+                        throw GradleException("Too many redirects while requesting $requestUrl")
+                    }
+                    currentUrl = URL(URL(currentUrl), location).toString()
+                    if (status == 303) {
+                        method = "GET"
+                    }
+                    continue
+                }
+
+                val body = if (readBody) {
+                    val stream = if (status >= 400) connection.errorStream else connection.inputStream
+                    stream?.use { it.readBytes() } ?: ByteArray(0)
+                } else {
+                    ByteArray(0)
+                }
+                connection.disconnect()
+                return HttpResponse(status, currentUrl, body)
+            }
+        }
+
+        fun httpGetBytes(url: String, headers: Map<String, String> = emptyMap()): ByteArray {
+            val response = httpRequest(url, "GET", headers, true)
+            if (response.status < 200 || response.status >= 300) {
+                var body = if (response.body.isNotEmpty()) {
+                    String(response.body, StandardCharsets.UTF_8).trim()
+                } else {
+                    ""
+                }
+                if (body.length > 300) {
+                    body = body.substring(0, 300) + "..."
+                }
+                throw GradleException("GET $url returned HTTP ${response.status}${if (body.isNotEmpty()) ": $body" else ""}")
+            }
+            return response.body
+        }
+
+        fun httpProbe(url: String): ProbeResult {
+            var headFailure: String? = null
+            try {
+                val response = httpRequest(url, "HEAD", emptyMap(), false)
+                if (response.status in 200..399) {
+                    return ProbeResult(true, response.status.toString(), "HEAD")
+                }
+                if (response.status !in listOf(403, 405)) {
+                    return ProbeResult(false, response.status.toString(), "HEAD")
+                }
+            } catch (exception: Exception) {
+                headFailure = exception.message
+            }
+
+            return try {
+                val response = httpRequest(url, "GET", mapOf("Range" to "bytes=0-0"), false)
+                ProbeResult(
+                    response.status in 200..399,
+                    response.status.toString(),
+                    "GET Range",
+                    headFailure
+                )
+            } catch (exception: Exception) {
+                ProbeResult(false, "n/a", "GET Range", exception.message ?: headFailure)
+            }
+        }
+
+        fun runCommand(commandLine: List<String>): CommandResult {
+            val stdout = ByteArrayOutputStream()
+            val stderr = ByteArrayOutputStream()
+            return try {
+                val processResult = exec {
+                    commandLine(commandLine)
+                    standardOutput = stdout
+                    errorOutput = stderr
+                    isIgnoreExitValue = true
+                }
+                CommandResult(
+                    processResult.exitValue,
+                    stdout.toString(StandardCharsets.UTF_8.name()),
+                    stderr.toString(StandardCharsets.UTF_8.name())
+                )
+            } catch (exception: Exception) {
+                CommandResult(
+                    -1,
+                    stdout.toString(StandardCharsets.UTF_8.name()),
+                    exception.message.orEmpty()
+                )
+            }
+        }
+
+        fun parseGpgKeyInfo(gpgOutput: String): GpgKeyInfo? {
+            val lines = gpgOutput.lines()
+            val pubLine = lines.find { it.startsWith("pub:") } ?: return null
+            val fprLine = lines.find { it.startsWith("fpr:") } ?: return null
+            val pubFields = pubLine.split(':')
+            val fprFields = fprLine.split(':')
+            return GpgKeyInfo(
+                keyId = pubFields.getOrElse(4) { "" },
+                created = pubFields.getOrElse(5) { "" },
+                expires = pubFields.getOrElse(6) { "" },
+                fingerprint = fprFields.getOrElse(9) { "" },
+            )
+        }
+
+        fun readLauncherKeyIds(): List<String> {
+            val launcherFile = file("apps/desktop/desktop-app-launcher/src/main/java/bisq/desktop_app_launcher/DesktopAppLauncher.java")
+            if (!launcherFile.isFile) {
+                return emptyList()
+            }
+
+            val keyIdRegex = Regex("private\\s+static\\s+final\\s+String\\s+FINGER_PRINT_[A-Z_]+\\s*=\\s*\"([0-9A-Fa-f]{8})\"")
+            return keyIdRegex.findAll(launcherFile.readText(StandardCharsets.UTF_8))
+                .map { it.groupValues[1].uppercase(Locale.ROOT) }
+                .distinct()
+                .sorted()
+                .toList()
+        }
+
+        fun checkVersionValue(results: MutableList<ReadinessResult>,
+                              releaseVersion: String,
+                              label: String,
+                              sourceFile: File,
+                              regex: Regex) {
+            if (!sourceFile.isFile) {
+                addResult(results, "FAIL", label, "Missing ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            val match = regex.find(sourceFile.readText(StandardCharsets.UTF_8))
+            if (match == null) {
+                addResult(results, "FAIL", label, "Could not find version declaration in ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            val actualVersion = match.groupValues[1]
+            if (actualVersion == releaseVersion) {
+                addResult(results, "PASS", label, "${rootProject.relativePath(sourceFile)} is set to $actualVersion")
+            } else {
+                addResult(results, "FAIL", label, "${rootProject.relativePath(sourceFile)} is $actualVersion, expected $releaseVersion")
+            }
+        }
+
+        val releaseVersion = normalizeReleaseVersion(releaseVersionProperty.orNull)
+        val releaseTag = "v$releaseVersion"
+        val expectedAssets = expectedBisq2ReleaseAssets(releaseVersion)
+        val results = mutableListOf<ReadinessResult>()
+
+        checkVersionValue(
+            results,
+            releaseVersion,
+            "gradle.properties version",
+            file("gradle.properties"),
+            Regex("""(?m)^\s*version\s*=\s*([^\s#]+)""")
+        )
+
+        val updaterUtilsFile = file("evolution/src/main/java/bisq/evolution/updater/UpdaterUtils.java")
+        if (!updaterUtilsFile.isFile) {
+            addResult(results, "FAIL", "Updater URL constants", "Missing ${rootProject.relativePath(updaterUtilsFile)}")
+        } else {
+            val updaterUtils = updaterUtilsFile.readText(StandardCharsets.UTF_8)
+            val expectedConstants = mapOf(
+                "RELEASES_URL" to "RELEASES_URL = \"https://github.com/bisq-network/bisq2/releases/tag/v\"",
+                "GITHUB_DOWNLOAD_URL" to "GITHUB_DOWNLOAD_URL = \"https://github.com/bisq-network/bisq2/releases/download/v\"",
+                "PUB_KEYS_URL" to "PUB_KEYS_URL = \"https://bisq.network/pubkey/\"",
+            )
+            val missingConstants = expectedConstants
+                .filterValues { !updaterUtils.contains(it) }
+                .keys
+                .sorted()
+            if (missingConstants.isEmpty()) {
+                addResult(results, "PASS", "Updater URL constants", "UpdaterUtils points to Bisq 2 GitHub releases and bisq.network pubkeys")
+            } else {
+                addResult(results, "FAIL", "Updater URL constants", "Unexpected or missing constants: ${missingConstants.joinToString(", ")}")
+            }
+        }
+
+        val githubToken = providers.gradleProperty("githubToken").orNull
+            ?: providers.environmentVariable("GITHUB_TOKEN").orNull
+        val githubHeaders = mutableMapOf(
+            "Accept" to "application/vnd.github+json",
+            "X-GitHub-Api-Version" to "2022-11-28",
+        )
+        if (!githubToken.isNullOrEmpty()) {
+            githubHeaders["Authorization"] = "Bearer $githubToken"
+        }
+
+        var releaseAssetsByName: Map<String, Map<*, *>> = emptyMap()
+        var releaseAssetsLoaded = false
+        val githubReleaseApiUrl = "https://api.github.com/repos/bisq-network/bisq2/releases/tags/$releaseTag"
+        try {
+            val releaseJson = String(httpGetBytes(githubReleaseApiUrl, githubHeaders), StandardCharsets.UTF_8)
+            val release = JsonSlurper().parseText(releaseJson) as Map<*, *>
+            if (release["tag_name"] == releaseTag) {
+                addResult(results, "PASS", "GitHub release tag", "Found $releaseTag on GitHub release page")
+            } else {
+                addResult(results, "FAIL", "GitHub release tag", "GitHub API returned tag '${release["tag_name"]}', expected '$releaseTag'")
+            }
+            if (release["draft"] == true) {
+                addResult(results, "WARN", "GitHub release state", "$releaseTag is still marked as a draft")
+            } else {
+                addResult(results, "PASS", "GitHub release state", "$releaseTag is published")
+            }
+            if (release["prerelease"] == true) {
+                addResult(results, "WARN", "GitHub prerelease flag", "$releaseTag is marked as a prerelease")
+            }
+
+            val assets = release["assets"] as? List<*> ?: emptyList<Any>()
+            releaseAssetsByName = assets
+                .mapNotNull { it as? Map<*, *> }
+                .associateBy { it["name"].toString() }
+            releaseAssetsLoaded = true
+            addResult(results, "PASS", "GitHub release API", "Loaded ${releaseAssetsByName.size} uploaded asset(s) from $githubReleaseApiUrl")
+        } catch (exception: Exception) {
+            addResult(results, "FAIL", "GitHub release API", exception.message)
+        }
+
+        if (releaseAssetsLoaded) {
+            expectedAssets.forEach { assetName ->
+                val asset = releaseAssetsByName[assetName]
+                if (asset == null) {
+                    addResult(results, "FAIL", "GitHub asset $assetName", "Missing from uploaded release assets")
+                    return@forEach
+                }
+
+                val browserDownloadUrl = asset["browser_download_url"]?.toString().orEmpty()
+                if (browserDownloadUrl.isEmpty()) {
+                    addResult(results, "FAIL", "GitHub asset $assetName", "Missing browser_download_url")
+                    return@forEach
+                }
+
+                val assetSize = (asset["size"] as? Number)?.toLong() ?: 0L
+                if (assetSize <= 0L) {
+                    addResult(results, "FAIL", "GitHub asset $assetName", "Asset exists but size is ${asset["size"]}")
+                    return@forEach
+                }
+                addResult(results, "PASS", "GitHub asset $assetName", "Present, $assetSize byte(s)")
+
+                val probe = httpProbe(browserDownloadUrl)
+                if (probe.ok) {
+                    addResult(results, "PASS", "GitHub download URL $assetName", "HTTP ${probe.status} via ${probe.method}")
+                } else {
+                    val details = if (probe.details.isNullOrEmpty()) "" else ": ${probe.details}"
+                    addResult(results, "FAIL", "GitHub download URL $assetName", "HTTP ${probe.status} via ${probe.method}$details")
+                }
+            }
+
+            val extraAssets = releaseAssetsByName.keys - expectedAssets.toSet()
+            if (extraAssets.isNotEmpty()) {
+                addResult(results, "WARN", "GitHub extra assets", "Unexpected uploaded asset(s): ${extraAssets.sorted().joinToString(", ")}")
+            }
+        }
+
+        val launcherKeyIds = readLauncherKeyIds()
+        if (launcherKeyIds.isEmpty()) {
+            addResult(results, "FAIL", "Launcher signer key ids", "Could not parse signer key ids from DesktopAppLauncher")
+        } else if (launcherKeyIds == bisq2ReleaseKeyIds.sorted()) {
+            addResult(results, "PASS", "Launcher signer key ids", "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}")
+        } else {
+            addResult(
+                results,
+                "FAIL",
+                "Launcher signer key ids",
+                "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}, expected ${bisq2ReleaseKeyIds.sorted().joinToString(", ")}"
+            )
+        }
+
+        val signingKeyFile = file("apps/desktop/desktop-app-launcher/maintainer_public_keys/signingkey.asc")
+        val activeSigningKeyId = if (!signingKeyFile.isFile) {
+            addResult(results, "FAIL", "signingkey.asc local file", "Missing ${rootProject.relativePath(signingKeyFile)}")
+            ""
+        } else {
+            val keyId = signingKeyFile.readText(StandardCharsets.UTF_8).trim().uppercase(Locale.ROOT)
+            if (bisq2ReleaseKeyIds.contains(keyId)) {
+                addResult(results, "PASS", "Active signing key id", "${rootProject.relativePath(signingKeyFile)} points to $keyId")
+            } else {
+                addResult(
+                    results,
+                    "FAIL",
+                    "Active signing key id",
+                    "${rootProject.relativePath(signingKeyFile)} points to ${keyId.ifEmpty { "<blank>" }}, expected one of ${bisq2ReleaseKeyIds.joinToString(", ")}"
+                )
+            }
+            keyId
+        }
+
+        if (signingKeyFile.isFile && releaseAssetsLoaded) {
+            val signingKeyAsset = releaseAssetsByName["signingkey.asc"]
+            val browserDownloadUrl = signingKeyAsset?.get("browser_download_url")?.toString().orEmpty()
+            if (browserDownloadUrl.isEmpty()) {
+                addResult(results, "FAIL", "signingkey.asc GitHub asset", "Missing signingkey.asc from GitHub release")
+            } else {
+                try {
+                    val githubSigningKey = httpGetBytes(browserDownloadUrl)
+                    val localHash = sha256(signingKeyFile)
+                    val githubHash = sha256Bytes(githubSigningKey)
+                    if (localHash == githubHash) {
+                        addResult(results, "PASS", "signingkey.asc exact content", "GitHub release matches local SHA-256 $localHash")
+                    } else {
+                        addResult(results, "FAIL", "signingkey.asc exact content", "local=$localHash, GitHub release=$githubHash")
+                    }
+                } catch (exception: Exception) {
+                    addResult(results, "FAIL", "signingkey.asc GitHub asset", exception.message)
+                }
+            }
+        }
+
+        val resourceKeyFiles = mutableMapOf<String, File>()
+        bisq2ReleaseKeyIds.forEach { keyId ->
+            val resourceFile = file("evolution/src/main/resources/keys/$keyId.asc")
+            val packageFile = file("apps/desktop/desktop-app-launcher/maintainer_public_keys/$keyId.asc")
+            resourceKeyFiles[keyId] = resourceFile
+
+            val sourceBytesByName = mutableMapOf<String, ByteArray>()
+            if (resourceFile.isFile) {
+                sourceBytesByName["app resources"] = resourceFile.readBytes()
+            } else {
+                addResult(results, "FAIL", "Public key $keyId app resource", "Missing ${rootProject.relativePath(resourceFile)}")
+            }
+            if (packageFile.isFile) {
+                sourceBytesByName["release package"] = packageFile.readBytes()
+            } else {
+                addResult(results, "FAIL", "Public key $keyId package resource", "Missing ${rootProject.relativePath(packageFile)}")
+            }
+
+            try {
+                sourceBytesByName["bisq.network/pubkey"] = httpGetBytes("https://bisq.network/pubkey/$keyId.asc")
+            } catch (exception: Exception) {
+                addResult(results, "FAIL", "Public key $keyId webpage", exception.message)
+            }
+
+            val githubAsset = releaseAssetsByName["$keyId.asc"]
+            val browserDownloadUrl = githubAsset?.get("browser_download_url")?.toString().orEmpty()
+            if (browserDownloadUrl.isNotEmpty()) {
+                try {
+                    sourceBytesByName["GitHub release"] = httpGetBytes(browserDownloadUrl)
+                } catch (exception: Exception) {
+                    addResult(results, "FAIL", "Public key $keyId GitHub asset", exception.message)
+                }
+            } else if (releaseAssetsLoaded) {
+                addResult(results, "FAIL", "Public key $keyId GitHub asset", "Missing $keyId.asc from GitHub release")
+            }
+
+            val expectedKeySourceCount = if (releaseAssetsLoaded) 4 else 3
+            if (sourceBytesByName.size == expectedKeySourceCount) {
+                val hashes = sourceBytesByName.mapValues { (_, bytes) -> sha256Bytes(bytes) }
+                val uniqueHashes = hashes.values.toSet()
+                if (uniqueHashes.size == 1) {
+                    addResult(results, "PASS", "Public key $keyId exact content", "All checked sources match SHA-256 ${uniqueHashes.first()}")
+                } else {
+                    addResult(
+                        results,
+                        "FAIL",
+                        "Public key $keyId exact content",
+                        hashes.entries.joinToString(", ") { (name, hash) -> "$name=$hash" }
+                    )
+                }
+            }
+        }
+
+        val gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull)
+        bisq2ReleaseKeyIds.forEach { keyId ->
+            val keyFile = resourceKeyFiles[keyId]
+            if (keyFile?.isFile != true) {
+                return@forEach
+            }
+
+            val gpgResult = runCommand(
+                listOf(
+                    gpgExecutable,
+                    "--show-keys",
+                    "--with-colons",
+                    "--fingerprint",
+                    keyFile.absolutePath,
+                )
+            )
+            if (gpgResult.exitValue != 0) {
+                addResult(
+                    results,
+                    "FAIL",
+                    "Public key $keyId metadata",
+                    "$gpgExecutable --show-keys failed. Install GnuPG or set -PgpgExecutable=/path/to/gpg. ${gpgResult.stderr.trim()}"
+                )
+                return@forEach
+            }
+
+            val keyInfo = parseGpgKeyInfo(gpgResult.stdout)
+            if (keyInfo == null || keyInfo.fingerprint.isEmpty()) {
+                addResult(results, "FAIL", "Public key $keyId metadata", "Could not parse fingerprint from gpg --show-keys output")
+                return@forEach
+            }
+
+            val isActiveSigningKey = activeSigningKeyId.isNotEmpty() &&
+                (keyId.equals(activeSigningKeyId, ignoreCase = true) ||
+                    keyInfo.keyId.uppercase(Locale.ROOT).endsWith(activeSigningKeyId))
+            val now = Instant.now()
+            if (keyInfo.expires.isEmpty()) {
+                addResult(results, "PASS", "Public key $keyId expiry", "Fingerprint ${keyInfo.fingerprint} has no expiry date")
+            } else {
+                val expiryInstant = Instant.ofEpochSecond(keyInfo.expires.toLong())
+                val expiryDate = expiryInstant.atZone(ZoneOffset.UTC).toLocalDate()
+                val daysRemaining = Duration.between(now, expiryInstant).toDays()
+                when {
+                    !expiryInstant.isAfter(now) -> {
+                        addResult(
+                            results,
+                            if (isActiveSigningKey) "FAIL" else "WARN",
+                            "Public key $keyId expiry",
+                            "${if (isActiveSigningKey) "Active signing key" else "Bundled non-active key"} expired on $expiryDate"
+                        )
+                    }
+                    daysRemaining <= 90 -> {
+                        addResult(results, "WARN", "Public key $keyId expiry", "Expires on $expiryDate ($daysRemaining day(s) remaining)")
+                    }
+                    else -> {
+                        addResult(results, "PASS", "Public key $keyId expiry", "Expires on $expiryDate ($daysRemaining day(s) remaining)")
+                    }
+                }
+            }
+        }
+
+        val reportFile = releaseReadinessReportFile.get().asFile
+        reportFile.parentFile.mkdirs()
+        val markdown = StringBuilder()
+        markdown.append("# Bisq 2 Release Readiness\n\n")
+        markdown.append("- Release version: `$releaseVersion`\n")
+        markdown.append("- GitHub tag: `$releaseTag`\n")
+        markdown.append("- Generated at: `${Instant.now()}`\n\n")
+        markdown.append("This report is generated by `./gradlew verifyReleaseReadiness -PreleaseVersion=$releaseVersion`. ")
+        markdown.append("The task is read-only: it checks expected release assets, GitHub download URLs, Bisq 2 signer key consistency, and key expiry.\n\n")
+        markdown.append("## Summary\n\n")
+        markdown.append("| Status | Count |\n")
+        markdown.append("| --- | ---: |\n")
+        listOf("PASS", "WARN", "FAIL").forEach { status ->
+            markdown.append("| $status | ${results.count { it.status == status }} |\n")
+        }
+        markdown.append("\n## Checks\n\n")
+        markdown.append("| Status | Check | Details |\n")
+        markdown.append("| --- | --- | --- |\n")
+        results.forEach { result ->
+            markdown.append("| ${result.status} | ${escapeMarkdownCell(result.name)} | ${escapeMarkdownCell(result.details)} |\n")
+        }
+        markdown.append('\n')
+        reportFile.writeText(markdown.toString(), StandardCharsets.UTF_8)
+        logger.lifecycle("Wrote ${rootProject.relativePath(reportFile)}")
+
+        val failures = results.filter { it.status == "FAIL" }
+        if (failures.isNotEmpty()) {
+            throw GradleException("Release readiness failed with ${failures.size} failure(s). See ${rootProject.relativePath(reportFile)}")
+        }
+
+        logger.lifecycle("Release readiness passed with ${results.count { it.status == "WARN" }} warning(s).")
+    }
+}
+
+tasks.register("verifyGithubReleaseReadiness") {
+    group = "verification"
+    description = "Compatibility alias for verifyReleaseReadiness."
+    dependsOn("verifyReleaseReadiness")
 }
 
 tasks.register("verifyGradleWrapperSecurity") {
