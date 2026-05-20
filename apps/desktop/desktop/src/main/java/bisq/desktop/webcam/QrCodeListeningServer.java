@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -52,10 +53,19 @@ public class QrCodeListeningServer {
                 this.serverSocket = Optional.of(serverSocket);
                 serverSocket.setSoTimeout(socketTimeout);
                 serverSocket.bind(serverAddress);
-                log.info("Start listening on port {}", port);
+                log.info("Start listening for webcam IPC");
                 while (!isStopped && !Thread.currentThread().isInterrupted()) {
-                    Socket socket = serverSocket.accept();
-                    inputHandler.onSocket(socket);
+                    try (Socket socket = serverSocket.accept()) {
+                        socket.setSoTimeout(socketTimeout);
+                        inputHandler.onSocket(socket);
+                    } catch (SocketTimeoutException ignore) {
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Rejected webcam IPC message: {}", e.getMessage());
+                    } catch (RuntimeException e) {
+                        log.error("Unexpected webcam IPC handler failure", e);
+                        errorHandler.accept(e);
+                        throw e;
+                    }
                 }
             } catch (IOException e) {
                 if (!isStopped) {

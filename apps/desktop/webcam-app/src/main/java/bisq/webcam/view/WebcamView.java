@@ -94,7 +94,7 @@ public class WebcamView extends StackPane {
 
         String versionNumber = "n/a";
         try {
-            versionNumber = FileReaderUtils.readStringFromResource("webcam-app/version.txt");
+            versionNumber = FileReaderUtils.readStringFromResource("webcam-app/version.txt").trim();
         } catch (IOException e) {
             log.error("Could not read version. Run gradle task `copyWebcamAppVersionToResources`.", e);
         }
