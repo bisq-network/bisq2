@@ -43,10 +43,11 @@ jobs:
           distribution: 'zulu'
           check-latest: false
 
-      - name: Gradle Build Action
-        uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          arguments: build -x test
-          build-root-directory: ${{ inputs.build-root-dir }}
-          gradle-executable: ./gradlew
-          gradle-version: 8.9
+          cache-provider: basic
+
+      - name: Build with Gradle
+        shell: bash
+        run: ./gradlew -p "${{ inputs.build-root-dir }}" build -x test
