@@ -30,6 +30,8 @@ dependencyResolutionManagement {
 includeBuild("../..")
 
 include("tor-common")
+include("jsocks")
+include("jtorctl")
 include("tor")
 include("tor-local-network")
 
