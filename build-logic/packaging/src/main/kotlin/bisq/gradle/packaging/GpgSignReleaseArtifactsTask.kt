@@ -36,7 +36,7 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         val releaseDir = getReleaseDir()
         val gpgUser = getRequiredValue(gpgUser, "Missing required -PgpgUser=<key-id-email-or-fingerprint>. You can also use -PbisqGpgUser=<key-id-email-or-fingerprint> or BISQ_GPG_USER.")
         val expectedFingerprint = normalizeFingerprint(
-                getRequiredValue(expectedFingerprint, "Missing expected GPG fingerprint. Use -PgpgFingerprint=<fingerprint> or BISQ_GPG_FINGERPRINT.")
+                getRequiredValue(expectedFingerprint, "Missing expected GPG fingerprint. Use -PgpgFingerprint=<fingerprint>, -PbisqGpgFingerprint=<fingerprint>, or BISQ_GPG_FINGERPRINT.")
         )
 
         val releaseDirFiles = releaseDir.listFiles()
