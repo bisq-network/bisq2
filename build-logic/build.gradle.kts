@@ -3,6 +3,7 @@ plugins {
     java
 }
 
+apply(from = "../gradle/dependency-security-overrides.gradle.kts")
 apply(from = "../gradle/dependency-verification.gradle.kts")
 
 tasks.named("clean") {

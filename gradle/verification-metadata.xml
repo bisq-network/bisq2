@@ -15,7 +15,10 @@
          <ignored-key id="CA80D1F0EB6CA4BA" reason="Key couldn't be downloaded from any key server"/>
       </ignored-keys>
       <trusted-keys>
-         <trusted-key id="0181A4828FA27B6BE6F1F5A68611CD28F472E006" group="org.apache.maven"/>
+         <trusted-key id="0181A4828FA27B6BE6F1F5A68611CD28F472E006">
+            <trusting group="org.apache.maven"/>
+            <trusting group="org.codehaus.plexus" name="plexus-utils" version="4.0.3"/>
+         </trusted-key>
          <trusted-key id="04543577D6A9CC626239C50C7ECBD740FF06AEB5">
             <trusting group="org.glassfish.jaxb"/>
             <trusting group="^com[.]sun($|([.].*))" regex="true"/>
@@ -1703,6 +1706,11 @@
       <component group="org.codehaus.plexus" name="plexus-utils" version="4.0.2">
          <artifact name="plexus-utils-4.0.2.pom">
             <pgp value="073F7A9345756F3B40CDB99E6C70A3B7599C5736"/>
+         </artifact>
+      </component>
+      <component group="org.codehaus.plexus" name="plexus-utils" version="4.0.3">
+         <artifact name="plexus-utils-4.0.3.pom">
+            <pgp value="0181A4828FA27B6BE6F1F5A68611CD28F472E006"/>
          </artifact>
       </component>
       <component group="org.codehaus.plexus" name="plexus-xml" version="4.0.4">
