@@ -18,5 +18,4 @@ dependencies {
     implementation("network:network-identity:$version")
 
     implementation(libs.google.gson)
-    implementation(libs.jsocks)
 }

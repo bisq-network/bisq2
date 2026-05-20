@@ -11,5 +11,5 @@ application {
 dependencies {
     implementation(project(":tor-common"))
     implementation(project(":tor"))
-    implementation(libs.jtorctl)
+    implementation(project(":jtorctl"))
 }
