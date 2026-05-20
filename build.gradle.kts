@@ -91,6 +91,14 @@ val bisq2InstallerReleaseAssets = listOf(
     "Bisq-%s-macos_x86_64.dmg",
     "Bisq-%s-macos_arm64.dmg",
     "Bisq-%s-win_x86_64.exe",
+    "Bisq-%s-win_x86_64.msi",
+)
+val bisq2DesktopUpdateJarReleaseAssets = listOf(
+    "desktop-app-%s-linux_x86_64-all.jar",
+    "desktop-app-%s-linux_arm64-all.jar",
+    "desktop-app-%s-macos_x86_64-all.jar",
+    "desktop-app-%s-macos_arm64-all.jar",
+    "desktop-app-%s-win_x86_64-all.jar",
 )
 val bisq2ReleaseArtifactExtensions = listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256")
 
@@ -163,11 +171,16 @@ fun resolveGpgExecutable(configuredGpgExecutable: String?): String {
 }
 
 fun expectedBisq2ReleaseAssets(releaseVersion: String): List<String> {
-    val installers = bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
-    val jarHash = "Bisq-$releaseVersion-all-jars.sha256"
-    val signableArtifacts = installers + jarHash
+    val signableArtifacts = expectedBisq2SignableReleaseAssets(releaseVersion)
     val keyAssets = bisq2ReleaseKeyIds.map { "$it.asc" } + "signingkey.asc"
     return (keyAssets + signableArtifacts + signableArtifacts.map { "$it.asc" }).sorted()
+}
+
+fun expectedBisq2SignableReleaseAssets(releaseVersion: String): List<String> {
+    val installers = bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
+    val updateJars = bisq2DesktopUpdateJarReleaseAssets.map { it.format(releaseVersion) }
+    val jarHash = "Bisq-$releaseVersion-all-jars.sha256"
+    return installers + updateJars + jarHash
 }
 
 fun isExpectedBisq2ReleaseArtifact(candidate: File): Boolean {
