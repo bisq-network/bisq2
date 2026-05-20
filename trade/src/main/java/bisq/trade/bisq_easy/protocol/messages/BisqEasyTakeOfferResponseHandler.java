@@ -25,6 +25,7 @@ import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -45,6 +46,12 @@ public class BisqEasyTakeOfferResponseHandler extends BisqEasyTradeMessageHandle
                 "Takers and makers contracts must be the same");
 
         ContractService contractService = serviceProvider.getContractService();
+        PublicKey makerPublicKey = trade.getContract().getMaker().getNetworkId().getPubKey().getPublicKey();
+        checkArgument(contractService.arePublicKeysMatching(message.getSenderPublicKey(), makerPublicKey),
+                "Makers message sender public key must match makers network id public key");
+        checkArgument(contractService.arePublicKeysMatching(makersContractSignatureData,
+                        makerPublicKey),
+                "Makers contract signature public key must match makers network id public key");
         try {
             checkArgument(contractService.verifyContractSignature(trade.getContract(), makersContractSignatureData),
                     "Verifying makers contract signature failed");
