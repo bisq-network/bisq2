@@ -3,12 +3,6 @@ plugins {
     application
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 application {
     mainClass.set("bisq.node_monitor_app.NodeMonitorApp")
 }

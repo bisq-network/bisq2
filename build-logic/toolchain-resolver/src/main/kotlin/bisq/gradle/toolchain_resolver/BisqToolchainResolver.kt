@@ -7,6 +7,8 @@ import org.gradle.platform.OperatingSystem
 import java.net.URI
 import java.util.*
 
+private const val OS_ARCH_PROPERTY = "os.arch"
+
 @Suppress("UnstableApiUsage")
 abstract class BisqToolchainResolver : JavaToolchainResolver {
     override fun resolve(toolchainRequest: JavaToolchainRequest): Optional<JavaToolchainDownload> {
@@ -35,9 +37,7 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
             }
 
     private fun getToolchainUrlForMacOs(javaVersion: Int): String? {
-        val osArch = System.getProperty("os.arch").lowercase(Locale.US)
-        // Note, they use x64 not x86 (or x86_64)
-        val macOsArchName = if (osArch.contains("aarch64")) "aarch64" else "x64"
+        val macOsArchName = getMacOsArchitectureClassifier()
         return when (javaVersion) {
             11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15_1-ca-jdk11.0.20-macosx_" + macOsArchName + ".tar.gz"
             15 -> "https://cdn.azul.com/zulu/bin/zulu15.46.17-ca-jdk15.0.10-macosx_" + macOsArchName + ".tar.gz"
@@ -54,4 +54,30 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
                 21 -> "https://cdn.azul.com/zulu/bin/zulu21.50.19-ca-jdk21.0.11-win_x64.zip"
                 else -> null
             }
+
+    private fun getMacOsArchitectureClassifier(): String {
+        val osArch = getOsArch()
+        if (osArch.isBlank()) {
+            throw IllegalStateException("Cannot choose macOS JDK toolchain because os.arch is missing or blank (value='$osArch').")
+        }
+
+        val architecture = osArch.trim().lowercase(Locale.US)
+        if (architecture == "aarch64" || architecture == "arm64") {
+            return "aarch64"
+        }
+        if (architecture == "x86_64" || architecture == "amd64" || architecture == "x64" ||
+            architecture == "x86" || architecture == "i386" || architecture == "i686") {
+            return "x64"
+        }
+
+        throw IllegalStateException("Cannot choose macOS JDK toolchain for unsupported os.arch value: '$osArch'.")
+    }
+
+    private fun getOsArch(): String {
+        return try {
+            System.getProperty(OS_ARCH_PROPERTY, "")
+        } catch (e: SecurityException) {
+            throw IllegalStateException("Cannot choose macOS JDK toolchain because os.arch cannot be read.", e)
+        }
+    }
 }
