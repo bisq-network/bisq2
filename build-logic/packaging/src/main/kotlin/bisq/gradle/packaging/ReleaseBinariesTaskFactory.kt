@@ -11,7 +11,6 @@ import org.gradle.kotlin.dsl.register
 class ReleaseBinariesTaskFactory(private val project: Project) {
     companion object {
         private const val MAINTAINER_PUBLIC_KEY_DIRECTORY: String = "maintainer_public_keys"
-        private const val DEFAULT_SIGNING_KEY_FINGERPRINT: String = "B493319106CC3D1F252E19CBF806F422E222AA02"
     }
 
     private val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
@@ -65,13 +64,12 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
         }
     }
 
-    fun registerCopySigningPublicKeyTask() {
-        val signingPublicKey = project.layout.projectDirectory
-                .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc")
-        project.tasks.register<Copy>("copySigningPublicKey") {
-            from(signingPublicKey)
+    fun registerCopyActiveSigningKeyIdMarkerTask() {
+        val activeSigningKeyIdMarker = project.layout.projectDirectory
+                .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/signingkey.asc")
+        project.tasks.register<Copy>("copyActiveSigningKeyIdMarker") {
+            from(activeSigningKeyIdMarker)
             into(releaseDir)
-            rename { "signingkey.asc" }
         }
     }
 
@@ -117,7 +115,7 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
         val expectedFingerprint = project.providers.gradleProperty("gpgFingerprint")
                 .orElse(project.providers.gradleProperty("bisqGpgFingerprint"))
                 .orElse(project.providers.environmentVariable("BISQ_GPG_FINGERPRINT"))
-                .orElse(DEFAULT_SIGNING_KEY_FINGERPRINT)
+                .orElse("")
         val gpgExecutable = project.providers.gradleProperty("gpgExecutable")
                 .orElse(project.providers.environmentVariable("GPG_EXECUTABLE"))
                 .orElse(project.providers.provider { resolveGpgExecutable() })
@@ -129,8 +127,16 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
             this.releaseDirPath.set(releaseDirPath)
             this.gpgUser.set(gpgUser)
             this.expectedFingerprint.set(expectedFingerprint)
+            this.activeSigningKeyIdPath.set(project.layout.projectDirectory
+                    .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/signingkey.asc")
+                    .asFile
+                    .absolutePath)
+            this.maintainerPublicKeysDirPath.set(project.layout.projectDirectory
+                    .dir(MAINTAINER_PUBLIC_KEY_DIRECTORY)
+                    .asFile
+                    .absolutePath)
             this.gpgExecutable.set(gpgExecutable)
-            artifactExtensions.set(listOf("dmg", "deb", "exe", "rpm", "sha256"))
+            artifactExtensions.set(listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256"))
         }
     }
 

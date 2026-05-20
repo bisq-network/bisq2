@@ -8,6 +8,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.Locale
 
 abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
@@ -20,6 +21,12 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
 
     @get:Input
     abstract val expectedFingerprint: Property<String>
+
+    @get:Input
+    abstract val activeSigningKeyIdPath: Property<String>
+
+    @get:Input
+    abstract val maintainerPublicKeysDirPath: Property<String>
 
     @get:Input
     abstract val gpgExecutable: Property<String>
@@ -35,9 +42,8 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
     fun run() {
         val releaseDir = getReleaseDir()
         val gpgUser = getRequiredValue(gpgUser, "Missing required -PgpgUser=<key-id-email-or-fingerprint>. You can also use -PbisqGpgUser=<key-id-email-or-fingerprint> or BISQ_GPG_USER.")
-        val expectedFingerprint = normalizeFingerprint(
-                getRequiredValue(expectedFingerprint, "Missing expected GPG fingerprint. Use -PgpgFingerprint=<fingerprint>, -PbisqGpgFingerprint=<fingerprint>, or BISQ_GPG_FINGERPRINT.")
-        )
+        val gpgExecutable = gpgExecutable.get()
+        val expectedFingerprint = resolveExpectedFingerprint(gpgExecutable)
 
         val releaseDirFiles = releaseDir.listFiles()
                 ?: throw GradleException("Cannot list release directory: $releaseDir. Check that it is readable.")
@@ -53,15 +59,9 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         logger.lifecycle("Processing ${artifacts.size} release artifact(s) in ${releaseDir.absolutePath}")
         artifacts.forEach { artifact ->
             val signatureFile = File(artifact.parentFile, "${artifact.name}.asc")
-            if (signatureFile.exists()) {
-                verifyExistingSignatureFile(signatureFile)
-                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
-                logger.lifecycle("Verified existing signature ${signatureFile.name}")
-            } else {
-                signArtifact(gpgExecutable.get(), gpgUser, artifact, signatureFile)
-                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
-                logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
-            }
+            signArtifact(gpgExecutable, gpgUser, artifact, signatureFile)
+            verifySignature(gpgExecutable, expectedFingerprint, artifact, signatureFile)
+            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
         }
     }
 
@@ -93,12 +93,86 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         }
     }
 
+    private fun resolveExpectedFingerprint(gpgExecutable: String): String {
+        return expectedFingerprint.orNull
+                ?.trim()
+                ?.takeIf(String::isNotEmpty)
+                ?.let(::normalizeFingerprint)
+                ?: deriveExpectedFingerprint(gpgExecutable)
+    }
+
+    private fun deriveExpectedFingerprint(gpgExecutable: String): String {
+        val activeSigningKeyIdFile = project.file(getRequiredValue(
+                activeSigningKeyIdPath,
+                "Missing active signing key id marker path."
+        ))
+        if (!activeSigningKeyIdFile.isFile) {
+            throw GradleException(
+                    "Active signing key id marker does not exist: $activeSigningKeyIdFile. " +
+                            "Set -PgpgFingerprint=<full-fingerprint> to override."
+            )
+        }
+
+        val activeSigningKeyId = activeSigningKeyIdFile.readText(StandardCharsets.UTF_8)
+                .trim()
+                .uppercase(Locale.ROOT)
+        if (!activeSigningKeyId.matches(Regex("([0-9A-F]{8}|[0-9A-F]{16}|[0-9A-F]{40})"))) {
+            throw GradleException(
+                    "Active signing key id marker $activeSigningKeyIdFile must contain an 8-, 16-, " +
+                            "or 40-character hex key id/fingerprint. Got: ${activeSigningKeyId.ifEmpty { "<blank>" }}"
+            )
+        }
+
+        val maintainerPublicKeysDir = project.file(getRequiredValue(
+                maintainerPublicKeysDirPath,
+                "Missing maintainer public keys directory path."
+        ))
+        val publicKeyFile = File(maintainerPublicKeysDir, "$activeSigningKeyId.asc")
+        if (!publicKeyFile.isFile) {
+            throw GradleException(
+                    "Active signing key id marker $activeSigningKeyIdFile points to $activeSigningKeyId, " +
+                            "but the corresponding public key file does not exist: $publicKeyFile. " +
+                            "Set -PgpgFingerprint=<full-fingerprint> to override."
+            )
+        }
+
+        val showKeysResult = execResult(listOf(
+                gpgExecutable,
+                "--show-keys",
+                "--with-colons",
+                "--fingerprint",
+                publicKeyFile.absolutePath
+        ))
+        if (showKeysResult.exitValue != 0) {
+            throw GradleException(
+                    "Failed to read public key metadata from $publicKeyFile: ${showKeysResult.failureDetails()}. " +
+                            "Set -PgpgFingerprint=<full-fingerprint> to override."
+            )
+        }
+
+        val primaryFingerprint = parsePrimaryFingerprint(showKeysResult.stdout)
+                ?: throw GradleException("Could not parse primary fingerprint from $publicKeyFile")
+        if (!primaryFingerprint.endsWith(activeSigningKeyId)) {
+            throw GradleException(
+                    "Active signing key id marker $activeSigningKeyIdFile points to $activeSigningKeyId, " +
+                            "but $publicKeyFile has primary fingerprint $primaryFingerprint"
+            )
+        }
+
+        logger.lifecycle(
+                "Using expected GPG fingerprint $primaryFingerprint from ${publicKeyFile.name} " +
+                        "selected by ${activeSigningKeyIdFile.name}"
+        )
+        return primaryFingerprint
+    }
+
     private fun signArtifact(gpgExecutable: String,
                              gpgUser: String,
                              artifact: File,
                              signatureFile: File) {
         val signResult = execResult(listOf(
                 gpgExecutable,
+                "--yes",
                 "--digest-algo", "SHA256",
                 "--local-user", gpgUser,
                 "--output", signatureFile.absolutePath,
@@ -111,15 +185,6 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         }
         if (!signatureFile.isFile || signatureFile.length() == 0L) {
             throw GradleException("GPG did not create a non-empty signature file for ${artifact.name}: $signatureFile")
-        }
-    }
-
-    private fun verifyExistingSignatureFile(signatureFile: File) {
-        if (!signatureFile.isFile) {
-            throw GradleException("Existing signature path is not a file: $signatureFile")
-        }
-        if (signatureFile.length() == 0L) {
-            throw GradleException("Existing signature file is empty: $signatureFile")
         }
     }
 
@@ -158,6 +223,23 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
                 }
                 .mapNotNull(::normalizeFingerprintOrNull)
                 .toSet()
+    }
+
+    private fun parsePrimaryFingerprint(showKeysOutput: String): String? {
+        var waitingForPrimaryFingerprint = false
+        for (line in showKeysOutput.lineSequence()) {
+            val tokens = line.split(":")
+            when (tokens.getOrNull(0)) {
+                "pub" -> waitingForPrimaryFingerprint = true
+                "sub" -> waitingForPrimaryFingerprint = false
+                "fpr" -> {
+                    if (waitingForPrimaryFingerprint) {
+                        return tokens.getOrNull(9)?.let(::normalizeFingerprintOrNull)
+                    }
+                }
+            }
+        }
+        return null
     }
 
     private fun normalizeFingerprint(fingerprint: String): String {
