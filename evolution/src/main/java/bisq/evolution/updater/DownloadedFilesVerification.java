@@ -28,7 +28,6 @@ import java.util.List;
 import static bisq.evolution.updater.UpdaterUtils.ASC_EXTENSION;
 import static bisq.evolution.updater.UpdaterUtils.FROM_BISQ_WEBPAGE_PREFIX;
 import static bisq.evolution.updater.UpdaterUtils.FROM_RESOURCES_PREFIX;
-import static bisq.evolution.updater.UpdaterUtils.getSigningKey;
 import static bisq.evolution.updater.UpdaterUtils.getSigningKeyId;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -40,42 +39,48 @@ public class DownloadedFilesVerification {
                               boolean ignoreSigningKeyInResourcesCheck) throws IOException {
         String signingKeyId = getSigningKeyId(dirPath);
         checkArgument(keyIds.contains(signingKeyId), "signingKeyId not matching any of the provided keys");
-        String signingKey = getSigningKey(dirPath, signingKeyId);
         Path sigFilePath = dirPath.resolve(dataFileName + ASC_EXTENSION); // E.g. Bisq-2.1.3.dmg.asc
         Path dataFilePath = dirPath.resolve(dataFileName); // E.g. Bisq2.dmg
 
-        // We require that the signing key is provided on the Bisq webpage
-        checkSignatureWithKeyFromWebpage(dirPath, signingKeyId, signingKey, sigFilePath, dataFilePath);
+        // Do not compare public key files byte-for-byte. Renewed keys can differ in metadata while keeping
+        // the same signing key material. Require each key source to independently verify the artifact instead.
+        checkSignatureWithKeyFromWebpage(dirPath, signingKeyId, sigFilePath, dataFilePath);
 
         if (!ignoreSigningKeyInResourcesCheck) {
-            checkSignatureWithKeyInResources(dirPath, signingKeyId, signingKey, sigFilePath, dataFilePath);
+            checkSignatureWithKeyInResources(dirPath, signingKeyId, sigFilePath, dataFilePath);
         }
 
         String signingKeyFileName = signingKeyId + ASC_EXTENSION;
         Path signingKeyFilePath = dirPath.resolve(signingKeyId + ASC_EXTENSION); // E.g. E222AA02.asc
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFilePath, sigFilePath, dataFilePath), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
+        checkSignature(signingKeyFileName, signingKeyFilePath, sigFilePath, dataFilePath);
         log.info("signature verification succeeded");
     }
 
     private static void checkSignatureWithKeyFromWebpage(Path dirPath,
                                                          String signingKeyId,
-                                                         String signingKey,
                                                          Path sigFilePath,
                                                          Path dataFilePath) {
 
         String signingKeyFileName = FROM_BISQ_WEBPAGE_PREFIX + signingKeyId + ASC_EXTENSION;
         Path signingKeyFilePath = dirPath.resolve(signingKeyFileName); // E.g. from_bisq_webpage_E222AA02.asc
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFilePath, sigFilePath, dataFilePath), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
+        checkSignature(signingKeyFileName, signingKeyFilePath, sigFilePath, dataFilePath);
     }
 
     private static void checkSignatureWithKeyInResources(Path dirPath,
                                                          String signingKeyId,
-                                                         String signingKey,
                                                          Path sigFilePath,
                                                          Path dataFilePath) throws IOException {
         String signingKeyFileName = FROM_RESOURCES_PREFIX + signingKeyId + ASC_EXTENSION;
         Path signingKeyFilePath = dirPath.resolve(signingKeyFileName); // E.g. from_resources_E222AA02.asc
         FileMutatorUtils.resourceToFile("keys/" + signingKeyId + ASC_EXTENSION, signingKeyFilePath); // We copy key from resources to download directory
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFilePath, sigFilePath, dataFilePath), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
+        checkSignature(signingKeyFileName, signingKeyFilePath, sigFilePath, dataFilePath);
+    }
+
+    private static void checkSignature(String signingKeyFileName,
+                                       Path signingKeyFilePath,
+                                       Path sigFilePath,
+                                       Path dataFilePath) {
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFilePath, sigFilePath, dataFilePath),
+                "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
     }
 }

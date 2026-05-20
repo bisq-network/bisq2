@@ -129,11 +129,6 @@ fun sha256(file: File): String {
     return digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
 }
 
-fun sha256Bytes(bytes: ByteArray): String {
-    val digest = MessageDigest.getInstance("SHA-256")
-    return digest.digest(bytes).joinToString("") { "%02x".format(it.toInt() and 0xff) }
-}
-
 fun htmlEscape(value: Any?): String {
     return value?.toString()
         ?.replace("&", "&amp;")
@@ -947,13 +942,18 @@ tasks.register("verifyReleaseReadiness") {
                 addResult(results, "FAIL", "signingkey.asc GitHub asset", "Missing signingkey.asc from GitHub release")
             } else {
                 try {
-                    val githubSigningKey = httpGetBytes(browserDownloadUrl)
-                    val localHash = sha256(signingKeyFile)
-                    val githubHash = sha256Bytes(githubSigningKey)
-                    if (localHash == githubHash) {
-                        addResult(results, "PASS", "signingkey.asc exact content", "GitHub release matches local SHA-256 $localHash")
+                    val githubSigningKeyId = String(httpGetBytes(browserDownloadUrl), StandardCharsets.UTF_8)
+                        .trim()
+                        .uppercase(Locale.ROOT)
+                    if (githubSigningKeyId == activeSigningKeyId && bisq2ReleaseKeyIds.contains(githubSigningKeyId)) {
+                        addResult(results, "PASS", "signingkey.asc marker", "GitHub release points to active key $githubSigningKeyId")
                     } else {
-                        addResult(results, "FAIL", "signingkey.asc exact content", "local=$localHash, GitHub release=$githubHash")
+                        addResult(
+                            results,
+                            "FAIL",
+                            "signingkey.asc marker",
+                            "local=${activeSigningKeyId.ifEmpty { "<invalid>" }}, GitHub release=${githubSigningKeyId.ifEmpty { "<blank>" }}"
+                        )
                     }
                 } catch (exception: Exception) {
                     addResult(results, "FAIL", "signingkey.asc GitHub asset", exception.message)
@@ -961,27 +961,88 @@ tasks.register("verifyReleaseReadiness") {
             }
         }
 
+        val gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull)
+        val publicKeySourceDir = layout.buildDirectory
+            .dir("tmp/verifyReleaseReadiness/public-keys")
+            .get()
+            .asFile
+        if (publicKeySourceDir.exists()) {
+            publicKeySourceDir.deleteRecursively()
+        }
+        publicKeySourceDir.mkdirs()
+
+        fun safeFileName(value: String): String {
+            return value.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        }
+
+        fun writePublicKeySource(keyId: String, sourceName: String, bytes: ByteArray): File {
+            val outputFile = File(publicKeySourceDir, "${keyId}_${safeFileName(sourceName)}.asc")
+            outputFile.writeBytes(bytes)
+            return outputFile
+        }
+
+        fun readPublicKeySourceFingerprint(keyId: String, sourceName: String, keyFile: File): String? {
+            val gpgResult = runCommand(
+                listOf(
+                    gpgExecutable,
+                    "--show-keys",
+                    "--with-colons",
+                    "--fingerprint",
+                    keyFile.absolutePath,
+                )
+            )
+            if (gpgResult.exitValue != 0) {
+                addResult(
+                    results,
+                    "FAIL",
+                    "Public key $keyId $sourceName metadata",
+                    "$gpgExecutable --show-keys failed. Install GnuPG or set -PgpgExecutable=/path/to/gpg. ${gpgResult.stderr.trim()}"
+                )
+                return null
+            }
+
+            val keyInfo = parseGpgKeyInfo(gpgResult.stdout)
+            if (keyInfo == null || keyInfo.fingerprint.isEmpty()) {
+                addResult(results, "FAIL", "Public key $keyId $sourceName metadata", "Could not parse fingerprint from gpg --show-keys output")
+                return null
+            }
+            val normalizedFingerprint = normalizeGpgFingerprintOrNull(keyInfo.fingerprint)
+            if (normalizedFingerprint == null) {
+                addResult(results, "FAIL", "Public key $keyId $sourceName metadata", "Could not parse full fingerprint ${keyInfo.fingerprint}")
+                return null
+            }
+            if (!normalizedFingerprint.endsWith(keyId.uppercase(Locale.ROOT))) {
+                addResult(results, "FAIL", "Public key $keyId $sourceName identity", "Fingerprint is $normalizedFingerprint")
+                return null
+            }
+            return normalizedFingerprint
+        }
+
         val resourceKeyFiles = mutableMapOf<String, File>()
+        val publicKeySourceFilesByKeyId = mutableMapOf<String, MutableMap<String, File>>()
         val expectedSignerFingerprintsByKeyId = mutableMapOf<String, String>()
         bisq2ReleaseKeyIds.forEach { keyId ->
             val resourceFile = file("evolution/src/main/resources/keys/$keyId.asc")
             val packageFile = file("apps/desktop/desktop-app-launcher/maintainer_public_keys/$keyId.asc")
             resourceKeyFiles[keyId] = resourceFile
 
-            val sourceBytesByName = mutableMapOf<String, ByteArray>()
             if (resourceFile.isFile) {
-                sourceBytesByName["app resources"] = resourceFile.readBytes()
+                publicKeySourceFilesByKeyId.getOrPut(keyId) { mutableMapOf() }["app resources"] = resourceFile
             } else {
                 addResult(results, "FAIL", "Public key $keyId app resource", "Missing ${rootProject.relativePath(resourceFile)}")
             }
             if (packageFile.isFile) {
-                sourceBytesByName["release package"] = packageFile.readBytes()
+                publicKeySourceFilesByKeyId.getOrPut(keyId) { mutableMapOf() }["release package"] = packageFile
             } else {
                 addResult(results, "FAIL", "Public key $keyId package resource", "Missing ${rootProject.relativePath(packageFile)}")
             }
 
             try {
-                sourceBytesByName["bisq.network/pubkey"] = httpGetBytes("https://bisq.network/pubkey/$keyId.asc")
+                publicKeySourceFilesByKeyId.getOrPut(keyId) { mutableMapOf() }["bisq.network/pubkey"] = writePublicKeySource(
+                    keyId,
+                    "bisq.network/pubkey",
+                    httpGetBytes("https://bisq.network/pubkey/$keyId.asc")
+                )
             } catch (exception: Exception) {
                 addResult(results, "FAIL", "Public key $keyId webpage", exception.message)
             }
@@ -990,7 +1051,11 @@ tasks.register("verifyReleaseReadiness") {
             val browserDownloadUrl = githubAsset?.get("browser_download_url")?.toString().orEmpty()
             if (browserDownloadUrl.isNotEmpty()) {
                 try {
-                    sourceBytesByName["GitHub release"] = httpGetBytes(browserDownloadUrl)
+                    publicKeySourceFilesByKeyId.getOrPut(keyId) { mutableMapOf() }["GitHub release"] = writePublicKeySource(
+                        keyId,
+                        "GitHub release",
+                        httpGetBytes(browserDownloadUrl)
+                    )
                 } catch (exception: Exception) {
                     addResult(results, "FAIL", "Public key $keyId GitHub asset", exception.message)
                 }
@@ -999,23 +1064,39 @@ tasks.register("verifyReleaseReadiness") {
             }
 
             val expectedKeySourceCount = if (releaseAssetsLoaded) 4 else 3
-            if (sourceBytesByName.size == expectedKeySourceCount) {
-                val hashes = sourceBytesByName.mapValues { (_, bytes) -> sha256Bytes(bytes) }
-                val uniqueHashes = hashes.values.toSet()
-                if (uniqueHashes.size == 1) {
-                    addResult(results, "PASS", "Public key $keyId exact content", "All checked sources match SHA-256 ${uniqueHashes.first()}")
+            val sourceFilesByName = publicKeySourceFilesByKeyId[keyId].orEmpty()
+            if (sourceFilesByName.size == expectedKeySourceCount) {
+                val fingerprints = sourceFilesByName.mapValues { (sourceName, keyFile) ->
+                    readPublicKeySourceFingerprint(keyId, sourceName, keyFile)
+                }
+                if (fingerprints.values.all { it != null }) {
+                    val uniqueFingerprints = fingerprints.values.filterNotNull().toSet()
+                    if (uniqueFingerprints.size == 1) {
+                        addResult(
+                            results,
+                            "PASS",
+                            "Public key $keyId identity",
+                            "All checked sources have fingerprint ${uniqueFingerprints.first()}; key metadata may differ"
+                        )
+                    } else {
+                        addResult(
+                            results,
+                            "FAIL",
+                            "Public key $keyId identity",
+                            fingerprints.entries.joinToString(", ") { (name, fingerprint) -> "$name=${fingerprint ?: "<invalid>"}" }
+                        )
+                    }
                 } else {
                     addResult(
                         results,
                         "FAIL",
-                        "Public key $keyId exact content",
-                        hashes.entries.joinToString(", ") { (name, hash) -> "$name=$hash" }
+                        "Public key $keyId identity",
+                        fingerprints.entries.joinToString(", ") { (name, fingerprint) -> "$name=${fingerprint ?: "<invalid>"}" }
                     )
                 }
             }
         }
 
-        val gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull)
         bisq2ReleaseKeyIds.forEach { keyId ->
             val keyFile = resourceKeyFiles[keyId]
             if (keyFile?.isFile != true) {
@@ -1083,9 +1164,19 @@ tasks.register("verifyReleaseReadiness") {
         }
 
         if (releaseAssetsLoaded) {
-            val expectedSignerFingerprints = expectedSignerFingerprintsByKeyId.values.sorted()
-            if (expectedSignerFingerprints.isEmpty()) {
-                addResult(results, "FAIL", "Release artifact signatures", "No expected maintainer fingerprints were available")
+            val activeSignerFingerprint = expectedSignerFingerprintsByKeyId[activeSigningKeyId]
+            val activeSigningKeySources = if (activeSigningKeyId.isEmpty()) {
+                emptyMap()
+            } else {
+                publicKeySourceFilesByKeyId[activeSigningKeyId].orEmpty()
+            }
+
+            if (activeSigningKeyId.isEmpty()) {
+                addResult(results, "FAIL", "Release artifact signatures", "No active signing key id was available")
+            } else if (activeSignerFingerprint == null) {
+                addResult(results, "FAIL", "Release artifact signatures", "No expected fingerprint was available for active signing key $activeSigningKeyId")
+            } else if (activeSigningKeySources.isEmpty()) {
+                addResult(results, "FAIL", "Release artifact signatures", "No public key sources were available for active signing key $activeSigningKeyId")
             } else {
                 val signatureVerificationDir = layout.buildDirectory
                     .dir("tmp/verifyReleaseReadiness/signatures")
@@ -1095,84 +1186,96 @@ tasks.register("verifyReleaseReadiness") {
                     signatureVerificationDir.deleteRecursively()
                 }
                 val downloadsDir = File(signatureVerificationDir, "downloads")
-                val gpgHomeDir = File(signatureVerificationDir, "gnupg")
                 downloadsDir.mkdirs()
-                gpgHomeDir.mkdirs()
-                gpgHomeDir.setReadable(false, false)
-                gpgHomeDir.setWritable(false, false)
-                gpgHomeDir.setExecutable(false, false)
-                gpgHomeDir.setReadable(true, true)
-                gpgHomeDir.setWritable(true, true)
-                gpgHomeDir.setExecutable(true, true)
 
-                val keyFilesToImport = bisq2ReleaseKeyIds.mapNotNull { keyId ->
-                    resourceKeyFiles[keyId]?.takeIf(File::isFile)
+                fun prepareGpgHomeDir(gpgHomeDir: File) {
+                    gpgHomeDir.mkdirs()
+                    gpgHomeDir.setReadable(false, false)
+                    gpgHomeDir.setWritable(false, false)
+                    gpgHomeDir.setExecutable(false, false)
+                    gpgHomeDir.setReadable(true, true)
+                    gpgHomeDir.setWritable(true, true)
+                    gpgHomeDir.setExecutable(true, true)
                 }
-                if (keyFilesToImport.isEmpty()) {
-                    addResult(results, "FAIL", "Release signature keyring", "No local maintainer public keys were available to import")
-                } else {
+
+                val downloadedArtifacts = mutableMapOf<String, Pair<File, File>>()
+                expectedBisq2SignableReleaseAssets(releaseVersion).forEach { artifactName ->
+                    val signatureName = "$artifactName.asc"
+                    val artifactUrl = releaseAssetsByName[artifactName]?.get("browser_download_url")?.toString().orEmpty()
+                    val signatureUrl = releaseAssetsByName[signatureName]?.get("browser_download_url")?.toString().orEmpty()
+                    if (artifactUrl.isEmpty() || signatureUrl.isEmpty()) {
+                        addResult(
+                            results,
+                            "FAIL",
+                            "GPG signature $signatureName",
+                            "Missing browser_download_url for ${listOfNotNull(
+                                artifactName.takeIf { artifactUrl.isEmpty() },
+                                signatureName.takeIf { signatureUrl.isEmpty() }
+                            ).joinToString(", ")}"
+                        )
+                        return@forEach
+                    }
+
+                    try {
+                        val artifactFile = File(downloadsDir, artifactName)
+                        val signatureFile = File(downloadsDir, signatureName)
+                        httpDownloadToFile(artifactUrl, artifactFile)
+                        httpDownloadToFile(signatureUrl, signatureFile)
+                        downloadedArtifacts[artifactName] = Pair(artifactFile, signatureFile)
+                    } catch (exception: Exception) {
+                        addResult(results, "FAIL", "GPG signature $signatureName", exception.message)
+                    }
+                }
+
+                activeSigningKeySources.forEach { (sourceName, keyFile) ->
+                    val gpgHomeDir = File(signatureVerificationDir, "gnupg-${safeFileName(sourceName)}")
+                    prepareGpgHomeDir(gpgHomeDir)
+
                     val importResult = runCommand(
                         listOf(
                             gpgExecutable,
                             "--homedir", gpgHomeDir.absolutePath,
                             "--batch",
                             "--import",
-                        ) + keyFilesToImport.map { it.absolutePath }
+                            keyFile.absolutePath,
+                        )
                     )
                     if (importResult.exitValue != 0) {
-                        addResult(results, "FAIL", "Release signature keyring", importResult.failureDetails())
+                        addResult(results, "FAIL", "Release signature keyring $sourceName", importResult.failureDetails())
                     } else {
-                        expectedBisq2SignableReleaseAssets(releaseVersion).forEach { artifactName ->
+                        downloadedArtifacts.forEach { (artifactName, files) ->
                             val signatureName = "$artifactName.asc"
-                            val artifactUrl = releaseAssetsByName[artifactName]?.get("browser_download_url")?.toString().orEmpty()
-                            val signatureUrl = releaseAssetsByName[signatureName]?.get("browser_download_url")?.toString().orEmpty()
-                            if (artifactUrl.isEmpty() || signatureUrl.isEmpty()) {
-                                addResult(
-                                    results,
-                                    "FAIL",
-                                    "GPG signature $signatureName",
-                                    "Missing browser_download_url for ${listOfNotNull(
-                                        artifactName.takeIf { artifactUrl.isEmpty() },
-                                        signatureName.takeIf { signatureUrl.isEmpty() }
-                                    ).joinToString(", ")}"
-                                )
-                                return@forEach
-                            }
-
                             try {
-                                val artifactFile = File(downloadsDir, artifactName)
-                                val signatureFile = File(downloadsDir, signatureName)
-                                httpDownloadToFile(artifactUrl, artifactFile)
-                                httpDownloadToFile(signatureUrl, signatureFile)
+                                val (artifactFile, signatureFile) = files
 
                                 val verifyResult = runCommand(
                                     gpgAssertSignerVerifyCommand(
                                         gpgExecutable,
-                                        expectedSignerFingerprints,
+                                        listOf(activeSignerFingerprint),
                                         signatureFile,
                                         artifactFile,
                                         listOf("--homedir", gpgHomeDir.absolutePath)
                                     )
                                 )
                                 if (verifyResult.exitValue != 0) {
-                                    addResult(results, "FAIL", "GPG signature $signatureName", verifyResult.failureDetails())
+                                    addResult(results, "FAIL", "GPG signature $signatureName with $sourceName key", verifyResult.failureDetails())
                                     return@forEach
                                 }
 
-                                val signerError = validateGpgVerifiedExpectedSigner(verifyResult, expectedSignerFingerprints)
+                                val signerError = validateGpgVerifiedExpectedSigner(verifyResult, listOf(activeSignerFingerprint))
                                 if (signerError == null) {
                                     val validSigFingerprints = parseGpgValidSigFingerprints(verifyResult.stdout)
                                     addResult(
                                         results,
                                         "PASS",
-                                        "GPG signature $signatureName",
-                                        "Valid signature from expected signer ${validSigFingerprints.intersect(expectedSignerFingerprints.toSet()).joinToString()}"
+                                        "GPG signature $signatureName with $sourceName key",
+                                        "Valid signature from active signer ${validSigFingerprints.intersect(setOf(activeSignerFingerprint)).joinToString()}"
                                     )
                                 } else {
-                                    addResult(results, "FAIL", "GPG signature $signatureName", signerError)
+                                    addResult(results, "FAIL", "GPG signature $signatureName with $sourceName key", signerError)
                                 }
                             } catch (exception: Exception) {
-                                addResult(results, "FAIL", "GPG signature $signatureName", exception.message)
+                                addResult(results, "FAIL", "GPG signature $signatureName with $sourceName key", exception.message)
                             }
                         }
                     }
