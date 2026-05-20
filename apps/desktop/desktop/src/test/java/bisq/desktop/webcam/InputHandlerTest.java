@@ -151,6 +151,16 @@ public class InputHandlerTest {
         InputHandler inputHandler = new InputHandler(model);
 
         assertThrows(IllegalArgumentException.class, () -> inputHandler.onSocket(timingOutSocket()));
+        assertNull(model.getLocalException().get());
+    }
+
+    @Test
+    void rejectsSocketReadFailureWithoutSettingLocalException() {
+        WebcamAppModel model = createModel();
+        InputHandler inputHandler = new InputHandler(model);
+
+        assertThrows(IllegalArgumentException.class, () -> inputHandler.onSocket(failingSocket()));
+        assertNull(model.getLocalException().get());
     }
 
     private WebcamAppModel createModel() {
@@ -192,6 +202,20 @@ public class InputHandlerTest {
                     @Override
                     public int read() throws IOException {
                         throw new SocketTimeoutException("timeout");
+                    }
+                };
+            }
+        };
+    }
+
+    private static Socket failingSocket() {
+        return new Socket() {
+            @Override
+            public InputStream getInputStream() {
+                return new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        throw new IOException("connection reset");
                     }
                 };
             }
