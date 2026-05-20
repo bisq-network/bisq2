@@ -35,9 +35,10 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
     fun run() {
         val releaseDir = getReleaseDir()
         val gpgUser = getRequiredValue(gpgUser, "Missing required -PgpgUser=<key-id-email-or-fingerprint>. You can also use -PbisqGpgUser=<key-id-email-or-fingerprint> or BISQ_GPG_USER.")
-        val expectedFingerprint = normalizeFingerprint(
-                getRequiredValue(expectedFingerprint, "Missing expected GPG fingerprint. Use -PgpgFingerprint=<fingerprint>, -PbisqGpgFingerprint=<fingerprint>, or BISQ_GPG_FINGERPRINT.")
-        )
+        val expectedFingerprint = expectedFingerprint.orNull
+                ?.trim()
+                ?.takeIf(String::isNotEmpty)
+                ?.let(::normalizeFingerprint)
 
         val releaseDirFiles = releaseDir.listFiles()
                 ?: throw GradleException("Cannot list release directory: $releaseDir. Check that it is readable.")
@@ -53,15 +54,9 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         logger.lifecycle("Processing ${artifacts.size} release artifact(s) in ${releaseDir.absolutePath}")
         artifacts.forEach { artifact ->
             val signatureFile = File(artifact.parentFile, "${artifact.name}.asc")
-            if (signatureFile.exists()) {
-                verifyExistingSignatureFile(signatureFile)
-                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
-                logger.lifecycle("Verified existing signature ${signatureFile.name}")
-            } else {
-                signArtifact(gpgExecutable.get(), gpgUser, artifact, signatureFile)
-                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
-                logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
-            }
+            signArtifact(gpgExecutable.get(), gpgUser, artifact, signatureFile)
+            verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
+            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
         }
     }
 
@@ -99,6 +94,7 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
                              signatureFile: File) {
         val signResult = execResult(listOf(
                 gpgExecutable,
+                "--yes",
                 "--digest-algo", "SHA256",
                 "--local-user", gpgUser,
                 "--output", signatureFile.absolutePath,
@@ -114,17 +110,8 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         }
     }
 
-    private fun verifyExistingSignatureFile(signatureFile: File) {
-        if (!signatureFile.isFile) {
-            throw GradleException("Existing signature path is not a file: $signatureFile")
-        }
-        if (signatureFile.length() == 0L) {
-            throw GradleException("Existing signature file is empty: $signatureFile")
-        }
-    }
-
     private fun verifySignature(gpgExecutable: String,
-                                expectedFingerprint: String,
+                                expectedFingerprint: String?,
                                 artifact: File,
                                 signatureFile: File) {
         val verifyResult = execResult(listOf(
@@ -136,6 +123,10 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         ))
         if (verifyResult.exitValue != 0) {
             throw GradleException("Failed to verify ${signatureFile.name}: ${verifyResult.failureDetails()}")
+        }
+
+        if (expectedFingerprint == null) {
+            return
         }
 
         val validSigFingerprints = parseValidSigFingerprints(verifyResult.stdout)
