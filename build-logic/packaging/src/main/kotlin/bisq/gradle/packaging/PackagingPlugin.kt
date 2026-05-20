@@ -73,7 +73,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory(project, extension))
+            jdkDirectory.set(getJPackageJdkDirectory(project))
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -95,7 +95,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                getJPackageJdkDirectory(project, extension)
+                getJPackageJdkDirectory(project)
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
@@ -116,32 +116,19 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         }
     }
 
-    private fun getJPackageJdkDirectory(project: Project, extension: PackagingPluginExtension): Provider<Directory> {
+    private fun getJPackageJdkDirectory(project: Project): Provider<Directory> {
         val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(getJavaLanguageVersion(project, extension))
+            languageVersion.set(getJavaLanguageVersion(project))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }
     }
 
-    private fun getJavaLanguageVersion(project: Project, extension: PackagingPluginExtension): Provider<JavaLanguageVersion> {
-        val pinnedJavaVersion = project.providers.gradleProperty("releaseBuild.javaVersion")
+    private fun getJavaLanguageVersion(project: Project): Provider<JavaLanguageVersion> {
+        return project.providers.gradleProperty("releaseBuild.javaVersion")
             .map { it.substringBefore('.').toInt() }
             .orElse(21)
-        val javaVersion = extension.name.flatMap { appName ->
-            if (appName == "Bisq") {
-                // Bisq1
-                if (getOS() == OS.MAC_OS) {
-                    project.provider { 15 }
-                } else {
-                    project.provider { 17 }
-                }
-            } else {
-                // Bisq2
-                pinnedJavaVersion
-            }
-        }
-        return javaVersion.map { JavaLanguageVersion.of(it) }
+            .map { JavaLanguageVersion.of(it) }
     }
 }
