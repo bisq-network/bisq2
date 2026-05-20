@@ -106,6 +106,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
         releaseBinariesTaskFactory.registerCopySigningPublicKeyTask()
         releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask(extension.version)
+        releaseBinariesTaskFactory.registerSignReleaseArtifactsTask()
     }
 
     private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
