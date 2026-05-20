@@ -11,6 +11,7 @@ import org.gradle.kotlin.dsl.register
 class ReleaseBinariesTaskFactory(private val project: Project) {
     companion object {
         private const val MAINTAINER_PUBLIC_KEY_DIRECTORY: String = "maintainer_public_keys"
+        private const val DEFAULT_SIGNING_KEY_FINGERPRINT: String = "B493319106CC3D1F252E19CBF806F422E222AA02"
     }
 
     private val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
@@ -103,5 +104,41 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
             hashFiles.setFrom(files)
             outputFile.set(mergedShaFile)
         }
+    }
+
+    fun registerSignReleaseArtifactsTask() {
+        val releaseDirPath = project.providers.gradleProperty("bisq.release.dir")
+                .orElse(project.providers.gradleProperty("releaseDir"))
+                .orElse("")
+        val gpgUser = project.providers.gradleProperty("gpgUser")
+                .orElse(project.providers.gradleProperty("bisqGpgUser"))
+                .orElse(project.providers.environmentVariable("BISQ_GPG_USER"))
+                .orElse("")
+        val expectedFingerprint = project.providers.gradleProperty("gpgFingerprint")
+                .orElse(project.providers.gradleProperty("bisqGpgFingerprint"))
+                .orElse(project.providers.environmentVariable("BISQ_GPG_FINGERPRINT"))
+                .orElse(DEFAULT_SIGNING_KEY_FINGERPRINT)
+        val gpgExecutable = project.providers.gradleProperty("gpgExecutable")
+                .orElse(project.providers.environmentVariable("GPG_EXECUTABLE"))
+                .orElse(project.providers.provider { resolveGpgExecutable() })
+
+        project.tasks.register<GpgSignReleaseArtifactsTask>("signReleaseArtifacts") {
+            group = "distribution"
+            description = "Signs release artifacts in -Pbisq.release.dir with detached armored GPG signatures."
+
+            this.releaseDirPath.set(releaseDirPath)
+            this.gpgUser.set(gpgUser)
+            this.expectedFingerprint.set(expectedFingerprint)
+            this.gpgExecutable.set(gpgExecutable)
+            artifactExtensions.set(listOf("dmg", "deb", "exe", "rpm", "sha256"))
+        }
+    }
+
+    private fun resolveGpgExecutable(): String {
+        return listOf(
+                "/opt/homebrew/bin/gpg",
+                "/usr/local/bin/gpg",
+                "/usr/bin/gpg"
+        ).firstOrNull { java.io.File(it).canExecute() } ?: "gpg"
     }
 }
