@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 689 configurations.
+Generated from `gradle/verification-metadata.xml` after resolving 703 configurations.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -19,14 +19,14 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 226 |
+| Resolved external modules | 224 |
 | Modules with PGP-signed artifacts only | 220 |
-| Modules using checksum-only artifacts only | 6 |
+| Modules using checksum-only artifacts only | 4 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 322 |
+| Verified artifacts | 317 |
 | PGP-signed artifacts | 311 |
-| Checksum-only artifacts | 11 |
+| Checksum-only artifacts | 6 |
 | Signer keys found in exported keyring | 82 / 82 |
 | Signer keys with name or email | 51 / 82 |
 | Signer keys with creation date | 82 / 82 |
@@ -39,8 +39,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
-| `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | `jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.<br><br>`jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256. |
-| `com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466` | direct | `jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466-sources.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned source artifact is pinned by SHA-256.<br><br>`jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.<br><br>`jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256. |
 | `com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1` | direct | `com.gradleup.shadow.gradle.plugin-9.4.1.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | `org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | `org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
@@ -63,8 +61,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:2.21.3` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.fasterxml.jackson:jackson-bom:2.21.3` | transitive | PGP signed | 0 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
 | `com.fasterxml.woodstox:woodstox-core:7.1.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13 |
-| `com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `com.github.jai-imageio:jai-imageio-core:1.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `0A60B3F1FCB211175300EC206E50BB68CC1699A6`<br>Stian Soiland-Reyes<br>`s.soilandreyes@uva.nl`<br>created 2002-01-20 |
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.api.grpc:proto-google-common-protos:2.64.1` | transitive | PGP signed | 1 signed / 0 checksum | `47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>created 2013-04-30<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |

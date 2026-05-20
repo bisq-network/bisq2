@@ -2,11 +2,6 @@
 # Format: <group:name:version>	<artifact-file-name>	<review-rationale>
 # Keep entries sorted by module and artifact. Remove stale entries when signatures become verifiable.
 
-com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.
-com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256.
-com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466-sources.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned source artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.
-com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256.
 com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1	com.gradleup.shadow.gradle.plugin-9.4.1.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0	org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0-sources.jar	Publisher does not provide a detached PGP signature for this Gradle plugin source artifact; source artifact is pinned by SHA-256.

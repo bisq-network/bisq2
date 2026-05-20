@@ -75,7 +75,7 @@ Requirements[^7] for building on:
 The Bisq 2 application currently does not use and expose java modules.
 
 To achieve that, there are two main challenges:
-- **Integrating non-modular dependencies**, like `i2p`, `jtorctl` or `jsocks`. One way to do this is to add java module
+- **Integrating non-modular dependencies**, like `i2p`. One way to do this is to add java module
   support in the upstream dependencies themselves, then use the modularized version. Another way is to use gradle
   plugins[^8] that can programmatically generate and customize java modules from standard non-modular libs.
 - **Integrating non-conventional already-modular dependencies**. Partly due to their own dependencies,
