@@ -127,6 +127,14 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
             this.releaseDirPath.set(releaseDirPath)
             this.gpgUser.set(gpgUser)
             this.expectedFingerprint.set(expectedFingerprint)
+            this.activeSigningKeyIdPath.set(project.layout.projectDirectory
+                    .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/signingkey.asc")
+                    .asFile
+                    .absolutePath)
+            this.maintainerPublicKeysDirPath.set(project.layout.projectDirectory
+                    .dir(MAINTAINER_PUBLIC_KEY_DIRECTORY)
+                    .asFile
+                    .absolutePath)
             this.gpgExecutable.set(gpgExecutable)
             artifactExtensions.set(listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256"))
         }
