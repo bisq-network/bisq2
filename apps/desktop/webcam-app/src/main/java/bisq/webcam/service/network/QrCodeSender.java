@@ -36,7 +36,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class QrCodeSender {
@@ -73,12 +72,21 @@ public class QrCodeSender {
     }
 
     public CompletableFuture<Void> send(WebcamControlSignals controlSignal, String payload) {
-        return doSend(controlSignal, Optional.of(checkNotNull(payload, "payload must not be null")));
+        if (payload == null) {
+            return CompletableFuture.failedFuture(new NullPointerException("payload must not be null"));
+        }
+        return doSend(controlSignal, Optional.of(payload));
     }
 
     private CompletableFuture<Void> doSend(WebcamControlSignals controlSignal, Optional<String> payload) {
-        WebcamIpcWireMessage wireMessage = WebcamIpcWireMessage.create(sessionSecret, controlSignal, payload);
         int payloadByteLength = payload.map(value -> value.getBytes(StandardCharsets.UTF_8).length).orElse(0);
+        WebcamIpcWireMessage wireMessage;
+        try {
+            wireMessage = WebcamIpcWireMessage.create(sessionSecret, controlSignal, payload);
+        } catch (RuntimeException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+
         log.info("send {} message with payloadByteLength={}", controlSignal, payloadByteLength);
         return CompletableFuture.runAsync(() -> {
                     try (Socket socket = new Socket()) {

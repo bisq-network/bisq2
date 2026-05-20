@@ -64,7 +64,7 @@ public class InputHandler {
         } catch (EOFException e) {
             throw new IllegalArgumentException("Incomplete webcam IPC frame", e);
         } catch (IOException e) {
-            model.getLocalException().set(e);
+            throw new IllegalArgumentException("Could not read webcam IPC frame", e);
         }
     }
 
