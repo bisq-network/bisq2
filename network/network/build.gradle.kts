@@ -21,7 +21,7 @@ dependencies {
     implementation(libs.typesafe.config)
 
     implementation(libs.apache.httpcomponents.httpclient)
-    implementation(libs.jsocks)
+    api("tor:jsocks:$version")
     implementation(libs.bundles.i2p)
     implementation(libs.bundles.jackson)
 
