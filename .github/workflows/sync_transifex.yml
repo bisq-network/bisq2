@@ -10,16 +10,20 @@ on:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify Transifex configuration
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Verify that .tx/config is in sync with the i18n folder
         run: |
@@ -50,16 +54,17 @@ jobs:
     name: Calculate pushes and push source files
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
       has_translation_changes: ${{ steps.calculate-pushes.outputs.has_translation_changes }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check if the commit is in the main branch
         id: check_commit
@@ -232,7 +237,7 @@ jobs:
 
       - name: Push source files to Transifex
         if: steps.calculate-pushes.outputs.s_args != ''
-        uses: transifex/cli-action@v2
+        uses: transifex/cli-action@584fd205cbe598773b5a81ce711fa44842678189 # v2
         with:
           token: ${{ secrets.TX_TOKEN }}
           args: ${{ steps.calculate-pushes.outputs.s_args }}
@@ -241,7 +246,7 @@ jobs:
     name: Push translations (${{ matrix.name }})
     if: needs.calculate_and_push_sources.outputs.t_matrix != '{"include":[]}'
     needs: calculate_and_push_sources
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # PHASE 1: Dynamic batching with controlled parallelism
     # Batches are generated dynamically based on changed locales only
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
@@ -251,9 +256,10 @@ jobs:
       fail-fast: false  # Don't cancel all jobs if one fails
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       # Install Transifex CLI for direct tx commands in retry/verification steps
       - name: Install Transifex CLI
@@ -290,7 +296,7 @@ jobs:
 
       # PHASE 1: Retry logic with exponential backoff
       - name: Push ${{ matrix.name }} translations with retry
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         id: push_with_retry
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
@@ -439,7 +445,7 @@ jobs:
     name: Upload Summary Report
     needs: [calculate_and_push_sources, push_translations]
     if: always() && needs.calculate_and_push_sources.outputs.has_translation_changes == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate summary
         run: |
