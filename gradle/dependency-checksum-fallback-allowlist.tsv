@@ -2,23 +2,14 @@
 # Format: <group:name:version>	<artifact-file-name>	<review-rationale>
 # Keep entries sorted by module and artifact. Remove stale entries when signatures become verifiable.
 
-com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.jar	Bisq-maintained JitPack dependency pinned to a resolved immutable revision; unsigned artifact is pinned by SHA-256.
-com.github.bisq-network:jsocks:43b004b	jsocks-43b004b.pom	Bisq-maintained JitPack dependency pinned to a resolved immutable revision; unsigned POM is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.
 com.github.bisq-network:jsocks:5c126a64a3864fb9f6a88818874ce71d73d63504	jsocks-5c126a64a3864fb9f6a88818874ce71d73d63504.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256.
 com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466-sources.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned source artifact is pinned by SHA-256.
 com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.jar	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned artifact is pinned by SHA-256.
 com.github.bisq-network:jtorctl:a3ced974b02f336720f3c86814ddb3fe00be3466	jtorctl-a3ced974b02f336720f3c86814ddb3fe00be3466.pom	Bisq-maintained JitPack dependency pinned to an immutable commit; unsigned POM is pinned by SHA-256.
-com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:8.3.0	com.gradleup.shadow.gradle.plugin-8.3.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1	com.gradleup.shadow.gradle.plugin-9.4.1.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0	org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
-org.javamodularity:moduleplugin:1.8.10	moduleplugin-1.8.10.jar	Publisher does not provide a detached PGP signature for this plugin artifact; artifact is pinned by SHA-256.
-org.javamodularity:moduleplugin:1.8.10	moduleplugin-1.8.10.pom	Publisher does not provide a detached PGP signature for this plugin POM; POM is pinned by SHA-256.
-org.openjfx:javafx-plugin:0.0.13	javafx-plugin-0.0.13.jar	Publisher does not provide a detached PGP signature for this Gradle plugin artifact; artifact is pinned by SHA-256.
-org.openjfx:javafx-plugin:0.0.13	javafx-plugin-0.0.13.pom	Publisher does not provide a detached PGP signature for this Gradle plugin POM; POM is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0-sources.jar	Publisher does not provide a detached PGP signature for this Gradle plugin source artifact; source artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.jar	Publisher does not provide a detached PGP signature for this Gradle plugin artifact; artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.module	Publisher does not provide a detached PGP signature for this Gradle module metadata; module metadata is pinned by SHA-256.
-org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.0.13	org.openjfx.javafxplugin.gradle.plugin-0.0.13.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0	org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
-org.sonatype.oss:oss-parent:7	oss-parent-7.pom	Legacy parent POM has no detached signature; POM is pinned by SHA-256.
