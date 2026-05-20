@@ -164,6 +164,7 @@ tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
 
 zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }
+zxing-core = { module = 'com.google.zxing:core', version.ref = 'zxing-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
