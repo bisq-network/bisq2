@@ -586,6 +586,19 @@ tasks.register("verifyReleaseReadiness") {
                 .replace("\n", "<br>")
         }
 
+        fun ensureDirectory(directory: File, label: String) {
+            if (!directory.mkdirs() && !directory.isDirectory) {
+                throw GradleException("Failed to create $label: $directory")
+            }
+        }
+
+        fun resetTemporaryDirectory(directory: File, label: String) {
+            if (directory.exists() && !directory.deleteRecursively()) {
+                throw GradleException("Failed to delete $label before reuse: $directory")
+            }
+            ensureDirectory(directory, label)
+        }
+
         fun httpRequest(requestUrl: String,
                         requestMethod: String,
                         headers: Map<String, String>,
@@ -966,10 +979,7 @@ tasks.register("verifyReleaseReadiness") {
             .dir("tmp/verifyReleaseReadiness/public-keys")
             .get()
             .asFile
-        if (publicKeySourceDir.exists()) {
-            publicKeySourceDir.deleteRecursively()
-        }
-        publicKeySourceDir.mkdirs()
+        resetTemporaryDirectory(publicKeySourceDir, "release readiness public key source directory")
 
         fun safeFileName(value: String): String {
             return value.replace(Regex("[^A-Za-z0-9._-]"), "_")
@@ -1182,14 +1192,12 @@ tasks.register("verifyReleaseReadiness") {
                     .dir("tmp/verifyReleaseReadiness/signatures")
                     .get()
                     .asFile
-                if (signatureVerificationDir.exists()) {
-                    signatureVerificationDir.deleteRecursively()
-                }
+                resetTemporaryDirectory(signatureVerificationDir, "release signature verification directory")
                 val downloadsDir = File(signatureVerificationDir, "downloads")
-                downloadsDir.mkdirs()
+                ensureDirectory(downloadsDir, "release signature download directory")
 
                 fun prepareGpgHomeDir(gpgHomeDir: File) {
-                    gpgHomeDir.mkdirs()
+                    resetTemporaryDirectory(gpgHomeDir, "release signature GPG home directory")
                     gpgHomeDir.setReadable(false, false)
                     gpgHomeDir.setWritable(false, false)
                     gpgHomeDir.setExecutable(false, false)
