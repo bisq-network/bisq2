@@ -5,6 +5,20 @@ pluginManagement {
     includeBuild("../build-logic")
 }
 
+plugins {
+    id("bisq.gradle.toolchain_resolver.ToolchainResolverPlugin")
+}
+
+toolchainManagement {
+    jvm {
+        javaRepositories {
+            repository("bisq_zulu") {
+                resolverClass.set(bisq.gradle.toolchain_resolver.BisqToolchainResolver::class.java)
+            }
+        }
+    }
+}
+
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {

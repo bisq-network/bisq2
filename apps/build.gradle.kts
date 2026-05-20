@@ -2,6 +2,8 @@ plugins {
     base
 }
 
+apply(from = "../gradle/build-environment-verification.gradle.kts")
+
 tasks.named("clean") {
     dependsOn(subprojects.map { it.tasks.named("clean") })
 }

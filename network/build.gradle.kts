@@ -12,6 +12,7 @@ plugins {
     id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
+apply(from = "../gradle/build-environment-verification.gradle.kts")
 apply(from = "../gradle/dependency-verification.gradle.kts")
 
 tasks.named("clean") {
