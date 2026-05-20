@@ -3,12 +3,6 @@ plugins {
     id("bisq.protobuf")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 dependencies {
     implementation("bisq:persistence")
     implementation("bisq:java-se")
