@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.contacts_list;
 
-import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
@@ -37,6 +37,7 @@ import bisq.user.reputation.ReputationService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -61,11 +62,33 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
     private final RichTableView<ListItem> richTableView;
     private final Hyperlink learnMoreLink;
+    private final Button closeIconButton;
+    private final VBox introBox;
     private Subscription userProfileIdOfScoreUpdatePin;
-    private UIScheduler uiScheduler;
 
     public ContactsListView(ContactsListModel model, ContactsListController controller) {
-        super(new VBox(), model, controller);
+        super(new VBox(20), model, controller);
+
+        root.setPadding(new Insets(20, SIDE_PADDING, 0, SIDE_PADDING));
+
+        Label intro1 = new Label(Res.get("contactsList.intro1"));
+        intro1.setWrapText(true);
+        intro1.getStyleClass().add("user-payment-account-no-data");
+
+        closeIconButton = BisqIconButton.createIconButton("close");
+        HBox topLine = new HBox(intro1, Spacer.fillHBox(), closeIconButton);
+
+        Label intro2 = new Label(Res.get("contactsList.intro2"));
+        intro2.setWrapText(true);
+        intro2.getStyleClass().add("large-thin-headline");
+
+        Label intro3 = new Label(Res.get("contactsList.intro3"));
+        intro3.setWrapText(true);
+        intro3.getStyleClass().add("user-content-text");
+
+        introBox = new VBox(10, topLine, intro2, intro3);
+        introBox.getStyleClass().add("bisq-box-2");
+        introBox.setPadding(new Insets(20, 30, 20, 30));
 
         richTableView = new RichTableView<>(model.getSortedList(),
                 Res.get("contactsList.table.headline"),
@@ -79,8 +102,7 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
         configTableView();
 
-        root.getChildren().add(richTableView);
-        root.setPadding(new Insets(SIDE_PADDING, SIDE_PADDING, 0, SIDE_PADDING));
+        root.getChildren().addAll(introBox, richTableView);
     }
 
     @Override
@@ -95,9 +117,11 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
             }
         });
 
-        learnMoreLink.setOnAction(e -> richTableView.openLearnMorePopup());
+        introBox.visibleProperty().bind(model.getIsIntroBoxVisible());
+        introBox.managedProperty().bind(model.getIsIntroBoxVisible());
 
-        maybeShowLearnMorePopup();
+        closeIconButton.setOnAction(e -> controller.onCloseIntro());
+        learnMoreLink.setOnAction(e -> richTableView.openLearnMorePopup());
     }
 
     @Override
@@ -105,12 +129,11 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
         richTableView.dispose();
         userProfileIdOfScoreUpdatePin.unsubscribe();
 
-        learnMoreLink.setOnAction(null);
+        introBox.visibleProperty().unbind();
+        introBox.managedProperty().unbind();
 
-        if (uiScheduler != null) {
-            uiScheduler.stop();
-            uiScheduler = null;
-        }
+        closeIconButton.setOnAction(null);
+        learnMoreLink.setOnAction(null);
     }
 
     private void configTableView() {
@@ -177,15 +200,6 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
                 .minWidth(150)
                 .includeForCsv(false)
                 .build());
-    }
-
-    private void maybeShowLearnMorePopup() {
-        UIThread.run(() -> {
-            if (model.isShouldShowLearnMorePopup()) {
-                uiScheduler = UIScheduler.run(richTableView::openLearnMorePopup).after(2000);
-                controller.onShowLearnMorePopup();
-            }
-        });
     }
 
     private VBox createAndGetPlaceholderContent() {
