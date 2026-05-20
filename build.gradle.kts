@@ -1,4 +1,5 @@
 import org.gradle.api.GradleException
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Delete
 
 import java.io.File
@@ -29,9 +30,20 @@ val compositeBuilds = listOf(
 apply(from = "gradle/dependency-verification.gradle.kts")
 
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
+val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
+val expectedReleaseJavaVendor = providers.gradleProperty("releaseBuild.javaVendor")
+val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
 
 fun getGradleCommand(): String {
     return if (System.getProperty("os.name").lowercase(getDefault()).contains("win")) "gradlew.bat" else "./gradlew"
+}
+
+fun requiredGradleProperty(propertyName: String, property: Provider<String>): String {
+    val value = property.orNull?.trim()
+    if (value.isNullOrEmpty()) {
+        throw GradleException("Missing $propertyName in gradle.properties")
+    }
+    return value
 }
 
 fun sha256(file: File): String {
@@ -130,6 +142,52 @@ tasks.register<Delete>("cleanAll") {
     delete(allBuildDirectories())
 }
 
+tasks.register("verifyBuildEnvironment") {
+    group = "verification"
+    description = "Verifies the local Gradle and Java runtime match the pinned build environment."
+
+    inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
+    inputs.property("expectedReleaseJavaVendor", expectedReleaseJavaVendor.orElse(""))
+    inputs.property("expectedReleaseGradleVersion", expectedReleaseGradleVersion.orElse(""))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
+        val expectedJavaVendor = requiredGradleProperty("releaseBuild.javaVendor", expectedReleaseJavaVendor)
+        val expectedGradleVersion = requiredGradleProperty("releaseBuild.gradleVersion", expectedReleaseGradleVersion)
+        val actualJavaVersion = System.getProperty("java.version")
+        val actualJavaVendor = System.getProperty("java.vendor")
+        val violations = mutableListOf<String>()
+
+        if (actualJavaVersion != expectedJavaVersion) {
+            violations += "Java version expected $expectedJavaVersion but was $actualJavaVersion"
+        }
+        if (actualJavaVendor != expectedJavaVendor) {
+            violations += "Java vendor expected $expectedJavaVendor but was $actualJavaVendor"
+        }
+        if (gradle.gradleVersion != expectedGradleVersion) {
+            violations += "Gradle version expected $expectedGradleVersion but was ${gradle.gradleVersion}"
+        }
+
+        if (violations.isNotEmpty()) {
+            throw GradleException(
+                "Build environment verification failed:\n" +
+                        violations.joinToString("\n") { "  - $it" }
+            )
+        }
+
+        logger.lifecycle(
+            "Verified build environment: Gradle ${gradle.gradleVersion}, Java $actualJavaVersion ($actualJavaVendor)."
+        )
+    }
+}
+
+tasks.register("verifyReleaseEnvironment") {
+    group = "verification"
+    description = "Verifies the local Gradle and Java runtime match the pinned release build environment."
+    dependsOn("verifyBuildEnvironment")
+}
+
 tasks.register("verifyGradleWrapperSecurity") {
     group = "verification"
     description = "Verifies Gradle wrapper checksums and pinned distribution metadata."
@@ -142,6 +200,7 @@ tasks.register("verifyGradleWrapperSecurity") {
     )
 
     inputs.file(gradleWrapperChecksums)
+    inputs.property("expectedReleaseGradleVersion", expectedReleaseGradleVersion.orElse(""))
     inputs.files(requiredPaths.map { file(it) })
     outputs.upToDateWhen { false }
 
@@ -211,6 +270,7 @@ tasks.register("verifyGradleWrapperSecurity") {
         val wrapperProperties = loadGradleWrapperProperties()
         val distributionUrl = wrapperProperties.getProperty("distributionUrl")
         val distributionSha256Sum = wrapperProperties.getProperty("distributionSha256Sum")
+        val expectedGradleVersion = expectedReleaseGradleVersion.orNull?.trim()
         val distributionUrlRegex =
             Regex("""^https://services[.]gradle[.]org/distributions/gradle-[A-Za-z0-9][A-Za-z0-9_.+-]*-(bin|all)[.]zip$""")
         val sha256Regex = Regex("""^[0-9a-f]{64}$""")
@@ -221,6 +281,15 @@ tasks.register("verifyGradleWrapperSecurity") {
         }
         if (distributionSha256Sum == null || !sha256Regex.matches(distributionSha256Sum)) {
             violations += "Gradle wrapper distributionSha256Sum must be a pinned lowercase SHA-256 value"
+        }
+        if (expectedGradleVersion.isNullOrEmpty()) {
+            violations += "Missing releaseBuild.gradleVersion in gradle.properties"
+        } else {
+            val pinnedDistributionUrlRegex =
+                Regex("""^https://services[.]gradle[.]org/distributions/gradle-${Regex.escape(expectedGradleVersion)}-(bin|all)[.]zip$""")
+            if (distributionUrl != null && !pinnedDistributionUrlRegex.matches(distributionUrl)) {
+                violations += "Gradle wrapper distributionUrl must use releaseBuild.gradleVersion $expectedGradleVersion"
+            }
         }
 
         if (violations.isNotEmpty()) {
@@ -244,9 +313,11 @@ tasks.register("verifyGithubActionsSecurity") {
     }
 
     inputs.files(workflowFiles)
+    inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
     outputs.upToDateWhen { false }
 
     doLast {
+        val expectedJavaVersion = expectedReleaseJavaVersion.orNull?.trim()
         val violations = mutableListOf<String>()
         val usesRegex = Regex("""^\s*-?\s*uses:\s*([^#\s]+)(?:\s+#\s*(.+))?\s*$""")
         val floatingRunnerRegex = Regex("""\b(ubuntu|macos|windows)-latest\b""", RegexOption.IGNORE_CASE)
@@ -257,6 +328,10 @@ tasks.register("verifyGithubActionsSecurity") {
         val checkLatestFalseRegex = Regex("""^\s*check-latest:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val stepStartRegex = Regex("""^(\s*)-\s+[A-Za-z_][A-Za-z0-9_-]*\s*:.*$""")
+
+        if (expectedJavaVersion.isNullOrEmpty()) {
+            violations += "Missing releaseBuild.javaVersion in gradle.properties"
+        }
 
         fun cleanYamlScalar(value: String): String {
             return value.trim().trim('\'', '"')
@@ -323,6 +398,10 @@ tasks.register("verifyGithubActionsSecurity") {
                     val javaVersion = cleanYamlScalar(javaVersionMatch.groupValues[1])
                     if (!javaVersion.startsWith("\${{") && !exactJavaVersionRegex.matches(javaVersion)) {
                         violations += "$workflowPath:$lineNumber uses a floating Java version: ${line.trim()}"
+                    } else if (!javaVersion.startsWith("\${{") &&
+                        !expectedJavaVersion.isNullOrEmpty() &&
+                        javaVersion != expectedJavaVersion) {
+                        violations += "$workflowPath:$lineNumber uses Java version $javaVersion but releaseBuild.javaVersion is $expectedJavaVersion"
                     }
                 }
 
@@ -332,9 +411,12 @@ tasks.register("verifyGithubActionsSecurity") {
                         .split(',')
                         .map { cleanYamlScalar(it) }
                         .filter { it.isNotEmpty() && !it.startsWith("\${{") }
-                        .filterNot { exactJavaVersionRegex.matches(it) }
                         .forEach {
-                            violations += "$workflowPath:$lineNumber uses a floating Java matrix version: $it"
+                            if (!exactJavaVersionRegex.matches(it)) {
+                                violations += "$workflowPath:$lineNumber uses a floating Java matrix version: $it"
+                            } else if (!expectedJavaVersion.isNullOrEmpty() && it != expectedJavaVersion) {
+                                violations += "$workflowPath:$lineNumber uses Java matrix version $it but releaseBuild.javaVersion is $expectedJavaVersion"
+                            }
                         }
                 }
 
@@ -356,6 +438,7 @@ tasks.register("verifyGithubActionsSecurity") {
 }
 
 tasks.named("check") {
+    dependsOn("verifyBuildEnvironment")
     dependsOn("verifyGradleWrapperSecurity")
     dependsOn("verifyGithubActionsSecurity")
 }

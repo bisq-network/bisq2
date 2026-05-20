@@ -9,9 +9,14 @@ repositories {
     }
 }
 
+val pinnedJavaLanguageVersion = providers.gradleProperty("releaseBuild.javaVersion")
+    .map { it.substringBefore('.').toInt() }
+    .orElse(21)
+
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(pinnedJavaLanguageVersion.map { JavaLanguageVersion.of(it) })
+        vendor.set(JvmVendorSpec.AZUL)
     }
 }
 
