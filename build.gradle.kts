@@ -109,14 +109,26 @@ tasks.register("verifyGithubActionsSecurity") {
         val checkLatestTrueRegex = Regex("""^\s*check-latest:\s*['"]?true['"]?\s*$""", RegexOption.IGNORE_CASE)
         val checkLatestFalseRegex = Regex("""^\s*check-latest:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
-        val nextStepRegex = Regex("""^\s*-\s+(name|uses):\s+.*""")
+        val stepStartRegex = Regex("""^(\s*)-\s+[A-Za-z_][A-Za-z0-9_-]*\s*:.*$""")
 
         fun cleanYamlScalar(value: String): String {
             return value.trim().trim('\'', '"')
         }
 
         fun stepLinesAfter(lines: List<String>, startIndex: Int): List<String> {
-            return lines.drop(startIndex + 1).takeWhile { !nextStepRegex.matches(it) }
+            val stepStartIndent = (startIndex downTo 0)
+                .mapNotNull { stepStartRegex.find(lines[it]) }
+                .firstOrNull()
+                ?.groupValues
+                ?.get(1)
+                ?.length
+
+            return lines.drop(startIndex + 1).takeWhile { line ->
+                val nextStepStart = stepStartRegex.find(line)
+                stepStartIndent == null ||
+                    nextStepStart == null ||
+                    nextStepStart.groupValues[1].length != stepStartIndent
+            }
         }
 
         workflowFiles.files.sortedBy { it.path }.forEach { workflowFile ->
