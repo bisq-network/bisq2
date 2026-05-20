@@ -62,7 +62,6 @@ openjfx-plugin = { strictly = '0.1.0' }
 protobuf-java-lib = { strictly = '4.28.2' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
-sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '9.4.1' }
 slf4j-lib = { strictly = '2.0.18' }
 
@@ -153,7 +152,6 @@ mockito-junit-jupiter = { module = 'org.mockito:mockito-junit-jupiter', version.
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 
-sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
 
 swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }

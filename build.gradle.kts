@@ -35,6 +35,7 @@ val compositeBuilds = listOf(
     CompositeBuild(file("apps/desktop"), ":apps:desktop"),
 )
 
+apply(from = "gradle/dependency-security-overrides.gradle.kts")
 apply(from = "gradle/dependency-verification.gradle.kts")
 
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
