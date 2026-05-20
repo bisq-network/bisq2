@@ -50,12 +50,18 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
             throw GradleException("No release artifacts found to sign in $releaseDir")
         }
 
-        logger.lifecycle("Signing ${artifacts.size} release artifact(s) in ${releaseDir.absolutePath}")
+        logger.lifecycle("Processing ${artifacts.size} release artifact(s) in ${releaseDir.absolutePath}")
         artifacts.forEach { artifact ->
             val signatureFile = File(artifact.parentFile, "${artifact.name}.asc")
-            signArtifact(gpgExecutable.get(), gpgUser, artifact, signatureFile)
-            verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
-            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
+            if (signatureFile.exists()) {
+                verifyExistingSignatureFile(signatureFile)
+                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
+                logger.lifecycle("Verified existing signature ${signatureFile.name}")
+            } else {
+                signArtifact(gpgExecutable.get(), gpgUser, artifact, signatureFile)
+                verifySignature(gpgExecutable.get(), expectedFingerprint, artifact, signatureFile)
+                logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
+            }
         }
     }
 
@@ -93,7 +99,6 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
                              signatureFile: File) {
         val signResult = execResult(listOf(
                 gpgExecutable,
-                "--yes",
                 "--digest-algo", "SHA256",
                 "--local-user", gpgUser,
                 "--output", signatureFile.absolutePath,
@@ -106,6 +111,15 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
         }
         if (!signatureFile.isFile || signatureFile.length() == 0L) {
             throw GradleException("GPG did not create a non-empty signature file for ${artifact.name}: $signatureFile")
+        }
+    }
+
+    private fun verifyExistingSignatureFile(signatureFile: File) {
+        if (!signatureFile.isFile) {
+            throw GradleException("Existing signature path is not a file: $signatureFile")
+        }
+        if (signatureFile.length() == 0L) {
+            throw GradleException("Existing signature file is empty: $signatureFile")
         }
     }
 
