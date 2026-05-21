@@ -22,6 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -71,24 +72,26 @@ public class ContactsListView extends View<VBox, ContactsListModel, ContactsList
 
         root.setPadding(new Insets(20, SIDE_PADDING, 0, SIDE_PADDING));
 
-        Label intro1 = new Label(Res.get("contactsList.intro1"));
-        intro1.setWrapText(true);
-        intro1.getStyleClass().add("user-payment-account-no-data");
+        Label introPreface = new Label(Res.get("contactsList.introPreface"));
+        introPreface.setWrapText(true);
+        introPreface.getStyleClass().add("contacts-intro-preface");
 
         closeIconButton = BisqIconButton.createIconButton("close");
-        HBox topLine = new HBox(intro1, Spacer.fillHBox(), closeIconButton);
+        HBox prefaceAndClose = new HBox(introPreface, Spacer.fillHBox(), closeIconButton);
 
-        Label intro2 = new Label(Res.get("contactsList.intro2"));
-        intro2.setWrapText(true);
-        intro2.getStyleClass().add("large-thin-headline");
+        Label introHeadline = new Label(Res.get("contactsList.introHeadline"));
+        introHeadline.setWrapText(true);
+        introHeadline.getStyleClass().add("contacts-intro-headline");
 
-        Label intro3 = new Label(Res.get("contactsList.intro3"));
-        intro3.setWrapText(true);
-        intro3.getStyleClass().add("user-content-text");
+        WrappingText introMain = new WrappingText(Res.get("contactsList.introMain"),
+                "contacts-intro-content-main");
+        WrappingText introDetails = new WrappingText(Res.get("contactsList.introDetails"),
+                "contacts-intro-content-details");
 
-        introBox = new VBox(10, topLine, intro2, intro3);
+        VBox.setMargin(introDetails, new Insets(10, 0, 0, 0));
+        introBox = new VBox(10, prefaceAndClose, introHeadline, introMain, introDetails);
         introBox.getStyleClass().add("bisq-box-2");
-        introBox.setPadding(new Insets(20, 30, 20, 30));
+        introBox.setPadding(new Insets(25, 30, 30, 30));
 
         richTableView = new RichTableView<>(model.getSortedList(),
                 Res.get("contactsList.table.headline"),
