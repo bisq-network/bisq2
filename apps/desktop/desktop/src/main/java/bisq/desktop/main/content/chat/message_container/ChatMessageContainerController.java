@@ -43,6 +43,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -69,6 +70,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private final UserProfileService userProfileService;
     private final SettingsService settingsService;
     private final ChatService chatService;
+    private final BannedUserService bannedUserService;
     private Pin selectedChannelPin, chatMessagesPin, getUserIdentitiesPin;
 
     public ChatMessageContainerController(ServiceProvider serviceProvider,
@@ -80,6 +82,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
         citationBlock = new CitationBlock(serviceProvider);
 
@@ -283,6 +286,11 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
         if (citation.isPresent() && citation.get().getText().length() > Citation.MAX_TEXT_LENGTH) {
             new Popup().warning(Res.get("validation.tooLong", Citation.MAX_TEXT_LENGTH)).show();
+            return;
+        }
+
+        if (bannedUserService.isUserProfileBanned(userIdentity.getUserProfile())) {
+            // If I am banned, we silently skip sending the message
             return;
         }
 
