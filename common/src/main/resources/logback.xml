@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property name="LOG_ROOT" value="logs" />
-    <conversionRule conversionWord="mask" converterClass="bisq.common.logging.LogMaskConverter"/>
+    <conversionRule conversionWord="mask" class="bisq.common.logging.LogMaskConverter"/>
 
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
