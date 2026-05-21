@@ -425,6 +425,10 @@ public class TradeWizardReviewController implements Controller {
                     .dontShowAgainId(SEND_OFFER_MSG_TEXT_ONLY_WARN)
                     .show();
         }
+        if (bannedUserService.isUserProfileBanned(userIdentity.getUserProfile())) {
+            // If I am banned, we silently skip sending the message
+            return;
+        }
         bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
