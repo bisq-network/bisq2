@@ -19,11 +19,14 @@ package bisq.security.mobile_notifications;
 
 
 import bisq.common.encoding.Base64;
+import bisq.common.util.ByteArrayUtils;
+import bisq.security.AesGcm;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.IESParameterSpec;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -32,9 +35,11 @@ import java.security.spec.X509EncodedKeySpec;
 
 @Slf4j
 public class MobileNotificationEncryption {
+    private static final int GCM_NONCE_LENGTH = 12;
 
     /**
      * Encrypt the message using the device's public key (ECIES for EC keys).
+     * Used as fallback when no symmetric key is available.
      *
      * @param publicKeyBase64 The Base64 encoded public key
      * @param message         The message to encrypt
@@ -67,7 +72,41 @@ public class MobileNotificationEncryption {
 
             return Base64.encode(encryptedBytes);
         } catch (Exception e) {
-            log.error("Encryption failed", e);
+            log.error("ECIES encryption failed", e);
+            throw new GeneralSecurityException(e);
+        }
+    }
+
+    /**
+     * Encrypt the message using a shared AES-256 symmetric key (AES-GCM).
+     * Used for iOS devices that provide a symmetric key during registration,
+     * enabling decryption in the Notification Service Extension via Apple CryptoKit.
+     *
+     * <p>Output format: nonce (12 bytes) || ciphertext || authentication tag (16 bytes)
+     * This matches the format expected by the iOS NSE (CryptoKit AES.GCM).
+     *
+     * @param symmetricKeyBase64 The Base64 encoded AES-256 key (32 bytes)
+     * @param message            The message to encrypt
+     * @return Base64 encoded encrypted message (nonce + ciphertext + tag)
+     */
+    public static String encryptWithSymmetricKey(String symmetricKeyBase64, String message) throws GeneralSecurityException {
+        try {
+            byte[] keyBytes = Base64.decode(symmetricKeyBase64);
+            if (keyBytes.length != 32) {
+                throw new GeneralSecurityException("Symmetric key must be 256 bits (32 bytes), got " + keyBytes.length);
+            }
+
+            SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+            byte[] nonce = ByteArrayUtils.getRandomBytes(GCM_NONCE_LENGTH);
+
+            // Reuse the project's AesGcm utility for the cipher operation.
+            // Java's GCM mode appends the authentication tag to the ciphertext.
+            byte[] ciphertextWithTag = AesGcm.encrypt(secretKey, nonce, message.getBytes(StandardCharsets.UTF_8));
+
+            // Output: nonce || ciphertext || tag — matches CryptoKit AES.GCM on iOS
+            return Base64.encode(ByteArrayUtils.concat(nonce, ciphertextWithTag));
+        } catch (Exception e) {
+            log.error("AES-GCM encryption failed", e);
             throw new GeneralSecurityException(e);
         }
     }

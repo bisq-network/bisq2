@@ -21,6 +21,9 @@ import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.common.util.StringUtils;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.notifications.mobile.registration.MobileDevicePlatform;
+
+import java.util.Base64;
+import java.util.Optional;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -84,6 +87,7 @@ public class DevicesRestApi extends RestApiBase {
         String publicKeyBase64 = request.getPublicKeyBase64();
         String deviceDescriptor = request.getDeviceDescriptor();
         MobileDevicePlatform platform = request.getPlatform();
+        Optional<String> symmetricKeyBase64 = Optional.ofNullable(request.getSymmetricKeyBase64());
 
         log.debug(
                 "Register device request: deviceId={}, descriptor={}, tokenLength={}, platform={}",
@@ -110,13 +114,32 @@ public class DevicesRestApi extends RestApiBase {
             }
         }
 
+        // Validate symmetricKeyBase64 if provided
+        if (symmetricKeyBase64.isPresent() && !symmetricKeyBase64.get().isEmpty()) {
+            try {
+                byte[] decoded = Base64.getDecoder().decode(symmetricKeyBase64.get());
+                if (decoded.length != 32) {
+                    return buildResponse(
+                            Response.Status.BAD_REQUEST,
+                            "symmetricKeyBase64 must decode to 32 bytes (AES-256)"
+                    );
+                }
+            } catch (IllegalArgumentException e) {
+                return buildResponse(
+                        Response.Status.BAD_REQUEST,
+                        "symmetricKeyBase64 must be valid Base64 and decode to 32 bytes (AES-256)"
+                );
+            }
+        }
+
         try {
             deviceRegistrationService.register(
                     deviceId,
                     deviceToken,
                     publicKeyBase64,
                     deviceDescriptor,
-                    platform
+                    platform,
+                    symmetricKeyBase64
             );
 
             log.info("Device registered: deviceId={}, platform={}", deviceId, platform);
