@@ -223,7 +223,9 @@ public class Node implements Connection.Handler {
                             log.debug("We are now in RUNNING state");
                         }
                     } catch (InterruptedException e) {
-                        log.warn("Thread got interrupted at initialize method", e);
+                        if(state.get() != STOPPING && state.get() != TERMINATED) {
+                            log.warn("Thread got interrupted at initialize method", e);
+                        }
                         Thread.currentThread().interrupt(); // Restore interrupted state
                     }
                 }
