@@ -24,9 +24,11 @@ Refresh the metadata before regenerating this report:
 | Modules using checksum-only artifacts only | 4 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 317 |
-| PGP-signed artifacts | 311 |
+| Verified artifacts | 318 |
+| PGP-signed artifacts | 312 |
 | Checksum-only artifacts | 6 |
+| Resolved executable artifacts missing explicit metadata | 0 |
+| Stale executable metadata entries for unresolved versions | 0 |
 | Signer keys found in exported keyring | 82 / 82 |
 | Signer keys with name or email | 51 / 82 |
 | Signer keys with creation date | 82 / 82 |
@@ -104,7 +106,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `io.grpc:grpc-stub:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-testing:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-util:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
-| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
+| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.perfmark:perfmark-api:0.27.0` | transitive | PGP signed | 1 signed / 0 checksum | `C6F7D1C804C821F49AF3BFC13AD93C3C677A106E`<br>Carl Mastrangelo<br>`carl@carlmastrangelo.com`<br>created 2019-05-31 |
 | `io.swagger.core.v3:swagger-annotations-jakarta:2.2.50` | transitive | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
 | `io.swagger.core.v3:swagger-annotations:2.2.50` | direct | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |

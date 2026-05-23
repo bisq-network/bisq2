@@ -67,6 +67,10 @@ data class DependencyReportRow(
     val keyIds: List<String>,
     val checksumArtifacts: List<Pair<String, String>>,
 )
+data class ExecutableArtifactMetadataViolations(
+    val missingArtifacts: Set<String>,
+    val staleArtifacts: Set<String>,
+)
 
 fun findBisqRepositoryRoot(start: File): File {
     var current: File? = start.canonicalFile
@@ -557,6 +561,48 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
 fun patternMatches(pattern: String, value: String, regex: Boolean): Boolean =
     pattern.isEmpty() || if (regex) Regex(pattern).matches(value) else pattern == value
 
+fun moduleId(componentId: String): String {
+    val parts = componentId.split(':', limit = 3)
+    return if (parts.size == 3) {
+        "${parts[0]}:${parts[1]}"
+    } else {
+        componentId
+    }
+}
+
+fun executableArtifactMetadataViolations(
+    resolved: ResolvedBuildDependencies,
+    componentsById: Map<String, VerifiedComponent>,
+): ExecutableArtifactMetadataViolations {
+    val resolvedExecutableArtifacts = TreeSet<String>()
+    val resolvedExecutableComponentIds = TreeSet<String>()
+    resolved.artifactsByComponent.forEach { (componentId, artifactNames) ->
+        artifactNames.filter { it.endsWith(".exe") }.forEach { artifactName ->
+            resolvedExecutableArtifacts += "$componentId\t$artifactName"
+            resolvedExecutableComponentIds += componentId
+        }
+    }
+    val resolvedExecutableModuleIds = resolvedExecutableComponentIds.mapTo(TreeSet()) { moduleId(it) }
+
+    val metadataExecutableArtifacts = TreeSet<String>()
+    componentsById.values.forEach { component ->
+        component.artifacts.filter { it.name.endsWith(".exe") }.forEach { artifact ->
+            metadataExecutableArtifacts += "${component.id}\t${artifact.name}"
+        }
+    }
+
+    val staleArtifacts = metadataExecutableArtifacts
+        .filterTo(TreeSet()) { entry ->
+            val componentId = entry.substringBefore('\t')
+            moduleId(componentId) in resolvedExecutableModuleIds && componentId !in resolvedExecutableComponentIds
+        }
+
+    return ExecutableArtifactMetadataViolations(
+        missingArtifacts = resolvedExecutableArtifacts.minus(metadataExecutableArtifacts).toSortedSet(),
+        staleArtifacts = staleArtifacts,
+    )
+}
+
 val resolveCurrentBuildTask = tasks.register("resolveAndVerifyDependenciesForCurrentBuild") {
     group = "verification"
     description = "Resolves every resolvable configuration in this Gradle build."
@@ -677,6 +723,7 @@ if (isBisqRepositoryRootBuild) {
             val allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist)
             val resolved = readResolvedDependencyInventory()
             val (componentsById) = parseVerificationMetadata(dependencyVerificationMetadata)
+            val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
             val checksumFallbackEntries = TreeSet<String>()
             resolved.resolvedComponents.forEach { componentId ->
                 val component = componentsById[componentId] ?: return@forEach
@@ -686,22 +733,44 @@ if (isBisqRepositoryRootBuild) {
             }
 
             val unapprovedEntries = checksumFallbackEntries.filter { !allowlist.entries.contains(it) }
-            val staleEntries = allowlist.entries.filter { !checksumFallbackEntries.contains(it) }
-            if (unapprovedEntries.isNotEmpty() || staleEntries.isNotEmpty()) {
+            val staleAllowlistEntries = allowlist.entries.filter { !checksumFallbackEntries.contains(it) }
+            if (
+                unapprovedEntries.isNotEmpty() ||
+                staleAllowlistEntries.isNotEmpty() ||
+                executableMetadataViolations.missingArtifacts.isNotEmpty() ||
+                executableMetadataViolations.staleArtifacts.isNotEmpty()
+            ) {
                 val message = StringBuilder("Dependency signature policy failed.")
                 if (unapprovedEntries.isNotEmpty()) {
                     message.append("\n\nUnapproved checksum-only dependency artifacts:\n - ")
                         .append(unapprovedEntries.joinToString("\n - "))
                 }
-                if (staleEntries.isNotEmpty()) {
+                if (staleAllowlistEntries.isNotEmpty()) {
                     message.append("\n\nAllowlist entries that are no longer checksum-only artifacts:\n - ")
-                        .append(staleEntries.joinToString("\n - "))
+                        .append(staleAllowlistEntries.joinToString("\n - "))
                 }
-                message.append("\n\nReview each checksum-only artifact, update $dependencyChecksumFallbackAllowlist, and regenerate $dependencySignatureReport.")
+                if (executableMetadataViolations.missingArtifacts.isNotEmpty()) {
+                    message
+                        .append("\n\nResolved executable dependency artifacts missing explicit verification metadata:\n - ")
+                        .append(executableMetadataViolations.missingArtifacts.joinToString("\n - "))
+                }
+                if (executableMetadataViolations.staleArtifacts.isNotEmpty()) {
+                    message
+                        .append("\n\nStale executable verification metadata for unresolved versions:\n - ")
+                        .append(executableMetadataViolations.staleArtifacts.joinToString("\n - "))
+                }
+                message.append(
+                    "\n\nReview each checksum-only artifact, update $dependencyChecksumFallbackAllowlist, " +
+                            "and regenerate $dependencySignatureReport."
+                )
                 throw GradleException(message.toString())
             }
 
-            logger.lifecycle("Verified ${checksumFallbackEntries.size} approved checksum-only dependency artifact(s).")
+            logger.lifecycle(
+                "Verified ${checksumFallbackEntries.size} approved checksum-only dependency artifact(s) " +
+                        "and ${executableMetadataViolations.missingArtifacts.size} missing / " +
+                        "${executableMetadataViolations.staleArtifacts.size} stale executable artifact metadata entries."
+            )
         }
     }
 
@@ -728,6 +797,7 @@ if (isBisqRepositoryRootBuild) {
             val allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist)
             val signerMetadata = loadSignerMetadata(dependencyVerificationKeyring)
             val (componentsById, trustedKeys) = parseVerificationMetadata(dependencyVerificationMetadata)
+            val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
 
             fun matchingTrustedKeyIds(group: String, name: String, version: String): List<String> =
                 trustedKeys
@@ -872,6 +942,14 @@ if (isBisqRepositoryRootBuild) {
             markdown.append("| Verified artifacts | $totalArtifacts |\n")
             markdown.append("| PGP-signed artifacts | $signedArtifacts |\n")
             markdown.append("| Checksum-only artifacts | $checksumOnlyArtifacts |\n")
+            markdown.append(
+                "| Resolved executable artifacts missing explicit metadata | " +
+                        "${executableMetadataViolations.missingArtifacts.size} |\n"
+            )
+            markdown.append(
+                "| Stale executable metadata entries for unresolved versions | " +
+                        "${executableMetadataViolations.staleArtifacts.size} |\n"
+            )
             markdown.append("| Signer keys found in exported keyring | $reportedKeyIdsInKeyring / ${reportedKeyIds.size} |\n")
             markdown.append("| Signer keys with name or email | $reportedKeyIdsWithUserId / ${reportedKeyIds.size} |\n")
             markdown.append("| Signer keys with creation date | $reportedKeyIdsWithCreatedDate / ${reportedKeyIds.size} |\n\n")
@@ -890,6 +968,32 @@ if (isBisqRepositoryRootBuild) {
                     markdown.append("| `${row.id}` | ${row.scope} | $checksumArtifacts |\n")
                 }
                 markdown.append('\n')
+            }
+
+            if (
+                executableMetadataViolations.missingArtifacts.isNotEmpty() ||
+                executableMetadataViolations.staleArtifacts.isNotEmpty()
+            ) {
+                markdown.append("## Executable Artifact Metadata Drift\n\n")
+                markdown.append(
+                    "Resolved executable artifacts are build tools such as `protoc` and `protoc-gen-grpc-java`; " +
+                            "keep explicit metadata for the resolved executable classifier and remove stale executable " +
+                            "metadata for older resolved-tool versions.\n\n"
+                )
+                if (executableMetadataViolations.missingArtifacts.isNotEmpty()) {
+                    markdown.append("Missing explicit metadata:\n\n")
+                    executableMetadataViolations.missingArtifacts.forEach { artifact ->
+                        markdown.append("- `").append(artifact.replace("\t", "` / `")).append("`\n")
+                    }
+                    markdown.append('\n')
+                }
+                if (executableMetadataViolations.staleArtifacts.isNotEmpty()) {
+                    markdown.append("Stale executable metadata:\n\n")
+                    executableMetadataViolations.staleArtifacts.forEach { artifact ->
+                        markdown.append("- `").append(artifact.replace("\t", "` / `")).append("`\n")
+                    }
+                    markdown.append('\n')
+                }
             }
 
             if (missingRows.isNotEmpty()) {
