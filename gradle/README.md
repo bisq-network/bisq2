@@ -57,3 +57,8 @@ Checksum fallback artifacts must be reviewed in `gradle/dependency-checksum-fall
 
 Keep the allowlist exact and sorted. `verifyDependencySignaturePolicy` fails when a fallback artifact is missing from
 the allowlist, when an allowlist entry is stale, or when an entry has no rationale.
+
+Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must also have explicit entries in
+`gradle/verification-metadata.xml` for the resolved classifier. `verifyDependencySignaturePolicy` fails when a resolved
+executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
+version of the same tool.
