@@ -1,12 +1,14 @@
 package bisq.common.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BitcoinAddressValidationTest {
     @Test
-    public void testValidateWalletAddressHash() {
+    @DisplayName("validate wallet address hash")
+    public void validate_wallet_address_hash() {
         assertTrue(BitcoinAddressValidation.isValid("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")); // P2PKH
         assertTrue(BitcoinAddressValidation.isValid("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")); // P2SH
         assertTrue(BitcoinAddressValidation.isValid("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4")); // Bech32

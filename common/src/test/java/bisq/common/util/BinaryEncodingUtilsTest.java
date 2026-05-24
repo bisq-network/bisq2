@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class BinaryEncodingUtilsTest {
 
     @Test
-    void writeByte_writesSingleByte() throws Exception {
+    @DisplayName("write byte writes single byte")
+    void write_byte_writes_single_byte() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
 
@@ -41,7 +43,8 @@ class BinaryEncodingUtilsTest {
     }
 
     @Test
-    void writeInt_writesFourBytes() throws Exception {
+    @DisplayName("write int writes four bytes")
+    void write_int_writes_four_bytes() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
 
@@ -52,7 +55,8 @@ class BinaryEncodingUtilsTest {
     }
 
     @Test
-    void writeLong_writesEightBytes() throws Exception {
+    @DisplayName("write long writes eight bytes")
+    void write_long_writes_eight_bytes() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
 
@@ -63,7 +67,8 @@ class BinaryEncodingUtilsTest {
     }
 
     @Test
-    void writeBytes_prefixesLength() throws Exception {
+    @DisplayName("write bytes prefixes length")
+    void write_bytes_prefixes_length() throws Exception {
         byte[] data = {1, 2, 3};
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -79,7 +84,8 @@ class BinaryEncodingUtilsTest {
     }
 
     @Test
-    void writeBytes_respectsMaxLength() {
+    @DisplayName("write bytes respects max length")
+    void write_bytes_respects_max_length() {
         byte[] data = new byte[5];
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -90,7 +96,8 @@ class BinaryEncodingUtilsTest {
     }
 
     @Test
-    void writeString_encodesUtf8WithLengthPrefix() throws Exception {
+    @DisplayName("write string encodes utf8 with length prefix")
+    void write_string_encodes_utf8_with_length_prefix() throws Exception {
         String value = "hello";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

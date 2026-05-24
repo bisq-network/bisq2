@@ -19,6 +19,7 @@ package bisq.i18n;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +32,8 @@ public class ResTest {
     }
 
     @Test
-    public void testEncodeDecode() {
+    @DisplayName("encode decode")
+    public void encode_decode() {
         String key, argument1, argument2, expected, encoded, decoded;
 
         // 2 args

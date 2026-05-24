@@ -23,6 +23,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
@@ -45,7 +46,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void parsesPreambleListAndTrailingParagraph() throws Exception {
+    @DisplayName("parses preamble list and trailing paragraph")
+    void parses_preamble_list_and_trailing_paragraph() throws Exception {
         String text = "Most fiat payment methods carry a risk of bank chargebacks.\n"
                 + "  Trade limits are determined by several factors:\n"
                 + "  - The chargeback risk associated with the selected payment method\n"
@@ -81,7 +83,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void parsesInlineBulletsWithoutLeadingParagraph() throws Exception {
+    @DisplayName("parses inline bullets without leading paragraph")
+    void parses_inline_bullets_without_leading_paragraph() throws Exception {
         String text = "- First item. - Second item.";
         UnorderedList list = runOnFxThread(() -> new UnorderedList(text, "bisq-text-13"));
 
@@ -91,7 +94,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void rendersSingleParagraphWhenNoListMarkersPresent() throws Exception {
+    @DisplayName("renders single paragraph when no list markers present")
+    void renders_single_paragraph_when_no_list_markers_present() throws Exception {
         String text = "No list markers here.";
         UnorderedList list = runOnFxThread(() -> new UnorderedList(text, "bisq-text-13"));
 
@@ -101,7 +105,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void parsesIndentedBulletsWithBlankLines() throws Exception {
+    @DisplayName("parses indented bullets with blank lines")
+    void parses_indented_bullets_with_blank_lines() throws Exception {
         String text = "  - First item\n"
                 + "\n"
                 + "  - Second item\n"
@@ -115,7 +120,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void parsesBulletsAtStartWithoutIndent() throws Exception {
+    @DisplayName("parses bullets at start without indent")
+    void parses_bullets_at_start_without_indent() throws Exception {
         String text = "- First item\n"
                 + "- Second item\n"
                 + "- Third item";
@@ -129,7 +135,8 @@ class UnorderedListTest {
     }
 
     @Test
-    void parsesBulletsWithNoSpaceAfterDashAndNoIndent() throws Exception {
+    @DisplayName("parses bullets with no space after dash and no indent")
+    void parses_bullets_with_no_space_after_dash_and_no_indent() throws Exception {
         String text = "-First item\n"
                 + "-Second item";
 

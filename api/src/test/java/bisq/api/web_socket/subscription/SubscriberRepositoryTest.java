@@ -19,6 +19,7 @@ package bisq.api.web_socket.subscription;
 
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +43,8 @@ class SubscriberRepositoryTest {
     // ── findSubscribers(topic) – grouped ────────────────────────────────────────
 
     @Test
-    void findSubscribersGroupsBySpecifier() {
+    @DisplayName("find subscribers groups by specifier")
+    void find_subscribers_groups_by_specifier() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber s1 = addToRepo(repo, request("r1", Topic.ALERT_NOTIFICATIONS, "DESKTOP"), mock(WebSocket.class));
@@ -58,7 +60,8 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void findSubscribersPlacesNoParamSubscribersUnderEmptySpecifier() {
+    @DisplayName("find subscribers places no param subscribers under empty specifier")
+    void find_subscribers_places_no_param_subscribers_under_empty_specifier() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber s = addToRepo(repo, request("r1", Topic.MARKET_PRICE, null), mock(WebSocket.class));
@@ -71,7 +74,8 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void findSubscribersReturnsMixedGroups() {
+    @DisplayName("find subscribers returns mixed groups")
+    void find_subscribers_returns_mixed_groups() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber withParam = addToRepo(repo, request("r1", Topic.OFFERS, "EUR"), mock(WebSocket.class));
@@ -86,14 +90,16 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void findSubscribersGroupedReturnsEmptyMapForUnknownTopic() {
+    @DisplayName("find subscribers grouped returns empty map for unknown topic")
+    void find_subscribers_grouped_returns_empty_map_for_unknown_topic() {
         SubscriberRepository repo = new SubscriberRepository();
 
         assertThat(repo.findSubscribers(Topic.MARKET_PRICE)).isEmpty();
     }
 
     @Test
-    void findSubscribersReturnsDefensiveCopy() {
+    @DisplayName("find subscribers returns defensive copy")
+    void find_subscribers_returns_defensive_copy() {
         SubscriberRepository repo = new SubscriberRepository();
         addToRepo(repo, request("r1", Topic.MARKET_PRICE, "x"), mock(WebSocket.class));
 
@@ -108,7 +114,8 @@ class SubscriberRepositoryTest {
     // ── findSubscribers(topic, parameter) ────────────────────────────────────
 
     @Test
-    void findSubscribersByParamReturnsOnlyExactMatch() {
+    @DisplayName("find subscribers by param returns only exact match")
+    void find_subscribers_by_param_returns_only_exact_match() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber exact = addToRepo(repo, request("r1", Topic.OFFERS, "EUR"), mock(WebSocket.class));
@@ -122,7 +129,8 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void findSubscribersByParamReturnsEmptyWhenNoMatch() {
+    @DisplayName("find subscribers by param returns empty when no match")
+    void find_subscribers_by_param_returns_empty_when_no_match() {
         SubscriberRepository repo = new SubscriberRepository();
         addToRepo(repo, request("r1", Topic.OFFERS, "USD"), mock(WebSocket.class));
 
@@ -132,7 +140,8 @@ class SubscriberRepositoryTest {
     // ── remove ────────────────────────────────────────────────────────────────
 
     @Test
-    void removeDeletesSubscriberFromCorrectParameterBucket() {
+    @DisplayName("remove deletes subscriber from correct parameter bucket")
+    void remove_deletes_subscriber_from_correct_parameter_bucket() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber s1 = addToRepo(repo, request("r1", Topic.MARKET_PRICE, null), mock(WebSocket.class));
@@ -145,7 +154,8 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void removeLastSubscriberForTopicLeavesNoEntry() {
+    @DisplayName("remove last subscriber for topic leaves no entry")
+    void remove_last_subscriber_for_topic_leaves_no_entry() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber s = addToRepo(repo, request("r1", Topic.MARKET_PRICE, null), mock(WebSocket.class));
@@ -156,7 +166,8 @@ class SubscriberRepositoryTest {
     }
 
     @Test
-    void removeWorksAcrossMixedParameterBuckets() {
+    @DisplayName("remove works across mixed parameter buckets")
+    void remove_works_across_mixed_parameter_buckets() {
         SubscriberRepository repo = new SubscriberRepository();
 
         Subscriber desktop = addToRepo(repo, request("r1", Topic.ALERT_NOTIFICATIONS, "DESKTOP"), mock(WebSocket.class));
@@ -171,7 +182,8 @@ class SubscriberRepositoryTest {
     // ── onConnectionClosed ────────────────────────────────────────────────────
 
     @Test
-    void onConnectionClosedRemovesAllSubscribersForSocket() {
+    @DisplayName("on connection closed removes all subscribers for socket")
+    void on_connection_closed_removes_all_subscribers_for_socket() {
         SubscriberRepository repo = new SubscriberRepository();
         WebSocket ws = mock(WebSocket.class);
 
@@ -196,7 +208,8 @@ class SubscriberRepositoryTest {
      * - findSubscribers(topic) returns a consistent grouped snapshot at each point
      */
     @Test
-    void concurrentAddRemoveAndFindAreSafe() throws InterruptedException {
+    @DisplayName("concurrent add remove and find are safe")
+    void concurrent_add_remove_and_find_are_safe() throws InterruptedException {
         SubscriberRepository repo = new SubscriberRepository();
         int threads = 8;
         int opsPerThread = 200;

@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.market.Market;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class AmountConversionTest {
 
     @Test
-    void testFiatToBtc() {
+    @DisplayName("fiat to btc")
+    void fiat_to_btc() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary fiatAmount = Fiat.fromFaceValue(100.0, "USD");
 
@@ -39,7 +41,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testBtcToFiat() {
+    @DisplayName("btc to fiat")
+    void btc_to_fiat() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.002);
 
@@ -51,7 +54,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testUsdToBtc() {
+    @DisplayName("usd to btc")
+    void usd_to_btc() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary usdAmount = Fiat.fromFaceValue(100.0, "USD");
 
@@ -62,7 +66,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testBtcToUsd() {
+    @DisplayName("btc to usd")
+    void btc_to_usd() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.002);
 
@@ -73,7 +78,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testUsdToFiat() {
+    @DisplayName("usd to fiat")
+    void usd_to_fiat() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(40000, "EUR");
         Monetary usdAmount = Fiat.fromFaceValue(100.0, "USD");
@@ -87,7 +93,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testFiatToUsd() {
+    @DisplayName("fiat to usd")
+    void fiat_to_usd() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(40000, "EUR");
         Monetary eurAmount = Fiat.fromFaceValue(80.0, "EUR");
@@ -101,7 +108,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testBtcToOtherCrypto() {
+    @DisplayName("btc to other crypto")
+    void btc_to_other_crypto() {
         // PriceQuote for XMR/BTC. If 1 XMR = 0.005 BTC, then price is 0.005.
         // Base side is XMR, Quote side is BTC.
         // fromPrice(price, base, quote)
@@ -121,7 +129,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testOtherCryptoToBtc() {
+    @DisplayName("other crypto to btc")
+    void other_crypto_to_btc() {
         PriceQuote xmrBtcPrice = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Market xmrBtcMarket = new Market("XMR", "BTC", "Monero", "Bitcoin");
         Monetary xmrAmount = Coin.fromFaceValue(2.0, "XMR");
@@ -135,7 +144,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testUsdToOtherCrypto() {
+    @DisplayName("usd to other crypto")
+    void usd_to_other_crypto() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote xmrBtcPrice = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Market xmrBtcMarket = new Market("XMR", "BTC", "Monero", "Bitcoin");
@@ -150,7 +160,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testOtherCryptoToUsd() {
+    @DisplayName("other crypto to usd")
+    void other_crypto_to_usd() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote xmrBtcPrice = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Market xmrBtcMarket = new Market("XMR", "BTC", "Monero", "Bitcoin");
@@ -165,7 +176,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testFiatToBtcThrowsOnNonFiatInput() {
+    @DisplayName("fiat to btc throws on non fiat input")
+    void fiat_to_btc_throws_on_non_fiat_input() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
 
@@ -174,7 +186,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testBtcToFiatThrowsOnNonBtcInput() {
+    @DisplayName("btc to fiat throws on non btc input")
+    void btc_to_fiat_throws_on_non_btc_input() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary usdAmount = Fiat.fromFaceValue(100, "USD");
 
@@ -183,7 +196,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testUsdToFiatThrowsOnNonFiatUsdInput() {
+    @DisplayName("usd to fiat throws on non fiat usd input")
+    void usd_to_fiat_throws_on_non_fiat_usd_input() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(40000, "EUR");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
@@ -193,7 +207,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testFiatToUsdThrowsOnNonFiatInput() {
+    @DisplayName("fiat to usd throws on non fiat input")
+    void fiat_to_usd_throws_on_non_fiat_input() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(40000, "EUR");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
@@ -203,7 +218,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testUsdToBtcThrowsIfQuoteIsNotBtcUsd() {
+    @DisplayName("usd to btc throws if quote is not btc usd")
+    void usd_to_btc_throws_if_quote_is_not_btc_usd() {
         PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(40000, "EUR");
         Monetary usdAmount = Fiat.fromFaceValue(100, "USD");
 
@@ -212,7 +228,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testBtcToOtherCryptoThrowsIfMarketDoesNotMatchPriceQuote() {
+    @DisplayName("btc to other crypto throws if market does not match price quote")
+    void btc_to_other_crypto_throws_if_market_does_not_match_price_quote() {
         PriceQuote xmrBtcPrice = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Market ethBtcMarket = new Market("ETH", "BTC", "Ether", "Bitcoin");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
@@ -222,7 +239,8 @@ public class AmountConversionTest {
     }
 
     @Test
-    void testOtherCryptoToBtcThrowsIfAmountCodeDoesNotMatchMarketBase() {
+    @DisplayName("other crypto to btc throws if amount code does not match market base")
+    void other_crypto_to_btc_throws_if_amount_code_does_not_match_market_base() {
         PriceQuote xmrBtcPrice = PriceQuote.fromPrice(0.005, "XMR", "BTC");
         Market xmrBtcMarket = new Market("XMR", "BTC", "Monero", "Bitcoin");
         Monetary ethAmount = Coin.fromFaceValue(1, "ETH");

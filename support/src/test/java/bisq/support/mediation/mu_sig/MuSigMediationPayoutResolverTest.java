@@ -19,6 +19,7 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.support.mediation.MediationPayoutDistributionType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -42,7 +43,8 @@ class MuSigMediationPayoutResolverTest {
                     TOTAL_PAYOUT_SATS);
 
     @Test
-    void calculateForTypeNoPayoutReturnsEmpty() {
+    @DisplayName("calculate for type no payout returns empty")
+    void calculate_for_type_no_payout_returns_empty() {
         Optional<MuSigMediationPayoutResolver.PayoutAmounts> payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                 MediationPayoutDistributionType.NO_PAYOUT,
                 CONTEXT,
@@ -52,7 +54,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeBuyerGetsTradeAmount() {
+    @DisplayName("calculate for type buyer gets trade amount")
+    void calculate_for_type_buyer_gets_trade_amount() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
                         CONTEXT,
@@ -64,7 +67,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeSellerGetsTradeAmount() {
+    @DisplayName("calculate for type seller gets trade amount")
+    void calculate_for_type_seller_gets_trade_amount() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT,
                         CONTEXT,
@@ -76,7 +80,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeBuyerPlusCompensationWithTenPercent() {
+    @DisplayName("calculate for type buyer plus compensation with ten percent")
+    void calculate_for_type_buyer_plus_compensation_with_ten_percent() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
@@ -88,7 +93,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeBuyerMinusPenaltyWithTenPercent() {
+    @DisplayName("calculate for type buyer minus penalty with ten percent")
+    void calculate_for_type_buyer_minus_penalty_with_ten_percent() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
@@ -100,7 +106,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeBuyerMinusPenaltyWithNinetyPercent() {
+    @DisplayName("calculate for type buyer minus penalty with ninety percent")
+    void calculate_for_type_buyer_minus_penalty_with_ninety_percent() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
@@ -112,7 +119,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeSellerPlusCompensationWithTenPercent() {
+    @DisplayName("calculate for type seller plus compensation with ten percent")
+    void calculate_for_type_seller_plus_compensation_with_ten_percent() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
@@ -124,7 +132,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void calculateForTypeSellerMinusPenaltyWithTenPercent() {
+    @DisplayName("calculate for type seller minus penalty with ten percent")
+    void calculate_for_type_seller_minus_penalty_with_ten_percent() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
@@ -136,7 +145,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void compensationTransferIsCappedByMinimumRefundConstraint() {
+    @DisplayName("compensation transfer is capped by minimum refund constraint")
+    void compensation_transfer_is_capped_by_minimum_refund_constraint() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                         CONTEXT,
@@ -148,7 +158,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void buyerPenaltyAtHundredPercentKeepsMinimumRefundConstraint() {
+    @DisplayName("buyer penalty at hundred percent keeps minimum refund constraint")
+    void buyer_penalty_at_hundred_percent_keeps_minimum_refund_constraint() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.calculateForType(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
                         CONTEXT,
@@ -160,7 +171,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutBuyerEditedIsResolvedToMinimumRefund() {
+    @DisplayName("custom payout buyer edited is resolved to minimum refund")
+    void custom_payout_buyer_edited_is_resolved_to_minimum_refund() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.of(10_000L),
@@ -173,7 +185,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutSellerEditedIsResolvedToMinimumRefund() {
+    @DisplayName("custom payout seller edited is resolved to minimum refund")
+    void custom_payout_seller_edited_is_resolved_to_minimum_refund() {
         MuSigMediationPayoutResolver.PayoutAmounts payoutAmounts = MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
                         Optional.empty(),
@@ -186,7 +199,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void customPayoutMissingInputReturnsEmpty() {
+    @DisplayName("custom payout missing input returns empty")
+    void custom_payout_missing_input_returns_empty() {
         Optional<MuSigMediationPayoutResolver.PayoutAmounts> payoutAmounts =
                 MuSigMediationPayoutResolver.resolveCustomPayout(
                         CONTEXT,
@@ -198,7 +212,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsAcceptsNoPayoutWithoutAmounts() {
+    @DisplayName("check payout amounts accepts no payout without amounts")
+    void check_payout_amounts_accepts_no_payout_without_amounts() {
         assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.NO_PAYOUT,
                 CONTEXT,
@@ -208,7 +223,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsNoPayoutWithAmounts() {
+    @DisplayName("check payout amounts rejects no payout with amounts")
+    void check_payout_amounts_rejects_no_payout_with_amounts() {
         assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.NO_PAYOUT,
                 CONTEXT,
@@ -218,7 +234,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsAcceptsMatchingBuyerPlusCompensation() {
+    @DisplayName("check payout amounts accepts matching buyer plus compensation")
+    void check_payout_amounts_accepts_matching_buyer_plus_compensation() {
         assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                 CONTEXT,
@@ -228,7 +245,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsMismatchingBuyerPlusCompensation() {
+    @DisplayName("check payout amounts rejects mismatching buyer plus compensation")
+    void check_payout_amounts_rejects_mismatching_buyer_plus_compensation() {
         assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                 CONTEXT,
@@ -238,7 +256,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsMissingAdjustmentForAdjustmentType() {
+    @DisplayName("check payout amounts rejects missing adjustment for adjustment type")
+    void check_payout_amounts_rejects_missing_adjustment_for_adjustment_type() {
         assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
                 CONTEXT,
@@ -248,7 +267,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsAcceptsCustomPayoutWithinMinimumRefundBounds() {
+    @DisplayName("check payout amounts accepts custom payout within minimum refund bounds")
+    void check_payout_amounts_accepts_custom_payout_within_minimum_refund_bounds() {
         assertDoesNotThrow(() -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,
@@ -258,7 +278,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsCustomPayoutBelowMinimumRefundBounds() {
+    @DisplayName("check payout amounts rejects custom payout below minimum refund bounds")
+    void check_payout_amounts_rejects_custom_payout_below_minimum_refund_bounds() {
         assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,
@@ -268,7 +289,8 @@ class MuSigMediationPayoutResolverTest {
     }
 
     @Test
-    void checkPayoutAmountsRejectsCustomPayoutOverflow() {
+    @DisplayName("check payout amounts rejects custom payout overflow")
+    void check_payout_amounts_rejects_custom_payout_overflow() {
         assertThrows(IllegalArgumentException.class, () -> MuSigMediationPayoutResolver.checkPayoutAmounts(
                 MediationPayoutDistributionType.CUSTOM_PAYOUT,
                 CONTEXT,

@@ -22,6 +22,7 @@ import bisq.common.platform.PlatformUtils;
 import bisq.persistence.Persistence;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -64,7 +65,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testGetRelativePath2() {
+    @DisplayName("get relative path2")
+    void get_relative_path2() {
         Path dataDirPath, storeFilePath;
         String dirPathString;
 
@@ -121,7 +123,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testResolveDirPath() {
+    @DisplayName("resolve dir path")
+    void resolve_dir_path() {
         Path dataDirPath, storeFilePath, dirPath;
 
         // Windows
@@ -144,7 +147,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testBackup() throws IOException {
+    @DisplayName("backup")
+    void backup() throws IOException {
         FileMutatorUtils.writeToPath("test", storeFilePath);
         assertThat(storeFilePath).exists();
         Path backupFilePath = backupService.getBackupFilePath();
@@ -155,7 +159,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testPrune(@TempDir Path tempDir) {
+    @DisplayName("prune")
+    void prune(@TempDir Path tempDir) {
         Predicate<BackupFileInfo> isMaxFileSizeReachedFunction = e -> false;
         List<Path> paths;
         List<BackupFileInfo> list;
@@ -480,7 +485,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testGetBackupsReadsDirectoryAndReturnsParsedBackups(@TempDir Path tempDir) throws IOException {
+    @DisplayName("get backups reads directory and returns parsed backups")
+    void get_backups_reads_directory_and_returns_parsed_backups(@TempDir Path tempDir) throws IOException {
         Path dbDirPath = tempDir.resolve("db");
         Path storePath = dbDirPath.resolve("test_store.protobuf");
 
@@ -509,7 +515,8 @@ public class BackupServiceTest {
     }
 
     @Test
-    void testCreateBackupFileInfoParsesAndSorts(@TempDir Path tempDir) {
+    @DisplayName("create backup file info parses and sorts")
+    void create_backup_file_info_parses_and_sorts(@TempDir Path tempDir) {
         String baseName = "test_store.protobuf";
         List<Path> paths = List.of(
                 tempDir.resolve("test_store.protobuf_2025-12-04_0901"),

@@ -25,6 +25,7 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.collection.ObservableSet;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +37,8 @@ import static org.mockito.Mockito.when;
 class TradeRestrictingAlertRestApiTest {
 
     @Test
-    void getTradeRestrictingAlertReturnsNoContentWhenNoActiveAlert() {
+    @DisplayName("get trade restricting alert returns no content when no active alert")
+    void get_trade_restricting_alert_returns_no_content_when_no_active_alert() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("mobile-info", AppType.MOBILE_CLIENT, 10L, AlertType.INFO, false, false));
@@ -50,7 +52,8 @@ class TradeRestrictingAlertRestApiTest {
     }
 
     @Test
-    void getTradeRestrictingAlertPrefersHaltTradingOverRequireVersionEvenWhenOlder() {
+    @DisplayName("get trade restricting alert prefers halt trading over require version even when older")
+    void get_trade_restricting_alert_prefers_halt_trading_over_require_version_even_when_older() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         // halt-old is older but halt-trading takes precedence over require-version
@@ -69,7 +72,8 @@ class TradeRestrictingAlertRestApiTest {
     }
 
     @Test
-    void getTradeRestrictingAlertReturnsOnlyMostRecentHaltWhenMultiplePresent() {
+    @DisplayName("get trade restricting alert returns only most recent halt when multiple present")
+    void get_trade_restricting_alert_returns_only_most_recent_halt_when_multiple_present() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("halt-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
@@ -87,7 +91,8 @@ class TradeRestrictingAlertRestApiTest {
     }
 
     @Test
-    void getTradeRestrictingAlertReturnsRequireVersionWhenNoHaltPresent() {
+    @DisplayName("get trade restricting alert returns require version when no halt present")
+    void get_trade_restricting_alert_returns_require_version_when_no_halt_present() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         alerts.add(createAlert("require-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, false, true, Optional.of("2.1.0")));
@@ -105,7 +110,8 @@ class TradeRestrictingAlertRestApiTest {
     }
 
     @Test
-    void getTradeRestrictingAlertReturnsBadRequestForInvalidAppType() {
+    @DisplayName("get trade restricting alert returns bad request for invalid app type")
+    void get_trade_restricting_alert_returns_bad_request_for_invalid_app_type() {
         AlertService alertService = mock(AlertService.class);
         TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
 

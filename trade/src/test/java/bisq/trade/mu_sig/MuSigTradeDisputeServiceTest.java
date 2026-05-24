@@ -63,6 +63,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
@@ -110,7 +111,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithMediatorAndNoDispute_whenRequestMediation_thenSetsRequestedPersistsAndDelegates() {
+    @DisplayName("given trade with mediator and no dispute when request mediation then sets requested persists and delegates")
+    void given_trade_with_mediator_and_no_dispute_when_request_mediation_then_sets_requested_persists_and_delegates() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.NO_DISPUTE, true, false);
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
 
@@ -128,7 +130,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithoutMediator_whenRequestMediation_thenKeepsStateAndDoesNotDelegate() {
+    @DisplayName("given trade without mediator when request mediation then keeps state and does not delegate")
+    void given_trade_without_mediator_when_request_mediation_then_keeps_state_and_does_not_delegate() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.NO_DISPUTE, false, false);
         stubOpenTradeChannel(fixture);
 
@@ -140,7 +143,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeAlreadyInDispute_whenRequestMediation_thenKeepsStateAndDoesNotDelegate() {
+    @DisplayName("given trade already in dispute when request mediation then keeps state and does not delegate")
+    void given_trade_already_in_dispute_when_request_mediation_then_keeps_state_and_does_not_delegate() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
         stubOpenTradeChannel(fixture);
 
@@ -152,7 +156,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithoutMediationResult_whenAcceptMediationResult_thenThrowsAndDoesNotPersist() {
+    @DisplayName("given trade without mediation result when accept mediation result then throws and does not persist")
+    void given_trade_without_mediation_result_when_accept_mediation_result_then_throws_and_does_not_persist() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
         stubOpenTradeChannel(fixture);
 
@@ -163,7 +168,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithMediationResult_whenAcceptMediationResult_thenMarksAcceptedPersistsAndDelegates() {
+    @DisplayName("given trade with mediation result when accept mediation result then marks accepted persists and delegates")
+    void given_trade_with_mediation_result_when_accept_mediation_result_then_marks_accepted_persists_and_delegates() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, false);
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
         fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
@@ -181,7 +187,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithMediationResult_whenRejectMediationResult_thenMarksRejectedPersistsAndDelegates() {
+    @DisplayName("given trade with mediation result when reject mediation result then marks rejected persists and delegates")
+    void given_trade_with_mediation_result_when_reject_mediation_result_then_marks_rejected_persists_and_delegates() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, false);
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
         fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
@@ -199,7 +206,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeWithArbitratorAndClosedMediation_whenRequestArbitration_thenSetsRequestedPersistsAndDelegates() {
+    @DisplayName("given trade with arbitrator and closed mediation when request arbitration then sets requested persists and delegates")
+    void given_trade_with_arbitrator_and_closed_mediation_when_request_arbitration_then_sets_requested_persists_and_delegates() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, true);
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
         fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
@@ -222,7 +230,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenTradeNotMediationClosed_whenRequestArbitration_thenKeepsStateAndDoesNotDelegate() {
+    @DisplayName("given trade not mediation closed when request arbitration then keeps state and does not delegate")
+    void given_trade_not_mediation_closed_when_request_arbitration_then_keeps_state_and_does_not_delegate() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, true);
         stubOpenTradeChannel(fixture);
 
@@ -234,7 +243,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenAuthorizedOpenMediationMessage_whenOnDisputeMessage_thenTransitionsToMediationOpenAndPersists() {
+    @DisplayName("given authorized open mediation message when on dispute message then transitions to mediation open and persists")
+    void given_authorized_open_mediation_message_when_on_dispute_message_then_transitions_to_mediation_open_and_persists() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_REQUESTED, true, false);
         tradeById.put(fixture.tradeId(), fixture.trade());
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
@@ -260,7 +270,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenQueuedPaymentDetailsRequestWithoutChannel_whenMaybeProcessPendingDisputeMessages_thenReplaysAndSendsResponse() {
+    @DisplayName("given queued payment details request without channel when maybe process pending dispute messages then replays and sends response")
+    void given_queued_payment_details_request_without_channel_when_maybe_process_pending_dispute_messages_then_replays_and_sends_response() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
         fixture.taker().setAccountPayload(createNationalBankPayload("taker-9", "DE901"));
         fixture.maker().setAccountPayload(createNationalBankPayload("maker-9", "DE902"));
@@ -286,7 +297,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenQueuedAcceptanceWithoutMediationResult_whenMaybeProcessPendingDisputeMessages_thenMarksPeerAcceptance() {
+    @DisplayName("given queued acceptance without mediation result when maybe process pending dispute messages then marks peer acceptance")
+    void given_queued_acceptance_without_mediation_result_when_maybe_process_pending_dispute_messages_then_marks_peer_acceptance() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
         tradeById.put(fixture.tradeId(), fixture.trade());
         when(muSigOpenTradeChannelService.findChannelByTradeId(fixture.tradeId())).thenReturn(Optional.of(createOpenTradeChannel(fixture)));
@@ -306,7 +318,8 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
-    void givenAuthorizedOpenArbitrationMessage_whenOnDisputeMessage_thenTransitionsToArbitrationOpenAndPersists() {
+    @DisplayName("given authorized open arbitration message when on dispute message then transitions to arbitration open and persists")
+    void given_authorized_open_arbitration_message_when_on_dispute_message_then_transitions_to_arbitration_open_and_persists() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, true);
         tradeById.put(fixture.tradeId(), fixture.trade());
         MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);

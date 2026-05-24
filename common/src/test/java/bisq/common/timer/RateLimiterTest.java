@@ -2,13 +2,15 @@ package bisq.common.timer;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RateLimiterTest {
     @SneakyThrows
     @Test
-    public void testRateLimiter() {
+    @DisplayName("rate limiter")
+    public void rate_limiter() {
         MockClock clock = new MockClock();
         clock.setTime(0);
         RateLimiter rateLimiter = new RateLimiter(clock, 5, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);

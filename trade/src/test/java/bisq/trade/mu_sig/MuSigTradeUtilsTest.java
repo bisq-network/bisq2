@@ -41,6 +41,7 @@ import bisq.security.keys.PubKey;
 import bisq.security.keys.TorKeyGeneration;
 import com.google.protobuf.Message;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Map;
 import java.util.List;
@@ -52,7 +53,8 @@ import static bisq.offer.options.OfferOptionUtil.createSaltedAccountPayloadHash;
 
 class MuSigTradeUtilsTest {
     @Test
-    void returnsBaseAsBtcSideForBtcFiatMarket() {
+    @DisplayName("returns base as btc side for btc fiat market")
+    void returns_base_as_btc_side_for_btc_fiat_market() {
         MuSigContract contract = createContract(createBtcFiatMarket(), 111L, 222L);
 
         Monetary btcSideMonetary = MuSigTradeUtils.getBtcSideMonetary(contract);
@@ -65,7 +67,8 @@ class MuSigTradeUtilsTest {
     }
 
     @Test
-    void returnsQuoteAsBtcSideForCryptoBtcMarket() {
+    @DisplayName("returns quote as btc side for crypto btc market")
+    void returns_quote_as_btc_side_for_crypto_btc_market() {
         MuSigContract contract = createContract(createCryptoBtcMarket(), 111L, 222L);
 
         Monetary btcSideMonetary = MuSigTradeUtils.getBtcSideMonetary(contract);
@@ -78,7 +81,8 @@ class MuSigTradeUtilsTest {
     }
 
     @Test
-    void matchesMakersSaltedAccountPayloadHashWhenTakerReceivesPeersAccountPayload() {
+    @DisplayName("matches makers salted account payload hash when taker receives peers account payload")
+    void matches_makers_salted_account_payload_hash_when_taker_receives_peers_account_payload() {
         TestAccountPayload accountPayload = new TestAccountPayload(new byte[]{1, 2, 3});
         MuSigContract contract = createContractWithPeerHashes(
                 createBtcFiatMarket(),
@@ -90,7 +94,8 @@ class MuSigTradeUtilsTest {
     }
 
     @Test
-    void matchesTakersSaltedAccountPayloadHashWhenMakerReceivesPeersAccountPayload() {
+    @DisplayName("matches takers salted account payload hash when maker receives peers account payload")
+    void matches_takers_salted_account_payload_hash_when_maker_receives_peers_account_payload() {
         TestAccountPayload accountPayload = new TestAccountPayload(new byte[]{4, 5, 6});
         MuSigContract contract = createContractWithPeerHashes(
                 createBtcFiatMarket(),
@@ -102,7 +107,8 @@ class MuSigTradeUtilsTest {
     }
 
     @Test
-    void returnsFalseWhenPeerAccountPayloadHashDoesNotMatchContract() {
+    @DisplayName("returns false when peer account payload hash does not match contract")
+    void returns_false_when_peer_account_payload_hash_does_not_match_contract() {
         TestAccountPayload accountPayload = new TestAccountPayload(new byte[]{1, 2, 3});
         MuSigContract contract = createContractWithPeerHashes(
                 createBtcFiatMarket(),

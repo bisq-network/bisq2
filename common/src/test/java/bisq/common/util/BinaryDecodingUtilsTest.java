@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class BinaryDecodingUtilsTest {
 
     @Test
-    void readByte_readsCorrectValue() throws Exception {
+    @DisplayName("read byte reads correct value")
+    void read_byte_reads_correct_value() throws Exception {
         byte[] data = {(byte) 0x42};
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(data));
 
@@ -39,7 +41,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void readInt_readsCorrectValue() throws Exception {
+    @DisplayName("read int reads correct value")
+    void read_int_reads_correct_value() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
         out.writeInt(123);
@@ -50,7 +53,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void readLong_readsCorrectValue() throws Exception {
+    @DisplayName("read long reads correct value")
+    void read_long_reads_correct_value() throws Exception {
         long value = 987654321L;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -63,7 +67,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void readBytes_readsPayloadWithLengthPrefix() throws Exception {
+    @DisplayName("read bytes reads payload with length prefix")
+    void read_bytes_reads_payload_with_length_prefix() throws Exception {
         byte[] payload = {10, 20, 30};
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -79,7 +84,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void readBytes_respectsMaxLength() throws Exception {
+    @DisplayName("read bytes respects max length")
+    void read_bytes_respects_max_length() throws Exception {
         byte[] payload = new byte[10];
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -96,7 +102,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void readString_readsUtf8String() throws Exception {
+    @DisplayName("read string reads utf8 string")
+    void read_string_reads_utf8_string() throws Exception {
         String value = "hello";
         byte[] utf8 = value.getBytes(StandardCharsets.UTF_8);
 
@@ -111,7 +118,8 @@ class BinaryDecodingUtilsTest {
     }
 
     @Test
-    void fullRoundtrip_stringIntLong() throws Exception {
+    @DisplayName("full roundtrip string int long")
+    void full_roundtrip_string_int_long() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
 

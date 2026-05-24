@@ -19,13 +19,15 @@ package bisq.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Random;
 
 @Slf4j
 public class DigestUtilTest {
     @Test
-    public void testPerformance() {
+    @DisplayName("performance")
+    public void performance() {
         long ts;
         int iterations = 100000;
         byte[] bytes = new byte[1000];

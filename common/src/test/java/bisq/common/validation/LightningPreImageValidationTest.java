@@ -1,12 +1,14 @@
 package bisq.common.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LightningPreImageValidationTest {
     @Test
-    public void testValidateLightningInvoiceHash() {
+    @DisplayName("validate lightning invoice hash")
+    public void validate_lightning_invoice_hash() {
         assertTrue(LightningPreImageValidation.isValid("abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"));
 
         assertFalse(LightningPreImageValidation.isValid("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"));
