@@ -19,6 +19,7 @@ package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,13 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReactionCompatibilityTest {
     @Test
-    void fromOrdinalReturnsEmptyForUnsupportedFutureReaction() {
+    @DisplayName("from ordinal returns empty for unsupported future reaction")
+    void from_ordinal_returns_empty_for_unsupported_future_reaction() {
         assertTrue(Reaction.fromOrdinal(Reaction.PARTY.ordinal()).isPresent());
         assertFalse(Reaction.fromOrdinal(Reaction.values().length).isPresent());
     }
 
     @Test
-    void commonPublicChatMessageReactionAllowsFutureReactionIds() {
+    @DisplayName("common public chat message reaction allows future reaction ids")
+    void common_public_chat_message_reaction_allows_future_reaction_ids() {
         bisq.chat.protobuf.ChatMessageReaction proto = bisq.chat.protobuf.ChatMessageReaction.newBuilder()
                 .setId("reaction-id")
                 .setUserProfileId("0123456789abcdef0123456789abcdef01234567")
@@ -53,7 +56,8 @@ class ReactionCompatibilityTest {
     }
 
     @Test
-    void commonPublicChatMessageReactionStillRejectsNegativeReactionIds() {
+    @DisplayName("common public chat message reaction still rejects negative reaction ids")
+    void common_public_chat_message_reaction_still_rejects_negative_reaction_ids() {
         assertThrows(IllegalArgumentException.class, () -> new CommonPublicChatMessageReaction(
                 "reaction-id",
                 "0123456789abcdef0123456789abcdef01234567",

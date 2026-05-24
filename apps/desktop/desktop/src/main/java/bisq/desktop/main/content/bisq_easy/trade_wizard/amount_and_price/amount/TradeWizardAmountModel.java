@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
@@ -48,7 +48,7 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
     @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
+    private List<? extends PaymentMethod<?>> fiatPaymentMethods = new ArrayList<>();
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();

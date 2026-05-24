@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -50,7 +51,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
     private static final double TWO_COLUMN_WIDTH = 20.75;
 
-    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
+    private final ListChangeListener<PaymentMethod<?>> fiatPaymentMethodListener;
     private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel, overlayLabel;
     private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
     private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
@@ -188,37 +189,40 @@ public class TradeWizardPaymentMethodsView extends View<StackPane, TradeWizardPa
         int i = 0;
         int col, row;
         for (; i < paymentMethodsCount; ++i) {
-            FiatPaymentMethod fiatPaymentMethod = model.getSortedFiatPaymentMethods().get(i);
+            PaymentMethod<?> paymentMethod = model.getSortedFiatPaymentMethods().get(i);
 
-            // enum name or custom name
-            ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
-            if (!fiatPaymentMethod.getShortDisplayString().equals(fiatPaymentMethod.getDisplayString())) {
-                chipButton.setTooltip(new BisqTooltip(fiatPaymentMethod.getDisplayString()));
+            ChipButton chipButton = new ChipButton(paymentMethod.getShortDisplayString());
+            if (!paymentMethod.getShortDisplayString().equals(paymentMethod.getDisplayString())) {
+                chipButton.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
             }
-            if (model.getSelectedFiatPaymentMethods().contains(fiatPaymentMethod)) {
+            if (model.getSelectedFiatPaymentMethods().contains(paymentMethod)) {
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onToggleFiatPaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                boolean wasAdded = controller.onToggleFiatPaymentMethod(paymentMethod, chipButton.isSelected());
                 if (!wasAdded) {
                     UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
                 }
             });
-            model.getAddedCustomFiatPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(fiatPaymentMethod))
-                    .findAny()
-                    .ifPresentOrElse(
-                            customMethod -> {
-                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
-                                StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
-                                chipButton.setLeftIcon(icon);
-                            },
-                            () -> {
-                                // Lookup for an image with the id of the enum name (REVOLUT)
-                                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getPaymentRailName());
-                                chipButton.setLeftIcon(icon);
-                            });
+            if (paymentMethod instanceof FiatPaymentMethod fiatPaymentMethod) {
+                model.getAddedCustomFiatPaymentMethods().stream()
+                        .filter(customMethod -> customMethod.equals(fiatPaymentMethod))
+                        .findAny()
+                        .ifPresentOrElse(
+                                customMethod -> {
+                                    ImageView closeIcon = chipButton.setRightIcon("remove-white");
+                                    closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
+                                    StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
+                                    chipButton.setLeftIcon(icon);
+                                },
+                                () -> {
+                                    ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getPaymentRailName());
+                                    chipButton.setLeftIcon(icon);
+                                });
+            } else {
+                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getPaymentRailName());
+                chipButton.setLeftIcon(icon);
+            }
 
             col = i % numColumns;
             row = i / numColumns;

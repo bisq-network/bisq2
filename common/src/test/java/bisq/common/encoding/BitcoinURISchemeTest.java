@@ -1,12 +1,14 @@
 package bisq.common.encoding;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BitcoinURISchemeTest {
     @Test
-    public void testExtractBitcoinAddress() {
+    @DisplayName("extract bitcoin address")
+    public void extract_bitcoin_address() {
         assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy", BitcoinURIScheme.extractBitcoinAddress("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy"));
         assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy", BitcoinURIScheme.extractBitcoinAddress("bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy"));
         assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy", BitcoinURIScheme.extractBitcoinAddress("bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy?amount=1234"));

@@ -2,13 +2,15 @@ package bisq.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class MathUtilsTest {
     @Test
-    public void parseToDouble() {
+    @DisplayName("parse to double")
+    public void parse_to_double() {
         assertEquals(1, MathUtils.parseToDouble("1"));
         assertEquals(1, MathUtils.parseToDouble("01"));
         assertEquals(-1, MathUtils.parseToDouble("-01"));

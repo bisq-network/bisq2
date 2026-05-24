@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.asset.FiatCurrencyRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MonetaryTest {
 
     @Test
-    void testGetRoundedValueForPrecision() {
+    @DisplayName("get rounded value for precision")
+    void get_rounded_value_for_precision() {
         Monetary monetary = Monetary.from(123456789, "BTC");
         assertEquals(100000000, monetary.getRoundedValueForPrecision(0));
 
@@ -47,7 +49,8 @@ public class MonetaryTest {
     }
 
     @Test
-    void testComparision() {
+    @DisplayName("comparision")
+    void comparision() {
         Monetary monetary = Monetary.from(123456788, "BTC");
         Monetary other = Monetary.from(123456789, "BTC");
         assertTrue(monetary.isLessThan(other, 8));
@@ -59,7 +62,8 @@ public class MonetaryTest {
     }
 
     @Test
-    void testClampWithMonetaryRange() {
+    @DisplayName("clamp with monetary range")
+    void clamp_with_monetary_range() {
         Monetary min = Coin.asBtcFromFaceValue(0.5);
         Monetary max = Coin.asBtcFromFaceValue(1.5);
         MonetaryRange limits = new MonetaryRange(min, max);
@@ -74,7 +78,8 @@ public class MonetaryTest {
     }
 
     @Test
-    void testClampThrowsIfCodeDoesNotMatch() {
+    @DisplayName("clamp throws if code does not match")
+    void clamp_throws_if_code_does_not_match() {
         Monetary value = Coin.asBtcFromFaceValue(1.0);
         Monetary min = Fiat.fromFaceValue(10, "USD");
         Monetary max = Coin.asBtcFromFaceValue(2.0);
@@ -83,7 +88,8 @@ public class MonetaryTest {
     }
 
     @Test
-    void testGetRoundedValueForLowPrecision() {
+    @DisplayName("get rounded value for low precision")
+    void get_rounded_value_for_low_precision() {
         Monetary monetary = Monetary.from(123456789, "BTC");
         assertEquals(123460000, monetary.getRoundedValueForLowPrecision());
 
@@ -104,35 +110,40 @@ public class MonetaryTest {
     }
 
     @Test
-    void testBtcPrecision() {
+    @DisplayName("btc precision")
+    void btc_precision() {
         Monetary monetary = Monetary.from(12345678, "BTC");
         assertEquals(8, monetary.precision);
         assertEquals(4, monetary.lowPrecision);
     }
 
     @Test
-    void testXmrPrecision() {
+    @DisplayName("xmr precision")
+    void xmr_precision() {
         Monetary monetary = Monetary.from(12345678, "XMR");
         assertEquals(12, monetary.precision);
         assertEquals(4, monetary.lowPrecision);
     }
 
     @Test
-    void testBsqPrecision() {
+    @DisplayName("bsq precision")
+    void bsq_precision() {
         Monetary monetary = Monetary.from(12345678, "BSQ");
         assertEquals(2, monetary.precision);
         assertEquals(2, monetary.lowPrecision);
     }
 
     @Test
-    void testFiatPrecision() {
+    @DisplayName("fiat precision")
+    void fiat_precision() {
         Monetary monetary = Monetary.from(12345678, "EUR");
         assertEquals(4, monetary.precision);
         assertEquals(2, monetary.lowPrecision);
     }
 
     @Test
-    void testParse() {
+    @DisplayName("parse")
+    void parse() {
         assertEquals(12345678, Coin.parse("0.12345678", "BTC", 8).getValue());
         assertEquals(12345678, Coin.parseBtc("0.12345678").getValue());
         assertEquals(12345678, Coin.parseBtc("0.123456789").getValue());
@@ -156,7 +167,8 @@ public class MonetaryTest {
     }
 
     @Test
-    void testQuotes() {
+    @DisplayName("quotes")
+    void quotes() {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         Fiat usd = Fiat.fromFaceValue(50000d, "USD");
         PriceQuote priceQuote = PriceQuote.from(btc, usd);
@@ -265,5 +277,114 @@ public class MonetaryTest {
         } catch (Exception e) {
             assertInstanceOf(ArithmeticException.class, e);
         }
+    }
+
+    @Test
+    @DisplayName("usdc coin has 6 decimal precision")
+    void usdc_coin_has_6_decimal_precision() {
+        Coin usdc = Coin.fromFaceValue(100.0, "USDC");
+        assertEquals(6, usdc.getPrecision());
+        assertEquals(100_000_000, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("usdc fromFaceValue round trip")
+    void usdc_from_face_value_round_trip() {
+        Coin usdc = Coin.fromFaceValue(42.50, "USDC");
+        assertEquals(42_500_000, usdc.getValue());
+        assertEquals(42.5, Monetary.toFaceValue(usdc, 2), 0.0001);
+    }
+
+    @Test
+    @DisplayName("monetary from dispatches fiat vs coin")
+    void monetary_from_dispatches_fiat_vs_coin() {
+        Monetary usd = Monetary.from(10000, "USD");
+        assertInstanceOf(Fiat.class, usd);
+
+        Monetary usdc = Monetary.from(10000000, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+    }
+
+    @Test
+    @DisplayName("monetary fromFaceValue dispatches fiat vs coin")
+    void monetary_from_face_value_dispatches_fiat_vs_coin() {
+        Monetary usd = Monetary.fromFaceValue(100.0, "USD");
+        assertInstanceOf(Fiat.class, usd);
+        assertEquals(100.0, Monetary.toFaceValue(usd, 2), 0.0001);
+
+        Monetary usdc = Monetary.fromFaceValue(100.0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(100.0, Monetary.toFaceValue(usdc, 2), 0.0001);
+    }
+
+    @Test
+    @DisplayName("usdc zero value")
+    void usdc_zero_value() {
+        Monetary usdc = Monetary.from(0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(0, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("usdc max reasonable amount")
+    void usdc_max_reasonable_amount() {
+        Monetary usdc = Monetary.fromFaceValue(1_000_000.0, "USDC");
+        assertInstanceOf(Coin.class, usdc);
+        assertEquals(1_000_000_000_000L, usdc.getValue());
+        assertEquals(1_000_000.0, Monetary.toFaceValue(usdc, 2), 0.01);
+    }
+
+    @Test
+    @DisplayName("usdc precision boundary at 6 decimals")
+    void usdc_precision_boundary() {
+        Coin usdc = Coin.fromFaceValue(0.000001, "USDC");
+        assertEquals(1, usdc.getValue());
+        assertEquals(6, usdc.getPrecision());
+    }
+
+    @Test
+    @DisplayName("usdc fromFaceValue precision truncation")
+    void usdc_face_value_precision_truncation() {
+        Coin usdc = Coin.fromFaceValue(1.1234567, "USDC");
+        assertEquals(1_123_456, usdc.getValue());
+    }
+
+    @Test
+    @DisplayName("monetary from returns Coin for USDC and Fiat for USD")
+    void monetary_from_type_dispatch() {
+        Monetary usdc = Monetary.from(1000000, "USDC");
+        Monetary usd = Monetary.from(10000, "USD");
+        assertInstanceOf(Coin.class, usdc);
+        assertInstanceOf(Fiat.class, usd);
+        assertEquals("USDC", usdc.getCode());
+        assertEquals("USD", usd.getCode());
+    }
+
+    @Test
+    @DisplayName("btc usdc price quote")
+    void btc_usdc_price_quote() {
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
+        Coin usdc = Coin.fromFaceValue(100000.0, "USDC");
+        PriceQuote priceQuote = PriceQuote.from(btc, usdc);
+        assertEquals("BTC/USDC", priceQuote.getMarket().getMarketCodes());
+        assertEquals("USDC", priceQuote.getQuoteSideMonetary().getCode());
+        assertEquals("BTC", priceQuote.getBaseSideMonetary().getCode());
+        assertTrue(priceQuote.getValue() > 0);
+    }
+
+    @Test
+    @DisplayName("usdc low precision is 2 for display like fiat")
+    void usdc_low_precision_is_two() {
+        Coin usdc = Coin.fromFaceValue(1000.50, "USDC");
+        assertEquals(6, usdc.getPrecision());
+        assertEquals(2, usdc.getLowPrecision());
+    }
+
+    @Test
+    @DisplayName("btc low precision is 4 unchanged")
+    void btc_low_precision_unchanged() {
+        Coin btc = Coin.asBtcFromFaceValue(1.0);
+        assertEquals(8, btc.getPrecision());
+        assertEquals(4, btc.getLowPrecision());
     }
 }

@@ -111,7 +111,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                     .ifPresent(market -> model.getSelectedMarket().set(market));
         }
 
-        model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
+        model.getListItems().setAll(MarketRepository.getAllBisqEasyMarkets().stream()
                 .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
                 .map(market -> {
                     Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChannelService.getChannels().stream()

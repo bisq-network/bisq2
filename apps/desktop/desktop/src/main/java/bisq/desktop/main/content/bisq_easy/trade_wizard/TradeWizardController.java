@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -73,7 +73,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardReviewController tradeWizardReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private final ListChangeListener<BitcoinPaymentMethod> bitcoinPaymentMethodsListener;
-    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodsListener;
+    private final ListChangeListener<PaymentMethod<?>> fiatPaymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin, priceSpecPin, selectedBisqEasyOfferPin,
             isBackButtonHighlightedPin;
 
@@ -356,7 +356,7 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private void handleFiatPaymentMethodsUpdate() {
-        ObservableList<FiatPaymentMethod> fiatPaymentMethods = tradeWizardPaymentMethodsController.getFiatPaymentMethods();
+        ObservableList<PaymentMethod<?>> fiatPaymentMethods = tradeWizardPaymentMethodsController.getFiatPaymentMethods();
         tradeWizardSelectOfferController.setFiatPaymentMethods(fiatPaymentMethods);
         tradeWizardAmountAndPriceController.setFiatPaymentMethods(fiatPaymentMethods);
         tradeWizardReviewController.setFiatPaymentMethods(fiatPaymentMethods);

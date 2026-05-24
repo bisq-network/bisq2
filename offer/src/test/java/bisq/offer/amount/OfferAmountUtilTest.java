@@ -22,6 +22,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class OfferAmountUtilTest {
 
     @Test
-    void calculateSecurityDepositAsBTCUsesPercentageAndCode() {
+    @DisplayName("calculate security deposit as btc uses percentage and code")
+    void calculate_security_deposit_as_btc_uses_percentage_and_code() {
         Monetary input = Coin.asBtcFromValue(100_000_000L);
         Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(input, 0.25);
         assertEquals("BTC", deposit.getCode());
@@ -37,14 +39,16 @@ public class OfferAmountUtilTest {
     }
 
     @Test
-    void calculateSecurityDepositAsBTCRoundsHalfUp() {
+    @DisplayName("calculate security deposit as btc rounds half up")
+    void calculate_security_deposit_as_btc_rounds_half_up() {
         Monetary input = Coin.asBtcFromValue(3L);
         Monetary deposit = OfferAmountUtil.calculateSecurityDepositAsBTC(input, 0.5);
         assertEquals(2L, deposit.getValue());
     }
 
     @Test
-    void calculateSecurityDepositAsBTCUsesBaseSideForBtcFiatMarket() {
+    @DisplayName("calculate security deposit as btc uses base side for btc fiat market")
+    void calculate_security_deposit_as_btc_uses_base_side_for_btc_fiat_market() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         Monetary baseSideMonetary = Coin.asBtcFromValue(100_000_000L);
         Monetary quoteSideMonetary = Fiat.fromValue(5_000_000L, "USD");
@@ -56,7 +60,8 @@ public class OfferAmountUtilTest {
     }
 
     @Test
-    void calculateSecurityDepositAsBTCUsesQuoteSideForCryptoBtcMarket() {
+    @DisplayName("calculate security deposit as btc uses quote side for crypto btc market")
+    void calculate_security_deposit_as_btc_uses_quote_side_for_crypto_btc_market() {
         Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
         Monetary baseSideMonetary = Coin.fromValue(10_000_000_000L, "XMR");
         Monetary quoteSideMonetary = Coin.asBtcFromValue(50_000_000L);
@@ -68,7 +73,8 @@ public class OfferAmountUtilTest {
     }
 
     @Test
-    void calculateSecurityDepositAsBTCThrowsWhenCodeIsNotBtc() {
+    @DisplayName("calculate security deposit as btc throws when code is not btc")
+    void calculate_security_deposit_as_btc_throws_when_code_is_not_btc() {
         Monetary nonBtcMonetary = Fiat.fromValue(10_000L, "USD");
 
         assertThrows(IllegalArgumentException.class, () ->

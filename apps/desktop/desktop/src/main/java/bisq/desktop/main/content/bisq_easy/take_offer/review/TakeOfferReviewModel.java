@@ -21,7 +21,7 @@ import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
@@ -44,7 +44,7 @@ class TakeOfferReviewModel implements Model {
     @Setter
     private BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec;
     @Setter
-    private FiatPaymentMethodSpec fiatPaymentMethodSpec;
+    private PaymentMethodSpec<?> fiatPaymentMethodSpec;
     @Setter
     private Monetary takersBaseSideAmount;
     @Setter

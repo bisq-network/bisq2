@@ -27,6 +27,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -80,7 +81,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void getOrCreateIdentityTest() {
+    @DisplayName("get or create identity test")
+    void get_or_create_identity_test() {
         String myTag = "myTag";
         Identity activeIdentity = identityService.getOrCreateIdentity(myTag);
         Identity persistedActiveIdentity = identityService.getOrCreateIdentity(myTag);
@@ -91,7 +93,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void getOrCreateIdentityWithAllArguments() {
+    @DisplayName("get or create identity with all arguments")
+    void get_or_create_identity_with_all_arguments() {
         String identityTag = "myTag1";
         // String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         // KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
@@ -108,7 +111,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void getOrCreateDefaultIdentityTest() {
+    @DisplayName("get or create default identity test")
+    void get_or_create_default_identity_test() {
         Identity firstDefaultIdentity = identityService.getOrCreateDefaultIdentity();
         assertThat(firstDefaultIdentity.getTag())
                 .isEqualTo(IdentityService.DEFAULT_IDENTITY_TAG);
@@ -118,7 +122,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void createNewIdentity() {
+    @DisplayName("create new identity")
+    void create_new_identity() {
         String myTag = "myTag";
         Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag).join();
         Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag).join();
@@ -127,13 +132,15 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void retireInvalidIdentity() {
+    @DisplayName("retire invalid identity")
+    void retire_invalid_identity() {
         boolean isRemoved = identityService.retireActiveIdentity("tag");
         assertThat(isRemoved).isFalse();
     }
 
     @Test
-    void retireActiveIdentity() {
+    @DisplayName("retire active identity")
+    void retire_active_identity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -152,13 +159,15 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findInvalidIdentity() {
+    @DisplayName("find invalid identity")
+    void find_invalid_identity() {
         Optional<Identity> activeIdentity = identityService.findActiveIdentity("tag");
         assertThat(activeIdentity).isEmpty();
     }
 
     @Test
-    void findInvalidIdentityByNetworkId() {
+    @DisplayName("find invalid identity by network id")
+    void find_invalid_identity_by_network_id() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
 
@@ -172,7 +181,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findActiveIdentity() {
+    @DisplayName("find active identity")
+    void find_active_identity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -181,7 +191,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findActiveIdentityByNetworkId() {
+    @DisplayName("find active identity by network id")
+    void find_active_identity_by_network_id() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -190,7 +201,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findInvalidRetiredIdentity() {
+    @DisplayName("find invalid retired identity")
+    void find_invalid_retired_identity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
         String keyId = keyBundleService.getKeyIdFromTag("myTag3");
@@ -203,7 +215,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findRetiredIdentity() {
+    @DisplayName("find retired identity")
+    void find_retired_identity() {
         Identity identity = identityService.getOrCreateIdentity("tag");
         identityService.retireActiveIdentity("tag");
 
@@ -212,7 +225,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findDefaultIdentityInFindAnyIdentity() {
+    @DisplayName("find default identity in find any identity")
+    void find_default_identity_in_find_any_identity() {
         Identity defaultIdentity = identityService.getOrCreateDefaultIdentity();
         Optional<Identity> identityByNetworkId = identityService
                 .findAnyIdentityByNetworkId(defaultIdentity.getNetworkId());
@@ -220,7 +234,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findActiveIdentityInFindAnyIdentity() {
+    @DisplayName("find active identity in find any identity")
+    void find_active_identity_in_find_any_identity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -230,7 +245,8 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findRetiredIdentityInFindAnyIdentity() {
+    @DisplayName("find retired identity in find any identity")
+    void find_retired_identity_in_find_any_identity() {
         Identity identity = identityService.getOrCreateIdentity("tag");
         identityService.retireActiveIdentity("tag");
 

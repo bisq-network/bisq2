@@ -28,6 +28,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,35 +53,40 @@ class MuSigTradeFormatterTest {
     }
 
     @Test
-    void formatBtcSideAmountMatchesBaseForBtcFiatMarket() {
+    @DisplayName("format btc side amount matches base for btc fiat market")
+    void format_btc_side_amount_matches_base_for_btc_fiat_market() {
         MuSigContract contract = createContract(createBtcFiatMarket(), 100_000_000L, 12_345_000L);
 
         assertEquals("1.00000000", MuSigTradeFormatter.formatBtcSideAmount(contract));
     }
 
     @Test
-    void formatBtcSideAmountMatchesQuoteForCryptoBtcMarket() {
+    @DisplayName("format btc side amount matches quote for crypto btc market")
+    void format_btc_side_amount_matches_quote_for_crypto_btc_market() {
         MuSigContract contract = createContract(createCryptoBtcMarket(), 12_345_000_000L, 100_000_000L);
 
         assertEquals("1.00000000", MuSigTradeFormatter.formatBtcSideAmount(contract));
     }
 
     @Test
-    void formatNonBtcSideAmountMatchesQuoteForBtcFiatMarket() {
+    @DisplayName("format non btc side amount matches quote for btc fiat market")
+    void format_non_btc_side_amount_matches_quote_for_btc_fiat_market() {
         MuSigContract contract = createContract(createBtcFiatMarket(), 100_000_000L, 12_345_000L);
 
         assertEquals("1234.50", MuSigTradeFormatter.formatNonBtcSideAmount(contract));
     }
 
     @Test
-    void formatNonBtcSideAmountMatchesBaseForCryptoBtcMarket() {
+    @DisplayName("format non btc side amount matches base for crypto btc market")
+    void format_non_btc_side_amount_matches_base_for_crypto_btc_market() {
         MuSigContract contract = createContract(createCryptoBtcMarket(), 12_345_000_000L, 100_000_000L);
 
         assertEquals("0.012345000000", MuSigTradeFormatter.formatNonBtcSideAmount(contract));
     }
 
     @Test
-    void formatBaseAndQuoteAmountsForBtcFiatMarket() {
+    @DisplayName("format base and quote amounts for btc fiat market")
+    void format_base_and_quote_amounts_for_btc_fiat_market() {
         MuSigContract contract = createContract(createBtcFiatMarket(), 100_000_000L, 12_345_000L);
 
         assertEquals("1.00000000", MuSigTradeFormatter.formatBaseSideAmount(contract));
@@ -90,7 +96,8 @@ class MuSigTradeFormatterTest {
     }
 
     @Test
-    void formatBaseAndQuoteAmountsForCryptoBtcMarket() {
+    @DisplayName("format base and quote amounts for crypto btc market")
+    void format_base_and_quote_amounts_for_crypto_btc_market() {
         MuSigContract contract = createContract(createCryptoBtcMarket(), 12_345_000_000L, 100_000_000L);
 
         assertEquals("0.012345000000", MuSigTradeFormatter.formatBaseSideAmount(contract));
@@ -100,14 +107,16 @@ class MuSigTradeFormatterTest {
     }
 
     @Test
-    void formatPriceWithCodeForBtcFiatMarket() {
+    @DisplayName("format price with code for btc fiat market")
+    void format_price_with_code_for_btc_fiat_market() {
         MuSigContract contract = createContract(createBtcFiatMarket(), 100_000_000L, 12_345_000L);
 
         assertEquals("1234.50 BTC/USD", MuSigTradeFormatter.formatPriceWithCode(contract));
     }
 
     @Test
-    void formatPriceWithCodeForCryptoBtcMarket() {
+    @DisplayName("format price with code for crypto btc market")
+    void format_price_with_code_for_crypto_btc_market() {
         MuSigContract contract = createContract(createCryptoBtcMarket(), 12_345_000_000L, 100_000_000L);
 
         assertEquals("81.0045 XMR/BTC", MuSigTradeFormatter.formatPriceWithCode(contract));

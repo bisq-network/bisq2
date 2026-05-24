@@ -19,8 +19,9 @@ package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import java.util.ArrayList;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.monetary.Monetary;
@@ -63,7 +64,7 @@ public class OfferbookListItem {
             fiatPaymentMethodsAsString, authorUserProfileId, quoteCurrencyCode, offerType,
             formattedOfferAge, offerAgeTooltipText;
     private final ReputationScore reputationScore;
-    private final List<FiatPaymentMethod> fiatPaymentMethods;
+    private final List<? extends PaymentMethod<?>> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
     private final boolean isFixPrice;
     private final Monetary quoteSideMinAmount;
@@ -83,7 +84,7 @@ public class OfferbookListItem {
         this.senderUserProfile = senderUserProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
-        fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+        fiatPaymentMethods = retrieveAndSortQuoteSidePaymentMethods();
         bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
         fiatPaymentMethodsAsString = Joiner.on(", ").join(fiatPaymentMethods.stream()
                 .map(PaymentMethod::getDisplayString)
@@ -127,11 +128,12 @@ public class OfferbookListItem {
         priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer);
     }
 
-    private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
-        List<FiatPaymentMethod> paymentMethods =
-                PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
-                .thenComparing(FiatPaymentMethod::getDisplayString));
+    private List<? extends PaymentMethod<?>> retrieveAndSortQuoteSidePaymentMethods() {
+        List<PaymentMethod<?>> paymentMethods = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
+                .map(PaymentMethodSpec::getPaymentMethod)
+                .collect(Collectors.toCollection(ArrayList::new));
+        paymentMethods.sort(Comparator.<PaymentMethod<?>, Boolean>comparing(PaymentMethod::isCustomPaymentMethod)
+                .thenComparing(PaymentMethod::getDisplayString));
         return paymentMethods;
     }
 

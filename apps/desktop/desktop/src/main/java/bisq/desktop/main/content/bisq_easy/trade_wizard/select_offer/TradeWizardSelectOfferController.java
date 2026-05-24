@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -56,6 +56,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -123,7 +124,7 @@ public class TradeWizardSelectOfferController implements Controller {
         }
     }
 
-    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+    public void setFiatPaymentMethods(List<? extends PaymentMethod<?>> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
             resetSelectedOffer();
@@ -290,12 +291,12 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Set<FiatPaymentMethod> takersFiatPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
-                List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
-                        .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
+                Set<PaymentMethod<?>> takersQuoteSideMethodSet = new HashSet<>(model.getFiatPaymentMethods());
+                List<PaymentMethod<?>> matchingQuoteSideMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
                         .map(PaymentMethodSpec::getPaymentMethod)
-                        .toList();
-                if (matchingFiatPaymentMethods.isEmpty()) {
+                        .filter(takersQuoteSideMethodSet::contains)
+                        .collect(Collectors.toList());
+                if (matchingQuoteSideMethods.isEmpty()) {
                     return false;
                 }
 

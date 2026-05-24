@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.components.offer.amount_selection;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -555,14 +556,14 @@ public class AmountSelectionController implements Controller {
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
             Monetary exactAmount = model.getMarket().isCrypto()
                     ? Coin.asBtcFromValue(midValue)
-                    : Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode()).round(0);
+                    : Monetary.from(midValue, priceQuote.getQuoteSideMonetary().getCode()).round(0);
             quoteSideAmountInput.setAmount(exactAmount);
             smallNumberDisplayBox.setAmount(exactAmount);
         } else {
             log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
             Monetary defaultQuoteSideAmount = model.getMarket().isCrypto()
                     ? Coin.asBtcFromFaceValue(100)
-                    : Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
+                    : Monetary.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
             quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
             smallNumberDisplayBox.setAmount(defaultQuoteSideAmount);
         }
@@ -610,8 +611,8 @@ public class AmountSelectionController implements Controller {
         } else {
             Monetary minRangeMonetary = model.getMinRangeMonetary().get();
             Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-            boolean isMinRangeMonetaryFiat = Asset.isFiat(minRangeMonetary.getCode());
-            boolean isMaxRangeMonetaryFiat = Asset.isFiat(maxRangeMonetary.getCode());
+            boolean isMinRangeMonetaryFiat = Asset.isFiat(minRangeMonetary.getCode()) || StableCoin.isStableCoin(minRangeMonetary.getCode());
+            boolean isMaxRangeMonetaryFiat = Asset.isFiat(maxRangeMonetary.getCode()) || StableCoin.isStableCoin(maxRangeMonetary.getCode());
 
             Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toBaseSideMonetary(minRangeMonetary);
             model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);

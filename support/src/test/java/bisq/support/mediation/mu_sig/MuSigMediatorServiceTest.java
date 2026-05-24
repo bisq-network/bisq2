@@ -57,6 +57,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -108,7 +109,8 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeMediationRequestMatchesAndPartiesAndMediatorAreConsistent() {
+    @DisplayName("authorize mediation request matches and parties and mediator are consistent")
+    void authorize_mediation_request_matches_and_parties_and_mediator_are_consistent() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         UserProfile mediator = createUserProfile(1003);
@@ -133,7 +135,8 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeDisputeCasePaymentDetailsResponse_returnsCase_whenKnownSenderIsNotBanned() {
+    @DisplayName("authorize dispute case payment details response returns case when known sender is not banned")
+    void authorize_dispute_case_payment_details_response_returns_case_when_known_sender_is_not_banned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         MuSigMediationRequest request = createMediationRequest("trade-12", requester, peer);
@@ -155,7 +158,8 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeDisputeCasePaymentDetailsResponse_returnsEmpty_whenSenderUserProfileIsUnknown() {
+    @DisplayName("authorize dispute case payment details response returns empty when sender user profile is unknown")
+    void authorize_dispute_case_payment_details_response_returns_empty_when_sender_user_profile_is_unknown() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         UserProfile stranger = createUserProfile(1003);
@@ -178,7 +182,8 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeDisputeCaseDataMessage_returnsCase_whenPeerIsNotBanned() {
+    @DisplayName("authorize dispute case data message returns case when peer is not banned")
+    void authorize_dispute_case_data_message_returns_case_when_peer_is_not_banned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         MuSigMediationRequest request = createMediationRequest("trade-14", requester, peer);
@@ -200,7 +205,8 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeDisputeCaseDataMessage_returnsEmpty_whenPeerIsBanned() {
+    @DisplayName("authorize dispute case data message returns empty when peer is banned")
+    void authorize_dispute_case_data_message_returns_empty_when_peer_is_banned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         when(bannedUserService.isUserProfileBanned(peer)).thenReturn(true);

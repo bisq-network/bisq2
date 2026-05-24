@@ -25,6 +25,7 @@ import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
+import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -52,6 +53,14 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     private final BisqEasyOfferbookChannelStore persistableStore = new BisqEasyOfferbookChannelStore();
     @Getter
     private final Persistence<BisqEasyOfferbookChannelStore> persistence;
+
+    /**
+     * Becomes true when at least one received offerbook message contained an offer
+     * that could not be deserialized (version too high or corrupted payload).
+     * The UI layer should observe this and show a one-time upgrade prompt.
+     */
+    @Getter
+    private final Observable<Boolean> hasReceivedUnsupportedOffer = new Observable<>(false);
 
     public BisqEasyOfferbookChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
@@ -129,6 +138,17 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     }
 
 
+    @Override
+    protected void processAddedMessage(BisqEasyOfferbookMessage message) {
+        if (message.isUnsupportedOffer() && !Boolean.TRUE.equals(hasReceivedUnsupportedOffer.get())) {
+            hasReceivedUnsupportedOffer.set(true);
+            log.info("Received offerbook message with unsupported offer (minSupportedVersion={}). " +
+                    "Message id: {}", message.getMinSupportedVersion(), message.getId());
+        }
+        super.processAddedMessage(message);
+    }
+
+
     /* --------------------------------------------------------------------- */
     // Protected 
     /* --------------------------------------------------------------------- */
@@ -166,10 +186,13 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
             BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefaultBtcFiatMarket());
             maybeAddPublicTradeChannel(defaultChannel);
 
-            List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
+            List<Market> allMarkets = MarketRepository.getAllBisqEasyMarkets();
             allMarkets.remove(MarketRepository.getDefaultBtcFiatMarket());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }
+
+        MarketRepository.getStableCoinMarkets()
+                .forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
     }
 
     @Override

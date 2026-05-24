@@ -32,7 +32,6 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -143,7 +142,7 @@ public class TradeRestApi extends RestApiBase {
                     .orElseThrow();
             checkArgument(!bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId()), "Maker profile is banned");
             Monetary baseSideAmount = Monetary.from(request.baseSideAmount(), bisqEasyOffer.getMarket().getBaseCurrencyCode());
-            Monetary quoteSideAmount = Monetary.from(request.quoteSideAmount(), bisqEasyOffer.getMarket().getBaseCurrencyCode());
+            Monetary quoteSideAmount = Monetary.from(request.quoteSideAmount(), bisqEasyOffer.getMarket().getQuoteCurrencyCode());
             BitcoinPaymentMethod bitcoinPaymentMethod = PaymentMethodSpecUtil.getBitcoinPaymentMethod(request.bitcoinPaymentMethod());
             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(bitcoinPaymentMethod);
             FiatPaymentMethod fiatPaymentMethod = PaymentMethodSpecUtil.getFiatPaymentMethod(request.fiatPaymentMethod());
@@ -319,7 +318,7 @@ public class TradeRestApi extends RestApiBase {
                                                 String userName) throws Exception {
         long quoteSideAmount = trade.getContract().getQuoteSideAmount();
         String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
-        String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Monetary.from(quoteSideAmount, quoteCurrencyCode));
         String encoded = Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage", userName, formattedQuoteAmount);
         bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.sellerConfirmFiatReceipt(trade);

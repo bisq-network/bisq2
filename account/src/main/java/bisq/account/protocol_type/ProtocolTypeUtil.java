@@ -17,8 +17,9 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.market.Market;
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
+import bisq.common.market.Market;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -53,7 +54,8 @@ public class ProtocolTypeUtil {
     private static boolean isBisqEasySupported(Market market) {
         String baseCurrencyCode = market.getBaseCurrencyCode();
         String quoteCurrencyCode = market.getQuoteCurrencyCode();
-        return (baseCurrencyCode.equals("BTC") && Asset.isFiat(quoteCurrencyCode));
+        return baseCurrencyCode.equals("BTC") &&
+                (Asset.isFiat(quoteCurrencyCode) || StableCoin.isStableCoin(quoteCurrencyCode));
     }
 
     private static boolean isBtcXmrSwapSupported(Market market) {

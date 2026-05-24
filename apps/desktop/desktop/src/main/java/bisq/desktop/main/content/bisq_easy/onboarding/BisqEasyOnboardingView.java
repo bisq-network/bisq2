@@ -27,13 +27,18 @@ import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -42,7 +47,7 @@ import org.fxmisc.easybind.Subscription;
 public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
     private static final int PADDING = 20;
 
-    private Button watchVideoButton, openTradeGuideButton;
+    private Button watchVideoButton, openTradeGuideButton, openStableCoinButton;
     private final Button startTradingButton, openChatButton;
     private ImageView videoImage;
     private Subscription videoSeenPin;
@@ -107,6 +112,36 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
                 0d,
                 groupPaneStyleClass,
                 groupInsets);
+
+        // Third row: stablecoin card (full-width)
+        HBox stableCoinCard = createStableCoinCard();
+        root.add(stableCoinCard, 0, 3, 2, 1);
+    }
+
+    private HBox createStableCoinCard() {
+        Label headline = GridPaneUtil.getHeadline(
+                Res.get("bisqEasy.onboarding.stableCoin.headline"),
+                "bisq-easy-onboarding-small-box-headline",
+                "bisq-easy",
+                16d);
+
+        TextFlow info = GridPaneUtil.getInfoLabel(
+                Res.get("bisqEasy.onboarding.stableCoin.info"),
+                "bisq-easy-onboarding-small-box-text");
+
+        openStableCoinButton = new Button(Res.get("bisqEasy.onboarding.stableCoin.button"));
+        openStableCoinButton.getStyleClass().add("large-button");
+        openStableCoinButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(openStableCoinButton, Priority.ALWAYS);
+
+        VBox textContent = new VBox(10, headline, info);
+        HBox.setHgrow(textContent, Priority.ALWAYS);
+
+        HBox card = new HBox(40, textContent, openStableCoinButton);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(36, 48, 36, 48));
+        card.getStyleClass().add("bisq-easy-onboarding-small-box");
+        return card;
     }
 
     @Override
@@ -118,6 +153,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         startTradingButton.setOnAction(e -> controller.onOpenTradeWizard());
         openChatButton.setOnAction(e -> controller.onOpenOfferbook());
+        openStableCoinButton.setOnAction(e -> controller.onOpenStableCoinOfferbook());
         openTradeGuideButton.setOnAction(e -> controller.onOpenTradeGuide());
         watchVideoButton.setOnMouseClicked(e -> controller.onPlayVideo());
         videoImage.setOnMouseClicked(e -> controller.onPlayVideo());
@@ -129,6 +165,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
 
         startTradingButton.setOnAction(null);
         openChatButton.setOnAction(null);
+        openStableCoinButton.setOnAction(null);
         openTradeGuideButton.setOnAction(null);
         watchVideoButton.setOnAction(null);
         videoImage.setOnMouseClicked(null);

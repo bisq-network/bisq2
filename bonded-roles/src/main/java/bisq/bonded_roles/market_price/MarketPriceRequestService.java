@@ -18,6 +18,7 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.common.asset.Asset;
+import bisq.common.asset.StableCoin;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
@@ -162,6 +163,10 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
             try {
                 Map<?, ?> treeMap = (Map<?, ?>) obj;
                 String currencyCode = (String) treeMap.get("currencyCode");
+                // Pricenode returns "USDT-E" for Tether; normalize to canonical code
+                if ("USDT-E".equals(currencyCode)) {
+                    currencyCode = "USDT";
+                }
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
                     String provider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
                     // Convert Bisq-Aggregate to BISQAGGREGATE
@@ -171,10 +176,12 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
                     // json uses double for our timestamp long value...
                     // We get milliseconds not seconds
                     long timestamp = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-                    // We only get BTC based prices not fiat-fiat or altcoin-altcoin
+                    // We only get BTC based prices not fiat-fiat or altcoin-altcoin.
+                    // Stablecoins use same orientation as fiat: BTC/USDC (not USDC/BTC).
                     boolean isFiat = Asset.isFiat(currencyCode);
-                    String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
-                    String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
+                    boolean isStableCoin = StableCoin.isStableCoin(currencyCode);
+                    String baseCurrencyCode = (isFiat || isStableCoin) ? "BTC" : currencyCode;
+                    String quoteCurrencyCode = (isFiat || isStableCoin) ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
                     MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromName(provider);
                     MarketPriceProviderInfo marketPriceProviderInfo = new MarketPriceProviderInfo(marketPriceProvider, marketPriceProvider.getDisplayName().orElse(provider));

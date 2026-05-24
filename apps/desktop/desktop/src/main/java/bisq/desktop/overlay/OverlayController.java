@@ -48,6 +48,7 @@ import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputati
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.main.content.user.accounts.crypto_accounts.create.CreateCryptoAssetAccountController;
+import bisq.desktop.main.content.user.accounts.stable_coin_accounts.create.CreateStableCoinAccountController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.CreatePaymentAccountController;
 import bisq.desktop.main.content.user.accounts.fiat_accounts.create.legacy.LegacyCreatePaymentAccountController;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
@@ -176,6 +177,7 @@ public class OverlayController extends NavigationController {
             case CREATE_PAYMENT_ACCOUNT_LEGACY ->
                     Optional.of(new LegacyCreatePaymentAccountController(serviceProvider));
             case CREATE_CRYPTO_CURRENCY_ACCOUNT -> Optional.of(new CreateCryptoAssetAccountController(serviceProvider));
+            case CREATE_STABLE_COIN_ACCOUNT -> Optional.of(new CreateStableCoinAccountController(serviceProvider));
 
             case BURN_BSQ -> Optional.of(new BurnBsqController(serviceProvider));
             case BSQ_BOND -> Optional.of(new BondedReputationController(serviceProvider));

@@ -19,6 +19,7 @@ package bisq.common.archive;
 
 import bisq.common.file.FileReaderUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
@@ -38,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ZipFileExtractorTest {
 
     @Test
-    void testExtractSingleFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("extract single file")
+    void extract_single_file(@TempDir Path tempDirPath) throws IOException {
         byte[] zipBytes = createZipWithSingleFile("test.txt", "Hello World");
         try (InputStream is = new ByteArrayInputStream(zipBytes);
              ZipFileExtractor extractor = new ZipFileExtractor(is, tempDirPath)) {
@@ -50,7 +52,8 @@ public class ZipFileExtractorTest {
     }
 
     @Test
-    void testExtractDirectoryAndFile(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("extract directory and file")
+    void extract_directory_and_file(@TempDir Path tempDirPath) throws IOException {
         byte[] zipBytes = createZipWithDirAndFile("dir/", "dir/file.txt", "Data");
         try (InputStream is = new ByteArrayInputStream(zipBytes);
              ZipFileExtractor extractor = new ZipFileExtractor(is, tempDirPath)) {
@@ -62,7 +65,8 @@ public class ZipFileExtractorTest {
     }
 
     @Test
-    void testThrowExceptionForInvalidZip(@TempDir Path tempDirPath) {
+    @DisplayName("throw exception for invalid zip")
+    void throw_exception_for_invalid_zip(@TempDir Path tempDirPath) {
         ByteArrayInputStream invalidZip = new ByteArrayInputStream("not a zip".getBytes(StandardCharsets.UTF_8));
         try (ZipFileExtractor extractor = new ZipFileExtractor(invalidZip, tempDirPath)) {
             assertThrows(ZipFileExtractionFailedException.class, extractor::extractArchive);
@@ -73,7 +77,8 @@ public class ZipFileExtractorTest {
 
 
     @Test
-    void testThrowExceptionWhenZipEntryEscapesDestDirectory(@TempDir Path tempDirPath) throws IOException {
+    @DisplayName("throw exception when zip entry escapes dest directory")
+    void throw_exception_when_zip_entry_escapes_dest_directory(@TempDir Path tempDirPath) throws IOException {
         // Create a malicious zip with path traversal entry
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {

@@ -18,6 +18,7 @@
 package bisq.bisq_easy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BisqEasyServiceTest {
     @Test
-    public void testIsAccountDataBanned() {
+    @DisplayName("is account data banned")
+    public void is_account_data_banned() {
         Set<String> bannedAccountDataSet = new HashSet<>();
         String sellersAccountData;
 

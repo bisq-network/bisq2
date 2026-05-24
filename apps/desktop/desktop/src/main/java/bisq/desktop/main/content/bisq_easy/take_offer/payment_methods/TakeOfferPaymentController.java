@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -26,7 +25,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -59,9 +57,16 @@ public class TakeOfferPaymentController implements Controller {
         model.setMarket(bisqEasyOffer.getMarket());
         model.getOfferedBitcoinPaymentMethodSpecs().setAll(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        boolean isStableCoin = bisqEasyOffer.getMarket().isBtcStableCoinMarket();
+        String fiatOrStableCoinBuyerKey = isStableCoin
+                ? "bisqEasy.takeOffer.paymentMethods.subtitle.stableCoin.buyer"
+                : "bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer";
+        String fiatOrStableCoinSellerKey = isStableCoin
+                ? "bisqEasy.takeOffer.paymentMethods.subtitle.stableCoin.seller"
+                : "bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller";
         model.setFiatSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode())
-                : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+                ? Res.get(fiatOrStableCoinBuyerKey, bisqEasyOffer.getMarket().getQuoteCurrencyCode())
+                : Res.get(fiatOrStableCoinSellerKey, bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
         model.setBitcoinSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
                 ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.buyer")
                 : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.seller"));
@@ -71,7 +76,7 @@ public class TakeOfferPaymentController implements Controller {
         return model.getSelectedBitcoinPaymentMethodSpec();
     }
 
-    public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
+    public ReadOnlyObjectProperty<PaymentMethodSpec<?>> getSelectedFiatPaymentMethodSpec() {
         return model.getSelectedFiatPaymentMethodSpec();
     }
 
@@ -99,11 +104,18 @@ public class TakeOfferPaymentController implements Controller {
         if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
             model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
         }
-        model.setHeadline(model.isFiatMethodVisible() && model.isBitcoinMethodVisible()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin")
-                : model.isFiatMethodVisible()
-                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiat")
-                : Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
+        boolean isStableCoinMarket = model.getMarket().isBtcStableCoinMarket();
+        if (model.isFiatMethodVisible() && model.isBitcoinMethodVisible()) {
+            model.setHeadline(Res.get(isStableCoinMarket
+                    ? "bisqEasy.takeOffer.paymentMethods.headline.stableCoinAndBitcoin"
+                    : "bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin"));
+        } else if (model.isFiatMethodVisible()) {
+            model.setHeadline(Res.get(isStableCoinMarket
+                    ? "bisqEasy.takeOffer.paymentMethods.headline.stableCoin"
+                    : "bisqEasy.takeOffer.paymentMethods.headline.fiat"));
+        } else {
+            model.setHeadline(Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
+        }
 
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD)
                 .ifPresent(name -> {
@@ -119,12 +131,11 @@ public class TakeOfferPaymentController implements Controller {
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey())
                 .ifPresent(name -> {
                     try {
-                        FiatPaymentRail persisted = FiatPaymentRail.valueOf(FiatPaymentRail.class, name);
                         model.getOfferedFiatPaymentMethodSpecs().stream()
-                                .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
+                                .filter(spec -> spec.getPaymentMethodName().equals(name)).findAny()
                                 .ifPresent(spec -> model.getSelectedFiatPaymentMethodSpec().set(spec));
                     } catch (Exception e) {
-                        log.warn("Could not create FiatPaymentRail from persisted name {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
+                        log.warn("Could not restore persisted payment method {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
                     }
                 });
     }
@@ -133,11 +144,11 @@ public class TakeOfferPaymentController implements Controller {
     public void onDeactivate() {
     }
 
-    void onToggleFiatPaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
+    void onToggleFiatPaymentMethod(PaymentMethodSpec<?> spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedFiatPaymentMethodSpec().set(spec);
             settingsService.setCookie(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey(),
-                    spec.getPaymentMethod().getPaymentRail().name());
+                    spec.getPaymentMethodName());
         } else {
             model.getSelectedFiatPaymentMethodSpec().set(null);
         }

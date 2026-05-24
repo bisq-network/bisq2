@@ -23,6 +23,7 @@ import bisq.common.util.ByteArrayUtils;
 import bisq.security.DigestUtil;
 import com.google.protobuf.Message;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -37,12 +38,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OfferOptionUtilTest {
 
     @Test
-    void findSymmetricSecurityDepositPercentReturnsEmptyWhenCollateralOptionIsMissing() {
+    @DisplayName("find symmetric security deposit percent returns empty when collateral option is missing")
+    void find_symmetric_security_deposit_percent_returns_empty_when_collateral_option_is_missing() {
         assertTrue(OfferOptionUtil.findSymmetricSecurityDepositPercent(List.of()).isEmpty());
     }
 
     @Test
-    void findSymmetricSecurityDepositPercentReturnsBuyerDepositWhenBuyerAndSellerMatch() {
+    @DisplayName("find symmetric security deposit percent returns buyer deposit when buyer and seller match")
+    void find_symmetric_security_deposit_percent_returns_buyer_deposit_when_buyer_and_seller_match() {
         double result = OfferOptionUtil.findSymmetricSecurityDepositPercent(List.of(new CollateralOption(0.15, 0.15)))
                 .orElseThrow();
 
@@ -50,13 +53,15 @@ public class OfferOptionUtilTest {
     }
 
     @Test
-    void findSymmetricSecurityDepositPercentThrowsWhenBuyerAndSellerDoNotMatch() {
+    @DisplayName("find symmetric security deposit percent throws when buyer and seller do not match")
+    void find_symmetric_security_deposit_percent_throws_when_buyer_and_seller_do_not_match() {
         assertThrows(IllegalArgumentException.class,
                 () -> OfferOptionUtil.findSymmetricSecurityDepositPercent(List.of(new CollateralOption(0.10, 0.15))));
     }
 
     @Test
-    void createSaltedAccountPayloadHashUsesSerializedPayloadForHashAndOfferId() {
+    @DisplayName("create salted account payload hash uses serialized payload for hash and offer id")
+    void create_salted_account_payload_hash_uses_serialized_payload_for_hash_and_offer_id() {
         byte[] serializedForHash = new byte[]{1, 2, 3, 4};
         TestAccountPayload accountPayload = new TestAccountPayload(serializedForHash);
         String offerId = "offer-123";
@@ -70,7 +75,8 @@ public class OfferOptionUtilTest {
     }
 
     @Test
-    void createSaltedAccountPayloadHashChangesWhenOfferIdChanges() {
+    @DisplayName("create salted account payload hash changes when offer id changes")
+    void create_salted_account_payload_hash_changes_when_offer_id_changes() {
         TestAccountPayload accountPayload = new TestAccountPayload(new byte[]{9, 8, 7});
 
         byte[] first = OfferOptionUtil.createSaltedAccountPayloadHash(accountPayload, "offer-1");
@@ -80,7 +86,8 @@ public class OfferOptionUtilTest {
     }
 
     @Test
-    void createSaltedAccountPayloadHashChangesWhenSerializedPayloadForHashChanges() {
+    @DisplayName("create salted account payload hash changes when serialized payload for hash changes")
+    void create_salted_account_payload_hash_changes_when_serialized_payload_for_hash_changes() {
         String offerId = "offer-123";
 
         byte[] first = OfferOptionUtil.createSaltedAccountPayloadHash(

@@ -376,7 +376,10 @@ public class SellerState3a extends BaseState {
 
             paymentProof.setDescription(model.getPaymentProofDescription());
             paymentProof.setPromptText(model.getPaymentProofPrompt());
-            fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
+            String receiptKey = model.getBisqEasyOffer().getMarket().isBtcStableCoinMarket()
+                    ? "bisqEasy.tradeState.info.seller.phase3a.stableCoinPaymentReceivedCheckBox"
+                    : "bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox";
+            fiatReceiptConfirmed.setText(Res.get(receiptKey, model.getFormattedQuoteAmount()));
             sentButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcSentButton", model.getFormattedBaseAmount()));
             qrCodeImageView.setImage(model.getSmallQrCodeImage());
 

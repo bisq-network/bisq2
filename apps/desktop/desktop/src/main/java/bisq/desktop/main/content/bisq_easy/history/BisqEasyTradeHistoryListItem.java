@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.history;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
@@ -55,7 +55,7 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
     private final UserProfile myUserProfile, peersUserProfile;
     private final ReputationScore peersReputationScore;
     private final Pair<String, String> pricePair;
-    private final FiatPaymentMethod paymentMethod;
+    private final PaymentMethod<?> paymentMethod;
     private final BitcoinPaymentMethod settlementMethod;
 
     public BisqEasyTradeHistoryListItem(BisqEasyClosedTrade closedTrade,

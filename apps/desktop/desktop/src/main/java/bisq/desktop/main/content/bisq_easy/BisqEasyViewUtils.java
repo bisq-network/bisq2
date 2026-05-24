@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
 import bisq.desktop.common.Layout;
@@ -82,13 +81,13 @@ public class BisqEasyViewUtils {
         return stackPane;
     }
 
-    public static HBox getPaymentAndSettlementMethodsBox(FiatPaymentMethod paymentMethod,
+    public static HBox getPaymentAndSettlementMethodsBox(PaymentMethod<?> paymentMethod,
                                                          BitcoinPaymentMethod settlementMethod) {
         return getPaymentAndSettlementMethodsBox(Collections.singletonList(paymentMethod),
                 Collections.singletonList(settlementMethod));
     }
 
-    public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,
+    public static HBox getPaymentAndSettlementMethodsBox(List<? extends PaymentMethod<?>> paymentMethods,
                                                          List<BitcoinPaymentMethod> settlementMethods) {
         HBox hBox = new HBox(8);
         addPaymentMethodsToHBox(paymentMethods, hBox);
@@ -103,8 +102,8 @@ public class BisqEasyViewUtils {
         return hBox;
     }
 
-    public static void addPaymentMethodsToHBox(List<FiatPaymentMethod> paymentMethods, HBox hBox) {
-        for (FiatPaymentMethod paymentMethod : paymentMethods) {
+    public static void addPaymentMethodsToHBox(List<? extends PaymentMethod<?>> paymentMethods, HBox hBox) {
+        for (PaymentMethod<?> paymentMethod : paymentMethods) {
             hBox.getChildren().add(createMethodLabel(paymentMethod));
         }
     }

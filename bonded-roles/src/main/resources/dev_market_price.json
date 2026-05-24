@@ -457,7 +457,7 @@
       "provider": "Bisq-Aggregate"
     },
     {
-      "currencyCode": "USDT-E",
+      "currencyCode": "USDT",
       "price": 0.00000898,
       "timestampSec": 1756866655161,
       "provider": "Bisq-Aggregate"

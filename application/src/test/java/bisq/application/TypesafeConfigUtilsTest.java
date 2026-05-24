@@ -18,6 +18,7 @@
 package bisq.application;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Map;
 
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class TypesafeConfigUtilsTest {
 
     @Test
-    void testMapCustomArgsAppNameWithEqualsSyntax() {
+    @DisplayName("map custom args app name with equals syntax")
+    void map_custom_args_app_name_with_equals_syntax() {
         String[] args = {"--app-name=bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -38,7 +40,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsAppNameWithSeparateArgSyntax() {
+    @DisplayName("map custom args app name with separate arg syntax")
+    void map_custom_args_app_name_with_separate_arg_syntax() {
         String[] args = {"--app-name", "bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -46,7 +49,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsDataDirWithEqualsSyntax() {
+    @DisplayName("map custom args data dir with equals syntax")
+    void map_custom_args_data_dir_with_equals_syntax() {
         String[] args = {"--data-dir=/tmp/bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -54,7 +58,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsDataDirWithSeparateArgSyntax() {
+    @DisplayName("map custom args data dir with separate arg syntax")
+    void map_custom_args_data_dir_with_separate_arg_syntax() {
         String[] args = {"--data-dir", "/tmp/bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -62,7 +67,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsMultipleArgsTogether() {
+    @DisplayName("map custom args multiple args together")
+    void map_custom_args_multiple_args_together() {
         String[] args = {"--app-name=bisq", "--data-dir", "/opt/bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -71,7 +77,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsMultipleArgsTogether2() {
+    @DisplayName("map custom args multiple args together2")
+    void map_custom_args_multiple_args_together2() {
         String[] args = {"--app-name=bisq", "--data-dir=/tmp/bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -80,7 +87,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testMapCustomArgsIgnoreUnknownArgs() {
+    @DisplayName("map custom args ignore unknown args")
+    void map_custom_args_ignore_unknown_args() {
         String[] args = {"--foo=bar", "--app-name", "bisq"};
         Map<String, Object> result = mapCustomArgsToTypesafeEntries(args);
 
@@ -91,20 +99,23 @@ class TypesafeConfigUtilsTest {
 
 
     @Test
-    void testCoerceBooleanTrue() {
+    @DisplayName("coerce boolean true")
+    void coerce_boolean_true() {
         assertEquals(Boolean.TRUE, coerce("true"));
         assertEquals(Boolean.TRUE, coerce("TrUe"));
         assertEquals(Boolean.TRUE, coerce("TRUE"));
     }
 
     @Test
-    void testCoerceBooleanFalse() {
+    @DisplayName("coerce boolean false")
+    void coerce_boolean_false() {
         assertEquals(Boolean.FALSE, coerce("false"));
         assertEquals(Boolean.FALSE, coerce("FaLsE"));
     }
 
     @Test
-    void testCoerceInteger() {
+    @DisplayName("coerce integer")
+    void coerce_integer() {
         Object coerce = coerce("123");
         int expected = 123;
         assertEquals(expected, coerce);
@@ -112,7 +123,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testCoerceLong() {
+    @DisplayName("coerce long")
+    void coerce_long() {
         long longValue1 = (long) Integer.MAX_VALUE + 1;
         assertEquals(longValue1, coerce(String.valueOf(longValue1)));
         long longValue2 = (long) Integer.MIN_VALUE - 1; // overflow
@@ -122,7 +134,8 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testCoerceDouble() {
+    @DisplayName("coerce double")
+    void coerce_double() {
         assertEquals(3.14, coerce("3.14"));
         assertEquals(-0.001, coerce("-0.001"));
         assertEquals(1.23e4, coerce("1.23e4"));
@@ -130,14 +143,16 @@ class TypesafeConfigUtilsTest {
     }
 
     @Test
-    void testCoerceFallbackString() {
+    @DisplayName("coerce fallback string")
+    void coerce_fallback_string() {
         assertEquals("hello", coerce("hello"));
         assertEquals("123abc", coerce("123abc"));
         assertEquals("1.2.3", coerce("1.2.3"));
     }
 
     @Test
-    void testCoerceTrimmedString() {
+    @DisplayName("coerce trimmed string")
+    void coerce_trimmed_string() {
         assertEquals(42, coerce(" 42 "));
         assertEquals(Boolean.TRUE, coerce(" true "));
         assertEquals("  some text  ", coerce("  some text  ")); // spaces preserved if not numeric/boolean
