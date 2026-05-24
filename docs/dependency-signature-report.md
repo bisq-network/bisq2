@@ -24,8 +24,8 @@ Refresh the metadata before regenerating this report:
 | Modules using checksum-only artifacts only | 4 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 320 |
-| PGP-signed artifacts | 314 |
+| Verified artifacts | 324 |
+| PGP-signed artifacts | 318 |
 | Checksum-only artifacts | 6 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
@@ -79,7 +79,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.google.protobuf:protobuf-gradle-plugin:0.9.4` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java-util:3.25.8` | transitive | PGP signed | 1 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
-| `com.google.protobuf:protoc:4.28.2` | direct | PGP signed | 3 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
+| `com.google.protobuf:protoc:4.28.2` | direct | PGP signed | 5 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.zxing:core:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.google.zxing:javase:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.googlecode.libphonenumber:libphonenumber:9.0.30` | direct | PGP signed | 3 signed / 0 checksum | `4759F2DC7BBF3AEC20B12D894DE0E3360046F74C`<br>rohini nidhi<br>`rnidhi@google.com`<br>created 2024-07-10<br><br>`76DF4612A2C7D5821832A8A2665487B2DBDA9781`<br>Kavitha Keshava<br>`kkeshava@google.com`<br>created 2025-09-25 |
@@ -106,7 +106,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `io.grpc:grpc-stub:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-testing:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-util:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
-| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 3 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
+| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 5 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.perfmark:perfmark-api:0.27.0` | transitive | PGP signed | 1 signed / 0 checksum | `C6F7D1C804C821F49AF3BFC13AD93C3C677A106E`<br>Carl Mastrangelo<br>`carl@carlmastrangelo.com`<br>created 2019-05-31 |
 | `io.swagger.core.v3:swagger-annotations-jakarta:2.2.50` | transitive | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
 | `io.swagger.core.v3:swagger-annotations:2.2.50` | direct | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
