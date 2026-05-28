@@ -14,7 +14,8 @@ jobs:
     name: Build Bisq on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -26,7 +27,8 @@ jobs:
     name: Build apps module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -38,7 +40,8 @@ jobs:
     name: Build network module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -50,7 +53,8 @@ jobs:
     name: Build tor module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:

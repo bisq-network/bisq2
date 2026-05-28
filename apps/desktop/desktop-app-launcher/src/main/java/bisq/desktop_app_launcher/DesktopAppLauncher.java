@@ -18,54 +18,21 @@
 package bisq.desktop_app_launcher;
 
 import bisq.common.application.BuildVersion;
-import bisq.common.platform.PlatformUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop_app.DesktopApp;
-import bisq.evolution.updater.DownloadedFilesVerification;
-import bisq.evolution.updater.UpdaterUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-
-import static bisq.evolution.updater.UpdaterUtils.UPDATES_DIR;
-import static bisq.evolution.updater.UpdaterUtils.readVersionFromVersionFile;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
- * If there is a version file found in the data dir we read it and look up for the jar file for that version.
- * If it exists we start a new java process with that jar file. Otherwise, we call the main method on the provided DesktopApp.
+ * The launcher calls the main method on the bundled DesktopApp.
  * <p>
  * The `java.home` system property is pointing to the provided JRE from the binary.
  * <p>
- * We do not use the typesafe config framework for the DesktopAppLauncher to keep
- * complexity and dependencies at a minimum. There are only 3 options which are used by the DesktopAppLauncher itself.
- * <p>
  * All JVM options and program arguments are forwarded to the Desktop application. As we cannot pass JVM arguments
  * to an executable, we add all program arguments starting with `-Dapplication` with `System.setProperty` as JVM options.
- * <p>
- * DesktopAppLauncher specific options can be set as JVM option or as program arguments:
- * <p>
- * --ignoreSignatureVerification=true|false (default false) OR -Dapplication.ignoreSignatureVerification
- * --ignoreSigningKeyInResourcesCheck=true|false (default false) OR -Dapplication.ignoreSigningKeyInResourcesCheck
- * --keyIds=keyId1,keyId2 (comma separated list of keyIds; default null)OR -Dapplication.keyIds
  */
 @Slf4j
 public class DesktopAppLauncher {
-    private static final String APP_NAME = "Bisq2";
-    private static final String FINGER_PRINT_ALEJANDRO_GARCIA = "E222AA02"; // B493 3191 06CC 3D1F 252E  19CB F806 F422 E222 AA02
-    private static final String FINGER_PRINT_HENRIK_JANNSEN = "387C8307"; // B8A5 D214 ADFA A387 A14C  8BCF 02AA 2BAE 387C 8307
-    private static final List<String> KEY_IDS = List.of(FINGER_PRINT_ALEJANDRO_GARCIA, FINGER_PRINT_HENRIK_JANNSEN);
-
-    private final Options options;
-
     public static void main(String[] args) {
         Thread.currentThread().setName("DesktopAppLauncher.main");
         try {
@@ -77,55 +44,9 @@ public class DesktopAppLauncher {
         }
     }
 
-    private final Path updatesDirPath, jarPath;
-    private final String jarFileName;
-
-    private DesktopAppLauncher(String[] args) throws Exception {
-        options = new Options(args);
-        String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
-        Path appDataDirPath = PlatformUtils.getUserDataDirPath().resolve(appName);
-        String version = UpdaterUtils.readVersionFromVersionFile(appDataDirPath)
-                .or(options::getVersion)
-                .orElse(BuildVersion.VERSION);
-        updatesDirPath = appDataDirPath.resolve(UPDATES_DIR).resolve(version);
-        jarFileName = UpdaterUtils.getJarFileName(version);
-        jarPath = updatesDirPath.resolve(jarFileName);
-
-        if (Files.exists(jarPath)) {
-            boolean ignoreSignatureVerification = options.getValueAsBoolean("ignoreSignatureVerification").orElse(false);
-            if (ignoreSignatureVerification) {
-                log.warn("Signature verification is disabled by the provided program argument. This is not recommended and should be done only if the user can ensure that the jar file is trusted.");
-            } else {
-                verifyJarFile();
-            }
-            invokeJar();
-        } else {
-            Optional<String> fromVersionFile = readVersionFromVersionFile(appDataDirPath);
-            if (fromVersionFile.isPresent() && !fromVersionFile.get().equals(BuildVersion.VERSION)) {
-                Optional<String> versionFromArgs = options.getValue("version");
-                log.warn("We found a version file with version {} but it does not match our version. versionFromArgs={}; DesktopAppLauncher.VERSION={}; ",
-                        fromVersionFile.get(), versionFromArgs, BuildVersion.VERSION);
-            }
-            log.info("No jar file found. Run default Bisq application with version " + BuildVersion.VERSION);
-            DesktopApp.main(args);
-        }
-    }
-
-    private void verifyJarFile() throws IOException {
-        boolean ignoreSigningKeyInResourcesCheck = options.getValueAsBoolean("ignoreSigningKeyInResourcesCheck").orElse(false);
-        List<String> keyList = options.getValue("keyIds")
-                .map(keyIds -> List.of(keyIds.split(",")))
-                .orElse(KEY_IDS);
-        DownloadedFilesVerification.verify(updatesDirPath, jarFileName, keyList, ignoreSigningKeyInResourcesCheck);
-    }
-
-    private void invokeJar() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        URL url = jarPath.toUri().toURL();
-        URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, DesktopAppLauncher.class.getClassLoader().getParent());
-        // Need to set contextClassLoader to load class from jar file
-        Thread.currentThread().setContextClassLoader(classLoader);
-        Class<?> clazz = classLoader.loadClass(DesktopApp.class.getCanonicalName());
-        Method mainMethod = clazz.getDeclaredMethod("main", String[].class);
-        mainMethod.invoke(null, (Object) options.getArgs());
+    private DesktopAppLauncher(String[] args) {
+        new Options(args);
+        log.info("Run bundled Bisq application with version {}", BuildVersion.VERSION);
+        DesktopApp.main(args);
     }
 }

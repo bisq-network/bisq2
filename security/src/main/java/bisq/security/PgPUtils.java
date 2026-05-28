@@ -37,9 +37,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SignatureException;
 import java.util.Iterator;
+import java.util.Locale;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PgPUtils {
@@ -49,7 +49,12 @@ public class PgPUtils {
             PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFilePath);
             PGPSignature pgpSignature = readPgpSignature(sigFilePath);
             long keyIdFromSignature = pgpSignature.getKeyID();
-            PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
+            PGPPublicKey publicKey = pgpPublicKeyRing.getPublicKey(keyIdFromSignature);
+            if (publicKey == null) {
+                log.error("Signature verification failed. No public key found for signature key ID {}. \npubKeyFilePath={} \nsigFilePath={} \ndataFilePath={}.",
+                        Long.toHexString(keyIdFromSignature).toUpperCase(Locale.ROOT), pubKeyFilePath, sigFilePath, dataFilePath);
+                return false;
+            }
             return isSignatureValid(pgpSignature, publicKey, dataFilePath);
         } catch (PGPException | IOException | SignatureException e) {
             log.error("Signature verification failed. \npubKeyFilePath={} \nsigFilePath={} \ndataFilePath={}.",

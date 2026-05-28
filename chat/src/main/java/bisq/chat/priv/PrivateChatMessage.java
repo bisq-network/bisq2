@@ -26,6 +26,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -47,7 +48,7 @@ import java.util.Set;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage implements MailboxMessage,
-        ExternalNetworkMessage, AckRequestingMessage, SenderPublicKeyProvidingPayload {
+        ExternalNetworkMessage, AckRequestingMessage, SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
@@ -128,6 +129,16 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     }
 
     @Override
+    public PublicKey getSenderPublicKey() {
+        return senderUserProfile.getPublicKey();
+    }
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return receiverNetworkId.getPubKey().getPublicKey();
+    }
+
+    @Override
     public NetworkId getReceiver() {
         return receiverNetworkId;
     }
@@ -135,11 +146,6 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     @Override
     public String getAckRequestingMessageId() {
         return id;
-    }
-
-    @Override
-    public PublicKey getSenderPublicKey() {
-        return senderUserProfile.getPublicKey();
     }
 
     public boolean addPrivateChatMessageReaction(R newReaction) {

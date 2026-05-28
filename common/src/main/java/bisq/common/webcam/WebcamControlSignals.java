@@ -15,13 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.data;
+package bisq.common.webcam;
+
+import lombok.Getter;
 
 public enum WebcamControlSignals {
-    HEART_BEAT,
-    IMAGE_RECOGNIZED,
-    QR_CODE_PREFIX,
-    ERROR_MESSAGE_PREFIX,
-    RESTART,
-    SHUTDOWN
+    HEART_BEAT(1),
+    IMAGE_RECOGNIZED(2),
+    QR_CODE_PREFIX(3),
+    ERROR_MESSAGE_PREFIX(4),
+    RESTART(5),
+    SHUTDOWN(6);
+
+    @Getter
+    private final byte code;
+
+    WebcamControlSignals(int code) {
+        this.code = (byte) code;
+    }
+
+    public static WebcamControlSignals fromCode(byte code) {
+        for (WebcamControlSignals signal : values()) {
+            if (signal.code == code) {
+                return signal;
+            }
+        }
+        throw new IllegalArgumentException("Unsupported webcam IPC signal code " + Byte.toUnsignedInt(code));
+    }
 }

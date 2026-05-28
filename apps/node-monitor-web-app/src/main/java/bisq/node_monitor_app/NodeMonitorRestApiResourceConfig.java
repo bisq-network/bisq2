@@ -11,7 +11,7 @@ import bisq.node_monitor.NodeMonitorRestApi;
 import bisq.node_monitor.NodeMonitorService;
 import jakarta.ws.rs.ApplicationPath;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.inject.hk2.AbstractBinder;
 
 @Slf4j
 @ApplicationPath("/api/v1")

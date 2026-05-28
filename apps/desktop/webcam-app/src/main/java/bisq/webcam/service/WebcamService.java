@@ -138,35 +138,41 @@ public class WebcamService implements Service {
         executor.get().submit(() -> {
             try {
                 frameGrabber.start();
+
+                while (isRunning && !Thread.currentThread().isInterrupted()) {
+                    try (Frame capturedFrame = frameGrabber.grabAtFrameRate()) {
+                        if (capturedFrame == null) {
+                            throw new FrameCaptureException("capturedFrame is null");
+                        }
+                        qrCodeProcessor.process(capturedFrame).ifPresent(qrCode::set);
+                        capturedImage.set(frameToImageConverter.convert(capturedFrame));
+                    } catch (InterruptedException e) {
+                        log.warn("Thread got interrupted at startFrameCapture method", e);
+                        Thread.currentThread().interrupt(); // Restore interrupted state
+
+                        exception.set(e);
+                        throw new FrameCaptureException(e);
+                    } catch (FrameGrabber.Exception e) {
+                        exception.set(e);
+                        throw new FrameCaptureException(e);
+                    }
+                }
             } catch (FrameGrabber.Exception e) {
                 log.error("Error at starting frameGrabber", e);
                 exception.set(e);
                 throw new FrameCaptureException(e);
+            } finally {
+                closeFrameGrabber(frameGrabber);
+                isRunning = false;
+                isStopped = true;
             }
-
-            while (isRunning && !Thread.currentThread().isInterrupted()) {
-                try (Frame capturedFrame = frameGrabber.grabAtFrameRate()) {
-                    if (capturedFrame == null) {
-                        throw new FrameCaptureException("capturedFrame is null");
-                    }
-                    qrCodeProcessor.process(capturedFrame).ifPresent(qrCode::set);
-                    capturedImage.set(frameToImageConverter.convert(capturedFrame));
-                } catch (InterruptedException e) {
-                    log.warn("Thread got interrupted at startFrameCapture method", e);
-                    Thread.currentThread().interrupt(); // Restore interrupted state
-
-                    exception.set(e);
-                    throw new FrameCaptureException(e);
-                } catch (FrameGrabber.Exception e) {
-                    exception.set(e);
-                    throw new FrameCaptureException(e);
-                }
-            }
-            try {
-                frameGrabber.close();
-            } catch (FrameGrabber.Exception ignore) {
-            }
-            isStopped = true;
         });
+    }
+
+    private void closeFrameGrabber(FrameGrabber frameGrabber) {
+        try {
+            frameGrabber.close();
+        } catch (FrameGrabber.Exception ignore) {
+        }
     }
 }

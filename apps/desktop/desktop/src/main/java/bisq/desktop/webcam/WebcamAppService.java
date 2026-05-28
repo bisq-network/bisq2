@@ -23,6 +23,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
+import bisq.common.webcam.WebcamIpcAuthenticator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,7 @@ public class WebcamAppService implements Service {
 
     @Getter
     private final WebcamAppModel model;
+    private final InputHandler inputHandler;
     private final QrCodeListeningServer qrCodeListeningServer;
     private final WebcamProcessLauncher webcamProcessLauncher;
     private Optional<Scheduler> checkHeartBeatUpdateScheduler = Optional.empty();
@@ -69,7 +71,7 @@ public class WebcamAppService implements Service {
 
     public WebcamAppService(ApplicationService.Config config) {
         model = new WebcamAppModel(config);
-        InputHandler inputHandler = new InputHandler(model);
+        inputHandler = new InputHandler(model);
         qrCodeListeningServer = new QrCodeListeningServer(SOCKET_TIMEOUT, inputHandler, this::handleException);
         webcamProcessLauncher = new WebcamProcessLauncher(model.getAppDataDirPath());
 
@@ -82,6 +84,7 @@ public class WebcamAppService implements Service {
         state.set(STOPPING);
         stopSchedulers();
         unbind();
+        inputHandler.clearSessionSecret();
         qrCodeListeningServer.stopServer();
         model.reset();
         return webcamProcessLauncher.shutdown()
@@ -101,23 +104,25 @@ public class WebcamAppService implements Service {
         setupTimeoutSchedulers();
 
         int port = NetworkUtils.selectRandomPort();
+        String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
         model.setPort(port);
+        inputHandler.setSessionSecret(sessionSecret);
 
         // Start local tcp server listening for input from qr code scan
         qrCodeListeningServer.start(port);
 
         state.set(STARTING);
-        log.error("STARTING");
-        webcamProcessLauncher.start(port)
+        log.info("Webcam app starting");
+        webcamProcessLauncher.start(port, sessionSecret)
                 .whenComplete((process, throwable) -> {
                     if (throwable != null) {
                         handleException(throwable);
                     } else {
-                        log.error("RUNNING");
+                        log.info("Webcam app running");
                         state.set(RUNNING);
                     }
                 });
-        log.info("We start the webcam application as new Java process and listen for a QR code result. TCP listening port={}", port);
+        log.info("We start the webcam application as new Java process and listen for a QR code result.");
 
         qrCodePin = model.getQrCode().addObserver(qrCode -> {
             if (qrCode != null) {

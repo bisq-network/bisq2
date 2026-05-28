@@ -13,26 +13,41 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build ${{ inputs.name }} on ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify Gradle wrapper checksums
+        shell: bash
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+          else
+            shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+          fi
 
       - name: Setup Java JDK
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: '21'
+          java-version: '21.0.11'
           distribution: 'zulu'
+          check-latest: false
 
-      - name: Gradle Build Action
-        uses: gradle/gradle-build-action@v3.5.0
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          arguments: build -x test
-          build-root-directory: ${{ inputs.build-root-dir }}
-          gradle-executable: ./gradlew
-          gradle-version: 8.9
+          cache-provider: basic
+
+      - name: Build with Gradle
+        shell: bash
+        run: ./gradlew -p "${{ inputs.build-root-dir }}" build -x test

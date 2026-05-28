@@ -17,8 +17,6 @@
 
 package bisq.desktop.webcam;
 
-import bisq.common.application.DevMode;
-import bisq.common.archive.ZipFileExtractor;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
@@ -26,7 +24,8 @@ import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,25 +40,18 @@ import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 @Slf4j
 public class WebcamProcessLauncher {
     private final Path webcamDirPath;
+    private final WebcamJarProvider webcamJarProvider;
     private Optional<Process> runningProcess = Optional.empty();
 
     public WebcamProcessLauncher(Path appDataDirPath) {
         this.webcamDirPath = appDataDirPath.resolve("webcam");
+        this.webcamJarProvider = new WebcamJarProvider(webcamDirPath);
     }
 
-    public CompletableFuture<Process> start(int port) {
+    public CompletableFuture<Process> start(int port, String sessionSecret) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String version = FileReaderUtils.readStringFromResource("webcam-app/version.txt");
-                Path jarFilePath = webcamDirPath.resolve("webcam-app-" + version + "-all.jar");
-
-                if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
-                    String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
-                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, webcamDirPath);
-                    zipFileExtractor.extractArchive();
-                    log.info("Extracted zip file {} to {}", resourcePath, webcamDirPath);
-                }
+                Path jarFilePath = webcamJarProvider.prepareWebcamJar();
 
                 String portParam = "--port=" + port;
                 String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileReaderUtils.FILE_SEP + "webcam-app";
@@ -78,16 +70,29 @@ public class WebcamProcessLauncher {
                 } else {
                     processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 }
-                log.info("ProcessBuilder commands: {}", processBuilder.command());
+                log.info("Launching webcam app process");
                 Process process = processBuilder.start();
+                sendSessionSecret(process, sessionSecret);
                 runningProcess = Optional.of(process);
-                log.info("Process successful launched: {}; port={}", process, port);
+                log.info("Webcam app process successfully launched: {}", process);
                 return process;
             } catch (Exception e) {
                 log.error("Launching process failed", e);
                 throw new RuntimeException(e);
             }
         }, ExecutorFactory.newSingleThreadScheduledExecutor("WebcamProcessLauncher"));
+    }
+
+    private void sendSessionSecret(Process process, String sessionSecret) {
+        // Child stdin is reserved for this one-shot IPC secret bootstrap.
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8))) {
+            writer.write(sessionSecret);
+            writer.newLine();
+            writer.flush();
+        } catch (Exception e) {
+            process.destroyForcibly();
+            throw new RuntimeException("Sending webcam IPC session secret failed", e);
+        }
     }
 
     public CompletableFuture<Boolean> shutdown() {

@@ -18,7 +18,16 @@
 package bisq.network.p2p.message;
 
 import java.security.PublicKey;
+import java.util.Optional;
 
 public interface SenderPublicKeyProvidingPayload {
     PublicKey getSenderPublicKey();
+
+    default Optional<PublicKey> findSenderPublicKey() {
+        return Optional.of(getSenderPublicKey());
+    }
+
+    default boolean isSenderPublicKeyRequired() {
+        return true;
+    }
 }
