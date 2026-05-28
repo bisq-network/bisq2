@@ -96,7 +96,7 @@ jobs:
     # just merges. Skip everything when the PR was closed without merging —
     # there's nothing to sync. (Per @wodoro.)
     if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     # No job-level permissions — inherits the read-only top-level scope.
 
@@ -160,7 +160,7 @@ jobs:
   verify-skip-label:
     name: Verify skip-sync-to-main label authority
     if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     # Read-only — same as detect-active-branch.
 
@@ -245,7 +245,7 @@ jobs:
       github.event.pull_request.merged == true
       && needs.detect-active-branch.outputs.should_sync == 'true'
       && needs.verify-skip-label.outputs.skip_by_maintainer != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Least-privilege: this job only POSTS / UPDATES A COMMENT on the source
     # PR. It does NOT push any branch or open a PR (that's the author's job,
@@ -265,6 +265,7 @@ jobs:
           # source PR's merge commit against `main`.
           fetch-depth: 0
           ref: main
+          persist-credentials: false
 
       - name: Dry-run the cherry-pick to detect conflicts
         id: cherry_pick
