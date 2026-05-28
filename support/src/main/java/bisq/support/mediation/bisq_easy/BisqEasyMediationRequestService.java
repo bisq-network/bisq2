@@ -141,7 +141,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                         myUserIdentity.getUserProfile(),
                         peer,
                         chatMessages,
-                        Optional.of(mediatorNetworkId)));
+                        mediatorNetworkId));
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());

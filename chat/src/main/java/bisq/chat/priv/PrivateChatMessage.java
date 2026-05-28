@@ -148,11 +148,6 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         return id;
     }
 
-    @Override
-    public PublicKey getSenderPublicKey() {
-        return senderUserProfile.getPublicKey();
-    }
-
     public boolean addPrivateChatMessageReaction(R newReaction) {
         Optional<R> existingReaction = getChatMessageReactions().stream()
                 .filter(privateChatReaction -> privateChatReaction.matches(newReaction))

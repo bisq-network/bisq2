@@ -97,9 +97,4 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
     public String getAckRequestingMessageId() {
         return id;
     }
-
-    @Override
-    public PublicKey getSenderPublicKey() {
-        return senderUserProfile.getPublicKey();
-    }
 }
