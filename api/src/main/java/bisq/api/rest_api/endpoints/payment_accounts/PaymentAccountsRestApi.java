@@ -11,10 +11,12 @@ import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
 import bisq.api.dto.account.PaymentAccountDto;
 import bisq.api.dto.account.create.CreatePaymentAccountDto;
 import bisq.api.dto.account.crypto.payment_method.CryptoPaymentMethodDto;
+import bisq.api.dto.account.fiat.common.BankAccountCountryDetailsDto;
 import bisq.api.dto.account.fiat.payment_method.FiatPaymentMethodDto;
 import bisq.api.dto.mappings.account.PaymentAccountDtoMapping;
 import bisq.api.dto.mappings.account.create.CreatePaymentAccountDtoMapping;
 import bisq.api.dto.mappings.account.crypto.CryptoPaymentMethodDtoMapping;
+import bisq.api.dto.mappings.account.fiat.BankAccountCountryDetailsDtoMapping;
 import bisq.api.dto.mappings.account.fiat.FiatPaymentMethodDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -218,6 +220,26 @@ public class PaymentAccountsRestApi extends RestApiBase {
             return buildOkResponse(items);
         } catch (Exception e) {
             log.error("Failed to retrieve fiat payment methods", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GET
+    @Path("/bank-account-country-details")
+    @Operation(
+            summary = "Get bank account country details",
+            description = "Retrieve country-specific bank account field requirements and labels for all countries",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Bank account country details retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = BankAccountCountryDetailsDto.class, type = "array"))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getBankAccountCountryDetails() {
+        try {
+            return buildOkResponse(BankAccountCountryDetailsDtoMapping.getAll());
+        } catch (Exception e) {
+            log.error("Failed to retrieve bank account country details", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
