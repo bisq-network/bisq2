@@ -70,6 +70,8 @@ public class WebcamProcessLauncher {
                 } else {
                     processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
                 }
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+                processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
                 log.info("Launching webcam app process");
                 Process process = processBuilder.start();
                 sendSessionSecret(process, sessionSecret);
