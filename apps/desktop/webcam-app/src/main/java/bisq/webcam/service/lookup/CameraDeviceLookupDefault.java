@@ -99,20 +99,17 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
 
     public CompletableFuture<FrameGrabber> find(int deviceNumber) {
         log.info("Try to find camera with device number {}", deviceNumber);
-        return CompletableFuture.supplyAsync(() -> {
-                    try (VideoCapture capture = new VideoCapture(deviceNumber);
-                         FrameGrabber frameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
+        return CompletableFuture.<FrameGrabber>supplyAsync(() -> {
+                    try (VideoCapture capture = new VideoCapture(deviceNumber)) {
                         // We use capture.grab call to get an early error if permissions are denied
                         boolean grabResult = capture.grab();
                         if (!grabResult) {
                             throw new WebcamException(ErrorCode.DEVICE_PERMISSION_DENIED);
                         }
 
-                        // has a 10 sec. timeout built in
-                        frameGrabber.start();
-                        return frameGrabber;
+                        return new OpenCVFrameGrabber(deviceNumber);
                     } catch (Exception e) {
-                        log.error("frameGrabber.start() failed. {}", e.getMessage());
+                        log.error("Camera device lookup failed. {}", e.getMessage());
                         throw new WebcamException(ErrorCode.DEVICE_LOOKUP_FAILED, e);
                     }
                 }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-device"))
