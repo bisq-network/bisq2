@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -39,10 +40,7 @@ public class QrCodeListeningServer {
     private final Consumer<Exception> errorHandler;
     private volatile boolean isStopped;
     private volatile Optional<ServerSocket> serverSocket = Optional.empty();
-
-    public QrCodeListeningServer(int socketTimeout, InputHandler inputHandler, Consumer<Exception> errorHandler) {
-        this(socketTimeout, socketTimeout, inputHandler, errorHandler);
-    }
+    private volatile Optional<ExecutorService> listenerExecutor = Optional.empty();
 
     public QrCodeListeningServer(int acceptTimeout,
                                  int socketReadTimeout,
@@ -63,30 +61,39 @@ public class QrCodeListeningServer {
         serverSocket = Optional.empty();
 
         InetSocketAddress serverAddress = new InetSocketAddress(LOOPBACK_HOST, port);
+        ServerSocket boundServerSocket = null;
         try {
-            ServerSocket boundServerSocket = new ServerSocket();
+            boundServerSocket = new ServerSocket();
             boundServerSocket.setSoTimeout(acceptTimeout);
             boundServerSocket.bind(serverAddress);
             serverSocket = Optional.of(boundServerSocket);
-            int boundPort = boundServerSocket.getLocalPort();
+            ServerSocket listeningServerSocket = boundServerSocket;
+            int boundPort = listeningServerSocket.getLocalPort();
 
+            ExecutorService newListenerExecutor = ExecutorFactory.newSingleThreadExecutor("QrCodeListeningServer");
+            listenerExecutor = Optional.of(newListenerExecutor);
             try {
-                CompletableFuture.runAsync(() -> listen(boundServerSocket),
-                        ExecutorFactory.newSingleThreadExecutor("QrCodeListeningServer"));
+                CompletableFuture.runAsync(() -> listen(listeningServerSocket, newListenerExecutor),
+                        newListenerExecutor);
             } catch (RuntimeException e) {
-                close(boundServerSocket);
+                close(listeningServerSocket);
                 serverSocket = Optional.empty();
+                clearListenerExecutor(newListenerExecutor);
+                newListenerExecutor.shutdownNow();
                 throw e;
             }
 
             return boundPort;
         } catch (IOException e) {
+            if (boundServerSocket != null) {
+                close(boundServerSocket);
+            }
             log.error("Server start failed", e);
             throw new IllegalStateException("Could not start webcam IPC server", e);
         }
     }
 
-    private void listen(ServerSocket boundServerSocket) {
+    private void listen(ServerSocket boundServerSocket, ExecutorService executorService) {
         try (boundServerSocket) {
             log.info("Start listening for webcam IPC");
             while (!isStopped && !Thread.currentThread().isInterrupted()) {
@@ -109,6 +116,8 @@ public class QrCodeListeningServer {
             }
         } finally {
             clearServerSocket(boundServerSocket);
+            clearListenerExecutor(executorService);
+            executorService.shutdown();
             log.info("Server stopped");
         }
     }
@@ -127,6 +136,13 @@ public class QrCodeListeningServer {
         }
     }
 
+    private void clearListenerExecutor(ExecutorService executorService) {
+        Optional<ExecutorService> currentListenerExecutor = listenerExecutor;
+        if (currentListenerExecutor.isPresent() && currentListenerExecutor.get() == executorService) {
+            listenerExecutor = Optional.empty();
+        }
+    }
+
     public void stopServer() {
         if (isStopped) {
             return;
@@ -140,5 +156,6 @@ public class QrCodeListeningServer {
             } catch (IOException ignore) {
             }
         });
+        listenerExecutor.ifPresent(ExecutorService::shutdownNow);
     }
 }

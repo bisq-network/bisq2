@@ -108,6 +108,8 @@ public class CameraDeviceLookupDefault implements CameraDeviceLookup {
                         }
 
                         return new OpenCVFrameGrabber(deviceNumber);
+                    } catch (WebcamException e) {
+                        throw e;
                     } catch (Exception e) {
                         log.error("Camera device lookup failed. {}", e.getMessage());
                         throw new WebcamException(ErrorCode.DEVICE_LOOKUP_FAILED, e);

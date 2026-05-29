@@ -109,9 +109,15 @@ public class WebcamAppService implements Service {
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
         inputHandler.setSessionSecret(sessionSecret);
 
-        // Bind before launching the helper so the selected loopback port cannot be claimed elsewhere.
-        int port = qrCodeListeningServer.start();
-        model.setPort(port);
+        int port;
+        try {
+            // Bind before launching the helper so the selected loopback port cannot be claimed elsewhere.
+            port = qrCodeListeningServer.start();
+            model.setPort(port);
+        } catch (RuntimeException e) {
+            cleanupFailedStart();
+            throw e;
+        }
 
         state.set(STARTING);
         log.info("Webcam app starting");
@@ -173,6 +179,13 @@ public class WebcamAppService implements Service {
         maxStartupTimeScheduler = Optional.empty();
         checkHeartBeatUpdateScheduler.ifPresent(Scheduler::stop);
         checkHeartBeatUpdateScheduler = Optional.empty();
+    }
+
+    private void cleanupFailedStart() {
+        stopSchedulers();
+        inputHandler.clearSessionSecret();
+        qrCodeListeningServer.stopServer();
+        model.reset();
     }
 
     private void handleException(Throwable throwable) {
