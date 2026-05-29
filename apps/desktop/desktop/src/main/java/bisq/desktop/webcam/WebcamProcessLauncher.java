@@ -76,7 +76,7 @@ public class WebcamProcessLauncher {
                 Process process = processBuilder.start();
                 sendSessionSecret(process, sessionSecret);
                 runningProcess = Optional.of(process);
-                log.info("Webcam app process successfully launched: {}", process);
+                log.info("Webcam app process successfully launched");
                 return process;
             } catch (Exception e) {
                 log.error("Launching process failed", e);
@@ -99,7 +99,7 @@ public class WebcamProcessLauncher {
 
     public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.supplyAsync(() -> runningProcess.map(process -> {
-            log.info("Process shutdown. runningProcess={}", runningProcess);
+            log.info("Shutting down webcam app process");
             process.destroy();
             boolean terminatedGraceFully = false;
             try {
