@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Path;
@@ -32,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QrCodeListeningServerTest {
     @TempDir
@@ -44,9 +43,8 @@ public class QrCodeListeningServerTest {
         QrCodeListeningServer qrCodeListeningServer = new QrCodeListeningServer(socketTimeout,
                 inputHandlerCompleting(acceptedSocketTimeout),
                 acceptedSocketTimeout::completeExceptionally);
-        int port = selectFreePort();
-
-        qrCodeListeningServer.start(port);
+        int port = qrCodeListeningServer.start();
+        assertTrue(port > 0);
         try (Socket ignored = connectToServer(port)) {
             assertEquals(socketTimeout, acceptedSocketTimeout.get(5, TimeUnit.SECONDS));
         } finally {
@@ -81,13 +79,6 @@ public class QrCodeListeningServerTest {
                 0,
                 false,
                 false));
-    }
-
-    private static int selectFreePort() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket()) {
-            serverSocket.bind(new InetSocketAddress("127.0.0.1", 0));
-            return serverSocket.getLocalPort();
-        }
     }
 
     private static Socket connectToServer(int port) throws IOException, InterruptedException {

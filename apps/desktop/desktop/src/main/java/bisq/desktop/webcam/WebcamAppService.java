@@ -22,7 +22,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.NetworkUtils;
 import bisq.common.webcam.WebcamIpcAuthenticator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -103,13 +102,12 @@ public class WebcamAppService implements Service {
 
         setupTimeoutSchedulers();
 
-        int port = NetworkUtils.selectRandomPort();
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
-        model.setPort(port);
         inputHandler.setSessionSecret(sessionSecret);
 
-        // Start local tcp server listening for input from qr code scan
-        qrCodeListeningServer.start(port);
+        // Bind before launching the helper so the selected loopback port cannot be claimed elsewhere.
+        int port = qrCodeListeningServer.start();
+        model.setPort(port);
 
         state.set(STARTING);
         log.info("Webcam app starting");
