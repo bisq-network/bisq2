@@ -33,14 +33,23 @@ import java.util.function.Consumer;
 public class QrCodeListeningServer {
     private static final String LOOPBACK_HOST = "127.0.0.1";
 
-    private final int socketTimeout;
+    private final int acceptTimeout;
+    private final int socketReadTimeout;
     private final InputHandler inputHandler;
     private final Consumer<Exception> errorHandler;
     private volatile boolean isStopped;
     private volatile Optional<ServerSocket> serverSocket = Optional.empty();
 
     public QrCodeListeningServer(int socketTimeout, InputHandler inputHandler, Consumer<Exception> errorHandler) {
-        this.socketTimeout = socketTimeout;
+        this(socketTimeout, socketTimeout, inputHandler, errorHandler);
+    }
+
+    public QrCodeListeningServer(int acceptTimeout,
+                                 int socketReadTimeout,
+                                 InputHandler inputHandler,
+                                 Consumer<Exception> errorHandler) {
+        this.acceptTimeout = acceptTimeout;
+        this.socketReadTimeout = socketReadTimeout;
         this.inputHandler = inputHandler;
         this.errorHandler = errorHandler;
     }
@@ -56,7 +65,7 @@ public class QrCodeListeningServer {
         InetSocketAddress serverAddress = new InetSocketAddress(LOOPBACK_HOST, port);
         try {
             ServerSocket boundServerSocket = new ServerSocket();
-            boundServerSocket.setSoTimeout(socketTimeout);
+            boundServerSocket.setSoTimeout(acceptTimeout);
             boundServerSocket.bind(serverAddress);
             serverSocket = Optional.of(boundServerSocket);
             int boundPort = boundServerSocket.getLocalPort();
@@ -82,11 +91,11 @@ public class QrCodeListeningServer {
             log.info("Start listening for webcam IPC");
             while (!isStopped && !Thread.currentThread().isInterrupted()) {
                 try (Socket socket = boundServerSocket.accept()) {
-                    socket.setSoTimeout(socketTimeout);
+                    socket.setSoTimeout(socketReadTimeout);
                     inputHandler.onSocket(socket);
                 } catch (SocketTimeoutException ignore) {
                 } catch (IllegalArgumentException e) {
-                    log.warn("Rejected webcam IPC message: {}", e.getMessage());
+                    log.debug("Rejected webcam IPC message: {}", e.getMessage());
                 } catch (RuntimeException e) {
                     log.error("Unexpected webcam IPC handler failure", e);
                     errorHandler.accept(e);

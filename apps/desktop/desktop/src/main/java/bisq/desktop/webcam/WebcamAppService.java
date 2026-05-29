@@ -43,7 +43,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 // scenarios with failed permissions.
 @Slf4j
 public class WebcamAppService implements Service {
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int SOCKET_ACCEPT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int SOCKET_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(2);
     private static final long STARTUP_TIME_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     private static final long CHECK_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(10);
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
@@ -71,7 +72,10 @@ public class WebcamAppService implements Service {
     public WebcamAppService(ApplicationService.Config config) {
         model = new WebcamAppModel(config);
         inputHandler = new InputHandler(model);
-        qrCodeListeningServer = new QrCodeListeningServer(SOCKET_TIMEOUT, inputHandler, this::handleException);
+        qrCodeListeningServer = new QrCodeListeningServer(SOCKET_ACCEPT_TIMEOUT,
+                SOCKET_READ_TIMEOUT,
+                inputHandler,
+                this::handleException);
         webcamProcessLauncher = new WebcamProcessLauncher(model.getAppDataDirPath());
 
         state.set(NEW);
