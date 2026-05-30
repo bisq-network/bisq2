@@ -7,9 +7,13 @@ import java.util.Optional;
 public interface CryptoAssetAccountPayloadDto extends PaymentAccountPayloadDto {
     String currencyName();
 
+    String currencyCode();
+
     String address();
 
     boolean isInstant();
+
+    boolean supportAutoConf();
 
     Optional<Boolean> isAutoConf();
 

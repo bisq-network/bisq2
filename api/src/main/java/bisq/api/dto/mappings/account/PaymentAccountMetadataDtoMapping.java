@@ -2,8 +2,8 @@ package bisq.api.dto.mappings.account;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentRail;
 import bisq.api.dto.account.AccountMetadataDto;
-import bisq.mu_sig.MuSigTradeAmountLimits;
 import bisq.presentation.formatters.DateFormatter;
 
 public final class PaymentAccountMetadataDtoMapping {
@@ -11,9 +11,10 @@ public final class PaymentAccountMetadataDtoMapping {
     }
 
     public static AccountMetadataDto mapAccountMetadata(Account<? extends PaymentMethod<?>, ?> account) {
-        String tradeLimitInfo = MuSigTradeAmountLimits.getFormattedMaxTradeLimitInUsd(account.getPaymentMethod().getPaymentRail());
         String creationDate = DateFormatter.formatDate(account.getCreationDate());
-        String tradeDuration = account.getPaymentMethod().getPaymentRail().getTradeDuration().getDisplayString();
+        PaymentRail paymentRail = account.getPaymentMethod().getPaymentRail();
+        String tradeLimitInfo = PaymentMethodDtoHelper.getTradeLimitInfo(paymentRail);
+        String tradeDuration = PaymentMethodDtoHelper.getTradeDuration(paymentRail);
         return new AccountMetadataDto(creationDate, tradeLimitInfo, tradeDuration);
     }
 }

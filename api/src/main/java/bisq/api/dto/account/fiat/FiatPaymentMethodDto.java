@@ -23,6 +23,7 @@ public record FiatPaymentMethodDto(
         String supportedCurrencyCodes,
         String countryNames,
         FiatPaymentMethodChargebackRiskDto chargebackRisk,
-        String restrictions
+        String tradeLimitInfo,
+        String tradeDuration
 ) {
 }
