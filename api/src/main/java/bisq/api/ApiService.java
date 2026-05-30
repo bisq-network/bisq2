@@ -45,6 +45,7 @@ import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
 import bisq.api.rest_api.endpoints.user_profile.UserProfileRestApi;
 import bisq.api.web_socket.WebSocketService;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -126,6 +127,7 @@ public class ApiService implements Service {
                       SettingsService settingsService,
                       BisqEasyService bisqEasyService,
                       OpenTradeItemsService openTradeItemsService,
+                      ClosedTradeItemsService closedTradeItemsService,
                       AccountService accountService,
                       ReputationService reputationService,
                       DeviceRegistrationService deviceRegistrationService) {
@@ -158,7 +160,8 @@ public class ApiService implements Service {
                 bondedRolesService.getMarketPriceService(),
                 userService,
                 supportedService,
-                tradeService);
+                tradeService,
+                closedTradeItemsService);
         TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
         UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());

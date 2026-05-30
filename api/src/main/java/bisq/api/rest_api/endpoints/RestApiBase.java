@@ -17,9 +17,13 @@
 
 package bisq.api.rest_api.endpoints;
 
+import bisq.api.rest_api.pagination.PaginatedResponse;
+import bisq.api.rest_api.pagination.PaginationParams;
 import jakarta.ws.rs.core.Response;
 
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public abstract class RestApiBase {
     protected Response buildResponse(Response.Status status, Object entity) {
@@ -65,5 +69,23 @@ public abstract class RestApiBase {
         return Response.status(status)
                 .entity(Map.of("error", errorMessage))
                 .build();
+    }
+
+    protected <T> Response buildPaginatedResponse(List<T> items, PaginationParams pagination) {
+        return buildPaginatedResponse(items, pagination, Function.identity());
+    }
+
+    protected <S, T> Response buildPaginatedResponse(List<S> items,
+                                                     PaginationParams pagination,
+                                                     Function<S, T> mapper) {
+        PaginatedResponse<S> page = pagination.paginate(items);
+        List<T> mapped = page.items().stream().map(mapper).toList();
+        PaginatedResponse<T> body = new PaginatedResponse<>(
+                mapped,
+                page.page(),
+                page.pageSize(),
+                page.totalItems(),
+                page.totalPages());
+        return Response.status(Response.Status.OK).entity(body).build();
     }
 }

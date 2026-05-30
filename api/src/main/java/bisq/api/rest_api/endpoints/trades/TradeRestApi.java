@@ -23,6 +23,14 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.api.dto.presentation.closed_trades.ClosedTradeIndexedItem;
+import bisq.api.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
+import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.api.rest_api.endpoints.offers.CreateOfferRequest;
+import bisq.api.rest_api.pagination.PaginatedResponse;
+import bisq.api.rest_api.pagination.PaginationParams;
+import bisq.api.rest_api.pagination.SortDirection;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
@@ -36,8 +44,6 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.api.rest_api.endpoints.RestApiBase;
-import bisq.api.rest_api.endpoints.offers.CreateOfferRequest;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
@@ -60,19 +66,23 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -93,12 +103,14 @@ public class TradeRestApi extends RestApiBase {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final ChatChannelSelectionService offerbookChannelSelectionService;
+    private final ClosedTradeItemsService closedTradeItemsService;
 
     public TradeRestApi(ChatService chatService,
                         MarketPriceService marketPriceService,
                         UserService userService,
                         SupportService supportedService,
-                        TradeService tradeService) {
+                        TradeService tradeService,
+                        ClosedTradeItemsService closedTradeItemsService) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         offerbookChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
@@ -108,6 +120,59 @@ public class TradeRestApi extends RestApiBase {
         bannedUserService = userService.getBannedUserService();
         bisqEasyMediationRequestService = supportedService.getBisqEasyMediationRequestService();
         bisqEasyTradeService = tradeService.getBisqEasyTradeService();
+        this.closedTradeItemsService = closedTradeItemsService;
+    }
+
+    @GET
+    @Path("/closed")
+    @Operation(
+            summary = "Get closed trades",
+            description = "Returns closed trades (completed, cancelled, rejected, or failed) for the current user. " +
+                    "Paginated. Query params: 'page' (1-indexed, default 1), 'pageSize' (default 20, max 100), " +
+                    "'sortBy' (DATE|MARKET|QUOTE_AMOUNT|BASE_AMOUNT|ROLE, default DATE), " +
+                    "'direction' (ASC|DESC, default DESC), " +
+                    "'search' (case-insensitive substring matched against trade id, market, role, peer username/nym, " +
+                    "payment methods, formatted price/amount strings), " +
+                    "'role' (BUYER|SELLER, optional), " +
+                    "'state' (BisqEasyTradeStateDto value; repeatable or comma-separated, optional).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Closed trades retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = PaginatedResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid query parameters"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getClosedTrades(@QueryParam("page") Integer page,
+                                    @QueryParam("pageSize") Integer pageSize,
+                                    @QueryParam("sortBy") String sortBy,
+                                    @QueryParam("direction") String direction,
+                                    @QueryParam("search") String search,
+                                    @QueryParam("role") String role,
+                                    @QueryParam("state") List<String> states) {
+        try {
+            ClosedTradesQuery.SortField field = ClosedTradesQuery.SortField.parse(
+                    Optional.ofNullable(sortBy), ClosedTradesQuery.SortField.DATE);
+            SortDirection sortDirection = SortDirection.parse(
+                    Optional.ofNullable(direction), SortDirection.DESC);
+            Optional<ClosedTradesQuery.RoleFilter> roleFilter = ClosedTradesQuery.RoleFilter.parse(
+                    Optional.ofNullable(role));
+            Set<BisqEasyTradeStateDto> stateFilter = ClosedTradesQuery.parseStates(states);
+            List<ClosedTradeIndexedItem> filtered = ClosedTradesQuery.apply(
+                    closedTradeItemsService.getItems().getList(),
+                    Optional.ofNullable(search),
+                    roleFilter,
+                    stateFilter,
+                    field,
+                    sortDirection);
+            return buildPaginatedResponse(filtered,
+                    PaginationParams.of(Optional.ofNullable(page), Optional.ofNullable(pageSize)),
+                    ClosedTradeIndexedItem::dto);
+        } catch (IllegalArgumentException e) {
+            return buildResponse(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error retrieving closed trades", e);
+            return buildErrorResponse("An unexpected error occurred");
+        }
     }
 
     @POST

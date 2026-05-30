@@ -20,12 +20,14 @@ package bisq.api.web_socket.subscription;
 
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
+import bisq.api.web_socket.domain.alert_notifications.AlertNotificationsWebSocketService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.api.web_socket.domain.offers.OffersWebSocketService;
 import bisq.api.web_socket.domain.reputation.ReputationWebSocketService;
+import bisq.api.web_socket.domain.trade_restricting_alert.TradeRestrictingAlertWebSocketService;
 import bisq.api.web_socket.domain.trades.TradePropertiesWebSocketService;
 import bisq.api.web_socket.domain.trades.TradesWebSocketService;
 import bisq.api.web_socket.domain.user_profile.NumUserProfilesWebSocketService;
