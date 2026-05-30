@@ -22,7 +22,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.NetworkUtils;
 import bisq.common.webcam.WebcamIpcAuthenticator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 // scenarios with failed permissions.
 @Slf4j
 public class WebcamAppService implements Service {
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int SOCKET_ACCEPT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int SOCKET_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(2);
     private static final long STARTUP_TIME_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     private static final long CHECK_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(10);
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
@@ -72,7 +72,10 @@ public class WebcamAppService implements Service {
     public WebcamAppService(ApplicationService.Config config) {
         model = new WebcamAppModel(config);
         inputHandler = new InputHandler(model);
-        qrCodeListeningServer = new QrCodeListeningServer(SOCKET_TIMEOUT, inputHandler, this::handleException);
+        qrCodeListeningServer = new QrCodeListeningServer(SOCKET_ACCEPT_TIMEOUT,
+                SOCKET_READ_TIMEOUT,
+                inputHandler,
+                this::handleException);
         webcamProcessLauncher = new WebcamProcessLauncher(model.getAppDataDirPath());
 
         state.set(NEW);
@@ -103,13 +106,18 @@ public class WebcamAppService implements Service {
 
         setupTimeoutSchedulers();
 
-        int port = NetworkUtils.selectRandomPort();
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
-        model.setPort(port);
         inputHandler.setSessionSecret(sessionSecret);
 
-        // Start local tcp server listening for input from qr code scan
-        qrCodeListeningServer.start(port);
+        int port;
+        try {
+            // Bind before launching the helper so the selected loopback port cannot be claimed elsewhere.
+            port = qrCodeListeningServer.start();
+            model.setPort(port);
+        } catch (RuntimeException e) {
+            cleanupFailedStart();
+            throw e;
+        }
 
         state.set(STARTING);
         log.info("Webcam app starting");
@@ -171,6 +179,13 @@ public class WebcamAppService implements Service {
         maxStartupTimeScheduler = Optional.empty();
         checkHeartBeatUpdateScheduler.ifPresent(Scheduler::stop);
         checkHeartBeatUpdateScheduler = Optional.empty();
+    }
+
+    private void cleanupFailedStart() {
+        stopSchedulers();
+        inputHandler.clearSessionSecret();
+        qrCodeListeningServer.stopServer();
+        model.reset();
     }
 
     private void handleException(Throwable throwable) {

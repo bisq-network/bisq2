@@ -23,15 +23,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QrCodeListeningServerTest {
     @TempDir
@@ -40,15 +41,63 @@ public class QrCodeListeningServerTest {
     @Test
     void setsReadTimeoutOnAcceptedSocket() throws Exception {
         int socketTimeout = 123;
+        int acceptTimeout = 456;
         CompletableFuture<Integer> acceptedSocketTimeout = new CompletableFuture<>();
-        QrCodeListeningServer qrCodeListeningServer = new QrCodeListeningServer(socketTimeout,
+        QrCodeListeningServer qrCodeListeningServer = new QrCodeListeningServer(acceptTimeout,
+                socketTimeout,
                 inputHandlerCompleting(acceptedSocketTimeout),
                 acceptedSocketTimeout::completeExceptionally);
-        int port = selectFreePort();
-
-        qrCodeListeningServer.start(port);
+        int port = qrCodeListeningServer.start();
+        assertTrue(port > 0);
         try (Socket ignored = connectToServer(port)) {
             assertEquals(socketTimeout, acceptedSocketTimeout.get(5, TimeUnit.SECONDS));
+        } finally {
+            qrCodeListeningServer.stopServer();
+        }
+    }
+
+    @Test
+    void keepsListeningAfterSlowClientTimesOut() throws Exception {
+        int socketReadTimeout = 100;
+        int acceptTimeout = 5_000;
+        CompletableFuture<Void> firstConnectionTimedOut = new CompletableFuture<>();
+        CompletableFuture<Integer> secondConnectionTimeout = new CompletableFuture<>();
+        AtomicInteger connectionCount = new AtomicInteger();
+        QrCodeListeningServer qrCodeListeningServer = new QrCodeListeningServer(acceptTimeout,
+                socketReadTimeout,
+                new InputHandler(createModel()) {
+                    @Override
+                    public void onSocket(Socket socket) {
+                        if (connectionCount.incrementAndGet() == 1) {
+                            try {
+                                socket.getInputStream().read();
+                                firstConnectionTimedOut.completeExceptionally(
+                                        new AssertionError("Expected slow webcam IPC client to time out"));
+                            } catch (SocketTimeoutException e) {
+                                firstConnectionTimedOut.complete(null);
+                                throw new IllegalArgumentException("Expected slow webcam IPC client timeout", e);
+                            } catch (IOException e) {
+                                firstConnectionTimedOut.completeExceptionally(e);
+                                throw new IllegalArgumentException("Could not read webcam IPC frame", e);
+                            }
+                        } else {
+                            try {
+                                secondConnectionTimeout.complete(socket.getSoTimeout());
+                            } catch (SocketException e) {
+                                secondConnectionTimeout.completeExceptionally(e);
+                            }
+                        }
+                    }
+                },
+                secondConnectionTimeout::completeExceptionally);
+        int port = qrCodeListeningServer.start();
+        assertTrue(port > 0);
+        try (Socket ignored = connectToServer(port)) {
+            firstConnectionTimedOut.get(5, TimeUnit.SECONDS);
+
+            try (Socket ignored2 = connectToServer(port)) {
+                assertEquals(socketReadTimeout, secondConnectionTimeout.get(5, TimeUnit.SECONDS));
+            }
         } finally {
             qrCodeListeningServer.stopServer();
         }
@@ -81,13 +130,6 @@ public class QrCodeListeningServerTest {
                 0,
                 false,
                 false));
-    }
-
-    private static int selectFreePort() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket()) {
-            serverSocket.bind(new InetSocketAddress("127.0.0.1", 0));
-            return serverSocket.getLocalPort();
-        }
     }
 
     private static Socket connectToServer(int port) throws IOException, InterruptedException {

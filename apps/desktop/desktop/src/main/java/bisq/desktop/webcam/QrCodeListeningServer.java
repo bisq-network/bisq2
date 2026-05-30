@@ -27,54 +27,120 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 @Slf4j
 public class QrCodeListeningServer {
-    private final int socketTimeout;
+    private static final String LOOPBACK_HOST = "127.0.0.1";
+
+    private final int acceptTimeout;
+    private final int socketReadTimeout;
     private final InputHandler inputHandler;
     private final Consumer<Exception> errorHandler;
     private volatile boolean isStopped;
-    private Optional<ServerSocket> serverSocket = Optional.empty();
+    private volatile Optional<ServerSocket> serverSocket = Optional.empty();
+    private volatile Optional<ExecutorService> listenerExecutor = Optional.empty();
 
-    public QrCodeListeningServer(int socketTimeout, InputHandler inputHandler, Consumer<Exception> errorHandler) {
-        this.socketTimeout = socketTimeout;
+    public QrCodeListeningServer(int acceptTimeout,
+                                 int socketReadTimeout,
+                                 InputHandler inputHandler,
+                                 Consumer<Exception> errorHandler) {
+        this.acceptTimeout = acceptTimeout;
+        this.socketReadTimeout = socketReadTimeout;
         this.inputHandler = inputHandler;
         this.errorHandler = errorHandler;
     }
 
-    public void start(int port) {
+    public int start() {
+        return start(0);
+    }
+
+    public int start(int port) {
         isStopped = false;
         serverSocket = Optional.empty();
 
-        CompletableFuture.runAsync(() -> {
-            InetSocketAddress serverAddress = new InetSocketAddress("127.0.0.1", port);
-            try (ServerSocket serverSocket = new ServerSocket()) {
-                this.serverSocket = Optional.of(serverSocket);
-                serverSocket.setSoTimeout(socketTimeout);
-                serverSocket.bind(serverAddress);
-                log.info("Start listening for webcam IPC");
-                while (!isStopped && !Thread.currentThread().isInterrupted()) {
-                    try (Socket socket = serverSocket.accept()) {
-                        socket.setSoTimeout(socketTimeout);
-                        inputHandler.onSocket(socket);
-                    } catch (SocketTimeoutException ignore) {
-                    } catch (IllegalArgumentException e) {
-                        log.warn("Rejected webcam IPC message: {}", e.getMessage());
-                    } catch (RuntimeException e) {
-                        log.error("Unexpected webcam IPC handler failure", e);
-                        errorHandler.accept(e);
-                        throw e;
-                    }
-                }
-            } catch (IOException e) {
-                if (!isStopped) {
-                    log.error("Server error", e);
+        InetSocketAddress serverAddress = new InetSocketAddress(LOOPBACK_HOST, port);
+        ServerSocket boundServerSocket = null;
+        try {
+            boundServerSocket = new ServerSocket();
+            boundServerSocket.setSoTimeout(acceptTimeout);
+            boundServerSocket.bind(serverAddress);
+            serverSocket = Optional.of(boundServerSocket);
+            ServerSocket listeningServerSocket = boundServerSocket;
+            int boundPort = listeningServerSocket.getLocalPort();
+
+            ExecutorService newListenerExecutor = ExecutorFactory.newSingleThreadExecutor("QrCodeListeningServer");
+            listenerExecutor = Optional.of(newListenerExecutor);
+            try {
+                CompletableFuture.runAsync(() -> listen(listeningServerSocket, newListenerExecutor),
+                        newListenerExecutor);
+            } catch (RuntimeException e) {
+                close(listeningServerSocket);
+                serverSocket = Optional.empty();
+                clearListenerExecutor(newListenerExecutor);
+                newListenerExecutor.shutdownNow();
+                throw e;
+            }
+
+            return boundPort;
+        } catch (IOException e) {
+            if (boundServerSocket != null) {
+                close(boundServerSocket);
+            }
+            log.error("Server start failed", e);
+            throw new IllegalStateException("Could not start webcam IPC server", e);
+        }
+    }
+
+    private void listen(ServerSocket boundServerSocket, ExecutorService executorService) {
+        try (boundServerSocket) {
+            log.info("Start listening for webcam IPC");
+            while (!isStopped && !Thread.currentThread().isInterrupted()) {
+                try (Socket socket = boundServerSocket.accept()) {
+                    socket.setSoTimeout(socketReadTimeout);
+                    inputHandler.onSocket(socket);
+                } catch (SocketTimeoutException ignore) {
+                } catch (IllegalArgumentException e) {
+                    log.debug("Rejected webcam IPC message: {}", e.getMessage());
+                } catch (RuntimeException e) {
+                    log.error("Unexpected webcam IPC handler failure", e);
                     errorHandler.accept(e);
+                    throw e;
                 }
             }
+        } catch (IOException e) {
+            if (!isStopped) {
+                log.error("Server error", e);
+                errorHandler.accept(e);
+            }
+        } finally {
+            clearServerSocket(boundServerSocket);
+            clearListenerExecutor(executorService);
+            executorService.shutdown();
             log.info("Server stopped");
-        }, ExecutorFactory.newSingleThreadExecutor("QrCodeListeningServer"));
+        }
+    }
+
+    private void clearServerSocket(ServerSocket boundServerSocket) {
+        Optional<ServerSocket> currentServerSocket = serverSocket;
+        if (currentServerSocket.isPresent() && currentServerSocket.get() == boundServerSocket) {
+            serverSocket = Optional.empty();
+        }
+    }
+
+    private void close(ServerSocket serverSocket) {
+        try {
+            serverSocket.close();
+        } catch (IOException ignore) {
+        }
+    }
+
+    private void clearListenerExecutor(ExecutorService executorService) {
+        Optional<ExecutorService> currentListenerExecutor = listenerExecutor;
+        if (currentListenerExecutor.isPresent() && currentListenerExecutor.get() == executorService) {
+            listenerExecutor = Optional.empty();
+        }
     }
 
     public void stopServer() {
@@ -90,5 +156,6 @@ public class QrCodeListeningServer {
             } catch (IOException ignore) {
             }
         });
+        listenerExecutor.ifPresent(ExecutorService::shutdownNow);
     }
 }

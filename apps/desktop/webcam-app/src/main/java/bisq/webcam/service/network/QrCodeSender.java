@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class QrCodeSender {
     private static final long SEND_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(1);
     private static final long SEND_MSG_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
+    private static final int SOCKET_CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(2);
 
     private final InetSocketAddress serverAddress;
     private final String sessionSecret;
@@ -90,7 +91,7 @@ public class QrCodeSender {
         log.info("send {} message with payloadByteLength={}", controlSignal, payloadByteLength);
         return CompletableFuture.runAsync(() -> {
                     try (Socket socket = new Socket()) {
-                        socket.connect(serverAddress);
+                        socket.connect(serverAddress, SOCKET_CONNECT_TIMEOUT);
                         WebcamIpcMessageSerializer.writeFrame(socket.getOutputStream(), wireMessage);
                     } catch (IOException e) {
                         log.error("Error at sending {} message with payloadByteLength={}",

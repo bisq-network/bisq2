@@ -94,7 +94,7 @@ public class WebcamApp extends Application {
                 logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
             }
             LogSetup.setup(logFile);
-            log.info("Webcam app logging to {}", logFile);
+            log.info("Webcam app logging initialized");
 
             String languageTag = "en";
             String languageTagParam = parameters.getNamed().get("languageTag");
