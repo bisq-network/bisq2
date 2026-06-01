@@ -51,8 +51,8 @@ public class TorHttpClient extends BaseHttpClient {
     private CloseableHttpClient closeableHttpClient;
     private volatile boolean shutdownStarted;
 
-    public TorHttpClient(String baseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
-        super(baseUrl, userAgent);
+    public TorHttpClient(String baseUrl, String logBaseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
+        super(baseUrl, logBaseUrl, userAgent);
         this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
@@ -97,7 +97,15 @@ public class TorHttpClient extends BaseHttpClient {
         Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
 
         long ts = System.currentTimeMillis();
-        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        // Safe-to-log representation of param. For POST 'param' is the request
+        // body (may contain plaintext payload), so log only its size. For GET
+        // 'param' is the path; current callers do not embed secrets there, but
+        // sensitive GET paths should be redacted by the caller via the
+        // descriptor's logPath before reaching this layer.
+        String safeParam = httpMethod == HttpMethod.POST
+                ? "[body " + param.length() + " chars]"
+                : param;
+        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", logBaseUrl, safeParam, httpMethod);
 
         InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         // Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -142,23 +150,23 @@ public class TorHttpClient extends BaseHttpClient {
                 int statusCode = response.getCode();
                 if (isSuccess(statusCode)) {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
-                            baseUrl,
+                            logBaseUrl,
                             System.currentTimeMillis() - ts,
                             StringUtils.fromBytes(responseString.getBytes().length),
                             StringUtils.truncate(response, 2000),
-                            param);
+                            safeParam);
                     return responseString;
                 }
                 log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
                         responseString,
                         statusCode,
-                        baseUrl,
+                        logBaseUrl,
                         System.currentTimeMillis() - ts,
-                        param);
+                        safeParam);
                 throw new RuntimeException(responseString);
             });
         } catch (Throwable t) {
-            String message = "Error at doRequestWithProxy with url " + baseUrl + " and param " + param +
+            String message = "Error at doRequestWithProxy with url " + logBaseUrl + " and param " + safeParam +
                     ". Throwable=" + t.getMessage();
             throw new IOException(message, t);
         } finally {

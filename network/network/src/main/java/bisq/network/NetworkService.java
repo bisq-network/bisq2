@@ -444,11 +444,17 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     // Getters
     /* --------------------------------------------------------------------- */
 
-    public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
+    /**
+     * @param logUrl Redacted variant of {@code url} used for log statements
+     *               and exception messages emitted by the returned client.
+     *               Pass the same value as {@code url} when nothing in the
+     *               URL is sensitive.
+     */
+    public BaseHttpClient getHttpClient(String url, String logUrl, String userAgent, TransportType transportType) {
         if (Objects.requireNonNull(transportType) == TransportType.TOR) {
-            return httpClientsByTransport.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
+            return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
         }
-        return httpClientsByTransport.getHttpClient(url, userAgent, transportType);
+        return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType);
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {

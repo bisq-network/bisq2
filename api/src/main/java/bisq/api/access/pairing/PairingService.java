@@ -126,6 +126,16 @@ public class PairingService {
         return Optional.ofNullable(apiAccessStoreService.getClientProfileByIdMap().get(id));
     }
 
+    /**
+     * Removes the client profile and associated permissions for the given client ID.
+     *
+     * @param clientId The client ID to revoke
+     * @return {@code true} if the profile was found and removed; {@code false} if not found
+     */
+    public boolean revokeClientProfile(String clientId) {
+        return apiAccessStoreService.removeClientProfile(clientId);
+    }
+
     private boolean isExpired(PairingCode pairingCode) {
         return Instant.now().isAfter(pairingCode.getExpiresAt());
     }

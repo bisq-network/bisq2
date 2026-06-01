@@ -15,13 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.account.fiat;
+package bisq.api.dto.account;
 
-import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.api.dto.account.payment_rail.PaymentRailDto;
 
-public record UserDefinedFiatAccountDto(
-    String accountName,
-    FiatPaymentRail paymentRail,
-    UserDefinedFiatAccountPayloadDto accountPayload
-) implements FiatAccountDto { }
-
+/**
+ * Generic read-side payment account DTO.
+ * Rail-specific details are represented by the concrete accountPayload DTO.
+ */
+public record PaymentAccountDto(
+        String accountName,
+        PaymentRailDto paymentRail,
+        PaymentAccountPayloadDto accountPayload,
+        String creationDate,
+        String tradeLimitInfo,
+        String tradeDuration
+) {
+}

@@ -21,6 +21,7 @@ package bisq.api.web_socket.domain;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.api.web_socket.subscription.WebSocketEvent;
 import bisq.common.application.Service;
@@ -28,6 +29,7 @@ import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
@@ -43,6 +45,26 @@ public abstract class BaseWebSocketService implements Service {
     }
 
     abstract public Optional<String> getJsonPayload();
+
+    /**
+     * Returns the payload for the given subscription parameter. Defaults to the parameter-less
+     * payload.
+     */
+    public Optional<String> getJsonPayload(Optional<String> parameter) {
+        return getJsonPayload();
+    }
+
+    /**
+     * Returns a canonical form of the subscription parameter for use as a bucket key.
+     * Subclasses that perform case-insensitive or defaulted parameter matching should override
+     * this so that logically identical parameters map to a single bucket.
+     */
+    public Optional<String> canonicalizeParameter(Optional<String> parameter) {
+        return parameter;
+    }
+
+    public void validate(SubscriptionRequest request) {
+    }
 
     //todo
     protected <T> Optional<String> toJson(T payload) {
@@ -65,11 +87,10 @@ public abstract class BaseWebSocketService implements Service {
     protected void send(Optional<String> jsonPayload,
                         Topic topic,
                         ModificationType modificationType) {
-        subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers -> {
-                    jsonPayload.ifPresent(json ->
-                            send(json, subscribers, topic, modificationType));
-                });
+        jsonPayload.ifPresent(json ->
+                subscriberRepository.findSubscribers(topic).values().stream()
+                        .flatMap(Collection::stream)
+                        .forEach(subscriber -> send(json, subscriber, modificationType)));
     }
 
     protected void send(String json,

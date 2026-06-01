@@ -30,14 +30,17 @@ import bisq.api.dto.access.session.SessionRequestDto;
 import bisq.api.dto.access.session.SessionResponseDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -67,12 +70,12 @@ public class AccessApi extends RestApiBase {
             summary = "Request API client pairing",
             description = """
                     Performs pairing of an API client.
-                    
+
                     The client submits a signed pairing request containing:
                     - protocol version
                     - pairing code identifier (from QR code)
                     - client name
-                    
+
                     On success, client credentials and a short-lived session ID are returned.
                     """
     )
@@ -136,10 +139,10 @@ public class AccessApi extends RestApiBase {
             description = """
                     Creates a new short-lived session for a client using a
                     client identifier and shared client secret.
-                    
+
                     This endpoint is intentionally unauthenticated and is used during
                     initial client bootstrap or re-sessioning.
-                    
+
                     If the credentials are valid, a new session ID is issued together
                     with its expiration timestamp. The session ID must be supplied in
                     subsequent authenticated requests.
@@ -189,6 +192,38 @@ public class AccessApi extends RestApiBase {
         } catch (Exception e) {
             log.error("Unexpected error during session request", e);
             return buildErrorResponse("Session request failed");
+        }
+    }
+
+    @DELETE
+    @Path("/clients/{clientId}")
+    @Operation(
+            summary = "Revoke a paired client",
+            description = """
+                    Revokes a previously paired API client.
+
+                    All active sessions for the client are immediately invalidated and
+                    the client profile is removed from persistent storage. The client
+                    can no longer authenticate and must pair again via QR code to regain
+                    access.
+                    """
+    )
+    @ApiResponse(responseCode = "204", description = "Client successfully revoked")
+    @ApiResponse(responseCode = "404", description = "Client not found")
+    @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
+    public Response revokeClient(
+            @Parameter(description = "The client ID to revoke", required = true)
+            @PathParam("clientId") String clientId
+    ) {
+        try {
+            boolean revoked = apiAccessService.revokeClient(clientId);
+            if (!revoked) {
+                return buildNotFoundResponse("Client not found: " + clientId);
+            }
+            return buildNoContentResponse();
+        } catch (Exception e) {
+            log.error("Unexpected error during client revocation for clientId={}", clientId, e);
+            return buildErrorResponse("Client revocation failed");
         }
     }
 }

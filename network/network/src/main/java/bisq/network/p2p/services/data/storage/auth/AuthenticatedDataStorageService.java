@@ -71,8 +71,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
-        maybeLogMapState("onPersistedApplied", persisted);
-        pruneInvalidAuthorizedData();
+//        maybeLogMapState("onPersistedApplied", persisted);
+//        pruneInvalidAuthorizedData();
         handlePersistedPublishDateAware(persisted);
     }
 

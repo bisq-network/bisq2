@@ -37,9 +37,11 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
-import bisq.api.rest_api.endpoints.payment_accounts.FiatPaymentAccountsRestApi;
+import bisq.api.rest_api.endpoints.trade_restricting_alert.TradeRestrictingAlertRestApi;
+import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
+import bisq.api.rest_api.endpoints.alert_notifications.AlertNotificationsRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
@@ -49,6 +51,8 @@ import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
@@ -70,6 +74,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +82,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 /**
  * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
@@ -108,6 +112,7 @@ public class ApiService implements Service {
     private final HttpServerBootstrapService httpServerBootstrapService;
     @Getter
     private final TlsContextService tlsContextService;
+    private final AlertNotificationsService alertNotificationsService;
     private final Observable<State> state = new Observable<>(State.NEW);
     private final Object pairingQrCodeLock = new Object();
     @Nullable
@@ -147,6 +152,7 @@ public class ApiService implements Service {
         pairingService = new PairingService(apiConfig, appDataDirPath, apiAccessStoreService, permissionService);
         sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
+        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService(), AppType.UNSPECIFIED);
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
@@ -166,15 +172,17 @@ public class ApiService implements Service {
         UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+        AlertNotificationsRestApi alertNotificationsRestApi = new AlertNotificationsRestApi(alertNotificationsService);
+        TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi = new TradeRestrictingAlertRestApi(bondedRolesService.getAlertService());
         PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
-        FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi = new FiatPaymentAccountsRestApi(accountService);
+        UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi = new UserDefinedPaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(
                 userService.getUserProfileService(),
                 supportedService.getModerationRequestService(),
                 userService.getRepublishUserProfileService());
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
-        DevicesRestApi devicesRestApi= new DevicesRestApi(deviceRegistrationService);
+        DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService);
 
         ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled() || apiConfig.isWebsocketEnabled()) {
@@ -190,9 +198,11 @@ public class ApiService implements Service {
                     userIdentityRestApi,
                     marketPriceRestApi,
                     settingsRestApi,
+                    alertNotificationsRestApi,
+                    tradeRestrictingAlertRestApi,
                     explorerRestApi,
                     paymentAccountsRestApi,
-                    fiatPaymentAccountsRestApi,
+                    userDefinedPaymentAccountsRestApi,
                     reputationRestApi,
                     userProfileRestApi,
                     devicesRestApi);
@@ -204,6 +214,7 @@ public class ApiService implements Service {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
                     tlsContextService,
                     bondedRolesService,
+                    alertNotificationsService,
                     chatService,
                     tradeService,
                     userService,
@@ -233,6 +244,7 @@ public class ApiService implements Service {
 
         // REST API and Websocket are handled inside httpServerBootstrapService
         futures.add(httpServerBootstrapService.initialize());
+        futures.add(alertNotificationsService.initialize());
 
         futures.add(apiAccessTransportService.initialize());
 
@@ -284,6 +296,7 @@ public class ApiService implements Service {
             pairingCodePin = null;
         }
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+        futures.add(alertNotificationsService.shutdown());
         futures.add(apiAccessTransportService.shutdown());
         futures.add(httpServerBootstrapService.shutdown());
         return CompletableFutureUtils.allOf(futures)

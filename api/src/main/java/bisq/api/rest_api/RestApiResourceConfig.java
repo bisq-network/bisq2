@@ -10,9 +10,11 @@ import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
-import bisq.api.rest_api.endpoints.payment_accounts.FiatPaymentAccountsRestApi;
+import bisq.api.rest_api.endpoints.trade_restricting_alert.TradeRestrictingAlertRestApi;
+import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
 import bisq.api.rest_api.endpoints.reputation.ReputationRestApi;
+import bisq.api.rest_api.endpoints.alert_notifications.AlertNotificationsRestApi;
 import bisq.api.rest_api.endpoints.settings.SettingsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.rest_api.endpoints.user_identity.UserIdentityRestApi;
@@ -34,9 +36,11 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  UserIdentityRestApi userIdentityRestApi,
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
+                                 AlertNotificationsRestApi alertNotificationsRestApi,
+                                 TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi,
                                  ExplorerRestApi explorerRestApi,
                                  PaymentAccountsRestApi paymentAccountsRestApi,
-                                 FiatPaymentAccountsRestApi fiatPaymentAccountsRestApi,
+                                 UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi,
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
                                  DevicesRestApi devicesRestApi) {
@@ -52,9 +56,11 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(UserIdentityRestApi.class);
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
+        register(AlertNotificationsRestApi.class);
+        register(TradeRestrictingAlertRestApi.class);
         register(ExplorerRestApi.class);
         register(PaymentAccountsRestApi.class);
-        register(FiatPaymentAccountsRestApi.class);
+        register(UserDefinedPaymentAccountsRestApi.class);
         register(ReputationRestApi.class);
         register(UserProfileRestApi.class);
         register(DevicesRestApi.class);
@@ -68,9 +74,11 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(userIdentityRestApi).to(UserIdentityRestApi.class);
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);
+                bind(alertNotificationsRestApi).to(AlertNotificationsRestApi.class);
+                bind(tradeRestrictingAlertRestApi).to(TradeRestrictingAlertRestApi.class);
                 bind(explorerRestApi).to(ExplorerRestApi.class);
                 bind(paymentAccountsRestApi).to(PaymentAccountsRestApi.class);
-                bind(fiatPaymentAccountsRestApi).to(FiatPaymentAccountsRestApi.class);
+                bind(userDefinedPaymentAccountsRestApi).to(UserDefinedPaymentAccountsRestApi.class);
                 bind(reputationRestApi).to(ReputationRestApi.class);
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
                 bind(devicesRestApi).to(DevicesRestApi.class);

@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.account.fiat;
+package bisq.api.web_socket.subscription;
 
-public record UserDefinedFiatAccountPayloadDto(
-        String accountData
-) implements FiatAccountPayloadDto { }
+import java.util.Optional;
 
+public record SubscriptionSpecifier(Topic topic, Optional<String> parameter) {
+}
