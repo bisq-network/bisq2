@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
@@ -48,12 +49,12 @@ public class WebcamProcessLauncher {
         this.webcamJarProvider = new WebcamJarProvider(webcamDirPath);
     }
 
-    public CompletableFuture<Process> start(int port, String sessionSecret) {
+    public CompletableFuture<Process> start(String sessionSecret) {
+        ExecutorService launchExecutor = ExecutorFactory.newSingleThreadExecutor("WebcamProcessLauncher");
         return CompletableFuture.supplyAsync(() -> {
             try {
                 Path jarFilePath = webcamJarProvider.prepareWebcamJar();
 
-                String portParam = "--port=" + port;
                 String logFileParam = "--logFile=" + URLEncoder.encode(webcamDirPath.toAbsolutePath().toString(), StandardCharsets.UTF_8) + FileReaderUtils.FILE_SEP + "webcam-app";
                 String languageTagParam = "--languageTag=" + LanguageRepository.getDefaultLanguageTag();
 
@@ -66,23 +67,22 @@ public class WebcamProcessLauncher {
                         FileMutatorUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIconPath);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath.toAbsolutePath().toString(), logFileParam, languageTagParam);
                 } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), portParam, logFileParam, languageTagParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath.toAbsolutePath().toString(), logFileParam, languageTagParam);
                 }
-                processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
                 processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
                 log.info("Launching webcam app process");
                 Process process = processBuilder.start();
                 sendSessionSecret(process, sessionSecret);
-                runningProcess = Optional.of(process);
+                setRunningProcess(process);
                 log.info("Webcam app process successfully launched");
                 return process;
             } catch (Exception e) {
                 log.error("Launching process failed", e);
                 throw new RuntimeException(e);
             }
-        }, ExecutorFactory.newSingleThreadScheduledExecutor("WebcamProcessLauncher"));
+        }, launchExecutor).whenComplete((process, throwable) -> launchExecutor.shutdown());
     }
 
     private void sendSessionSecret(Process process, String sessionSecret) {
@@ -98,12 +98,13 @@ public class WebcamProcessLauncher {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.supplyAsync(() -> runningProcess.map(process -> {
+        Optional<Process> processToShutdown = getAndClearRunningProcess();
+        return CompletableFuture.supplyAsync(() -> processToShutdown.map(process -> {
             log.info("Shutting down webcam app process");
             process.destroy();
-            boolean terminatedGraceFully = false;
+            boolean terminatedGracefully = false;
             try {
-                terminatedGraceFully = process.waitFor(2, TimeUnit.SECONDS);
+                terminatedGracefully = process.waitFor(2, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 log.warn("Thread got interrupted at shutdown", e);
                 Thread.currentThread().interrupt(); // Restore interrupted state
@@ -112,9 +113,25 @@ public class WebcamProcessLauncher {
             if (process.isAlive()) {
                 log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
                 process.destroyForcibly();
-                terminatedGraceFully = false;
+                try {
+                    process.waitFor(2, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    log.warn("Thread got interrupted while waiting after forced shutdown", e);
+                    Thread.currentThread().interrupt();
+                }
+                terminatedGracefully = false;
             }
-            return terminatedGraceFully;
+            return terminatedGracefully;
         }).orElse(true), commonForkJoinPool());
+    }
+
+    private synchronized void setRunningProcess(Process process) {
+        runningProcess = Optional.of(process);
+    }
+
+    private synchronized Optional<Process> getAndClearRunningProcess() {
+        Optional<Process> process = runningProcess;
+        runningProcess = Optional.empty();
+        return process;
     }
 }

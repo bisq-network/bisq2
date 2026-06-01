@@ -28,7 +28,7 @@ import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamException;
 import bisq.webcam.service.WebcamService;
-import bisq.webcam.service.network.QrCodeSender;
+import bisq.webcam.service.ipc.QrCodeSender;
 import bisq.webcam.view.WebcamView;
 import bisq.webcam.view.util.ImageUtil;
 import bisq.webcam.view.util.KeyHandlerUtil;
@@ -44,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
@@ -82,18 +84,12 @@ public class WebcamApp extends Application {
     public void init() {
         Parameters parameters = getParameters();
         try {
-            int port = 8000;
-            String portParam = parameters.getNamed().get("port");
-            if (portParam != null) {
-                port = Integer.parseInt(portParam);
-            }
-
             String logFile = PlatformUtils.getUserDataDirPath().resolve("Bisq-webcam-app").toAbsolutePath() + FileReaderUtils.FILE_SEP + "webcam-app";
             String logFileParam = parameters.getNamed().get("logFile");
             if (logFileParam != null) {
                 logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
             }
-            LogSetup.setup(logFile);
+            LogSetup.setupWithoutConsoleAppender(logFile);
             log.info("Webcam app logging initialized");
 
             String languageTag = "en";
@@ -103,7 +99,7 @@ public class WebcamApp extends Application {
             }
             Res.setAndApplyLanguageTag(languageTag);
 
-            qrCodeSender = new QrCodeSender(port, readSessionSecret());
+            qrCodeSender = new QrCodeSender(new FileOutputStream(FileDescriptor.out), readSessionSecret());
         } catch (Exception e) {
             log.error("init failed", e);
             throw new IllegalStateException("Webcam app init failed", e);

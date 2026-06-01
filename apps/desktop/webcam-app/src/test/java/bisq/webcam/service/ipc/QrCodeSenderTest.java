@@ -15,23 +15,52 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam.service.network;
+package bisq.webcam.service.ipc;
 
 import bisq.common.webcam.WebcamControlSignals;
+import bisq.common.webcam.WebcamIpcMessage;
+import bisq.common.webcam.WebcamIpcFrameCodec;
 import bisq.common.webcam.WebcamIpcWireMessage;
+import bisq.common.webcam.WebcamIpcWireMessageValidation;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class QrCodeSenderTest {
     @Test
+    void sendsAuthenticatedMessageToOutputStream() throws Exception {
+        String secret = "secret";
+        String payload = "bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy";
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        QrCodeSender qrCodeSender = new QrCodeSender(outputStream, secret);
+
+        try {
+            qrCodeSender.send(WebcamControlSignals.QR_CODE_PREFIX, payload).join();
+
+            WebcamIpcWireMessage wireMessage = WebcamIpcFrameCodec.readFrame(
+                    new ByteArrayInputStream(outputStream.toByteArray()));
+            assertTrue(WebcamIpcWireMessageValidation.verify(secret, wireMessage));
+            WebcamIpcMessage ipcMessage = WebcamIpcMessage.fromWireMessage(wireMessage);
+            assertEquals(WebcamControlSignals.QR_CODE_PREFIX, ipcMessage.getSignal());
+            assertEquals(Optional.of(payload), ipcMessage.getPayload());
+        } finally {
+            qrCodeSender.shutdown();
+        }
+    }
+
+    @Test
     void sendReturnsFailedFutureWhenPayloadIsTooLarge() {
-        QrCodeSender qrCodeSender = new QrCodeSender(0, "secret");
+        QrCodeSender qrCodeSender = new QrCodeSender(new ByteArrayOutputStream(), "secret");
         String payload = "a".repeat(WebcamIpcWireMessage.MAX_PAYLOAD_LENGTH + 1);
 
         try {
@@ -47,7 +76,7 @@ public class QrCodeSenderTest {
 
     @Test
     void sendReturnsFailedFutureWhenPayloadIsNull() {
-        QrCodeSender qrCodeSender = new QrCodeSender(0, "secret");
+        QrCodeSender qrCodeSender = new QrCodeSender(new ByteArrayOutputStream(), "secret");
 
         try {
             CompletableFuture<Void> future = assertDoesNotThrow(() ->

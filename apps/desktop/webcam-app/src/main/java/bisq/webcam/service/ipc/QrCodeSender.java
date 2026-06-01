@@ -15,20 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam.service.network;
+package bisq.webcam.service.ipc;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.webcam.WebcamControlSignals;
-import bisq.common.webcam.WebcamIpcMessageSerializer;
+import bisq.common.webcam.WebcamIpcFrameCodec;
 import bisq.common.webcam.WebcamIpcWireMessage;
 import bisq.webcam.service.ErrorCode;
 import bisq.webcam.service.WebcamException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -41,21 +40,24 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class QrCodeSender {
     private static final long SEND_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(1);
     private static final long SEND_MSG_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
-    private static final int SOCKET_CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(2);
-
-    private final InetSocketAddress serverAddress;
+    private final MessageWriter messageWriter;
     private final String sessionSecret;
     private Optional<Scheduler> heartBeatScheduler = Optional.empty();
-    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("QrCodeSender");
+    private final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("QrCodeSender");
 
-    public QrCodeSender(int port, String sessionSecret) {
+    public QrCodeSender(OutputStream outputStream, String sessionSecret) {
+        this(outputStreamWriter(outputStream), sessionSecret);
+    }
+
+    private QrCodeSender(MessageWriter messageWriter, String sessionSecret) {
+        checkArgument(messageWriter != null, "messageWriter must not be null");
         checkArgument(sessionSecret != null && !sessionSecret.isBlank(), "Missing webcam IPC session secret");
-        serverAddress = new InetSocketAddress("127.0.0.1", port);
+        this.messageWriter = messageWriter;
         this.sessionSecret = sessionSecret;
     }
 
     public void startSendingHeartBeat() {
-        // Send a heart beat every second to avoid triggering server socket timeout
+        // Send a heartbeat every second so the parent can detect a stalled helper
         heartBeatScheduler = Optional.of(Scheduler.run(() -> send(WebcamControlSignals.HEART_BEAT))
                 .host(this)
                 .runnableName("sendHeartBeat")
@@ -90,9 +92,8 @@ public class QrCodeSender {
 
         log.info("send {} message with payloadByteLength={}", controlSignal, payloadByteLength);
         return CompletableFuture.runAsync(() -> {
-                    try (Socket socket = new Socket()) {
-                        socket.connect(serverAddress, SOCKET_CONNECT_TIMEOUT);
-                        WebcamIpcMessageSerializer.writeFrame(socket.getOutputStream(), wireMessage);
+                    try {
+                        messageWriter.write(wireMessage);
                     } catch (IOException e) {
                         log.error("Error at sending {} message with payloadByteLength={}",
                                 controlSignal, payloadByteLength, e);
@@ -100,5 +101,18 @@ public class QrCodeSender {
                     }
                 }, executorService)
                 .orTimeout(SEND_MSG_TIMEOUT, TimeUnit.MILLISECONDS);
+    }
+
+    private static MessageWriter outputStreamWriter(OutputStream outputStream) {
+        checkArgument(outputStream != null, "outputStream must not be null");
+        return wireMessage -> {
+            synchronized (outputStream) {
+                WebcamIpcFrameCodec.writeFrame(outputStream, wireMessage);
+            }
+        };
+    }
+
+    private interface MessageWriter {
+        void write(WebcamIpcWireMessage wireMessage) throws IOException;
     }
 }

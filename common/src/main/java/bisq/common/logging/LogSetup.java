@@ -30,6 +30,7 @@ import com.google.common.base.Charsets;
 import org.slf4j.LoggerFactory;
 
 public class LogSetup {
+    private static final String CONSOLE_APPENDER_NAME = "CONSOLE_APPENDER";
     private static Logger logbackLogger;
     public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
@@ -39,6 +40,19 @@ public class LogSetup {
 
     public static void setup(String fileName) {
         setup(fileName, 20, "10MB", DEFAULT_LOG_LEVEL);
+    }
+
+    public static void setupWithoutConsoleAppender(String fileName) {
+        setup(fileName);
+        detachConsoleAppender();
+    }
+
+    private static void detachConsoleAppender() {
+        if (LoggerFactory.getILoggerFactory() instanceof LoggerContext) {
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+            rootLogger.detachAppender(CONSOLE_APPENDER_NAME);
+        }
     }
 
     public static void setup(String fileName, int rollingPolicyMaxIndex, String maxFileSize, Level logLevel) {

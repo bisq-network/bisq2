@@ -2,8 +2,8 @@
 
 The webcam application runs as independent jvm process to reduce security risks from the many dependencies it uses (many
 native drivers).
-We start from the desktop application that app and communicate via TPC sockets the resulting qr code and simple control
-commands like `shutdown`.
+We start the app from the desktop application and communicate the resulting QR code and simple control
+commands like `shutdown` over stdin/stdout pipes, without opening a network socket.
 As there is no build dependency from desktop to the webcam app to avoid the dependency inclusion we need to build a jar
 file zip it and copy it into desktop so that it can be used by the Bisq app.
 We use the java executable which is included in the binary. We unzip the zip file from the resources into the
