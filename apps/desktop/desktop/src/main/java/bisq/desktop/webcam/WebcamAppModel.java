@@ -20,7 +20,6 @@ package bisq.desktop.webcam;
 import bisq.application.ApplicationService;
 import bisq.common.observable.Observable;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,8 +30,6 @@ import java.nio.file.Path;
 @Slf4j
 public class WebcamAppModel {
     private final Path appDataDirPath;
-    @Setter
-    private int port;
     private final Observable<Boolean> imageRecognized = new Observable<>();
     private final Observable<String> qrCode = new Observable<>();
     private final Observable<Boolean> isShutdownSignalReceived = new Observable<>();
@@ -48,7 +45,6 @@ public class WebcamAppModel {
     }
 
     public void reset() {
-        port = 0;
         imageRecognized.set(null);
         qrCode.set(null);
         isShutdownSignalReceived.set(null);
