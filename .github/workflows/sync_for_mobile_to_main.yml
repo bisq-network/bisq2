@@ -252,6 +252,23 @@ jobs:
     # with their own GPG-signed commit). PR conversation comments go through
     # the Issues API (PRs are issues for that endpoint), so we need
     # `issues: write`.
+    #
+    # Caveat — declaring `issues: write` here is necessary but NOT sufficient.
+    # GitHub enforces a permissions ceiling at both repo and org level. If
+    # either is set to "Read repository contents and packages permissions"
+    # (the default for newer repos / orgs), this declaration is silently
+    # capped at read-only and the comment-posting step fails at runtime with:
+    #
+    #   HttpError: Resource not accessible by integration
+    #   POST /repos/<owner>/<repo>/issues/<n>/comments  -> 403
+    #   x-accepted-github-permissions: 'issues=write; pull_requests=write'
+    #
+    # Fix: a repo admin sets Settings > Actions > General > Workflow
+    # permissions to "Read and write permissions". The org setting (if more
+    # restrictive) overrides the repo setting, so the org may need flipping
+    # too. There is no workflow-side workaround that does not require an
+    # admin action (a PAT secret or a GitHub App installation token would
+    # bypass the ceiling but both need a maintainer to provision them).
     permissions:
       contents: read
       pull-requests: read
