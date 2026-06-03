@@ -3,43 +3,41 @@ package bisq.api.dto.mappings.account.fiat;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.fiat.ZelleAccount;
 import bisq.account.accounts.fiat.ZelleAccountPayload;
-import bisq.api.dto.account.AccountMetadataDto;
-import bisq.api.dto.account.fiat.FiatPaymentMethodChargebackRiskDto;
-import bisq.api.dto.account.fiat.ZelleAccountDto;
-import bisq.api.dto.account.fiat.ZelleAccountPayloadDto;
-import bisq.api.dto.mappings.account.PaymentAccountKeyMapping;
-import bisq.api.dto.mappings.account.PaymentAccountMetadataDtoMapping;
+import bisq.api.dto.account.fiat.payment_method.FiatPaymentMethodChargebackRiskDto;
+import bisq.api.dto.account.fiat.common.FiatPaymentRailDto;
+import bisq.api.dto.account.PaymentAccountDto;
+import bisq.api.dto.account.fiat.zelle.ZelleAccountPayloadDto;
+import bisq.api.dto.account.fiat.zelle.CreateZelleAccountPayloadDto;
+import bisq.api.dto.mappings.account.PaymentAccountDtoMappingHelper;
 import bisq.common.locale.CountryRepository;
 import bisq.common.util.StringUtils;
 
 public class ZelleAccountDtoMapping {
-    public static ZelleAccount toBisq2Model(ZelleAccountDto dto) {
-        ZelleAccountPayloadDto payloadDto = dto.accountPayload();
+    public static ZelleAccount toBisq2Model(String accountName, CreateZelleAccountPayloadDto payloadDto) {
         ZelleAccountPayload payload = new ZelleAccountPayload(
                 StringUtils.createUid(),
                 payloadDto.holderName(),
                 payloadDto.emailOrMobileNr()
         );
-        PaymentAccountKeyMapping.KeyData keyData = PaymentAccountKeyMapping.createDefault();
         return new ZelleAccount(
                 StringUtils.createUid(),
                 System.currentTimeMillis(),
-                dto.accountName(),
+                accountName,
                 payload,
-                keyData.keyPair(),
-                keyData.keyType(),
+                PaymentAccountDtoMappingHelper.createDefaultKeyPair(),
+                PaymentAccountDtoMappingHelper.getDefaultKeyType(),
                 AccountOrigin.BISQ2_NEW
         );
     }
 
-    public static ZelleAccountDto fromBisq2Model(ZelleAccount account) {
-        AccountMetadataDto accountMetadata = PaymentAccountMetadataDtoMapping.mapAccountMetadata(account);
-        FiatPaymentMethodChargebackRiskDto chargebackRisk = FiatPaymentMethodChargebackRiskDto.valueOf(account.getPaymentMethod().getPaymentRail().getChargebackRisk().name());
+    public static PaymentAccountDto fromBisq2Model(ZelleAccount account) {
+        FiatPaymentMethodChargebackRiskDto chargebackRisk = FiatAccountDtoMappingHelper.toChargebackRiskDto(account.getPaymentMethod().getPaymentRail());
 
         String currency = FiatAccountPayloadCurrencyMapping.toDisplayString(account.getAccountPayload());
 
-        return new ZelleAccountDto(
+        return new PaymentAccountDto(
                 account.getAccountName(),
+                FiatPaymentRailDto.ZELLE,
                 new ZelleAccountPayloadDto(
                         chargebackRisk,
                         account.getPaymentMethod().getShortDisplayString(),
@@ -48,9 +46,9 @@ public class ZelleAccountDtoMapping {
                         account.getAccountPayload().getHolderName(),
                         account.getAccountPayload().getEmailOrMobileNr()
                 ),
-                accountMetadata.creationDate(),
-                accountMetadata.tradeLimitInfo(),
-                accountMetadata.tradeDuration()
+                PaymentAccountDtoMappingHelper.getCreationDate(account),
+                PaymentAccountDtoMappingHelper.getTradeLimitInfo(account),
+                PaymentAccountDtoMappingHelper.getTradeDuration(account)
         );
     }
 }
