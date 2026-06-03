@@ -499,7 +499,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            maybeDispatchNotification(chatNotification);
+            maybeDispatchNotification(chatNotification, chatMessage);
         } else {
             consumeNotification(chatNotification);
         }
@@ -541,12 +541,14 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 senderUserProfile);
     }
 
-    private void maybeDispatchNotification(ChatNotification chatNotification) {
+    private void maybeDispatchNotification(ChatNotification chatNotification, ChatMessage chatMessage) {
         boolean afterStartUp = isReceivedAfterStartUp(chatNotification);
         boolean domainMatches = testChatChannelDomainPredicate(chatNotification);
         if (!isApplicationFocussed && afterStartUp && domainMatches) {
-            log.debug("Dispatching notification for channel '{}': {}", chatNotification.getChatChannelDomain(), chatNotification.getTitle());
-            notificationService.dispatchNotification(chatNotification);
+            boolean mobileEligible = isMobileEligible(chatMessage);
+            log.debug("Dispatching notification for channel '{}': {} (mobileEligible={})",
+                    chatNotification.getChatChannelDomain(), chatNotification.getTitle(), mobileEligible);
+            notificationService.dispatchNotification(chatNotification, mobileEligible);
         } else {
             log.debug("Skipping notification dispatch for '{}' (focused={}, afterStartUp={}, domainPredicate={})",
                     chatNotification.getTitle(),
@@ -554,6 +556,38 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                     afterStartUp,
                     domainMatches);
         }
+    }
+
+    private boolean isMobileEligible(ChatMessage chatMessage) {
+        return chatMessage == null || isMobileEligible(chatMessage.getChatMessageType());
+    }
+
+    /**
+     * Decides whether a chat message of the given type should reach the mobile relay
+     * (FCM / APNs) or be delivered only to the desktop (system) channel.
+     * <p>
+     * Mirrors {@code OpenTradesNotificationService} on Android nodeApp which has
+     * proven sound at scale: only {@code TEXT} (real peer chat) and
+     * {@code TAKE_BISQ_EASY_OFFER} (your offer was taken) are surfaced as pushes.
+     * <p>
+     * {@code PROTOCOL_LOG_MESSAGE} in particular is suppressed: the Bisq Easy trade
+     * protocol emits one per state transition (take-offer, account-info, btc-address,
+     * fiat-sent, fiat-receipt, btc-sent, completed, …) which produces 6–10+ push
+     * notifications per active trade — the noise pattern reported in
+     * {@code bisq-network/bisq-mobile#1450}.
+     * <p>
+     * Important trade-state transitions that the user does need pushed (e.g. "peer
+     * confirmed fiat receipt") will be re-introduced via a dedicated service that
+     * observes {@code BisqEasyTrade.tradeState} directly — see follow-up to #1450.
+     * <p>
+     * Package-private static so it can be unit-tested without instantiating the full
+     * {@link ChatNotificationService} (which has many constructor dependencies).
+     */
+    static boolean isMobileEligible(bisq.chat.ChatMessageType type) {
+        return switch (type) {
+            case TEXT, TAKE_BISQ_EASY_OFFER -> true;
+            case PROTOCOL_LOG_MESSAGE, LEAVE, CHAT_RULES_WARNING, EXPIRED_MESSAGES_INDICATOR -> false;
+        };
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {

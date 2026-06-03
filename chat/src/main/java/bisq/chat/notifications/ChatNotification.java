@@ -41,6 +41,11 @@ public class ChatNotification implements Notification, PersistableProto {
         return channelId + "." + messageId;
     }
 
+    @Override
+    public Category getCategory() {
+        return Category.CHAT_MESSAGE;
+    }
+
     private final String id;
     private final String title;
     private final String message;
