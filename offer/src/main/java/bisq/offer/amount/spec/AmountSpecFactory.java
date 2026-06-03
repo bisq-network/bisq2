@@ -50,7 +50,7 @@ public class AmountSpecFactory {
         if (useRangeAmount) {
             long minAmount = minTradeAmount.getBaseSideAmount().getValue();
             long maxAmount = maxTradeAmount.getBaseSideAmount().getValue();
-            return new BaseSideRangeAmountSpec(minAmount, maxAmount);
+            return createBaseSideAmountSpec(minAmount, maxAmount);
         } else {
             long fixAmount = fixTradeAmount.getBaseSideAmount().getValue();
             return new BaseSideFixedAmountSpec(fixAmount);
@@ -64,10 +64,22 @@ public class AmountSpecFactory {
         if (useRangeAmount) {
             long minAmount = minTradeAmount.getQuoteSideAmount().getValue();
             long maxAmount = maxTradeAmount.getQuoteSideAmount().getValue();
-            return new QuoteSideRangeAmountSpec(minAmount, maxAmount);
+            return createQuoteSideAmountSpec(minAmount, maxAmount);
         } else {
             long fixAmount = fixTradeAmount.getQuoteSideAmount().getValue();
             return new QuoteSideFixedAmountSpec(fixAmount);
         }
+    }
+
+    public static BaseSideAmountSpec createBaseSideAmountSpec(long minAmount, long maxAmount) {
+        return minAmount == maxAmount
+                ? new BaseSideFixedAmountSpec(minAmount)
+                : new BaseSideRangeAmountSpec(minAmount, maxAmount);
+    }
+
+    public static QuoteSideAmountSpec createQuoteSideAmountSpec(long minAmount, long maxAmount) {
+        return minAmount == maxAmount
+                ? new QuoteSideFixedAmountSpec(minAmount)
+                : new QuoteSideRangeAmountSpec(minAmount, maxAmount);
     }
 }
