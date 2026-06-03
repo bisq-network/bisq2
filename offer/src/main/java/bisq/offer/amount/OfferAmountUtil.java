@@ -23,14 +23,13 @@ import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.AmountSpecFactory;
 import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
-import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
-import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -239,7 +238,7 @@ public class OfferAmountUtil {
                             .map(quote -> quote.toQuoteSideMonetary(maxAmount)))
                     .map(Monetary::getValue);
             if (minQuoteSideAmount.isPresent() && maxQuoteSideAmount.isPresent()) {
-                return Optional.of(new QuoteSideRangeAmountSpec(minQuoteSideAmount.get(), maxQuoteSideAmount.get()));
+                return Optional.of(AmountSpecFactory.createQuoteSideAmountSpec(minQuoteSideAmount.get(), maxQuoteSideAmount.get()));
             } else {
                 return Optional.empty();
             }
@@ -268,7 +267,7 @@ public class OfferAmountUtil {
                             .map(quote -> quote.toBaseSideMonetary(maxAmount)))
                     .map(Monetary::getValue);
             if (minBaseSideAmount.isPresent() && maxBaseSideAmount.isPresent()) {
-                return Optional.of(new BaseSideRangeAmountSpec(minBaseSideAmount.get(), maxBaseSideAmount.get()));
+                return Optional.of(AmountSpecFactory.createBaseSideAmountSpec(minBaseSideAmount.get(), maxBaseSideAmount.get()));
             } else {
                 return Optional.empty();
             }
