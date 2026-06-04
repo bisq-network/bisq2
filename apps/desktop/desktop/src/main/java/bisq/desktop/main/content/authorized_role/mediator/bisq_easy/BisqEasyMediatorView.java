@@ -21,6 +21,7 @@ import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
@@ -31,8 +32,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -113,9 +114,14 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {
-        if (keyEvent.getCode() == KeyCode.ESCAPE) {
-            deFocusSelectedCase();
+        if (isTextInputFocused()) {
+            return;
         }
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::deFocusSelectedCase);
+    }
+
+    private boolean isTextInputFocused() {
+        return root.getScene() != null && root.getScene().getFocusOwner() instanceof TextInputControl;
     }
 
     private void deFocusSelectedCase() {
