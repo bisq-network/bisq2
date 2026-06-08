@@ -559,7 +559,16 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     }
 
     private boolean isMobileEligible(ChatMessage chatMessage) {
-        return chatMessage == null || isMobileEligible(chatMessage.getChatMessageType());
+        if (chatMessage == null) {
+            // Fail-closed: an eligibility whitelist can't say "yes" without knowing
+            // what's being checked. In practice the caller (onMessageAdded → maybeDispatchNotification)
+            // always passes a non-null message, but if that contract is ever broken we'd rather
+            // skip the relay push than spam every registered device with a notification we
+            // can't classify.
+            return false;
+        }
+        return isMobileEligible(chatMessage.getChatMessageType())
+                && isMobileEligible(chatMessage.getChatChannelDomain());
     }
 
     /**
@@ -583,10 +592,56 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
      * Package-private static so it can be unit-tested without instantiating the full
      * {@link ChatNotificationService} (which has many constructor dependencies).
      */
-    static boolean isMobileEligible(bisq.chat.ChatMessageType type) {
+    static boolean isMobileEligible(ChatMessageType type) {
         return switch (type) {
             case TEXT, TAKE_BISQ_EASY_OFFER -> true;
             case PROTOCOL_LOG_MESSAGE, LEAVE, CHAT_RULES_WARNING, EXPIRED_MESSAGES_INDICATOR -> false;
+        };
+    }
+
+    /**
+     * Decides whether a chat message in the given channel domain should reach the
+     * mobile relay (FCM / APNs).
+     * <p>
+     * The mobile inbox is scoped to trade-relevant signals: a relayed-notifications
+     * opt-in means "tell me when something happens with my trades", not "stream the
+     * global Bisq community chat to my phone". The previous type-only filter
+     * (introduced in {@code bisq-network/bisq-mobile#1450}) suppressed protocol
+     * log noise but still pushed every TEXT message — including unrelated chatter
+     * in the global {@link ChatChannelDomain#DISCUSSION} / {@link
+     * ChatChannelDomain#SUPPORT} channels and any active
+     * {@link ChatChannelDomain#BISQ_EASY_OFFERBOOK} market — which surfaced as the
+     * "Bisq New Message" notifications continuing to arrive long after the user's
+     * trade had completed (reported in {@code bisq-network/bisq-mobile#1464}).
+     * <p>
+     * Only the user's private trade channels are eligible:
+     * <ul>
+     *   <li>{@link ChatChannelDomain#BISQ_EASY_OPEN_TRADES} — Bisq Easy trade chat
+     *       (1-on-1 with the peer, plus mediator when escalated).</li>
+     *   <li>{@link ChatChannelDomain#MU_SIG_OPEN_TRADES} — MuSig trade chat
+     *       (analogous to Bisq Easy). Currently not subscribed by
+     *       {@link #initialize()} but whitelisted here so the filter stays correct
+     *       if mobile relay is later wired up for MuSig.</li>
+     * </ul>
+     * <p>
+     * Public chat ({@link ChatChannelDomain#BISQ_EASY_OFFERBOOK},
+     * {@link ChatChannelDomain#DISCUSSION}, {@link ChatChannelDomain#SUPPORT}) is
+     * desktop-only — desktop users see those in the in-app chat view; mobile users
+     * who care about offerbook activity check the app.
+     * <p>
+     * Exhaustive switch by design: adding a new {@link ChatChannelDomain} value
+     * is a compile error here, forcing a deliberate push/no-push decision rather
+     * than silently inheriting the wrong default.
+     */
+    static boolean isMobileEligible(ChatChannelDomain domain) {
+        return switch (domain) {
+            case BISQ_EASY_OPEN_TRADES, MU_SIG_OPEN_TRADES -> true;
+            case BISQ_EASY_OFFERBOOK,
+                 DISCUSSION,
+                 SUPPORT,
+                 BISQ_EASY_PRIVATE_CHAT, // deprecated, falls back to DISCUSSION
+                 EVENTS                  // deprecated, falls back to DISCUSSION
+                    -> false;
         };
     }
 
