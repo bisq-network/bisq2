@@ -40,22 +40,40 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BisqEasyMobileTradeNotificationServiceWhitelistTest {
 
     /**
-     * Exactly mirrors {@code OpenTradesNotificationService.handleTradeStateNotification}
-     * on Android nodeApp. Any change here must be matched there and vice-versa.
+     * Mirrors the trade-state whitelist in
+     * {@link BisqEasyMobileTradeNotificationService#handleStateChange} (kept in sync
+     * with {@code OpenTradesNotificationService} on Android nodeApp).
+     * <p>
+     * Self-action states reached via a LOCAL event (BUYER_SENT_FIAT_SENT_CONFIRMATION,
+     * SELLER_CONFIRMED_FIAT_RECEIPT, SELLER_SENT_BTC_SENT_CONFIRMATION,
+     * MAKER_SENT_TAKE_OFFER_RESPONSE__*) are intentionally absent from the
+     * whitelist — pushing the user about an action they just took on the device
+     * is noise, and the counterparty already gets the push on their own machine
+     * via the symmetric "*_RECEIVED_*" state. See bisq-network/bisq-mobile#1464.
+     * <p>
+     * The payment-info-exchange block lists all 10 states across the 4 trade roles
+     * (buyer/seller × maker/taker) and 3 timing branches; the dedup keyed on
+     * {@code notifiedPaymentInfo} collapses them to a single push per trade.
      */
     private static final Set<BisqEasyTradeState> EXPECTED_NON_TERMINAL_WHITELIST = EnumSet.of(
-            BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION,
             BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
             BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
-            BisqEasyTradeState.SELLER_CONFIRMED_FIAT_RECEIPT,
-            BisqEasyTradeState.SELLER_SENT_BTC_SENT_CONFIRMATION,
             BisqEasyTradeState.BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
             BisqEasyTradeState.TAKER_SENT_TAKE_OFFER_REQUEST,
-            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
-            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+            // Payment-info exchange — buyer-as-taker (Branch-1.2 + final converging)
             BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+            BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+            // Payment-info exchange — seller-as-maker (Branch-1.2 + final converging)
+            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+            // Payment-info exchange — seller-as-taker (Branch-1.1 + Branch-2 + final converging)
+            BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
             BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_,
-            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_
+            BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+            // Payment-info exchange — buyer-as-maker (Branch-1.2 + Branch-2 + final converging)
+            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+            BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA
     );
 
     @Test
@@ -86,6 +104,106 @@ public class BisqEasyMobileTradeNotificationServiceWhitelistTest {
         // noise on the chat path. They MUST NOT also fire a push here.
         assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(BisqEasyTradeState.INIT),
                 "INIT is the protocol entry state, not a user-actionable event");
+    }
+
+    /**
+     * #1464 follow-up: states reached via a LOCAL event in the user's own FSM
+     * must NOT push — pushing the user about an action they just took on the
+     * device is noise. The counterparty still learns about each action on their
+     * own machine via the symmetric "*_RECEIVED_*" state, so this is purely
+     * about silencing self-notifications, not dropping signal.
+     * <p>
+     * Mirrors the foreground-gated behaviour of the nodeApp
+     * {@code OpenTradesNotificationService} — the relay path has no foreground
+     * signal, so we suppress at the source instead.
+     */
+    @Test
+    void selfActionStatesAreSuppressedFromMobile() {
+        assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION),
+                "BUYER_SENT_FIAT_SENT_CONFIRMATION is reached via the buyer's local BisqEasyConfirmFiatSentEvent — must not self-notify");
+        assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.SELLER_CONFIRMED_FIAT_RECEIPT),
+                "SELLER_CONFIRMED_FIAT_RECEIPT is the seller's local 'I received fiat' event — must not self-notify");
+        assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.SELLER_SENT_BTC_SENT_CONFIRMATION),
+                "SELLER_SENT_BTC_SENT_CONFIRMATION is the seller's local 'I sent BTC' event — must not self-notify");
+        assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS),
+                "MAKER_SENT_TAKE_OFFER_RESPONSE__* is the maker's local response event — already pushed via TAKER_SENT_TAKE_OFFER_REQUEST");
+        assertFalse(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA),
+                "MAKER_SENT_TAKE_OFFER_RESPONSE__* is the maker's local response event — already pushed via TAKER_SENT_TAKE_OFFER_REQUEST");
+    }
+
+    /**
+     * Peer-action states (the "*_RECEIVED_*" twins of the self-suppressed states)
+     * remain whitelisted — those are the meaningful signals.
+     */
+    @Test
+    void peerActionStatesStillFireForCorrectRole() {
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION),
+                "Seller must still be notified when buyer sends fiat (peer action)");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION),
+                "Buyer must still be notified when seller confirms receipt (peer action)");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.BUYER_RECEIVED_BTC_SENT_CONFIRMATION),
+                "Buyer must still be notified when seller sends BTC (peer action)");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.TAKER_SENT_TAKE_OFFER_REQUEST),
+                "Maker must still be notified when taker takes the offer (peer action; gated to maker in dispatch)");
+    }
+
+    /**
+     * Regression for bisq-network/bisq-mobile#1464 — buyer-as-taker sends BTC
+     * address first, then the seller sends account data while the app is
+     * backgrounded. Before the fix, the resulting state
+     * ({@code TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA},
+     * the "final converging" state of Branch 1.1) was NOT whitelisted, so the
+     * trade-state observer produced no mobile push and the buyer never learned
+     * payment info had arrived.
+     * <p>
+     * The same gap existed for the symmetric final-converging states of the
+     * other three roles (seller-as-maker, seller-as-taker, buyer-as-maker),
+     * plus the seller-as-maker / seller-as-taker / buyer-as-maker Branch-1.x
+     * intermediates that the original 3-state whitelist also missed.
+     */
+    @Test
+    void paymentInfoExchangeFiresForBuyerAsTakerWhoSentBtcAddressFirst() {
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA),
+                "buyer-as-taker who sent btc address first must still get a push when account data arrives (#1464)");
+    }
+
+    @Test
+    void paymentInfoExchangeFiresForAllFourFinalConvergingStates() {
+        // The "both halves done" state — reached when either party completes the
+        // exchange after the other side has already sent its half — must always
+        // trigger a push (deduped) regardless of role / ordering.
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA),
+                "buyer-as-taker final converging");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS),
+                "seller-as-maker final converging");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS),
+                "seller-as-taker final converging");
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA),
+                "buyer-as-maker final converging");
+    }
+
+    @Test
+    void sellerAsMakerSendingAccountDataFirstFiresPush() {
+        // Before #1464, seller-as-maker had NO state at all in the payment-info
+        // whitelist — neither Branch-1.2 nor final converging — so they never
+        // got a "payment info sent" push regardless of ordering. Pin both.
+        assertTrue(BisqEasyMobileTradeNotificationService.isWhitelistedState(
+                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS),
+                "seller-as-maker who sent account data before receiving btc address must still get a push (#1464)");
     }
 
     @Test
