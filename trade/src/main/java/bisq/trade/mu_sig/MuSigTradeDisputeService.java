@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.contract.mu_sig.MuSigContract;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
@@ -124,19 +125,19 @@ final class MuSigTradeDisputeService {
     public void onDisputeMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
-                    .flatMap(tradeAndChannel -> authorizeMediationStateChangeMessage(message, tradeAndChannel, bannedUserService))
+                    .flatMap(tradeAndChannel -> verifyMediationStateChangeMessage(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processMediationStateChangeMessage(message, tradeAndChannel));
         } else if (envelopePayloadMessage instanceof MuSigMediationResultAcceptanceMessage message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
-                    .flatMap(tradeAndChannel -> authorizeMediationResultAcceptanceMessage(message, tradeAndChannel, bannedUserService))
+                    .flatMap(tradeAndChannel -> verifyMediationResultAcceptanceMessage(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processMediationResultAcceptanceMessage(message, tradeAndChannel));
         } else if (envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsRequest message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
-                    .flatMap(tradeAndChannel -> authorizeDisputeCasePaymentDetailsRequest(message, tradeAndChannel, bannedUserService))
+                    .flatMap(tradeAndChannel -> verifyDisputeCasePaymentDetailsRequest(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processDisputeCasePaymentDetailsRequest(message, tradeAndChannel));
         } else if (envelopePayloadMessage instanceof MuSigArbitrationStateChangeMessage message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
-                    .flatMap(tradeAndChannel -> authorizeArbitrationStateChangeMessage(message, tradeAndChannel, bannedUserService))
+                    .flatMap(tradeAndChannel -> verifyArbitrationStateChangeMessage(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processArbitrationStateChangeMessage(message, tradeAndChannel));
         }
     }
@@ -159,7 +160,7 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private static Optional<MuSigTradeAndChannel> authorizeMediationStateChangeMessage(
+    private static Optional<MuSigTradeAndChannel> verifyMediationStateChangeMessage(
             MuSigMediationStateChangeMessage message,
             MuSigTradeAndChannel tradeAndChannel,
             BannedUserService bannedUserService) {
@@ -170,13 +171,13 @@ final class MuSigTradeDisputeService {
                     message.getTradeId());
             return Optional.empty();
         }
-        if (!mediator.orElseThrow().getId().equals(message.getSenderUserProfile().getId())) {
-            log.warn("Ignoring MuSigMediationStateChangeMessage for trade {} with unexpected senderUserProfile {}.",
-                    message.getTradeId(), message.getSenderUserProfile());
+        if (!mediator.orElseThrow().getId().equals(message.getSenderNetworkId().getId())) {
+            log.warn("Ignoring MuSigMediationStateChangeMessage for trade {} with unexpected senderNetworkId {}.",
+                    message.getTradeId(), message.getSenderNetworkId());
             return Optional.empty();
         }
 
-        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
             log.warn("Ignoring MuSigMediationStateChangeMessage as sender is banned");
             return Optional.empty();
         }
@@ -225,7 +226,7 @@ final class MuSigTradeDisputeService {
 
                 Optional<MuSigMediationResult> currentResult = tradeDispute.getMuSigMediationResult();
                 Optional<byte[]> currentResultSignature = tradeDispute.getMediationResultSignature();
-                if (!isValidMediationResultMessage(trade.getContract(), message)) {
+                if (!isMediationResultMessageValid(trade.getContract(), message)) {
                     return;
                 }
                 if (currentResult.isEmpty() && currentResultSignature.isEmpty()) {
@@ -258,7 +259,7 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private boolean isValidMediationResultMessage(MuSigContract contract,
+    private boolean isMediationResultMessageValid(MuSigContract contract,
                                                   MuSigMediationStateChangeMessage message) {
         try {
             if (message.getMediationResultSignature().isEmpty()) {
@@ -282,17 +283,17 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private static Optional<MuSigTradeAndChannel> authorizeMediationResultAcceptanceMessage(
+    private static Optional<MuSigTradeAndChannel> verifyMediationResultAcceptanceMessage(
             MuSigMediationResultAcceptanceMessage message,
             MuSigTradeAndChannel tradeAndChannel,
             BannedUserService bannedUserService) {
-        if (!tradeAndChannel.trade().getPeer().getNetworkId().getId().equals(message.getSenderUserProfile().getId())) {
-            log.warn("Ignoring MuSigMediationResultAcceptanceMessage with unexpected senderUserProfile {} for trade {}.",
-                    message.getSenderUserProfile(), message.getTradeId());
+        if (!tradeAndChannel.trade().getPeer().getNetworkId().getId().equals(message.getSenderNetworkId().getId())) {
+            log.warn("Ignoring MuSigMediationResultAcceptanceMessage with unexpected senderNetworkId {} for trade {}.",
+                    message.getSenderNetworkId(), message.getTradeId());
             return Optional.empty();
         }
 
-        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
             log.warn("Ignoring MuSigMediationResultAcceptanceMessage as sender is banned");
             return Optional.empty();
         }
@@ -312,19 +313,19 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private static Optional<MuSigTradeAndChannel> authorizeDisputeCasePaymentDetailsRequest(
+    private static Optional<MuSigTradeAndChannel> verifyDisputeCasePaymentDetailsRequest(
             MuSigDisputeCasePaymentDetailsRequest message,
             MuSigTradeAndChannel tradeAndChannel,
             BannedUserService bannedUserService) {
         MuSigTrade trade = tradeAndChannel.trade();
-        UserProfile sender = message.getSenderUserProfile();
+        NetworkId sender = message.getSenderNetworkId();
         if (!isSenderMediator(sender, trade) && !isSenderArbitrator(sender, trade)) {
-            log.warn("Ignoring MuSigDisputeCasePaymentDetailsRequest for trade {} with unexpected senderUserProfile {}.",
-                    message.getTradeId(), message.getSenderUserProfile());
+            log.warn("Ignoring MuSigDisputeCasePaymentDetailsRequest for trade {} with unexpected senderNetworkId {}.",
+                    message.getTradeId(), message.getSenderNetworkId());
             return Optional.empty();
         }
 
-        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
             log.warn("Ignoring MuSigDisputeCasePaymentDetailsRequest as sender is banned");
             return Optional.empty();
         }
@@ -335,7 +336,7 @@ final class MuSigTradeDisputeService {
                                                          MuSigTradeAndChannel tradeAndChannel) {
         MuSigTrade trade = tradeAndChannel.trade();
         MuSigTradeDispute tradeDispute = trade.getTradeDispute();
-        UserProfile sender = message.getSenderUserProfile();
+        NetworkId sender = message.getSenderNetworkId();
 
         if (isSenderMediator(sender, trade)) {
             if (isArbitrationState(tradeDispute.getDisputeState())) {
@@ -353,7 +354,7 @@ final class MuSigTradeDisputeService {
                 return;
             }
         } else {
-            log.warn("Ignoring MuSigDisputeCasePaymentDetailsRequest for trade {} with unexpected senderUserProfile {}.",
+            log.warn("Ignoring MuSigDisputeCasePaymentDetailsRequest for trade {} with unexpected senderNetworkId {}.",
                     message.getTradeId(), sender);
             return;
         }
@@ -364,12 +365,12 @@ final class MuSigTradeDisputeService {
             return;
         }
         muSigTraderMediationService.sendDisputeCasePaymentDetailsResponse(
-                trade.getId(), trade.getMyIdentity(), message.getSenderUserProfile(),
+                trade.getId(), trade.getMyIdentity(), message.getSenderNetworkId(),
                 trade.getTaker().getAccountPayload().orElseThrow(),
                 trade.getMaker().getAccountPayload().orElseThrow());
     }
 
-    private static Optional<MuSigTradeAndChannel> authorizeArbitrationStateChangeMessage(
+    private static Optional<MuSigTradeAndChannel> verifyArbitrationStateChangeMessage(
             MuSigArbitrationStateChangeMessage message,
             MuSigTradeAndChannel tradeAndChannel,
             BannedUserService bannedUserService) {
@@ -380,13 +381,13 @@ final class MuSigTradeDisputeService {
                     message.getTradeId());
             return Optional.empty();
         }
-        if (!arbitrator.orElseThrow().getId().equals(message.getSenderUserProfile().getId())) {
-            log.warn("Ignoring MuSigArbitrationStateChangeMessage for trade {} with unexpected senderUserProfile {}.",
-                    message.getTradeId(), message.getSenderUserProfile());
+        if (!arbitrator.orElseThrow().getId().equals(message.getSenderNetworkId().getId())) {
+            log.warn("Ignoring MuSigArbitrationStateChangeMessage for trade {} with unexpected senderNetworkId {}.",
+                    message.getTradeId(), message.getSenderNetworkId());
             return Optional.empty();
         }
 
-        if (bannedUserService.isUserProfileBanned(message.getSenderUserProfile())) {
+        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
             log.warn("Ignoring MuSigArbitrationStateChangeMessage as sender is banned");
             return Optional.empty();
         }
@@ -424,7 +425,7 @@ final class MuSigTradeDisputeService {
 
                 Optional<MuSigArbitrationResult> currentResult = tradeDispute.getMuSigArbitrationResult();
                 Optional<byte[]> currentResultSignature = tradeDispute.getArbitrationResultSignature();
-                if (!isValidArbitrationResultMessage(trade.getContract(), message)) {
+                if (!isArbitrationResultMessageValid(trade.getContract(), message)) {
                     return;
                 }
                 if (currentResult.isEmpty() && currentResultSignature.isEmpty()) {
@@ -451,7 +452,7 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private boolean isValidArbitrationResultMessage(MuSigContract contract,
+    private boolean isArbitrationResultMessageValid(MuSigContract contract,
                                                     MuSigArbitrationStateChangeMessage message) {
         try {
             if (message.getArbitrationResultSignature().isEmpty()) {
@@ -475,13 +476,13 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    private static boolean isSenderMediator(UserProfile sender, MuSigTrade trade) {
+    private static boolean isSenderMediator(NetworkId sender, MuSigTrade trade) {
         return trade.getContract().getMediator()
                 .map(profile -> profile.getId().equals(sender.getId()))
                 .orElse(false);
     }
 
-    private static boolean isSenderArbitrator(UserProfile sender, MuSigTrade trade) {
+    private static boolean isSenderArbitrator(NetworkId sender, MuSigTrade trade) {
         return trade.getContract().getArbitrator()
                 .map(profile -> profile.getId().equals(sender.getId()))
                 .orElse(false);

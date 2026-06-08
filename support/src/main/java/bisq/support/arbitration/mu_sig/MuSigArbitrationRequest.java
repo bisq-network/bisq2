@@ -24,6 +24,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -53,7 +54,8 @@ import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 @ToString
 @EqualsAndHashCode
 public final class MuSigArbitrationRequest implements
-        MailboxMessage, ExternalNetworkMessage, AckRequestingMessage, SenderPublicKeyProvidingPayload {
+        MailboxMessage, ExternalNetworkMessage, AckRequestingMessage,
+        SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     public static String createMessageId(String tradeId) {
         return MuSigArbitrationRequest.class.getSimpleName() + "." + tradeId;
     }
@@ -174,6 +176,11 @@ public final class MuSigArbitrationRequest implements
     @Override
     public PublicKey getSenderPublicKey() {
         return requester.getPublicKey();
+    }
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return arbitratorNetworkId.getPubKey().getPublicKey();
     }
 
 }
