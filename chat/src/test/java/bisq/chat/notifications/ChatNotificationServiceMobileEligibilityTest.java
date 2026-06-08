@@ -17,6 +17,7 @@
 
 package bisq.chat.notifications;
 
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import org.junit.jupiter.api.Test;
 
@@ -30,18 +31,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Pins the mobile-eligibility whitelist used by {@code ChatNotificationService} when
  * deciding whether to push a chat notification to the mobile relay (FCM / APNs).
  * <p>
- * Mirror of the proven Android nodeApp {@code OpenTradesNotificationService} behavior:
- * only {@code TEXT} and {@code TAKE_BISQ_EASY_OFFER} are surfaced as pushes; the
- * trade protocol log noise and other in-app indicators are desktop-only.
- * <p>
- * See bisq-network/bisq-mobile#1450.
+ * Two orthogonal axes are checked:
+ * <ol>
+ *   <li>{@link ChatMessageType} — only {@code TEXT} and {@code TAKE_BISQ_EASY_OFFER}
+ *       are pushable (the {@code PROTOCOL_LOG_MESSAGE} noise filter from
+ *       {@code bisq-network/bisq-mobile#1450}).</li>
+ *   <li>{@link ChatChannelDomain} — only the user's private trade channels
+ *       ({@code BISQ_EASY_OPEN_TRADES}, {@code MU_SIG_OPEN_TRADES}) push. Public
+ *       chat domains (offerbook, discussion, support) stay desktop-only, fixing
+ *       the "global community chat keeps notifying my phone after my trade
+ *       closed" bug reported in {@code bisq-network/bisq-mobile#1464}.</li>
+ * </ol>
+ * Both checks must pass for a message to reach the mobile relay.
  */
 public class ChatNotificationServiceMobileEligibilityTest {
 
-    private static final Set<ChatMessageType> EXPECTED_MOBILE_ELIGIBLE = EnumSet.of(
+    private static final Set<ChatMessageType> EXPECTED_MOBILE_ELIGIBLE_TYPES = EnumSet.of(
             ChatMessageType.TEXT,
             ChatMessageType.TAKE_BISQ_EASY_OFFER
     );
+
+    private static final Set<ChatChannelDomain> EXPECTED_MOBILE_ELIGIBLE_DOMAINS = EnumSet.of(
+            ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
+            ChatChannelDomain.MU_SIG_OPEN_TRADES
+    );
+
+
+    /* --------------------------------------------------------------------- */
+    // ChatMessageType axis
+    /* --------------------------------------------------------------------- */
 
     @Test
     void textMessagesAreMobileEligible() {
@@ -72,23 +90,90 @@ public class ChatNotificationServiceMobileEligibilityTest {
     }
 
     /**
-     * Pins the FULL whitelist so that adding a new {@link ChatMessageType} forces a
-     * deliberate decision: should it be a mobile push or not? Without this test,
-     * a new enum value silently defaults to the {@code switch} compile error (good)
-     * but a careless author could pick the wrong branch. This test fails loudly if
-     * the whitelist changes and reminds the reviewer to update issue #1450 follow-ups.
+     * Pins the FULL message-type whitelist so adding a new {@link ChatMessageType}
+     * forces a deliberate decision: should it be a mobile push or not? Without
+     * this test, a new enum value would silently inherit whichever branch a
+     * careless author picked. Fails loudly so the reviewer remembers to revisit
+     * the #1450 / #1464 follow-ups.
      */
     @Test
-    void mobileEligibleWhitelistIsExactlyTextAndOfferTaken() {
+    void mobileEligibleTypeWhitelistIsExactlyTextAndOfferTaken() {
         for (ChatMessageType type : ChatMessageType.values()) {
             boolean actual = ChatNotificationService.isMobileEligible(type);
-            boolean expected = EXPECTED_MOBILE_ELIGIBLE.contains(type);
+            boolean expected = EXPECTED_MOBILE_ELIGIBLE_TYPES.contains(type);
             if (actual != expected) {
                 throw new AssertionError(
-                        "Mobile-eligibility whitelist changed for " + type +
+                        "Mobile-eligibility (type) whitelist changed for " + type +
                                 " (expected=" + expected + ", actual=" + actual + "). " +
-                                "If this is intentional, update EXPECTED_MOBILE_ELIGIBLE in this test " +
-                                "and note the change in the #1450 follow-up.");
+                                "If this is intentional, update EXPECTED_MOBILE_ELIGIBLE_TYPES in this test " +
+                                "and note the change in the #1450 / #1464 follow-up.");
+            }
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // ChatChannelDomain axis (#1464)
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void bisqEasyOpenTradeChannelsAreMobileEligible() {
+        assertTrue(ChatNotificationService.isMobileEligible(ChatChannelDomain.BISQ_EASY_OPEN_TRADES),
+                "Bisq Easy private trade chat is the user's main signal — must reach mobile push");
+    }
+
+    @Test
+    void muSigOpenTradeChannelsAreMobileEligible() {
+        assertTrue(ChatNotificationService.isMobileEligible(ChatChannelDomain.MU_SIG_OPEN_TRADES),
+                "MuSig private trade chat must reach mobile push — kept in the allowlist for when the mobile relay is wired up for MuSig");
+    }
+
+    @Test
+    void publicOfferbookChannelsAreSuppressedFromMobile() {
+        assertFalse(ChatNotificationService.isMobileEligible(ChatChannelDomain.BISQ_EASY_OFFERBOOK),
+                "Bisq Easy offerbook chat is global per-market chatter, not a user-facing trade signal — desktop only");
+    }
+
+    @Test
+    void globalDiscussionChannelsAreSuppressedFromMobile() {
+        assertFalse(ChatNotificationService.isMobileEligible(ChatChannelDomain.DISCUSSION),
+                "DISCUSSION is the global Bisq community chat — exactly the source of the post-trade #1464 noise; desktop only");
+    }
+
+    @Test
+    void supportChannelsAreSuppressedFromMobile() {
+        assertFalse(ChatNotificationService.isMobileEligible(ChatChannelDomain.SUPPORT),
+                "SUPPORT is the public Bisq support channel — not the user's trade context; desktop only");
+    }
+
+    @Test
+    void deprecatedDomainsAreSuppressedFromMobile() {
+        //noinspection deprecation
+        assertFalse(ChatNotificationService.isMobileEligible(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT),
+                "BISQ_EASY_PRIVATE_CHAT is deprecated (migrates to DISCUSSION) — never push");
+        //noinspection deprecation
+        assertFalse(ChatNotificationService.isMobileEligible(ChatChannelDomain.EVENTS),
+                "EVENTS is deprecated (migrates to DISCUSSION) — never push");
+    }
+
+    /**
+     * Same loud-failure pin as the type axis: a new {@link ChatChannelDomain}
+     * must be classified explicitly. The exhaustive switch in
+     * {@code ChatNotificationService} already gives a compile error, but this
+     * test catches the silent case where a developer adds the new case but
+     * forgets to update the mobile-push policy.
+     */
+    @Test
+    void mobileEligibleDomainWhitelistIsExactlyTradeChannels() {
+        for (ChatChannelDomain domain : ChatChannelDomain.values()) {
+            boolean actual = ChatNotificationService.isMobileEligible(domain);
+            boolean expected = EXPECTED_MOBILE_ELIGIBLE_DOMAINS.contains(domain);
+            if (actual != expected) {
+                throw new AssertionError(
+                        "Mobile-eligibility (domain) whitelist changed for " + domain +
+                                " (expected=" + expected + ", actual=" + actual + "). " +
+                                "If this is intentional, update EXPECTED_MOBILE_ELIGIBLE_DOMAINS in this test " +
+                                "and note the change in the #1464 follow-up.");
             }
         }
     }
