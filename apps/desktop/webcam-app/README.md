@@ -15,6 +15,6 @@ To include the resources in the desktop application it requires to run the gradl
 webcam project (subproject of desktop).
 This task creates a shadow jar, makes a zip and copies the zip to the build directory in the `desktop:desktop` project.
 The target directory is `apps/desktop/desktop/build/generated/src/main/resources/webcam-app`.
-It also copies teh `version.txt` file from the `desktop:webcam` projects root directory to the same resource directory.
+It also copies the `version.txt` file from the `desktop:webcam` projects root directory to the same resource directory.
 
 `
