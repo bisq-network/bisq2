@@ -34,6 +34,7 @@ import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -129,12 +130,12 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigArbitrationRequest message) {
             synchronized (arbitrationCaseLock) {
-                authorizeArbitrationRequest(message, bannedUserService)
+                verifyArbitrationRequest(message, bannedUserService)
                         .ifPresent(requester -> processArbitrationRequest(message, requester));
             }
         } else if (envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsResponse message) {
             synchronized (arbitrationCaseLock) {
-                authorizeDisputeCasePaymentDetailsResponse(message, this::findArbitrationCase, bannedUserService)
+                verifyDisputeCasePaymentDetailsResponse(message, this::findArbitrationCase, bannedUserService)
                         .ifPresent(arbitrationCase -> processDisputeCasePaymentDetailsResponse(message, arbitrationCase));
             }
         }
@@ -231,7 +232,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
         UserIdentity myUserIdentity = myArbitratorUserIdentity.orElseThrow();
         MuSigDisputeCasePaymentDetailsRequest message = new MuSigDisputeCasePaymentDetailsRequest(
                 muSigArbitrationRequest.getTradeId(),
-                myUserIdentity.getUserProfile()
+                myUserIdentity.getNetworkIdWithKeyPair().getNetworkId()
         );
         NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
         networkService.confidentialSend(message,
@@ -258,8 +259,8 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
     // Private
     /* --------------------------------------------------------------------- */
 
-    static Optional<UserProfile> authorizeArbitrationRequest(MuSigArbitrationRequest message,
-                                                             BannedUserService bannedUserService) {
+    static Optional<UserProfile> verifyArbitrationRequest(MuSigArbitrationRequest message,
+                                                          BannedUserService bannedUserService) {
         UserProfile requester = message.getRequester();
         if (bannedUserService.isUserProfileBanned(requester)) {
             log.warn("Ignoring MuSigArbitrationRequest as sender is banned");
@@ -277,7 +278,37 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                     message.getTradeId());
             return Optional.empty();
         }
+        if (!hasValidChatMessages(message, requester, peer)) {
+            return Optional.empty();
+        }
         return Optional.of(requester);
+    }
+
+    private static boolean hasValidChatMessages(MuSigArbitrationRequest message,
+                                                UserProfile requester,
+                                                UserProfile peer) {
+        String tradeId = message.getTradeId();
+        String channelId = MuSigOpenTradeChannel.createId(tradeId);
+        return message.getChatMessages().stream()
+                .allMatch(chatMessage -> {
+                    if (!chatMessage.getTradeId().equals(tradeId)) {
+                        log.warn("Ignoring MuSigArbitrationRequest for trade {} because embedded chat message {} has trade ID {}.",
+                                tradeId, chatMessage.getId(), chatMessage.getTradeId());
+                        return false;
+                    }
+                    if (!chatMessage.getChannelId().equals(channelId)) {
+                        log.warn("Ignoring MuSigArbitrationRequest for trade {} because embedded chat message {} has channel ID {}.",
+                                tradeId, chatMessage.getId(), chatMessage.getChannelId());
+                        return false;
+                    }
+                    String senderUserProfileId = chatMessage.getSenderUserProfile().getId();
+                    if (!senderUserProfileId.equals(requester.getId()) && !senderUserProfileId.equals(peer.getId())) {
+                        log.warn("Ignoring MuSigArbitrationRequest for trade {} because embedded chat message {} has unexpected sender {}.",
+                                tradeId, chatMessage.getId(), senderUserProfileId);
+                        return false;
+                    }
+                    return true;
+                });
     }
 
     private void processArbitrationRequest(MuSigArbitrationRequest message, UserProfile requester) {
@@ -287,7 +318,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
             return;
         }
 
-        if (!verifyArbitrationRequest(message)) {
+        if (!isMediationResultValid(message)) {
             return;
         }
 
@@ -320,7 +351,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
         MuSigArbitrationStateChangeMessage openMessage = new MuSigArbitrationStateChangeMessage(
                 StringUtils.createUid(),
                 tradeId,
-                myUserIdentity.getUserProfile(),
+                myUserIdentity.getNetworkIdWithKeyPair().getNetworkId(),
                 ArbitrationCaseState.OPEN,
                 Optional.empty(),
                 Optional.empty());
@@ -339,7 +370,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                 myUserIdentity.getId());
     }
 
-    static Optional<MuSigArbitrationCase> authorizeDisputeCasePaymentDetailsResponse(
+    static Optional<MuSigArbitrationCase> verifyDisputeCasePaymentDetailsResponse(
             MuSigDisputeCasePaymentDetailsResponse response,
             Function<String, Optional<MuSigArbitrationCase>> findArbitrationCase,
             BannedUserService bannedUserService) {
@@ -347,19 +378,19 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
         return findArbitrationCase.apply(tradeId)
                 .<Optional<MuSigArbitrationCase>>map(arbitrationCase -> {
                     MuSigArbitrationRequest muSigArbitrationRequest = arbitrationCase.getMuSigArbitrationRequest();
-                    UserProfile senderUserProfile = response.getSenderUserProfile();
+                    NetworkId senderNetworkId = response.getSenderNetworkId();
                     UserProfile requester = muSigArbitrationRequest.getRequester();
                     UserProfile peer = muSigArbitrationRequest.getPeer();
-                    boolean isRequester = requester.getId().equals(senderUserProfile.getId());
-                    boolean isPeer = peer.getId().equals(senderUserProfile.getId());
+                    boolean isRequester = requester.getId().equals(senderNetworkId.getId());
+                    boolean isPeer = peer.getId().equals(senderNetworkId.getId());
                     if (!isRequester && !isPeer) {
-                        log.warn("Ignoring MuSigDisputeCasePaymentDetailsResponse for trade {} with unknown senderUserProfile {}.",
-                                tradeId, senderUserProfile);
+                        log.warn("Ignoring MuSigDisputeCasePaymentDetailsResponse for trade {} with unknown senderNetworkId {}.",
+                                tradeId, senderNetworkId);
                         return Optional.empty();
                     }
-                    if (bannedUserService.isUserProfileBanned(senderUserProfile)) {
-                        log.warn("Ignoring MuSigDisputeCasePaymentDetailsResponse for trade {} from banned senderUserProfile {}.",
-                                tradeId, senderUserProfile);
+                    if (bannedUserService.isUserProfileBanned(senderNetworkId)) {
+                        log.warn("Ignoring MuSigDisputeCasePaymentDetailsResponse for trade {} from banned senderNetworkId {}.",
+                                tradeId, senderNetworkId);
                         return Optional.empty();
                     }
                     return Optional.of(arbitrationCase);
@@ -374,7 +405,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                                                           MuSigArbitrationCase arbitrationCase) {
         String tradeId = response.getTradeId();
         MuSigArbitrationRequest muSigArbitrationRequest = arbitrationCase.getMuSigArbitrationRequest();
-        Role causingRole = resolveSenderRole(muSigArbitrationRequest.getContract(), response.getSenderUserProfile().getId());
+        Role causingRole = resolveSenderRole(muSigArbitrationRequest.getContract(), response.getSenderNetworkId().getId());
         PaymentDetailsVerification verification = verifyPaymentDetails(muSigArbitrationRequest.getContract(),
                 response,
                 causingRole);
@@ -406,7 +437,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                 .findAny();
     }
 
-    private boolean verifyArbitrationRequest(MuSigArbitrationRequest message) {
+    private boolean isMediationResultValid(MuSigArbitrationRequest message) {
         String tradeId = message.getTradeId();
         MuSigContract contract = message.getContract();
         MuSigMediationResult mediationResult = message.getMuSigMediationResult();
@@ -472,7 +503,7 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
                     String id = StringUtils.createUid();
                     MuSigArbitrationStateChangeMessage message = new MuSigArbitrationStateChangeMessage(id,
                             muSigArbitrationRequest.getTradeId(),
-                            myUserIdentity.getUserProfile(),
+                            myUserIdentity.getNetworkIdWithKeyPair().getNetworkId(),
                             arbitrationCaseState,
                             muSigArbitrationResult,
                             muSigArbitrationCase.getArbitrationResultSignature());

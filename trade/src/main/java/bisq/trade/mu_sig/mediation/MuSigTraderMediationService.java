@@ -147,7 +147,6 @@ public class MuSigTraderMediationService {
                                            Identity myIdentity,
                                            UserProfile mediator,
                                            MuSigContract contract) {
-        UserProfile senderUserProfile = userProfileService.findUserProfile(myIdentity.getId()).orElseThrow();
         byte[] contractHash = ContractService.getContractHash(contract);
         MuSigDisputeCaseDataMessage message = ChatMessagePruning.createWithMaybePrunedMessages(
                 muSigOpenTradeChannelService.findChannelByTradeId(tradeId)
@@ -156,7 +155,7 @@ public class MuSigTraderMediationService {
                 tradeId,
                 chatMessages -> new MuSigDisputeCaseDataMessage(
                         tradeId,
-                        senderUserProfile,
+                        myIdentity.getNetworkId(),
                         contractHash,
                         chatMessages));
         networkService.confidentialSend(message,
@@ -170,7 +169,7 @@ public class MuSigTraderMediationService {
                                                      boolean mediationResultAccepted,
                                                      MuSigOpenTradeChannel channel) {
         networkService.confidentialSend(new MuSigMediationResultAcceptanceMessage(tradeId,
-                        userProfileService.findUserProfile(myIdentity.getId()).orElseThrow(),
+                        myIdentity.getNetworkId(),
                         mediationResultAccepted),
                 peer.getNetworkId(),
                 myIdentity.getNetworkIdWithKeyPair());
@@ -184,17 +183,17 @@ public class MuSigTraderMediationService {
 
     public void sendDisputeCasePaymentDetailsResponse(String tradeId,
                                                       Identity myIdentity,
-                                                      UserProfile senderUserProfile,
+                                                      NetworkId receiverNetworkId,
                                                       AccountPayload<?> takerAccountPayload,
                                                       AccountPayload<?> makerAccountPayload) {
         MuSigDisputeCasePaymentDetailsResponse paymentDetailsResponse = new MuSigDisputeCasePaymentDetailsResponse(
                 tradeId,
-                userProfileService.findUserProfile(myIdentity.getId()).orElseThrow(),
+                myIdentity.getNetworkId(),
                 takerAccountPayload,
                 makerAccountPayload
         );
         networkService.confidentialSend(paymentDetailsResponse,
-                senderUserProfile.getNetworkId(),
+                receiverNetworkId,
                 myIdentity.getNetworkIdWithKeyPair());
     }
 }

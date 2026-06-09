@@ -26,8 +26,11 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.market.Market;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
@@ -65,6 +68,7 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,6 +105,7 @@ class MuSigMediatorServiceTest {
         when(userService.getBannedUserService()).thenReturn(bannedUserService);
         when(bannedUserService.isUserProfileBanned(any(String.class))).thenReturn(false);
         when(bannedUserService.isUserProfileBanned(any(UserProfile.class))).thenReturn(false);
+        when(bannedUserService.isUserProfileBanned(any(NetworkId.class))).thenReturn(false);
 
         BondedRolesService bondedRolesService = mock(BondedRolesService.class);
         AuthorizedBondedRolesService authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
@@ -108,7 +113,7 @@ class MuSigMediatorServiceTest {
     }
 
     @Test
-    void authorizeMediationRequestMatchesAndPartiesAndMediatorAreConsistent() {
+    void verifyMediationRequestMatchesAndPartiesAndMediatorAreConsistent() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         UserProfile mediator = createUserProfile(1003);
@@ -124,38 +129,159 @@ class MuSigMediatorServiceTest {
                 mediator.getNetworkId()
         );
 
-        Optional<UserProfile> authenticatedSender = MuSigMediatorService.authorizeMediationRequest(
+        Optional<UserProfile> verifiedRequester = MuSigMediatorService.verifyMediationRequest(
                 request,
                 bannedUserService
         );
 
-        assertThat(authenticatedSender).containsSame(requester);
+        assertThat(verifiedRequester).containsSame(requester);
     }
 
     @Test
-    void authorizeDisputeCasePaymentDetailsResponse_returnsCase_whenKnownSenderIsNotBanned() {
+    void muSigMediationRequestProvidesMediatorReceiverPublicKey() {
+        UserProfile requester = createUserProfile(1051);
+        UserProfile peer = createUserProfile(1052);
+        UserProfile mediator = createUserProfile(1053);
+        MuSigMediationRequest request = createMediationRequest(
+                "trade-51",
+                requester,
+                peer,
+                mediator,
+                List.of());
+
+        assertThat(request.getReceiverPublicKey().getEncoded())
+                .isEqualTo(mediator.getPublicKey().getEncoded());
+    }
+
+    @Test
+    void verifyMediationRequestAcceptsValidEmbeddedChatMessages() {
+        UserProfile requester = createUserProfile(1011);
+        UserProfile peer = createUserProfile(1012);
+        UserProfile mediator = createUserProfile(1013);
+        String tradeId = "trade-11";
+        MuSigOpenTradeMessage chatMessage = createChatMessage(
+                tradeId,
+                MuSigOpenTradeChannel.createId(tradeId),
+                requester,
+                peer);
+        MuSigMediationRequest request = createMediationRequest(
+                tradeId,
+                requester,
+                peer,
+                mediator,
+                List.of(chatMessage));
+
+        Optional<UserProfile> verifiedRequester = MuSigMediatorService.verifyMediationRequest(
+                request,
+                bannedUserService
+        );
+
+        assertThat(verifiedRequester).containsSame(requester);
+    }
+
+    @Test
+    void verifyMediationRequestRejectsEmbeddedChatMessageWithWrongTradeId() {
+        UserProfile requester = createUserProfile(1021);
+        UserProfile peer = createUserProfile(1022);
+        UserProfile mediator = createUserProfile(1023);
+        String tradeId = "trade-21";
+        MuSigOpenTradeMessage chatMessage = createChatMessage(
+                "trade-22",
+                MuSigOpenTradeChannel.createId(tradeId),
+                requester,
+                peer);
+        MuSigMediationRequest request = createMediationRequest(
+                tradeId,
+                requester,
+                peer,
+                mediator,
+                List.of(chatMessage));
+
+        Optional<UserProfile> verifiedRequester = MuSigMediatorService.verifyMediationRequest(
+                request,
+                bannedUserService
+        );
+
+        assertThat(verifiedRequester).isEmpty();
+    }
+
+    @Test
+    void verifyMediationRequestRejectsEmbeddedChatMessageWithWrongChannelId() {
+        UserProfile requester = createUserProfile(1031);
+        UserProfile peer = createUserProfile(1032);
+        UserProfile mediator = createUserProfile(1033);
+        String tradeId = "trade-31";
+        MuSigOpenTradeMessage chatMessage = createChatMessage(
+                tradeId,
+                MuSigOpenTradeChannel.createId("trade-32"),
+                requester,
+                peer);
+        MuSigMediationRequest request = createMediationRequest(
+                tradeId,
+                requester,
+                peer,
+                mediator,
+                List.of(chatMessage));
+
+        Optional<UserProfile> verifiedRequester = MuSigMediatorService.verifyMediationRequest(
+                request,
+                bannedUserService
+        );
+
+        assertThat(verifiedRequester).isEmpty();
+    }
+
+    @Test
+    void verifyMediationRequestRejectsEmbeddedChatMessageWithUnexpectedSender() {
+        UserProfile requester = createUserProfile(1041);
+        UserProfile peer = createUserProfile(1042);
+        UserProfile mediator = createUserProfile(1043);
+        UserProfile stranger = createUserProfile(1044);
+        String tradeId = "trade-41";
+        MuSigOpenTradeMessage chatMessage = createChatMessage(
+                tradeId,
+                MuSigOpenTradeChannel.createId(tradeId),
+                stranger,
+                peer);
+        MuSigMediationRequest request = createMediationRequest(
+                tradeId,
+                requester,
+                peer,
+                mediator,
+                List.of(chatMessage));
+
+        Optional<UserProfile> verifiedRequester = MuSigMediatorService.verifyMediationRequest(
+                request,
+                bannedUserService
+        );
+
+        assertThat(verifiedRequester).isEmpty();
+    }
+
+    @Test
+    void verifyDisputeCasePaymentDetailsResponse_returnsCase_whenKnownSenderIsNotBanned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         MuSigMediationRequest request = createMediationRequest("trade-12", requester, peer);
         MuSigMediationCase mediationCase = new MuSigMediationCase(request);
         MuSigDisputeCasePaymentDetailsResponse response = new MuSigDisputeCasePaymentDetailsResponse(
                 "trade-12",
-                requester,
+                requester.getNetworkId(),
                 createNationalBankPayload("taker-account-12", "DE121"),
                 createNationalBankPayload("maker-account-12", "DE122")
         );
 
-        Optional<MuSigMediationCase> authenticatedCase = MuSigMediatorService.authorizeDisputeCasePaymentDetailsResponse(
+        Optional<MuSigMediationCase> verifiedCase = MuSigMediatorService.verifyDisputeCasePaymentDetailsResponse(
                 response,
                 tradeId -> tradeId.equals(mediationCase.getMuSigMediationRequest().getTradeId()) ? Optional.of(mediationCase) : Optional.empty(),
                 bannedUserService
         );
 
-        assertThat(authenticatedCase).containsSame(mediationCase);
+        assertThat(verifiedCase).containsSame(mediationCase);
     }
 
     @Test
-    void authorizeDisputeCasePaymentDetailsResponse_returnsEmpty_whenSenderUserProfileIsUnknown() {
+    void verifyDisputeCasePaymentDetailsResponse_returnsEmpty_whenSenderNetworkIdIsUnknown() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         UserProfile stranger = createUserProfile(1003);
@@ -163,69 +289,76 @@ class MuSigMediatorServiceTest {
         MuSigMediationCase mediationCase = new MuSigMediationCase(request);
         MuSigDisputeCasePaymentDetailsResponse response = new MuSigDisputeCasePaymentDetailsResponse(
                 "trade-13",
-                stranger,
+                stranger.getNetworkId(),
                 createNationalBankPayload("taker-account-13", "DE131"),
                 createNationalBankPayload("maker-account-13", "DE132")
         );
 
-        Optional<MuSigMediationCase> authenticatedCase = MuSigMediatorService.authorizeDisputeCasePaymentDetailsResponse(
+        Optional<MuSigMediationCase> verifiedCase = MuSigMediatorService.verifyDisputeCasePaymentDetailsResponse(
                 response,
                 tradeId -> tradeId.equals(mediationCase.getMuSigMediationRequest().getTradeId()) ? Optional.of(mediationCase) : Optional.empty(),
                 bannedUserService
         );
 
-        assertThat(authenticatedCase).isEmpty();
+        assertThat(verifiedCase).isEmpty();
     }
 
     @Test
-    void authorizeDisputeCaseDataMessage_returnsCase_whenPeerIsNotBanned() {
+    void verifyDisputeCaseDataMessage_returnsCase_whenPeerIsNotBanned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
         MuSigMediationRequest request = createMediationRequest("trade-14", requester, peer);
         MuSigMediationCase mediationCase = new MuSigMediationCase(request);
         MuSigDisputeCaseDataMessage message = new MuSigDisputeCaseDataMessage(
                 "trade-14",
-                peer,
+                peer.getNetworkId(),
                 new byte[20],
                 List.of()
         );
 
-        Optional<MuSigMediationCase> authenticatedCase = MuSigMediatorService.authorizeDisputeCaseDataMessage(
+        Optional<MuSigMediationCase> verifiedCase = MuSigMediatorService.verifyDisputeCaseDataMessage(
                 message,
                 tradeId -> tradeId.equals(mediationCase.getMuSigMediationRequest().getTradeId()) ? Optional.of(mediationCase) : Optional.empty(),
                 bannedUserService
         );
 
-        assertThat(authenticatedCase).containsSame(mediationCase);
+        assertThat(verifiedCase).containsSame(mediationCase);
     }
 
     @Test
-    void authorizeDisputeCaseDataMessage_returnsEmpty_whenPeerIsBanned() {
+    void verifyDisputeCaseDataMessage_returnsEmpty_whenPeerIsBanned() {
         UserProfile requester = createUserProfile(1001);
         UserProfile peer = createUserProfile(1002);
-        when(bannedUserService.isUserProfileBanned(peer)).thenReturn(true);
+        when(bannedUserService.isUserProfileBanned(peer.getNetworkId())).thenReturn(true);
         MuSigMediationRequest request = createMediationRequest("trade-15", requester, peer);
         MuSigMediationCase mediationCase = new MuSigMediationCase(request);
         MuSigDisputeCaseDataMessage message = new MuSigDisputeCaseDataMessage(
                 "trade-15",
-                peer,
+                peer.getNetworkId(),
                 new byte[20],
                 List.of()
         );
 
-        Optional<MuSigMediationCase> authenticatedCase = MuSigMediatorService.authorizeDisputeCaseDataMessage(
+        Optional<MuSigMediationCase> verifiedCase = MuSigMediatorService.verifyDisputeCaseDataMessage(
                 message,
                 tradeId -> tradeId.equals(mediationCase.getMuSigMediationRequest().getTradeId()) ? Optional.of(mediationCase) : Optional.empty(),
                 bannedUserService
         );
 
-        assertThat(authenticatedCase).isEmpty();
+        assertThat(verifiedCase).isEmpty();
     }
 
     private MuSigMediationRequest createMediationRequest(String tradeId,
                                                          UserProfile requester,
                                                          UserProfile peer) {
-        UserProfile mediator = createUserProfile(19000);
+        return createMediationRequest(tradeId, requester, peer, createUserProfile(19000), List.of());
+    }
+
+    private MuSigMediationRequest createMediationRequest(String tradeId,
+                                                         UserProfile requester,
+                                                         UserProfile peer,
+                                                         UserProfile mediator,
+                                                         List<MuSigOpenTradeMessage> chatMessages) {
         return new MuSigMediationRequest(
                 tradeId,
                 createContract(requester, peer, mediator, "offer-" + tradeId,
@@ -233,9 +366,31 @@ class MuSigMediatorServiceTest {
                         createNationalBankPayload("maker-" + tradeId, "DE" + tradeId.substring(tradeId.length() - 2) + "2")),
                 requester,
                 peer,
-                List.of(),
+                chatMessages,
                 mediator.getNetworkId()
         );
+    }
+
+    private MuSigOpenTradeMessage createChatMessage(String tradeId,
+                                                    String channelId,
+                                                    UserProfile sender,
+                                                    UserProfile receiver) {
+        return new MuSigOpenTradeMessage(
+                tradeId,
+                "message-" + tradeId + "-" + sender.getId().substring(0, 6),
+                channelId,
+                sender,
+                receiver.getId(),
+                receiver.getNetworkId(),
+                "message",
+                Optional.empty(),
+                System.currentTimeMillis(),
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                Set.of());
     }
 
     private MuSigContract createContract(UserProfile maker,
