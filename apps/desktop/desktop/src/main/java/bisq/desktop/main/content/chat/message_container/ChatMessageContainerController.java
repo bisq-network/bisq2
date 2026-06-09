@@ -269,9 +269,18 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
+            ChatChannel<? extends ChatMessage> previousChannel = model.getSelectedChannel().get();
+            if (previousChannel != null && !previousChannel.equals(chatChannel)) {
+                clearChatInput();
+            }
             model.getSelectedChannel().set(chatChannel);
             applyUserProfileOrChannelChange();
         });
+    }
+
+    private void clearChatInput() {
+        model.getTextInput().set("");
+        citationBlock.close();
     }
 
     private void doSendMessage(String text) {
