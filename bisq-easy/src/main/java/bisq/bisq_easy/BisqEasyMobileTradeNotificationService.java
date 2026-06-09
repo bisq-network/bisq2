@@ -213,55 +213,54 @@ public class BisqEasyMobileTradeNotificationService implements Service {
     /* --------------------------------------------------------------------- */
 
     private void handleStateChange(BisqEasyTrade trade, BisqEasyTradeState state) {
+        // Self-action suppression rationale (bisq-network/bisq-mobile#1464 follow-up).
+        //
+        // Each "*_SENT_*" / "*_CONFIRMED_*" state below is reached via a LOCAL event
+        // handler in the user's own trade FSM (see e.g.
+        // BisqEasyBuyerAsTakerProtocol.java:102-104: BisqEasyConfirmFiatSentEvent → BUYER_SENT_FIAT_SENT_CONFIRMATION).
+        // Pushing the user about an action they just took on the device is pure noise —
+        // they already see the result in the UI. The nodeApp (decentralised) avoids this
+        // by unregistering observers while the app is foregrounded; the relay path has
+        // no foreground signal, so we suppress at the source instead.
+        //
+        // The counterparty's notification still fires on THEIR machine via the
+        // symmetric "*_RECEIVED_*" state (e.g. SELLER_RECEIVED_FIAT_SENT_CONFIRMATION
+        // for the buyer's "I sent fiat" action), so no information is lost — each side
+        // is informed about the OTHER side's action exactly once.
+        //
+        // Suppressed (own-action) states intentionally fall through to the default
+        // branch as no-ops:
+        //   - BUYER_SENT_FIAT_SENT_CONFIRMATION                 (buyer's local "I sent fiat" event)
+        //   - SELLER_CONFIRMED_FIAT_RECEIPT                     (seller's local "I received fiat" event)
+        //   - SELLER_SENT_BTC_SENT_CONFIRMATION                 (seller's local "I sent BTC" event)
+        //   - MAKER_SENT_TAKE_OFFER_RESPONSE__*                 (maker's local response event;
+        //                                                        peer-side already pushed via
+        //                                                        TAKER_SENT_TAKE_OFFER_REQUEST below)
         switch (state) {
-            case BUYER_SENT_FIAT_SENT_CONFIRMATION -> {
-                if (trade.isBuyer()) {
-                    dispatch(trade, "bisqEasy.mobileNotifications.youSentFiat.title",
-                            "bisqEasy.mobileNotifications.youSentFiat.message");
-                } else {
-                    dispatch(trade, "bisqEasy.mobileNotifications.peerSentFiat.title",
-                            "bisqEasy.mobileNotifications.peerSentFiat.message");
-                }
-            }
-
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION -> {
                 if (trade.isSeller()) {
                     dispatch(trade, "bisqEasy.mobileNotifications.youReceivedFiatConfirmation.title",
                             "bisqEasy.mobileNotifications.youReceivedFiatConfirmation.message");
-                } else {
-                    dispatch(trade, "bisqEasy.mobileNotifications.youSentFiat.title",
-                            "bisqEasy.mobileNotifications.youSentFiat.message");
                 }
             }
 
-            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
-                 SELLER_CONFIRMED_FIAT_RECEIPT -> {
+            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION -> {
+                // Peer (seller) confirmed fiat receipt — buyer learns about it here.
+                // SELLER_CONFIRMED_FIAT_RECEIPT (the seller's own-action twin of this
+                // state) is intentionally absent — see suppressed list above.
                 if (trade.isBuyer()) {
                     dispatch(trade, "bisqEasy.mobileNotifications.peerReceivedFiat.title",
                             "bisqEasy.mobileNotifications.peerReceivedFiat.message");
-                } else {
-                    dispatch(trade, "bisqEasy.mobileNotifications.youReceivedFiat.title",
-                            "bisqEasy.mobileNotifications.youReceivedFiat.message");
-                }
-            }
-
-            case SELLER_SENT_BTC_SENT_CONFIRMATION -> {
-                if (trade.isSeller()) {
-                    dispatch(trade, "bisqEasy.mobileNotifications.youSentBtc.title",
-                            "bisqEasy.mobileNotifications.youSentBtc.message");
-                } else {
-                    dispatch(trade, "bisqEasy.mobileNotifications.peerSentBtc.title",
-                            "bisqEasy.mobileNotifications.peerSentBtc.message");
                 }
             }
 
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION -> {
+                // Peer (seller) sent BTC — buyer learns about it here.
+                // SELLER_SENT_BTC_SENT_CONFIRMATION (seller's own-action twin) is
+                // intentionally suppressed — see list above.
                 if (trade.isBuyer()) {
                     dispatch(trade, "bisqEasy.mobileNotifications.youReceivedBtc.title",
                             "bisqEasy.mobileNotifications.youReceivedBtc.message");
-                } else {
-                    dispatch(trade, "bisqEasy.mobileNotifications.youSentBtc.title",
-                            "bisqEasy.mobileNotifications.youSentBtc.message");
                 }
             }
 
@@ -273,16 +272,38 @@ public class BisqEasyMobileTradeNotificationService implements Service {
                 }
             }
 
-            case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
-                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
-                    dispatch(trade, "bisqEasy.mobileNotifications.offerTaken.title",
-                            "bisqEasy.mobileNotifications.offerTaken.message");
-
-            case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+            // Payment-info exchange — push once per trade as soon as the user's
+            // FSM reflects that either (a) account data has been received or (b)
+            // account data has been sent. Because the Bisq Easy protocol allows
+            // BTC-address and account-data to be sent in either order, and the
+            // "received take-offer response" can interleave with both, the
+            // payment-info event has many possible state representations across
+            // the four trade roles (buyer/seller × maker/taker) and three timing
+            // branches (1.1 / 1.2 / 2). We whitelist all of them; the
+            // notifiedPaymentInfo dedup collapses them to a single push per trade
+            // regardless of which transition fires first.
+            //
+            // Originally only the three Branch-1.2 / Branch-2 intermediates were
+            // listed. The Branch-1.1 ("btc-address sent first, account-data
+            // arrives later") and final-converging ("both halves done") paths
+            // silently produced no push, which surfaced in
+            // bisq-network/bisq-mobile#1464 once the public-chat noise that had
+            // been masking the gap got correctly filtered out.
+            case
+                // --- BUYER AS TAKER ---
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 // --- SELLER AS MAKER ---
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                 // --- SELLER AS TAKER ---
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
                  TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_,
-                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_ -> {
-                // Payment-info exchange — the offer-response state AND the payment-data
-                // change observer can both fire here, so dedup to one push per trade.
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                 // --- BUYER AS MAKER ---
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA -> {
                 if (notifiedPaymentInfo.add(trade.getId())) {
                     if (trade.isSeller()) {
                         dispatch(trade, "bisqEasy.mobileNotifications.paymentInfoSent.title",
@@ -349,19 +370,27 @@ public class BisqEasyMobileTradeNotificationService implements Service {
      * whether a given state will produce a push without depending on the full handler.
      */
     static boolean isWhitelistedState(BisqEasyTradeState state) {
+        // Own-action states (BUYER_SENT_FIAT_SENT_CONFIRMATION,
+        // SELLER_CONFIRMED_FIAT_RECEIPT, SELLER_SENT_BTC_SENT_CONFIRMATION,
+        // MAKER_SENT_TAKE_OFFER_RESPONSE__*) are deliberately absent — see the
+        // self-action suppression comment in handleStateChange.
         return switch (state) {
-            case BUYER_SENT_FIAT_SENT_CONFIRMATION,
-                 SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
+            case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
                  BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
-                 SELLER_CONFIRMED_FIAT_RECEIPT,
-                 SELLER_SENT_BTC_SENT_CONFIRMATION,
                  BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
                  TAKER_SENT_TAKE_OFFER_REQUEST,
-                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
-                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                 // Payment-info exchange (covers all 4 roles × Branch-1.x + final-converging).
+                 // See the matching case block in handleStateChange for rationale.
                  TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
                  TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_,
-                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_ -> true;
+                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA -> true;
             default -> state.isFinalState();
         };
     }
