@@ -11,9 +11,11 @@ import bisq.api.dto.account.fiat.alipay.CreateAliPayAccountPayloadDto;
 import bisq.api.dto.account.fiat.amazon_gift_card.CreateAmazonGiftCardAccountPayloadDto;
 import bisq.api.dto.account.fiat.cash_deposit.CreateCashDepositAccountPayloadDto;
 import bisq.api.dto.account.fiat.money_gram.CreateMoneyGramAccountPayloadDto;
+import bisq.api.dto.account.fiat.national_bank.CreateNationalBankAccountPayloadDto;
 import bisq.api.dto.account.fiat.revolut.CreateRevolutAccountPayloadDto;
 import bisq.api.dto.account.fiat.sepa.CreateSepaAccountPayloadDto;
 import bisq.api.dto.account.fiat.sepa_instant.CreateSepaInstantAccountPayloadDto;
+import bisq.api.dto.account.fiat.same_bank.CreateSameBankAccountPayloadDto;
 import bisq.api.dto.account.fiat.user_defined.CreateUserDefinedFiatAccountPayloadDto;
 import bisq.api.dto.account.fiat.wise.CreateWiseAccountPayloadDto;
 import bisq.api.dto.account.fiat.zelle.CreateZelleAccountPayloadDto;
@@ -24,9 +26,11 @@ import bisq.api.dto.mappings.account.fiat.AliPayAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.AmazonGiftCardAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.CashDepositAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.MoneyGramAccountDtoMapping;
+import bisq.api.dto.mappings.account.fiat.NationalBankAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.RevolutAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.SepaAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.SepaInstantAccountDtoMapping;
+import bisq.api.dto.mappings.account.fiat.SameBankAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.UserDefinedFiatAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.WiseAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.ZelleAccountDtoMapping;
@@ -39,9 +43,11 @@ import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.AMAZON_GIFT_CA
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.CASH_DEPOSIT;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.CUSTOM;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.MONEY_GRAM;
+import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.NATIONAL_BANK;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.REVOLUT;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.SEPA;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.SEPA_INSTANT;
+import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.SAME_BANK;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.WISE;
 import static bisq.api.dto.account.fiat.common.FiatPaymentRailDto.ZELLE;
 
@@ -97,6 +103,12 @@ public class CreatePaymentAccountDtoMapping {
                 }
                 throw expectedPayloadException("CreateMoneyGramAccountPayloadDto", dto);
             }
+            case NATIONAL_BANK -> {
+                if (payload instanceof CreateNationalBankAccountPayloadDto nationalBankPayload) {
+                    yield NationalBankAccountDtoMapping.toBisq2Model(accountName, nationalBankPayload);
+                }
+                throw expectedPayloadException("CreateNationalBankAccountPayloadDto", dto);
+            }
             case REVOLUT -> {
                 if (payload instanceof CreateRevolutAccountPayloadDto revolutPayload) {
                     yield RevolutAccountDtoMapping.toBisq2Model(accountName, revolutPayload);
@@ -114,6 +126,12 @@ public class CreatePaymentAccountDtoMapping {
                     yield SepaInstantAccountDtoMapping.toBisq2Model(accountName, sepaInstantPayload);
                 }
                 throw expectedPayloadException("CreateSepaInstantAccountPayloadDto", dto);
+            }
+            case SAME_BANK -> {
+                if (payload instanceof CreateSameBankAccountPayloadDto sameBankPayload) {
+                    yield SameBankAccountDtoMapping.toBisq2Model(accountName, sameBankPayload);
+                }
+                throw expectedPayloadException("CreateSameBankAccountPayloadDto", dto);
             }
             case WISE -> {
                 if (payload instanceof CreateWiseAccountPayloadDto wisePayload) {
