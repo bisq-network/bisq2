@@ -5,10 +5,11 @@ _Note: This document is outdated_
 The wrapper can update itself using:
 
 ```
-./gradlew wrapper --gradle-version 7.4.1 \
-    --distribution-type all \
-    --gradle-distribution-sha256-sum a9a7b7baba105f6557c9dcf9c3c6e8f7e57e6b49889c5f1d133f015d0727e4be
+./gradlew wrapper --gradle-version 8.13 \
+    --distribution-type bin
 ```
+
+Optionally, add `--gradle-distribution-sha256-sum <checksum>` using the value from Gradle release checksums[^1].
 
 - `--gradle-version`: the version you wish to update to
 - `--distribution-type`: `bin` or `all`. Use the `all` distribution to provide the sources needed for the IDE for
@@ -97,10 +98,10 @@ compileJava {
 ```
 
 [^1]: https://gradle.org/release-checksums/
-[^2]: https://docs.gradle.org/7.4.1/userguide/platforms.html#sub:platforms-vs-catalog
-[^3]: https://docs.gradle.org/7.4.1/userguide/platforms.html#sub:version-catalog-declaration
+[^2]: https://docs.gradle.org/current/userguide/platforms.html#sub:platforms-vs-catalog
+[^3]: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog-declaration
 [^4]: https://docs.gradle.org/current/userguide/dependency_management_terminology.html#sub:terminology_dependency_constraint
-[^5]: https://docs.gradle.org/7.4.1/userguide/rich_versions.html
+[^5]: https://docs.gradle.org/current/userguide/rich_versions.html
 [^6]: https://docs.gradle.org/current/userguide/java_platform_plugin.html
 [^7]: https://docs.oracle.com/en/java/javase/17/jpackage/packaging-overview.html#GUID-786E15C0-2CE7-4BDF-9B2F-AC1C57249134
 [^8]: https://github.com/jjohannes/extra-java-module-info
