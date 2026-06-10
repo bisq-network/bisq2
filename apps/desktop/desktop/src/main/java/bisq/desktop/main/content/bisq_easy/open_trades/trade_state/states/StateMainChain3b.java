@@ -24,6 +24,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.BitcoinAddressValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
@@ -245,8 +246,9 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         }
 
         private List<Long> findTxOutputValuesForAddress(Tx tx, String address) {
+            String canonicalAddress = BitcoinAddressValidation.canonicalize(address);
             return tx.getOutputs().stream()
-                    .filter(output -> address.equals(output.getAddress()))
+                    .filter(output -> canonicalAddress.equals(output.getAddress()))
                     .map(Output::getValue)
                     .toList();
         }

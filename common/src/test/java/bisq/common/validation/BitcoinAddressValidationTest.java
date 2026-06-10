@@ -20,4 +20,23 @@ public class BitcoinAddressValidationTest {
         assertFalse(BitcoinAddressValidation.isValid("4A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")); // Invalid address
         assertFalse(BitcoinAddressValidation.isValid("")); // Empty string
     }
+
+    @Test
+    public void testCanonicalize() {
+        // bitcoin: prefix stripped (#4782) and bech32 lowercased (#4712) to match the explorer output
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.canonicalize("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.canonicalize("BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.canonicalize("bitcoin:bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.canonicalize("BITCOIN:BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4"));
+
+        // base58 is case-sensitive: never altered (prefix/params still stripped)
+        assertEquals("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+                BitcoinAddressValidation.canonicalize("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"));
+        assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+                BitcoinAddressValidation.canonicalize("bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy?amount=1"));
+    }
 }
