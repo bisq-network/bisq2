@@ -23,10 +23,64 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
     companion object {
         const val OUTPUT_DIR_PATH = "packaging/jpackage/packages"
+        private val DEFAULT_RUNTIME_IMAGE_MODULES = setOf(
+                "java.base",
+                "java.compiler",
+                "java.desktop",
+                "java.instrument",
+                "java.logging",
+                "java.management",
+                "java.naming",
+                "java.net.http",
+                "java.security.jgss",
+                "java.sql",
+                "java.xml",
+                "jdk.attach",
+                "jdk.charsets",
+                "jdk.crypto.ec",
+                "jdk.httpserver",
+                "jdk.jdi",
+                "jdk.jfr",
+                "jdk.localedata",
+                "jdk.management",
+                "jdk.net",
+                "jdk.unsupported",
+        )
+        private val DEFAULT_RUNTIME_IMAGE_JLINK_OPTIONS = listOf(
+                "--no-header-files",
+                "--no-man-pages",
+                "--strip-debug",
+                "--compress", "zip-6",
+        )
+        private val DEFAULT_RUNTIME_IMAGE_EXCLUDED_NATIVE_COMMANDS = setOf(
+                "jdb",
+                "jdb.exe",
+                "jfr",
+                "jfr.exe",
+                "jwebserver",
+                "jwebserver.exe",
+        )
     }
 
     override fun apply(project: Project) {
         val extension = project.extensions.create<PackagingPluginExtension>("packaging")
+        extension.runtimeImageModules.convention(DEFAULT_RUNTIME_IMAGE_MODULES)
+        extension.runtimeImageJlinkOptions.convention(DEFAULT_RUNTIME_IMAGE_JLINK_OPTIONS)
+        extension.runtimeImageExcludedNativeCommands.convention(DEFAULT_RUNTIME_IMAGE_EXCLUDED_NATIVE_COMMANDS)
+        extension.requireJavaLauncher.convention(true)
+
+        val jPackageJdkDirectory = getJPackageJdkDirectory(project)
+        val runtimeImageTask = project.tasks.register<JLinkTask>("createJPackageRuntimeImage") {
+            group = "distribution"
+            description = "Create the Java runtime image bundled into jpackage installers."
+
+            jdkDirectory.set(jPackageJdkDirectory)
+            modules.set(extension.runtimeImageModules)
+            options.set(extension.runtimeImageJlinkOptions)
+            excludedNativeCommands.set(extension.runtimeImageExcludedNativeCommands)
+            requireJavaLauncher.set(extension.requireJavaLauncher)
+            outputDirectory.set(project.layout.buildDirectory.dir("packaging/jlink/runtime-image"))
+        }
 
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
 
@@ -73,7 +127,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory(project))
+            jdkDirectory.set(jPackageJdkDirectory)
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -95,7 +149,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                getJPackageJdkDirectory(project)
+                extension.runtimeImageDirectory.orElse(runtimeImageTask.flatMap { it.outputDirectory })
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
