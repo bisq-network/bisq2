@@ -91,14 +91,16 @@ make desktop-ui-scenario file=scripts/scenarios/desktop-ui-smoke.scenario
 
 ## Runtime Design
 
-The harness app launches the normal `DesktopApp` and registers a harness-owned `DesktopAutomationViewObserver` through the desktop module's production-neutral `ViewLifecycleObservers` registry before startup. When views attach to JavaFX scenes, the observer binds automation scopes and ids to the controls exposed by those views.
+The harness app launches the normal `DesktopApp` and registers a harness-owned `DesktopAutomationViewObserver` through the desktop module's production-neutral `ViewLifecycleObservers` registry before startup. When views attach to JavaFX scenes, the observer dispatches the view to harness-owned binder classes. Those binders attach automation scopes and ids to package-private semantic nodes exposed by the views.
 
 The production desktop app keeps only the neutral integration points required for this:
 
 - `ViewLifecycleObserver` and `ViewLifecycleObservers` in the desktop view framework
-- small semantic view accessors for controls the harness needs to address
+- package-private semantic view accessors for nodes the harness needs to address
 
-The production `desktop-app` binary does not start the automation server and does not depend on the harness app. The harness app owns the automation server startup and the selector metadata binding via `DesktopAutomationMetadata`.
+The production `desktop-app` binary does not start the automation server and does not depend on the harness app. The harness app owns the automation server startup, selector strings, and selector metadata binding via `DesktopAutomationMetadata`.
+
+View-specific binders live in `desktop-ui-harness-app` and deliberately use the same Java package as the production view they bind. This same-package pattern lets binders call package-private semantic accessors without making mutable JavaFX controls part of a public desktop API. The source files are split across modules, but the project runs on the classpath rather than JPMS modules, so package-private access works as intended.
 
 The local automation server is started from the dedicated `desktop-ui-harness-app` module:
 
@@ -167,6 +169,8 @@ HARNESS_RESET_ON_START=0 APP_NAME=bisq2_gui1 DATA_DIR=/tmp/bisq2-local-3node/des
 ## Best Practices For Reliable UI E2E
 
 - Prefer stable automation scopes and automation ids for interactive controls.
+- Keep selector strings and `DesktopAutomationMetadata` calls in `desktop-ui-harness-app`.
+- Do not add public view getters only for automation.
 - Do not rely on generated/randomized JavaFX ids in tests.
 - Keep user-facing text assertions separate from interaction selectors.
 - Use a dedicated harness data dir for reproducible runs.
@@ -179,7 +183,7 @@ Use the harness as a short local feedback loop after JavaFX changes:
 1. build the harness app
 2. start the harness
 3. inspect the current visible UI with `nodes`
-4. add or adjust a harness view binder for the controls you need
+4. add package-private semantic accessors and a harness binder for missing controls
 5. validate the visible UI with `validate`
 6. automate the interaction with `click`, `type`, `press-key`, or a scenario file
 7. capture screenshots before/after the change for review
@@ -198,9 +202,48 @@ Typical loop:
 
 ## Adding Automation Selectors To A View
 
-Automation selector declarations belong in the harness app, not in production view constructors.
-If the target view does not expose a stable control yet, add a small semantic accessor to the
-view and keep the selector string in `desktop-ui-harness-app`.
+Automation selector declarations belong in the harness app, not in production view constructors. Do not use annotations for this contract: annotations still live in production source, are easy to treat as public test API, and add reflection or processing without improving the selector boundary. Use explicit semantic accessors plus harness-side binders instead.
+
+If the target view does not expose a stable node yet, add a package-private semantic accessor to the view and keep the selector string in `desktop-ui-harness-app`. Name the accessor by user intent, not by the concrete widget type:
+
+```java
+TextInputControl messageInput() {
+    return inputField;
+}
+
+Node sendMessageAction() {
+    return sendButton;
+}
+```
+
+Then add or update a binder in `desktop-ui-harness-app` under the same Java package as the production view:
+
+```java
+package bisq.desktop.main.content.chat.message_container;
+
+import bisq.desktop_ui_harness_app.AbstractDesktopAutomationViewBinder;
+
+public final class ChatMessageContainerAutomationBinder
+        extends AbstractDesktopAutomationViewBinder<ChatMessageContainerView> {
+    @Override
+    public Class<ChatMessageContainerView> viewType() {
+        return ChatMessageContainerView.class;
+    }
+
+    @Override
+    public void bind(ChatMessageContainerView view) {
+        scope(view.getRoot(), "chat-message-container");
+        id(view.messageInput(), "input");
+        id(view.sendMessageAction(), "send");
+    }
+}
+```
+
+Finally, register the binder in `DesktopAutomationViewObserver`:
+
+```java
+new ChatMessageContainerAutomationBinder()
+```
 
 Only bind automation metadata to stable, meaningful UI surfaces:
 
@@ -215,16 +258,6 @@ Do not bind automation metadata to:
 - list cells or recycled table rows
 - controls whose identity is based only on visible text
 
-Pattern:
-
-```java
-private void bindChatMessageContainer(ChatMessageContainerView view) {
-    DesktopAutomationMetadata.setScope(view.getRoot(), "chat-message-container");
-    DesktopAutomationMetadata.setId(view.getInputField(), "input");
-    DesktopAutomationMetadata.setId(view.getSendButton(), "send");
-}
-```
-
 Resulting selectors:
 
 - `chat-message-container/input`
@@ -235,6 +268,31 @@ Notes:
 - scope names must be unique across all showing JavaFX scenes/windows
 - automation ids only need to be unique inside their scope
 - keep JavaFX `Node.id` for CSS only when needed; it is not the automation contract
+- binder tests belong in `desktop-ui-harness-app/src/test/java` under the same Java package as the view so they can assert package-private semantic accessors
+- production view tests may use the same package-private semantic accessors, but external modules should not depend on them
+
+## Extension Checklist For Developers And Agents
+
+When adding or changing harness selectors:
+
+- inspect the current UI first with `./scripts/desktop-ui-harness.bash nodes`
+- add only package-private semantic accessors to production views
+- return `Node` for buttons/toggles/actions and `TextInputControl` for editable text inputs
+- keep accessor names stable and intent-based, such as `messageInput`, `sendMessageAction`, or `nextAction`
+- add the binder under `apps/desktop/desktop-ui-harness-app/src/main/java` using the same Java package as the production view
+- keep all selector strings in the binder, never in the production view
+- register the binder in `DesktopAutomationViewObserver`
+- add a binder unit test under `apps/desktop/desktop-ui-harness-app/src/test/java` using the same Java package as the production view
+- run `./gradlew :apps:desktop:desktop-ui-harness-app:test` before manual harness checks
+- run `./scripts/desktop-ui-harness.bash validate` against the target screen before adding scenario steps
+
+Do not add:
+
+- public view getters just for automation
+- annotations for selectors in production source
+- `DesktopAutomationMetadata` calls in production source
+- JavaFX `Node.id` values as automation selectors
+- selectors for decorative, recycled, or text-only-identified nodes
 
 ## Selector Naming Rules
 

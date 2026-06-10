@@ -8,77 +8,126 @@
  *
  * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package bisq.desktop_ui_harness_app;
 
-import bisq.chat.ChatChannelDomain;
-import bisq.desktop.automation.DesktopAutomationMetadata;
-import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
-import bisq.desktop.main.content.chat.message_container.ChatMessageContainerModel;
-import bisq.desktop.main.content.chat.message_container.ChatMessageContainerView;
-import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.i18n.Res;
-import javafx.embed.swing.JFXPanel;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
+import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 class DesktopAutomationViewObserverTest {
-    @Mock
-    private ChatMessageContainerController controller;
-    @Mock
-    private UserProfileSelection userProfileSelection;
+    @Test
+    void dispatchesAttachedViewToMatchingBinder() {
+        TestView view = TestView.create();
+        RecordingBinder binder = new RecordingBinder();
 
-    private AutoCloseable closeable;
+        new DesktopAutomationViewObserver(List.of(binder)).onViewAttached(view);
 
-    @BeforeAll
-    static void initJavaFxToolkit() {
-        new JFXPanel();
-        Res.setAndApplyLanguageTag("en");
-    }
-
-    @BeforeEach
-    void setUp() {
-        closeable = MockitoAnnotations.openMocks(this);
-        when(userProfileSelection.getRoot()).thenReturn(new Pane());
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        closeable.close();
+        assertThat(binder.boundView).isSameAs(view);
     }
 
     @Test
-    void bindsChatMessageContainerMetadataOutsideProductionView() {
-        ChatMessageContainerView view = new ChatMessageContainerView(
-                new ChatMessageContainerModel(ChatChannelDomain.SUPPORT),
-                controller,
-                new VBox(),
-                new VBox(),
-                userProfileSelection);
+    void ignoresUnsupportedViews() {
+        TestView view = TestView.create();
+        DesktopAutomationViewBinder<View<?, ?, ?>> unsupportedBinder = new DesktopAutomationViewBinder<>() {
+            @Override
+            public Class<View<?, ?, ?>> viewType() {
+                return uncheckedViewClass();
+            }
 
-        assertThat(DesktopAutomationMetadata.getScope(view.getRoot())).isEmpty();
-        assertThat(DesktopAutomationMetadata.getId(view.getInputField())).isEmpty();
-        assertThat(DesktopAutomationMetadata.getId(view.getSendButton())).isEmpty();
+            @Override
+            public void bind(View<?, ?, ?> view) {
+                throw new AssertionError("unsupported binder must not be invoked");
+            }
+        };
 
-        new DesktopAutomationViewObserver().onViewAttached(view);
+        new DesktopAutomationViewObserver(List.of(unsupportedBinder)).onViewAttached(view);
+    }
 
-        assertThat(DesktopAutomationMetadata.getScope(view.getRoot())).contains("chat-message-container");
-        assertThat(DesktopAutomationMetadata.getId(view.getInputField())).contains("input");
-        assertThat(DesktopAutomationMetadata.getId(view.getSendButton())).contains("send");
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static Class<View<?, ?, ?>> uncheckedViewClass() {
+        return (Class) UnsupportedView.class;
+    }
+
+    private static final class RecordingBinder implements DesktopAutomationViewBinder<TestView> {
+        private TestView boundView;
+
+        @Override
+        public Class<TestView> viewType() {
+            return TestView.class;
+        }
+
+        @Override
+        public void bind(TestView view) {
+            boundView = view;
+        }
+    }
+
+    private static final class TestView extends View<Pane, TestModel, TestController> {
+        private static TestView create() {
+            TestController controller = new TestController();
+            TestView view = new TestView(controller);
+            controller.view = view;
+            return view;
+        }
+
+        private TestView(TestController controller) {
+            super(new Pane(), new TestModel(), controller);
+        }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
+        }
+    }
+
+    private static final class UnsupportedView extends View<Pane, TestModel, TestController> {
+        private UnsupportedView(TestController controller) {
+            super(new Pane(), new TestModel(), controller);
+        }
+
+        @Override
+        protected void onViewAttached() {
+        }
+
+        @Override
+        protected void onViewDetached() {
+        }
+    }
+
+    private static final class TestModel implements Model {
+    }
+
+    private static final class TestController implements Controller {
+        private View<? extends Parent, ? extends Model, ? extends Controller> view;
+
+        @Override
+        public View<? extends Parent, ? extends Model, ? extends Controller> getView() {
+            return view;
+        }
+
+        @Override
+        public void onActivate() {
+        }
+
+        @Override
+        public void onDeactivate() {
+        }
     }
 }

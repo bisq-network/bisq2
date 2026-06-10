@@ -22,6 +22,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -91,7 +92,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         root.getChildren().addAll(logoAndVersion, hBox, progressBar, new HBox(Spacer.fillHBox(), detailsGrid, Spacer.fillHBox()));
     }
 
-    public ImageView getLogo() {
+    Node logoIndicator() {
         return logo;
     }
 

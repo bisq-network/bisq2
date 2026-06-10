@@ -26,6 +26,7 @@ import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -107,15 +108,15 @@ public class TacView extends View<VBox, TacModel, TacController> {
                 buttons);
     }
 
-    public CheckBox getConfirmCheckBox() {
+    Node confirmationToggle() {
         return confirmCheckBox;
     }
 
-    public Button getAcceptButton() {
+    Node acceptAction() {
         return acceptButton;
     }
 
-    public Button getRejectButton() {
+    Node rejectAction() {
         return rejectButton;
     }
 

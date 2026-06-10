@@ -23,6 +23,7 @@ import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -69,7 +70,7 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
                 nextButton);
     }
 
-    public Button getNextButton() {
+    Node nextAction() {
         return nextButton;
     }
 

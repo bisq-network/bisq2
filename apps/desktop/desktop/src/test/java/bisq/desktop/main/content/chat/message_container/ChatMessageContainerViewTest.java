@@ -22,7 +22,7 @@ import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -82,7 +82,7 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
 
     @Test
     void enterDispatchesPlainMessage(FxRobot robot) {
-        TextArea input = view.getInputField();
+        TextInputControl input = view.messageInput();
 
         robot.targetWindow(stage);
         robot.clickOn(input);
@@ -98,13 +98,13 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
 
     @Test
     void sendButtonDispatchesTrimmedMessage(FxRobot robot) {
-        TextArea input = view.getInputField();
-        Button sendButton = view.getSendButton();
+        TextInputControl input = view.messageInput();
+        Button sendAction = (Button) view.sendMessageAction();
 
         robot.targetWindow(stage);
         robot.clickOn(input);
         robot.interact(() -> input.setText("   /ai please help   "));
-        robot.interact(sendButton::fire);
+        robot.interact(sendAction::fire);
         WaitForAsyncUtils.waitForFxEvents();
 
         verify(controller).onSendMessage("/ai please help");

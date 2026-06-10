@@ -357,11 +357,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return submenu;
     }
 
-    public VBox getMainMenuItems() {
+    Node mainNavigationScope() {
         return mainMenuItems;
     }
 
-    public Optional<Node> findNavigationButtonNode(NavigationTarget navigationTarget) {
+    Optional<Node> navigationAction(NavigationTarget navigationTarget) {
         return Optional.ofNullable(navigationButtonByTarget.get(navigationTarget));
     }
 

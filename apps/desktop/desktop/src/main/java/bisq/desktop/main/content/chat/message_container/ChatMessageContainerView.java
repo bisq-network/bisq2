@@ -30,8 +30,10 @@ import bisq.i18n.Res;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -201,11 +203,11 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         return sendMessageBox;
     }
 
-    public BisqTextArea getInputField() {
+    TextInputControl messageInput() {
         return inputField;
     }
 
-    public Button getSendButton() {
+    Node sendMessageAction() {
         return sendButton;
     }
 
