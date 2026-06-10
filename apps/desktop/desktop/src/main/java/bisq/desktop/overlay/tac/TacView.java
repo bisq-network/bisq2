@@ -107,6 +107,18 @@ public class TacView extends View<VBox, TacModel, TacController> {
                 buttons);
     }
 
+    public CheckBox getConfirmCheckBox() {
+        return confirmCheckBox;
+    }
+
+    public Button getAcceptButton() {
+        return acceptButton;
+    }
+
+    public Button getRejectButton() {
+        return rejectButton;
+    }
+
     @Override
     protected void onViewAttached() {
         root.requestFocus();
