@@ -36,9 +36,12 @@ import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
@@ -100,6 +103,7 @@ public abstract class PrivateChatChannelService<
             return CompletableFuture.failedFuture(new RuntimeException());
         }
         if (isPeerBanned(receiver)) {
+            addPeerBannedSystemMessage(channel, myUserIdentity, receiver, date);
             return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
         }
 
@@ -120,6 +124,40 @@ public abstract class PrivateChatChannelService<
 
     protected boolean isPeerBanned(UserProfile userProfile) {
         return bannedUserService.isUserProfileBanned(userProfile);
+    }
+
+    @VisibleForTesting
+    static final String PEER_BANNED_NOTICE_KEY = "chat.privateChannel.peerBanned";
+
+    private void addPeerBannedSystemMessage(C channel, UserIdentity myUserIdentity, UserProfile receiver, long date) {
+        if (alreadyNotifiedAboutBannedPeer(channel.getChatMessages(), receiver.getUserName())) {
+            return;
+        }
+        UserProfile nonBannedAuthor = myUserIdentity.getUserProfile();
+        M systemMessage = createAndGetNewPrivateChatMessage(StringUtils.createUid(),
+                channel,
+                nonBannedAuthor,
+                receiver,
+                Res.encode(PEER_BANNED_NOTICE_KEY, receiver.getUserName()),
+                Optional.empty(),
+                date,
+                false,
+                ChatMessageType.PROTOCOL_LOG_MESSAGE);
+        addMessage(systemMessage, channel);
+    }
+
+    @VisibleForTesting
+    static boolean alreadyNotifiedAboutBannedPeer(Collection<? extends ChatMessage> messages, String peerName) {
+        String peerNotice = Res.encode(PEER_BANNED_NOTICE_KEY, peerName);
+        return messages.stream()
+                .sorted(Comparator.comparingLong(ChatMessage::getDate).reversed())
+                .takeWhile(PrivateChatChannelService::isPeerBannedNotice)
+                .anyMatch(message -> message.getText().map(peerNotice::equals).orElse(false));
+    }
+
+    private static boolean isPeerBannedNotice(ChatMessage message) {
+        return message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE
+                && message.getText().map(text -> text.startsWith(PEER_BANNED_NOTICE_KEY)).orElse(false);
     }
 
     public void leaveChannel(String id) {
